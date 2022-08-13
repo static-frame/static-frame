@@ -44,7 +44,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :maxdepth: 1
    :caption: API Overview
 
-   api_overview/serie   api_overview/series.rst
+   api_overview/series.rst
    api_overview/series_he.rst
    api_overview/frame.rst
    api_overview/frame_go.rst
