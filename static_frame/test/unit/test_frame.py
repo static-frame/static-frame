@@ -5803,6 +5803,13 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('a', ((0, 'x'), (1, 'foo'))), ('b', ((0, 'bar'), (1, 'x'))), ('c', ((0, 'baz'), (1, 'y')))))
 
+    def test_frame_fillna_j(self) -> None:
+        f1 = sf.Frame.from_fields(((1.1, 2.2), (3.1, np.nan), ('bar', 'foo'), ('baz', None)), columns=('a', 'b', 'c', 'd'), consolidate_blocks=True)
+
+        f2 = f1.fillna({'b': 'x', 'd':'y'})
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 1.1), (1, 2.2))), ('b', ((0, 3.1), (1, 'x'))), ('c', ((0, 'bar'), (1, 'foo'))), ('d', ((0, 'baz'), (1, 'y'))))
+                )
 
     #---------------------------------------------------------------------------
 
