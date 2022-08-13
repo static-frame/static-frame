@@ -15,7 +15,7 @@ pyinstrument==3.4.1
 Pygments==2.7.4
 gprof2dot==2021.2.21
 line-profiler==3.4.0
-ipython==7.16.
+ipython==7.16.3
 sphinx==5.0.2
 sphinx-jinja==2.0.2
 sphinx_rtd_theme==1.0.0
