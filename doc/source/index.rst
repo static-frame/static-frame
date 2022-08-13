@@ -225,6 +225,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/frame_he-accessor_transpose.rst
    api_overview/frame_he-accessor_fill_value.rst
    api_overview/frame_he-accessor_regular_expression.rst
+
    api_overview/bus-constructor.rst
    api_overview/bus-exporter.rst
    api_overview/bus-attribute.rst
