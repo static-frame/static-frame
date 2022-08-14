@@ -75,11 +75,20 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_microsecond_go.rst
    api_overview/index_nanosecond.rst
    api_overview/index_nanosecond_go.rst
+   api_overview/hloc.rst
+   api_overview/iloc.rst
+   api_overview/fill_value_auto.rst
+   api_overview/display_active.rst
    api_overview/display_config.rst
    api_overview/store_config.rst
    api_overview/store_filter.rst
+   api_overview/index_auto_factory.rst
+   api_overview/index_default_factory.rst
+   api_overview/index_auto_constructor_factory.rst
    api_overview/npz.rst
    api_overview/npy.rst
+   api_overview/platform.rst
+
 
 .. toctree::
    :maxdepth: 1
@@ -116,11 +125,19 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_microsecond_go.rst
    api_detail/index_nanosecond.rst
    api_detail/index_nanosecond_go.rst
+   api_detail/hloc.rst
+   api_detail/iloc.rst
+   api_detail/fill_value_auto.rst
+   api_detail/display_active.rst
    api_detail/display_config.rst
    api_detail/store_config.rst
    api_detail/store_filter.rst
+   api_detail/index_auto_factory.rst
+   api_detail/index_default_factory.rst
+   api_detail/index_auto_constructor_factory.rst
    api_detail/npz.rst
    api_detail/npy.rst
+   api_detail/platform.rst
 
 .. toctree::
    :hidden:
@@ -216,7 +233,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/bus-display.rst
    api_overview/bus-selector.rst
    api_overview/bus-iterator.rst
-   api_overview/bus-operator_binary.rst
    api_overview/batch-constructor.rst
    api_overview/batch-exporter.rst
    api_overview/batch-attribute.rst
@@ -240,7 +256,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/yarn-display.rst
    api_overview/yarn-selector.rst
    api_overview/yarn-iterator.rst
-   api_overview/yarn-operator_binary.rst
    api_overview/quilt-constructor.rst
    api_overview/quilt-exporter.rst
    api_overview/quilt-attribute.rst
@@ -249,7 +264,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/quilt-display.rst
    api_overview/quilt-selector.rst
    api_overview/quilt-iterator.rst
-   api_overview/quilt-operator_binary.rst
    api_overview/index-constructor.rst
    api_overview/index-exporter.rst
    api_overview/index-attribute.rst
@@ -560,33 +574,58 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_nanosecond_go-accessor_datetime.rst
    api_overview/index_nanosecond_go-accessor_string.rst
    api_overview/index_nanosecond_go-accessor_regular_expression.rst
+   api_overview/hloc-constructor.rst
+   api_overview/hloc-attribute.rst
+   api_overview/hloc-method.rst
+   api_overview/hloc-dictionary_like.rst
+   api_overview/hloc-display.rst
+   api_overview/iloc-constructor.rst
+   api_overview/iloc-attribute.rst
+   api_overview/iloc-display.rst
+   api_overview/fill_value_auto-constructor.rst
+   api_overview/fill_value_auto-attribute.rst
+   api_overview/fill_value_auto-display.rst
+   api_overview/fill_value_auto-selector.rst
+   api_overview/display_active-constructor.rst
+   api_overview/display_active-attribute.rst
+   api_overview/display_active-method.rst
+   api_overview/display_active-dictionary_like.rst
+   api_overview/display_active-display.rst
    api_overview/display_config-constructor.rst
    api_overview/display_config-exporter.rst
    api_overview/display_config-attribute.rst
    api_overview/display_config-method.rst
    api_overview/display_config-display.rst
-   api_overview/display_config-operator_binary.rst
    api_overview/store_config-constructor.rst
    api_overview/store_config-exporter.rst
    api_overview/store_config-attribute.rst
    api_overview/store_config-method.rst
    api_overview/store_config-display.rst
-   api_overview/store_config-operator_binary.rst
    api_overview/store_filter-constructor.rst
    api_overview/store_filter-exporter.rst
    api_overview/store_filter-attribute.rst
    api_overview/store_filter-display.rst
-   api_overview/store_filter-operator_binary.rst
+   api_overview/index_auto_factory-constructor.rst
+   api_overview/index_auto_factory-exporter.rst
+   api_overview/index_auto_factory-display.rst
+   api_overview/index_default_factory-constructor.rst
+   api_overview/index_default_factory-method.rst
+   api_overview/index_default_factory-display.rst
+   api_overview/index_auto_constructor_factory-constructor.rst
+   api_overview/index_auto_constructor_factory-exporter.rst
+   api_overview/index_auto_constructor_factory-method.rst
+   api_overview/index_auto_constructor_factory-display.rst
    api_overview/npz-constructor.rst
    api_overview/npz-attribute.rst
    api_overview/npz-method.rst
    api_overview/npz-display.rst
-   api_overview/npz-operator_binary.rst
    api_overview/npy-constructor.rst
    api_overview/npy-attribute.rst
    api_overview/npy-method.rst
    api_overview/npy-display.rst
-   api_overview/npy-operator_binary.rst
+   api_overview/platform-constructor.rst
+   api_overview/platform-exporter.rst
+   api_overview/platform-display.rst
 
    api_detail/series-constructor.rst
    api_detail/series-exporter.rst
@@ -679,7 +718,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/bus-display.rst
    api_detail/bus-selector.rst
    api_detail/bus-iterator.rst
-   api_detail/bus-operator_binary.rst
    api_detail/batch-constructor.rst
    api_detail/batch-exporter.rst
    api_detail/batch-attribute.rst
@@ -703,7 +741,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/yarn-display.rst
    api_detail/yarn-selector.rst
    api_detail/yarn-iterator.rst
-   api_detail/yarn-operator_binary.rst
    api_detail/quilt-constructor.rst
    api_detail/quilt-exporter.rst
    api_detail/quilt-attribute.rst
@@ -712,7 +749,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/quilt-display.rst
    api_detail/quilt-selector.rst
    api_detail/quilt-iterator.rst
-   api_detail/quilt-operator_binary.rst
    api_detail/index-constructor.rst
    api_detail/index-exporter.rst
    api_detail/index-attribute.rst
@@ -1023,32 +1059,58 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_nanosecond_go-accessor_datetime.rst
    api_detail/index_nanosecond_go-accessor_string.rst
    api_detail/index_nanosecond_go-accessor_regular_expression.rst
+   api_detail/hloc-constructor.rst
+   api_detail/hloc-attribute.rst
+   api_detail/hloc-method.rst
+   api_detail/hloc-dictionary_like.rst
+   api_detail/hloc-display.rst
+   api_detail/iloc-constructor.rst
+   api_detail/iloc-attribute.rst
+   api_detail/iloc-display.rst
+   api_detail/fill_value_auto-constructor.rst
+   api_detail/fill_value_auto-attribute.rst
+   api_detail/fill_value_auto-display.rst
+   api_detail/fill_value_auto-selector.rst
+   api_detail/display_active-constructor.rst
+   api_detail/display_active-attribute.rst
+   api_detail/display_active-method.rst
+   api_detail/display_active-dictionary_like.rst
+   api_detail/display_active-display.rst
    api_detail/display_config-constructor.rst
    api_detail/display_config-exporter.rst
    api_detail/display_config-attribute.rst
    api_detail/display_config-method.rst
    api_detail/display_config-display.rst
-   api_detail/display_config-operator_binary.rst
    api_detail/store_config-constructor.rst
    api_detail/store_config-exporter.rst
    api_detail/store_config-attribute.rst
    api_detail/store_config-method.rst
    api_detail/store_config-display.rst
-   api_detail/store_config-operator_binary.rst
    api_detail/store_filter-constructor.rst
    api_detail/store_filter-exporter.rst
    api_detail/store_filter-attribute.rst
    api_detail/store_filter-display.rst
-   api_detail/store_filter-operator_binary.rst
+   api_detail/index_auto_factory-constructor.rst
+   api_detail/index_auto_factory-exporter.rst
+   api_detail/index_auto_factory-display.rst
+   api_detail/index_default_factory-constructor.rst
+   api_detail/index_default_factory-method.rst
+   api_detail/index_default_factory-display.rst
+   api_detail/index_auto_constructor_factory-constructor.rst
+   api_detail/index_auto_constructor_factory-exporter.rst
+   api_detail/index_auto_constructor_factory-method.rst
+   api_detail/index_auto_constructor_factory-display.rst
    api_detail/npz-constructor.rst
    api_detail/npz-attribute.rst
    api_detail/npz-method.rst
    api_detail/npz-display.rst
-   api_detail/npz-operator_binary.rst
    api_detail/npy-constructor.rst
    api_detail/npy-attribute.rst
    api_detail/npy-method.rst
    api_detail/npy-display.rst
-   api_detail/npy-operator_binary.rst
+   api_detail/platform-constructor.rst
+   api_detail/platform-exporter.rst
+   api_detail/platform-display.rst
+
 
 :ref:`genindex`

@@ -217,7 +217,7 @@ def terminal_ansi(stream: tp.TextIO = sys.stdout) -> bool:
 _module._display_active = DisplayConfig()  # type: ignore
 
 class DisplayActive:
-    '''Utility interface for setting module-level display configuration.
+    '''Utility interface for setting and storing default display configurations.
     '''
     FILE_NAME = '.static_frame.conf'
 

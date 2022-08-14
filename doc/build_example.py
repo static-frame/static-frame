@@ -4713,6 +4713,200 @@ class ExGenBatch(ExGen):
         yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
 
 
+class ExGenHLoc(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"ih = sf.IndexHierarchy.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})"
+            yield 'ih'
+            yield f"ih.loc[sf.HLoc[:, 4096]]"
+            yield f"ih.loc[sf.HLoc[['a', 'c'], [1024, 2048]]]"
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})"
+            yield f'f'
+            yield f"f.loc[sf.HLoc[:, 'q']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}[:, ['a', 'b']].{attr}"
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[:, ['a', 'b'], 2048:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"tuple(iter(hl))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"repr(hl)"
+        elif attr == '__str__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"str(hl)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+class ExGenILoc(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})"
+            yield f'f'
+            yield f"f.loc[sf.ILoc[-2:], ['a', 'c']]"
+            yield f"f.loc[sf.ILoc[-1], 'b':]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}[-2:].{attr}"
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[-2:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"il = {icls}[-2:]"
+            yield f"tuple(iter(il))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"il = {icls}[-2:]"
+            yield f"repr(il)"
+        elif attr == '__str__()':
+            yield f"il = {icls}[-2:]"
+            yield f"str(il)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+class ExGenFillValueAuto(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_H)})"
+            yield f'f'
+            yield f"f.fillfalsy(sf.FillValueAuto(f=-1, U='na', M=np.datetime64('2021-01-01')))"
+            yield f"f.shift(index=2, fill_value=sf.FillValueAuto)"
+        elif attr == 'from_default':
+            yield f"{icls}.from_default()"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}.from_default().{attr}"
+
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[-2:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"il = {icls}[-2:]"
+            yield f"tuple(iter(il))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"fva = {icls}.from_default()"
+            yield f"repr(fva)"
+        elif attr == '__str__()':
+            yield f"fva = {icls}.from_default()"
+            yield f"str(fva)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '[]':
+            yield f"fva = {icls}.from_default()"
+            yield 'fva[np.dtype(int)]'
+            yield 'fva[np.dtype(float)]'
+            yield 'fva[np.dtype(bool)]'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -4779,6 +4973,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
+            # print(func, row)
             calls = func(row)
             yield from calls_to_msg(calls, row)
 
@@ -4826,6 +5021,9 @@ def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Bus, ExGenBus)
     yield from gen_examples(sf.Batch, ExGenBatch)
 
+    yield from gen_examples(sf.HLoc, ExGenHLoc)
+    yield from gen_examples(sf.ILoc, ExGenILoc)
+    yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
 
 
 def write():
