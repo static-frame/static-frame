@@ -1045,9 +1045,8 @@ class InterfaceSummary(Features):
                 name=target.__name__
                 )
         f = f.set_index('signature', drop=True)
-        f['signature_no_args']
 
-        # derive Sphinx-RST compatible (case insensitive) label that handles single charactger case-senstive attrs in FillValueAuto
+        # derive Sphinx-RST compatible (case insensitive) label that handles single character case-senstive attrs in FillValueAuto
         sna_label = f['signature_no_args'].iter_element().apply(
                 lambda e: e if len(e) > 1 else f'{e}_' if e.isupper() else e
                 ).via_str.lower().rename('sna_label')

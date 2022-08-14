@@ -115,7 +115,7 @@ class ContainerMap:
         # not containers but neede for build_example.py
         from static_frame.core.hloc import HLoc
         from static_frame.core.index import ILoc
-        from static_frame.core.fill_value_auto import FillValueAuto
+        from static_frame.core.fill_value_auto import FillValueAuto #pylint: disable=W0404
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
