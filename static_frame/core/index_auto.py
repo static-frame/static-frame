@@ -27,7 +27,7 @@ class IndexConstructorFactoryBase:
 
 class IndexDefaultFactory(IndexConstructorFactoryBase):
     '''
-    Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
+    Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as an index constructor argument. An instance must be created.
     '''
     # NOTE: rename IndexDefaultConstructorFactory
 
@@ -49,7 +49,7 @@ class IndexDefaultFactory(IndexConstructorFactoryBase):
 
 class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     '''
-    Token class to be used to automatically determine index type by dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
+    Token class to be used to automatically determine index type by array dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
     '''
     __slots__ = ('_name',)
 
@@ -94,7 +94,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
 
 IndexAutoInitializer = int
 
-# could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
+# could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow into non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
     '''NOTE: this class is treated as an ``index`` or ``columns`` argument, not as a constructor.

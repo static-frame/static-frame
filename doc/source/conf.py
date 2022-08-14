@@ -92,11 +92,19 @@ DOCUMENTED_COMPONENTS = (
         sf.IndexMicrosecondGO,
         sf.IndexNanosecond,
         sf.IndexNanosecondGO,
+        sf.HLoc,
+        sf.ILoc,
+        sf.FillValueAuto,
+        sf.DisplayActive,
         sf.DisplayConfig,
         sf.StoreConfig,
         sf.StoreFilter,
+        sf.IndexAutoFactory,
+        sf.IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        sf.IndexAutoConstructorFactory,
         sf.NPZ,
         sf.NPY,
+        sf.Platform,
         )
 
 

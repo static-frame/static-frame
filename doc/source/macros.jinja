@@ -14,7 +14,7 @@ Detail: {{ name }}: {{ ig }}
 {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
 
 {# anchor for linking from overview #}
-.. _api-sig-{{ name }}-{{ row.signature_no_args }}:
+.. _api-sig-{{ name }}-{{ row.sna_label }}:
 
 
 {% if row.use_signature and signature.startswith('[') %}
@@ -123,9 +123,9 @@ Overview: {{ name }}: {{ ig }}
 
     {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
         {% if signature.startswith('[') -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
         {% else -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
         {% endif -%}
     {% endfor %}
 
