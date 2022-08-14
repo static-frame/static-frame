@@ -1,6 +1,6 @@
 numpy==1.19.5 # 1.20 introduces np.typing incompatibilities
 automap==0.5.1
-arraykit==0.1.12
+arraykit==0.1.13
 
 pytest==4.6.11
 pytest-cov==3.0.0

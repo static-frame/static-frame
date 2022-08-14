@@ -6,7 +6,9 @@ What is New in StaticFrame
 
 Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
 
-Corrected issue with ``fillna`` and ``fillfalsy`` functions when non elemental fill values are supplied.
+Corrected issue with ``fillna`` and ``fillfalsy`` functions when non-elemental fill values are supplied.
+
+Updated ``arraykit`` to 0.1.13.
 
 
 0.9.10
