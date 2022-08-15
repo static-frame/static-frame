@@ -1,6 +1,6 @@
-numpy==1.22.2
+numpy==1.23.1
 automap==0.5.1
-arraykit==0.1.12
+arraykit==0.1.13
 
 pytest==6.2.5
 pytest-cov==3.0.0
@@ -20,7 +20,7 @@ sphinx==4.5.0
 sphinx-jinja==1.1.1
 sphinx_rtd_theme>=0.5.1
 sphinxcontrib-napoleon==0.7.0
-pandas==1.4.2
+pandas==1.4.3
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.21.1

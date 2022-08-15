@@ -37,6 +37,7 @@ from static_frame.core.util import isna_array
 from static_frame import HLoc
 from static_frame import ILoc
 
+from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 
@@ -123,7 +124,7 @@ class TestUnit(TestCase):
             s1 = Series(range(4), own_index=True, index=None)
 
     def test_series_init_h(self) -> None:
-        s1 = Series(range(4), index_constructor=IndexSecond)
+        s1 = Series(range(4), index=np.arange(4), index_constructor=IndexSecond)
         self.assertEqual(s1.to_pairs(),
             ((np.datetime64('1970-01-01T00:00:00'), 0),
             (np.datetime64('1970-01-01T00:00:01'), 1),
@@ -3114,6 +3115,12 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, 2),)), (1, ((0, 3),)))
                 )
+
+    def test_series_to_frame_j(self) -> None:
+        s1 = Series((2, 3), index=list('ab'))
+        with self.assertRaises(InvalidDatetime64Initializer):
+            # RuntimeError: Attempting to create IndexDate from an IndexAutoFactory, which is generally not desired as the result will be an offset from the epoch.
+            f1 = s1.to_frame(columns_constructor=IndexDate)
 
     #---------------------------------------------------------------------------
 

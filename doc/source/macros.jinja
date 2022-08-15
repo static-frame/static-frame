@@ -6,15 +6,15 @@
 
 .. _api-detail-{{ name }}-{{ ig_tag }}:
 
-{{ name }}: {{ ig }}
+Detail: {{ name }}: {{ ig }}
 --------------------------------------------------------------------------------
 
-Overview: :ref:`api-overview-{{ name }}-{{ ig_tag }}`
+:ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
 {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
 
 {# anchor for linking from overview #}
-.. _api-sig-{{ name }}-{{ row.signature_no_args }}:
+.. _api-sig-{{ name }}-{{ row.sna_label }}:
 
 
 {% if row.use_signature and signature.startswith('[') %}
@@ -113,19 +113,19 @@ Overview: :ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
 .. _api-overview-{{ name }}-{{ ig_tag }}:
 
-{{ name }}: {{ ig }}
+Overview: {{ name }}: {{ ig }}
 --------------------------------------------------------------------------------
 
-Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
+:ref:`api-detail-{{ name }}-{{ ig_tag }}`
 
 .. csv-table::
     :header-rows: 0
 
     {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
         {% if signature.startswith('[') -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
         {% else -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
         {% endif -%}
     {% endfor %}
 
@@ -137,14 +137,25 @@ Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
 
 
 {# api_detail_toc /////////////////////////////////////////////////////////////// #}
-{% macro api_detail_toc(name, toc) -%}
+{% macro api_detail_toc(name, toc, interface_group_doc) -%}
 
 .. _api-detail-{{ name }}:
 
-{{ name }}
+Detail: {{ name }}
 ================================================================================
 
+:ref:`api-overview-{{ name }}`
+
+
 .. autoclass:: static_frame.{{ name }}
+
+
+{% for ig, ig_tag in toc[name] -%}
+
+* :ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`: {{ interface_group_doc[ig] }}
+
+{% endfor %}
+
 
 :ref:`{{ name }}<api-detail-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 
@@ -154,15 +165,23 @@ Detail: :ref:`api-detail-{{ name }}-{{ ig_tag }}`
 
 
 {# api_overview_toc /////////////////////////////////////////////////////////////// #}
-{% macro api_overview_toc(name, toc) -%}
+{% macro api_overview_toc(name, toc, interface_group_doc) -%}
 
 .. _api-overview-{{ name }}:
 
-{{ name }}
+Overview: {{ name }}
 ================================================================================
 
-.. autoclass:: static_frame.{{ name }}
-    :noindex:
+:ref:`api-detail-{{ name }}`
+
+
+.. csv-table::
+    :header-rows: 0
+
+    {% for ig, ig_tag in toc[name] -%}
+        :ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`, "{{ interface_group_doc[ig] }}"
+    {% endfor %}
+
 
 :ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 

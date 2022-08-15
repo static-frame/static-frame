@@ -197,7 +197,7 @@ c
 #start_Series-mloc
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-94003662395440
+140266469220336
 #end_Series-mloc
 
 #start_Series-name
@@ -1416,7 +1416,7 @@ c
 #start_Series-interface
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.interface
-<Frame: Series>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(values, *, index, name, ... Series   Constructor          Initializer. Args...
@@ -1569,6 +1569,50 @@ e        0.54
 <<U1>    <float64>
 #end_Series-assign[].apply()
 
+#start_Series-assign[].apply_element()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign['b':].apply_element(lambda e: e if e < 10 else f'--{e}--')
+<Series>
+<Index>
+a        2
+b        8
+c        --19--
+d        --34--
+e        --54--
+<<U1>    <object>
+#end_Series-assign[].apply_element()
+
+#start_Series-assign[].apply_element_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign['b':].apply_element_items(lambda l, e: e if l == 'c' else f'--{e}--')
+<Series>
+<Index>
+a        2
+b        --8--
+c        19
+d        --34--
+e        --54--
+<<U1>    <object>
+#end_Series-assign[].apply_element_items()
+
 #start_Series-assign.iloc[]()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s.assign.iloc[2]('x')
@@ -1622,6 +1666,50 @@ e        0.54
 <<U1>    <float64>
 #end_Series-assign.iloc[].apply()
 
+#start_Series-assign.iloc[].apply_element()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.iloc[2:].apply_element(lambda e: e / 100 if e < 10 else e)
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+#end_Series-assign.iloc[].apply_element()
+
+#start_Series-assign.iloc[].apply_element_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.iloc[2:].apply_element_items(lambda l, e: e if l == 'c' else f'--{e}--')
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        --34--
+e        --54--
+<<U1>    <object>
+#end_Series-assign.iloc[].apply_element_items()
+
 #start_Series-assign.loc[]()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s.assign.loc['c']('x')
@@ -1674,6 +1762,50 @@ d        0.34
 e        0.54
 <<U1>    <float64>
 #end_Series-assign.loc[].apply()
+
+#start_Series-assign.loc[].apply_element()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.loc['c':].apply_element(lambda e: e / 100 if e < 10 else e)
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+#end_Series-assign.loc[].apply_element()
+
+#start_Series-assign.loc[].apply_element_items()
+>>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        2
+b        8
+c        19
+d        34
+e        54
+<<U1>    <int64>
+>>> s.assign.loc['c':].apply_element_items(lambda l, e: e / 100 if l == 'c' else e)
+<Series>
+<Index>
+a        2.0
+b        8.0
+c        0.19
+d        34.0
+e        54.0
+<<U1>    <float64>
+#end_Series-assign.loc[].apply_element_items()
 
 #start_Series-drop[]
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -4704,7 +4836,7 @@ c        ('8', 0)
 >>> s.via_values.apply(np.sin)
 <Series>
 <Index>
-a        -0.5440211108893698
+a        -0.5440211108893699
 b        0.9092974268256817
 c        0.9893582466233818
 <<U1>    <float64>
@@ -4715,7 +4847,7 @@ c        0.9893582466233818
 >>> np.sin(s.via_values)
 <Series>
 <Index>
-a        -0.5440211108893698
+a        -0.5440211108893699
 b        0.9092974268256817
 c        0.9893582466233818
 <<U1>    <float64>
@@ -4726,7 +4858,7 @@ c        0.9893582466233818
 >>> np.sin(s.via_values(unify_blocks=True))
 <Series>
 <Index>
-a        -0.5440211108893698
+a        -0.5440211108893699
 b        0.9092974268256817
 c        0.9893582466233818
 <<U1>    <float64>
@@ -4942,7 +5074,7 @@ c
 #start_SeriesHE-mloc
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-94003643551424
+140266472919408
 #end_SeriesHE-mloc
 
 #start_SeriesHE-name
@@ -6161,7 +6293,7 @@ c
 #start_SeriesHE-interface
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.interface
-<Frame: SeriesHE>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(values, *, index, name, ... SeriesHE Constructor          Initializer. Args...
@@ -6314,6 +6446,50 @@ e          0.54
 <<U1>      <float64>
 #end_SeriesHE-assign[].apply()
 
+#start_SeriesHE-assign[].apply_element()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign['b':].apply_element(lambda e: e if e < 10 else f'--{e}--')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          --19--
+d          --34--
+e          --54--
+<<U1>      <object>
+#end_SeriesHE-assign[].apply_element()
+
+#start_SeriesHE-assign[].apply_element_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign['b':].apply_element_items(lambda l, e: e if l == 'c' else f'--{e}--')
+<SeriesHE>
+<Index>
+a          2
+b          --8--
+c          19
+d          --34--
+e          --54--
+<<U1>      <object>
+#end_SeriesHE-assign[].apply_element_items()
+
 #start_SeriesHE-assign.iloc[]()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s.assign.iloc[2]('x')
@@ -6367,6 +6543,50 @@ e          0.54
 <<U1>      <float64>
 #end_SeriesHE-assign.iloc[].apply()
 
+#start_SeriesHE-assign.iloc[].apply_element()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.iloc[2:].apply_element(lambda e: e / 100 if e < 10 else e)
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+#end_SeriesHE-assign.iloc[].apply_element()
+
+#start_SeriesHE-assign.iloc[].apply_element_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.iloc[2:].apply_element_items(lambda l, e: e if l == 'c' else f'--{e}--')
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          --34--
+e          --54--
+<<U1>      <object>
+#end_SeriesHE-assign.iloc[].apply_element_items()
+
 #start_SeriesHE-assign.loc[]()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s.assign.loc['c']('x')
@@ -6419,6 +6639,50 @@ d          0.34
 e          0.54
 <<U1>      <float64>
 #end_SeriesHE-assign.loc[].apply()
+
+#start_SeriesHE-assign.loc[].apply_element()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.loc['c':].apply_element(lambda e: e / 100 if e < 10 else e)
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+#end_SeriesHE-assign.loc[].apply_element()
+
+#start_SeriesHE-assign.loc[].apply_element_items()
+>>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          2
+b          8
+c          19
+d          34
+e          54
+<<U1>      <int64>
+>>> s.assign.loc['c':].apply_element_items(lambda l, e: e / 100 if l == 'c' else e)
+<SeriesHE>
+<Index>
+a          2.0
+b          8.0
+c          0.19
+d          34.0
+e          54.0
+<<U1>      <float64>
+#end_SeriesHE-assign.loc[].apply_element_items()
 
 #start_SeriesHE-drop[]
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -9429,7 +9693,7 @@ c          ('8', 0)
 >>> s.via_values.apply(np.sin)
 <SeriesHE>
 <Index>
-a          -0.5440211108893698
+a          -0.5440211108893699
 b          0.9092974268256817
 c          0.9893582466233818
 <<U1>      <float64>
@@ -9440,7 +9704,7 @@ c          0.9893582466233818
 >>> np.sin(s.via_values)
 <SeriesHE>
 <Index>
-a          -0.5440211108893698
+a          -0.5440211108893699
 b          0.9092974268256817
 c          0.9893582466233818
 <<U1>      <float64>
@@ -9451,7 +9715,7 @@ c          0.9893582466233818
 >>> np.sin(s.via_values(unify_blocks=True))
 <SeriesHE>
 <Index>
-a          -0.5440211108893698
+a          -0.5440211108893699
 b          0.9092974268256817
 c          0.9893582466233818
 <<U1>      <float64>
@@ -9476,6 +9740,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -9485,19 +9753,6 @@ q        2       3
 r        4       5
 <object> <int64> <int64>
 #end_Frame-from_arrow()
-
-#start_Frame-from_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
->>> sf.Frame.from_clipboard(index_depth=1)
-<Frame>
-<Index> a       b       <<U1>
-<Index>
-p       0       1
-q       2       3
-r       4       5
-<<U1>   <int64> <int64>
-#end_Frame-from_clipboard()
 
 #start_Frame-from_concat()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -9944,12 +10199,11 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
-
-#start_Frame-to_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_Frame-to_clipboard()
 
 #start_Frame-to_csv()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -10241,7 +10495,7 @@ c           datetime64[D]
 #start_Frame-mloc
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94003673708416 94003669124816 94003659296720]
+[140266432298736 140266469669280 140266472993728]
 #end_Frame-mloc
 
 #start_Frame-name
@@ -11930,7 +12184,7 @@ c
 #start_Frame-interface
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.interface
-<Frame: Frame>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(data, *, index, columns,... Frame    Constructor          Initializer. Args...
@@ -12086,6 +12340,50 @@ s          0.0       0       12
 <<U1>      <float64> <int64> <int64>
 #end_Frame-assign[].apply()
 
+#start_Frame-assign[].apply_element()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign['a'].apply_element(lambda e: e / 100 if e < 8 else e)
+<Frame: x>
+<Index>    a         b       c       <<U1>
+<Index>
+p          10.0      8       1
+q          -0.02     -3      0
+r          0.0       8       9
+s          0.0       0       12
+<<U1>      <float64> <int64> <int64>
+#end_Frame-assign[].apply_element()
+
+#start_Frame-assign[].apply_element_items()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+#end_Frame-assign[].apply_element_items()
+
 #start_Frame-assign.iloc[]()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.iloc[2]((-1, -2, -3))
@@ -12138,6 +12436,50 @@ r          0.0       0.08      0.09
 s          0.0       0.0       0.12
 <<U1>      <float64> <float64> <float64>
 #end_Frame-assign.iloc[].apply()
+
+#start_Frame-assign.iloc[].apply_element()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element(lambda e: e / 100 if e < 8 else e)
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+p          10.0      8.0       1.0
+q          -0.02     -0.03     0.0
+r          0.0       8.0       9.0
+s          0.0       0.0       12.0
+<<U1>      <float64> <float64> <float64>
+#end_Frame-assign.iloc[].apply_element()
+
+#start_Frame-assign.iloc[].apply_element_items()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<Frame: x>
+<Index>    a         b       c       <<U1>
+<Index>
+p          10.0      8       1
+q          -0.02     -3      0
+r          0.0       8       9
+s          0.0       0       12
+<<U1>      <float64> <int64> <int64>
+#end_Frame-assign.iloc[].apply_element_items()
 
 #start_Frame-assign.loc[]()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -12192,6 +12534,50 @@ s          0.0       0.0       0.12
 <<U1>      <float64> <float64> <float64>
 #end_Frame-assign.loc[].apply()
 
+#start_Frame-assign.loc[].apply_element()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element(lambda e: e / 100 if e < 10 else e)
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+p          10.0      8.0       1.0
+q          -2.0      -3.0      0.0
+r          0.0       0.08      0.09
+s          0.0       0.0       12.0
+<<U1>      <float64> <float64> <float64>
+#end_Frame-assign.loc[].apply_element()
+
+#start_Frame-assign.loc[].apply_element_items()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)
+<Frame: x>
+<Index>    a       b       c         <<U1>
+<Index>
+p          10      8       1.0
+q          -2      -3      0.0
+r          0       8       0.09
+s          0       0       0.12
+<<U1>      <int64> <int64> <float64>
+#end_Frame-assign.loc[].apply_element_items()
+
 #start_Frame-assign.bloc[]()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.bloc[f > 5](-1)
@@ -12217,6 +12603,25 @@ r          0.0       0.08      0.09
 s          0.0       0.0       0.12
 <<U1>      <float64> <float64> <float64>
 #end_Frame-assign.bloc[].apply()
+
+#start_Frame-assign.bloc[].apply_element()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+p          10.0      0.08      1.0
+q          -2.0      -3.0      0.0
+r          0.0       0.08      9.0
+s          0.0       0.0       12.0
+<<U1>      <float64> <float64> <float64>
+#end_Frame-assign.bloc[].apply_element()
+
+#start_Frame-assign.bloc[].apply_element_items()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Frame-assign.bloc[].apply_element_items()
 
 #start_Frame-bloc[]
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -13187,13 +13592,13 @@ q        1
 #start_Frame-iter_group_labels().apply_iter()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x7f31e8e580b0>
+<generator object IterNodeDelegate.apply_iter at 0x115b3b200>
 #end_Frame-iter_group_labels().apply_iter()
 
 #start_Frame-iter_group_labels().apply_iter_items()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x7f31e8e58120>
+<generator object IterNodeDelegate.apply_iter_items at 0x115b3b660>
 #end_Frame-iter_group_labels().apply_iter_items()
 
 #start_Frame-iter_group_labels_array()
@@ -15668,7 +16073,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       nan       nan       nan
+p       inf       inf       inf
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -15917,7 +16322,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       nan       nan       nan
+p       inf       inf       inf
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -16391,7 +16796,7 @@ RuntimeError('via_fill_value interfaces can only be used on the left-hand side o
 <Frame: x>
 <Index>    a                   b                   c                   <<U1>
 <Index>
-p          -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p          -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q          -0.9092974268256817 -0.1411200080598672 0.0
 r          0.0                 0.9893582466233818  0.4121184852417566
 s          0.0                 0.0                 -0.5365729180004349
@@ -16404,7 +16809,7 @@ s          0.0                 0.0                 -0.5365729180004349
 <Frame: x>
 <Index>    a                   b                   c                   <<U1>
 <Index>
-p          -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p          -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q          -0.9092974268256817 -0.1411200080598672 0.0
 r          0.0                 0.9893582466233818  0.4121184852417566
 s          0.0                 0.0                 -0.5365729180004349
@@ -16417,7 +16822,7 @@ s          0.0                 0.0                 -0.5365729180004349
 <Frame: x>
 <Index>    a                   b                   c                   <<U1>
 <Index>
-p          -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p          -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q          -0.9092974268256817 -0.1411200080598672 0.0
 r          0.0                 0.9893582466233818  0.4121184852417566
 s          0.0                 0.0                 -0.5365729180004349
@@ -16443,6 +16848,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -16452,19 +16861,6 @@ q         2       3
 r         4       5
 <object>  <int64> <int64>
 #end_FrameHE-from_arrow()
-
-#start_FrameHE-from_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
->>> sf.FrameHE.from_clipboard(index_depth=1)
-<FrameHE>
-<Index>   a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameHE-from_clipboard()
 
 #start_FrameHE-from_concat()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -16911,12 +17307,11 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
-
-#start_FrameHE-to_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameHE-to_clipboard()
 
 #start_FrameHE-to_csv()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -17208,7 +17603,7 @@ c           datetime64[D]
 #start_FrameHE-mloc
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94003655550512 94003658289616 94003656109024]
+[140266474564384 140266470007392 140266472966288]
 #end_FrameHE-mloc
 
 #start_FrameHE-name
@@ -18897,7 +19292,7 @@ c
 #start_FrameHE-interface
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.interface
-<Frame: FrameHE>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(data, *, index, columns,... FrameHE  Constructor          Initializer. Args...
@@ -19053,6 +19448,50 @@ s            0.0       0       12
 <<U1>        <float64> <int64> <int64>
 #end_FrameHE-assign[].apply()
 
+#start_FrameHE-assign[].apply_element()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign['a'].apply_element(lambda e: e / 100 if e < 8 else e)
+<FrameHE: x>
+<Index>      a         b       c       <<U1>
+<Index>
+p            10.0      8       1
+q            -0.02     -3      0
+r            0.0       8       9
+s            0.0       0       12
+<<U1>        <float64> <int64> <int64>
+#end_FrameHE-assign[].apply_element()
+
+#start_FrameHE-assign[].apply_element_items()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+#end_FrameHE-assign[].apply_element_items()
+
 #start_FrameHE-assign.iloc[]()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.iloc[2]((-1, -2, -3))
@@ -19105,6 +19544,50 @@ r            0.0       0.08      0.09
 s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameHE-assign.iloc[].apply()
+
+#start_FrameHE-assign.iloc[].apply_element()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element(lambda e: e / 100 if e < 8 else e)
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -0.02     -0.03     0.0
+r            0.0       8.0       9.0
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameHE-assign.iloc[].apply_element()
+
+#start_FrameHE-assign.iloc[].apply_element_items()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<FrameHE: x>
+<Index>      a         b       c       <<U1>
+<Index>
+p            10.0      8       1
+q            -0.02     -3      0
+r            0.0       8       9
+s            0.0       0       12
+<<U1>        <float64> <int64> <int64>
+#end_FrameHE-assign.iloc[].apply_element_items()
 
 #start_FrameHE-assign.loc[]()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -19159,6 +19642,50 @@ s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameHE-assign.loc[].apply()
 
+#start_FrameHE-assign.loc[].apply_element()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element(lambda e: e / 100 if e < 10 else e)
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -2.0      -3.0      0.0
+r            0.0       0.08      0.09
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameHE-assign.loc[].apply_element()
+
+#start_FrameHE-assign.loc[].apply_element_items()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)
+<FrameHE: x>
+<Index>      a       b       c         <<U1>
+<Index>
+p            10      8       1.0
+q            -2      -3      0.0
+r            0       8       0.09
+s            0       0       0.12
+<<U1>        <int64> <int64> <float64>
+#end_FrameHE-assign.loc[].apply_element_items()
+
 #start_FrameHE-assign.bloc[]()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.bloc[f > 5](-1)
@@ -19184,6 +19711,25 @@ r            0.0       0.08      0.09
 s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameHE-assign.bloc[].apply()
+
+#start_FrameHE-assign.bloc[].apply_element()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+p            10.0      0.08      1.0
+q            -2.0      -3.0      0.0
+r            0.0       0.08      9.0
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameHE-assign.bloc[].apply_element()
+
+#start_FrameHE-assign.bloc[].apply_element_items()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_FrameHE-assign.bloc[].apply_element_items()
 
 #start_FrameHE-bloc[]
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -20154,13 +20700,13 @@ q        1
 #start_FrameHE-iter_group_labels().apply_iter()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x7f31eae90eb0>
+<generator object IterNodeDelegate.apply_iter at 0x115b5c660>
 #end_FrameHE-iter_group_labels().apply_iter()
 
 #start_FrameHE-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x7f31eae90200>
+<generator object IterNodeDelegate.apply_iter_items at 0x115b5c580>
 #end_FrameHE-iter_group_labels().apply_iter_items()
 
 #start_FrameHE-iter_group_labels_array()
@@ -22607,7 +23153,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -22856,7 +23402,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -23330,7 +23876,7 @@ RuntimeError('via_fill_value interfaces can only be used on the left-hand side o
 <FrameHE: x>
 <Index>      a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -23343,7 +23889,7 @@ s            0.0                 0.0                 -0.5365729180004349
 <FrameHE: x>
 <Index>      a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -23356,7 +23902,7 @@ s            0.0                 0.0                 -0.5365729180004349
 <FrameHE: x>
 <Index>      a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -23382,6 +23928,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -23391,19 +23941,6 @@ q         2       3
 r         4       5
 <object>  <int64> <int64>
 #end_FrameGO-from_arrow()
-
-#start_FrameGO-from_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
->>> sf.FrameGO.from_clipboard(index_depth=1)
-<FrameGO>
-<IndexGO> a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameGO-from_clipboard()
 
 #start_FrameGO-from_concat()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -23850,12 +24387,11 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
-
-#start_FrameGO-to_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameGO-to_clipboard()
 
 #start_FrameGO-to_csv()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -24147,7 +24683,7 @@ c           datetime64[D]
 #start_FrameGO-mloc
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94003655550512 94003659175488 94003663831120]
+[140266431573664 140266469350864 140266473000208]
 #end_FrameGO-mloc
 
 #start_FrameGO-name
@@ -25863,7 +26399,7 @@ c
 #start_FrameGO-interface
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.interface
-<Frame: FrameGO>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(data, *, index, columns,... FrameGO  Constructor          Initializer. Args...
@@ -26019,6 +26555,50 @@ s            0.0       0       12
 <<U1>        <float64> <int64> <int64>
 #end_FrameGO-assign[].apply()
 
+#start_FrameGO-assign[].apply_element()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign['a'].apply_element(lambda e: e / 100 if e < 8 else e)
+<FrameGO: x>
+<IndexGO>    a         b       c       <<U1>
+<Index>
+p            10.0      8       1
+q            -0.02     -3      0
+r            0.0       8       9
+s            0.0       0       12
+<<U1>        <float64> <int64> <int64>
+#end_FrameGO-assign[].apply_element()
+
+#start_FrameGO-assign[].apply_element_items()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+#end_FrameGO-assign[].apply_element_items()
+
 #start_FrameGO-assign.iloc[]()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.iloc[2]((-1, -2, -3))
@@ -26071,6 +26651,50 @@ r            0.0       0.08      0.09
 s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameGO-assign.iloc[].apply()
+
+#start_FrameGO-assign.iloc[].apply_element()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element(lambda e: e / 100 if e < 8 else e)
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -0.02     -0.03     0.0
+r            0.0       8.0       9.0
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameGO-assign.iloc[].apply_element()
+
+#start_FrameGO-assign.iloc[].apply_element_items()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)
+<FrameGO: x>
+<IndexGO>    a         b       c       <<U1>
+<Index>
+p            10.0      8       1
+q            -0.02     -3      0
+r            0.0       8       9
+s            0.0       0       12
+<<U1>        <float64> <int64> <int64>
+#end_FrameGO-assign.iloc[].apply_element_items()
 
 #start_FrameGO-assign.loc[]()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -26125,6 +26749,50 @@ s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameGO-assign.loc[].apply()
 
+#start_FrameGO-assign.loc[].apply_element()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element(lambda e: e / 100 if e < 10 else e)
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -2.0      -3.0      0.0
+r            0.0       0.08      0.09
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameGO-assign.loc[].apply_element()
+
+#start_FrameGO-assign.loc[].apply_element_items()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)
+<FrameGO: x>
+<IndexGO>    a       b       c         <<U1>
+<Index>
+p            10      8       1.0
+q            -2      -3      0.0
+r            0       8       0.09
+s            0       0       0.12
+<<U1>        <int64> <int64> <float64>
+#end_FrameGO-assign.loc[].apply_element_items()
+
 #start_FrameGO-assign.bloc[]()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f.assign.bloc[f > 5](-1)
@@ -26150,6 +26818,25 @@ r            0.0       0.08      0.09
 s            0.0       0.0       0.12
 <<U1>        <float64> <float64> <float64>
 #end_FrameGO-assign.bloc[].apply()
+
+#start_FrameGO-assign.bloc[].apply_element()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+p            10.0      0.08      1.0
+q            -2.0      -3.0      0.0
+r            0.0       0.08      9.0
+s            0.0       0.0       12.0
+<<U1>        <float64> <float64> <float64>
+#end_FrameGO-assign.bloc[].apply_element()
+
+#start_FrameGO-assign.bloc[].apply_element_items()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_FrameGO-assign.bloc[].apply_element_items()
 
 #start_FrameGO-bloc[]
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -27120,13 +27807,13 @@ q        1
 #start_FrameGO-iter_group_labels().apply_iter()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter at 0x7f32696d8120>
+<generator object IterNodeDelegate.apply_iter at 0x115b3b5f0>
 #end_FrameGO-iter_group_labels().apply_iter()
 
 #start_FrameGO-iter_group_labels().apply_iter_items()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.iter_group_labels(1).apply_iter_items(lambda f: f['b'].sum())
-<generator object IterNodeDelegate.apply_iter_items at 0x7f32696d8200>
+<generator object IterNodeDelegate.apply_iter_items at 0x115b3b7b0>
 #end_FrameGO-iter_group_labels().apply_iter_items()
 
 #start_FrameGO-iter_group_labels_array()
@@ -29601,7 +30288,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -29850,7 +30537,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -30349,7 +31036,7 @@ c            FrameGO  FrameGO
 <FrameGO: x>
 <IndexGO>    a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -30362,7 +31049,7 @@ s            0.0                 0.0                 -0.5365729180004349
 <FrameGO: x>
 <IndexGO>    a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -30375,7 +31062,7 @@ s            0.0                 0.0                 -0.5365729180004349
 <FrameGO: x>
 <IndexGO>    a                   b                   c                   <<U1>
 <Index>
-p            -0.5440211108893698 0.9893582466233818  0.8414709848078965
+p            -0.5440211108893699 0.9893582466233818  0.8414709848078965
 q            -0.9092974268256817 -0.1411200080598672 0.0
 r            0.0                 0.9893582466233818  0.4121184852417566
 s            0.0                 0.0                 -0.5365729180004349
@@ -30465,7 +31152,7 @@ x        <Index>
 #start_Index-mloc
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-94003655846496
+140266469243376
 #end_Index-mloc
 
 #start_Index-name
@@ -31037,7 +31724,7 @@ True
 #start_Index-interface
 >>> ix = sf.Index((None, 'A', 1024, True), name='x')
 >>> ix.interface
-<Frame: Index>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, loc_is_iloc, ... Index    Constructor          Initializer. Args...
@@ -32170,7 +32857,7 @@ XYZ
 <Index>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_Index-via_values.apply()
@@ -32181,7 +32868,7 @@ XYZ
 <Index>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_Index-via_values.__array_ufunc__()
@@ -32192,7 +32879,7 @@ XYZ
 <Index>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_Index-via_values.__call__()
@@ -32280,7 +32967,7 @@ x        <IndexGO>
 #start_IndexGO-mloc
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-94003670940224
+140266469815808
 #end_IndexGO-mloc
 
 #start_IndexGO-name
@@ -32881,7 +33568,7 @@ True
 #start_IndexGO-interface
 >>> ix = sf.IndexGO((None, 'A', 1024, True), name='x')
 >>> ix.interface
-<Frame: IndexGO>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, loc_is_iloc, ... IndexGO  Constructor          Initializer. Args...
@@ -34014,7 +34701,7 @@ XYZ
 <IndexGO>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_IndexGO-via_values.apply()
@@ -34025,7 +34712,7 @@ XYZ
 <IndexGO>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_IndexGO-via_values.__array_ufunc__()
@@ -34036,7 +34723,7 @@ XYZ
 <IndexGO>
 0.0
 -0.15853338004399595
-0.31305701279012343
+0.3130570127901234
 -0.5946419876082146
 <float64>
 #end_IndexGO-via_values.__call__()
@@ -34140,7 +34827,7 @@ None     <IndexYear>
 #start_IndexYear-mloc
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.mloc
-94003658289680
+140266469543056
 #end_IndexYear-mloc
 
 #start_IndexYear-name
@@ -34277,13 +34964,13 @@ True
 #start_IndexYear-cumprod()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-cumprod()
 
 #start_IndexYear-cumsum()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-cumsum()
 
 #start_IndexYear-difference()
@@ -34668,7 +35355,7 @@ True
 #start_IndexYear-interface
 >>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
 >>> ix.interface
-<Frame: IndexYear>
+<Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexYear Constructor          Initializer. Args...
@@ -35019,7 +35706,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYear-__abs__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYear-__abs__()
 
 #start_IndexYear-__invert__()
@@ -35031,7 +35718,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYear-__neg__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYear-__neg__()
 
 #start_IndexYear-__pos__()
@@ -35817,7 +36504,7 @@ None     <IndexYearGO>
 #start_IndexYearGO-mloc
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.mloc
-94003646420112
+140266469842288
 #end_IndexYearGO-mloc
 
 #start_IndexYearGO-name
@@ -35966,13 +36653,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearGO-cumprod()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-cumprod()
 
 #start_IndexYearGO-cumsum()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-cumsum()
 
 #start_IndexYearGO-difference()
@@ -36372,7 +37059,7 @@ True
 #start_IndexYearGO-interface
 >>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
 >>> ix.interface
-<Frame: IndexYearGO>
+<Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexYearGO Constructor          Initializer. Args...
@@ -36723,7 +37410,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearGO-__abs__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearGO-__abs__()
 
 #start_IndexYearGO-__invert__()
@@ -36735,7 +37422,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearGO-__neg__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearGO-__neg__()
 
 #start_IndexYearGO-__pos__()
@@ -37543,7 +38230,7 @@ None     <IndexYearMonth>
 #start_IndexYearMonth-mloc
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-94003673706736
+140266469586432
 #end_IndexYearMonth-mloc
 
 #start_IndexYearMonth-name
@@ -37680,13 +38367,13 @@ True
 #start_IndexYearMonth-cumprod()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-cumprod()
 
 #start_IndexYearMonth-cumsum()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-cumsum()
 
 #start_IndexYearMonth-difference()
@@ -37901,7 +38588,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-06
 <datetime64[M]>
 >>> ix.relabel(lambda l: l.astype('<M8[ms]').astype(object).day)
-RuntimeError('attempting to create datetime64[M] from an integer, which is generally not desired as the result will be offset from the epoch.')
+InvalidDatetime64Initializer('Attempting to create datetime64[M] from an integer, which is generally not desired as the result will be an offset from the epoch.')
 #end_IndexYearMonth-relabel()
 
 #start_IndexYearMonth-rename()
@@ -38071,7 +38758,7 @@ True
 #start_IndexYearMonth-interface
 >>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
 >>> ix.interface
-<Frame: IndexYearMonth>
+<Frame>
 <Index>                              cls_name       group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexYearMonth Constructor          Initializer. Args...
@@ -38422,7 +39109,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonth-__abs__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearMonth-__abs__()
 
 #start_IndexYearMonth-__invert__()
@@ -38434,7 +39121,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonth-__neg__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearMonth-__neg__()
 
 #start_IndexYearMonth-__pos__()
@@ -39242,7 +39929,7 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-mloc
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-94003664453072
+140266469842256
 #end_IndexYearMonthGO-mloc
 
 #start_IndexYearMonthGO-name
@@ -39391,13 +40078,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearMonthGO-cumprod()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-cumprod()
 
 #start_IndexYearMonthGO-cumsum()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-cumsum()
 
 #start_IndexYearMonthGO-difference()
@@ -39627,7 +40314,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-06
 <datetime64[M]>
 >>> ix.relabel(lambda l: l.astype('<M8[ms]').astype(object).day)
-RuntimeError('attempting to create datetime64[M] from an integer, which is generally not desired as the result will be offset from the epoch.')
+InvalidDatetime64Initializer('Attempting to create datetime64[M] from an integer, which is generally not desired as the result will be an offset from the epoch.')
 #end_IndexYearMonthGO-relabel()
 
 #start_IndexYearMonthGO-rename()
@@ -39797,7 +40484,7 @@ True
 #start_IndexYearMonthGO-interface
 >>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
 >>> ix.interface
-<Frame: IndexYearMonthGO>
+<Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexYearMonthGO Constructor          Initializer. Args...
@@ -40148,7 +40835,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonthGO-__abs__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearMonthGO-__abs__()
 
 #start_IndexYearMonthGO-__invert__()
@@ -40160,7 +40847,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonthGO-__neg__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexYearMonthGO-__neg__()
 
 #start_IndexYearMonthGO-__pos__()
@@ -41014,7 +41701,7 @@ None     <IndexDate>
 #start_IndexDate-mloc
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94003658289680
+140266469543056
 #end_IndexDate-mloc
 
 #start_IndexDate-name
@@ -41151,13 +41838,13 @@ True
 #start_IndexDate-cumprod()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-cumprod()
 
 #start_IndexDate-cumsum()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-cumsum()
 
 #start_IndexDate-difference()
@@ -41372,7 +42059,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-06-30
 <datetime64[D]>
 >>> ix.relabel(lambda l: l.astype('<M8[ms]').astype(object).day)
-RuntimeError('attempting to create datetime64[D] from an integer, which is generally not desired as the result will be offset from the epoch.')
+InvalidDatetime64Initializer('Attempting to create datetime64[D] from an integer, which is generally not desired as the result will be an offset from the epoch.')
 #end_IndexDate-relabel()
 
 #start_IndexDate-rename()
@@ -41542,7 +42229,7 @@ True
 #start_IndexDate-interface
 >>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexDate>
+<Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexDate Constructor          Initializer. Args...
@@ -41893,7 +42580,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDate-__abs__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexDate-__abs__()
 
 #start_IndexDate-__invert__()
@@ -41905,7 +42592,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDate-__neg__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexDate-__neg__()
 
 #start_IndexDate-__pos__()
@@ -42762,7 +43449,7 @@ None     <IndexDateGO>
 #start_IndexDateGO-mloc
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94003666965264
+140266469586400
 #end_IndexDateGO-mloc
 
 #start_IndexDateGO-name
@@ -42911,13 +43598,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexDateGO-cumprod()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-cumprod()
 
 #start_IndexDateGO-cumsum()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-cumsum()
 
 #start_IndexDateGO-difference()
@@ -43147,7 +43834,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-06-30
 <datetime64[D]>
 >>> ix.relabel(lambda l: l.astype('<M8[ms]').astype(object).day)
-RuntimeError('attempting to create datetime64[D] from an integer, which is generally not desired as the result will be offset from the epoch.')
+InvalidDatetime64Initializer('Attempting to create datetime64[D] from an integer, which is generally not desired as the result will be an offset from the epoch.')
 #end_IndexDateGO-relabel()
 
 #start_IndexDateGO-rename()
@@ -43317,7 +44004,7 @@ True
 #start_IndexDateGO-interface
 >>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexDateGO>
+<Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexDateGO Constructor          Initializer. Args...
@@ -43668,7 +44355,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDateGO-__abs__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexDateGO-__abs__()
 
 #start_IndexDateGO-__invert__()
@@ -43680,7 +44367,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDateGO-__neg__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexDateGO-__neg__()
 
 #start_IndexDateGO-__pos__()
@@ -44445,7 +45132,7 @@ None     <IndexMinute>
 #start_IndexMinute-mloc
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94003664453072
+140266469842256
 #end_IndexMinute-mloc
 
 #start_IndexMinute-name
@@ -44582,13 +45269,13 @@ True
 #start_IndexMinute-cumprod()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-cumprod()
 
 #start_IndexMinute-cumsum()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-cumsum()
 
 #start_IndexMinute-difference()
@@ -44973,7 +45660,7 @@ False
 #start_IndexMinute-interface
 >>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMinute>
+<Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMinute Constructor          Initializer. Args...
@@ -45326,7 +46013,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinute-__abs__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMinute-__abs__()
 
 #start_IndexMinute-__invert__()
@@ -45338,7 +46025,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinute-__neg__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMinute-__neg__()
 
 #start_IndexMinute-__pos__()
@@ -46106,7 +46793,7 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-mloc
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94003658289680
+140266469543056
 #end_IndexMinuteGO-mloc
 
 #start_IndexMinuteGO-name
@@ -46255,13 +46942,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMinuteGO-cumprod()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-cumprod()
 
 #start_IndexMinuteGO-cumsum()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-cumsum()
 
 #start_IndexMinuteGO-difference()
@@ -46661,7 +47348,7 @@ False
 #start_IndexMinuteGO-interface
 >>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMinuteGO>
+<Frame>
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMinuteGO Constructor          Initializer. Args...
@@ -47014,7 +47701,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinuteGO-__abs__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMinuteGO-__abs__()
 
 #start_IndexMinuteGO-__invert__()
@@ -47026,7 +47713,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinuteGO-__neg__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMinuteGO-__neg__()
 
 #start_IndexMinuteGO-__pos__()
@@ -47794,7 +48481,7 @@ None     <IndexHour>
 #start_IndexHour-mloc
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003664453072
+140266469842256
 #end_IndexHour-mloc
 
 #start_IndexHour-name
@@ -47931,13 +48618,13 @@ True
 #start_IndexHour-cumprod()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-cumprod()
 
 #start_IndexHour-cumsum()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-cumsum()
 
 #start_IndexHour-difference()
@@ -48326,7 +49013,7 @@ False
 #start_IndexHour-interface
 >>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexHour>
+<Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexHour Constructor          Initializer. Args...
@@ -48679,7 +49366,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHour-__abs__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexHour-__abs__()
 
 #start_IndexHour-__invert__()
@@ -48691,7 +49378,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHour-__neg__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexHour-__neg__()
 
 #start_IndexHour-__pos__()
@@ -49458,7 +50145,7 @@ None     <IndexHourGO>
 #start_IndexHourGO-mloc
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003656140752
+140266469653744
 #end_IndexHourGO-mloc
 
 #start_IndexHourGO-name
@@ -49607,13 +50294,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexHourGO-cumprod()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-cumprod()
 
 #start_IndexHourGO-cumsum()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-cumsum()
 
 #start_IndexHourGO-difference()
@@ -50017,7 +50704,7 @@ False
 #start_IndexHourGO-interface
 >>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexHourGO>
+<Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexHourGO Constructor          Initializer. Args...
@@ -50370,7 +51057,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHourGO-__abs__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexHourGO-__abs__()
 
 #start_IndexHourGO-__invert__()
@@ -50382,7 +51069,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHourGO-__neg__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexHourGO-__neg__()
 
 #start_IndexHourGO-__pos__()
@@ -51149,7 +51836,7 @@ None     <IndexSecond>
 #start_IndexSecond-mloc
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003646420112
+140266469842288
 #end_IndexSecond-mloc
 
 #start_IndexSecond-name
@@ -51286,13 +51973,13 @@ True
 #start_IndexSecond-cumprod()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-cumprod()
 
 #start_IndexSecond-cumsum()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-cumsum()
 
 #start_IndexSecond-difference()
@@ -51681,7 +52368,7 @@ False
 #start_IndexSecond-interface
 >>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexSecond>
+<Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexSecond Constructor          Initializer. Args...
@@ -52034,7 +52721,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecond-__abs__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexSecond-__abs__()
 
 #start_IndexSecond-__invert__()
@@ -52046,7 +52733,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecond-__neg__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexSecond-__neg__()
 
 #start_IndexSecond-__pos__()
@@ -52818,7 +53505,7 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-mloc
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003664453072
+140266469842256
 #end_IndexSecondGO-mloc
 
 #start_IndexSecondGO-name
@@ -52967,13 +53654,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexSecondGO-cumprod()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-cumprod()
 
 #start_IndexSecondGO-cumsum()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-cumsum()
 
 #start_IndexSecondGO-difference()
@@ -53377,7 +54064,7 @@ False
 #start_IndexSecondGO-interface
 >>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexSecondGO>
+<Frame>
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexSecondGO Constructor          Initializer. Args...
@@ -53730,7 +54417,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecondGO-__abs__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexSecondGO-__abs__()
 
 #start_IndexSecondGO-__invert__()
@@ -53742,7 +54429,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecondGO-__neg__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexSecondGO-__neg__()
 
 #start_IndexSecondGO-__pos__()
@@ -54514,7 +55201,7 @@ None     <IndexMillisecond>
 #start_IndexMillisecond-mloc
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003673706736
+140266469586432
 #end_IndexMillisecond-mloc
 
 #start_IndexMillisecond-name
@@ -54652,13 +55339,13 @@ True
 #start_IndexMillisecond-cumprod()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-cumprod()
 
 #start_IndexMillisecond-cumsum()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-cumsum()
 
 #start_IndexMillisecond-difference()
@@ -55051,7 +55738,7 @@ False
 #start_IndexMillisecond-interface
 >>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMillisecond>
+<Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMillisecond Constructor          Initializer. Args...
@@ -55406,7 +56093,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecond-__abs__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMillisecond-__abs__()
 
 #start_IndexMillisecond-__invert__()
@@ -55418,7 +56105,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecond-__neg__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMillisecond-__neg__()
 
 #start_IndexMillisecond-__pos__()
@@ -56202,7 +56889,7 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-mloc
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003656140752
+140266469653744
 #end_IndexMillisecondGO-mloc
 
 #start_IndexMillisecondGO-name
@@ -56352,13 +57039,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMillisecondGO-cumprod()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-cumprod()
 
 #start_IndexMillisecondGO-cumsum()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-cumsum()
 
 #start_IndexMillisecondGO-difference()
@@ -56766,7 +57453,7 @@ False
 #start_IndexMillisecondGO-interface
 >>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMillisecondGO>
+<Frame>
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMillisecondGO Constructor          Initializer. Args...
@@ -57121,7 +57808,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecondGO-__abs__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMillisecondGO-__abs__()
 
 #start_IndexMillisecondGO-__invert__()
@@ -57133,7 +57820,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecondGO-__neg__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMillisecondGO-__neg__()
 
 #start_IndexMillisecondGO-__pos__()
@@ -57917,7 +58604,7 @@ None     <IndexMicrosecond>
 #start_IndexMicrosecond-mloc
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003666965264
+140266469586400
 #end_IndexMicrosecond-mloc
 
 #start_IndexMicrosecond-name
@@ -58055,13 +58742,13 @@ True
 #start_IndexMicrosecond-cumprod()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-cumprod()
 
 #start_IndexMicrosecond-cumsum()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-cumsum()
 
 #start_IndexMicrosecond-difference()
@@ -58454,7 +59141,7 @@ False
 #start_IndexMicrosecond-interface
 >>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMicrosecond>
+<Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMicrosecond Constructor          Initializer. Args...
@@ -58809,7 +59496,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecond-__abs__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMicrosecond-__abs__()
 
 #start_IndexMicrosecond-__invert__()
@@ -58821,7 +59508,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecond-__neg__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMicrosecond-__neg__()
 
 #start_IndexMicrosecond-__pos__()
@@ -59607,7 +60294,7 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-mloc
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94003658289680
+140266469543056
 #end_IndexMicrosecondGO-mloc
 
 #start_IndexMicrosecondGO-name
@@ -59757,13 +60444,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMicrosecondGO-cumprod()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-cumprod()
 
 #start_IndexMicrosecondGO-cumsum()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-cumsum()
 
 #start_IndexMicrosecondGO-difference()
@@ -60171,7 +60858,7 @@ False
 #start_IndexMicrosecondGO-interface
 >>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
 >>> ix.interface
-<Frame: IndexMicrosecondGO>
+<Frame>
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexMicrosecondGO Constructor          Initializer. Args...
@@ -60526,7 +61213,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecondGO-__abs__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMicrosecondGO-__abs__()
 
 #start_IndexMicrosecondGO-__invert__()
@@ -60538,7 +61225,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecondGO-__neg__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexMicrosecondGO-__neg__()
 
 #start_IndexMicrosecondGO-__pos__()
@@ -61324,7 +62011,7 @@ None     <IndexNanosecond>
 #start_IndexNanosecond-mloc
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-94003664453072
+140266469842256
 #end_IndexNanosecond-mloc
 
 #start_IndexNanosecond-name
@@ -61462,13 +62149,13 @@ True
 #start_IndexNanosecond-cumprod()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-cumprod()
 
 #start_IndexNanosecond-cumsum()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-cumsum()
 
 #start_IndexNanosecond-difference()
@@ -61861,7 +62548,7 @@ False
 #start_IndexNanosecond-interface
 >>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
 >>> ix.interface
-<Frame: IndexNanosecond>
+<Frame>
 <Index>                              cls_name        group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexNanosecond Constructor          Initializer. Args...
@@ -62216,7 +62903,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecond-__abs__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexNanosecond-__abs__()
 
 #start_IndexNanosecond-__invert__()
@@ -62228,7 +62915,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecond-__neg__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexNanosecond-__neg__()
 
 #start_IndexNanosecond-__pos__()
@@ -63013,7 +63700,7 @@ None     <IndexNanosecondGO>
 #start_IndexNanosecondGO-mloc
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-94003646420112
+140266469842288
 #end_IndexNanosecondGO-mloc
 
 #start_IndexNanosecondGO-name
@@ -63163,13 +63850,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexNanosecondGO-cumprod()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-cumprod()
 
 #start_IndexNanosecondGO-cumsum()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-cumsum()
 
 #start_IndexNanosecondGO-difference()
@@ -63577,7 +64264,7 @@ False
 #start_IndexNanosecondGO-interface
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
 >>> ix.interface
-<Frame: IndexNanosecondGO>
+<Frame>
 <Index>                              cls_name          group                doc                  <<U18>
 <Index: signature>
 __init__(labels, *, name, loc_is_... IndexNanosecondGO Constructor          Initializer. Args...
@@ -63932,7 +64619,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecondGO-__abs__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexNanosecondGO-__abs__()
 
 #start_IndexNanosecondGO-__invert__()
@@ -63944,7 +64631,7 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecondGO-__neg__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtype[datetime64]'>, None))
 #end_IndexNanosecondGO-__neg__()
 
 #start_IndexNanosecondGO-__pos__()
@@ -64821,7 +65508,7 @@ z        <IndexDate>
 #start_IndexHierarchy-mloc
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[94003663374016 94003649878944 94003655932480]
+[140266469701632 140266474627632 140266474468304]
 #end_IndexHierarchy-mloc
 
 #start_IndexHierarchy-name
@@ -64839,7 +65526,7 @@ z        <IndexDate>
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -65225,13 +65912,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f32975b5550> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x10c299af0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f32973f6790> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x10ca75670> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -65358,7 +66045,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f32975b5700>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x10c299ca0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -65420,7 +66107,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f32975b58b0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x10c299e50>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -65452,7 +66139,7 @@ RuntimeError('Invalid key length for a; must be length 3.')
 #start_IndexHierarchy-interface
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.interface
-<Frame: IndexHierarchy>
+<Frame>
 <Index>                              cls_name       group                doc                  <<U18>
 <Index: signature>
 __init__(indices, *, indexers, na... IndexHierarchy Constructor          Initializer. Args...
@@ -66686,7 +67373,7 @@ XYZ              12/31/1517
 #start_IndexHierarchy-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -66841,7 +67528,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchy-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -66964,7 +67651,7 @@ XYZ              12/31/1517
 >>> ih.via_values.apply(np.sin)
 <IndexHierarchy: ('x', 'y', 'z')>
 0.0                               -0.15853338004399595 0.5514266812416906
-0.8414709848078965                0.31305701279012343  0.5514266812416906
+0.8414709848078965                0.3130570127901234   0.5514266812416906
 0.8414709848078965                -0.15853338004399595 0.5514266812416906
 <float64>                         <float64>            <float64>
 #end_IndexHierarchy-via_values.apply()
@@ -66974,7 +67661,7 @@ XYZ              12/31/1517
 >>> np.sin(ih.via_values)
 <IndexHierarchy: ('x', 'y', 'z')>
 0.0                               -0.15853338004399595 0.5514266812416906
-0.8414709848078965                0.31305701279012343  0.5514266812416906
+0.8414709848078965                0.3130570127901234   0.5514266812416906
 0.8414709848078965                -0.15853338004399595 0.5514266812416906
 <float64>                         <float64>            <float64>
 #end_IndexHierarchy-via_values.__array_ufunc__()
@@ -66984,7 +67671,7 @@ XYZ              12/31/1517
 >>> np.sin(ih.via_values(unify_blocks=True))
 <IndexHierarchy: ('x', 'y', 'z')>
 0.0                               -0.15853338004399595 0.5514266812416906
-0.8414709848078965                0.31305701279012343  0.5514266812416906
+0.8414709848078965                0.3130570127901234   0.5514266812416906
 0.8414709848078965                -0.15853338004399595 0.5514266812416906
 <float64>                         <float64>            <float64>
 #end_IndexHierarchy-via_values.__call__()
@@ -67156,7 +67843,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-mloc
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[94003663374016 94003683987312 94003668882624]
+[140266469701632 140266474718736 140266474707856]
 #end_IndexHierarchyGO-mloc
 
 #start_IndexHierarchyGO-name
@@ -67174,7 +67861,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -67581,13 +68268,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f32975b5550> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x10c299af0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f32973f6790> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x10ca75670> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -67714,7 +68401,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f32975b5700>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x10c299ca0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -67776,7 +68463,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f32975b58b0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x10c299e50>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -67808,7 +68495,7 @@ RuntimeError('Invalid key length for a; must be length 3.')
 #start_IndexHierarchyGO-interface
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.interface
-<Frame: IndexHierarchyGO>
+<Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(indices, *, indexers, na... IndexHierarchyGO Constructor          Initializer. Args...
@@ -69042,7 +69729,7 @@ XYZ                12/31/1517
 #start_IndexHierarchyGO-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -69197,7 +69884,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchyGO-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -69320,7 +70007,7 @@ XYZ                12/31/1517
 >>> ih.via_values.apply(np.sin)
 <IndexHierarchyGO: ('x', 'y', 'z')>
 0.0                                 -0.15853338004399595 0.5514266812416906
-0.8414709848078965                  0.31305701279012343  0.5514266812416906
+0.8414709848078965                  0.3130570127901234   0.5514266812416906
 0.8414709848078965                  -0.15853338004399595 0.5514266812416906
 <float64>                           <float64>            <float64>
 #end_IndexHierarchyGO-via_values.apply()
@@ -69330,7 +70017,7 @@ XYZ                12/31/1517
 >>> np.sin(ih.via_values)
 <IndexHierarchyGO: ('x', 'y', 'z')>
 0.0                                 -0.15853338004399595 0.5514266812416906
-0.8414709848078965                  0.31305701279012343  0.5514266812416906
+0.8414709848078965                  0.3130570127901234   0.5514266812416906
 0.8414709848078965                  -0.15853338004399595 0.5514266812416906
 <float64>                           <float64>            <float64>
 #end_IndexHierarchyGO-via_values.__array_ufunc__()
@@ -69340,7 +70027,7 @@ XYZ                12/31/1517
 >>> np.sin(ih.via_values(unify_blocks=True))
 <IndexHierarchyGO: ('x', 'y', 'z')>
 0.0                                 -0.15853338004399595 0.5514266812416906
-0.8414709848078965                  0.31305701279012343  0.5514266812416906
+0.8414709848078965                  0.3130570127901234   0.5514266812416906
 0.8414709848078965                  -0.15853338004399595 0.5514266812416906
 <float64>                           <float64>            <float64>
 #end_IndexHierarchyGO-via_values.__call__()
@@ -69629,8 +70316,8 @@ y
 >>> b.mloc
 <Series>
 <Index>
-x        (94003652437632,)
-y        (94003670940192,)
+x        (140266431909904,)
+y        (140266474676416,)
 <<U1>    <object>
 #end_Bus-mloc
 
@@ -70063,63 +70750,62 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.values
 [<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
- <Frame: y>
-<Index>    c      d      <<U1>
-<Index>
-p          False  True
-q          False  True
-r          False  True
-<<U1>      <bool> <bool>]
+ <Index>    a       b       <<U1>
+ <Index>
+ p          0       1
+ q          2       3
+ r          4       5
+ <<U1>      <int64> <int64>       <Frame: y>
+                                  <Index>    c      d      <<U1>
+                                  <Index>
+                                  p          False  True
+                                  q          False  True
+                                  r          False  True
+                                  <<U1>      <bool> <bool>      ]
 #end_Bus-values
 
 #start_Bus-interface
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.interface
-<Frame: Bus>
-<Index>                              cls_name group           doc                  <<U18>
+<Frame>
+<Index>                              cls_name group       doc                  <<U18>
 <Index: signature>
-__init__(frames, *, index, index_... Bus      Constructor     Default Bus const...
-from_concat(containers, *, index,... Bus      Constructor     Concatenate multi...
-from_dict(mapping, *, name, index... Bus      Constructor     Bus construction ...
-from_frames(frames, *, index_cons... Bus      Constructor     Return a Bus from...
-from_hdf5(fp, *, config, max_pers... Bus      Constructor     Given a file path...
-from_items(pairs, *, config, name... Bus      Constructor     Return a Bus from...
-from_series(series, *, store, con... Bus      Constructor     Create a Bus from...
-from_sqlite(fp, *, config, max_pe... Bus      Constructor     Given a file path...
-from_xlsx(fp, *, config, max_pers... Bus      Constructor     Given a file path...
-from_zip_csv(fp, *, config, max_p... Bus      Constructor     Given a file path...
-from_zip_npz(fp, *, config, max_p... Bus      Constructor     Given a file path...
-from_zip_parquet(fp, *, config, m... Bus      Constructor     Given a file path...
-from_zip_pickle(fp, *, config, ma... Bus      Constructor     Given a file path...
-from_zip_tsv(fp, *, config, max_p... Bus      Constructor     Given a file path...
-to_hdf5(fp, *, config)               Bus      Exporter        Write the complet...
-to_series()                          Bus      Exporter        Return a Series w...
-to_sqlite(fp, *, config)             Bus      Exporter        Write the complet...
-...                                  ...      ...             ...
+__init__(frames, *, index, index_... Bus      Constructor Default Bus const...
+from_concat(containers, *, index,... Bus      Constructor Concatenate multi...
+from_dict(mapping, *, name, index... Bus      Constructor Bus construction ...
+from_frames(frames, *, index_cons... Bus      Constructor Return a Bus from...
+from_hdf5(fp, *, config, max_pers... Bus      Constructor Given a file path...
+from_items(pairs, *, config, name... Bus      Constructor Return a Bus from...
+from_series(series, *, store, con... Bus      Constructor Create a Bus from...
+from_sqlite(fp, *, config, max_pe... Bus      Constructor Given a file path...
+from_xlsx(fp, *, config, max_pers... Bus      Constructor Given a file path...
+from_zip_csv(fp, *, config, max_p... Bus      Constructor Given a file path...
+from_zip_npz(fp, *, config, max_p... Bus      Constructor Given a file path...
+from_zip_parquet(fp, *, config, m... Bus      Constructor Given a file path...
+from_zip_pickle(fp, *, config, ma... Bus      Constructor Given a file path...
+from_zip_tsv(fp, *, config, max_p... Bus      Constructor Given a file path...
+to_hdf5(fp, *, config)               Bus      Exporter    Write the complet...
+to_series()                          Bus      Exporter    Return a Series w...
+to_sqlite(fp, *, config)             Bus      Exporter    Write the complet...
+...                                  ...      ...         ...
+display_wide(config)                 Bus      Display     Maximize horizont...
+drop[key]                            Bus      Selector    Label-based selec...
+drop.iloc[key]                       Bus      Selector
+drop.loc[key]                        Bus      Selector
+[key]                                Bus      Selector    Selector of value...
+iloc[key]                            Bus      Selector
 loc[key]                             Bus      Selector
-iter_element()                       Bus      Iterator        Iterator of eleme...
-iter_element().apply(func, *, dty... Bus      Iterator        Apply a function ...
-iter_element().apply_iter(func)      Bus      Iterator        Apply a function ...
-iter_element().apply_iter_items(f... Bus      Iterator        Apply a function ...
-iter_element().apply_pool(func, *... Bus      Iterator        Apply a function ...
-iter_element_items()                 Bus      Iterator        Iterator of label...
-iter_element_items().apply(func, ... Bus      Iterator        Apply a function ...
-iter_element_items().apply_iter(f... Bus      Iterator        Apply a function ...
-iter_element_items().apply_iter_i... Bus      Iterator        Apply a function ...
-iter_element_items().apply_pool(f... Bus      Iterator        Apply a function ...
-__eq__(other)                        Bus      Operator Binary
-__ge__(other)                        Bus      Operator Binary
-__gt__(other)                        Bus      Operator Binary
-__le__(other)                        Bus      Operator Binary
-__lt__(other)                        Bus      Operator Binary
-__ne__(other)                        Bus      Operator Binary
-<<U58>                               <<U3>    <<U15>          <<U83>
+iter_element()                       Bus      Iterator    Iterator of eleme...
+iter_element().apply(func, *, dty... Bus      Iterator    Apply a function ...
+iter_element().apply_iter(func)      Bus      Iterator    Apply a function ...
+iter_element().apply_iter_items(f... Bus      Iterator    Apply a function ...
+iter_element().apply_pool(func, *... Bus      Iterator    Apply a function ...
+iter_element_items()                 Bus      Iterator    Iterator of label...
+iter_element_items().apply(func, ... Bus      Iterator    Apply a function ...
+iter_element_items().apply_iter(f... Bus      Iterator    Apply a function ...
+iter_element_items().apply_iter_i... Bus      Iterator    Apply a function ...
+iter_element_items().apply_pool(f... Bus      Iterator    Apply a function ...
+<<U58>                               <<U3>    <<U15>      <<U83>
 #end_Bus-interface
 
 #start_Bus-__repr__()
@@ -70498,64 +71184,10 @@ w        4
 <<U1>    <int64>
 #end_Bus-iter_element_items().apply_pool()
 
-#start_Bus-__eq__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 == b2
-False
->>> b1 == b1
-True
-#end_Bus-__eq__()
-
-#start_Bus-__ge__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 >= b2
-TypeError("'>=' not supported between instances of 'Bus' and 'Bus'")
->>> b1 >= b1
-TypeError("'>=' not supported between instances of 'Bus' and 'Bus'")
-#end_Bus-__ge__()
-
-#start_Bus-__gt__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 > b2
-TypeError("'>' not supported between instances of 'Bus' and 'Bus'")
->>> b1 > b1
-TypeError("'>' not supported between instances of 'Bus' and 'Bus'")
-#end_Bus-__gt__()
-
-#start_Bus-__le__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 <= b2
-TypeError("'<=' not supported between instances of 'Bus' and 'Bus'")
->>> b1 <= b1
-TypeError("'<=' not supported between instances of 'Bus' and 'Bus'")
-#end_Bus-__le__()
-
-#start_Bus-__lt__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 < b2
-TypeError("'<' not supported between instances of 'Bus' and 'Bus'")
->>> b1 < b1
-TypeError("'<' not supported between instances of 'Bus' and 'Bus'")
-#end_Bus-__lt__()
-
-#start_Bus-__ne__()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> b1 != b2
-True
->>> b1 != b1
-False
-#end_Bus-__ne__()
-
 #start_Batch-__init__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt
-<Batch at 0x7f3269719ef0>
+<Batch at 0x115a1ee50>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -70572,7 +71204,7 @@ j                r     44      45
 #start_Batch-from_frames()
 >>> bt = sf.Batch.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')))
 >>> bt
-<Batch at 0x7f32696d7860>
+<Batch at 0x115b35db0>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -70806,7 +71438,7 @@ True
 #start_Batch-T
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.T
-<Batch at 0x7f32696d7360>
+<Batch at 0x115a1e6d0>
 #end_Batch-T
 
 #start_Batch-name
@@ -70827,7 +71459,7 @@ j               (3, 2)
 #start_Batch-via_container
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.via_container
-<Batch at 0x7f32697198b0>
+<Batch at 0x115b564a0>
 #end_Batch-via_container
 
 #start_Batch-__array__()
@@ -71910,7 +72542,7 @@ j       2.6666666666666665 2.6666666666666665
 #start_Batch-interface
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt.interface
-<Frame: Batch>
+<Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(items, *, name, config, ... Batch    Constructor          Default construct...
@@ -71954,13 +72586,13 @@ via_re(pattern, flags).subn(repl,... Batch    Accessor Regular ... Perform the s
 #start_Batch-__repr__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> repr(bt)
-<Batch at 0x7f31e8e4aae0>
+<Batch at 0x115ab3540>
 #end_Batch-__repr__()
 
 #start_Batch-__str__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> str(bt)
-<Batch at 0x7f31e8e4a680>
+<Batch at 0x115a3ebd0>
 #end_Batch-__str__()
 
 #start_Batch-display()
@@ -72468,7 +73100,7 @@ j                r     352     360
 #start_Batch-__rshift__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt >> 1
-<Batch at 0x7f32696ecd10>
+<Batch at 0x115b56e00>
 #end_Batch-__rshift__()
 
 #start_Batch-__rsub__()
@@ -72909,7 +73541,7 @@ j                r     1620-06-30 1976-06-30
 #start_Batch-via_str.__getitem__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fb30>
+<Batch at 0x115b56d10>
 >>> bt.via_str[-1].to_frame()
 <Frame>
 <Index>                   a     b     c        <<U1>
@@ -72928,7 +73560,7 @@ j                s        3           nan
 #start_Batch-via_str.capitalize()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f326970f860>
+<Batch at 0x115b56770>
 >>> bt.via_str.capitalize().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -72947,7 +73579,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.center()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32697fd1d0>
+<Batch at 0x115b567c0>
 >>> bt.via_str.center(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -72966,7 +73598,7 @@ j                s           3        wX    nan
 #start_Batch-via_str.contains()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f326970f310>
+<Batch at 0x115b56220>
 >>> bt.via_str.contains('X').to_frame()
 <Frame>
 <Index>                   a     b     c        <<U1>
@@ -72985,7 +73617,7 @@ j                s        False True  nan
 #start_Batch-via_str.count()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc630>
+<Batch at 0x115b56bd0>
 >>> bt.via_str.count('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73004,7 +73636,7 @@ j                s        0       1       nan
 #start_Batch-via_str.decode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')))).astype(bytes)
 >>> bt
-<Batch at 0x7f326970f090>
+<Batch at 0x115b562c0>
 >>> bt.via_str.decode().to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -73023,7 +73655,7 @@ j                s        3      wX   nan
 #start_Batch-via_str.encode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fcc0>
+<Batch at 0x115b56630>
 >>> bt.via_str.encode().to_frame()
 <Frame>
 <Index>                   a     b       c             <<U1>
@@ -73042,7 +73674,7 @@ j                s        b'3'  b' wX ' nan
 #start_Batch-via_str.endswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177f810>
+<Batch at 0x115b56b80>
 >>> bt.via_str.endswith(' ').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73061,7 +73693,7 @@ j                s        False  True   nan
 #start_Batch-via_str.find()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fdb0>
+<Batch at 0x115b56680>
 >>> bt.via_str.find('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73080,7 +73712,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.index()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177f630>
+<Batch at 0x115b56bd0>
 >>> bt.via_str.index('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.index()
@@ -73088,7 +73720,7 @@ ValueError('substring not found')
 #start_Batch-via_str.isalnum()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177ff90>
+<Batch at 0x115b565e0>
 >>> bt.via_str.isalnum().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73107,7 +73739,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isalpha()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fb30>
+<Batch at 0x115b56630>
 >>> bt.via_str.isalpha().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73126,7 +73758,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isdecimal()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31eae9eef0>
+<Batch at 0x115b569a0>
 >>> bt.via_str.isdecimal().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73145,7 +73777,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isdigit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fe00>
+<Batch at 0x115a4e9f0>
 >>> bt.via_str.isdigit().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73164,7 +73796,7 @@ j                s        True   False  nan
 #start_Batch-via_str.islower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4a220>
+<Batch at 0x115b35630>
 >>> bt.via_str.islower().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73183,7 +73815,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isnumeric()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4e270>
+<Batch at 0x115b35db0>
 >>> bt.via_str.isnumeric().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73202,7 +73834,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isspace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f326970f6d0>
+<Batch at 0x115b358b0>
 >>> bt.via_str.isspace().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73221,7 +73853,7 @@ j                s        False  False  nan
 #start_Batch-via_str.istitle()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc3b0>
+<Batch at 0x115b35db0>
 >>> bt.via_str.istitle().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73240,7 +73872,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isupper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4e270>
+<Batch at 0x115b35630>
 >>> bt.via_str.isupper().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73259,7 +73891,7 @@ j                s        False  False  nan
 #start_Batch-via_str.ljust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4ea90>
+<Batch at 0x115b56770>
 >>> bt.via_str.ljust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -73278,7 +73910,7 @@ j                s        3         wX      nan
 #start_Batch-via_str.len()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc3b0>
+<Batch at 0x115b56810>
 >>> bt.via_str.len().to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73297,7 +73929,7 @@ j                s        1       4       nan
 #start_Batch-via_str.lower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc270>
+<Batch at 0x115a30a90>
 >>> bt.via_str.lower().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73316,7 +73948,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.lstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc180>
+<Batch at 0x115b35770>
 >>> bt.via_str.lstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73335,7 +73967,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.partition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc9f0>
+<Batch at 0x115b356d0>
 >>> bt.via_str.partition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -73354,7 +73986,7 @@ j                s        ('3', '', '')  (' w', 'X', ' ') nan
 #start_Batch-via_str.replace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4aae0>
+<Batch at 0x115b56c20>
 >>> bt.via_str.replace('X', '*').to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -73373,7 +74005,7 @@ j                s        3      w*   nan
 #start_Batch-via_str.rfind()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4e680>
+<Batch at 0x115b56270>
 >>> bt.via_str.rfind('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73392,7 +74024,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.rindex()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f326970fbd0>
+<Batch at 0x115b56a40>
 >>> bt.via_str.rindex('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.rindex()
@@ -73400,7 +74032,7 @@ ValueError('substring not found')
 #start_Batch-via_str.rjust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc270>
+<Batch at 0x115b56270>
 >>> bt.via_str.rjust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -73419,7 +74051,7 @@ j                s               3      wX  nan
 #start_Batch-via_str.rpartition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fdb0>
+<Batch at 0x115b56c20>
 >>> bt.via_str.rpartition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -73438,7 +74070,7 @@ j                s        ('', '', '3')  (' w', 'X', ' ') nan
 #start_Batch-via_str.rsplit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177f040>
+<Batch at 0x115b49590>
 >>> bt.via_str.rsplit('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -73457,7 +74089,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.rstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fc20>
+<Batch at 0x115b494f0>
 >>> bt.via_str.rstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73476,7 +74108,7 @@ j                s        3       wX   nan
 #start_Batch-via_str.split()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fe00>
+<Batch at 0x115b354f0>
 >>> bt.via_str.split('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -73495,7 +74127,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.startswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fcc0>
+<Batch at 0x115ab3d60>
 >>> bt.via_str.startswith('X').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73514,7 +74146,7 @@ j                s        False  False  nan
 #start_Batch-via_str.strip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177f630>
+<Batch at 0x115b49360>
 >>> bt.via_str.strip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73533,7 +74165,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.swapcase()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f321177fdb0>
+<Batch at 0x115b35450>
 >>> bt.via_str.swapcase().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73552,7 +74184,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.title()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f326970f9f0>
+<Batch at 0x115b35770>
 >>> bt.via_str.title().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73571,7 +74203,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.upper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4a680>
+<Batch at 0x115b35450>
 >>> bt.via_str.upper().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73590,7 +74222,7 @@ j                s        3       WX   nan
 #start_Batch-via_str.zfill()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4aae0>
+<Batch at 0x115a3ed10>
 >>> bt.via_str.zfill(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -73689,11 +74321,11 @@ j                s     0.0       0.0       1.0
 <Frame>
 <Index>                a         b         c         <<U1>
 <IndexHierarchy>
-i                p     nan       nan       nan
+i                p     inf       inf       inf
 i                q     1.0       1.0       -0.0
 i                r     0.0       16.0      18.0
 i                s     0.0       0.0       12.0
-j                p     nan       nan       nan
+j                p     inf       inf       inf
 j                q     -1.0      -1.0      -0.0
 j                r     0.0       4.0       4.0
 j                s     0.0       0.0       1.0
@@ -74007,11 +74639,11 @@ j                s     0.0       0.0       1.0
 <Frame>
 <Index>                a         b         c         <<U1>
 <IndexHierarchy>
-i                p     nan       nan       nan
+i                p     inf       inf       inf
 i                q     1.0       1.0       -0.0
 i                r     0.0       16.0      18.0
 i                s     0.0       0.0       12.0
-j                p     nan       nan       nan
+j                p     inf       inf       inf
 j                q     -1.0      -1.0      -0.0
 j                r     0.0       4.0       4.0
 j                s     0.0       0.0       1.0
@@ -74429,7 +75061,7 @@ j                c     20      12
 #start_Batch-via_re().search()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4ea90>
+<Batch at 0x115b51bd0>
 >>> bt.via_re('[X123]').search().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74447,7 +75079,7 @@ j                3        True   True   True
 #start_Batch-via_re().match()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4ebd0>
+<Batch at 0x115b51a40>
 >>> bt.via_re('[X123]').match().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74465,7 +75097,7 @@ j                3        True   True   True
 #start_Batch-via_re().fullmatch()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4eea0>
+<Batch at 0x115b514f0>
 >>> bt.via_re('123').fullmatch().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74483,7 +75115,7 @@ j                3        False  True   False
 #start_Batch-via_re().split()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4ed10>
+<Batch at 0x115b51a90>
 >>> bt.via_re('[X123]').split().to_frame()
 <Frame>
 <Index>                   a           b                c                    <<U1>
@@ -74501,7 +75133,7 @@ j                3        ('', '.0')  ('', '', '', '') ('', '5', '7-04-0...
 #start_Batch-via_re().findall()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f31e8e4e680>
+<Batch at 0x115af6590>
 >>> bt.via_re('[X123]').findall().to_frame()
 <Frame>
 <Index>                   a        b               c                    <<U1>
@@ -74519,7 +75151,7 @@ j                3        ('2',)   ('1', '2', '3') ('1', '1', '1')
 #start_Batch-via_re().sub()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f32696ec1d0>
+<Batch at 0x115b514f0>
 >>> bt.via_re('[X123]').sub('==').to_frame()
 <Frame>
 <Index>                   a     b      c              <<U1>
@@ -74537,7 +75169,7 @@ j                3        ==.0  ====== ==5==7-04-0==
 #start_Batch-via_re().subn()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f32117cc630>
+<Batch at 0x115b51d60>
 >>> bt.via_re('[X123]').subn('==', 1).to_frame()
 <Frame>
 <Index>                   a            b           c                  <<U1>
@@ -74596,4 +75228,243 @@ j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
 <<U1>            <<U1> <float64>            <float64>
 #end_Batch-via_values.__call__()
+
+#start_HLoc-__init__()
+>>> ih = sf.IndexHierarchy.from_product(('a', 'b', 'c'), (1024, 4096, 2048), name='x')
+>>> ih
+<IndexHierarchy: x>
+a                   1024
+a                   4096
+a                   2048
+b                   1024
+b                   4096
+b                   2048
+c                   1024
+c                   4096
+c                   2048
+<<U1>               <int64>
+>>> ih.loc[sf.HLoc[:, 4096]]
+<IndexHierarchy: x>
+a                   4096
+b                   4096
+c                   4096
+<<U1>               <int64>
+>>> ih.loc[sf.HLoc[['a', 'c'], [1024, 2048]]]
+<IndexHierarchy: x>
+a                   1024
+a                   2048
+c                   1024
+c                   2048
+<<U1>               <int64>
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                p     10      False  1517-01-01
+0                q     2       True   1517-04-01
+1                p     8       True   1517-12-31
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+>>> f.loc[sf.HLoc[:, 'q']]
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                q     2       True   1517-04-01
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+#end_HLoc-__init__()
+
+#start_HLoc-STATIC
+>>> sf.HLoc[:, ['a', 'b']].STATIC
+True
+#end_HLoc-STATIC
+
+#start_HLoc-key
+>>> sf.HLoc[:, ['a', 'b']].key
+(slice(None, None, None), ['a', 'b'])
+#end_HLoc-key
+
+#start_HLoc-__len__()
+>>> len(sf.HLoc[:, ['a', 'b'], 2048:])
+3
+#end_HLoc-__len__()
+
+#start_HLoc-__iter__()
+>>> hl = sf.HLoc[:, ['a', 'b'], 2048:]
+>>> tuple(iter(hl))
+(slice(None, None, None), ['a', 'b'], slice(2048, None, None))
+#end_HLoc-__iter__()
+
+#start_HLoc-__repr__()
+>>> hl = sf.HLoc[:, ['a', 'b'], 2048:]
+>>> repr(hl)
+<static_frame.core.hloc.HLoc object at 0x115b2cf10>
+#end_HLoc-__repr__()
+
+#start_HLoc-__str__()
+>>> hl = sf.HLoc[:, ['a', 'b'], 2048:]
+>>> str(hl)
+<static_frame.core.hloc.HLoc object at 0x115b57430>
+#end_HLoc-__str__()
+
+#start_ILoc-__init__()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                p     10      False  1517-01-01
+0                q     2       True   1517-04-01
+1                p     8       True   1517-12-31
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+>>> f.loc[sf.ILoc[-2:], ['a', 'c']]
+<Frame: x>
+<Index>                a       c               <<U1>
+<IndexHierarchy>
+1                p     8       1517-12-31
+1                q     3       1517-06-30
+<int64>          <<U1> <int64> <datetime64[D]>
+>>> f.loc[sf.ILoc[-1], 'b':]
+<Series: (1, 'q')>
+<Index>
+b                  False
+c                  1517-06-30
+<<U1>              <object>
+#end_ILoc-__init__()
+
+#start_ILoc-STATIC
+>>> sf.ILoc[-2:].STATIC
+True
+#end_ILoc-STATIC
+
+#start_ILoc-key
+>>> sf.ILoc[-2:].key
+slice(-2, None, None)
+#end_ILoc-key
+
+#start_ILoc-__repr__()
+>>> il = sf.ILoc[-2:]
+>>> repr(il)
+<static_frame.core.index.ILoc object at 0x115b39310>
+#end_ILoc-__repr__()
+
+#start_ILoc-__str__()
+>>> il = sf.ILoc[-2:]
+>>> str(il)
+<static_frame.core.index.ILoc object at 0x115b57850>
+#end_ILoc-__str__()
+
+#start_FillValueAuto-__init__()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b     c               <<U1>
+<Index>
+0          10.0      qrs   1517-01-01
+1          2.0       XYZ   1517-04-01
+2          nan             NaT
+3          2.0       123   1517-04-01
+<int64>    <float64> <<U4> <datetime64[D]>
+>>> f.fillfalsy(sf.FillValueAuto(f=-1, U='na', M=np.datetime64('2021-01-01')))
+<Frame: x>
+<Index>    a         b     c               <<U1>
+<Index>
+0          10.0      qrs   1517-01-01
+1          2.0       XYZ   1517-04-01
+2          -1.0      na    2021-01-01
+3          2.0       123   1517-04-01
+<int64>    <float64> <<U4> <datetime64[D]>
+>>> f.shift(index=2, fill_value=sf.FillValueAuto)
+<Frame: x>
+<Index>    a         b     c               <<U1>
+<Index>
+0          nan             NaT
+1          nan             NaT
+2          10.0      qrs   1517-01-01
+3          2.0       XYZ   1517-04-01
+<int64>    <float64> <<U4> <datetime64[D]>
+#end_FillValueAuto-__init__()
+
+#start_FillValueAuto-from_default()
+>>> sf.FillValueAuto.from_default()
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x112f10840>
+#end_FillValueAuto-from_default()
+
+#start_FillValueAuto-M
+>>> sf.FillValueAuto.from_default().M
+NaT
+#end_FillValueAuto-M
+
+#start_FillValueAuto-O
+>>> sf.FillValueAuto.from_default().O
+#end_FillValueAuto-O
+
+#start_FillValueAuto-S
+>>> sf.FillValueAuto.from_default().S
+b''
+#end_FillValueAuto-S
+
+#start_FillValueAuto-U
+>>> sf.FillValueAuto.from_default().U
+
+#end_FillValueAuto-U
+
+#start_FillValueAuto-V
+>>> sf.FillValueAuto.from_default().V
+b'\x00'
+#end_FillValueAuto-V
+
+#start_FillValueAuto-b
+>>> sf.FillValueAuto.from_default().b
+False
+#end_FillValueAuto-b
+
+#start_FillValueAuto-c
+>>> sf.FillValueAuto.from_default().c
+(nan+nanj)
+#end_FillValueAuto-c
+
+#start_FillValueAuto-f
+>>> sf.FillValueAuto.from_default().f
+nan
+#end_FillValueAuto-f
+
+#start_FillValueAuto-i
+>>> sf.FillValueAuto.from_default().i
+0
+#end_FillValueAuto-i
+
+#start_FillValueAuto-m
+>>> sf.FillValueAuto.from_default().m
+NaT
+#end_FillValueAuto-m
+
+#start_FillValueAuto-u
+>>> sf.FillValueAuto.from_default().u
+0
+#end_FillValueAuto-u
+
+#start_FillValueAuto-__repr__()
+>>> fva = sf.FillValueAuto.from_default()
+>>> repr(fva)
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x1159d75c0>
+#end_FillValueAuto-__repr__()
+
+#start_FillValueAuto-__str__()
+>>> fva = sf.FillValueAuto.from_default()
+>>> str(fva)
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x1159d78c0>
+#end_FillValueAuto-__str__()
+
+#start_FillValueAuto-[]
+>>> fva = sf.FillValueAuto.from_default()
+>>> fva[np.dtype(int)]
+0
+>>> fva[np.dtype(float)]
+nan
+>>> fva[np.dtype(bool)]
+False
+#end_FillValueAuto-[]
 

@@ -1,6 +1,22 @@
 What is New in StaticFrame
 ===============================
 
+0.9.11
+----------
+
+Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
+
+Corrected issue with ``fillna`` and ``fillfalsy`` functions when non-elemental fill values are supplied.
+
+Updated ``arraykit`` to 0.1.13.
+
+
+0.9.10
+----------
+
+Corrected single depth selection issue with ``IndexHierarchy``.
+
+
 0.9.9
 ----------
 

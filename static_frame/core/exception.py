@@ -72,9 +72,13 @@ class InvalidDatetime64Comparison(RuntimeError):
     def __init__(self) -> None:
         super().__init__('Cannot perform set operations on datetime64 of different units; use astype to align units before comparison.')
 
+class InvalidDatetime64Initializer(RuntimeError):
+    pass
+
 class InvalidFillValue(RuntimeError):
     def __init__(self, fill_value: tp.Any, context: str) -> None:
         super().__init__(f'{fill_value} not supported in the context of {context}.')
+
 
 #-------------------------------------------------------------------------------
 

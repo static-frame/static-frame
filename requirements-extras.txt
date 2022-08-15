@@ -6,4 +6,4 @@ tables>=3.6.1
 pyarrow>=0.16.0
 msgpack>=1.0.0
 msgpack-numpy>=0.4.7
-visidata==2.4
+visidata>=2.4

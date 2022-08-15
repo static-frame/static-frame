@@ -112,6 +112,11 @@ class ContainerMap:
         from static_frame.core.yarn import Yarn
         from static_frame.core.quilt import Quilt
 
+        # not containers but neede for build_example.py
+        from static_frame.core.hloc import HLoc
+        from static_frame.core.index import ILoc
+        from static_frame.core.fill_value_auto import FillValueAuto #pylint: disable=W0404
+
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
@@ -181,6 +186,9 @@ def get_col_fill_value_factory(
         fill_value = FILL_VALUE_AUTO_DEFAULT
     elif is_mapping(fill_value):
         is_map = True
+    elif fill_value.__class__ is np.ndarray: # tuple is an element
+        if fill_value.ndim > 1:
+            raise ValueError('Fill values must be one-dimensional arrays.')
     elif isinstance(fill_value, tuple): # tuple is an element
         is_element = True
     elif hasattr(fill_value, '__iter__') and not isinstance(fill_value, str):

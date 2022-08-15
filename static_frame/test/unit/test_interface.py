@@ -1,19 +1,14 @@
 import numpy as np
 
 from doc.source.conf import DOCUMENTED_COMPONENTS
-from static_frame.core.container import ContainerBase
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
-from static_frame.core.store import StoreConfig
-from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
-from static_frame import NPZ
-from static_frame import NPY
+from static_frame import FillValueAuto
 
 
 class TestUnit(TestCase):
@@ -31,7 +26,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 38), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 8), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 136), ('Method', 88), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 38), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 136), ('Method', 88), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:
@@ -68,14 +63,14 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(
                 f2.columns.values.tolist(),
-                ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args']
+                ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args', 'sna_label']
                 )
 
     def test_interface_assign_a(self) -> None:
         f = Frame.interface.loc[Frame.interface.index.via_str.startswith('assign')]
         # assignmewnt interface is one of the most complex, so we can check the signatures here explicitly
         self.assertEqual(f.index.values.tolist(),
-                ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)'])
+                ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign[key].apply_element(func, *, dtype, fill_value)', 'assign[key].apply_element_items(func, *, dtype, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.iloc[key].apply_element(func, *, dtype, fill_value)', 'assign.iloc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.loc[key].apply_element(func, *, dtype, fill_value)', 'assign.loc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)', 'assign.bloc[key].apply_element(func, *, dtype, fill_value)', 'assign.bloc[key].apply_element_items(func, *, dtype, fill_value)'])
 
     def test_interface_via_re_signature_no_args(self) -> None:
         inter = InterfaceSummary.to_frame(Series,
@@ -94,15 +89,12 @@ class TestUnit(TestCase):
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
-            if post is NPY or post is NPZ: #type: ignore
-                continue
-            if not isinstance(post, ContainerBase):
-                self.assertTrue(isinstance(post, ( # type: ignore
-                    DisplayConfig,
-                    StoreConfig,
-                    StoreFilter,
-                    )))
+            self.assertTrue(post is not None)
 
+    def test_interface_util_a(self) -> None:
+        f = InterfaceSummary.to_frame(FillValueAuto, minimized=False, max_args=99)
+        self.assertTrue(f.size > 0)
+        self.assertEqual(len(f), len(f['sna_label'].unique()))
 
 if __name__ == '__main__':
     import unittest
