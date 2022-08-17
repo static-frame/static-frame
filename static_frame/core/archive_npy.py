@@ -602,11 +602,12 @@ class ArchiveFrameConverter:
                 include=include_columns,
                 )
 
-        for i, array in enumerate(block_iter):
+        i = 0
+        for i, array in enumerate(block_iter, 1):
             archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
 
         metadata[Label.KEY_DEPTHS] = [
-                i + 1, # block count
+                i, # block count
                 depth_index,
                 depth_columns]
 
