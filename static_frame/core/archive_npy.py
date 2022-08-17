@@ -666,10 +666,13 @@ class ArchiveFrameConverter:
                 name=name_columns,
                 )
 
-        tb = TypeBlocks.from_blocks(
-                archive.read_array(Label.FILE_TEMPLATE_BLOCKS.format(i))
-                for i in range(block_count)
-                )
+        if block_count:
+            tb = TypeBlocks.from_blocks(
+                    archive.read_array(Label.FILE_TEMPLATE_BLOCKS.format(i))
+                    for i in range(block_count)
+            )
+        else:
+            tb = TypeBlocks.from_zero_size_shape()
 
         f = constructor(tb,
                 own_data=True,
