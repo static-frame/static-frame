@@ -604,7 +604,7 @@ class ArchiveFrameConverter:
 
         i = 0
         for i, array in enumerate(block_iter, 1):
-            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
+            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
 
         metadata[Label.KEY_DEPTHS] = [
                 i, # block count
