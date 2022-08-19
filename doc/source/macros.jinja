@@ -30,22 +30,19 @@ Detail: {{ name }}: {{ ig }}
 {% elif row.use_signature and not row.is_attr %}
 
 .. py:method:: {{ name }}.{{ signature }}
-    :noindex:
 
 {% elif row.use_signature and row.is_attr %}
 
 .. py:attribute:: {{ name }}.{{ signature }}
-    :noindex:
+    :noindex: {# NOTE: collides with iter_*, via_* usage below #}
 
 {% elif ig == 'Attribute' or signature == 'values' or row.is_attr %}
 
 .. autoattribute:: static_frame.{{ row.reference }}
-    :noindex:
 
 {% else %}
 
 .. automethod:: static_frame.{{ row.reference }}
-    :noindex:
 
 {% endif %}
 
