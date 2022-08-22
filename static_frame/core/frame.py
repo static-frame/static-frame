@@ -8774,10 +8774,10 @@ class FrameHE(Frame):
 
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
+            # NOTE: we hash based on labels, which we use a faster-than full identity check
             self._hash = hash((
-                    tuple(self.index.values),
-                    tuple(self.columns.values),
-                    # tuple(dt.str for dt in self._blocks.dtypes)
+                    tuple(self.index),
+                    tuple(self.columns),
                     ))
         return self._hash
 
