@@ -9726,6 +9726,15 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))))
                 )
 
+    def test_frame_to_frame_he_c(self) -> None:
+        fhe1 = ff.parse("f(Fg)|v(int,bool,str)|i((I,I),(str,str))|s(5,4)").to_frame_he()
+        fhe2 = ff.parse("f(Fg)|v(int,bool,str)|c((ISg,ISg),(dts, dts))|s(5,4)").to_frame_he()
+        post = {}
+        post[fhe1] = 0
+        post[fhe2] = 1
+        self.assertTrue(fhe1 in post)
+        self.assertTrue(fhe2 in post)
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_npz_a(self) -> None:
