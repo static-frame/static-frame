@@ -9825,6 +9825,13 @@ class TestUnit(TestCase):
             self.assertTrue(f1.equals(f2))
             self.assertIs(f2.__class__, FrameGO)
 
+    def test_frame_to_npz_empty(self) -> None:
+        f1 = Frame()
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertTrue(f1.equals(f2))
 
     #---------------------------------------------------------------------------
 
