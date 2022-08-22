@@ -23,12 +23,12 @@ def build(fp: Path) -> str:
     if fp.suffix != '.zip':
         raise RuntimeError('suffix must be .zip')
 
-    key_to_sig_full = {}
-    sig_full_to_key = {}
-    key_to_doc = {}
-    method_to_keys = defaultdict(list)
-    keys = []
-    methods = set()
+    sig_to_sig_full = {}
+    # sig_full_to_key = {}
+    sig_to_doc = {}
+    method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
+    sigs = []
+    methods = set() # on
 
     for cls in DOCUMENTED_COMPONENTS:
         inter = InterfaceSummary.to_frame(cls, #type: ignore
@@ -37,35 +37,35 @@ def build(fp: Path) -> str:
                 )
         for sig_full, row in inter.iter_series_items(axis=1):
             key = f'{row["cls_name"]}.{row["signature_no_args"]}'
-            keys.append(key)
+            sigs.append(key)
 
             sig_full = f'{row["cls_name"]}.{sig_full}'
-            key_to_sig_full[key] = sig_full
-            sig_full_to_key[sig_full] = key
+            sig_to_sig_full[key] = sig_full
+            # sig_full_to_key[sig_full] = key
 
-            key_to_doc[key] = row['doc']
+            sig_to_doc[key] = row['doc']
 
-            method_to_keys[row["signature_no_args"]].append(key)
+            method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
 
-    assert len(methods) == len(method_to_keys)
-    assert len(keys) == len(key_to_sig_full)
-    assert len(keys) == len(key_to_doc)
-    assert len(keys) == len(sig_full_to_key)
+    assert len(methods) == len(method_to_sig)
+    assert len(sigs) == len(sig_to_sig_full)
+    assert len(sigs) == len(sig_to_doc)
+    import ipdb; ipdb.set_trace()
 
     with ZipFile(fp, mode='w', allowZip64=True) as archive:
         for name, bundle in (
-                ('key_to_sig_full', key_to_sig_full),
-                ('sig_full_to_key', key_to_sig_full),
-                ('key_to_dic', key_to_doc),
-                ('method_to_keys', method_to_keys),
-                ('keys', keys),
+                ('sig_to_sig_full', sig_to_sig_full),
+                # ('sig_full_to_key', sig_full_to_key),
+                ('sig_to_doc', sig_to_doc),
+                ('method_to_sig', method_to_sig),
+                ('sigs', sigs),
                 ('methods', tuple(methods)),
                 ):
             with archive.open(f'{name}.json', 'w', force_zip64=True) as f:
                 f.write(json.dumps(bundle).encode('utf-8'))
 
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     build(Path('/tmp/sf-api.zip'))
