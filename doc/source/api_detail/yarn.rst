@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_detail_toc('Yarn', toc) }}
+    {{ macros.api_detail_toc('Yarn', toc, interface_group_doc) }}
 

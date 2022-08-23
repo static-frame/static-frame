@@ -537,6 +537,8 @@ class ExGen:
             yield f'{name}.via_values.apply(np.sin){exporter}'
         elif attr == 'via_values.__array_ufunc__()':
             yield f'np.sin({name}.via_values){exporter}'
+        elif attr == 'via_values.__call__()':
+            yield f'np.sin({name}.via_values(unify_blocks=True)){exporter}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -855,6 +857,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign['c':].apply(lambda s: s / 100)"
+        elif attr == 'assign[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign['b':].apply_element(lambda e: e if e < 10 else f'--{{e}}--')"
+        elif attr == 'assign[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign['b':].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.iloc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield f"s.assign.iloc[2]('x')"
@@ -864,6 +874,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign.iloc[2:].apply(lambda s: s / 100)"
+        elif attr == 'assign.iloc[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.iloc[2:].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.iloc[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.iloc[2:].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.loc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield f"s.assign.loc['c']('x')"
@@ -873,6 +891,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.assign.loc['c':].apply(lambda s: s / 100)"
+        elif attr == 'assign.loc[].apply_element()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.loc['c':].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.loc[].apply_element_items()':
+            yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
+            yield f"s.assign.loc['c':].apply_element_items(lambda l, e: e / 100 if l == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -1888,6 +1914,14 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign['a'].apply(lambda s: s / 100)"
+        elif attr == 'assign[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign['a'].apply_element(lambda e: e / 100 if e < 8 else e)"
+        elif attr == 'assign[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.iloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.iloc[2]((-1, -2, -3))"
@@ -1897,6 +1931,14 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign.iloc[2:].apply(lambda s: s / 100)"
+        elif attr == 'assign.iloc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.iloc[1:].apply_element(lambda e: e / 100 if e < 8 else e)"
+        elif attr == 'assign.iloc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.loc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.loc['r'](-1)"
@@ -1906,12 +1948,26 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f"f.assign.loc['r':].apply(lambda s: s / 100)"
+        elif attr == 'assign.loc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.loc['r':].apply_element(lambda e: e / 100 if e < 10 else e)"
+        elif attr == 'assign.loc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)"
         elif attr == 'assign.bloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.bloc[f > 5](-1)"
         elif attr == 'assign.bloc[].apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield f"f.assign.bloc[f > 5].apply(lambda s: s * .01)"
+        elif attr == 'assign.bloc[].apply_element()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)"
+        elif attr == 'assign.bloc[].apply_element_items()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield f"f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4654,14 +4710,208 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
+        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
 
 
+class ExGenHLoc(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"ih = sf.IndexHierarchy.from_product({kwa(IH_INIT_FROM_PRODUCT_B, star_expand_first=True)})"
+            yield 'ih'
+            yield f"ih.loc[sf.HLoc[:, 4096]]"
+            yield f"ih.loc[sf.HLoc[['a', 'c'], [1024, 2048]]]"
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})"
+            yield f'f'
+            yield f"f.loc[sf.HLoc[:, 'q']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}[:, ['a', 'b']].{attr}"
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[:, ['a', 'b'], 2048:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"tuple(iter(hl))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"repr(hl)"
+        elif attr == '__str__()':
+            yield f"hl = {icls}[:, ['a', 'b'], 2048:]"
+            yield f"str(hl)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+class ExGenILoc(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})"
+            yield f'f'
+            yield f"f.loc[sf.ILoc[-2:], ['a', 'c']]"
+            yield f"f.loc[sf.ILoc[-1], 'b':]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}[-2:].{attr}"
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[-2:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"il = {icls}[-2:]"
+            yield f"tuple(iter(il))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"il = {icls}[-2:]"
+            yield f"repr(il)"
+        elif attr == '__str__()':
+            yield f"il = {icls}[-2:]"
+            yield f"str(il)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+class ExGenFillValueAuto(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+
+        if attr == '__init__':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_H)})"
+            yield f'f'
+            yield f"f.fillfalsy(sf.FillValueAuto(f=-1, U='na', M=np.datetime64('2021-01-01')))"
+            yield f"f.shift(index=2, fill_value=sf.FillValueAuto)"
+        elif attr == 'from_default':
+            yield f"{icls}.from_default()"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        yield f"{icls}.from_default().{attr}"
+
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__len__()':
+            yield f"len({icls}[-2:])"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"il = {icls}[-2:]"
+            yield f"tuple(iter(il))"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"fva = {icls}.from_default()"
+            yield f"repr(fva)"
+        elif attr == '__str__()':
+            yield f"fva = {icls}.from_default()"
+            yield f"str(fva)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '[]':
+            yield f"fva = {icls}.from_default()"
+            yield 'fva[np.dtype(int)]'
+            yield 'fva[np.dtype(float)]'
+            yield 'fva[np.dtype(bool)]'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-
+TAG_START = '#start_'
+TAG_END = '#end_'
 
 def calls_to_msg(calls: tp.Iterator[str],
         row: sf.Series
@@ -4678,7 +4928,7 @@ def calls_to_msg(calls: tp.Iterator[str],
     for i, call in enumerate(calls):
         # enumerate to pass through empty calls without writing start / end boundaries
         if i == 0:
-            yield f'#start_{cls.__name__}-{row["signature_no_args"]}'
+            yield f'{TAG_START}{cls.__name__}-{row["signature_no_args"]}'
 
         try:
             yield f'>>> {call}'
@@ -4691,7 +4941,7 @@ def calls_to_msg(calls: tp.Iterator[str],
             yield repr(e) # show this error
 
     if i >= 0:
-        yield f'#end_{cls.__name__}-{row["signature_no_args"]}'
+        yield f'{TAG_END}{cls.__name__}-{row["signature_no_args"]}'
         yield ''
 
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -4700,7 +4950,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
 
     inter = InterfaceSummary.to_frame(target, #type: ignore
             minimized=False,
-            max_args=99, # +inf, but keep as int
+            max_args=99,
             )
 
     for ig in (
@@ -4725,6 +4975,7 @@ def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
+            # print(func, row)
             calls = func(row)
             yield from calls_to_msg(calls, row)
 
@@ -4772,6 +5023,9 @@ def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Bus, ExGenBus)
     yield from gen_examples(sf.Batch, ExGenBatch)
 
+    yield from gen_examples(sf.HLoc, ExGenHLoc)
+    yield from gen_examples(sf.ILoc, ExGenILoc)
+    yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
 
 
 def write():
@@ -4783,12 +5037,29 @@ def write():
             f.write(line)
             f.write('\n')
 
+def bundle() -> tp.Dict[str, tp.Sequence[str]]:
+    post = {}
+    lines = []
+    sig = ''
+    for line in gen_all_examples():
+        if line.startswith(TAG_START):
+            prefix, method = line.split('-')
+            cls_name = prefix.replace(TAG_START, '')
+            sig = f'{cls_name}.{method}'
+        elif line.startswith(TAG_END):
+            if lines:
+                post[sig] = lines.copy()
+                lines.clear()
+            sig = ''
+        else:
+            lines.append(line)
+    return post
 
 if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
-        pass
     # write()
+    # post = bundle()
 
 
 

@@ -456,7 +456,6 @@ class Frame(ContainerOperand):
                         columns_constructor=columns_constructor,
                         ))
         frames = normalized
-
         own_index = False
         own_columns = False
 
@@ -2938,6 +2937,7 @@ class Frame(ContainerOperand):
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
             raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
+
         #-----------------------------------------------------------------------
         # index assignment
 
@@ -3100,6 +3100,11 @@ class Frame(ContainerOperand):
     def via_values(self) -> InterfaceValues['Frame']:
         '''
         Interface for applying functions to values (as arrays) in this container.
+
+        Args:
+            consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
+            unify_blocks: Group all arrays into single array, re-typing to an appropriate dtype.
+            dtype: specify a dtype to be used in conversion before consolidation or unification, and before function application.
         '''
         return InterfaceValues(self)
 
@@ -8450,6 +8455,13 @@ class FrameAssign(Assign):
         'key',
         )
 
+    INTERFACE = (
+        '__call__',
+        'apply',
+        'apply_element',
+        'apply_element_items',
+        )
+
    # common base classe for supplying delegate; need to define interface for docs
     def __call__(self,
             value: tp.Any,
@@ -8518,16 +8530,6 @@ class FrameAssign(Assign):
                 lambda c: c.iter_element_items().apply(func, dtype=dtype),
                 fill_value=fill_value,
                 )
-
-    #---------------------------------------------------------------------------
-    # NOTE: explored but rejected supporting direct operater application on this object
-
-    # def __add__(self, other: tp.Any) -> tp.Any:
-    #     return self.apply(
-    #             lambda c: c.__add__(other)
-    #             )
-
-
 
 class FrameAssignILoc(FrameAssign):
     __slots__ = (
@@ -8772,10 +8774,10 @@ class FrameHE(Frame):
 
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
+            # NOTE: we hash based on labels, which we use a faster-than full identity check
             self._hash = hash((
-                    tuple(self.index.values),
-                    tuple(self.columns.values),
-                    # tuple(dt.str for dt in self._blocks.dtypes)
+                    tuple(self.index),
+                    tuple(self.columns),
                     ))
         return self._hash
 

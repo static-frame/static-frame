@@ -1,16 +1,34 @@
 What is New in StaticFrame
 ===============================
 
+0.9.11
+----------
+
+Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
+
+Corrected issue with ``fillna`` and ``fillfalsy`` functions when non-elemental fill values are supplied.
+
+Updated ``arraykit`` to 0.1.13.
+
+
+0.9.10
+----------
+
+Corrected single depth selection issue with ``IndexHierarchy``.
+
+
 0.9.9
 ----------
 
-Updated ``arraykit`` to 0.1.12
+Updated ``arraykit`` to 0.1.12.
 
-Set minimum ``numpy`` to 1.18.5
+Set minimum ``numpy`` to 1.18.5.
 
 Added ``index_constructors`` parameter to ``Frame.relabel_shift_in()``.
 
 Corrected issue when ``Frame.astype()`` called with an empty ``Frame``.
+
+Extended ``via_values`` property to take optional consolidation arguments via ``__call__()`` constructor; usage of ``via_values`` instance returns same-typed, same-sized container.
 
 
 0.9.8

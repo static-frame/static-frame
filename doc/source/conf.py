@@ -22,6 +22,7 @@ import typing as tp
 import static_frame as sf
 
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
+from static_frame.core.interface import INTERFACE_GROUP_DOC
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
 # from static_frame.test.unit.test_doc import api_example_str
@@ -91,11 +92,19 @@ DOCUMENTED_COMPONENTS = (
         sf.IndexMicrosecondGO,
         sf.IndexNanosecond,
         sf.IndexNanosecondGO,
+        sf.HLoc,
+        sf.ILoc,
+        sf.FillValueAuto,
+        sf.DisplayActive,
         sf.DisplayConfig,
         sf.StoreConfig,
         sf.StoreFilter,
+        sf.IndexAutoFactory,
+        sf.IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        sf.IndexAutoConstructorFactory,
         sf.NPZ,
         sf.NPY,
+        sf.Platform,
         )
 
 
@@ -107,6 +116,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     # for docs
     post['examples_defined'] = get_defined()
+    post['interface_group_doc'] = INTERFACE_GROUP_DOC
     post['toc'] = {}
     post['interface'] = {}
     for cls in DOCUMENTED_COMPONENTS:
@@ -120,7 +130,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
         for ig in INTERFACE_GROUP_ORDER:
             ig_tag = ig.replace('-', '_').replace(' ', '_').lower()
             inter_sub = inter.loc[inter['group'] == ig]
-            if len(inter_sub) == 0:
+            if len(inter_sub) == 0: # skip empty groups
                 continue
             post['interface'][cls.__name__][ig_tag] = (
                     cls.__name__,

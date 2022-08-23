@@ -276,7 +276,7 @@ class TestUnit(TestCase):
         labels = (('I', 'A'), ('I', 'B'))
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
-        self.assertIn(ih1.nbytes, (509, 533, 557))
+        self.assertTrue(ih1.nbytes > 500)
 
     def test_hierarchy_size_b(self) -> None:
 
@@ -284,7 +284,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchyGO.from_labels(labels, name='foo')
         ih1.append(('I', 'C'))
-        self.assertIn(ih1.nbytes, (545, 569, 585))
+        self.assertTrue(ih1.nbytes > 500)
 
     def test_hierarchy_bool_a(self) -> None:
 
@@ -715,6 +715,44 @@ class TestUnit(TestCase):
         for i in range(len(selections) - 1):
             for j in range(i, len(selections)):
                 self.assertTrue(selections[i].equals(selections[j]), msg=(i, j))
+
+    def test_hierarchy_loc_to_iloc_s(self) -> None:
+
+        # https://github.com/InvestmentSystems/static-frame/issues/554
+        ih = ff.parse('v(bool)|i((I,ID),(int,dtD))|s(4,4)').index.sort()
+        start = ih.values_at_depth(1)[0]
+        end = ih.values_at_depth(1)[-1]
+
+        post = ih._loc_to_iloc(HLoc[:, start:end])
+        self.assertListEqual(list(post), [0, 1, 2, 3])
+
+        ih = IndexHierarchy.from_labels(
+            [
+                [4, 0],
+                [2, 1],
+                [0, 2],
+                [3, 3],
+                [1, 4],
+            ]
+        )
+
+        ih2 = ih.sort()
+
+        self.assertListEqual(
+            list(ih2), [
+                (0, 2),
+                (1, 4),
+                (2, 1),
+                (3, 3),
+                (4, 0),
+            ]
+        )
+
+        for idx1, idx2 in zip(ih._indices, ih2._indices):
+            self.assertTrue(idx1.equals(idx2))
+
+        post = ih2._loc_to_iloc(HLoc[:, 4:1])
+        self.assertListEqual(list(post), [1, 2])
 
     #---------------------------------------------------------------------------
 
@@ -3765,19 +3803,18 @@ class TestUnit(TestCase):
 
     def test_hierarchy_via_values_b(self) -> None:
         ih1 = IndexHierarchy.from_product((0, 1), (10, 20))
-        post = np.sum(ih1.via_values, axis=1)
+        post = np.sum(ih1.values, axis=1)
         self.assertEqual(post.tolist(),
                 [10, 20, 11, 21]
                 )
 
     def test_hierarchy_via_values_c(self) -> None:
-        ih1 = IndexHierarchyGO.from_product((0, 1), (10, 20))
-        ih1.append((2, 30))
-        post = np.sum(ih1.via_values, axis=1)
-        self.assertEqual(post.tolist(),
-                [10, 20, 11, 21, 32]
+        ih1 = IndexHierarchyGO.from_product((0, 1), (2, 3))
+        ih1.append((5, 3))
+        post = np.power(ih1.via_values, 2)
+        self.assertEqual(post.values.tolist(),
+                [[0, 4], [0, 9], [1, 4], [1, 9], [25, 9]]
                 )
-
 
     #---------------------------------------------------------------------------
 

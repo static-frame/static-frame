@@ -31,6 +31,8 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
@@ -72,6 +74,7 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import is_objectable_dt64
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 
@@ -628,6 +631,13 @@ class TestUnit(TestCase):
         post = intersect1d(a1, a2)
         self.assertEqual(post.dtype, np.dtype('datetime64[Y]'))
         self.assertEqual(str(post), "['1999']")
+
+    def test_intersect1d_i(self) -> None:
+        # from hypothesis: showed that a dt64 D can be out of range to Python datetime.date
+        a1 = np.array([-719163], dtype=np.int32)
+        a2 = np.array(['0000-12-31'], dtype='datetime64[D]')
+        post = intersect1d(a1, a2)
+        self.assertEqual(len(post), 0)
 
     #---------------------------------------------------------------------------
 
@@ -2715,6 +2725,19 @@ class TestUnit(TestCase):
         post = blocks_to_array_2d(arrays)
         self.assertEqual(post.tolist(), [[1], [2]])
 
+    #---------------------------------------------------------------------------
+    def test_is_objectable_dt64(self) -> None:
+        self.assertFalse(is_objectable_dt64(np.array(('0001-01',), dtype=DT64_MONTH)))
+        self.assertFalse(is_objectable_dt64(np.array(('0000',), dtype=DT64_YEAR)))
+
+        self.assertFalse(is_objectable_dt64(np.array(('0000-01-01',), dtype=DT64_DAY)))
+        self.assertFalse(is_objectable_dt64(np.array(('0000-01-01',), dtype=DT64_MS)))
+
+        self.assertFalse(is_objectable_dt64(np.array(('10000-01-01',), dtype=DT64_DAY)))
+        self.assertFalse(is_objectable_dt64(np.array(('10000-01-01',), dtype=DT64_MONTH)))
+
+        self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
+        self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
 
 if __name__ == '__main__':
     unittest.main()

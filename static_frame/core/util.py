@@ -29,6 +29,7 @@ import numpy as np
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import InvalidDatetime64Initializer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
@@ -103,11 +104,21 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
-# all dt64 units that tolist() to go to a compatible Python type
+# all dt64 units that tolist() to go to a compatible Python type. Note that datetime.date.MINYEAR, MAXYEAR sets a limit that is more narrow than dt64
 # NOTE: similar to DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO
 DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
+
+def is_objectable_dt64(array: np.ndarray) -> bool:
+    if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
+        return False
+    years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
+    if np.any(years < datetime.MINYEAR):
+        return False
+    if np.any(years > datetime.MAXYEAR):
+        return False
+    return True
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
@@ -144,7 +155,6 @@ STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
 
-() = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
@@ -1668,7 +1678,7 @@ TD64_MS = np.timedelta64(1, 'ms')
 TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
+_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
@@ -1687,11 +1697,10 @@ def to_datetime64(
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
-                if dtype == DT64_YEAR:
-                    # convert to string as that is likely what is wanted
+                if dtype == DT64_YEAR: # convert to string as that is generally what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
-                    raise RuntimeError('attempting to create {} from an integer, which is generally not desired as the result will be offset from the epoch.'.format(dtype))
+                    raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
@@ -1703,7 +1712,7 @@ def to_datetime64(
         if dtype:
             # dtype can be either generic, or a matching specific dtype
             if dtype != np.datetime64 and dtype != dt.dtype:
-                raise RuntimeError(f'value ({dt}) is not a supported dtype ({dtype})')
+                raise InvalidDatetime64Initializer(f'value ({dt}) is not a supported dtype ({dtype})')
     return dt
 
 def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
@@ -2303,20 +2312,23 @@ def _ufunc_set_1d(
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
     if (array_is_str ^ other_is_str) or dtype.kind == 'O':
-        # NOTE: we convert applicable dt64 types to objects to permit date object to dt64 comparisons when  possible
-        if array_is_dt64 and np.datetime_data(array.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+        # NOTE: we convert applicable dt64 types to objects to permit date object to dt64 comparisons when possible
+        if array_is_dt64 and is_objectable_dt64(array):
             array = array.astype(DTYPE_OBJECT)
-        elif other_is_dt64 and np.datetime_data(other.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+        elif other_is_dt64 and is_objectable_dt64(other):
             # the case of both is handled above
             other = other.astype(DTYPE_OBJECT)
 
-        # NOTE: taking a frozenset of dt64 arrays does not force elements to date/datetime objects
-        if is_union:
-            result = frozenset(array) | frozenset(other)
-        elif is_intersection:
-            result = frozenset(array) & frozenset(other)
-        else:
-            result = frozenset(array).difference(frozenset(other))
+        # NOTE: taking a frozenset of dt64 arrays does not force elements to date/datetime objects, which is what we want here
+        with WarningsSilent():
+            # NOTE: dt64 element comparisons will warn about elementwise comparison, even those they are elements
+            if is_union:
+                result = frozenset(array) | frozenset(other)
+            elif is_intersection:
+                result = frozenset(array) & frozenset(other)
+            else:
+                result = frozenset(array).difference(frozenset(other))
+
         # NOTE: try to sort, as set ordering is not stable
         try:
             result = sorted(result) #type: ignore

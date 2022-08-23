@@ -38,11 +38,13 @@ from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame import IndexDefaultFactory
 from static_frame import IndexAutoConstructorFactory
+
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import InvalidFillValue
+from static_frame.core.exception import InvalidDatetime64Initializer
 
 from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.frame import FrameAssignBLoc
@@ -5744,9 +5746,9 @@ class TestUnit(TestCase):
 
     def test_frame_fillna_e(self) -> None:
 
-        f = Frame(np.arange(4).reshape(2, 2))
-        with self.assertRaises(RuntimeError):
-            # must provde a Frame
+        f = Frame.from_fields(((None, 'foo'), ('a', np.nan)))
+        with self.assertRaises(ValueError):
+            # ValueError: Fill values must be one-dimensional arrays.
             f.fillna(np.arange(4).reshape(2, 2))
 
     def test_frame_fillna_f(self) -> None:
@@ -5789,6 +5791,24 @@ class TestUnit(TestCase):
         f2 = f1.fillna(FillValueAuto(f=-1, O='na'))
         self.assertEqual(f2.to_pairs(),
                 (('A', (('w', -1.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', -1.0))), ('C', (('w', 3), ('x', 'na'), ('y', 2))), ('D', (('w', 0), ('x', 'na'), ('y', 3))))
+                )
+
+    def test_frame_fillna_i(self) -> None:
+        f1 = sf.Frame.from_fields((('', 'foo'), ('bar', None), ('baz', '')), columns=('a', 'b', 'c'))
+        f2 = f1.fillna({'a': 'x', 'b': 'x', 'c':'y'})
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, ''), (1, 'foo'))), ('b', ((0, 'bar'), (1, 'x'))), ('c', ((0, 'baz'), (1, '')))))
+
+        f3 = f1.fillfalsy({'a': 'x', 'b': 'x', 'c':'y'})
+        self.assertEqual(f3.to_pairs(),
+                (('a', ((0, 'x'), (1, 'foo'))), ('b', ((0, 'bar'), (1, 'x'))), ('c', ((0, 'baz'), (1, 'y')))))
+
+    def test_frame_fillna_j(self) -> None:
+        f1 = sf.Frame.from_fields(((1.1, 2.2), (3.1, np.nan), ('bar', 'foo'), ('baz', None)), columns=('a', 'b', 'c', 'd'), consolidate_blocks=True)
+
+        f2 = f1.fillna({'b': 'x', 'd':'y'})
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 1.1), (1, 2.2))), ('b', ((0, 3.1), (1, 'x'))), ('c', ((0, 'bar'), (1, 'foo'))), ('d', ((0, 'baz'), (1, 'y'))))
                 )
 
     #---------------------------------------------------------------------------
@@ -8503,6 +8523,20 @@ class TestUnit(TestCase):
                 (('p', (('w', 0), ('x', 2), ('z', 34))), ('q', (('w', False), ('x', False), ('z', False))), ('r', (('w', 'c'), ('x', 'd'), ('z', 'e'))), ('s', (('w', False), ('x', True), ('z', True))))
                 )
 
+    def test_frame_from_concat_gg(self) -> None:
+        # when explicitly named 0, we get the expected error when creting the index
+        s1 = Series([1, 2, 3], name=0)
+        s2 = s1.rename(np.datetime64('2022-01-01'))
+        with self.assertRaises(InvalidDatetime64Initializer):
+            _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
+
+        s1 = Series([1, 2, 3]) # happens implicitly, but here we make it explicit
+        s2 = s1.rename(np.datetime64('2022-01-01'))
+
+        with self.assertRaises(InvalidDatetime64Initializer):
+            _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
+
+
 
     #---------------------------------------------------------------------------
 
@@ -9692,6 +9726,15 @@ class TestUnit(TestCase):
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))))
                 )
 
+    def test_frame_to_frame_he_c(self) -> None:
+        fhe1 = ff.parse("f(Fg)|v(int,bool,str)|i((I,I),(str,str))|s(5,4)").to_frame_he()
+        fhe2 = ff.parse("f(Fg)|v(int,bool,str)|c((ISg,ISg),(dts, dts))|s(5,4)").to_frame_he()
+        post = {}
+        post[fhe1] = 0
+        post[fhe2] = 1
+        self.assertTrue(fhe1 in post)
+        self.assertTrue(fhe2 in post)
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_npz_a(self) -> None:
@@ -9791,6 +9834,13 @@ class TestUnit(TestCase):
             self.assertTrue(f1.equals(f2))
             self.assertIs(f2.__class__, FrameGO)
 
+    def test_frame_to_npz_empty(self) -> None:
+        f1 = Frame()
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertTrue(f1.equals(f2))
 
     #---------------------------------------------------------------------------
 
@@ -12553,56 +12603,80 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_via_values_apply_a(self) -> None:
+    def test_frame_via_values_a(self) -> None:
 
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
-        post1 = abs(f).via_values.apply(np.log)
+        # post1 = abs(f).via_values.apply(np.log)
+
+        post1 = np.log(abs(f).via_values)
+
         self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post2 = abs(f).via_values.apply(np.log, unify_blocks=True)
+        post2 = np.log(abs(f).via_values(unify_blocks=True))
         self.assertEqual(round(post2.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post3 = abs(f).via_values.apply(np.log, consolidate_blocks=True)
+        post3 = np.log(abs(f).via_values(consolidate_blocks=True))
         self.assertEqual(round(post3.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post4 = abs(f).via_values.apply(np.log, consolidate_blocks=True, dtype=float)
+        post4 = np.log(abs(f).via_values(consolidate_blocks=True, dtype=float))
         self.assertEqual(round(post4.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-        post1 = abs(f).via_values.apply(np.log, dtype=float)
+        post1 = np.log(abs(f).via_values(dtype=float))
         self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
-    def test_frame_via_values_apply_b(self) -> None:
+    def test_frame_via_values_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
-        post1 = f.via_values.apply(np.sin)
+        post1 = np.sin(f.via_values)
         self.assertEqual(round(post1).to_pairs(), #type: ignore
                 (('zZbu', ((0, 0.0), (1, 0.0), (2, 0.0))), ('ztsv', ((0, 0.0), (1, 0.0), (2, 0.0))), ('zUvW', ((0, 1.0), (1, 0.0), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 0.0), (2, 1.0))))
                 )
 
-    def test_frame_via_values_array_a(self) -> None:
+    def test_frame_via_values_c(self) -> None:
         f = ff.parse('s(3,4)|v(float)|c(I,str)')
         post1 = np.cos(f.via_values)
-        self.assertEqual(post1.round(2).tolist(),
+        self.assertEqual(post1.values.round(2).tolist(),
                 [[0.11, 0.24, -1.0, 0.95],
                 [0.5, -0.24, -0.76, -0.46],
                 [-0.79, 1.0, -0.73, -0.99]]
                 )
 
-    def test_frame_via_values_array_b(self) -> None:
-        f = ff.parse('s(3,4)|v(float)|c(I,str)')
-        post1 = np.sum(f.via_values, axis=0)
-        self.assertEqual(post1.round(2).tolist(),
-                [2027.4, 1810.0, 2447.36, 4361.16]
+    def test_frame_via_values_d(self) -> None:
+        f = ff.parse('s(3,4)|v(int)|c(I,str)') % 4
+        post1 = np.power(f.via_values, 2)
+        self.assertEqual(post1.to_pairs(),
+                (('zZbu', ((0, 9), (1, 9), (2, 9))), ('ztsv', ((0, 1), (1, 9), (2, 1))), ('zUvW', ((0, 0), (1, 1), (2, 1))), ('zkuW', ((0, 1), (1, 1), (2, 0))))
                 )
+
+        post2 = f.via_values.apply(np.power, 2)
+        self.assertEqual(post1.to_pairs(),
+                (('zZbu', ((0, 9), (1, 9), (2, 9))), ('ztsv', ((0, 1), (1, 9), (2, 1))), ('zUvW', ((0, 0), (1, 1), (2, 1))), ('zkuW', ((0, 1), (1, 1), (2, 0))))
+                )
+
+    def test_frame_via_values_e(self) -> None:
+        f = ff.parse('s(3,4)|v(int, bool)|c(I,str)')
+
+        post1 = np.power(f.via_values(), 2)
+        self.assertEqual(
+            [dt.kind for dt in post1.dtypes.values],
+            ['i', 'i', 'i', 'i']
+            )
+
+        post2 = np.power(f.via_values(unify_blocks=True), 2)
+        self.assertEqual(
+            [dt.kind for dt in post2.dtypes.values],
+            ['O', 'O', 'O', 'O']
+            )
+
 
     #---------------------------------------------------------------------------
 

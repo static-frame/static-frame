@@ -92,6 +92,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
+from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
@@ -113,4 +114,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.8'
+__version__ = '0.9.11'

@@ -7,6 +7,7 @@ from functools import partial
 
 import numpy as np
 from arraykit import name_filter
+from arraykit import get_new_indexers_and_screen
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -1731,6 +1732,7 @@ class IndexHierarchy(IndexBase):
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
             key: tp.Union[np.ndarray, CompoundLabelType],
+            single_depth: bool,
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
@@ -1748,7 +1750,10 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if key_at_depth.start is not None:
-                start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
+                if not single_depth:
+                    start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
+                else:
+                    [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
             else:
                 start = 0
 
@@ -1760,7 +1765,11 @@ class IndexHierarchy(IndexBase):
                     )
 
             if key_at_depth.stop is not None:
-                stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
+                if not single_depth:
+                    stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
+                else:
+                    [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
+                    stop += 1
             else:
                 stop = len(indexer_at_depth)
 
@@ -1768,6 +1777,9 @@ class IndexHierarchy(IndexBase):
                 other = PositionsAllocator.get(stop)[start:]
             else:
                 other = np.arange(start, stop, key_at_depth.step)
+
+            if single_depth:
+                return other
 
             return isin_array(
                     array=indexer_at_depth,
@@ -1836,7 +1848,11 @@ class IndexHierarchy(IndexBase):
                 ]
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
-            mask = self._build_mask_for_key_at_depth(depth=meaningful_depths[0], key=key)
+            mask = self._build_mask_for_key_at_depth(
+                    depth=meaningful_depths[0],
+                    key=key,
+                    single_depth=True,
+                    )
         else:
             # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
             if (len(meaningful_depths) == self.depth
@@ -1849,7 +1865,11 @@ class IndexHierarchy(IndexBase):
             mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
 
             for depth in meaningful_depths:
-                mask = self._build_mask_for_key_at_depth(depth=depth, key=key)
+                mask = self._build_mask_for_key_at_depth(
+                        depth=depth,
+                        key=key,
+                        single_depth=False,
+                        )
                 mask_2d[:, depth] = mask
 
             mask = mask_2d.all(axis=1)
@@ -1973,7 +1993,12 @@ class IndexHierarchy(IndexBase):
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
-            unique_indexes, new_indexer = ufunc_unique1d_indexer(indexer[key])
+            selection = indexer[key]
+            if len(index) > len(selection):
+                unique_indexes, new_indexer = ufunc_unique1d_indexer(selection)
+            else:
+                unique_indexes, new_indexer = get_new_indexers_and_screen(selection, index.positions)
+
             new_indices.append(index._extract_iloc(unique_indexes))
             new_indexers[i] = new_indexer
 
@@ -2295,11 +2320,14 @@ class IndexHierarchy(IndexBase):
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
         blocks = self._blocks._extract(row_key=order)
+        indexers = self._indexers[:, order]
+        indexers.flags.writeable = False
 
-        return self.__class__._from_type_blocks(
-                blocks=blocks,
-                index_constructors=self._index_constructors,
+        return self.__class__(
+                indices=self._indices, # will be copied with mutable_immutable_index_filter
+                indexers=indexers,
                 name=self._name,
+                blocks=blocks,
                 own_blocks=True,
                 )
 
