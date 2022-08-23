@@ -13,18 +13,17 @@ import static_frame as sf
 import pandas as pd
 
 from static_frame.core.interface import InterfaceSummary
-from static_frame.core.interface import InterfaceGroup
-from static_frame.core.container_util import ContainerMap
+from doc.build_example import bundle as doc_bundle
+# from static_frame.core.interface import InterfaceGroup
+# from static_frame.core.container_util import ContainerMap
 
 from doc.source.conf import DOCUMENTED_COMPONENTS
 
 def build(fp: Path) -> str:
-
     if fp.suffix != '.zip':
         raise RuntimeError('suffix must be .zip')
 
     sig_to_sig_full = {}
-    # sig_full_to_key = {}
     sig_to_doc = {}
     method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
     sigs = []
@@ -48,6 +47,8 @@ def build(fp: Path) -> str:
             method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
 
+    sig_to_example = doc_bundle()
+
     assert len(methods) == len(method_to_sig)
     assert len(sigs) == len(sig_to_sig_full)
     assert len(sigs) == len(sig_to_doc)
@@ -56,16 +57,15 @@ def build(fp: Path) -> str:
     with ZipFile(fp, mode='w', allowZip64=True) as archive:
         for name, bundle in (
                 ('sig_to_sig_full', sig_to_sig_full),
-                # ('sig_full_to_key', sig_full_to_key),
                 ('sig_to_doc', sig_to_doc),
                 ('method_to_sig', method_to_sig),
                 ('sigs', sigs),
                 ('methods', tuple(methods)),
+                ('sig_to_example', sig_to_example),
                 ):
             with archive.open(f'{name}.json', 'w', force_zip64=True) as f:
                 f.write(json.dumps(bundle).encode('utf-8'))
 
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     build(Path('/tmp/sf-api.zip'))

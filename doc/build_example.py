@@ -4910,6 +4910,8 @@ class ExGenFillValueAuto(ExGen):
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
+TAG_START = '#start_'
+TAG_END = '#end_'
 
 def calls_to_msg(calls: tp.Iterator[str],
         row: sf.Series
@@ -4926,7 +4928,7 @@ def calls_to_msg(calls: tp.Iterator[str],
     for i, call in enumerate(calls):
         # enumerate to pass through empty calls without writing start / end boundaries
         if i == 0:
-            yield f'#start_{cls.__name__}-{row["signature_no_args"]}'
+            yield f'{TAG_START}{cls.__name__}-{row["signature_no_args"]}'
 
         try:
             yield f'>>> {call}'
@@ -4939,7 +4941,7 @@ def calls_to_msg(calls: tp.Iterator[str],
             yield repr(e) # show this error
 
     if i >= 0:
-        yield f'#end_{cls.__name__}-{row["signature_no_args"]}'
+        yield f'{TAG_END}{cls.__name__}-{row["signature_no_args"]}'
         yield ''
 
 def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
@@ -5035,11 +5037,29 @@ def write():
             f.write(line)
             f.write('\n')
 
+def bundle() -> tp.Dict[str, tp.Sequence[str]]:
+    post = {}
+    lines = []
+    sig = ''
+    for line in gen_all_examples():
+        if line.startswith(TAG_START):
+            prefix, method = line.split('-')
+            cls_name = prefix.replace(TAG_START, '')
+            sig = f'{cls_name}.{method}'
+        elif line.startswith(TAG_END):
+            if lines:
+                post[sig] = lines.copy()
+                lines.clear()
+            sig = ''
+        else:
+            lines.append(line)
+    return post
 
 if __name__ == '__main__':
     for line in gen_all_examples():
         print(line)
     # write()
+    # post = bundle()
 
 
 
