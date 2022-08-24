@@ -633,13 +633,9 @@ class IndexHierarchy(IndexBase):
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
-        def _repeat(i_repeat_tuple: tp.Tuple[int, int]) -> np.ndarray:
-            i, repeat = i_repeat_tuple
-            return np.tile(i, reps=repeat)
-
         indexers: np.ndarray = np.array(
                 [
-                    np.hstack(tuple(map(_repeat, enumerate(repeats)))),
+                    np.hstack([np.repeat(val, repeats=reps) for val, reps in enumerate(repeats)]),
                     np.hstack(indexers_inner),
                 ],
                 dtype=DTYPE_INT_DEFAULT,
@@ -670,7 +666,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             items: iterable of pairs of label, :obj:`IndexBase`.
-            index_constructor: Optionally provide index constructor for outermost index.
+            index_constructors: Optionally provide index constructor for outermost index.
         '''
         items = iter(items)
         try:
@@ -696,6 +692,7 @@ class IndexHierarchy(IndexBase):
         ndim = index._NDIM
         labels: tp.List[tp.Hashable] = [label]
         repeats: tp.List[int] = [len(index)]
+        existing_index_constructors: tp.List[IndexConstructor] = list(index._index_constructors)
 
         blocks = [index._blocks]
         for label, index in items:
@@ -706,16 +703,39 @@ class IndexHierarchy(IndexBase):
             repeats.append(len(index))
             blocks.append(index._blocks)
 
-        tb = TypeBlocks.from_blocks(TypeBlocks.vstack_blocks_to_blocks(blocks))
+            # If the IndexConstructor differs for any level, downcast to the
+            # default constructor.
+            for i, constructor in enumerate(index._index_constructors):
+                if constructor != existing_index_constructors[i]:
+                    existing_index_constructors[i] = cls._INDEX_CONSTRUCTOR
+
+
+        outer_level = np.hstack(
+                [
+                    np.repeat(val, repeats=reps)
+                    for val, reps in zip(labels, repeats)
+                ])
+
+        assert len(outer_level) == sum(map(len, blocks)) # sanity check
+
+        def gen_blocks() -> tp.Iterable[np.ndarray]:
+            yield outer_level
+            yield from TypeBlocks.vstack_blocks_to_blocks(blocks)
+
+        tb = TypeBlocks.from_blocks(gen_blocks())
+
         size, depth = tb.shape
 
         def gen_columns():
             for i in range(depth):
                 yield tb._extract_array_column(i).reshape(size)
 
+        if index_constructors is None:
+            index_constructors = cls._INDEX_CONSTRUCTOR
+
         index_constructors_iter = cls._build_index_constructors(
-                index_constructors=index_constructors,
-                depth=tb.shape[1],
+                index_constructors=(index_constructors, *existing_index_constructors),
+                depth=depth,
                 )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(

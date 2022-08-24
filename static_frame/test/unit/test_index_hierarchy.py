@@ -1283,7 +1283,47 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
         ih2 = IndexHierarchy.from_labels((('p', 0), ('q', 1)))
         ih3 = IndexHierarchy.from_index_items((('a', ih1), ('b', ih2)))
-        breakpoint()
+
+        assert ih3.shape == (len(ih1) + len(ih2), 3)
+
+        assert set(ih3._indices[0]) == {"a", "b"}
+        assert set(ih3._indices[1]) == {"x", "y", "p", "q"}
+        assert set(ih3._indices[2]) == {0, 1}
+
+        assert ih3._indices[1].equals(ih1._indices[0].union(ih2._indices[0]))
+        assert ih3._indices[2].equals(ih1._indices[1].union(ih2._indices[1]))
+
+        assert tuple(ih3) == (
+                ('a', 'x', 0),
+                ('a', 'y', 1),
+                ('b', 'p', 0),
+                ('b', 'q', 1),
+                )
+
+    def test_hierarchy_from_index_items_e(self) -> None:
+        ih1 = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        ih2 = IndexHierarchy.from_labels((('p', "2022-12-30"), ('q', "2022-12-31")), index_constructors=[Index, IndexDate])
+        ih3 = IndexHierarchy.from_index_items((('a', ih1), ('b', ih2)))
+
+        assert ih3.shape == (len(ih1) + len(ih2), 3)
+
+        assert set(ih3._indices[0]) == {"a", "b"}
+        assert set(ih3._indices[1]) == {"x", "y", "p", "q"}
+        # Note the downcast to Python date objects
+        assert set(ih3._indices[2]) == {0, 1, datetime.date(2022, 12, 30), datetime.date(2022, 12, 31)}
+
+        assert ih3._indices[1].equals(ih1._indices[0].union(ih2._indices[0]))
+
+        # Note the downcast effect here as well
+        assert not ih3._indices[2].equals(ih1._indices[1].union(ih2._indices[1]))
+        assert set(ih3._indices[2]) == set(ih1._indices[1].union(ih2._indices[1]))
+
+        assert tuple(ih3) == (
+                ('a', 'x', 0),
+                ('a', 'y', 1),
+                ('b', 'p', datetime.date(2022, 12, 30)),
+                ('b', 'q', datetime.date(2022, 12, 31)),
+                )
 
     #---------------------------------------------------------------------------
 
