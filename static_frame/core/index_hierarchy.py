@@ -627,10 +627,6 @@ class IndexHierarchy(IndexBase):
             indexers_inner.append(new_indexer)
             repeats.append(len(index))
 
-        if not labels:
-            assert index_inner is None # sanity check
-            return cls._from_empty((), name=name, depth_reference=2)
-
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
         indexers: np.ndarray = np.array(
