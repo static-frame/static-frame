@@ -607,7 +607,7 @@ class IndexHierarchy(IndexBase):
         repeats: tp.List[int] = []
 
         for label, index in items:
-            if index._NDIM != 1:
+            if index.depth != 1:
                 raise ErrorInitIndex("All indices must have the same shape.")
 
             labels.append(label)
@@ -658,7 +658,7 @@ class IndexHierarchy(IndexBase):
     def from_index_items(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[tp.Hashable, IndexBase]],
             *,
-            index_constructors: IndexConstructors = None,
+            index_constructor: IndexConstructor = None,
             name: NameType = None,
             ) -> IH:
         '''
@@ -666,7 +666,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             items: iterable of pairs of label, :obj:`IndexBase`.
-            index_constructors: Optionally provide index constructor for outermost index.
+            index_constructor: Optionally provide index constructor for outermost index.
         '''
         items = iter(items)
         try:
@@ -675,14 +675,6 @@ class IndexHierarchy(IndexBase):
             return cls._from_empty((), name=name, depth_reference=2)
 
         if index.depth == 1:
-            if index_constructors is not None:
-                try:
-                    [index_constructor] = list(index_constructors)
-                except TypeError:
-                    raise ErrorInitIndex('Must provide exactly one index constructor.')
-            else:
-                index_constructor = None
-
             return cls._from_index_items_1d(
                     itertools.chain([(label, index)], items), # type: ignore
                     index_constructor=index_constructor,
@@ -732,11 +724,11 @@ class IndexHierarchy(IndexBase):
             for i in range(depth):
                 yield tb._extract_array_column(i).reshape(size)
 
-        if index_constructors is None:
-            index_constructors = cls._INDEX_CONSTRUCTOR
+        if index_constructor is None:
+            index_constructor = cls._INDEX_CONSTRUCTOR
 
         index_constructors_iter = cls._build_index_constructors(
-                index_constructors=(index_constructors, *existing_index_constructors),
+                index_constructors=(index_constructor, *existing_index_constructors),
                 depth=depth,
                 )
 

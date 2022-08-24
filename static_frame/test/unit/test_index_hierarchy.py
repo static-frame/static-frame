@@ -1315,7 +1315,6 @@ class TestUnit(TestCase):
         assert ih3._indices[1].equals(ih1._indices[0].union(ih2._indices[0]))
 
         # Note the downcast effect here as well
-        assert not ih3._indices[2].equals(ih1._indices[1].union(ih2._indices[1]))
         assert set(ih3._indices[2]) == set(ih1._indices[1].union(ih2._indices[1]))
 
         assert tuple(ih3) == (
@@ -1324,6 +1323,31 @@ class TestUnit(TestCase):
                 ('b', 'p', datetime.date(2022, 12, 30)),
                 ('b', 'q', datetime.date(2022, 12, 31)),
                 )
+
+    def test_hierarchy_from_index_items_f(self) -> None:
+        ih = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        idx = Index(('A', 'B', 'C'))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_index_items((('a', ih), ('b', idx)))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_index_items((('a', idx), ('b', ih)))
+
+    def test_hierarchy_from_index_items_g(self) -> None:
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+
+        ih = IndexHierarchy.from_index_items({"2020-12-30": idx1, "2020-12-31": idx2}.items(), index_constructor=IndexDate)
+
+        assert ih.shape == (len(idx1) + len(idx2), 2)
+        assert tuple(ih.astype(str)) == (
+                ('2020-12-30', 'A'),
+                ('2020-12-30', 'B'),
+                ('2020-12-30', 'C'),
+                ('2020-12-31', 'x'),
+                ('2020-12-31', 'y'),
+        )
 
     #---------------------------------------------------------------------------
 
