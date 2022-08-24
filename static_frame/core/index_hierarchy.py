@@ -674,7 +674,7 @@ class IndexHierarchy(IndexBase):
         except StopIteration:
             return cls._from_empty((), name=name, depth_reference=2)
 
-        if index._NDIM == 1:
+        if index.depth == 1:
             if index_constructors is not None:
                 try:
                     [index_constructor] = list(index_constructors)
@@ -684,28 +684,30 @@ class IndexHierarchy(IndexBase):
                 index_constructor = None
 
             return cls._from_index_items_1d(
-                    itertools.chain([(label, index)], items),
+                    itertools.chain([(label, index)], items), # type: ignore
                     index_constructor=index_constructor,
                     name=name,
                     )
 
-        ndim = index._NDIM
+        assert isinstance(index, IndexHierarchy) # mypy
+
+        depth = index.depth
         labels: tp.List[tp.Hashable] = [label]
         repeats: tp.List[int] = [len(index)]
         existing_index_constructors: tp.List[IndexConstructor] = list(index._index_constructors)
 
         blocks = [index._blocks]
         for label, index in items:
-            if index._NDIM != ndim:
+            if index.depth != depth:
                 raise ErrorInitIndex("All indices must have the same shape.")
 
             labels.append(label)
             repeats.append(len(index))
-            blocks.append(index._blocks)
+            blocks.append(index._blocks)  # type: ignore
 
             # If the IndexConstructor differs for any level, downcast to the
             # default constructor.
-            for i, constructor in enumerate(index._index_constructors):
+            for i, constructor in enumerate(index._index_constructors):  # type: ignore
                 if constructor != existing_index_constructors[i]:
                     existing_index_constructors[i] = cls._INDEX_CONSTRUCTOR
 
@@ -726,7 +728,7 @@ class IndexHierarchy(IndexBase):
 
         size, depth = tb.shape
 
-        def gen_columns():
+        def gen_columns() -> tp.Iterator[np.ndarray]:
             for i in range(depth):
                 yield tb._extract_array_column(i).reshape(size)
 
