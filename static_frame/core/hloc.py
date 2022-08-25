@@ -1,4 +1,3 @@
-from itertools import zip_longest
 import typing as tp
 
 from static_frame.core.util import GetItemKeyType

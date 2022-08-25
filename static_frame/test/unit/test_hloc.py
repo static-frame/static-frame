@@ -1,4 +1,4 @@
-# pylint: disable=comparison-overlap
+# type: ignore [non-overlapping-equality-check]
 import unittest
 
 from static_frame import HLoc
