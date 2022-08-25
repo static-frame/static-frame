@@ -507,7 +507,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
-        target_bus_index = target_hierarchy._get_unique_labels_in_occurence_order(depth=0)
+        target_bus_index = target_hierarchy.get_unique_labels_in_occurence_order(depth=0)
         target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index) # type: ignore
 
         # create a Boolean array equal to the entire realized length

@@ -1399,6 +1399,41 @@ class IndexHierarchy(IndexBase):
             return self._blocks._extract_array_column(depth_level)
         return self._blocks._extract_array(column_key=list(depth_level))
 
+    def index_at_depth(self: IH,
+            depth_level: DepthLevelSpecifier = 0,
+            ) -> tp.Union[Index, tp.List[Index]]:
+        '''
+        Return an index, or a list of indices for the ``depth_level`` specified.
+
+        Args:
+            depth_level: a single depth level, or iterable depth of depth levels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(depth_level, INT_TYPES):
+            return self._indices[depth_level]
+
+        return list(map(self._indices.__getitem__, depth_level))
+
+    def indexer_at_depth(self: IH,
+            depth_level: DepthLevelSpecifier = 0,
+            ) -> np.ndarray:
+        '''
+        Return the indexers for the ``depth_level`` specified.
+        Array will 2D if multiple depths are selected.
+
+        Args:
+            depth_level: a single depth level, or iterable depth of depth levels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if not isinstance(depth_level, INT_TYPES):
+            depth_level = list(depth_level)
+
+        return self._indexers[depth_level]
+
     # Could this be memoized?
     @staticmethod
     def _extract_counts(
@@ -1649,15 +1684,15 @@ class IndexHierarchy(IndexBase):
             own_blocks=True,
             )
 
-    def _get_unique_labels_in_occurence_order(self: IH,
+    def get_unique_labels_in_occurence_order(self: IH,
             depth: int = 0,
             ) -> tp.Sequence[tp.Hashable]:
         '''
-        Index could be [A, B, C]
-        Indexers could be [2, 0, 0, 2, 1]
-
-        This function return [C, A, B] -- shoutout to my initials
+        Return the unique labels in the given depth in the order they appear in the hierarchy.
         '''
+        # Index could be [A, B, C]
+        # Indexers could be [2, 0, 0, 2, 1]
+        # This function return [C, A, B] -- shoutout to my initials
         # get the outer level, or just the unique frame labels needed
         labels = self.values_at_depth(depth)
         label_indexes = ufunc_unique1d_positions(labels)[0]
@@ -2312,6 +2347,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     #---------------------------------------------------------------------------
+
     def _drop_missing(self,
             func: tp.Callable[[np.ndarray], np.ndarray],
             condition: tp.Callable[[np.ndarray], bool],
@@ -2333,7 +2369,6 @@ class IndexHierarchy(IndexBase):
             return self #type: ignore
 
         return self._drop_iloc(~row_key) #type: ignore
-
 
     def dropna(self, *,
             condition: tp.Callable[[np.ndarray], bool] = np.all,
@@ -2358,7 +2393,6 @@ class IndexHierarchy(IndexBase):
             condition:
         '''
         return self._drop_missing(isfalsy_array, condition)
-
 
     #---------------------------------------------------------------------------
 
@@ -2407,6 +2441,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     #---------------------------------------------------------------------------
+
     def _sample_and_key(self: IH,
             count: int = 1,
             *,
