@@ -366,19 +366,20 @@ class ArchiveDirectory(Archive):
             memory_map: bool,
             ):
 
-        self._archive = fp
-        if not os.path.exists(self._archive):
-            if writeable:
-                os.mkdir(fp)
-            else:
+        if writeable:
+            # because an error in writing will remove the entire directory, we requires the directory to be newly created
+            if os.path.exists(fp):
+                raise RuntimeError(f'Atttempting to write to an existant directory: {fp}')
+            os.mkdir(fp)
+        else:
+            if not os.path.exists(fp):
                 raise RuntimeError(f'Atttempting to read from a non-existant directory: {fp}')
-        elif not os.path.isdir(self._archive):
-            raise RuntimeError(f'A directory must be provided, not {fp}')
-
-        if not writeable:
+            if not os.path.isdir(fp):
+                raise RuntimeError(f'A directory must be provided, not {fp}')
             self._header_decode_cache = {}
-            self.labels = frozenset(f.name for f in os.scandir(self._archive))
+            self.labels = frozenset(f.name for f in os.scandir(fp))
 
+        self._archive = fp
         self.memory_map = memory_map
 
     def write_array(self, name: str, array: np.ndarray) -> None:
