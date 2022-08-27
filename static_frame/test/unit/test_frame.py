@@ -9951,8 +9951,8 @@ class TestUnit(TestCase):
             with self.assertRaises(ErrorNPYEncode):
                 sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npy(fp)
             self.assertFalse(os.path.exists(fp))
-
-
+            # restore so test does not complain
+            os.mkdir(fp)
 
     #---------------------------------------------------------------------------
 
