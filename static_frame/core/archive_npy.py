@@ -892,7 +892,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     )
         elif columns is not None:
             if columns.__class__ is not np.ndarray:
-                raise RuntimeError('index argument must be an Index, IndexHierarchy, or 1D np.ndarray')
+                raise RuntimeError('columns argument must be an Index, IndexHierarchy, or 1D np.ndarray')
 
             depth_columns = 1 # only support 1D
             name_columns = None

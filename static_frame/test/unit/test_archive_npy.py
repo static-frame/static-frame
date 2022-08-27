@@ -321,6 +321,16 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 NPZ(fp, 'foo').from_arrays(blocks=(a1,))
 
+    def test_archive_components_npz_write_arrays_k(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,str,bool,bool)')
+
+        with temp_file('.zip') as fp:
+            f1.to_npz(fp)
+            a1 = np.arange(12).reshape(3, 4)
+            with self.assertRaises(UnsupportedOperation):
+                NPZ(fp, 'r').from_arrays(blocks=(a1,))
+
+
     #-----------------------------------------------------------------------------
 
     def test_archive_components_npy_write_arrays_h(self) -> None:
@@ -349,6 +359,7 @@ class TestUnit(TestCase):
         a3 = np.array([True, False, True])
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             columns=('a', 'b', 'c', 'd', 'e', 'f')
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_arrays(blocks=(a1, a2, a3), columns=columns, name='bar')
@@ -536,8 +547,7 @@ class TestUnit(TestCase):
 
         with TemporaryDirectory() as fp:
             os.rmdir(fp) # let it be re-created
-            f1.to_npy(fp)
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(UnsupportedOperation):
                 _ = NPY(fp, 'w').contents
 
     def test_archive_components_npz_contents_a(self) -> None:
@@ -566,6 +576,15 @@ class TestUnit(TestCase):
             f1.to_npy(fp)
             with self.assertRaises(RuntimeError):
                 npy = NPY(fp, 'w')
+
+    def test_archive_components_npy_nbytes_c(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
+
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+            with self.assertRaises(UnsupportedOperation):
+                _ = NPY(fp, 'w').nbytes
+
 
     def test_archive_zip_missing_cleanup(self) -> None:
         # Test for cases where the specified file doesn't exist.
