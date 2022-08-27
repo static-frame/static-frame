@@ -4,6 +4,7 @@ import json
 import struct
 from ast import literal_eval
 import os
+import shutil
 import mmap
 import typing as tp
 from types import TracebackType
@@ -79,7 +80,10 @@ class NPYConverter:
         '''
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
-            raise ErrorNPYEncode('no support for object dtypes')
+            size = 40
+            preview = repr(array)
+            raise ErrorNPYEncode(
+                f'no support for object dtypes: {preview[:size]}{"..." if len(preview) > size else ""}')
         if dtype.names is not None:
             raise ErrorNPYEncode('no support for structured arrays')
         if array.ndim == 0 or array.ndim > 2:
@@ -234,6 +238,8 @@ class Archive:
     _header_decode_cache: HeaderDecodeCacheType
     _archive: tp.Union[ZipFile, PathSpecifier]
 
+    # set per subclass
+    FUNC_REMOVE_FP: tp.Callable[[PathSpecifier], None]
 
     def __init__(self,
             fp: PathSpecifier,
@@ -280,6 +286,7 @@ class ArchiveZip(Archive):
             )
 
     _archive: ZipFile
+    FUNC_REMOVE_FP = os.remove
 
     def __init__(self,
             fp: PathSpecifier,
@@ -357,6 +364,7 @@ class ArchiveDirectory(Archive):
             )
 
     _archive: PathSpecifier
+    FUNC_REMOVE_FP = shutil.rmtree
 
     def __init__(self,
             fp: PathSpecifier,
@@ -582,29 +590,35 @@ class ArchiveFrameConverter:
                 memory_map=False,
                 )
 
-        ArchiveIndexConverter.index_encode(
-                metadata=metadata,
-                archive=archive,
-                index=frame._index,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-                key_types=Label.KEY_TYPES_INDEX,
-                depth=depth_index,
-                include=include_index,
-                )
+        try:
+            ArchiveIndexConverter.index_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    index=frame._index,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                    key_types=Label.KEY_TYPES_INDEX,
+                    depth=depth_index,
+                    include=include_index,
+                    )
+            ArchiveIndexConverter.index_encode(
+                    metadata=metadata,
+                    archive=archive,
+                    index=frame._columns,
+                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                    key_types=Label.KEY_TYPES_COLUMNS,
+                    depth=depth_columns,
+                    include=include_columns,
+                    )
+            i = 0
+            for i, array in enumerate(block_iter, 1):
+                archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
 
-        ArchiveIndexConverter.index_encode(
-                metadata=metadata,
-                archive=archive,
-                index=frame._columns,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-                key_types=Label.KEY_TYPES_COLUMNS,
-                depth=depth_columns,
-                include=include_columns,
-                )
-
-        i = 0
-        for i, array in enumerate(block_iter, 1):
-            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
+        except ErrorNPYEncode:
+            archive.close()
+            archive.__del__() # force cleanup
+            if os.path.exists(fp):
+                cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
+            raise
 
         metadata[Label.KEY_DEPTHS] = [
                 i, # block count
@@ -1054,16 +1068,10 @@ class NPZ(ArchiveComponentsConverter):
     '''
     _ARCHIVE_CLS = ArchiveZip
 
-    # def from_npy(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
-    #     pass
-
 class NPY(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
     _ARCHIVE_CLS = ArchiveDirectory
-
-    # def from_npz(self, fp: PathSpecifier) -> None: # writes an NPZ from an NPY
-    #     pass
 
 
 

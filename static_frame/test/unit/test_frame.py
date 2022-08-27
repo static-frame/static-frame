@@ -9842,6 +9842,16 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             self.assertTrue(f1.equals(f2))
 
+    def test_frame_to_npz_failure_a(self) -> None:
+        from datetime import date
+        with temp_file('.npz') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npz(fp)
+            self.assertFalse(os.path.exists(fp))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_npz_a(self) -> None:
@@ -9934,6 +9944,15 @@ class TestUnit(TestCase):
             f3 = Frame.from_npy(fp)
             f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
             self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
+
+    def test_frame_to_npy_failure_a(self) -> None:
+        from datetime import date
+        with TemporaryDirectory() as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+
+
 
     #---------------------------------------------------------------------------
 

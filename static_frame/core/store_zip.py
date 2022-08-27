@@ -261,6 +261,7 @@ class _StoreZip(Store):
         else:
             label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
+        # NOTE: zip catch errors and remove self._fp before exiting to not leave a malformed zip; not sure of this is needed for `to_npz` failures`
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame_bytes in label_and_bytes():
                 label_encoded = config_map.default.label_encode(label)
@@ -338,7 +339,7 @@ class StoreZipPickle(_StoreZip):
     '''A zip of pickles, permitting incremental loading of Frames.
     '''
     _EXT_CONTAINED = '.pickle'
-    _EXPORTER = pickle.dumps
+    _EXPORTER = pickle.dumps # NOTE: might be able to use to_pickle
 
     @classmethod
     def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
