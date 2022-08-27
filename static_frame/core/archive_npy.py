@@ -1,39 +1,34 @@
-from zipfile import ZipFile
-from zipfile import ZIP_STORED
 import json
-import struct
-from ast import literal_eval
+import mmap
 import os
 import shutil
-import mmap
+import struct
 import typing as tp
-from types import TracebackType
+from ast import literal_eval
 from io import UnsupportedOperation
+from types import TracebackType
+from zipfile import ZIP_STORED
+from zipfile import ZipFile
 
 import numpy as np
 
-from static_frame.core.interface_meta import InterfaceMeta
-
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import list_to_tuple
-from static_frame.core.util import NameType
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import concat_resolved
-
+from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_set
-from static_frame.core.container_util import ContainerMap
-
-from static_frame.core.index_base import IndexBase
-from static_frame.core.index import Index
-from static_frame.core.index_datetime import dtype_to_index_cls
-
-from static_frame.core.exception import ErrorNPYDecode
-from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import ErrorNPYDecode
+from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.index import Index
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_datetime import dtype_to_index_cls
+from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.util import DTYPE_OBJECT_KIND
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifier
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import list_to_tuple
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -1072,8 +1067,3 @@ class NPY(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
     _ARCHIVE_CLS = ArchiveDirectory
-
-
-
-
-
