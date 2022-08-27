@@ -75,14 +75,13 @@ class NPYConverter:
         '''
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
-            size = 40
             preview = repr(array)
             raise ErrorNPYEncode(
-                f'no support for object dtypes: {preview[:size]}{"..." if len(preview) > size else ""}')
+                f'No support for object dtypes: {preview[:40]}{"..." if len(preview) > 40 else ""}')
         if dtype.names is not None:
-            raise ErrorNPYEncode('no support for structured arrays')
+            raise ErrorNPYEncode('No support for structured arrays')
         if array.ndim == 0 or array.ndim > 2:
-            raise ErrorNPYEncode('no support for ndim == 0 or greater than two.')
+            raise ErrorNPYEncode('No support for ndim other than 1 and 2.')
 
         flags = array.flags
         fortran_order = flags.f_contiguous
