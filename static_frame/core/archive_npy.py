@@ -5,6 +5,7 @@ import shutil
 import struct
 import typing as tp
 from ast import literal_eval
+from io import BytesIO
 from io import UnsupportedOperation
 from types import TracebackType
 from zipfile import ZIP_STORED
@@ -611,7 +612,8 @@ class ArchiveFrameConverter:
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
-            if os.path.exists(fp):
+            # fp can be bytes objects in some scenarios
+            if not isinstance(fp, BytesIO) and os.path.exists(fp):
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 

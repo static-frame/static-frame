@@ -1,35 +1,32 @@
+import os
+import typing as tp
 from datetime import date
 from datetime import datetime
-# from io import StringIO
-import typing as tp
-import numpy as np
-import frame_fixtures as ff
 
-from static_frame.core.frame import Frame
+import frame_fixtures as ff
+import numpy as np
+
 from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred
-
-from static_frame.core.series import Series
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_zip import StoreZipTSV
-
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfig
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.hloc import HLoc
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import skip_win
-
-from static_frame.core.index_auto import IndexAutoFactory
-
 from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import StoreFileMutation
+from static_frame.core.frame import Frame
+from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.series import Series
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_zip import StoreZipTSV
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -2257,6 +2254,19 @@ class TestUnit(TestCase):
             self.assertEqual(b3['f5'].to_pairs(),
                 ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
                 )
+
+    def test_bus_npz_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3').astype(object)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                b1.to_zip_npz(fp)
+            self.assertFalse(os.path.exists(fp))
 
 
 if __name__ == '__main__':
