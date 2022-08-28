@@ -612,8 +612,8 @@ class ArchiveFrameConverter:
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
-            # fp can be bytes objects in some scenarios
-            if not isinstance(fp, BytesIO) and os.path.exists(fp):
+            # fp can be BytesIO in a to_zip_npz scenario
+            if not isinstance(fp, BytesIO) and os.path.exists(fp): #type: ignore
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
