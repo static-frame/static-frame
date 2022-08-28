@@ -10024,6 +10024,16 @@ class TestUnit(TestCase):
                 )
             c.__del__()
 
+    def test_frame_from_npy_memory_map_e(self) -> None:
+        f1 = ff.parse('s(3,3)|v(str,bool)').astype[2](object)
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+            with self.assertRaises(ErrorNPYEncode):
+                f1.to_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+            os.mkdir(fp)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_astype_a(self) -> None:
