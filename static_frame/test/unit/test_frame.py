@@ -9842,6 +9842,16 @@ class TestUnit(TestCase):
             f2 = Frame.from_npz(fp)
             self.assertTrue(f1.equals(f2))
 
+    def test_frame_to_npz_failure_a(self) -> None:
+        from datetime import date
+        with temp_file('.npz') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npz(fp)
+            self.assertFalse(os.path.exists(fp))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_npz_a(self) -> None:
@@ -9861,6 +9871,7 @@ class TestUnit(TestCase):
     def test_frame_to_npy_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9869,6 +9880,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(10_000,2)|v(int,str)|c((I, ID),(str,dtD))|i(ID,dtD)').rename('foo')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9877,6 +9889,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9886,6 +9899,7 @@ class TestUnit(TestCase):
                 'foo', index='bar', columns='baz')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9895,6 +9909,7 @@ class TestUnit(TestCase):
                 'foo', index='bar', columns='baz')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9905,6 +9920,7 @@ class TestUnit(TestCase):
                 )
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9913,6 +9929,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename('foo')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9921,6 +9938,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,100)|v(int,str,bool)').rename(((1, 2), (3, 4)))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2 = Frame.from_npy(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9930,16 +9948,28 @@ class TestUnit(TestCase):
         f2 = f1[f1.dtypes == int] # force maximally partitioned
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f2.to_npy(fp, consolidate_blocks=True)
             f3 = Frame.from_npy(fp)
             f2.equals(f3, compare_dtype=True, compare_class=True, compare_name=True)
             self.assertEqual(f3._blocks.shapes.tolist(), [(20, 50)])
+
+    def test_frame_to_npy_failure_a(self) -> None:
+        from datetime import date
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+            with self.assertRaises(ErrorNPYEncode):
+                sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+            # restore so test does not complain
+            os.mkdir(fp)
 
     #---------------------------------------------------------------------------
 
     def test_frame_from_npy_memory_map_a(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2, finalizer = Frame.from_npy_mmap(fp)
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
@@ -9948,6 +9978,7 @@ class TestUnit(TestCase):
     def test_frame_from_npy_memory_map_b(self) -> None:
         f1 = ff.parse('s(10_000,2)|v(int,str)|i((I, ID),(str,dtD))|c(ID,dtD)').rename('foo')
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f2, finalizer = Frame.from_npy_mmap(fp)
             f3 = f2.to_frame()
@@ -9956,6 +9987,7 @@ class TestUnit(TestCase):
     def test_frame_from_npy_memory_map_c(self) -> None:
         f1 = ff.parse('s(3,3)')
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             f1, finalizer = sf.Frame.from_npy_mmap(fp)
             f1 = f1.set_index(0)
@@ -9965,6 +9997,7 @@ class TestUnit(TestCase):
     def test_frame_from_npy_memory_map_d(self) -> None:
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
 
             class C:
                 def __init__(self) -> None:
@@ -9990,6 +10023,16 @@ class TestUnit(TestCase):
                 ((0, 1930.4), (1, -610.8), (2, 694.3))
                 )
             c.__del__()
+
+    def test_frame_from_npy_memory_map_e(self) -> None:
+        f1 = ff.parse('s(3,3)|v(str,bool)').astype[2](object)
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+            with self.assertRaises(ErrorNPYEncode):
+                f1.to_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+            os.mkdir(fp)
+
 
     #---------------------------------------------------------------------------
 
