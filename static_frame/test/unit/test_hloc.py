@@ -28,7 +28,7 @@ class TestUnit(TestCase):
     def test_hloc_repr(self) -> None:
         assert repr(HLoc[1]) == 'HLoc[1]'
         assert repr(HLoc[1,]) == 'HLoc[1]'
-        assert repr(HLoc[1, 2]) == 'HLoc[1, 2]'
+        assert repr(HLoc[1, 2]) == 'HLoc[1,2]'
         assert repr(HLoc[:,1]) == 'HLoc[:,1]'
         assert repr(HLoc[:,1,2]) == 'HLoc[:,1,2]'
         assert repr(HLoc[1:2,:]) == 'HLoc[1:2,:]'

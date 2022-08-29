@@ -34,18 +34,9 @@ class HLoc(metaclass=HLocMeta):
         return self.key.__len__()
 
     def __repr__(self) -> str:
-        contains_slices = False
-
-        # This is usually very small (i.e. <10 items), so it's very cheap to
-        # pay the price of an extra loop to check for slices.
-        for key in self.key:
-            if key.__class__ is slice:
-                contains_slices = True
-                break
-
         def gen_nested_keys() -> tp.Iterator[str]:
             for key in self.key:
-                if key.__class__ is slice:
+                if key.__class__ is not slice:
                     yield str(key)
                     continue
 
@@ -66,11 +57,4 @@ class HLoc(metaclass=HLocMeta):
 
                 yield result
 
-        if not contains_slices:
-            if len(self.key) == 1:
-                return f'HLoc[{self.key[0]}]'
-
-            # self.key is a tuple, so we strip off the parentheses.
-            return f'HLoc[{str(self.key)[1:-1]}]'
-
-        return f'<HLoc[{",".join(gen_nested_keys())}]>'
+        return f'HLoc[{",".join(gen_nested_keys())}]'
