@@ -45,7 +45,7 @@ class HLoc(metaclass=HLocMeta):
 
         def gen_nested_keys() -> tp.Iterator[str]:
             for key in self.key:
-                if not isinstance(key, slice):
+                if key.__class__ is slice:
                     yield str(key)
                     continue
 
