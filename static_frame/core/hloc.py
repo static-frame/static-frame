@@ -73,4 +73,4 @@ class HLoc(metaclass=HLocMeta):
             # self.key is a tuple, so we strip off the parentheses.
             return f'HLoc[{str(self.key)[1:-1]}]'
 
-        return f'HLoc[{",".join(gen_nested_keys())}]'
+        return f'<HLoc[{",".join(gen_nested_keys())}]>'
