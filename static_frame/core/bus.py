@@ -45,9 +45,7 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-
 from static_frame.core.style_config import StyleConfig
-# from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index

@@ -1,6 +1,16 @@
 What is New in StaticFrame
 ===============================
 
+0.9.12
+----------
+
+``ErrorNPYEncode`` exceptions raised during authoring NPZ files or NPY directories now remove those files or directories.
+
+``ErrorNPYEncode`` exceptions raised during ``to_zip_npz()`` now remove the archive.
+
+Authoring NPYs to a pre-existing directory will now raise a ``RuntimeError``.
+
+
 0.9.11
 ----------
 
