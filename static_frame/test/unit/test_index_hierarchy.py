@@ -4094,6 +4094,12 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         self.assertEqual(ih1.unique([1]).tolist(), ['a', 'b'])
 
+    def test_hierarchy_unique_c(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        with self.assertRaises(RuntimeError):
+            ih1.unique((0, 2), order_by_occurrence=True)
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_union_a(self) -> None:
@@ -4176,8 +4182,8 @@ class TestUnit(TestCase):
         ]
         ih = IndexHierarchy.from_labels(labels)
 
-        depth0 = list(ih.get_unique_labels_in_occurence_order(0))
-        depth1 = list(ih.get_unique_labels_in_occurence_order(1))
+        depth0 = ih.unique(depth_level=0, order_by_occurrence=True).tolist()
+        depth1 = ih.unique(depth_level=1, order_by_occurrence=True).tolist()
 
         self.assertListEqual([1, 3, 2, 0, 4, 5], depth0)
         self.assertListEqual(list("ABCFDE"), depth1)

@@ -1684,21 +1684,6 @@ class IndexHierarchy(IndexBase):
             own_blocks=True,
             )
 
-    def get_unique_labels_in_occurence_order(self: IH,
-            depth: int = 0,
-            ) -> tp.Sequence[tp.Hashable]:
-        '''
-        Return the unique labels in the given depth in the order they appear in the hierarchy.
-        '''
-        # Index could be [A, B, C]
-        # Indexers could be [2, 0, 0, 2, 1]
-        # This function return [C, A, B] -- shoutout to my initials
-        # get the outer level, or just the unique frame labels needed
-        labels = self.values_at_depth(depth)
-        label_indexes = ufunc_unique1d_positions(labels)[0]
-        label_indexes.sort()
-        return labels[label_indexes] # type: ignore
-
     # --------------------------------------------------------------------------
 
     def _build_mask_for_key_at_depth(self: IH,
@@ -2194,12 +2179,14 @@ class IndexHierarchy(IndexBase):
 
     def unique(self: IH,
             depth_level: DepthLevelSpecifier = 0,
+            order_by_occurrence: bool = False,
             ) -> np.ndarray:
         '''
         Return a NumPy array of unique values.
 
         Args:
             depth_level: Specify a single depth or multiple depths in an iterable.
+            order_by_occurrence: if True, values are ordered by when they first appear
 
         Returns:
             :obj:`numpy.ndarray`
@@ -2213,7 +2200,20 @@ class IndexHierarchy(IndexBase):
             pos = depth_level
 
         if pos is not None: # i.e. a single level
+            if order_by_occurrence:
+                # Index could be [A, B, C]
+                # Indexers could be [2, 0, 0, 2, 1]
+                # This function return [C, A, B] -- shoutout to my initials
+                # get the outer level, or just the unique frame labels needed
+                labels = self.values_at_depth(pos)
+                label_indexes = ufunc_unique1d_positions(labels)[0]
+                label_indexes.sort()
+                return labels[label_indexes] # type: ignore
+
             return self._indices[pos].values
+
+        if order_by_occurrence:
+            raise NotImplementedError('order_by_occurrence not implemented for multiple depth levels.')
 
         return ufunc_unique(array2d_to_array1d(self.values_at_depth(sel)))
 

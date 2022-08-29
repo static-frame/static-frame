@@ -12,7 +12,6 @@ from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
 
-
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
@@ -26,7 +25,6 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
@@ -1115,13 +1113,15 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: DepthLevelSpecifier = 0,
+            order_by_occurrence: bool = False,
             ) -> np.ndarray:
         '''
         Return a NumPy array of unique values.
 
         Args:
             depth_level: defaults to 0 for for a 1D Index.
+            order_by_occurrence: for 1D indices, this argument is a no-op. Provided for compatibility with IndexHierarchy.
 
         Returns:
             :obj:`numpy.ndarray`
