@@ -53,16 +53,16 @@ class HLoc(metaclass=HLocMeta):
                     yield ':'
                     continue
 
-                if key.start is None:
+                if key.start is None:  # type: ignore [union-attr]
                     result = ':'
                 else:
-                    result = f'{key.start}:'
+                    result = f'{key.start}:' # type: ignore [union-attr]
 
-                if key.stop is not None:
-                    result += str(key.stop)
+                if key.stop is not None: # type: ignore [union-attr]
+                    result += str(key.stop) # type: ignore [union-attr]
 
-                if key.step is not None and key.step != 1:
-                    result += f':{key.step}'
+                if key.step is not None and key.step != 1: # type: ignore [union-attr]
+                    result += f':{key.step}' # type: ignore [union-attr]
 
                 yield result
 
