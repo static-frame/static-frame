@@ -90,6 +90,14 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.name, 'foo')
         self.assertEqual(f.index.__class__, IndexDate)
 
+    #---------------------------------------------------------------------------
+    def test_index_auto_factory_equals_a(self) -> None:
+
+        idx1 = IndexAutoFactory.from_optional_constructor(10_000,
+                default_constructor=Index)
+        idx2 = IndexAutoFactory.from_optional_constructor(10_000,
+                default_constructor=Index)
+        self.assertTrue(idx1.equals(idx2))
 
 
 if __name__ == '__main__':
