@@ -199,7 +199,6 @@ class _StoreZip(Store):
                         continue
 
                     c: StoreConfig = config_map[label]
-
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
@@ -220,7 +219,6 @@ class _StoreZip(Store):
                     yield cached_frame
                 else:
                     frame = next(frame_gen)
-
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = frame
                     yield frame
@@ -458,5 +456,39 @@ class StoreZipParquet(_StoreZip):
                 include_index_name=c.include_index_name,
                 include_columns=c.include_columns,
                 include_columns_name=c.include_columns_name,
+                )
+        return payload.name, dst.getvalue()
+
+#-------------------------------------------------------------------------------
+class StoreZipNPY(_StoreZip):
+    '''A zip of npz files, permitting incremental loading of Frames.
+    '''
+    _EXT_CONTAINED = ''
+    _EXPORTER = Frame.to_npy
+
+    @classmethod
+    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
+        return container_type.from_npy
+
+    @staticmethod
+    def _build_frame(
+            src: bytes,
+            name: tp.Hashable,
+            config: tp.Union[StoreConfigHE, StoreConfig],
+            constructor: FrameConstructor,
+        ) -> Frame:
+        return constructor(
+            BytesIO(src),
+            )
+
+    @staticmethod
+    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
+        c = payload.config
+        # cannot use bytes... need to write a direcotory of npy
+        dst = BytesIO()
+        payload.exporter(payload.frame,
+                dst,
+                include_index=c.include_index,
+                include_columns=c.include_columns,
                 )
         return payload.name, dst.getvalue()
