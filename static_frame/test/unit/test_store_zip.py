@@ -16,6 +16,7 @@ from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipNPZ
+from static_frame.core.store_zip import StoreZipNPY
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -425,6 +426,19 @@ class TestUnitMultiProcess(TestCase):
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
+
+    #---------------------------------------------------------------------------
+    def test_store_zip_npy_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)').rename('a'),
+        f2 = ff.parse('s(4,4)|v(bool)').rename('b'),
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            st = StoreZipNPY(fp)
+            st.write(((f.name, f) for f in (f1, f2)), config=config)
+
 
 
 if __name__ == '__main__':

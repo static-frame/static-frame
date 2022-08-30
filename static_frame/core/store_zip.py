@@ -463,7 +463,7 @@ class StoreZipParquet(_StoreZip):
 class StoreZipNPY(_StoreZip):
     '''A zip of npz files, permitting incremental loading of Frames.
     '''
-    _EXT_CONTAINED = ''
+    _EXT_CONTAINED = frozenset(('.npy',))
     _EXPORTER = Frame.to_npy
 
     @classmethod
@@ -491,4 +491,46 @@ class StoreZipNPY(_StoreZip):
                 include_index=c.include_index,
                 include_columns=c.include_columns,
                 )
-        return payload.name, dst.getvalue()
+        return payload.name, dst.getvalue() # gets bytes string
+
+
+    @store_coherent_write
+    def write(self,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            *,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+        config_map = StoreConfigMap.from_initializer(config)
+        multiprocess = (config_map.default.write_max_workers is not None and
+                        config_map.default.write_max_workers > 1)
+
+        def gen() -> tp.Iterable[PayloadFrameToBytes]:
+            for label, frame in items:
+                # NOTE: need to derive a new label that combines this label and underlying NPY label
+                # yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
+                #         name=label,
+                #         config=config_map[label].to_store_config_he(),
+                #         frame=frame,
+                #         exporter=self.__class__._EXPORTER,
+                #         )
+
+        if multiprocess:
+            def label_and_bytes() -> tp.Iterator[LabelAndBytes]:
+                with ProcessPoolExecutor(max_workers=config_map.default.write_max_workers) as executor:
+                    yield from executor.map(self._payload_to_bytes,
+                            gen(),
+                            chunksize=config_map.default.write_chunksize)
+        else:
+            label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
+
+        try:
+            with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for label, frame_bytes in label_and_bytes():
+                    label_encoded = config_map.default.label_encode(label)
+                    # this will write it without a container
+                    zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
+        except ErrorNPYEncode:
+            # NOTE: catch NPY failures and remove self._fp to not leave a malformed zip
+            if os.path.exists(self._fp):
+                os.remove(self._fp)
+            raise
