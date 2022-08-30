@@ -1165,6 +1165,8 @@ class Index(IndexBase):
             return False
         if compare_name and self.name != other.name:
             return False
+        if self._map is None and other._map is None:
+            return True # have same length must be same integer range and dtype
         if compare_dtype and self.dtype != other.dtype:
             return False
         return arrays_equal(self.values, other.values, skipna=skipna)
