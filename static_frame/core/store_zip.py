@@ -485,12 +485,12 @@ class StoreZipNPY(_StoreZip):
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
         c = payload.config
         # cannot use bytes... need to write a direcotory of npy
-        dst = BytesIO()
-        payload.exporter(payload.frame,
-                dst,
-                include_index=c.include_index,
-                include_columns=c.include_columns,
-                )
+        # dst = BytesIO()
+        # payload.exporter(payload.frame,
+        #         dst,
+        #         include_index=c.include_index,
+        #         include_columns=c.include_columns,
+        #         )
         return payload.name, dst.getvalue() # gets bytes string
 
 
@@ -504,8 +504,11 @@ class StoreZipNPY(_StoreZip):
         multiprocess = (config_map.default.write_max_workers is not None and
                         config_map.default.write_max_workers > 1)
 
+        # from static_frame.core.archive_npy import
+
         def gen() -> tp.Iterable[PayloadFrameToBytes]:
             for label, frame in items:
+                pass
                 # NOTE: need to derive a new label that combines this label and underlying NPY label
                 # yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
                 #         name=label,

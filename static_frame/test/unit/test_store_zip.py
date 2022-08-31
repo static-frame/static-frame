@@ -435,9 +435,9 @@ class TestUnitMultiProcess(TestCase):
 
         config = StoreConfig()
 
-        with temp_file('.zip') as fp:
-            st = StoreZipNPY(fp)
-            st.write(((f.name, f) for f in (f1, f2)), config=config)
+        # with temp_file('.zip') as fp:
+        #     st = StoreZipNPY(fp)
+        #     st.write(((f.name, f) for f in (f1, f2)), config=config)
 
 
 
