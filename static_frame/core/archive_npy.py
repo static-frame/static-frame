@@ -455,6 +455,61 @@ class ArchiveDirectory(Archive):
         fp = os.path.join(self._archive, self.FILE_META)
         return os.path.getsize(fp)
 
+
+class ArchiveIterator(Archive):
+    __slots__ = (
+            'labels',
+            'memory_map',
+            '_archive',
+            '_header_decode_cache',
+            )
+
+    _archive: PathSpecifier
+    FUNC_REMOVE_FP = None
+
+    def __init__(self,
+            f: BytesIO,
+            writeable: bool,
+            memory_map: bool,
+            ):
+
+        self._archive = f
+        self.memory_map = memory_map
+
+    def write_array(self, name: str, array: np.ndarray) -> None:
+        NPYConverter.to_npy(self._archive, array)
+
+    def read_array(self, name: str) -> np.ndarray:
+        array, mm = NPYConverter.from_npy(self._archive,
+                self._header_decode_cache,
+                self.memory_map,
+                )
+
+    # def read_array_header(self, name: str) -> HeaderType:
+    #     '''Alternate reader for status displays.
+    #     '''
+    #     fp = os.path.join(self._archive, name)
+    #     f = open(fp, 'rb')
+    #     try:
+    #         header = NPYConverter.header_from_npy(f, self._header_decode_cache)
+    #     finally:
+    #         f.close()
+    #     return header
+
+    # def size_array(self, name: str) -> int:
+    #     fp = os.path.join(self._archive, name)
+    #     return os.path.getsize(fp)
+
+    def write_metadata(self, content: tp.Any) -> None:
+        self._archive.write(json.dumps(content))
+
+    def read_metadata(self) -> tp.Any:
+        post = json.loads(self._archive.read())
+
+    # def size_metadata(self) -> int:
+    #     fp = os.path.join(self._archive, self.FILE_META)
+    #     return os.path.getsize(fp)
+
 #-------------------------------------------------------------------------------
 class Label:
     KEY_NAMES = '__names__'
