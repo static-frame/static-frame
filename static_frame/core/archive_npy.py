@@ -247,7 +247,7 @@ class Archive:
     def __contains__(self, name: str) -> None:
         raise NotImplementedError() # pragma: no cover
 
-    def labels_external(self) -> tp.Iterator[str]:
+    def labels(self) -> tp.Iterator[str]:
         raise NotImplementedError() # pragma: no cover
 
     def write_array(self, name: str, array: np.ndarray) -> None:
@@ -279,7 +279,6 @@ class ArchiveZip(Archive):
     '''Archives based on a new ZipFile per Frame; ZipFile creation happens on __init__.
     '''
     __slots__ = (
-            # 'labels',
             '_memory_map',
             '_archive',
             '_closable',
@@ -321,7 +320,7 @@ class ArchiveZip(Archive):
             return False
         return True
 
-    def labels_external(self) -> tp.Iterator[str]:
+    def labels(self) -> tp.Iterator[str]:
         yield from self._archive.namelist()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
@@ -368,7 +367,6 @@ class ArchiveDirectory(Archive):
     '''Archive interface to a directory, where the directory is created on write and NPY files are authored into the files system.
     '''
     __slots__ = (
-            # 'labels',
             '_memory_map',
             '_archive',
             '_closable',
@@ -399,7 +397,7 @@ class ArchiveDirectory(Archive):
         self._archive = fp
         self._memory_map = memory_map
 
-    def labels_external(self) -> tp.Iterator[str]:
+    def labels(self) -> tp.Iterator[str]:
         # NOTE: should this filter?
         yield from (f.name for f in os.scandir(self._archive))
 
@@ -484,7 +482,6 @@ class ArchiveZipFileOpen(Archive):
     '''Archive based on a shared (and already open/created) ZipFile.
     '''
     __slots__ = (
-            # 'labels',
             '_memory_map',
             '_archive',
             '_header_decode_cache',
@@ -512,12 +509,12 @@ class ArchiveZipFileOpen(Archive):
             raise RuntimeError(f'Cannot memory_map with {self}')
         self._memory_map = memory_map
 
-    def labels_external(self) -> tp.Iterator[str]:
+    def labels(self) -> tp.Iterator[str]:
         '''Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string, post label_encoding.
         '''
         dir_last = None
         for name in self._archive.namelist():
-            # split on the last observed seperator
+            # split on the last observed separator
             dir_current, _ = name.rsplit(self._delimiter, maxsplit=1)
             if dir_last is None or dir_current != dir_last:
                 dir_last = dir_current
@@ -938,7 +935,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
-                    self._archive.labels_external(),
+                    self._archive.labels(),
                     key=lambda fn: tuple(reversed(fn.split('.')))
                     ):
                 # NOTE: will not work with ArchiveZipFileOpen
@@ -963,8 +960,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             raise UnsupportedOperation('Open with mode "r" to get nbytes.')
 
         def gen() -> tp.Iterator[int]:
-            # metadata is in labels; sort by ext,ension first to put at top
-            for name in self._archive.labels_external():
+            # metadata is in labels; sort by extension first to put at top
+            for name in self._archive.labels():
                 # NOTE: will not work with ArchiveZipFileOpen
                 if name == self._archive.FILE_META:
                     yield self._archive.size_metadata()
