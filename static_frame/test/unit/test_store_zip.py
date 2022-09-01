@@ -430,15 +430,21 @@ class TestUnitMultiProcess(TestCase):
     #---------------------------------------------------------------------------
     def test_store_zip_npy_a(self) -> None:
 
-        f1 = ff.parse('s(4,4)|v(int)').rename('a'),
-        f2 = ff.parse('s(4,4)|v(bool)').rename('b'),
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
 
         config = StoreConfig()
 
-        # with temp_file('.zip') as fp:
-        #     st = StoreZipNPY(fp)
-        #     st.write(((f.name, f) for f in (f1, f2)), config=config)
+        with temp_file('.zip') as fp:
+            st = StoreZipNPY(fp)
+            st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
 
+            self.assertEqual(tuple(st.labels()), ('a', 'b', 'c'))
+
+            self.assertTrue(f1.equals(st.read('a')))
+            self.assertTrue(f2.equals(st.read('b')))
+            self.assertTrue(f3.equals(st.read('c')))
 
 
 if __name__ == '__main__':

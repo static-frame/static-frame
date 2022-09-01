@@ -18,6 +18,9 @@ from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
+from static_frame.core.archive_npy import ArchiveZipFileOpen
+from static_frame.core.archive_npy import ArchiveFrameConverter
+
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -460,39 +463,11 @@ class StoreZipParquet(_StoreZip):
         return payload.name, dst.getvalue()
 
 #-------------------------------------------------------------------------------
-class StoreZipNPY(_StoreZip):
-    '''A zip of npz files, permitting incremental loading of Frames.
+class StoreZipNPY(Store):
+    '''A zip of NPY files. This does not presently support multi-processing.
     '''
-    _EXT_CONTAINED = frozenset(('.npy',))
-    _EXPORTER = Frame.to_npy
-
-    @classmethod
-    def _container_type_to_constructor(cls, container_type: tp.Type[Frame]) -> FrameConstructor:
-        return container_type.from_npy
-
-    @staticmethod
-    def _build_frame(
-            src: bytes,
-            name: tp.Hashable,
-            config: tp.Union[StoreConfigHE, StoreConfig],
-            constructor: FrameConstructor,
-        ) -> Frame:
-        return constructor(
-            BytesIO(src),
-            )
-
-    @staticmethod
-    def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
-        c = payload.config
-        # cannot use bytes... need to write a direcotory of npy
-        # dst = BytesIO()
-        # payload.exporter(payload.frame,
-        #         dst,
-        #         include_index=c.include_index,
-        #         include_columns=c.include_columns,
-        #         )
-        return payload.name, dst.getvalue() # gets bytes string
-
+    _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
+    _DELIMITER = '/'
 
     @store_coherent_write
     def write(self,
@@ -501,39 +476,78 @@ class StoreZipNPY(_StoreZip):
             config: StoreConfigMapInitializer = None
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
-        multiprocess = (config_map.default.write_max_workers is not None and
-                        config_map.default.write_max_workers > 1)
-
-        # from static_frame.core.archive_npy import
-
-        def gen() -> tp.Iterable[PayloadFrameToBytes]:
-            for label, frame in items:
-                pass
-                # NOTE: need to derive a new label that combines this label and underlying NPY label
-                # yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
-                #         name=label,
-                #         config=config_map[label].to_store_config_he(),
-                #         frame=frame,
-                #         exporter=self.__class__._EXPORTER,
-                #         )
-
-        if multiprocess:
-            def label_and_bytes() -> tp.Iterator[LabelAndBytes]:
-                with ProcessPoolExecutor(max_workers=config_map.default.write_max_workers) as executor:
-                    yield from executor.map(self._payload_to_bytes,
-                            gen(),
-                            chunksize=config_map.default.write_chunksize)
-        else:
-            label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
         try:
             with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
-                for label, frame_bytes in label_and_bytes():
-                    label_encoded = config_map.default.label_encode(label)
-                    # this will write it without a container
-                    zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
+                archive = ArchiveZipFileOpen(zf,
+                        writeable=True,
+                        memory_map=False,
+                        delimiter=self._DELIMITER,
+                        )
+                for label, frame in items:
+                    archive.prefix = config_map.default.label_encode(label)
+                    ArchiveFrameConverter.frame_encode(
+                            archive=archive,
+                            frame=frame,
+                            include_index=True, # TODO: get from config map
+                            include_columns=True,
+                            consolidate_blocks=False,
+                            )
         except ErrorNPYEncode:
             # NOTE: catch NPY failures and remove self._fp to not leave a malformed zip
             if os.path.exists(self._fp):
                 os.remove(self._fp)
             raise
+
+    @store_coherent_non_write
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True, # not used
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            archive = ArchiveZipFileOpen(zf,
+                    writeable=True, # set to writeable to avoid sourcing namelist
+                    memory_map=False,
+                    delimiter=self._DELIMITER,
+                    )
+            yield from (config_map.default.label_decode(name)
+                    for name in archive.labels_external())
+
+
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            archive = ArchiveZipFileOpen(zf,
+                    writeable=False,
+                    memory_map=False,
+                    delimiter=self._DELIMITER,
+                    )
+            for label in labels:
+                # Since the value can be deallocated between lookup & extraction,
+                # we have to handle it with `get`` & a sentinel to ensure we
+                # don't have a race condition
+                cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+                if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                    yield _StoreZip._set_container_type(cache_lookup, container_type)
+                    continue
+
+                # c: StoreConfig = config_map[label]
+                archive.prefix = config_map.default.label_encode(label)
+                frame = ArchiveFrameConverter.frame_decode(
+                            archive=archive,
+                            constructor=container_type,
+                            )
+                # Newly read frame, add it to our weak_cache
+                self._weak_cache[label] = frame
+                yield frame

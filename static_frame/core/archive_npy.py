@@ -221,15 +221,13 @@ class Archive:
     FILE_META = '__meta__.json'
 
     __slots__ = (
-            'labels',
-            'memory_map',
+            '_memory_map',
             '_archive',
             '_closable',
             '_header_decode_cache',
             )
 
-    labels: tp.FrozenSet[str]
-    memory_map: bool
+    _memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
     _archive: tp.Union[ZipFile, PathSpecifier]
 
@@ -245,6 +243,12 @@ class Archive:
 
     def __del__(self) -> None:
         pass
+
+    def __contains__(self, name: str) -> None:
+        raise NotImplementedError() # pragma: no cover
+
+    def labels_external(self) -> tp.Iterator[str]:
+        raise NotImplementedError() # pragma: no cover
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         raise NotImplementedError() #pragma: no cover
@@ -272,9 +276,11 @@ class Archive:
             f.close()
 
 class ArchiveZip(Archive):
+    '''Archives based on a new ZipFile per Frame; ZipFile creation happens on __init__.
+    '''
     __slots__ = (
-            'labels',
-            'memory_map',
+            # 'labels',
+            '_memory_map',
             '_archive',
             '_closable',
             '_header_decode_cache',
@@ -296,18 +302,28 @@ class ArchiveZip(Archive):
                 allowZip64=True,
                 )
         if not writeable:
-            self.labels = frozenset(self._archive.namelist())
+            # self.labels = frozenset(self._archive.namelist())
             self._header_decode_cache = {}
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
 
-        self.memory_map = memory_map
+        self._memory_map = memory_map
 
     def __del__(self) -> None:
         # Note: If the fp we were given didn't exist, _archive also doesn't exist.
         archive = getattr(self, '_archive', None)
         if archive:
             archive.close()
+
+    def __contains__(self, name: str) -> bool:
+        try:
+            self._archive.getinfo(name)
+        except KeyError:
+            return False
+        return True
+
+    def labels_external(self) -> tp.Iterator[str]:
+        yield from self._archive.namelist()
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
@@ -350,9 +366,11 @@ class ArchiveZip(Archive):
         return self._archive.getinfo(self.FILE_META).file_size
 
 class ArchiveDirectory(Archive):
+    '''Archive interface to a directory, where the directory is created on write and NPY files are authored into the files system.
+    '''
     __slots__ = (
-            'labels',
-            'memory_map',
+            # 'labels',
+            '_memory_map',
             '_archive',
             '_closable',
             '_header_decode_cache',
@@ -378,10 +396,17 @@ class ArchiveDirectory(Archive):
             if not os.path.isdir(fp):
                 raise RuntimeError(f'A directory must be provided, not {fp}')
             self._header_decode_cache = {}
-            self.labels = frozenset(f.name for f in os.scandir(fp))
 
         self._archive = fp
-        self.memory_map = memory_map
+        self._memory_map = memory_map
+
+    def labels_external(self) -> tp.Iterator[str]:
+        # NOTE: should this filter?
+        yield from (f.name for f in os.scandir(fp))
+
+    def __contains__(self, name: str) -> bool:
+        fp = os.path.join(self._archive, name)
+        return os.path.exists(fp)
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         fp = os.path.join(self._archive, name)
@@ -393,7 +418,7 @@ class ArchiveDirectory(Archive):
 
     def read_array(self, name: str) -> np.ndarray:
         fp = os.path.join(self._archive, name)
-        if self.memory_map:
+        if self._memory_map:
             if not hasattr(self, '_closable'):
                 self._closable = []
 
@@ -401,7 +426,7 @@ class ArchiveDirectory(Archive):
             try:
                 array, mm = NPYConverter.from_npy(f,
                         self._header_decode_cache,
-                        self.memory_map,
+                        self._memory_map,
                         )
             finally:
                 f.close() # NOTE: can close the file after creating memory map
@@ -413,7 +438,7 @@ class ArchiveDirectory(Archive):
         try:
             array, _ = NPYConverter.from_npy(f,
                     self._header_decode_cache,
-                    self.memory_map,
+                    self._memory_map,
                     )
         finally:
             f.close()
@@ -456,59 +481,112 @@ class ArchiveDirectory(Archive):
         return os.path.getsize(fp)
 
 
-# class ArchiveBuffer(Archive):
-#     __slots__ = (
-#             'labels',
-#             'memory_map',
-#             '_archive',
-#             '_header_decode_cache',
-#             )
+class ArchiveZipFileOpen(Archive):
+    '''Archive based on a shared (and already open/created) ZipFile.
+    '''
+    __slots__ = (
+            # 'labels',
+            '_memory_map',
+            '_archive',
+            '_header_decode_cache',
+            '_delimiter',
+            'prefix',
+            )
 
-#     _archive: PathSpecifier
-#     FUNC_REMOVE_FP = None
+    _archive: ZipFile
+    FUNC_REMOVE_FP = None # let creater of ZIP remove
 
-#     def __init__(self,
-#             f: BytesIO,
-#             writeable: bool,
-#             memory_map: bool,
-#             ):
+    def __init__(self,
+            zf: ZipFile,
+            writeable: bool,
+            memory_map: bool,
+            delimiter: str,
+            ):
 
-#         self._archive = f
-#         self.memory_map = memory_map
+        self._archive = zf
+        self.prefix = None # must be directly set by clients
+        self._delimiter = delimiter
 
-#     def write_array(self, name: str, array: np.ndarray) -> None:
-#         NPYConverter.to_npy(self._archive, array)
+        if not writeable:
+            # self.labels = frozenset(self._archive.namelist())
+            self._header_decode_cache = {}
+        if memory_map:
+            raise RuntimeError(f'Cannot memory_map with {self}')
+        self._memory_map = memory_map
 
-#     def read_array(self, name: str) -> np.ndarray:
-#         array, mm = NPYConverter.from_npy(self._archive,
-#                 self._header_decode_cache,
-#                 self.memory_map,
-#                 )
+    def labels_external(self) -> tp.Iterator[str]:
+        '''Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string, post label_encoding.
+        '''
+        dir_last = None
+        for name in self._archive.namelist():
+            # split on the last observed seperator
+            dir_current, _ = name.rsplit(self._delimiter, maxsplit=1)
+            if dir_last is None or dir_current != dir_last:
+                dir_last = dir_current
+                # always use default decoder
+                yield dir_current
 
-#     # def read_array_header(self, name: str) -> HeaderType:
-#     #     '''Alternate reader for status displays.
-#     #     '''
-#     #     fp = os.path.join(self._archive, name)
-#     #     f = open(fp, 'rb')
-#     #     try:
-#     #         header = NPYConverter.header_from_npy(f, self._header_decode_cache)
-#     #     finally:
-#     #         f.close()
-#     #     return header
+    def __del__(self) -> None:
+        # let the creator of the zip perform any cleanup
+        pass
 
-#     # def size_array(self, name: str) -> int:
-#     #     fp = os.path.join(self._archive, name)
-#     #     return os.path.getsize(fp)
+    def __contains__(self, name: str) -> bool:
+        name = f'{self.prefix}{self._delimiter}{name}'
+        try:
+            self._archive.getinfo(name)
+        except KeyError:
+            return False
+        return True
 
-#     def write_metadata(self, content: tp.Any) -> None:
-#         self._archive.write(json.dumps(content))
+    def write_array(self, name: str, array: np.ndarray) -> None:
+        # NOTE: zip only has 'w' mode, not 'wb'
+        # NOTE: force_zip64 required for large files
+        name = f'{self.prefix}{self._delimiter}{name}'
+        f = self._archive.open(name, 'w', force_zip64=True)
+        try:
+            NPYConverter.to_npy(f, array)
+        finally:
+            f.close()
 
-#     def read_metadata(self) -> tp.Any:
-#         post = json.loads(self._archive.read())
+    def read_array(self, name: str) -> np.ndarray:
+        name = f'{self.prefix}{self._delimiter}{name}'
+        f = self._archive.open(name)
+        try:
+            array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
+        finally:
+            f.close()
+        array.flags.writeable = False
+        return array
 
-#     # def size_metadata(self) -> int:
-#     #     fp = os.path.join(self._archive, self.FILE_META)
-#     #     return os.path.getsize(fp)
+    def read_array_header(self, name: str) -> HeaderType:
+        '''Alternate reader for status displays.
+        '''
+        name = f'{self.prefix}{self._delimiter}{name}'
+        f = self._archive.open(name)
+        try:
+            header = NPYConverter.header_from_npy(f, self._header_decode_cache)
+        finally:
+            f.close()
+        return header
+
+    def size_array(self, name: str) -> int:
+        name = f'{self.prefix}{self._delimiter}{name}'
+        return self._archive.getinfo(name).file_size
+
+    def write_metadata(self, content: tp.Any) -> None:
+        name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
+        self._archive.writestr(name, json.dumps(content))
+
+    def read_metadata(self) -> tp.Any:
+        name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
+        return json.loads(self._archive.read(name))
+
+    def size_metadata(self) -> int:
+        name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
+        return self._archive.getinfo(name).file_size
+
+
+
 
 #-------------------------------------------------------------------------------
 class Label:
@@ -580,7 +658,7 @@ class ArchiveIndexConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        if key_template_values.format(0) not in archive.labels:
+        if key_template_values.format(0) not in archive:
             index = None
         elif depth == 1:
             index = cls_index(archive.read_array(key_template_values.format(0)),
@@ -807,16 +885,6 @@ class NPZFrameConverter(ArchiveFrameConverter):
 class NPYFrameConverter(ArchiveFrameConverter):
     _ARCHIVE_CLS = ArchiveDirectory
 
-
-
-# TODO: implement
-# class ArchiveBusConverter:
-#     _ARCHIVE_CLS: tp.Type[Archive]
-
-
-
-
-
 #-------------------------------------------------------------------------------
 # for converting from components, unstructured Frames
 
@@ -839,7 +907,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         else:
             raise RuntimeError('Invalid value for mode; use "w" or "r"')
 
-        self._writeable = writeable # not explicitly stored in Archive instance
+        self._writeable = writeable
         self._archive = self._ARCHIVE_CLS(fp,
                 writeable=self._writeable,
                 memory_map=False,
@@ -872,9 +940,10 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
-                    self._archive.labels,
+                    self._archive.labels_external(),
                     key=lambda fn: tuple(reversed(fn.split('.')))
                     ):
+                # NOTE: will not work with ArchiveZipFileOpen
                 if name == self._archive.FILE_META:
                     yield (name, self._archive.size_metadata()) + ('', '', '')
                 else:
@@ -897,7 +966,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         def gen() -> tp.Iterator[int]:
             # metadata is in labels; sort by ext,ension first to put at top
-            for name in self._archive.labels:
+            for name in self._archive.labels_external():
+                # NOTE: will not work with ArchiveZipFileOpen
                 if name == self._archive.FILE_META:
                     yield self._archive.size_metadata()
                 else:
