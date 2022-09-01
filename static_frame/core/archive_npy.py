@@ -302,7 +302,6 @@ class ArchiveZip(Archive):
                 allowZip64=True,
                 )
         if not writeable:
-            # self.labels = frozenset(self._archive.namelist())
             self._header_decode_cache = {}
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
@@ -402,7 +401,7 @@ class ArchiveDirectory(Archive):
 
     def labels_external(self) -> tp.Iterator[str]:
         # NOTE: should this filter?
-        yield from (f.name for f in os.scandir(fp))
+        yield from (f.name for f in os.scandir(self._archive))
 
     def __contains__(self, name: str) -> bool:
         fp = os.path.join(self._archive, name)
@@ -508,7 +507,6 @@ class ArchiveZipFileOpen(Archive):
         self._delimiter = delimiter
 
         if not writeable:
-            # self.labels = frozenset(self._archive.namelist())
             self._header_decode_cache = {}
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
