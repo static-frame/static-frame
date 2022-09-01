@@ -567,7 +567,7 @@ class ArchiveIndexConverter:
         archive.write_array(key_template_values.format(0), array)
 
     @staticmethod
-    def _index_decode(*,
+    def index_decode(*,
             archive: Archive,
             metadata: tp.Dict[str, tp.Any],
             key_template_values: str,
@@ -603,18 +603,14 @@ class ArchiveIndexConverter:
 class ArchiveFrameConverter:
     _ARCHIVE_CLS: tp.Type[Archive]
 
-    @classmethod
-    def to_archive(cls,
-            *,
+    @staticmethod
+    def frame_encode(*,
+            archive: Archive,
             frame: 'Frame',
-            fp: PathSpecifier,
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
-            ) -> None:
-        '''
-        Write a :obj:`Frame` as an npz file.
-        '''
+            ):
         metadata: tp.Dict[str, tp.Any] = {}
         metadata[Label.KEY_NAMES] = [frame._name,
                 frame._index._name,
@@ -636,34 +632,81 @@ class ArchiveFrameConverter:
         else:
             block_iter = iter(frame._blocks._blocks)
 
+        ArchiveIndexConverter.index_encode(
+                metadata=metadata,
+                archive=archive,
+                index=frame._index,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=Label.KEY_TYPES_INDEX,
+                depth=depth_index,
+                include=include_index,
+                )
+        ArchiveIndexConverter.index_encode(
+                metadata=metadata,
+                archive=archive,
+                index=frame._columns,
+                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=Label.KEY_TYPES_COLUMNS,
+                depth=depth_columns,
+                include=include_columns,
+                )
+        i = 0
+        for i, array in enumerate(block_iter, 1):
+            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
+
+        metadata[Label.KEY_DEPTHS] = [
+                i, # block count
+                depth_index,
+                depth_columns]
+
+        archive.write_metadata(metadata)
+
+
+    @classmethod
+    def to_archive(cls,
+            *,
+            frame: 'Frame',
+            fp: PathSpecifier,
+            include_index: bool = True,
+            include_columns: bool = True,
+            consolidate_blocks: bool = False,
+            ) -> None:
+        '''
+        Write a :obj:`Frame` as an npz file.
+        '''
+        # metadata: tp.Dict[str, tp.Any] = {}
+        # metadata[Label.KEY_NAMES] = [frame._name,
+        #         frame._index._name,
+        #         frame._columns._name,
+        #         ]
+        # # do not store Frame class as caller will determine
+        # metadata[Label.KEY_TYPES] = [
+        #         frame._index.__class__.__name__,
+        #         frame._columns.__class__.__name__,
+        #         ]
+
+        # # store shape, index depths
+        # depth_index = frame._index.depth
+        # depth_columns = frame._columns.depth
+
+        # if consolidate_blocks:
+        #     # NOTE: by taking iter, can avoid 2x memory in some circumstances
+        #     block_iter = frame._blocks._reblock()
+        # else:
+        #     block_iter = iter(frame._blocks._blocks)
+
         archive = cls._ARCHIVE_CLS(fp,
                 writeable=True,
                 memory_map=False,
                 )
-
         try:
-            ArchiveIndexConverter.index_encode(
-                    metadata=metadata,
+            cls.frame_encode(
                     archive=archive,
-                    index=frame._index,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-                    key_types=Label.KEY_TYPES_INDEX,
-                    depth=depth_index,
-                    include=include_index,
+                    frame=frame,
+                    include_index=include_index,
+                    include_columns=include_columns,
+                    consolidate_blocks=consolidate_blocks,
                     )
-            ArchiveIndexConverter.index_encode(
-                    metadata=metadata,
-                    archive=archive,
-                    index=frame._columns,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-                    key_types=Label.KEY_TYPES_COLUMNS,
-                    depth=depth_columns,
-                    include=include_columns,
-                    )
-            i = 0
-            for i, array in enumerate(block_iter, 1):
-                archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
-
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
@@ -672,12 +715,43 @@ class ArchiveFrameConverter:
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
-        metadata[Label.KEY_DEPTHS] = [
-                i, # block count
-                depth_index,
-                depth_columns]
+        # try:
+        #     ArchiveIndexConverter.index_encode(
+        #             metadata=metadata,
+        #             archive=archive,
+        #             index=frame._index,
+        #             key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+        #             key_types=Label.KEY_TYPES_INDEX,
+        #             depth=depth_index,
+        #             include=include_index,
+        #             )
+        #     ArchiveIndexConverter.index_encode(
+        #             metadata=metadata,
+        #             archive=archive,
+        #             index=frame._columns,
+        #             key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+        #             key_types=Label.KEY_TYPES_COLUMNS,
+        #             depth=depth_columns,
+        #             include=include_columns,
+        #             )
+        #     i = 0
+        #     for i, array in enumerate(block_iter, 1):
+        #         archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
 
-        archive.write_metadata(metadata)
+        # except ErrorNPYEncode:
+        #     archive.close()
+        #     archive.__del__() # force cleanup
+        #     # fp can be BytesIO in a to_zip_npz scenario
+        #     if not isinstance(fp, BytesIO) and os.path.exists(fp): #type: ignore
+        #         cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
+        #     raise
+
+        # metadata[Label.KEY_DEPTHS] = [
+        #         i, # block count
+        #         depth_index,
+        #         depth_columns]
+
+        # archive.write_metadata(metadata)
 
     @classmethod
     def _from_archive(cls,
@@ -705,7 +779,7 @@ class ArchiveFrameConverter:
         cls_index, cls_columns = (ContainerMap.str_to_cls(name)
                 for name in metadata[Label.KEY_TYPES])
 
-        index = ArchiveIndexConverter._index_decode(
+        index = ArchiveIndexConverter.index_decode(
                 archive=archive,
                 metadata=metadata,
                 key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
@@ -722,7 +796,7 @@ class ArchiveFrameConverter:
             else:
                 cls_columns = cls_columns._MUTABLE_CONSTRUCTOR #type: ignore
 
-        columns = ArchiveIndexConverter._index_decode(
+        columns = ArchiveIndexConverter.index_decode(
                 archive=archive,
                 metadata=metadata,
                 key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
