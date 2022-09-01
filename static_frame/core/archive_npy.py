@@ -674,27 +674,6 @@ class ArchiveFrameConverter:
         '''
         Write a :obj:`Frame` as an npz file.
         '''
-        # metadata: tp.Dict[str, tp.Any] = {}
-        # metadata[Label.KEY_NAMES] = [frame._name,
-        #         frame._index._name,
-        #         frame._columns._name,
-        #         ]
-        # # do not store Frame class as caller will determine
-        # metadata[Label.KEY_TYPES] = [
-        #         frame._index.__class__.__name__,
-        #         frame._columns.__class__.__name__,
-        #         ]
-
-        # # store shape, index depths
-        # depth_index = frame._index.depth
-        # depth_columns = frame._columns.depth
-
-        # if consolidate_blocks:
-        #     # NOTE: by taking iter, can avoid 2x memory in some circumstances
-        #     block_iter = frame._blocks._reblock()
-        # else:
-        #     block_iter = iter(frame._blocks._blocks)
-
         archive = cls._ARCHIVE_CLS(fp,
                 writeable=True,
                 memory_map=False,
@@ -715,60 +694,19 @@ class ArchiveFrameConverter:
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
-        # try:
-        #     ArchiveIndexConverter.index_encode(
-        #             metadata=metadata,
-        #             archive=archive,
-        #             index=frame._index,
-        #             key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-        #             key_types=Label.KEY_TYPES_INDEX,
-        #             depth=depth_index,
-        #             include=include_index,
-        #             )
-        #     ArchiveIndexConverter.index_encode(
-        #             metadata=metadata,
-        #             archive=archive,
-        #             index=frame._columns,
-        #             key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-        #             key_types=Label.KEY_TYPES_COLUMNS,
-        #             depth=depth_columns,
-        #             include=include_columns,
-        #             )
-        #     i = 0
-        #     for i, array in enumerate(block_iter, 1):
-        #         archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
-
-        # except ErrorNPYEncode:
-        #     archive.close()
-        #     archive.__del__() # force cleanup
-        #     # fp can be BytesIO in a to_zip_npz scenario
-        #     if not isinstance(fp, BytesIO) and os.path.exists(fp): #type: ignore
-        #         cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
-        #     raise
-
-        # metadata[Label.KEY_DEPTHS] = [
-        #         i, # block count
-        #         depth_index,
-        #         depth_columns]
-
-        # archive.write_metadata(metadata)
 
     @classmethod
-    def _from_archive(cls,
+    def frame_decode(cls,
             *,
+            archive: Archive,
             constructor: tp.Type['Frame'],
-            fp: PathSpecifier,
-            memory_map: bool = False,
             ) -> tp.Tuple['Frame', Archive]:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-        archive = cls._ARCHIVE_CLS(fp,
-                writeable=False,
-                memory_map=memory_map,
-                )
+
         metadata = archive.read_metadata()
 
         # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
@@ -822,9 +760,7 @@ class ArchiveFrameConverter:
                 own_columns = False if columns is None else True,
                 name=name,
                 )
-
-        return f, archive
-
+        return f
 
     @classmethod
     def from_archive(cls,
@@ -835,12 +771,15 @@ class ArchiveFrameConverter:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        f, _ = cls._from_archive(constructor=constructor,
-                fp=fp,
+        archive = cls._ARCHIVE_CLS(fp,
+                writeable=False,
                 memory_map=False,
                 )
+        f = cls.frame_decode(
+                archive=archive,
+                constructor=constructor,
+                )
         return f
-
 
     @classmethod
     def from_archive_mmap(cls,
@@ -851,9 +790,13 @@ class ArchiveFrameConverter:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
-        f, archive = cls._from_archive(constructor=constructor,
-                fp=fp,
+        archive = cls._ARCHIVE_CLS(fp,
+                writeable=False,
                 memory_map=True,
+                )
+        f = cls.frame_decode(
+                archive=archive,
+                constructor=constructor,
                 )
         return f, archive.close
 
