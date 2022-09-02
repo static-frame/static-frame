@@ -12,6 +12,7 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipNPZ
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.util import PathSpecifier
 from static_frame.core.store import StoreConfigMap
 
@@ -104,6 +105,23 @@ class StoreClientMixin:
         store = StoreZipNPZ(fp)
         config = self._filter_config(config)
         store.write(self._items_store(), config=config)
+
+
+    @doc_inject(selector='store_client_exporter')
+    def to_zip_npy(self,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+        '''
+        Write the complete :obj:`Bus` as a zipped archive of NPY files.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
+        config = self._filter_config(config)
+        store.write(self._items_store(), config=config)
+
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_parquet(self,

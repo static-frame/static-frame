@@ -514,7 +514,7 @@ class StoreZipNPY(Store):
                     delimiter=self._DELIMITER,
                     )
             yield from (config_map.default.label_decode(name)
-                    for name in archive.labels_external())
+                    for name in archive.labels())
 
 
     @store_coherent_non_write
