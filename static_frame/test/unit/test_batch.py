@@ -1600,6 +1600,21 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
     #---------------------------------------------------------------------------
+    def test_batch_to_npy(self) -> None:
+
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        b1 = Batch.from_frames((f1, f2))
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            b2 = Batch.from_zip_npy(fp)
+            frames = dict(b2.items())
+
+            self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
+
+    #---------------------------------------------------------------------------
     def test_batch_via_values_a(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
