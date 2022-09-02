@@ -3933,6 +3933,10 @@ class ExGenBus(ExGen):
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f"b.to_zip_csv('/tmp/b.zip')"
             yield f"{iattr}('/tmp/b.zip')"
+        elif attr == 'from_zip_npy':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b.to_zip_npy('/tmp/b.zip')"
+            yield f"{iattr}('/tmp/b.zip')"
         elif attr == 'from_zip_npz':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f"b.to_zip_npz('/tmp/b.zip')"
@@ -3977,6 +3981,7 @@ class ExGenBus(ExGen):
         elif attr in (
                 'to_zip_csv()',
                 'to_zip_npz()',
+                'to_zip_npy()',
                 'to_zip_parquet()',
                 'to_zip_pickle()',
                 'to_zip_tsv()',
@@ -4237,6 +4242,11 @@ class ExGenBatch(ExGen):
             yield f"bt1.to_zip_csv('/tmp/f.zip')"
             yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
             yield 'bt2.to_frame()'
+        elif attr == 'from_zip_npy':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_npy('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip')"
+            yield 'bt2.to_frame()'
         elif attr == 'from_zip_npz':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt1.to_zip_npz('/tmp/f.zip')"
@@ -4285,6 +4295,7 @@ class ExGenBatch(ExGen):
             yield f"bt1.{attr_func}('/tmp/f.xlsx')"
         elif attr in (
                 'to_zip_csv()',
+                'to_zip_npy()',
                 'to_zip_npz()',
                 'to_zip_parquet()',
                 'to_zip_pickle()',
@@ -5056,6 +5067,7 @@ def bundle() -> tp.Dict[str, tp.Sequence[str]]:
     return post
 
 if __name__ == '__main__':
+
     for line in gen_all_examples():
         print(line)
     # write()
