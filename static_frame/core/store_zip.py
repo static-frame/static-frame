@@ -485,7 +485,7 @@ class StoreZipNPY(Store):
                         delimiter=self._DELIMITER,
                         )
                 for label, frame in items:
-                    archive.prefix = config_map.default.label_encode(label)
+                    archive.prefix = config_map.default.label_encode(label) # mutate
                     ArchiveFrameConverter.frame_encode(
                             archive=archive,
                             frame=frame,
@@ -534,16 +534,12 @@ class StoreZipNPY(Store):
                     delimiter=self._DELIMITER,
                     )
             for label in labels:
-                # Since the value can be deallocated between lookup & extraction,
-                # we have to handle it with `get`` & a sentinel to ensure we
-                # don't have a race condition
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
                     yield _StoreZip._set_container_type(cache_lookup, container_type)
                     continue
 
-                # c: StoreConfig = config_map[label]
-                archive.prefix = config_map.default.label_encode(label)
+                archive.prefix = config_map.default.label_encode(label) # mutate
                 frame = ArchiveFrameConverter.frame_decode(
                             archive=archive,
                             constructor=container_type,

@@ -34,6 +34,7 @@ from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipNPZ
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
@@ -203,7 +204,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -226,7 +227,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -244,6 +245,29 @@ class Batch(ContainerOperand, StoreClientMixin):
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                )
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 max_workers=max_workers,
