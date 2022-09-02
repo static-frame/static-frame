@@ -509,7 +509,7 @@ class StoreZipNPY(Store):
 
         with zipfile.ZipFile(self._fp) as zf:
             archive = ArchiveZipFileOpen(zf,
-                    writeable=True, # set to writeable to avoid sourcing namelist
+                    writeable=False,
                     memory_map=False,
                     delimiter=self._DELIMITER,
                     )

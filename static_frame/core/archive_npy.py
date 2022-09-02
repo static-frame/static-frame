@@ -515,6 +515,8 @@ class ArchiveZipFileOpen(Archive):
         dir_last = None
         for name in self._archive.namelist():
             # split on the last observed separator
+            if name.endswith(self._delimiter):
+                continue
             dir_current, _ = name.rsplit(self._delimiter, maxsplit=1)
             if dir_last is None or dir_current != dir_last:
                 dir_last = dir_current
