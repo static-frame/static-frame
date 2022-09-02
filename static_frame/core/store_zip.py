@@ -516,7 +516,6 @@ class StoreZipNPY(Store):
             yield from (config_map.default.label_decode(name)
                     for name in archive.labels())
 
-
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[tp.Hashable],

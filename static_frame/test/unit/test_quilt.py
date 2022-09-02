@@ -1541,6 +1541,21 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_quilt_to_zip_npy_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_npy(fp)
+            q2 = Quilt.from_zip_npy(fp, retain_labels=True, axis=1)
+
+            self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+    #---------------------------------------------------------------------------
+
     def test_quilt_equals_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
