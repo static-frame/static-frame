@@ -11,6 +11,7 @@ import pandas as pd
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap
+from static_frame.core.container import ContainerBase
 
 dt64 = np.datetime64
 
@@ -3070,9 +3071,9 @@ class ExGenIndex(ExGen):
 
 
 class _ExGenIndexDT64(ExGen):
-    INDEX_INIT_A = () # oroginal
-    INDEX_INIT_B = () # can be extended to a
-    INDEX_INIT_C = () # has NaT
+    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
+    INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
+    INDEX_INIT_C: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
 
     @classmethod
@@ -4982,11 +4983,11 @@ def calls_to_msg(calls: tp.Iterator[str],
         yield f'{TAG_END}{cls.__name__}-{row["signature_no_args"]}'
         yield ''
 
-def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
+def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]:
 
     sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 
-    inter = InterfaceSummary.to_frame(target, #type: ignore
+    inter = InterfaceSummary.to_frame(target,
             minimized=False,
             max_args=99,
             )
@@ -5087,9 +5088,9 @@ def to_string_io() -> StringIO:
     sio.seek(0)
     return sio
 
-def to_json_bundle() -> tp.Dict[str, tp.Sequence[str]]:
+def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
     post = {}
-    lines = []
+    lines: tp.List[str] = []
     sig = ''
     for line in gen_all_examples():
         if line.startswith(TAG_START):
