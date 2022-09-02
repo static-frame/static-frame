@@ -244,7 +244,7 @@ class Archive:
     def __del__(self) -> None:
         pass
 
-    def __contains__(self, name: str) -> None:
+    def __contains__(self, name: str) -> bool:
         raise NotImplementedError() # pragma: no cover
 
     def labels(self) -> tp.Iterator[str]:
@@ -490,7 +490,6 @@ class ArchiveZipFileOpen(Archive):
             )
 
     _archive: ZipFile
-    FUNC_REMOVE_FP = None # let creater of ZIP remove
 
     def __init__(self,
             zf: ZipFile,
@@ -500,7 +499,7 @@ class ArchiveZipFileOpen(Archive):
             ):
 
         self._archive = zf
-        self.prefix = None # must be directly set by clients
+        self.prefix = '' # must be directly set by clients
         self._delimiter = delimiter
 
         if not writeable:
@@ -510,17 +509,16 @@ class ArchiveZipFileOpen(Archive):
         self._memory_map = memory_map
 
     def labels(self) -> tp.Iterator[str]:
-        '''Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string, post label_encoding.
+        '''Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string (they are added post processing with label_encoding).
         '''
-        dir_last = None
+        dir_last = '' # dir name cannot be an empty sting
         for name in self._archive.namelist():
             # split on the last observed separator
             if name.endswith(self._delimiter):
                 continue
             dir_current, _ = name.rsplit(self._delimiter, maxsplit=1)
-            if dir_last is None or dir_current != dir_last:
+            if dir_current != dir_last:
                 dir_last = dir_current
-                # always use default decoder
                 yield dir_current
 
     def __del__(self) -> None:
@@ -685,7 +683,7 @@ class ArchiveFrameConverter:
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
-            ):
+            ) -> None:
         metadata: tp.Dict[str, tp.Any] = {}
         metadata[Label.KEY_NAMES] = [frame._name,
                 frame._index._name,
@@ -775,7 +773,7 @@ class ArchiveFrameConverter:
             *,
             archive: Archive,
             constructor: tp.Type['Frame'],
-            ) -> tp.Tuple['Frame', Archive]:
+            ) -> 'Frame':
         '''
         Create a :obj:`Frame` from an npz file.
         '''
