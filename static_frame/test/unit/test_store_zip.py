@@ -459,11 +459,13 @@ class TestUnitMultiProcess(TestCase):
             st = StoreZipNPY(fp)
             st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
 
-            f = st.read('a')
-            self.assertTrue(f1.equals(f))
+            f4 = st.read('a')
+            self.assertTrue(f1.equals(f4))
             self.assertTrue('a' in st._weak_cache)
-            self.assertIs(f, st.read('a'))
+            self.assertIs(f4, st.read('a'))
 
+            post = tuple(st.read_many(('a', 'b', 'c')))
+            self.assertEqual(len(post), 3)
 
 if __name__ == '__main__':
     import unittest
