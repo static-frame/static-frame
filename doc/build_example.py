@@ -329,8 +329,9 @@ class ExGen:
         attr = row['signature_no_args'] # drop paren
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
 
-        yield f'{name} = {ctr}'
-        yield f'{name}.{attr}'
+        if attr != 'mloc':
+            yield f'{name} = {ctr}'
+            yield f'{name}.{attr}'
 
 
     @staticmethod
@@ -1380,12 +1381,14 @@ class ExGenFrame(ExGen):
         elif attr == 'from_csv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_csv('/tmp/f.csv')"
-            yield "open('/tmp/f.csv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.csv').read_text()"
             yield f"{iattr}('/tmp/f.csv', index_depth=1)"
         elif attr == 'from_delimited':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-            yield "open('/tmp/f.psv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.psv').read_text()"
             yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
         elif attr == 'from_dict':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
@@ -1426,6 +1429,8 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"{iattr}('/tmp/f.npy')"
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
 
         elif attr == 'from_npy_mmap':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -1433,6 +1438,8 @@ class ExGenFrame(ExGen):
             yield f"f2, closer = {iattr}('/tmp/f.npy')"
             yield 'f2'
             yield 'closer() # close mmaps after usage'
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
 
         elif attr == 'from_npz':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -1492,7 +1499,8 @@ class ExGenFrame(ExGen):
         elif attr == 'from_tsv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_tsv('/tmp/f.tsv')"
-            yield "open('/tmp/f.tsv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.tsv').read_text()"
             yield f"{iattr}('/tmp/f.tsv', index_depth=1)"
 
         elif attr == 'from_xlsx':
@@ -1534,11 +1542,13 @@ class ExGenFrame(ExGen):
         elif attr == 'to_csv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_csv('/tmp/f.csv')"
-            yield "open('/tmp/f.csv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.csv').read_text()"
         elif attr == 'to_delimited()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-            yield "open('/tmp/f.psv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.psv').read_text()"
         elif attr == 'to_hdf5()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_hdf5('/tmp/f.h5')"
@@ -1546,6 +1556,8 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"sf.Frame.from_npy('/tmp/f.npy')"
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
         elif attr == 'to_npz()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npz('/tmp/f.npz')"
@@ -1566,7 +1578,8 @@ class ExGenFrame(ExGen):
         elif attr == 'to_tsv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_tsv('/tmp/f.tsv')"
-            yield "open('/tmp/f.tsv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.tsv').read_text()"
         elif attr == 'to_xlsx()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
@@ -2407,7 +2420,7 @@ class ExGenFrame(ExGen):
                 'iter_group_labels().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-            yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
+            yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum()))"
 
         elif attr == 'iter_group_labels_array().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
@@ -4596,7 +4609,7 @@ class ExGenBatch(ExGen):
             yield f"(bt {cls.SIG_TO_OP_MATMUL[attr]} (1, 0.5)).to_frame()"
         elif attr in cls.SIG_TO_OP_BIT:
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"bt {cls.SIG_TO_OP_BIT[attr]} 1"
+            yield f"(bt {cls.SIG_TO_OP_BIT[attr]} 1).to_frame()"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5027,17 +5040,29 @@ def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.ILoc, ExGenILoc)
     yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
 
+#-----------------------------------------------------------------------------
+# exporters
 
-def write():
+def get_examples_fp() -> str:
     doc_dir = os.path.abspath(os.path.dirname(__file__))
-    fp = os.path.join(doc_dir, 'source', 'examples.txt')
+    return os.path.join(doc_dir, 'source', 'examples.txt')
 
+def to_file() -> None:
+    fp = get_examples_fp()
     with open(fp, 'w') as f:
         for line in gen_all_examples():
             f.write(line)
             f.write('\n')
 
-def bundle() -> tp.Dict[str, tp.Sequence[str]]:
+def to_string_io() -> StringIO:
+    sio = StringIO()
+    for line in gen_all_examples():
+        sio.write(line)
+        sio.write('\n')
+    sio.seek(0)
+    return sio
+
+def to_json_bundle() -> tp.Dict[str, tp.Sequence[str]]:
     post = {}
     lines = []
     sig = ''
@@ -5056,9 +5081,9 @@ def bundle() -> tp.Dict[str, tp.Sequence[str]]:
     return post
 
 if __name__ == '__main__':
-    for line in gen_all_examples():
-        print(line)
-    # write()
+    # for line in gen_all_examples():
+    #     print(line)
+    to_file()
     # post = bundle()
 
 
