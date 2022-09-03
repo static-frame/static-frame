@@ -1,45 +1,58 @@
 
+from collections import Counter
+
+
 from static_frame.test.test_case import TestCase
 from doc.build_example import to_string_io
 from doc.build_example import get_examples_fp
+from doc.build_example import TAG_START
+from doc.build_example import TAG_END
 
+# clipboard does not work on some platforms / GitHub CI
+SKIP = frozenset((
+    'from_clipboard()',
+    'to_clipboard()',
+    'from_arrow()',
+    'to_arrow()',
+    'mloc'
+    ))
 
 class TestUnit(TestCase):
 
-    SKIP_NEXT = frozenset((
-        '>>> ih.mean()\n',
-        '>>> ih.median()\n',
-        '>>> ih.std()\n',
-        '>>> ih.var()\n',
-        '>>> bt\n',
-        '>>> bt.T\n',
-        '>>> bt.via_container\n',
-        '>>> repr(bt)\n',
-        '>>> str(bt)\n',
-        '>>> repr(hl)\n',
-        '>>> str(hl)\n',
-        '>>> repr(il)\n',
-        '>>> str(il)\n',
-        '>>> sf.FillValueAuto.from_default()\n',
-        '>>> repr(fva)\n',
-        '>>> str(fva)\n',
-        ))
 
     def test_example_gen(self) -> None:
+        # NOTE: comparing the direct output is problematic as different platforms might have subtle differences in float representations; thus, we just copmare exaples size and exercise example generation
+
         current = to_string_io()
         fp = get_examples_fp()
         skip = False
+
+        def count(lines, counter):
+            current = ''
+            for line in lines:
+                if line.startswith(TAG_START):
+                    current = line.rstrip()
+                    if current.split('-', maxsplit=1)[1] in SKIP:
+                        current = ''
+                    continue
+                if current:
+                    counter[current] += 1
+                    continue
+                if line.startswith(TAG_END):
+                    current = ''
+
+        counts_current = Counter()
+        counts_past = Counter()
+
         with open(fp) as past:
-            for line_past in past:
-                line_current = current.readline()
-                if line_current in self.SKIP_NEXT:
-                    skip = True
-                    self.assertEqual(line_past, line_current)
-                elif skip:
-                    skip = False # disable
-                else:
-                    self.assertEqual(line_past, line_current)
-                # import ipdb; ipdb.set_trace()
+            count(past, counts_past)
+        count(current.readlines(), counts_current)
+
+        for key in (counts_current.keys() | counts_past.keys()):
+            with self.subTest(key):
+                self.assertEqual(counts_current[key], counts_past[key], key)
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

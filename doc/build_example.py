@@ -334,11 +334,8 @@ class ExGen:
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args'] # drop paren
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
-
-        if attr != 'mloc':
-            yield f'{name} = {ctr}'
-            yield f'{name}.{attr}'
-
+        yield f'{name} = {ctr}'
+        yield f'{name}.{attr}'
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -4952,6 +4949,16 @@ class ExGenFillValueAuto(ExGen):
 TAG_START = '#start_'
 TAG_END = '#end_'
 
+def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
+    exceptions = []
+    try:
+        import tkinter as tk
+        exceptions.append(tk.TclError)
+    except (ImportError, ModuleNotFoundError):
+        pass
+    exceptions.extend((ValueError, RuntimeError, NotImplementedError, TypeError))
+    return tuple(exceptions)
+
 def calls_to_msg(calls: tp.Iterator[str],
         row: sf.Series
         ) -> tp.Iterator[str]:
@@ -4962,6 +4969,8 @@ def calls_to_msg(calls: tp.Iterator[str],
     g['np'] = np
     g['pd'] = pd
     l = locals()
+
+    repr_except = get_repr_exceptions()
 
     i = -1
     for i, call in enumerate(calls):
@@ -4976,7 +4985,7 @@ def calls_to_msg(calls: tp.Iterator[str],
                 yield from str(post).split('\n')
         except SyntaxError:
             exec(call, g, l)
-        except (ValueError, RuntimeError, NotImplementedError, TypeError) as e:
+        except repr_except as e:
             yield repr(e) # show this error
 
     if i >= 0:
