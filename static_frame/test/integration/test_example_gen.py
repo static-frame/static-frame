@@ -1,12 +1,11 @@
 import typing as tp
 from collections import Counter
 
-
-from static_frame.test.test_case import TestCase
-from doc.build_example import to_string_io
-from doc.build_example import get_examples_fp
-from doc.build_example import TAG_START
 from doc.build_example import TAG_END
+from doc.build_example import TAG_START
+from doc.build_example import get_examples_fp
+from doc.build_example import to_string_io
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
 # clipboard does not work on some platforms / GitHub CI, third-party packages might change repr
