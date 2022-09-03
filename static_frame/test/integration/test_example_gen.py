@@ -53,8 +53,6 @@ class TestUnit(TestCase):
             with self.subTest(key):
                 self.assertEqual(counts_current[key], counts_past[key], key)
 
-        # import ipdb; ipdb.set_trace()
-
 
 if __name__ == '__main__':
     import unittest
