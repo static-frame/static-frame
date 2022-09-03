@@ -1,4 +1,4 @@
-
+import typing as tp
 from collections import Counter
 
 
@@ -27,7 +27,7 @@ class TestUnit(TestCase):
         fp = get_examples_fp()
         skip = False
 
-        def count(lines, counter):
+        def count(lines: tp.Iterable[str], counter: tp.Counter[str]) -> None:
             current = ''
             for line in lines:
                 if line.startswith(TAG_START):
@@ -41,8 +41,8 @@ class TestUnit(TestCase):
                 if line.startswith(TAG_END):
                     current = ''
 
-        counts_current = Counter()
-        counts_past = Counter()
+        counts_current: tp.Counter[str] = Counter()
+        counts_past: tp.Counter[str] = Counter()
 
         with open(fp) as past:
             count(past, counts_past)
