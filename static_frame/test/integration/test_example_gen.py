@@ -7,6 +7,7 @@ from doc.build_example import to_string_io
 from doc.build_example import get_examples_fp
 from doc.build_example import TAG_START
 from doc.build_example import TAG_END
+from static_frame.test.test_case import skip_win
 
 # clipboard does not work on some platforms / GitHub CI, third-party packages might change repr
 SKIP_COMPARE = frozenset((
@@ -21,7 +22,7 @@ SKIP_COMPARE = frozenset((
 
 class TestUnit(TestCase):
 
-
+    @skip_win #type: ignore
     def test_example_gen(self) -> None:
         # NOTE: comparing the direct output is problematic as different platforms might have subtle differences in float representations; thus, we just copmare exaples size and exercise example generation
 
