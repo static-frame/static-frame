@@ -280,7 +280,7 @@ class DisplayHeader:
         Provide string representation before additon of outer delimiters.
         '''
         if self.name is not None:
-            return '{}: {}'.format(self.cls.__name__, self.name)
+            return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
 

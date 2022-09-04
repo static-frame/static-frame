@@ -1228,7 +1228,7 @@ def _index_many_to_one(
 
     for index in indices_iter:
         if index.depth != depth_first:
-            raise RuntimeError(f'Indices must have aligned depths')
+            raise RuntimeError('Indices must have aligned depths')
         if mtot_is_concat and depth_first > 1:
             arrays.append([index.values_at_depth(d) for d in range(depth_first)])
         else:
@@ -1416,7 +1416,7 @@ def prepare_values_for_lex(
     if not asc_is_element:
         ascending = tuple(ascending) #type: ignore
         if values_for_lex is None or len(ascending) != len(values_for_lex): #type: ignore
-            raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
+            raise RuntimeError('Multiple ascending values must match number of arrays selected.')
         # values for lex are in reversed order; thus take ascending reversed
         values_for_lex_post = []
         for asc, a in zip(reversed(ascending), values_for_lex):
@@ -1471,7 +1471,7 @@ def sort_index_for_order(
         # depth is 1
         asc_is_element = isinstance(ascending, BOOL_TYPES)
         if not asc_is_element:
-            raise RuntimeError(f'Multiple ascending values not permitted.')
+            raise RuntimeError('Multiple ascending values not permitted.')
 
         v = cfs if cfs_is_array else cfs.values
         order = np.argsort(v, kind=kind)

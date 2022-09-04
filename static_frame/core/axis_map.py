@@ -92,7 +92,7 @@ def buses_to_hierarchy(
     tree = {}
     for label, bus in zip(labels, buses):
         if not isinstance(bus, Bus):
-            raise init_exception_cls(f'Must provide an interable of Bus.')
+            raise init_exception_cls('Must provide an interable of Bus.')
         if label in tree:
             raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
         tree[label] = extractor(bus._index)

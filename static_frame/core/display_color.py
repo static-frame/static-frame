@@ -289,7 +289,7 @@ class HexColor:
         Given a hex color and text, return a string formatted for ANSI colors
         '''
         ansi = cls._to_ansi(hex_color)
-        return '\033[38;5;{ansi:d}m{text:s}\033[0m'.format(
+        return '\033[38;5;{ansi:d}m{text:s}\033[0m'.format( # pylint: disable=C0209
                 ansi=ansi,
                 text=text)
 
@@ -315,7 +315,7 @@ class HexColor:
         Given a hex color and text, return a string formatted for ANSI colors
         '''
         color = cls.get_html(hex_color)
-        return '<span style="color: {color}">{text}</span>'.format(
+        return '<span style="color: {color}">{text}</span>'.format( # pylint: disable=C0209
                 color=color,
                 text=text)
 
