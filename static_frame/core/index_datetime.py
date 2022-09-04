@@ -5,11 +5,10 @@ import numpy as np
 from automap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _IndexGOMixin
+from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_H
 from static_frame.core.util import DT64_M
@@ -50,7 +49,7 @@ class IndexDatetime(Index):
 
     STATIC = True
     _DTYPE = None # define in derived class
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @doc_inject(selector='index_date_time_init')
     def __init__(self,
@@ -191,8 +190,8 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
         if self._map is not None:
             try:
                 self._map.add(value)
-            except ValueError:
-                raise KeyError(f'duplicate key append attempted: {value}')
+            except ValueError as e:
+                raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)
         self._positions_mutable_count += 1 #pylint: disable=E0237
         self._recache = True #pylint: disable=E0237
@@ -203,7 +202,7 @@ class IndexYear(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_YEAR
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -273,7 +272,7 @@ class IndexYear(IndexDatetime):
 class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):
 
     _IMMUTABLE_CONSTRUCTOR = IndexYear
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
 
@@ -283,7 +282,7 @@ class IndexYearMonth(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_MONTH
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -355,7 +354,7 @@ class IndexYearMonth(IndexDatetime):
 class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
 
     _IMMUTABLE_CONSTRUCTOR = IndexYearMonth
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
 
@@ -366,7 +365,7 @@ class IndexDate(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_DAY
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -427,7 +426,7 @@ class IndexDate(IndexDatetime):
 class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):
 
     _IMMUTABLE_CONSTRUCTOR = IndexDate
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
@@ -437,12 +436,12 @@ class IndexHour(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_H
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexHourGO(_IndexDatetimeGOMixin, IndexHour):
 
     _IMMUTABLE_CONSTRUCTOR = IndexHour
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
 
@@ -452,12 +451,12 @@ class IndexMinute(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_M
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMinute
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
 
@@ -467,12 +466,12 @@ class IndexSecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_S
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexSecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 
@@ -482,12 +481,12 @@ class IndexMillisecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_MS
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMillisecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 
@@ -497,12 +496,12 @@ class IndexMicrosecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_US
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 
@@ -512,12 +511,12 @@ class IndexNanosecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_NS
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexNanosecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 

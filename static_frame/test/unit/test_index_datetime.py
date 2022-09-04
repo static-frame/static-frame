@@ -28,8 +28,6 @@ from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocInvalid
-from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.test.test_case import TestCase
 
@@ -51,8 +49,6 @@ class TestUnit(TestCase):
             self.assertEqual(base_go._IMMUTABLE_CONSTRUCTOR, base)
             self.assertEqual(base.STATIC, True)
             self.assertEqual(base_go.STATIC, False)
-            self.assertEqual(len(base.__slots__), len(_INDEX_SLOTS))
-            self.assertEqual(len(base_go.__slots__), len(_INDEX_GO_SLOTS))
 
     #---------------------------------------------------------------------------
 

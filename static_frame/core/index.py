@@ -8,8 +8,8 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from automap import AutoMap
-from automap import FrozenAutoMap
+from automap import AutoMap # pylint: disable=E0611
+from automap import FrozenAutoMap # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -23,7 +23,6 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
@@ -129,18 +128,17 @@ def mutable_immutable_index_filter(
     return index.__class__(index) # create new instance
 
 #-------------------------------------------------------------------------------
-_INDEX_SLOTS = (
+
+class Index(IndexBase):
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
+
+    __slots__ = (
         '_map',
         '_labels',
         '_positions',
         '_recache',
         '_name'
         )
-
-class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
-
-    __slots__ = _INDEX_SLOTS
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
@@ -359,7 +357,7 @@ class Index(IndexBase):
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         assert not self._recache # __deepcopy__ is implemented on derived GO class
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
         obj._labels = array_deepcopy(self._labels, memo) #type: ignore
         obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
@@ -760,9 +758,9 @@ class Index(IndexBase):
         # We want to return these indices to match ar1 before it was sorted
         try:
             indexer = indexer[ar1_indexer]
-        except IndexError:
+        except IndexError as e:
             # Display the first missing element
-            raise KeyError(self.difference(other)[0])
+            raise KeyError(self.difference(other)[0]) from e
 
         indexer.flags.writeable = False
         return indexer
@@ -899,11 +897,11 @@ class Index(IndexBase):
                 try:
                     # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
                     result = self._positions[key]
-                except IndexError:
+                except IndexError as e:
                     # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
                     if is_array and key.dtype == DTYPE_BOOL: #type: ignore
                         raise # loc selection on Boolean array selection returns IndexError
-                    raise KeyError(key)
+                    raise KeyError(key) from e
                 # NOTE: not certain as to when a TypeError is raised here; might no longer be necessary
                 # except TypeError:
                 #     raise LocInvalid(f'Invalid loc: {key}')
@@ -1368,22 +1366,11 @@ class Index(IndexBase):
                 name=self._name)
 
 #-------------------------------------------------------------------------------
-_INDEX_GO_SLOTS = (
-        '_map',
-        '_labels',
-        '_positions',
-        '_recache',
-        '_name',
-        '_labels_mutable',
-        '_labels_mutable_dtype',
-        '_positions_mutable_count',
-        )
-
 
 class _IndexGOMixin:
 
     STATIC = False
-    # NOTE: must define in derived class or get TypeError: multiple bases have instance lay-out conflict
+    # NOTE: must define __slots__ in derived class or get TypeError: multiple bases have instance lay-out conflict
     __slots__ = ()
 
     _map: tp.Optional[AutoMap]
@@ -1398,12 +1385,12 @@ class _IndexGOMixin:
         if self._recache:
             self._update_array_cache()
 
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
         obj._labels = array_deepcopy(self._labels, memo) #type: ignore
         obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
-        obj._recache = False
-        obj._name = self._name # should be hashable/immutable
+        obj._recache = False # pylint: disable=E0237
+        obj._name = self._name # pylint: disable=E0237
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
@@ -1450,7 +1437,7 @@ class _IndexGOMixin:
                 self._labels_mutable,
                 dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
-        self._recache = False
+        self._recache = False # pylint: disable=E0237
 
     #---------------------------------------------------------------------------
     # grow only mutation
@@ -1483,7 +1470,7 @@ class _IndexGOMixin:
             self._map = AutoMap(self._labels_mutable)
 
         self._positions_mutable_count += 1
-        self._recache = True
+        self._recache = True # pylint: disable=E0237
 
     def extend(self, values: KeyIterableTypes) -> None:
         '''Append multiple values
@@ -1493,13 +1480,18 @@ class _IndexGOMixin:
         for value in values:
             self.append(value)
 
+INDEX_GO_LEAF_SLOTS = (
+        '_labels_mutable',
+        '_labels_mutable_dtype',
+        '_positions_mutable_count',
+        )
 
 class IndexGO(_IndexGOMixin, Index):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
     '''
 
     _IMMUTABLE_CONSTRUCTOR = Index
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 
 # update class attr on Index after class initialziation

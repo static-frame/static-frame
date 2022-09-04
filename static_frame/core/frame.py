@@ -481,8 +481,8 @@ class Frame(ContainerOperand):
                             cls._COLUMNS_CONSTRUCTOR,
                             columns_constructor,
                             )
-                except ErrorInitIndexNonUnique:
-                    raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
+                except ErrorInitIndexNonUnique as e:
+                    raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.') from e
                 own_columns = True
 
             if index is IndexAutoFactory:
@@ -516,8 +516,8 @@ class Frame(ContainerOperand):
                             Index,
                             index_constructor,
                             )
-                except ErrorInitIndexNonUnique:
-                    raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+                except ErrorInitIndexNonUnique as e:
+                    raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.') from e
                 own_index = True
 
             if columns is IndexAutoFactory:
@@ -709,7 +709,7 @@ class Frame(ContainerOperand):
             columns = index_from_optional_constructor(columns,
                     default_constructor=cls._COLUMNS_CONSTRUCTOR)
 
-        fill_arrays = dict() # NOTE: we will hash to NaN and NaT, but can assume we are using the same instance
+        fill_arrays = {} # NOTE: we will hash to NaN and NaT, but can assume we are using the same instance
 
         containers_iter = iter(containers)
         container = next(containers_iter)
@@ -1908,7 +1908,7 @@ class Frame(ContainerOperand):
             # this is necessary if there are quoted cells that include the delimiter
             def file_like() -> tp.Iterator[str]:
                 if isinstance(fp, str):
-                    with open(fp, 'r') as f:
+                    with open(fp, 'r', encoding='utf-8') as f:
                         for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
                             yield delimiter_native.join(row)
                 else: # handling file like object works for stringio but not for bytesio
@@ -1917,7 +1917,7 @@ class Frame(ContainerOperand):
         else:
             def file_like() -> tp.Iterator[str]: # = fp
                 if isinstance(fp, str):
-                    with open(fp, 'r') as f:
+                    with open(fp, 'r', encoding='utf-8') as f:
                         for row in f:
                             yield row
                 else: # iterable of string lines, StringIO
@@ -2986,7 +2986,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Frame':
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._blocks = deepcopy(self._blocks, memo)
         obj._columns = deepcopy(self._columns, memo)
         obj._index = deepcopy(self._index, memo)
@@ -8300,12 +8300,7 @@ class FrameGO(Frame):
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 
-    __slots__ = (
-            '_blocks',
-            '_columns',
-            '_index',
-            '_name'
-            )
+    __slots__ = ()
 
     STATIC = False
     _COLUMNS_CONSTRUCTOR = IndexGO
@@ -8335,8 +8330,7 @@ class FrameGO(Frame):
         elif value.__class__ is np.ndarray:
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1:
-                raise RuntimeError(
-                        f'can only use setitem with 1D containers')
+                raise RuntimeError('can only use setitem with 1D containers')
             if len(value) != row_count:
                 # block may have zero shape if created without columns
                 raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
@@ -8532,10 +8526,7 @@ class FrameAssign(Assign):
                 )
 
 class FrameAssignILoc(FrameAssign):
-    __slots__ = (
-        'container',
-        'key',
-        )
+    __slots__ = ()
 
     def __init__(self,
             container: Frame,
@@ -8611,10 +8602,7 @@ class FrameAssignILoc(FrameAssign):
 
 
 class FrameAssignBLoc(FrameAssign):
-    __slots__ = (
-        'container',
-        'key',
-        )
+    __slots__ = ()
 
     def __init__(self,
             container: Frame,
@@ -8746,10 +8734,10 @@ class FrameHE(Frame):
     '''
 
     __slots__ = (
-            '_blocks',
-            '_columns',
-            '_index',
-            '_name',
+            # '_blocks',
+            # '_columns',
+            # '_index',
+            # '_name',
             '_hash',
             )
 
