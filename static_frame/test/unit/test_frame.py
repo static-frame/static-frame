@@ -4333,17 +4333,17 @@ class TestUnit(TestCase):
                 columns=('p', 'q'),
                 index=('w', 'x'),
                 )
-        self.assertTrue((np.int64(10) * f1).equals(10 * f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) + f1).equals(10 + f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) / f1).equals(10 / f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) // f1).equals(10 // f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) - f1).equals(10 - f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) > f1).equals(5 > f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) < f1).equals(5 < f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) == f1).equals(5 == f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) != f1).equals(5 != f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) * f1).equals(10 * f1))
+        self.assertTrue((np.int64(10) + f1).equals(10 + f1))
+        self.assertTrue((np.int64(10) / f1).equals(10 / f1))
+        self.assertTrue((np.int64(10) // f1).equals(10 // f1))
+        self.assertTrue((np.int64(10) - f1).equals(10 - f1))
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
+        self.assertTrue((np.int64(5) == f1).equals(5 == f1))
+        self.assertTrue((np.int64(5) != f1).equals(5 != f1))
 
 
 
@@ -6354,7 +6354,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', 'a|True|20.2', 'b|False|85.3')))
                 file.close()
 
@@ -6369,7 +6369,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
                 file.close()
 
@@ -6460,7 +6460,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6566,7 +6566,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6747,7 +6747,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
@@ -6768,7 +6768,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '__index0__|__index1__|r|s\n',
@@ -6799,7 +6799,7 @@ class TestUnit(TestCase):
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf1)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines1 = f.readlines()
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
@@ -6808,7 +6808,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines2 = f.readlines()
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
@@ -6950,7 +6950,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
                 # nan has been converted to string
                 self.assertEqual(lines[1], 'w,2,,a,False,None\n')
@@ -6966,7 +6966,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,
@@ -6988,7 +6988,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,

@@ -638,12 +638,12 @@ class TestUnit(TestCase):
     def test_series_binary_operator_v(self) -> None:
         s1 = Series((2, 5, 10), index=list('abc'))
 
-        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) > s1).equals(5 > s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) < s1).equals(5 < s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) == s1).equals(5 == s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) != s1).equals(5 != s1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1))
+        self.assertTrue((np.int64(5) > s1).equals(5 > s1))
+        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1))
+        self.assertTrue((np.int64(5) < s1).equals(5 < s1))
+        self.assertTrue((np.int64(5) == s1).equals(5 == s1))
+        self.assertTrue((np.int64(5) != s1).equals(5 != s1))
 
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
