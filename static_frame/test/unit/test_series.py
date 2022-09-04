@@ -1488,7 +1488,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # should raise with bad keyword argumenty
-            s2.median(skip_na=False)
+            s2.median(skip_na=False) # pylint: disable=E1123
 
     #---------------------------------------------------------------------------
 
@@ -3003,7 +3003,7 @@ class TestUnit(TestCase):
 
         with temp_file('.html', path=True) as fp:
             s1.to_html_datatables(fp, show=False)
-            with open(fp) as file:
+            with open(fp, encoding='utf-8') as file:
                 data = file.read()
                 self.assertTrue('SFTable' in data)
                 self.assertTrue(len(data) > 800)

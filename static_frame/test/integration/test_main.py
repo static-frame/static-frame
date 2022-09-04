@@ -25,10 +25,9 @@ def _test_main(python: str) -> None:
 
     args = (python, '-m', 'static_frame')
 
-    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout = process.communicate(COMMAND)[0]
-
-    assert not process.returncode
+    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE) as process:
+        stdout = process.communicate(COMMAND)[0]
+        assert not process.returncode
     # disabling this check as it fails in a TOX context
     #assert result in stdout
 

@@ -271,7 +271,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
         fp_alt = cls.get_test_input('jph_photos.txt')
 
         readme_fp = cls.get_readme_fp()
-        with open(readme_fp) as f:
+        with open(readme_fp, encoding='utf-8') as f:
             readme_str = f.read()
 
         # update display config to remove colors
@@ -285,7 +285,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
         src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
 
         # using a raw string to avoid unicode decoding issues on windows
-        dst = ">>> frame = sf.Frame.from_tsv(r'%s', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')" % fp_alt
+        dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"
 
         if src not in readme_str:
             raise RuntimeError('did not find expected string')

@@ -6830,7 +6830,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     'foo|bar|r|s\n',
@@ -6842,7 +6842,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '||r|s\n',
@@ -6865,7 +6865,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['|1|1|2|2\n',
@@ -6878,7 +6878,7 @@ class TestUnit(TestCase):
                     store_filter=None,
                     include_index_name=False,
                     include_columns_name=True)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
 
 
@@ -7205,7 +7205,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
 
             with self.assertRaises(RuntimeError):
-                _ = f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
+                f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
 
             f1.to_xlsx(fp)
             f2 = Frame.from_xlsx(fp)
@@ -13986,7 +13986,7 @@ class TestUnit(TestCase):
     def test_frame_via_T_or_a(self) -> None:
         f1 = ff.parse('s(6,3)|v(int)')
 
-        f2 = (f1 < 0).via_T | (True, False, False, False, False, True)
+        f2 = (f1 < 0).via_T | (True, False, False, False, False, True) # pylint: disable=E1131
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))

@@ -2183,11 +2183,11 @@ class TestUnit(TestCase):
 
         # Depth levels are not unique
         with self.assertRaises(ValueError):
-            ih.relabel_at_depth(dict(), depth_level=[0, 0])
+            ih.relabel_at_depth({}, depth_level=[0, 0])
 
         # Depth level is too shallow
         with self.assertRaises(ValueError):
-            ih.relabel_at_depth(dict(), depth_level=2)
+            ih.relabel_at_depth({}, depth_level=2)
 
         # Depth level outside range positive
         with self.assertRaises(ValueError):
@@ -3156,7 +3156,7 @@ class TestUnit(TestCase):
 
         with temp_file('.html', path=True) as fp:
             ih1.to_html_datatables(fp, show=False)
-            with open(fp) as file:
+            with open(fp, encoding='utf-8') as file:
                 data = file.read()
                 self.assertTrue('SFTable' in data)
                 self.assertTrue(len(data) > 1000)
