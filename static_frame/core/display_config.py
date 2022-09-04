@@ -1,14 +1,13 @@
-from enum import Enum
-import typing as tp
-import re
 import json
+import re
+import typing as tp
+from enum import Enum
 
 import numpy as np
 
-from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core import display_html_datatables
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.style_config import StyleConfig
-
 
 ColorConstructor = tp.Union[int, str]
 

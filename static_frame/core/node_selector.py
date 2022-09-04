@@ -4,20 +4,21 @@ import numpy as np
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import GetItemKeyType
+
 # from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.bus import Bus  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.yarn import Yarn  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.bus import Bus  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 

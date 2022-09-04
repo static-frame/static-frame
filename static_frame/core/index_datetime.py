@@ -1,18 +1,15 @@
-import typing as tp
 import datetime
+import typing as tp
 
 import numpy as np
-
 from automap import AutoMap  # pylint: disable = E0611
-
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index import _INDEX_GO_SLOTS
 from static_frame.core.index import _INDEX_SLOTS
-from static_frame.core.index import _IndexGOMixin
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.util import DateInitializer
+from static_frame.core.index import _IndexGOMixin
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_H
 from static_frame.core.util import DT64_M
@@ -22,23 +19,24 @@ from static_frame.core.util import DT64_NS
 from static_frame.core.util import DT64_S
 from static_frame.core.util import DT64_US
 from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import to_timedelta64
+from static_frame.core.util import DateInitializer
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
-from static_frame.core.util import NameType
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
-    import pandas  #pylint: disable = W0611 #pragma: no cover
+    import pandas  # pylint: disable = W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexDatetime')
 

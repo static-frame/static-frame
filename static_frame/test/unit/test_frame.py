@@ -1,21 +1,22 @@
-from collections import namedtuple
-from collections import OrderedDict
-from io import StringIO
 import copy
 import datetime
+import io
 import itertools as it
+import os
 import pickle
 import sqlite3
 import string
 import typing as tp
 import unittest
-import os
-import io
+from collections import OrderedDict
+from collections import namedtuple
+from io import StringIO
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
+import static_frame as sf
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
@@ -23,44 +24,40 @@ from static_frame import FrameHE
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
-from static_frame import IndexGO
+from static_frame import IndexAutoConstructorFactory
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
+from static_frame import IndexDefaultFactory
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
-from static_frame import IndexSecond
-from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import IndexDefaultFactory
-from static_frame import IndexAutoConstructorFactory
-
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import InvalidDatetime64Initializer
-
-from static_frame.core.frame import FrameAssignILoc
+from static_frame.core.exception import InvalidFillValue
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
+from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.fill_value_auto import FillValueAuto
-
+from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
-import static_frame as sf
 
 nan = np.nan
 

@@ -3,35 +3,38 @@ Tools for iterators in Series and Frame. These components are imported by both s
 '''
 
 import typing as tp
-from enum import Enum
-from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
+from enum import Enum
+from functools import partial
 
 import numpy as np
 from arraykit import name_filter
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import IndexConstructor
+
+# import multiprocessing as mp
+# mp_context = mp.get_context('spawn')
+
+
 # from static_frame.core.util import array_from_iterator
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.quilt import Quilt # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.bus import Bus # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.yarn import Yarn # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
@@ -609,8 +612,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
             index_constructor: tp.Optional[IndexConstructor]= None,
             name_index: NameType = None,
             ) -> 'Series':
-        from static_frame.core.series import Series
         from static_frame.core.index import Index
+        from static_frame.core.series import Series
 
         # NOTE: when used on labels, this key is given; when used on labels (indices) depth_level is given; only take the key if it is a hashable (a string or a tuple, not a slice, list, or array)
 

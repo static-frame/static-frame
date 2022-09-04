@@ -1,45 +1,42 @@
-from collections import OrderedDict
-from io import StringIO
-import string
-import pickle
-import datetime
-import typing as tp
-from enum import Enum
 import copy
+import datetime
+import pickle
 import re
+import string
+import typing as tp
+from collections import OrderedDict
+from enum import Enum
+from io import StringIO
 
 import numpy as np
 
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
-
 import static_frame as sf
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import Series
+from static_frame import DisplayConfig
+from static_frame import FillValueAuto
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import FrameHE
-from static_frame import mloc
-from static_frame import DisplayConfig
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexDate
-from static_frame import IndexSecond
-from static_frame import IndexYearMonth
-from static_frame import IndexYear
-from static_frame import IndexAutoFactory
-from static_frame import IndexDefaultFactory
-from static_frame import FillValueAuto
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import isna_array
-
 from static_frame import HLoc
 from static_frame import ILoc
-
-from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame import Index
+from static_frame import IndexAutoFactory
+from static_frame import IndexDate
+from static_frame import IndexDefaultFactory
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
+from static_frame import IndexYear
+from static_frame import IndexYearMonth
+from static_frame import Series
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import isna_array
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 

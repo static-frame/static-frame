@@ -1,21 +1,21 @@
-import time
 import datetime
+import time
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
-from static_frame.core.frame import Frame
-from static_frame.core.series import Series
 from static_frame.core.batch import Batch
-from static_frame.test.test_case import TestCase
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.display_config import DisplayConfig
-from static_frame.test.test_case import temp_file
-from static_frame.core.store import StoreConfig
 from static_frame.core.batch import normalize_container
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.frame import Frame
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.series import Series
+from static_frame.core.store import StoreConfig
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 

@@ -1,96 +1,90 @@
 import typing as tp
-from itertools import zip_longest
-from copy import deepcopy
 from collections import Counter
+from copy import deepcopy
+from itertools import zip_longest
 
 import numpy as np
-
-from automap import AutoMap
-from automap import FrozenAutoMap
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-
+from automap import AutoMap
+from automap import FrozenAutoMap
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import matmul
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
+from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_values import InterfaceValues
-
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_sample
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import concat_resolved
-
-from static_frame.core.util import dtype_from_element
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import intersect1d
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import pos_loc_slice_to_iloc_slice
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import union1d
-from static_frame.core.util import argsort_array
-from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import UFunc
+from static_frame.core.util import argsort_array
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import DTYPE_NA_KINDS
-
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.loc_map import LocMap
-
+from static_frame.core.util import array_sample
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import intersect1d
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
+from static_frame.core.util import setdiff1d
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import union1d
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611 #pragma: no cover
-    from static_frame import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
+    import pandas  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound=IndexBase)
 
@@ -998,8 +992,8 @@ class Index(IndexBase):
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
 
         if self._recache:
             self._update_array_cache()
@@ -1334,10 +1328,10 @@ class Index(IndexBase):
             *,
             index_constructor:
         '''
-        from static_frame import IndexHierarchy
-        from static_frame import IndexHierarchyGO
         from static_frame import Index
         from static_frame import IndexGO
+        from static_frame import IndexHierarchy
+        from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
         cls_depth = Index if self.STATIC else IndexGO
@@ -1366,6 +1360,7 @@ class Index(IndexBase):
         '''Return a Pandas Index.
         '''
         import pandas
+
         # must copy to remove immutability, decouple reference
         if self._map is None:
             return pandas.RangeIndex(self.__len__(), name=self._name)

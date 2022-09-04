@@ -6,8 +6,8 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from arraykit import name_filter
 from arraykit import get_new_indexers_and_screen
+from arraykit import name_filter
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructor

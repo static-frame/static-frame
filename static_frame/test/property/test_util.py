@@ -1,16 +1,15 @@
-import typing as tp
 import datetime
 import fractions
+import typing as tp
+
 import numpy as np
-
-from hypothesis import strategies as st
-from hypothesis import given
-
+from arraykit import isna_element
 from arraykit import mloc
-from arraykit import shape_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-from arraykit import isna_element
+from arraykit import shape_filter
+from hypothesis import given
+from hypothesis import strategies as st
 
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA

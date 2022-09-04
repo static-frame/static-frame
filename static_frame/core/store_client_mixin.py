@@ -1,21 +1,18 @@
 
 import typing as tp
 
-
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.util import PathSpecifier
-from static_frame.core.store import StoreConfigMap
-
-
 
 # NOTE: wanted this to inherit from tp.Generic[T], such that values returned from constructors would be known, but this breaks in 3.6 with: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 

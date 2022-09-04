@@ -1,31 +1,29 @@
 # This module follows the conventions of the VisiData project for naming and style.
 # This module is excluded from mypy and lint checking
 
-from datetime import date
 import re
+from datetime import date
 
 import numpy as np
-
-from visidata import vd
-from visidata import Sheet
-from visidata import asyncthread
-from visidata import IndexSheet
 from visidata import Column
 from visidata import ColumnAttr
-from visidata import run
+from visidata import IndexSheet
 from visidata import Progress
+from visidata import Sheet
 from visidata import anytype
+from visidata import asyncthread
+from visidata import run
 from visidata import undoAttrCopyFunc
+from visidata import vd
 
-
-from static_frame.core.frame import Frame
-from static_frame.core.bus import Bus
 from static_frame.core.batch import Batch
+from static_frame.core.bus import Bus
+from static_frame.core.frame import Frame
+from static_frame.core.index import Index
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
-from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_auto import IndexAutoFactory
 
 
 def normalize_container(container):

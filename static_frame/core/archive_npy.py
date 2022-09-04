@@ -32,8 +32,9 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import list_to_tuple
 
 if tp.TYPE_CHECKING:
-    import pandas as pd #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
 
 
 HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
@@ -970,8 +971,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
 
-        from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.frame import Frame
+        from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
 

@@ -1,49 +1,37 @@
 import datetime
-from  itertools import product
+from itertools import product
 
 import numpy as np
 
-from static_frame import Index
-from static_frame import IndexGO
-
-from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-
-from static_frame import IndexYear
-from static_frame import IndexYearGO
-
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
-
+from static_frame import Index
 from static_frame import IndexDate
 from static_frame import IndexDateGO
-
-from static_frame import IndexSecond
-from static_frame import IndexSecondGO
-
+from static_frame import IndexGO
 from static_frame import IndexHour
 from static_frame import IndexHourGO
-
-from static_frame import IndexMinute
-from static_frame import IndexMinuteGO
-
-from static_frame import IndexMillisecond
-from static_frame import IndexMillisecondGO
-
 from static_frame import IndexMicrosecond
 from static_frame import IndexMicrosecondGO
-
+from static_frame import IndexMillisecond
+from static_frame import IndexMillisecondGO
+from static_frame import IndexMinute
+from static_frame import IndexMinuteGO
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
-
-from static_frame.core.index import _INDEX_SLOTS
-from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index_datetime import dtype_to_index_cls
-
-from static_frame.test.test_case import TestCase
-from static_frame.core.exception import LocInvalid
+from static_frame import IndexSecond
+from static_frame import IndexSecondGO
+from static_frame import IndexYear
+from static_frame import IndexYearGO
+from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
+from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import LocInvalid
+from static_frame.core.index import _INDEX_GO_SLOTS
+from static_frame.core.index import _INDEX_SLOTS
+from static_frame.core.index_datetime import dtype_to_index_cls
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

@@ -1,16 +1,22 @@
-import unittest
 import datetime
 import typing as tp
+import unittest
 import warnings
-
 from enum import Enum
 
 import numpy as np
+from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
-from arraykit import column_1d_filter
 
+from static_frame.core.exception import InvalidDatetime64Comparison
+from static_frame.core.util import DT64_DAY
+from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
@@ -23,25 +29,31 @@ from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
+from static_frame.core.util import array_deepcopy
+from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
-from static_frame.core.util import array_shift
 from static_frame.core.util import array_sample
+from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import binary_transition
+from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
-from static_frame.core.util import DT64_DAY
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DT64_MS
-from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import datetime64_not_aligned
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
+from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import is_objectable_dt64
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import list_to_tuple
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
@@ -53,34 +65,20 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
-from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
-from static_frame.core.util import union1d
-from static_frame.core.util import union2d
-from static_frame.core.util import array_deepcopy
-from static_frame.core.util import array_from_element_apply
-from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import UFUNC_MAP
-from static_frame.core.util import list_to_tuple
-from static_frame.core.util import datetime64_not_aligned
-from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import is_objectable_dt64
-
-from static_frame.core.exception import InvalidDatetime64Comparison
-
+from static_frame.core.util import ufunc_unique2d_indexer
+from static_frame.core.util import union1d
+from static_frame.core.util import union2d
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
+
 
 class TestUnit(TestCase):
 
