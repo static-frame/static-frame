@@ -470,7 +470,7 @@ class ArchiveDirectory(Archive):
         return os.path.getsize(fp)
 
 
-class ArchiveZipFileOpen(Archive):
+class ArchiveZipWrapper(Archive):
     '''Archive based on a shared (and already open/created) ZipFile.
     '''
     __slots__ = ('prefix', '_delimiter')
@@ -924,7 +924,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     self._archive.labels(),
                     key=lambda fn: tuple(reversed(fn.split('.')))
                     ):
-                # NOTE: will not work with ArchiveZipFileOpen
+                # NOTE: will not work with ArchiveZipWrapper
                 if name == self._archive.FILE_META:
                     yield (name, self._archive.size_metadata()) + ('', '', '')
                 else:
@@ -948,7 +948,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         def gen() -> tp.Iterator[int]:
             # metadata is in labels; sort by extension first to put at top
             for name in self._archive.labels():
-                # NOTE: will not work with ArchiveZipFileOpen
+                # NOTE: will not work with ArchiveZipWrapper
                 if name == self._archive.FILE_META:
                     yield self._archive.size_metadata()
                 else:

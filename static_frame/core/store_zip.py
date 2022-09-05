@@ -7,7 +7,7 @@ from io import BytesIO
 from io import StringIO
 
 from static_frame.core.archive_npy import ArchiveFrameConverter
-from static_frame.core.archive_npy import ArchiveZipFileOpen
+from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.frame import Frame
@@ -478,19 +478,20 @@ class StoreZipNPY(Store):
 
         try:
             with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
-                archive = ArchiveZipFileOpen(zf,
+                archive = ArchiveZipWrapper(zf,
                         writeable=True,
                         memory_map=False,
                         delimiter=self._DELIMITER,
                         )
                 for label, frame in items:
+                    c: StoreConfig = config_map[label]
                     archive.prefix = config_map.default.label_encode(label) # mutate
                     ArchiveFrameConverter.frame_encode(
                             archive=archive,
                             frame=frame,
-                            include_index=True, # TODO: get from config map
-                            include_columns=True,
-                            consolidate_blocks=False,
+                            include_index=c.include_index,
+                            include_columns=c.include_columns,
+                            consolidate_blocks=c.consolidate_blocks,
                             )
         except ErrorNPYEncode:
             # NOTE: catch NPY failures and remove self._fp to not leave a malformed zip
@@ -507,11 +508,12 @@ class StoreZipNPY(Store):
         config_map = StoreConfigMap.from_initializer(config)
 
         with zipfile.ZipFile(self._fp) as zf:
-            archive = ArchiveZipFileOpen(zf,
+            archive = ArchiveZipWrapper(zf,
                     writeable=False,
                     memory_map=False,
                     delimiter=self._DELIMITER,
                     )
+            # NOTE: this labels() delibers directories of NPY, not individual NPY
             yield from (config_map.default.label_decode(name)
                     for name in archive.labels())
 
@@ -526,7 +528,7 @@ class StoreZipNPY(Store):
         config_map = StoreConfigMap.from_initializer(config)
 
         with zipfile.ZipFile(self._fp) as zf:
-            archive = ArchiveZipFileOpen(zf,
+            archive = ArchiveZipWrapper(zf,
                     writeable=False,
                     memory_map=False,
                     delimiter=self._DELIMITER,

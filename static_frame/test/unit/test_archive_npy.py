@@ -13,7 +13,7 @@ from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ
 from static_frame.core.archive_npy import ArchiveDirectory
 from static_frame.core.archive_npy import ArchiveZip
-from static_frame.core.archive_npy import ArchiveZipFileOpen
+from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.archive_npy import Label
 from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.bus import Bus
@@ -607,7 +607,7 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as zf:
                 with self.assertRaises(RuntimeError):
-                    ArchiveZipFileOpen(zf, writeable=True, memory_map=True, delimiter='/')
+                    ArchiveZipWrapper(zf, writeable=True, memory_map=True, delimiter='/')
 
     def test_archive_zip_file_open_b(self) -> None:
         f1 = ff.parse('s(2,2)|v(int)').rename('a')
@@ -618,7 +618,7 @@ class TestUnit(TestCase):
             b.to_zip_npy(fp)
 
             with zipfile.ZipFile(fp, 'r', zipfile.ZIP_DEFLATED) as zf:
-                archive = ArchiveZipFileOpen(zf, writeable=False, memory_map=False, delimiter='/')
+                archive = ArchiveZipWrapper(zf, writeable=False, memory_map=False, delimiter='/')
 
                 archive.prefix = 'b'
                 post1 = archive.read_array_header(Label.FILE_TEMPLATE_BLOCKS.format(0))
