@@ -416,7 +416,7 @@ class InterfaceFillValue(Interface[TContainer]):
 #---------------------------------------------------------------------------
 class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is FrameGO
 
-    __slots__ = InterfaceFillValue.__slots__
+    __slots__ = ()
     INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
             '__setitem__',
             )
