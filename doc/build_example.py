@@ -5128,9 +5128,9 @@ def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
 
 if __name__ == '__main__':
 
-    for line in gen_all_examples():
-        print(line)
-    # to_file()
+    # for line in gen_all_examples():
+    #     print(line)
+    to_file()
     # post = bundle()
 
 
