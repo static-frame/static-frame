@@ -26,7 +26,7 @@ xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
 tables==3.6.1
-pyarrow==0.16.0
+pyarrow==0.17.0
 msgpack==1.0.0
 msgpack-numpy==0.4.7
 frame-fixtures==0.2.1

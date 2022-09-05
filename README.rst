@@ -105,7 +105,7 @@ For extended input and output, the following packages are required:
 - openpyxl >= 3.0.9
 - xarray >= 0.13.0
 - tables >= 3.6.1
-- pyarrow >= 0.16.0
+- pyarrow >= 0.17.0
 - visidata >= 2.4
 
 
