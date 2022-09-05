@@ -1,8 +1,8 @@
 import typing as tp
 
 import numpy as np
-import static_frame as sf
 
+import static_frame as sf
 from static_frame.test.test_case import TestCase
 
 CHARACTERS_REFERENCE = dict((

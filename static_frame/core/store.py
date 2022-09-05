@@ -1,28 +1,26 @@
 
 
-import typing as tp
 import os
-
-from itertools import chain
+import typing as tp
 from functools import partial
 from functools import wraps
+from itertools import chain
 from weakref import WeakValueDictionary
-import numpy as np
 
-from static_frame.core.interface_meta import InterfaceMeta
+import numpy as np
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import StoreParameterConflict
-
 from static_frame.core.frame import Frame
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import path_filter
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexConstructors
+from static_frame.core.util import PathSpecifier
+from static_frame.core.util import path_filter
 
 #-------------------------------------------------------------------------------
 

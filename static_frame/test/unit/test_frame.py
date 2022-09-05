@@ -1,21 +1,22 @@
-from collections import namedtuple
-from collections import OrderedDict
-from io import StringIO
 import copy
 import datetime
+import io
 import itertools as it
+import os
 import pickle
 import sqlite3
 import string
 import typing as tp
 import unittest
-import os
-import io
+from collections import OrderedDict
+from collections import namedtuple
+from io import StringIO
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
+import static_frame as sf
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
@@ -23,44 +24,40 @@ from static_frame import FrameHE
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
-from static_frame import IndexGO
+from static_frame import IndexAutoConstructorFactory
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
+from static_frame import IndexDefaultFactory
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
-from static_frame import IndexSecond
-from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import IndexDefaultFactory
-from static_frame import IndexAutoConstructorFactory
-
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import InvalidDatetime64Initializer
-
-from static_frame.core.frame import FrameAssignILoc
+from static_frame.core.exception import InvalidFillValue
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
+from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.fill_value_auto import FillValueAuto
-
+from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
-import static_frame as sf
 
 nan = np.nan
 
@@ -4336,17 +4333,17 @@ class TestUnit(TestCase):
                 columns=('p', 'q'),
                 index=('w', 'x'),
                 )
-        self.assertTrue((np.int64(10) * f1).equals(10 * f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) + f1).equals(10 + f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) / f1).equals(10 / f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) // f1).equals(10 // f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) - f1).equals(10 - f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) > f1).equals(5 > f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) < f1).equals(5 < f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) == f1).equals(5 == f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) != f1).equals(5 != f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) * f1).equals(10 * f1))
+        self.assertTrue((np.int64(10) + f1).equals(10 + f1))
+        self.assertTrue((np.int64(10) / f1).equals(10 / f1))
+        self.assertTrue((np.int64(10) // f1).equals(10 // f1))
+        self.assertTrue((np.int64(10) - f1).equals(10 - f1))
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
+        self.assertTrue((np.int64(5) == f1).equals(5 == f1))
+        self.assertTrue((np.int64(5) != f1).equals(5 != f1))
 
 
 
@@ -6357,7 +6354,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', 'a|True|20.2', 'b|False|85.3')))
                 file.close()
 
@@ -6372,7 +6369,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
                 file.close()
 
@@ -6463,7 +6460,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6569,7 +6566,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6750,7 +6747,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
@@ -6771,7 +6768,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '__index0__|__index1__|r|s\n',
@@ -6802,7 +6799,7 @@ class TestUnit(TestCase):
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf1)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines1 = f.readlines()
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
@@ -6811,7 +6808,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines2 = f.readlines()
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
@@ -6833,7 +6830,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     'foo|bar|r|s\n',
@@ -6845,7 +6842,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '||r|s\n',
@@ -6868,7 +6865,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['|1|1|2|2\n',
@@ -6881,7 +6878,7 @@ class TestUnit(TestCase):
                     store_filter=None,
                     include_index_name=False,
                     include_columns_name=True)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
 
 
@@ -6953,7 +6950,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
                 # nan has been converted to string
                 self.assertEqual(lines[1], 'w,2,,a,False,None\n')
@@ -6969,7 +6966,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,
@@ -6991,7 +6988,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,
@@ -7208,7 +7205,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
 
             with self.assertRaises(RuntimeError):
-                _ = f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
+                f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
 
             f1.to_xlsx(fp)
             f2 = Frame.from_xlsx(fp)
@@ -13989,7 +13986,7 @@ class TestUnit(TestCase):
     def test_frame_via_T_or_a(self) -> None:
         f1 = ff.parse('s(6,3)|v(int)')
 
-        f2 = (f1 < 0).via_T | (True, False, False, False, False, True)
+        f2 = (f1 < 0).via_T | (True, False, False, False, False, True) # pylint: disable=E1131
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))

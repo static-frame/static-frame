@@ -1,19 +1,16 @@
 import typing as tp
 
 import numpy as np
-
 from hypothesis import given
 from hypothesis import settings as hypo_settings
 
-from static_frame.test.property import strategies as sfst
-
-from static_frame.test.test_case import TestCase
-
-from static_frame import TypeBlocks
+from static_frame import Frame
 from static_frame import Index
 from static_frame import IndexHierarchy
 from static_frame import Series
-from static_frame import Frame
+from static_frame import TypeBlocks
+from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

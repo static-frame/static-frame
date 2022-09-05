@@ -1,10 +1,12 @@
 import numpy as np
-# import frame_fixtures as ff
 
-from static_frame.test.test_case import TestCase
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64
+from static_frame.test.test_case import TestCase
+
+# import frame_fixtures as ff
+
 
 class TestUnit(TestCase):
 

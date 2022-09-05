@@ -46,6 +46,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
@@ -55,7 +56,6 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.util import DtypesSpecifier
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')

@@ -1,24 +1,22 @@
 import typing as tp
 
 import numpy as np
-
 from arraykit import column_2d_filter
-
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.util import UFunc
+from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import UFunc
 from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.type_blocks import TypeBlocks
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',

@@ -1,5 +1,6 @@
 import typing as tp
 
+
 class Assign:
     '''
     Common base class for SeriesAssign and FrameAssign classes.

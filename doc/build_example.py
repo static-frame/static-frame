@@ -2,12 +2,11 @@ from io import StringIO
 import typing as tp
 import os
 import sys
-import datetime
 
 import numpy as np
-import static_frame as sf
 import pandas as pd
 
+import static_frame as sf
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap

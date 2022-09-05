@@ -2,15 +2,12 @@ import typing as tp
 import unittest
 
 import numpy as np
-
-from hypothesis import strategies as st
 from hypothesis import given
-
-from static_frame.test.property import strategies as sfst
-
-from static_frame.test.test_case import TestCase
+from hypothesis import strategies as st
 
 from static_frame import TypeBlocks
+from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

@@ -1,18 +1,3 @@
-from collections import abc
-from collections import defaultdict
-from collections import namedtuple
-from collections import Counter
-from enum import Enum
-from functools import partial
-from functools import reduce
-from io import StringIO
-from itertools import chain
-from itertools import zip_longest
-from os import PathLike
-from urllib import request
-from copy import deepcopy
-from types import TracebackType
-
 import contextlib
 import datetime
 import operator
@@ -20,24 +5,37 @@ import os
 import tempfile
 import typing as tp
 import warnings
+from collections import Counter
+from collections import abc
+from collections import defaultdict
+from collections import namedtuple
+from copy import deepcopy
+from enum import Enum
+from functools import partial
+from functools import reduce
+from io import StringIO
+from itertools import chain
+from itertools import zip_longest
+from os import PathLike
+from types import TracebackType
+from urllib import request
 
-from arraykit import resolve_dtype
-from arraykit import column_2d_filter
-
-from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
+from arraykit import column_2d_filter
+from arraykit import resolve_dtype
+from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import InvalidDatetime64Comparison
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -1644,8 +1642,8 @@ def pos_loc_slice_to_iloc_slice(
             if key.stop >= length:
                 # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                 raise LocInvalid(f'Invalid loc: {key}')
-        except TypeError: # if stop is not an int
-            raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError as e: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}') from e
 
         stop = key.stop + 1
     return slice(start, stop, key.step)
@@ -3119,7 +3117,7 @@ def write_optional_file(
     if f is None: # do not have a file object
         try:
             assert isinstance(fp, str)
-            with tp.cast(StringIO, open(fp, 'w')) as f:
+            with tp.cast(StringIO, open(fp, 'w', encoding='utf-8')) as f:
                 f.write(content)
         finally:
             if fd is not None:

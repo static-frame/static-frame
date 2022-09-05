@@ -1,8 +1,7 @@
 import numpy as np
 
-from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index import Index
-
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.test.test_case import TestCase
 
 

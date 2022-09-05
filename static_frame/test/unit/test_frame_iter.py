@@ -1,18 +1,18 @@
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
 import static_frame as sf
-from static_frame import IndexHierarchy
-from static_frame import IndexDate
-from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
 from static_frame import HLoc
-from static_frame.test.test_case import TestCase
+from static_frame import IndexDate
+from static_frame import IndexHierarchy
+from static_frame import Series
+from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
+from static_frame.test.test_case import TestCase
 
 nan = np.nan
 

@@ -1,8 +1,10 @@
 import typing as tp
 from itertools import zip_longest
+
 import numpy as np
 
 from static_frame.core.container import ContainerBase
+from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -11,10 +13,12 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
+from static_frame.core.index import Index
+from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
-from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -27,28 +31,26 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import BoolOrBools
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexConstructor
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.index import Index
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifier
+
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):

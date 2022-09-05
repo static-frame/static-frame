@@ -8,8 +8,9 @@ codecov>=2.0.15
 hypothesis==6.40.0
 scipy==1.8.0
 mypy==0.800
-pylint==2.4.4
+pylint==2.15.0
 invoke==1.4.0
+isort==5.10.1
 
 pyinstrument==3.4.1
 Pygments==2.7.4

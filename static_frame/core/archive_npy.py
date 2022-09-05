@@ -32,8 +32,9 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import list_to_tuple
 
 if tp.TYPE_CHECKING:
-    import pandas as pd #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
 
 
 HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
@@ -272,13 +273,7 @@ class Archive:
             f.close()
 
 class ArchiveZip(Archive):
-    __slots__ = (
-            'labels',
-            'memory_map',
-            '_archive',
-            '_closable',
-            '_header_decode_cache',
-            )
+    __slots__ = ()
 
     _archive: ZipFile
     FUNC_REMOVE_FP = os.remove
@@ -290,7 +285,7 @@ class ArchiveZip(Archive):
             ):
 
         mode = 'w' if writeable else 'r'
-        self._archive = ZipFile(fp,
+        self._archive = ZipFile(fp, # pylint: disable=R1732
                 mode=mode,
                 compression=ZIP_STORED,
                 allowZip64=True,
@@ -312,14 +307,14 @@ class ArchiveZip(Archive):
     def write_array(self, name: str, array: np.ndarray) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
-        f = self._archive.open(name, 'w', force_zip64=True)
+        f = self._archive.open(name, 'w', force_zip64=True) # pylint: disable=R1732
         try:
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
     def read_array(self, name: str) -> np.ndarray:
-        f = self._archive.open(name)
+        f = self._archive.open(name) # pylint: disable=R1732
         try:
             array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
         finally:
@@ -330,7 +325,7 @@ class ArchiveZip(Archive):
     def read_array_header(self, name: str) -> HeaderType:
         '''Alternate reader for status displays.
         '''
-        f = self._archive.open(name)
+        f = self._archive.open(name) # pylint: disable=R1732
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -350,13 +345,7 @@ class ArchiveZip(Archive):
         return self._archive.getinfo(self.FILE_META).file_size
 
 class ArchiveDirectory(Archive):
-    __slots__ = (
-            'labels',
-            'memory_map',
-            '_archive',
-            '_closable',
-            '_header_decode_cache',
-            )
+    __slots__ = ()
 
     _archive: PathSpecifier
     FUNC_REMOVE_FP = shutil.rmtree
@@ -385,7 +374,7 @@ class ArchiveDirectory(Archive):
 
     def write_array(self, name: str, array: np.ndarray) -> None:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'wb')
+        f = open(fp, 'wb') # pylint: disable=R1732
         try:
             NPYConverter.to_npy(f, array)
         finally:
@@ -397,7 +386,7 @@ class ArchiveDirectory(Archive):
             if not hasattr(self, '_closable'):
                 self._closable = []
 
-            f = open(fp, 'rb')
+            f = open(fp, 'rb') # pylint: disable=R1732
             try:
                 array, mm = NPYConverter.from_npy(f,
                         self._header_decode_cache,
@@ -409,7 +398,7 @@ class ArchiveDirectory(Archive):
             self._closable.append(mm)
             return array
 
-        f = open(fp, 'rb')
+        f = open(fp, 'rb') # pylint: disable=R1732
         try:
             array, _ = NPYConverter.from_npy(f,
                     self._header_decode_cache,
@@ -423,7 +412,7 @@ class ArchiveDirectory(Archive):
         '''Alternate reader for status displays.
         '''
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'rb')
+        f = open(fp, 'rb') # pylint: disable=R1732
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -436,7 +425,7 @@ class ArchiveDirectory(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'w')
+        f = open(fp, 'w', encoding='utf-8') # pylint: disable=R1732
         try:
             f.write(json.dumps(content))
         finally:
@@ -444,7 +433,7 @@ class ArchiveDirectory(Archive):
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'r')
+        f = open(fp, 'r', encoding='utf-8') # pylint: disable=R1732
         try:
             post = json.loads(f.read())
         finally:
@@ -970,8 +959,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
 
-        from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.frame import Frame
+        from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
 
@@ -984,7 +973,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                             Index,
                             )
                 except ErrorInitIndexNonUnique:
-                    raise RuntimeError('Column names after horizontal concatenation are not unique; set include_columns to None to ignore.')
+                    raise RuntimeError('Column names after horizontal concatenation are not unique; set include_columns to None to ignore.') from None
             else:
                 columns = None
 
@@ -1009,7 +998,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 try:
                     index = index_many_concat((f._index for f in frames), Index)
                 except ErrorInitIndexNonUnique:
-                    raise RuntimeError('Index names after vertical concatenation are not unique; set include_index to None to ignore')
+                    raise RuntimeError('Index names after vertical concatenation are not unique; set include_index to None to ignore') from None
             else:
                 index = None
 

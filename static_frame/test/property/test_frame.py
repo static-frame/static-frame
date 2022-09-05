@@ -1,12 +1,12 @@
-import typing as tp
+import gc
 import operator
 import os
 import sqlite3
-import gc
+import typing as tp
 
 import numpy as np
-from hypothesis import given
 from arraykit import isna_element
+from hypothesis import given
 
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
@@ -15,9 +15,9 @@ from static_frame.core.interface import UFUNC_BINARY_OPERATORS
 from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.core.series import Series
 from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

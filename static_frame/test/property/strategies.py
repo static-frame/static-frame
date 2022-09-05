@@ -1,49 +1,46 @@
 import typing as tp
 from enum import Enum
-
-from functools import partial
 from functools import lru_cache
+from functools import partial
 from itertools import chain
 from itertools import repeat
 
+import numpy as np
+from hypothesis import HealthCheck
+from hypothesis import settings as hypo_settings
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
-from hypothesis import settings as hypo_settings
-from hypothesis import HealthCheck
 
-
-import numpy as np
-
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_BOOL
-
-# from static_frame.core.util import DTYPE_INEXACT_KINDS
-
-from static_frame import TypeBlocks
-
+from static_frame import Frame
+from static_frame import FrameGO
 from static_frame import Index
+from static_frame import IndexDate
+from static_frame import IndexDateGO
 from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexHour
+from static_frame import IndexHourGO
+from static_frame import IndexMicrosecond
+from static_frame import IndexMicrosecondGO
+from static_frame import IndexMillisecond
+from static_frame import IndexMillisecondGO
+from static_frame import IndexMinute
+from static_frame import IndexMinuteGO
+from static_frame import IndexNanosecond
+from static_frame import IndexNanosecondGO
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexHour
-from static_frame import IndexHourGO
-from static_frame import IndexMinute
-from static_frame import IndexMinuteGO
-from static_frame import IndexMillisecond
-from static_frame import IndexMillisecondGO
-from static_frame import IndexMicrosecond
-from static_frame import IndexMicrosecondGO
-from static_frame import IndexNanosecond
-from static_frame import IndexNanosecondGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
 from static_frame import Series
-from static_frame import Frame
-from static_frame import FrameGO
+from static_frame import TypeBlocks
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
+
+# from static_frame.core.util import DTYPE_INEXACT_KINDS
+
+
 
 
 MAX_ROWS = 8
@@ -950,6 +947,7 @@ def get_frame_or_frame_go(
 if __name__ == '__main__':
     import fnmatch
     from argparse import ArgumentParser
+
     from static_frame.core.display_color import HexColor
 
     parser = ArgumentParser()
