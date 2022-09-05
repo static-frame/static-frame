@@ -4,9 +4,11 @@ What is New in StaticFrame
 0.9.13
 ----------
 
-Added `test_example_gen.py` to test and enforce automatic example generation.
+Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``
 
-Improved usage of `__slots__` throughout.
+Added ``test_example_gen.py`` to test and enforce automatic example generation.
+
+Improved usage of ``__slots__`` throughout.
 
 Continuous integration quality checks now using pylint 2.15.0 and isort 5.10.1
 
