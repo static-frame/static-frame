@@ -37,11 +37,11 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE

@@ -6,6 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 from io import BytesIO
 from io import StringIO
 
+from static_frame.core.archive_npy import ArchiveFrameConverter
+from static_frame.core.archive_npy import ArchiveZipFileOpen
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.frame import Frame
@@ -18,9 +20,6 @@ from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
-from static_frame.core.archive_npy import ArchiveZipFileOpen
-from static_frame.core.archive_npy import ArchiveFrameConverter
-
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')

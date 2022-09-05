@@ -10,8 +10,8 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipNPY
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
