@@ -647,7 +647,7 @@ def pivot_index_map(*,
             group_to_dtype[None] = resolve_dtype_iter(dtypes_src)
     else:
         group_to_target_map = defaultdict(dict)
-        targets_unique = dict() # Store targets in order observed
+        targets_unique = {} # Store targets in order observed
 
         for axis_idx, (group, target, dtype) in enumerate(zip(
                 zip(*group_arrays), # get tuples of len 1 to depth

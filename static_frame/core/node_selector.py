@@ -43,7 +43,7 @@ class Interface(tp.Generic[TContainer]):
     INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceBatch:
-    # Batch interfaces are unique in that they always (?) return a Batch
+    __slots__ = ()
     INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceGetItem(Interface[TContainer]):
@@ -176,12 +176,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
     '''For assignment with __getitem__, iloc, loc.
     '''
 
-    __slots__ = (
-            '_func_iloc',
-            '_func_loc',
-            '_func_getitem',
-            'delegate'
-            )
+    __slots__ = ('delegate',)
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
@@ -200,13 +195,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
 class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
     '''For assignment with __getitem__, iloc, loc, bloc.
     '''
-    __slots__ = (
-            '_func_iloc',
-            '_func_loc',
-            '_func_getitem',
-            '_func_bloc',
-            'delegate'
-            )
+    __slots__ = ('delegate',)
 
     def __init__(self, *,
             func_iloc: GetItemFunc,

@@ -1642,8 +1642,8 @@ def pos_loc_slice_to_iloc_slice(
             if key.stop >= length:
                 # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                 raise LocInvalid(f'Invalid loc: {key}')
-        except TypeError: # if stop is not an int
-            raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError as e: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}') from e
 
         stop = key.stop + 1
     return slice(start, stop, key.step)
@@ -3117,7 +3117,7 @@ def write_optional_file(
     if f is None: # do not have a file object
         try:
             assert isinstance(fp, str)
-            with tp.cast(StringIO, open(fp, 'w')) as f:
+            with tp.cast(StringIO, open(fp, 'w', encoding='utf-8')) as f:
                 f.write(content)
         finally:
             if fd is not None:

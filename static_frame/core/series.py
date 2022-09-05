@@ -122,13 +122,11 @@ if tp.TYPE_CHECKING:
 class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
     '''
-
     __slots__ = (
             'values',
             '_index',
             '_name',
             )
-
     values: np.ndarray
     _index: IndexBase
     _NDIM: int = 1
@@ -570,7 +568,7 @@ class Series(ContainerOperand):
         self.values.flags.writeable = False
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj.values = array_deepcopy(self.values, memo)
         obj._index = deepcopy(self._index, memo)
         obj._name = self._name # should be hashable/immutable
@@ -2094,7 +2092,7 @@ class Series(ContainerOperand):
 
         asc_is_element = isinstance(ascending, BOOL_TYPES)
         if not asc_is_element:
-            raise RuntimeError(f'Multiple ascending values not permitted.')
+            raise RuntimeError('Multiple ascending values not permitted.')
 
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(cfs_values, kind=kind)
@@ -3237,14 +3235,7 @@ class SeriesHE(Series):
     '''
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     '''
-
-    __slots__ = (
-            'values',
-            '_index',
-            '_name',
-            '_hash',
-            )
-
+    __slots__ = ('_hash',)
     _hash: int
 
     def __eq__(self, other: tp.Any) -> bool:

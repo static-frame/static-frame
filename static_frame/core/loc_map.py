@@ -230,7 +230,7 @@ class HierarchicalLocMap:
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        obj: _HLMap = self.__new__(self.__class__)
+        obj: _HLMap = self.__class__.__new__(self.__class__)
         obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
         obj.encoded_indexer_map = deepcopy(self.encoded_indexer_map, memo)
