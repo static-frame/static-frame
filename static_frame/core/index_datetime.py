@@ -5,10 +5,10 @@ import numpy as np
 from automap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _IndexGOMixin
-from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_H
 from static_frame.core.util import DT64_M
