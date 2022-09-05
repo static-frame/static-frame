@@ -4,7 +4,7 @@ What is New in StaticFrame
 0.9.13
 ----------
 
-Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``
+Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``.
 
 Added ``test_example_gen.py`` to test and enforce automatic example generation.
 
