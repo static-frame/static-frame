@@ -1,17 +1,17 @@
 import datetime
-import numpy as np
 
 import frame_fixtures as ff
+import numpy as np
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexYearMonth
-
-from static_frame.test.test_case import TestCase
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultFactory
-from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.test.test_case import TestCase
+
 
 class TestUnit(TestCase):
 

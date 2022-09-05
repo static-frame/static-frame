@@ -45,7 +45,7 @@ class TestUnit(TestCase):
         counts_current: tp.Counter[str] = Counter()
         counts_past: tp.Counter[str] = Counter()
 
-        with open(fp) as past:
+        with open(fp, encoding='utf-8') as past:
             count(past, counts_past)
         count(current.readlines(), counts_current)
 

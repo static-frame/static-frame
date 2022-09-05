@@ -4,20 +4,21 @@ import numpy as np
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import GetItemKeyType
+
 # from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.bus import Bus  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.yarn import Yarn  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.bus import Bus  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -42,7 +43,7 @@ class Interface(tp.Generic[TContainer]):
     INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceBatch:
-    # Batch interfaces are unique in that they always (?) return a Batch
+    __slots__ = ()
     INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceGetItem(Interface[TContainer]):
@@ -175,12 +176,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
     '''For assignment with __getitem__, iloc, loc.
     '''
 
-    __slots__ = (
-            '_func_iloc',
-            '_func_loc',
-            '_func_getitem',
-            'delegate'
-            )
+    __slots__ = ('delegate',)
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
@@ -199,13 +195,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
 class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
     '''For assignment with __getitem__, iloc, loc, bloc.
     '''
-    __slots__ = (
-            '_func_iloc',
-            '_func_loc',
-            '_func_getitem',
-            '_func_bloc',
-            'delegate'
-            )
+    __slots__ = ('delegate',)
 
     def __init__(self, *,
             func_iloc: GetItemFunc,

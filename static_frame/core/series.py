@@ -1,32 +1,31 @@
 import typing as tp
+from collections.abc import Set
+from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import product
-from copy import deepcopy
-from collections.abc import Set
 
 import numpy as np
-from numpy.ma import MaskedArray #type: ignore
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
+from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.container_util import get_col_fill_value_factory
-from static_frame.core.container_util import is_fill_value_factory_initializer
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -39,84 +38,82 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_auto import IndexInitOrAutoType
-
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_fill_value import InterfaceFillValue
-from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_values import InterfaceValues
-
+from static_frame.core.rank import RankMethod
+from static_frame.core.rank import rank_1d
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
 from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import full_for_fill
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import INT_TYPES
+from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import intersect1d
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import DTYPE_NA_KINDS
-from static_frame.core.util import BoolOrBools
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import iloc_to_insertion_iloc
-from static_frame.core.util import FILL_VALUE_DEFAULT
-
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-from static_frame.core.rank import rank_1d
-from static_frame.core.rank import RankMethod
 
 if tp.TYPE_CHECKING:
-    from static_frame import Bus # pylint: disable=W0611 #pragma: no cover
-    from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
-    from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
-    from static_frame import FrameHE # pylint: disable=W0611 #pragma: no cover
-    import pandas # pylint: disable=W0611 #pragma: no cover
+    import pandas  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame import Bus  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -125,13 +122,11 @@ if tp.TYPE_CHECKING:
 class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
     '''
-
     __slots__ = (
             'values',
             '_index',
             '_name',
             )
-
     values: np.ndarray
     _index: IndexBase
     _NDIM: int = 1
@@ -573,7 +568,7 @@ class Series(ContainerOperand):
         self.values.flags.writeable = False
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj.values = array_deepcopy(self.values, memo)
         obj._index = deepcopy(self._index, memo)
         obj._name = self._name # should be hashable/immutable
@@ -2097,7 +2092,7 @@ class Series(ContainerOperand):
 
         asc_is_element = isinstance(ascending, BOOL_TYPES)
         if not asc_is_element:
-            raise RuntimeError(f'Multiple ascending values not permitted.')
+            raise RuntimeError('Multiple ascending values not permitted.')
 
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(cfs_values, kind=kind)
@@ -3111,7 +3106,7 @@ class Series(ContainerOperand):
 
         if show:
             assert isinstance(fp, str) #pragma: no cover
-            import webbrowser #pragma: no cover
+            import webbrowser  # pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
 
@@ -3240,14 +3235,7 @@ class SeriesHE(Series):
     '''
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     '''
-
-    __slots__ = (
-            'values',
-            '_index',
-            '_name',
-            '_hash',
-            )
-
+    __slots__ = ('_hash',)
     _hash: int
 
     def __eq__(self, other: tp.Any) -> bool:

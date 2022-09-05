@@ -1548,7 +1548,7 @@ class TestUnit(TestCase):
             a1 = b2.values
             self.assertNotEqual(id(a1), id(b2._values_mutable))
             self.assertEqual(b2.status['loaded'].sum(), 2)
-            self.assertTrue(all([f.__class__ is Frame for f in a1]))
+            self.assertTrue(all(f.__class__ is Frame for f in a1))
 
     #---------------------------------------------------------------------------
 

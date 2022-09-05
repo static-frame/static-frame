@@ -1,37 +1,34 @@
-from itertools import combinations
-import unittest
-import string
-import typing as tp
 import hashlib
 import json
+import string
+import typing as tp
+import unittest
+from itertools import combinations
 
-import numpy as np
 import frame_fixtures as ff
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
+import numpy as np
 
 import static_frame as sf
 # assuming located in the same directory
-from static_frame import Index
-from static_frame import IndexHierarchy
-from static_frame import Series
-from static_frame import Frame
-from static_frame import FrameGO
 from static_frame import Display
+from static_frame import DisplayActive
 from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
-from static_frame import DisplayActive
-from static_frame.core.display_color import HexColor
-
-from static_frame.core.display_config import DisplayFormatLaTeX
-from static_frame.core.display import DisplayTypeCategoryFactory
-from static_frame.core.display import terminal_ansi
-from static_frame.core.display import DisplayCell
+from static_frame import Frame
+from static_frame import FrameGO
+from static_frame import Index
+from static_frame import IndexHierarchy
+from static_frame import Series
 from static_frame.core.display import FORMAT_EMPTY
+from static_frame.core.display import DisplayCell
+from static_frame.core.display import DisplayTypeCategoryFactory
 from static_frame.core.display import DisplayTypeInt
-
+from static_frame.core.display import terminal_ansi
+from static_frame.core.display_color import HexColor
+from static_frame.core.display_config import DisplayFormatLaTeX
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
 nan = np.nan

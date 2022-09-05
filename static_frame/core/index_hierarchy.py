@@ -6,8 +6,8 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from arraykit import name_filter
 from arraykit import get_new_indexers_and_screen
+from arraykit import name_filter
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -459,7 +459,7 @@ class IndexHierarchy(IndexBase):
             try:
                 [size] = set(map(len, arrays))
             except ValueError:
-                raise ErrorInitIndex('All arrays must have the same length')
+                raise ErrorInitIndex('All arrays must have the same length') from None
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
@@ -941,7 +941,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        obj: IH = self.__new__(self.__class__)
+        obj: IH = self.__class__.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = array_deepcopy(self._indexers, memo)
         obj._blocks = self._blocks.__deepcopy__(memo)

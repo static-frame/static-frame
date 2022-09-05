@@ -1,12 +1,13 @@
 import typing as tp
+from functools import partial
 from itertools import repeat
 from itertools import zip_longest
-from functools import partial
 
 import numpy as np
 
+from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.axis_map import get_extractor
 from static_frame.core.bus import Bus
-from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.display import Display
@@ -14,17 +15,19 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -34,26 +37,23 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipNPY
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
-from static_frame.core.axis_map import bus_to_hierarchy
-from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''

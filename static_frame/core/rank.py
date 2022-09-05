@@ -1,15 +1,16 @@
 import typing as tp
-
 from enum import Enum
+
 import numpy as np
 
-from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_INT
+from static_frame.core.util import PositionsAllocator
+
 
 class RankMethod(str, Enum):
     MEAN = 'mean'

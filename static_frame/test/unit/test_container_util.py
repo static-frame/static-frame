@@ -3,7 +3,20 @@ import typing as tp
 
 import numpy as np
 
+from static_frame import Frame
+from static_frame import Index
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
+from static_frame import Series
+from static_frame.core.container_util import apex_to_name
+from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import bloc_key_normalize
+from static_frame.core.container_util import container_to_exporter_attr
+from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
@@ -14,28 +27,11 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
-from static_frame.core.container_util import apex_to_name
-from static_frame.core.container_util import apply_binary_operator_blocks_columnar
-from static_frame.core.container_util import container_to_exporter_attr
-from static_frame.core.container_util import get_block_match
-
-from static_frame.core.fill_value_auto import FillValueAuto
-
-from static_frame.core.frame import FrameHE
-
-from static_frame.test.test_case import TestCase
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.fill_value_auto import FillValueAuto
+from static_frame.core.frame import FrameHE
+from static_frame.test.test_case import TestCase
 
-
-from static_frame import Frame
-from static_frame import Index
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexSecond
-from static_frame import Series
 
 class TestUnit(TestCase):
 

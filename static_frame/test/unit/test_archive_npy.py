@@ -1,30 +1,32 @@
+import contextlib
 import os
+from io import StringIO
+from io import UnsupportedOperation
 from tempfile import TemporaryDirectory
 from io import UnsupportedOperation, StringIO
 import contextlib
 import zipfile
 
-import numpy as np
-from numpy.lib.format import write_array # type: ignore
+
 import frame_fixtures as ff
+import numpy as np
+from numpy.lib.format import write_array  # type: ignore
 
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.bus import Bus
-from static_frame.core.archive_npy import NPYConverter
-from static_frame.core.archive_npy import ArchiveDirectory
-from static_frame.core.archive_npy import ArchiveZip
 from static_frame.core.archive_npy import ArchiveZipFileOpen
 from static_frame.core.archive_npy import NPZ
 from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import Label
-
+from static_frame.core.archive_npy import ArchiveDirectory
+from static_frame.core.archive_npy import ArchiveZip
+from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import AxisInvalid
-
-from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):

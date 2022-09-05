@@ -1,30 +1,30 @@
-import sys
-import typing as tp
-import os
 import html
 import inspect
+import os
 import platform
 import re
-from functools import partial
+import sys
+import typing as tp
 from collections import namedtuple
+from functools import partial
 
 import numpy as np
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import CallableToIterType
+from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
+from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
+from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
-from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
-from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
-from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import CallableToIterType
+from static_frame.core.util import _gen_skip_middle
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -280,7 +280,7 @@ class DisplayHeader:
         Provide string representation before additon of outer delimiters.
         '''
         if self.name is not None:
-            return '{}: {}'.format(self.cls.__name__, self.name)
+            return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
 

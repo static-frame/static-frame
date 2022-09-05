@@ -1,5 +1,3 @@
-# from io import StringIO
-import typing as tp
 from collections import defaultdict
 import json
 from pathlib import Path
@@ -7,10 +5,6 @@ from zipfile import ZipFile
 # import os
 # import sys
 # import datetime
-
-import numpy as np
-import static_frame as sf
-import pandas as pd
 
 from static_frame.core.interface import InterfaceSummary
 from doc.build_example import to_json_bundle
@@ -69,3 +63,6 @@ def build(fp: Path) -> str:
 
 if __name__ == '__main__':
     build(Path('/tmp/sf-api.zip'))
+
+
+

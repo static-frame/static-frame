@@ -1,27 +1,25 @@
+import argparse
+import cProfile
+import datetime
+import fnmatch
 import io
 import itertools
 import os
-import argparse
-import typing as tp
-import fnmatch
-import timeit
-import string
-import cProfile
 import pstats
+import random
+import string
 import sys
-import datetime
 import tempfile
+import timeit
+import typing as tp
 from enum import Enum
 
-from pyinstrument import Profiler #type: ignore
-from line_profiler import LineProfiler #type: ignore
-import gprof2dot #type: ignore
-
+import frame_fixtures as ff
+import gprof2dot  # type: ignore
 import numpy as np
 import pandas as pd
-import random
-import frame_fixtures as ff
-
+from line_profiler import LineProfiler  # type: ignore
+from pyinstrument import Profiler  # type: ignore
 
 sys.path.append(os.getcwd())
 
@@ -760,6 +758,7 @@ class FrameIterTuple(Perf):
 
 
         from static_frame.core.type_blocks import TypeBlocks
+
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
 
@@ -825,6 +824,7 @@ class FrameIterGroupApply(Perf):
 
 
         from static_frame.core.type_blocks import TypeBlocks
+
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
 
@@ -1136,6 +1136,7 @@ class Group(Perf):
         self.pdf2 = self.sff2.to_pandas()
 
         from static_frame import Frame
+
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
@@ -1229,6 +1230,7 @@ class FrameFromConcat(Perf):
 
 
         from static_frame import Frame
+
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations
         # self.meta = {

@@ -2,67 +2,67 @@
 This module us for utilty functions that take as input and / or return Container subclasses such as Index, Series, or Frame, and that need to be shared by multiple such Container classes.
 '''
 
-from collections import defaultdict
-from itertools import zip_longest
-from functools import partial
 import datetime
-from fractions import Fraction
 import typing as tp
+from collections import defaultdict
 from enum import Enum
+from fractions import Fraction
+from functools import partial
+from itertools import zip_longest
 
 import numpy as np
-from numpy import char as npc
 from arraykit import column_2d_filter
 from arraykit import resolve_dtype_iter
+from numpy import char as npc
 
+from static_frame.core.container import ContainerOperand
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.index_base import IndexBase
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import concat_resolved
+from static_frame.core.rank import RankMethod
+from static_frame.core.rank import rank_1d
+from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import slice_to_ascending_slice
-from static_frame.core.util import STATIC_ATTR
-from static_frame.core.util import UFunc
-from static_frame.core.util import ufunc_set_iter
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
+from static_frame.core.util import UFunc
+from static_frame.core.util import WarningsSilent
+from static_frame.core.util import concat_resolved
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
-from static_frame.core.util import BoolOrBools
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import WarningsSilent
-
-from static_frame.core.rank import rank_1d
-from static_frame.core.rank import RankMethod
-from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.container import ContainerOperand
-
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import ufunc_set_iter
 
 if tp.TYPE_CHECKING:
-    import pandas as pd #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactory #pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
-    from static_frame.core.index_auto import IndexConstructorFactoryBase #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.quilt import Quilt #pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import \
+        IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
 
 
 ExplicitConstructor = tp.Union[
@@ -80,42 +80,41 @@ class ContainerMap:
 
     @classmethod
     def _update_map(cls) -> None:
+        from static_frame.core.batch import Batch
+        from static_frame.core.bus import Bus
+        from static_frame.core.fill_value_auto import FillValueAuto  # pylint: disable=W0404
         from static_frame.core.frame import Frame
         from static_frame.core.frame import FrameGO
         from static_frame.core.frame import FrameHE
-        from static_frame.core.series import Series
-        from static_frame.core.series import SeriesHE
+        # not containers but neede for build_example.py
+        from static_frame.core.hloc import HLoc
+        from static_frame.core.index import ILoc
         from static_frame.core.index import Index
         from static_frame.core.index import IndexGO
-        from static_frame.core.index_hierarchy import IndexHierarchy
-        from static_frame.core.index_hierarchy import IndexHierarchyGO
         from static_frame.core.index_datetime import IndexDate
         from static_frame.core.index_datetime import IndexDateGO
+        from static_frame.core.index_datetime import IndexHour
+        from static_frame.core.index_datetime import IndexHourGO
+        from static_frame.core.index_datetime import IndexMicrosecond
+        from static_frame.core.index_datetime import IndexMicrosecondGO
+        from static_frame.core.index_datetime import IndexMillisecond
+        from static_frame.core.index_datetime import IndexMillisecondGO
+        from static_frame.core.index_datetime import IndexMinute
+        from static_frame.core.index_datetime import IndexMinuteGO
+        from static_frame.core.index_datetime import IndexNanosecond
+        from static_frame.core.index_datetime import IndexNanosecondGO
+        from static_frame.core.index_datetime import IndexSecond
+        from static_frame.core.index_datetime import IndexSecondGO
         from static_frame.core.index_datetime import IndexYear
         from static_frame.core.index_datetime import IndexYearGO
         from static_frame.core.index_datetime import IndexYearMonth
         from static_frame.core.index_datetime import IndexYearMonthGO
-        from static_frame.core.index_datetime import IndexHour
-        from static_frame.core.index_datetime import IndexHourGO
-        from static_frame.core.index_datetime import IndexMinute
-        from static_frame.core.index_datetime import IndexMinuteGO
-        from static_frame.core.index_datetime import IndexSecond
-        from static_frame.core.index_datetime import IndexSecondGO
-        from static_frame.core.index_datetime import IndexMillisecond
-        from static_frame.core.index_datetime import IndexMillisecondGO
-        from static_frame.core.index_datetime import IndexMicrosecond
-        from static_frame.core.index_datetime import IndexMicrosecondGO
-        from static_frame.core.index_datetime import IndexNanosecond
-        from static_frame.core.index_datetime import IndexNanosecondGO
-        from static_frame.core.bus import Bus
-        from static_frame.core.batch import Batch
-        from static_frame.core.yarn import Yarn
+        from static_frame.core.index_hierarchy import IndexHierarchy
+        from static_frame.core.index_hierarchy import IndexHierarchyGO
         from static_frame.core.quilt import Quilt
-
-        # not containers but neede for build_example.py
-        from static_frame.core.hloc import HLoc
-        from static_frame.core.index import ILoc
-        from static_frame.core.fill_value_auto import FillValueAuto #pylint: disable=W0404
+        from static_frame.core.series import Series
+        from static_frame.core.series import SeriesHE
+        from static_frame.core.yarn import Yarn
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
@@ -296,8 +295,9 @@ def pandas_to_numpy(
             isna = isna.values
         hasna = isna.any() # will work for ndim 1 and 2
 
-        from pandas import StringDtype #pylint: disable=E0611
-        from pandas import BooleanDtype #pylint: disable=E0611
+        from pandas import BooleanDtype  # pylint: disable=E0611
+        from pandas import StringDtype  # pylint: disable=E0611
+
         # from pandas import DatetimeTZDtype
         # from pandas import Int8Dtype
         # from pandas import Int16Dtype
@@ -375,9 +375,9 @@ def index_from_optional_constructor(
     '''
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
+    from static_frame.core.index_auto import IndexAutoConstructorFactory
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexConstructorFactoryBase
-    from static_frame.core.index_auto import IndexAutoConstructorFactory
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -519,8 +519,8 @@ def matmul(
     '''
     Implementation of matrix multiplication for Series and Frame
     '''
-    from static_frame.core.series import Series
     from static_frame.core.frame import Frame
+    from static_frame.core.series import Series
 
     # for a @ b = c
     # if a is 2D: a.columns must align b.index
@@ -1119,8 +1119,8 @@ def key_from_container_key(
     if not hasattr(key, 'STATIC'):
         return key
 
-    from static_frame.core.index import Index
     from static_frame.core.index import ILoc
+    from static_frame.core.index import Index
     from static_frame.core.series import Series
     from static_frame.core.series import SeriesHE
 
@@ -1228,7 +1228,7 @@ def _index_many_to_one(
 
     for index in indices_iter:
         if index.depth != depth_first:
-            raise RuntimeError(f'Indices must have aligned depths')
+            raise RuntimeError('Indices must have aligned depths')
         if mtot_is_concat and depth_first > 1:
             arrays.append([index.values_at_depth(d) for d in range(depth_first)])
         else:
@@ -1416,7 +1416,7 @@ def prepare_values_for_lex(
     if not asc_is_element:
         ascending = tuple(ascending) #type: ignore
         if values_for_lex is None or len(ascending) != len(values_for_lex): #type: ignore
-            raise RuntimeError(f'Multiple ascending values must match number of arrays selected.')
+            raise RuntimeError('Multiple ascending values must match number of arrays selected.')
         # values for lex are in reversed order; thus take ascending reversed
         values_for_lex_post = []
         for asc, a in zip(reversed(ascending), values_for_lex):
@@ -1471,7 +1471,7 @@ def sort_index_for_order(
         # depth is 1
         asc_is_element = isinstance(ascending, BOOL_TYPES)
         if not asc_is_element:
-            raise RuntimeError(f'Multiple ascending values not permitted.')
+            raise RuntimeError('Multiple ascending values not permitted.')
 
         v = cfs if cfs_is_array else cfs.values
         order = np.argsort(v, kind=kind)
