@@ -10,6 +10,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
@@ -422,6 +423,45 @@ class TestUnitMultiProcess(TestCase):
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
 
+    #---------------------------------------------------------------------------
+    def test_store_zip_npy_a(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            st = StoreZipNPY(fp)
+            st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
+
+            self.assertEqual(tuple(st.labels()), ('a', 'b', 'c'))
+
+            self.assertTrue(f1.equals(st.read('a')))
+            self.assertTrue(f2.equals(st.read('b')))
+            self.assertTrue(f3.equals(st.read('c')))
+
+
+    def test_store_zip_npy_b(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            st = StoreZipNPY(fp)
+            st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
+
+            f4 = st.read('a')
+            self.assertTrue(f1.equals(f4))
+            self.assertTrue('a' in st._weak_cache)
+            self.assertIs(f4, st.read('a'))
+
+            post = tuple(st.read_many(('a', 'b', 'c')))
+            self.assertEqual(len(post), 3)
 
 if __name__ == '__main__':
     import unittest

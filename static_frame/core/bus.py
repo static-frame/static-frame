@@ -31,6 +31,7 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
@@ -290,11 +291,32 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             index_constructor: IndexConstructor = None,
             ) -> 'Bus':
         '''
-        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+        Given a file path to zipped NPZ :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                max_persist=max_persist,
+                index_constructor=index_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_persist: tp.Optional[int] = None,
+            index_constructor: IndexConstructor = None,
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped NPY :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 max_persist=max_persist,

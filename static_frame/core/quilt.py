@@ -37,6 +37,7 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
@@ -259,11 +260,36 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped parquet :obj:`Quilt` store, return a :obj:`Quilt` instance.
+        Given a file path to zipped NPZ :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='quilt_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped NPY :obj:`Quilt` store, return a :obj:`Quilt` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 axis=axis,

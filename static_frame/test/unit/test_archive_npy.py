@@ -1,5 +1,6 @@
 import contextlib
 import os
+import zipfile
 from io import StringIO
 from io import UnsupportedOperation
 from tempfile import TemporaryDirectory
@@ -12,7 +13,10 @@ from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ
 from static_frame.core.archive_npy import ArchiveDirectory
 from static_frame.core.archive_npy import ArchiveZip
+from static_frame.core.archive_npy import ArchiveZipFileOpen
+from static_frame.core.archive_npy import Label
 from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
@@ -330,7 +334,7 @@ class TestUnit(TestCase):
                 NPZ(fp, 'r').from_arrays(blocks=(a1,))
 
 
-    #-----------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npy_write_arrays_h(self) -> None:
 
@@ -381,7 +385,7 @@ class TestUnit(TestCase):
                     )
 
 
-    #-----------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npz_from_frames_a(self) -> None:
         f1 = ff.parse('s(2,2)|v(int)').relabel(index=('a', 'b'))
@@ -527,7 +531,7 @@ class TestUnit(TestCase):
             with self.assertRaises(UnsupportedOperation):
                 NPY(fp, 'r').from_frames(frames=(f1, f2), axis=3)
 
-    #-----------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npy_contents_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
@@ -596,6 +600,36 @@ class TestUnit(TestCase):
 
         # Assert that no error was printed to stderr.
         self.assertEqual(buffer.getvalue(), '')
+
+    #---------------------------------------------------------------------------
+    def test_archive_zip_file_open_a(self) -> None:
+
+        with temp_file('.zip') as fp:
+            with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+                with self.assertRaises(RuntimeError):
+                    ArchiveZipFileOpen(zf, writeable=True, memory_map=True, delimiter='/')
+
+    def test_archive_zip_file_open_b(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(bool)').rename('b')
+        b = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            b.to_zip_npy(fp)
+
+            with zipfile.ZipFile(fp, 'r', zipfile.ZIP_DEFLATED) as zf:
+                archive = ArchiveZipFileOpen(zf, writeable=False, memory_map=False, delimiter='/')
+
+                archive.prefix = 'b'
+                post1 = archive.read_array_header(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                self.assertEqual(post1, (np.dtype('bool'), False, (2, 2)))
+
+                post2 = archive.size_array(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                self.assertEqual(post2, 68)
+
+                post3 = archive.size_metadata()
+                self.assertEqual(post3, 90)
+
 
 
 if __name__ == '__main__':
