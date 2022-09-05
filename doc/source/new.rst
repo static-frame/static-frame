@@ -1,6 +1,18 @@
 What is New in StaticFrame
 ===============================
 
+0.9.13
+----------
+
+Added `test_example_gen.py` to test and enforce automatic example generation.
+
+Improved usage of `__slots__` throughout.
+
+Continuous integration quality checks now using pylint 2.15.0 and isort 5.10.1
+
+Minimum pyarrow set to 0.17.0
+
+
 0.9.12
 ----------
 
