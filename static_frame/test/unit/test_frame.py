@@ -4794,8 +4794,8 @@ class TestUnit(TestCase):
 
     def test_frame_sort_index_e(self) -> None:
         f1 = Frame(index=IndexHierarchy.from_labels((), depth_reference=2)).sort_index()
-        import ipdb; ipdb.set_trace()
-
+        self.assertEqual(f1.shape, (0, 0))
+        self.assertEqual(f1.index.shape, (0, 2))
 
     #---------------------------------------------------------------------------
 

@@ -5381,7 +5381,6 @@ class Frame(ContainerOperand):
             {key}
         '''
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
-        import ipdb; ipdb.set_trace()
         index = self._index[order]
 
         blocks = self._blocks.iloc[order]

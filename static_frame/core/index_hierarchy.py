@@ -1925,6 +1925,12 @@ class IndexHierarchy(IndexBase):
             return tuple(self._blocks.iter_row_elements(key))
 
         tb = self._blocks._extract(row_key=key)
+        if len(tb) == 0:
+            return self.__class__._from_empty((),
+                    name=self._name,
+                    depth_reference=tb.shape[1],
+                    index_constructors=self._index_constructors,
+                    )
 
         new_indices: tp.List[Index] = []
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
@@ -1944,7 +1950,7 @@ class IndexHierarchy(IndexBase):
         return self.__class__(
                 indices=new_indices,
                 indexers=new_indexers,
-                name=self.name,
+                name=self._name,
                 blocks=tb,
                 own_blocks=True,
                 )
