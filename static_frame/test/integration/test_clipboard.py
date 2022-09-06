@@ -8,8 +8,8 @@ class TestUnit(TestCase):
 
     # NOTE: this test will end up clearing the user's clipboard
 
-    @skip_mac_pyle38 #type: ignore
-    @skip_linux_no_display #type: ignore
+    @skip_mac_pyle38
+    @skip_linux_no_display
     def test_frame_to_clipboard_a(self) -> None:
         records = (
                 (2, 'a', False),

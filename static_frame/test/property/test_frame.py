@@ -248,7 +248,7 @@ class TestUnit(TestCase):
         f2['__new__'] = 10
         self.assertTrue(len(f2.columns) == len(f1.columns) + 1)
 
-    @skip_win  # type: ignore # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
+    @skip_win # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -263,7 +263,7 @@ class TestUnit(TestCase):
             #         columns_depth=f1.columns.depth)
 
 
-    @skip_win  # type: ignore # UnicodeEncodeError
+    @skip_win # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -316,7 +316,7 @@ class TestUnit(TestCase):
         post = f1.to_html()
         self.assertTrue(len(post) > 0)
 
-    @skip_win  # type: ignore # UnicodeEncodeError
+    @skip_win # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go())
     def test_frame_to_html_datatables(self, f1: Frame) -> None:
         post = f1.to_html_datatables(show=False)

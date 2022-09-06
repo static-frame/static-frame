@@ -3592,7 +3592,7 @@ class TestUnit(TestCase):
                 (1, IndexYearMonth))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_hierarchy_astype_e(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 
@@ -3629,7 +3629,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win #type: ignore
+    @skip_win
     def test_hierarchy_values_at_depth_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
         post = ih1.values_at_depth([0, 1])

@@ -78,7 +78,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_display_active_a(self) -> None:
 
         fp1 = DisplayActive._default_fp()
@@ -102,7 +102,7 @@ class TestUnit(TestCase):
                 index.display(config=config_right).to_rows(),
                 ['<Index>', '      a', '      b', '      c', '  <<U1>'])
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_display_cell_align_left_b(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
@@ -144,7 +144,7 @@ class TestUnit(TestCase):
                 '      y       2      95     c  False  False',
                 '  <<U1> <int64> <int64> <<U1> <bool> <bool>'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_type_show_a(self) -> None:
         config_type = sf.DisplayConfig.from_default(
                 type_show=True,
@@ -193,7 +193,7 @@ class TestUnit(TestCase):
                 'y       2       95      c     False  False',
                 '<<U1>   <int64> <int64> <<U1> <bool> <bool>'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_type_show_b(self) -> None:
         config_type = sf.DisplayConfig.from_default(
                 type_show=True,
@@ -231,7 +231,7 @@ class TestUnit(TestCase):
                 ['p   q  r s     t', '2   2  a False False', '30  34 b True  False', '2   95 c False False', '300 -4 x False False']
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_display_cell_fill_width_a(self) -> None:
 
         config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)
@@ -378,7 +378,7 @@ class TestUnit(TestCase):
                 '<int64> <int64>']
                 )
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_display_columns_a(self) -> None:
 
         config_columns_8 = sf.DisplayConfig.from_default(display_columns=8, type_color=False)
@@ -412,7 +412,7 @@ class TestUnit(TestCase):
                 '3         0       1       ... 323     324',
                 '<int64>   <int64> <int64> ... <int64> <int64>'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_display_columns_b(self) -> None:
 
         config_columns_4 = sf.DisplayConfig.from_default(display_columns=4, type_color=False)
@@ -537,7 +537,7 @@ class TestUnit(TestCase):
         self.assertEqual(d1.transform().to_rows(),
                 ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_html_pre_a(self) -> None:
         f = Frame.from_dict(dict(a=(1, 2),
                 b=(1.2, 3.4),
@@ -556,7 +556,7 @@ class TestUnit(TestCase):
 
         self.assertEqualLines(html, str(expected))
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_display_html_table_a(self) -> None:
         f = sf.Frame.from_dict(
             dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
@@ -762,7 +762,7 @@ class TestUnit(TestCase):
             '''\\begin{table}[ht]\n\\centering\nx\n\\label{table:foo}\n\\end{table}'''
             )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_display_type_color_markup_a(self) -> None:
 
         config1 = DisplayConfig(display_format=DisplayFormats.TERMINAL)

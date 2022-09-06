@@ -21,7 +21,7 @@ SKIP_COMPARE = frozenset((
 
 class TestUnit(TestCase):
 
-    @skip_win #type: ignore
+    @skip_win
     def test_example_gen(self) -> None:
         # NOTE: comparing the direct output is problematic as different platforms might have subtle differences in float representations; thus, we just copmare exaples size and exercise example generation
 

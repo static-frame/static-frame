@@ -36,6 +36,6 @@ def test_main_python() -> None:
     _test_main(executable)
 
 
-@mark.skipif(not HAS_IPYTHON, reason='Requires IPython.')  # type: ignore
+@mark.skipif(not HAS_IPYTHON, reason='Requires IPython.')
 def test_main_ipython() -> None:
     _test_main('ipython')

@@ -846,7 +846,7 @@ class TestUnit(TestCase):
             [(3, 3), (3, 2), (3, 1), (3, 2)]
             )
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_type_blocks_assign_blocks_c(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])

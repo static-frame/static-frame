@@ -256,7 +256,7 @@ class TestUnit(TestCase):
                     (('f1', None), ('f2', (3, 2)), ('f3', (2, 2 )))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_nbytes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -289,7 +289,7 @@ class TestUnit(TestCase):
 
             self.assertEqual(b2.nbytes, 112)
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_dtypes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -324,7 +324,7 @@ class TestUnit(TestCase):
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

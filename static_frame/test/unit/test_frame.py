@@ -616,7 +616,7 @@ class TestUnit(TestCase):
                  ('d', ((0, 'a'), (1, 'b'))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_from_pandas_g(self) -> None:
         import pandas as pd
 
@@ -882,7 +882,7 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_to_pandas_d(self) -> None:
         records = (
                 (1, 2, 'a', False),
@@ -1307,7 +1307,7 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 sf.Frame.from_parquet(fp, columns_depth=2)
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_parquet_d(self) -> None:
         dt64 = np.datetime64
         dtype = np.dtype
@@ -2666,7 +2666,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_attrs_a(self) -> None:
 
         records = (
@@ -4028,7 +4028,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f1.min(axis=1).items()),
                 (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)))
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_row_dtype_a(self) -> None:
         # reindex both axis
         records = (
@@ -5632,7 +5632,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_fillna_a(self) -> None:
         dtype = np.dtype
 
@@ -5658,7 +5658,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', dtype('O')), ('B', dtype('int64')), ('C', dtype('O')), ('D', dtype('int64'))))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_fillna_b(self) -> None:
 
         f1 = Frame.from_records([
@@ -6098,7 +6098,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
     #---------------------------------------------------------------------------
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_csv_a(self) -> None:
         # header, mixed types, no index
 
@@ -6200,7 +6200,7 @@ class TestUnit(TestCase):
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_frame_from_csv_i(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
 
@@ -6282,7 +6282,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_structured_array_to_d_ia_cl_a(self) -> None:
 
         a1 = np.array(np.arange(12).reshape((3, 4)))
@@ -6734,7 +6734,7 @@ class TestUnit(TestCase):
                     include_columns_name=True))
 
     #---------------------------------------------------------------------------
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_a(self) -> None:
 
         records = (
@@ -6753,7 +6753,7 @@ class TestUnit(TestCase):
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_b(self) -> None:
 
         records = (
@@ -6778,7 +6778,7 @@ class TestUnit(TestCase):
                     '2|b|3|x\n'
                     ])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_c(self) -> None:
 
         records = (
@@ -6815,7 +6815,7 @@ class TestUnit(TestCase):
                     'w|False|2.0000e-08|1.2300e-07\n',
                     'x|True|1.1190e-06|\n'])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_d(self) -> None:
 
         records = (
@@ -6852,7 +6852,7 @@ class TestUnit(TestCase):
                     '2|b|3|x\n'
                     ])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_e(self) -> None:
 
         records = (
@@ -7968,7 +7968,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 2), ('a', 30))), ('q', (('x', 2), ('a', 34))), ('t', (('x', False), ('a', False))), ('r', (('x', 'c'), ('a', 'd'))), ('s', (('x', False), ('a', True))))
                 )
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_frame_from_concat_d(self) -> None:
         records = (
                 (2, 2, False),
@@ -7998,7 +7998,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 (('p', (('a', 2), ('b', 30), ('c', 2), ('d', 30))), ('q', (('a', 2), ('b', 34), ('c', 2), ('d', 34))), ('r', (('a', False), ('b', False), ('c', False), ('d', False)))))
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_concat_e(self) -> None:
 
         f1 = Frame.from_items(zip(
@@ -8340,7 +8340,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_concat_w(self) -> None:
 
         a = sf.Frame.from_dict({0:(1,2), 1:(2,3), 2:(True, True)})
@@ -9218,7 +9218,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
                 )
 
-    @skip_pylt37 #type: ignore
+    @skip_pylt37
     def test_frame_from_records_r(self) -> None:
         import dataclasses
         @dataclasses.dataclass
@@ -10577,7 +10577,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's', 't'])
         self.assertEqual(f2.columns.values.tolist(), ['p', 'q', 'r', 's', 't', 'u'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_display_a(self) -> None:
 
         f1 = Frame.from_records(((1,2),(True,False)), name='foo',
@@ -11519,7 +11519,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc[0, 0], 'a')
         self.assertEqual(f2.loc[sf.ILoc[0], 0], 'a')
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_unset_index_f(self) -> None:
         records = (
                 (2, 2),
@@ -11597,7 +11597,7 @@ class TestUnit(TestCase):
         ]
 
     #---------------------------------------------------------------------------
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_a(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -11708,7 +11708,7 @@ class TestUnit(TestCase):
                 (('down', (('left', 43), ('right', 45))), ('up', (('left', 39), ('right', 41))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_e1(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -11748,7 +11748,7 @@ class TestUnit(TestCase):
                 (('a', (('far', 6), ('near', 22))), ('b', (('far', 82), ('near', 86))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_f(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -12102,7 +12102,7 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
             ((0, (('A', 0), (None, 1), ('B', 2))), (2, (('A', 10), (None, 20), ('B', 30)))))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_x(self) -> None:
         f = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
@@ -13000,7 +13000,7 @@ class TestUnit(TestCase):
         f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0)
         self.assertTrue(f6.equals(f3, compare_dtype=True))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_join_d(self) -> None:
         index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
         index2 = IndexHierarchy.from_product(('A', 'B'), index1)
