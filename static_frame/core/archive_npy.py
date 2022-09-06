@@ -391,7 +391,7 @@ class ArchiveDirectory(Archive):
 
     def labels(self) -> tp.Iterator[str]:
         # NOTE: should this filter?
-        yield from (f.name for f in os.scandir(self._archive))
+        yield from (f.name for f in os.scandir(self._archive)) #type: ignore
 
     def __contains__(self, name: str) -> bool:
         fp = os.path.join(self._archive, name)

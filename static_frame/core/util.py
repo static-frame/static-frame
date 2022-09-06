@@ -428,15 +428,15 @@ class WarningsSilent:
     FILTER = [('ignore', None, Warning, None, 0)]
 
     def __enter__(self) -> None:
-        self.previous_warnings = warnings.filters #type: ignore
-        warnings.filters = self.FILTER #type: ignore
+        self.previous_warnings = warnings.filters
+        warnings.filters = self.FILTER
 
     def __exit__(self,
             type: tp.Type[BaseException],
             value: BaseException,
             traceback: TracebackType,
             ) -> None:
-        warnings.filters = self.previous_warnings #type: ignore
+        warnings.filters = self.previous_warnings
 
 #-------------------------------------------------------------------------------
 class UFuncCategory(Enum):
@@ -2475,7 +2475,7 @@ def _ufunc_set_2d(
 
     if width == 1:
         # let the function flatten the array, then reshape into 2D
-        post = func(array, other, **func_kwargs)  # type: ignore
+        post = func(array, other, **func_kwargs)
         post = post.reshape(len(post), width)
         post.flags.writeable = False
         return post
@@ -2487,7 +2487,7 @@ def _ufunc_set_2d(
     # creates a view of tuples for 1D operation
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
-    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
+    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width)
     post.flags.writeable = False
     return post
 
@@ -3174,7 +3174,7 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''
     if isinstance(key, str) or not hasattr(key, '__len__'):
-        return [key]
+        return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
 

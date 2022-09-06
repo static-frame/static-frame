@@ -365,7 +365,7 @@ class Index(IndexBase):
         obj._name = self._name # should be hashable/immutable
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     def __copy__(self: I) -> I:
         '''
@@ -1396,7 +1396,7 @@ class _IndexGOMixin:
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     #---------------------------------------------------------------------------
     def _extract_labels(self,

@@ -346,7 +346,7 @@ class Series(ContainerOperand):
             own_index = True
         except StopIteration:
             # Default to empty when given an empty iterable
-            ih = None #type: ignore
+            ih = None
             values = ()
             own_index = False
 
@@ -574,7 +574,7 @@ class Series(ContainerOperand):
         obj._name = self._name # should be hashable/immutable
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     # def __copy__(self) -> 'Series':
     #     '''
@@ -595,7 +595,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Index`
         '''
-        return reversed(self._index) #type: ignore
+        return reversed(self._index)
 
     #---------------------------------------------------------------------------
     # name interface

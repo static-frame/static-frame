@@ -38,7 +38,7 @@ class StoreClientMixin:
         if hasattr(self, '_bus'): # this is Quilt
             return self._bus._config # type: ignore
         # Yarn does not have a _config attr
-        return getattr(self, '_config', None) #type: ignore
+        return getattr(self, '_config', None)
 
     #---------------------------------------------------------------------------
     # exporters

@@ -1787,7 +1787,7 @@ class TestUnit(TestCase):
 
         iterable: tp.Iterable[tp.Any]
 
-        for iterable in (  # type: ignore
+        for iterable in (
                 [1, 2, 3],
                 dict(a=1, b=2, c=3).values(),
                 dict(a=1, b=2, c=3).keys(),
@@ -1807,7 +1807,7 @@ class TestUnit(TestCase):
 
         iterable: tp.Iterable[tp.Any]
 
-        for iterable, dtype in (  # type: ignore
+        for iterable, dtype in (
                 ([1, 2, 3], int),
                 (dict(a=1, b=2, c=3).values(), int),
                 (dict(a=1, b=2, c=3).keys(), str),
@@ -2658,10 +2658,10 @@ class TestUnit(TestCase):
             ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
 
     def test_warnings_silent_a(self) -> None:
-        post = warnings.filters #type: ignore
+        post = warnings.filters
         with WarningsSilent():
             warnings.warn('foo')
-        self.assertIs(post, warnings.filters) #type: ignore
+        self.assertIs(post, warnings.filters)
 
     #---------------------------------------------------------------------------
     def test_blocks_to_array_2d_a(self) -> None:

@@ -227,7 +227,7 @@ class DisplayActive:
 
     @staticmethod
     def get(**kwargs: tp.Union[bool, int, str]) -> DisplayConfig:
-        config: DisplayConfig = _module._display_active  # type: ignore
+        config: DisplayConfig = _module._display_active
         if not kwargs:
             return config
         args = config.to_dict()

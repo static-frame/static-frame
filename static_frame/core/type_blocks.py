@@ -512,7 +512,7 @@ class TypeBlocks(ContainerOperand):
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     def __copy__(self) -> 'TypeBlocks':
         '''
