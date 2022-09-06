@@ -904,11 +904,11 @@ class TestUnit(TestCase):
     def test_hierarchy_extract_iloc_e(self) -> None:
         ih1 = IndexHierarchyGO.from_labels((('a', 'a'), ('b','b')))
         ih2 = ih1[None]
-        ih2.append(('c', 'c'))
+        ih2.append(('c', 'c')) #type: ignore
         self.assertEqual(ih1.values.tolist(),
                 [['a', 'a'], ['b', 'b']])
 
-        self.assertEqual(ih2.values.tolist(),
+        self.assertEqual(ih2.values.tolist(), #type: ignore
                 [['a', 'a'], ['b', 'b'], ['c', 'c']])
 
 
