@@ -2,8 +2,8 @@ numpy==1.18.5
 automap==0.5.1
 arraykit==0.1.13
 
-pytest==3.8.0
-pytest-cov==2.6.0
+pytest==7.1.2
+pytest-cov==3.0.0
 codecov>=2.0.15
 hypothesis==6.40.0
 scipy==1.5.4
