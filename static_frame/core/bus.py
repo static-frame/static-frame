@@ -527,7 +527,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`Index`
         '''
-        return reversed(self._index) #type: ignore
+        return reversed(self._index)
 
     # def __copy__(self) -> 'Bus':
     #     '''
@@ -739,7 +739,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     yield frame
         else: # max persist is 1
             for label in labels:
-                yield store.read(label, config=config[labels])
+                yield store.read(label, config=config[label])
 
 
     def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:

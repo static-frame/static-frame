@@ -1178,7 +1178,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        total = sum(map(_NBYTES_GETTER, self._indices))
+        total: int = sum(map(_NBYTES_GETTER, self._indices))
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
         total += self._map.nbytes

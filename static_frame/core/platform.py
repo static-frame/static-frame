@@ -38,9 +38,9 @@ class Platform:
                     continue #pragma: no cover
 
                 if hasattr(mod, '__version__'):
-                    yield package, mod.__version__ #type: ignore
+                    yield package, mod.__version__
                 elif hasattr(mod, 'version'): # msgpack
-                    yield package, mod.version #type: ignore
+                    yield package, mod.version
                 else:
                     yield package, None
 

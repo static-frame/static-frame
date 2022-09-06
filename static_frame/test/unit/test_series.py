@@ -795,13 +795,13 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index)))
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)]))
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
@@ -818,13 +818,13 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index)))
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)]))
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),

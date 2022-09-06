@@ -208,7 +208,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         Returns:
             :obj:`Index`
         '''
-        return reversed(self._index) #type: ignore
+        return reversed(self._index)
 
     #---------------------------------------------------------------------------
     # name interface
