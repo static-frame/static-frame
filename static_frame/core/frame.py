@@ -236,8 +236,8 @@ class Frame(ContainerOperand):
     @classmethod
     def _from_zero_size_shape(cls,
             *,
-            index: IndexInitializer = None,
-            columns: IndexInitializer = None,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypeSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
@@ -532,7 +532,7 @@ class Frame(ContainerOperand):
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 type_blocks = []
-                previous_frame = None
+                previous_frame: tp.Optional[Frame] = None
                 block_compatible = True
                 reblock_compatible = True
 
@@ -567,7 +567,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()),
+        return cls(TypeBlocks.from_blocks(block_gen()), #type: ignore
                 index=index,
                 columns=columns,
                 name=name,
@@ -654,7 +654,7 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        return cls.from_concat(frames,
+        return cls.from_concat(frames, #type: ignore
                 axis=axis,
                 union=union,
                 name=name,
@@ -744,7 +744,7 @@ class Frame(ContainerOperand):
             for col_count, (col, dtype_at_col) in enumerate(dtypes.items()):
                 if col not in container:
                     # get fill value based on previous container
-                    fill_value = get_col_fill_value(col_count, dtype_at_col)
+                    fill_value = get_col_fill_value(col_count, dtype_at_col) #type: ignore
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value) # type: ignore
@@ -756,7 +756,7 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key) # type: ignore
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = get_col_fill_value(col_count, col_series.dtype)
+                    fill_value = get_col_fill_value(col_count, col_series.dtype) # type: ignore
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
@@ -905,7 +905,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()),
+        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
                 index=index,
                 columns=columns,
                 name=name,
@@ -942,11 +942,12 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        columns: tp.Sequence[tp.Hashable] = []
+        columns: tp.List[tp.Hashable] = []
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns))
 
+        rows: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
@@ -999,7 +1000,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()),
+        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
                 index=index,
                 columns=columns,
                 name=name,
@@ -2106,7 +2107,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        return cls.from_delimited(fp,
+        return cls.from_delimited(fp, # type: ignore
                 delimiter=',',
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -2155,7 +2156,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_delimited(fp,
+        return cls.from_delimited(fp, # type: ignore
                 delimiter='\t',
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -2213,7 +2214,7 @@ class Frame(ContainerOperand):
         sio = StringIO()
         sio.write(root.clipboard_get())
         sio.seek(0)
-        return cls.from_delimited(sio,
+        return cls.from_delimited(sio, # type: ignore
                 delimiter=delimiter,
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -2667,7 +2668,7 @@ class Frame(ContainerOperand):
         else: # > 1
             index_values = index_arrays
 
-            def index_default_constructor(values,
+            def index_default_constructor(values: tp.Iterable[np.ndarray],
                     *,
                     index_constructors: IndexConstructors = None,
                     ) -> IndexBase:
@@ -2771,10 +2772,10 @@ class Frame(ContainerOperand):
         Args:
             msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
         '''
-        import msgpack
-        import msgpack_numpy
+        import msgpack # type: ignore
+        import msgpack_numpy # type: ignore
 
-        def decode(obj: dict, #dict produced by msgpack-python
+        def decode(obj: tp.Dict[str, tp.Any], #dict produced by msgpack-python
                 chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
                 ) -> object:
 
@@ -6813,7 +6814,7 @@ class Frame(ContainerOperand):
                 for target in targets_unique: # target is always a tuple
                     # derive the new index
                     if index_src.depth == 1:
-                        key = (outer,) + target
+                        key = (outer,) + target # type: ignore
                     else:
                         key = outer + target
                     record = []
@@ -6893,7 +6894,7 @@ class Frame(ContainerOperand):
 
                 for target in targets_unique: # target is always a tuple
                     if columns_src.depth == 1:
-                        key = (outer,) + target
+                        key = (outer,) + target # type: ignore
                     else:
                         key = outer + target
                     # cannot allocate array as do not know dtype until after fill_value
@@ -7002,7 +7003,7 @@ class Frame(ContainerOperand):
         # NOTE: doing selection and using iteration (from set, and with zip, below) reduces chances for type coercion in IndexHierarchy
         left_loc = left_index[list(map_iloc.keys())]
 
-        for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
+        for (k, v), left_loc_element in zip(map_iloc.items(), left_loc): # type: ignore
             left_loc_set.add(left_loc_element)
             # right at v is an array
             right_loc_part = right_index[v] # iloc to loc
