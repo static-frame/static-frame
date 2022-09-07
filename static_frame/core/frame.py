@@ -6699,7 +6699,7 @@ class Frame(ContainerOperand):
             columns_fields: KeyOrKeys = (),
             data_fields: KeyOrKeys = (),
             *,
-            func: CallableOrCallableMap = np.nansum,
+            func: tp.Optional[CallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,
             index_constructor: IndexConstructor = None,
             ) -> 'Frame':
@@ -6728,8 +6728,8 @@ class Frame(ContainerOperand):
             func_single = func
             func_fields = ()
         else: # assume func has an items method
-            func_map = tuple(func.items())
-            func_single = func_map[0][1] if len(func_map) == 1 else None
+            func_map = tuple(func.items()) # type: ignore
+            func_single = func_map[0][1] if len(func_map) == 1 else None # type: ignore
             func_fields = () if func_single else tuple(label for label, _ in func_map)
 
         # normalize all keys to lists of values
@@ -6818,7 +6818,7 @@ class Frame(ContainerOperand):
                     if index_src.depth == 1:
                         key = (outer,) + target # type: ignore
                     else:
-                        key = outer + target
+                        key = outer + target # type: ignore
                     record = []
                     # this is equivalent to iterating over the new columns to get a row of data
                     for group, target_map in group_to_target_map.items():
@@ -6838,7 +6838,7 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-        return self.from_records_items(
+        return self.from_records_items( # type: ignore
                 records_items(),
                 index_constructor=pdc.expand_constructor,
                 columns=pdc.contract_dst,
@@ -6898,7 +6898,7 @@ class Frame(ContainerOperand):
                     if columns_src.depth == 1:
                         key = (outer,) + target # type: ignore
                     else:
-                        key = outer + target
+                        key = outer + target # type: ignore
                     # cannot allocate array as do not know dtype until after fill_value
                     values = []
                     for group, target_map in group_to_target_map.items():
@@ -6914,7 +6914,7 @@ class Frame(ContainerOperand):
                     array.flags.writeable = False
                     yield key, array
 
-        return self.from_items(
+        return self.from_items( # type: ignore
                 items(),
                 index=pdc.contract_dst,
                 index_constructor=pdc.contract_constructor,
@@ -6995,10 +6995,10 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # store collections of matches, derive final index
 
-        left_loc_set = set()
-        right_loc_set = set()
-        many_loc = []
-        many_iloc = []
+        left_loc_set: tp.Set[tp.Hashable] = set()
+        right_loc_set: tp.Set[tp.Hashable] = set()
+        many_loc: tp.List[Pair] = []
+        many_iloc: tp.List[Pair] = []
 
         cifv = composite_index_fill_value
 
@@ -7064,7 +7064,7 @@ class Frame(ContainerOperand):
                 for loc in final_index:
                     # what if loc is in both left and rihgt?
                     if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
-                        iloc = map_iloc[left_index._loc_to_iloc(loc)]
+                        iloc = map_iloc[left_index._loc_to_iloc(loc)] # type: ignore
                         assert len(iloc) == 1 # not is_many, so all have to be length 1
                         values.append(other.iloc[iloc[0], idx_col])
                     elif loc in right_index:
