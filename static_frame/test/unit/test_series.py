@@ -3075,8 +3075,8 @@ class TestUnit(TestCase):
                 index=IndexAutoFactory,
                 columns=IndexAutoFactory,
                 )
-        self.assertTrue(f1.index._map is None)
-        self.assertTrue(f1.columns._map is None)
+        self.assertTrue(f1.index._map is None) # type: ignore
+        self.assertTrue(f1.columns._map is None) # type: ignore
 
     def test_series_to_frame_f(self) -> None:
         s1 = Series((2, 3), index=list('ab'), name='alt')

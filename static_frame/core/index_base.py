@@ -255,7 +255,11 @@ class IndexBase(ContainerOperand):
             ) -> tp.Tuple[I, np.ndarray]:
         raise NotImplementedError() #pragma: no cover
 
-    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self,
+            level: tp.Hashable,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self,
