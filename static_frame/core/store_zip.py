@@ -236,7 +236,7 @@ class _StoreZip(Store):
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
-            compression: zipfile.ZIP_DEFLATED,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess = (config_map.default.write_max_workers is not None and
@@ -478,7 +478,7 @@ class StoreZipNPY(Store):
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
-            compression: zipfile.ZIP_DEFLATED,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
 
