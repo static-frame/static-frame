@@ -119,6 +119,8 @@ from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECT_KIND
+from static_frame.core.util import DTYPE_TIMEDELTA_KIND
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
@@ -2772,8 +2774,8 @@ class Frame(ContainerOperand):
         Args:
             msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
         '''
-        import msgpack # type: ignore
-        import msgpack_numpy # type: ignore
+        import msgpack  # type: ignore
+        import msgpack_numpy  # type: ignore
 
         def decode(obj: tp.Dict[str, tp.Any], #dict produced by msgpack-python
                 chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
@@ -7628,17 +7630,17 @@ class Frame(ContainerOperand):
             elif package == 'numpy':
                 #msgpack-numpy is breaking with these data types, overriding here
                 if obj.__class__ is np.ndarray:
-                    if obj.dtype.type == np.object_:
-                        data = list(map(element_encode, obj))
+                    if obj.dtype.kind == DTYPE_OBJECT_KIND:
+                        data = list(map(element_encode, obj)) # type: ignore
                         return {b'np': True,
                                 b'dtype': 'object_',
                                 b'data': packb(data)}
-                    elif obj.dtype.type == np.datetime64:
+                    elif obj.dtype.kind == DTYPE_DATETIME_KIND:
                         data = obj.astype(str)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)}
-                    elif obj.dtype.type == np.timedelta64:
+                    elif obj.dtype.kind == DTYPE_TIMEDELTA_KIND:
                         data = obj.astype(np.float64)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
@@ -7774,7 +7776,7 @@ class Frame(ContainerOperand):
             include_columns: bool = True,
             include_columns_name: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> None:
+            ) -> tp.Iterator[tp.Sequence[str]]:
         '''
         Iterator of records with values converted to strings.
         '''
@@ -7942,7 +7944,7 @@ class Frame(ContainerOperand):
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp=fp, # type: ignore
                 delimiter=',',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -7991,7 +7993,7 @@ class Frame(ContainerOperand):
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp=fp, # type: ignore
                 delimiter='\t',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -8061,8 +8063,8 @@ class Frame(ContainerOperand):
         import tkinter as tk
         root = tk.Tk()
         root.withdraw()
-        root.clipboard_clear() #type: ignore
-        root.clipboard_append(sio.read()) #type: ignore
+        root.clipboard_clear()
+        root.clipboard_append(sio.read())
 
     #---------------------------------------------------------------------------
     # Store based output
@@ -8550,10 +8552,10 @@ class FrameAssignILoc(FrameAssign):
 
         if isinstance(self.key, tuple):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
-            key = (self.key[0], #type: ignore [index]
+            key = (self.key[0],
                     key_to_ascending_key(
                             self.key[1],
-                            self.container.shape[1] #type: ignore [index]
+                            self.container.shape[1]
                     ))
         else:
             key = (self.key, None)
