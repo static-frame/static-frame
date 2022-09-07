@@ -3081,7 +3081,7 @@ class Frame(ContainerOperand):
             delegate=FrameAssign,
             )
 
-    @property
+    @property # type: ignore
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType['Frame']:
         '''
@@ -3389,7 +3389,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    @property
+    @property # type: ignore
     @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow['Frame']:
         '''
@@ -3407,7 +3407,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property
+    @property # type: ignore
     @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow['Frame']:
         '''
@@ -3425,7 +3425,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property
+    @property # type: ignore
     @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow['Frame']:
         '''
@@ -3443,7 +3443,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property
+    @property # type: ignore
     @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow['Frame']:
         '''
@@ -3565,7 +3565,7 @@ class Frame(ContainerOperand):
             if check_equals and self._index.equals(index):
                 index_ic = None
             else:
-                index_ic = IndexCorrespondence.from_correspondence(self._index, index)
+                index_ic = IndexCorrespondence.from_correspondence(self._index, index) # type: ignore
         else:
             index = self._index
             index_ic = None
@@ -3580,7 +3580,7 @@ class Frame(ContainerOperand):
             if check_equals and self._columns.equals(columns):
                 columns_ic = None
             else:
-                columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
+                columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns) # type: ignore
             own_columns_frame = True
         else:
             columns = self._columns
@@ -5200,7 +5200,7 @@ class Frame(ContainerOperand):
 
         if len(labels) > 1:
             # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
-            group_source = blocks_to_array_2d(labels)
+            group_source = blocks_to_array_2d(labels) # type: ignore
             if use_sorted:
                 group_source = group_source[ordering]
         else:
@@ -5495,9 +5495,9 @@ class Frame(ContainerOperand):
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
                 if cfs.shape[1] == 1: # type: ignore
-                    values_for_sort = cfs._extract_array_column(0)
+                    values_for_sort = cfs._extract_array_column(0) # type: ignore
                 else:
-                    values_for_lex = [cfs._extract_array_column(i)
+                    values_for_lex = [cfs._extract_array_column(i) # type: ignore
                             for i in range(cfs.shape[1]-1, -1, -1)]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
@@ -5854,7 +5854,7 @@ class Frame(ContainerOperand):
                 yield self._index.values
             else:
                 # No recache is needed as it's not possible for an index to be GO
-                yield from self._index._blocks._blocks
+                yield from self._index._blocks._blocks # type: ignore
             for b in self._blocks._blocks:
                 yield b
 
@@ -5878,9 +5878,9 @@ class Frame(ContainerOperand):
 
             if index_depth == 1:
                 # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
-                columns_labels = TypeBlocks.from_blocks(
+                columns_labels = TypeBlocks.from_blocks( # type: ignore
                         concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
-                        for i, name in enumerate(names[0])
+                        for i, name in enumerate(names[0]) #type: ignore
                         )
             else:
                 # assume that names is an iterable of columns, each column with a label per columns depth
@@ -5900,7 +5900,7 @@ class Frame(ContainerOperand):
                     own_blocks=True)
         else:
             # columns depth is 1, label per index depth is correct
-            columns_labels = chain(names, self._columns.values)
+            columns_labels = chain(names, self._columns.values) # type: ignore
             columns_default_constructor = self._COLUMNS_CONSTRUCTOR
 
         columns, own_columns = index_from_optional_constructors(
@@ -5935,7 +5935,7 @@ class Frame(ContainerOperand):
             columns_constructor:
         '''
         index_iloc = self._index._loc_to_iloc(index)
-        if index_iloc is None or (index_iloc.__class__ is np.ndarray and len(index_iloc) == 0):
+        if index_iloc is None or (index_iloc.__class__ is np.ndarray and len(index_iloc) == 0): # type: ignore
             # if None was a key it would have an iloc
             return self if self.STATIC else self.__class__(self)
 
@@ -5955,7 +5955,7 @@ class Frame(ContainerOperand):
         else:
             # given a multiple row selection, yield a tuple accross rows (column values) as tuples; this acvoids going through arrays
             columns_values = self._blocks.iter_columns_tuples(index_iloc)
-            name = tuple(self._index[index_iloc])
+            name = tuple(self._index[index_iloc]) # type: ignore
 
         columns = index_from_optional_constructor(columns_values,
                 default_constructor=self._COLUMNS_CONSTRUCTOR,
@@ -6091,12 +6091,12 @@ class Frame(ContainerOperand):
                 # assume that names[0] is an iterable of labels per index depth level (one row of labels)
                 index_labels = TypeBlocks.from_blocks(
                         concat_resolved((np.array([name]), self._index.values_at_depth(i)))
-                        for i, name in enumerate(names[0])
+                        for i, name in enumerate(names[0]) # type: ignore
                         )
             else:
                 # assume that names is an iterable of rows, each row with a label per index depth
                 labels_per_depth = []
-                for labels in zip(*names):
+                for labels in zip(*names): # type: ignore
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
