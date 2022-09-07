@@ -1567,7 +1567,7 @@ class Frame(ContainerOperand):
             if is_fill_value_factory_initializer(fill_value):
                 raise InvalidFillValue(fill_value, 'axis==None')
 
-            items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v)
+            items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v) # type: ignore
                     for k, v in items)
             dtype = dtype if dtype is not None else DTYPE_OBJECT
             tb = TypeBlocks.from_element_items(
@@ -1715,7 +1715,7 @@ class Frame(ContainerOperand):
                         )
 
                 if columns_select:
-                    iloc_sel = columns._loc_to_iloc(columns.isin(columns_select))
+                    iloc_sel = columns._loc_to_iloc(columns.isin(columns_select)) # type: ignore
                     selector = itemgetter(*iloc_sel)
                     selector_reduces = len(iloc_sel) == 1
                     columns = columns.iloc[iloc_sel]
@@ -1778,9 +1778,9 @@ class Frame(ContainerOperand):
             if columns_select:
                 row_gen_final = (filter_row(row) for row in row_gen())
             else:
-                row_gen_final = row_gen()
+                row_gen_final = row_gen() # type: ignore
 
-            return cls.from_records(
+            return cls.from_records( # type: ignore
                     row_gen_final,
                     columns=columns,
                     index=index,
@@ -1815,7 +1815,7 @@ class Frame(ContainerOperand):
             :obj:`static_frame.Frame`
         '''
         data = json.loads(json_data)
-        return cls.from_dict_records(data,
+        return cls.from_dict_records(data, # type: ignore
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
@@ -1841,7 +1841,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), #pragma: no cover
+        return cls.from_json(_read_url(url), #pragma: no cover #type: ignore
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
@@ -2619,8 +2619,8 @@ class Frame(ContainerOperand):
                 is_index_col = (col_idx >= index_start_pos and col_idx <= index_end_pos)
 
                 if is_index_col:
-                    index_arrays.append(array_final)
-                    apex_labels.append(name)
+                    index_arrays.append(array_final) # type: ignore
+                    apex_labels.append(name) # type: ignore
                     continue
 
                 if not is_index_col and columns_depth > 0:
@@ -2767,7 +2767,7 @@ class Frame(ContainerOperand):
     @staticmethod
     @doc_inject(selector='constructor_frame')
     def from_msgpack(
-            msgpack_data: bin
+            msgpack_data: bytes
             ) -> 'Frame':
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
@@ -2777,7 +2777,7 @@ class Frame(ContainerOperand):
         import msgpack  # type: ignore
         import msgpack_numpy  # type: ignore
 
-        def decode(obj: tp.Dict[str, tp.Any], #dict produced by msgpack-python
+        def decode(obj: tp.Dict[bytes, tp.Any], #dict produced by msgpack-python
                 chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
                 ) -> object:
 
@@ -7012,7 +7012,7 @@ class Frame(ContainerOperand):
             right_loc_set.update(right_loc_part)
 
             if is_many:
-                many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
+                many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part)) # type: ignore
                 many_iloc.extend(Pair(p) for p in product((k,), v))
 
         #-----------------------------------------------------------------------
@@ -7079,11 +7079,11 @@ class Frame(ContainerOperand):
         final_index_left = []
         for p in final_index:
             if p.__class__ is Pair: # in both
-                iloc = left_index._loc_to_iloc(p[0])
+                iloc = left_index._loc_to_iloc(p[0]) # type: ignore
                 row_key.append(iloc)
                 final_index_left.append(p)
             elif p.__class__ is PairLeft:
-                row_key.append(left_index._loc_to_iloc(p[0]))
+                row_key.append(left_index._loc_to_iloc(p[0])) # type: ignore
                 final_index_left.append(p)
 
         # extract potentially repeated rows
@@ -7101,7 +7101,6 @@ class Frame(ContainerOperand):
 
         # populate from right columns
         # NOTE: find optimized path to avoid final_index iteration per column in all scenarios
-
         for idx_col, col in enumerate(other.columns):
             values = []
             for pair in final_index:
@@ -7109,12 +7108,12 @@ class Frame(ContainerOperand):
                 # assert isinstance(pair, Pair)
                 loc_left, loc_right = pair
                 if pair.__class__ is PairRight: # get from right
-                    values.append(other.loc[loc_right, col])
+                    values.append(other.loc[loc_right, col]) # type: ignore
                 elif pair.__class__ is PairLeft:
                     # get from left, but we do not have col, so fill value
                     values.append(fill_value)
                 else: # is this case needed?
-                    values.append(other.loc[loc_right, col])
+                    values.append(other.loc[loc_right, col]) # type: ignore
 
             final[right_template.format(col)] = values
         return final.to_frame()
@@ -7328,6 +7327,7 @@ class Frame(ContainerOperand):
 
         # NOTE: might introduce coercions in IndexHierarchy
         labels_prior = self._columns.values
+        labels_insert: tp.Iterable[tp.Hashable]
 
         if isinstance(container, Frame):
             if not len(container.columns):
@@ -7338,7 +7338,7 @@ class Frame(ContainerOperand):
 
         elif isinstance(container, Series):
             labels_insert = (container.name,)
-            blocks_insert = (container.values,)
+            blocks_insert = (container.values,) # type: ignore
 
         columns = self._columns.__class__.from_labels(chain(
                 labels_prior[:key],
@@ -7585,28 +7585,28 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 include_columns_name=include_columns_name,
                 )
-        fp = path_filter(fp)
+        fp = path_filter(fp) # type: ignore
         # NOTE:  compression='none' shown to not provide a clear performance improvement over the assumed default, 'snappy'
         pq.write_table(table, fp)
 
 
-    def to_msgpack(self) -> 'bin':
+    def to_msgpack(self) -> bytes:
         '''
-        Return a msgpack.
+        Return msgpack bytes.
         '''
         import msgpack
         import msgpack_numpy
 
-        def encode(obj: object,
-                chain: tp.Callable[[np.ndarray], str] = msgpack_numpy.encode,
-                ) -> dict: #returns dict that msgpack-python consumes
+        def encode(obj: tp.Union[ContainerOperand, np.ndarray],
+                chain: tp.Callable[[np.ndarray], tp.Dict[bytes, tp.Any]] = msgpack_numpy.encode,
+                ) -> tp.Dict[bytes, tp.Any]: #returns dict that msgpack-python consumes
             cls = obj.__class__
-            clsname = cls.__name__
+            cls_name = cls.__name__
             package = cls.__module__.split('.', 1)[0]
 
             if package == 'static_frame':
                 if isinstance(obj, Frame):
-                    return {b'sf':clsname,
+                    return {b'sf':cls_name,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks),
                             b'index':packb(obj.index),
@@ -7614,42 +7614,43 @@ class Frame(ContainerOperand):
                 elif isinstance(obj, IndexHierarchy):
                     if obj._recache:
                         obj._update_array_cache()
-                    return {b'sf':clsname,
+                    return {b'sf':cls_name,
                             b'name':obj.name,
                             b'index_constructors': packb([
                                     a.__name__ for a in obj.index_types.values.tolist()]),
                             b'blocks':packb(obj._blocks)}
                 elif isinstance(obj, Index):
-                    return {b'sf':clsname,
+                    return {b'sf':cls_name,
                             b'name':obj.name,
                             b'data':packb(obj.values)}
                 elif isinstance(obj, TypeBlocks):
-                    return {b'sf':clsname,
+                    return {b'sf':cls_name,
                             b'blocks':packb(obj._blocks)}
 
             elif package == 'numpy':
                 #msgpack-numpy is breaking with these data types, overriding here
                 if obj.__class__ is np.ndarray:
-                    if obj.dtype.kind == DTYPE_OBJECT_KIND:
+                    if obj.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
                         data = list(map(element_encode, obj)) # type: ignore
                         return {b'np': True,
                                 b'dtype': 'object_',
                                 b'data': packb(data)}
-                    elif obj.dtype.kind == DTYPE_DATETIME_KIND:
-                        data = obj.astype(str)
+                    elif obj.dtype.kind == DTYPE_DATETIME_KIND: # type: ignore
+                        data = obj.astype(str) # type: ignore
                         return {b'np': True,
-                                b'dtype': str(obj.dtype),
+                                b'dtype': str(obj.dtype), # type: ignore
                                 b'data': packb(data)}
-                    elif obj.dtype.kind == DTYPE_TIMEDELTA_KIND:
-                        data = obj.astype(np.float64)
+                    elif obj.dtype.kind == DTYPE_TIMEDELTA_KIND: # type: ignore
+                        data = obj.astype(DTYPE_FLOAT_DEFAULT) # type: ignore
                         return {b'np': True,
-                                b'dtype': str(obj.dtype),
+                                b'dtype': str(obj.dtype), # type: ignore
                                 b'data': packb(data)}
             return chain(obj) #let msgpack_numpy.encode take over
 
         packb = partial(msgpack.packb, default=encode)
+        # NOTE: element_encode used in closure above
         element_encode = partial(MessagePackElement.encode, packb=packb)
-        return packb(self)
+        return packb(self) # type: ignore
 
     def to_xarray(self) -> 'Dataset':
         '''
@@ -7662,6 +7663,7 @@ class Frame(ContainerOperand):
         columns = self.columns
         index = self.index
 
+        index_name: tp.Union[tp.Hashable, tp.Tuple[tp.Hashable, ...]]
         if index.depth == 1:
             index_name = index.names[0]
             coords = {index_name: index.values}
@@ -7682,6 +7684,7 @@ class Frame(ContainerOperand):
             columns_values = array2d_to_tuples(columns.values)
 
             def columns_arrays() -> tp.Iterator[np.ndarray]:
+                c: Series
                 for c in self.iter_series(axis=0): #type: ignore
                     # dtype must be able to accomodate a float NaN
                     resolved = resolve_dtype(c.dtype, DTYPE_FLOAT_DEFAULT)
