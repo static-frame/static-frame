@@ -1,4 +1,4 @@
-import frame_fixtures as ff
+# import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf

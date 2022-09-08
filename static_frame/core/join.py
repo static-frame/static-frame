@@ -5,13 +5,13 @@ from itertools import product
 import numpy as np
 from arraykit import resolve_dtype
 
-from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
+# from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.index import Index
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import NULL_SLICE
+# from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import Join
