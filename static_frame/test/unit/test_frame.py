@@ -320,7 +320,7 @@ class TestUnit(TestCase):
         f2 = FrameGO(index=IndexAutoFactory(2))
         f2['a'] = (3, 9)
         f2['b'] = (4, 5)
-        self.assertEqual(f2.index._map, None)
+        self.assertEqual(f2.index._map, None) # type: ignore
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
                 )
@@ -8445,8 +8445,8 @@ class TestUnit(TestCase):
                 columns=sf.IndexHierarchy.from_labels(f2_col_labels),
                 index=sf.IndexHierarchy.from_labels(f2_idx_labels)
         )
-        intersection_cols: sf.Index = f1.columns.intersection(f2.columns)
-        intersection_idx: sf.Index = f1.index.intersection(f2.index)
+        intersection_cols: sf.Index = f1.columns.intersection(f2.columns) # type: ignore
+        intersection_idx: sf.Index = f1.index.intersection(f2.index) # type: ignore
 
         f1_reindexed = f1.reindex(intersection_idx)[intersection_cols]
         f2_reindexed = f2.reindex(intersection_idx)[intersection_cols]

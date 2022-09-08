@@ -534,7 +534,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
         else: # an iterable of labels, or an index subclass
-            self._index = index_from_optional_constructor(index, #type: ignore
+            self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )

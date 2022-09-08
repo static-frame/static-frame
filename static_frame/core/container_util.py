@@ -58,6 +58,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexInitOrAutoType
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -364,7 +365,7 @@ def df_slice_to_arrays(*,
 
 #---------------------------------------------------------------------------
 def index_from_optional_constructor(
-        value: tp.Union[IndexInitializer, 'IndexAutoFactory'],
+        value: 'IndexInitOrAutoType',
         *,
         default_constructor: IndexConstructor,
         explicit_constructor: ExplicitConstructor = None,
@@ -380,7 +381,7 @@ def index_from_optional_constructor(
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
-                default_constructor=default_constructor, #type: ignore
+                default_constructor=default_constructor,
                 explicit_constructor=explicit_constructor,
                 )
 
@@ -495,7 +496,7 @@ def constructor_from_optional_constructors(
 
 
 def index_constructor_empty(
-        index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']
+        index: 'IndexInitOrAutoType',
         ) -> bool:
     '''
     Determine if an index is empty (if possible) or an IndexAutoFactory.
@@ -1313,7 +1314,7 @@ def _index_many_to_one(
 def index_many_concat(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
-        explicit_constructor: tp.Optional[IndexInitializer] = None,
+        explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> tp.Optional[IndexBase]:
     return _index_many_to_one(indices,
             cls_default,
@@ -1325,7 +1326,7 @@ def index_many_set(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         union: bool,
-        explicit_constructor: tp.Optional[IndexInitializer] = None,
+        explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> tp.Optional[IndexBase]:
     '''
     Given multiple Index objects, union them. Preserve name and index type if aligned.

@@ -219,8 +219,8 @@ class TestUnit(TestCase):
 
             f = Frame.from_npz(fp)
             self.assertEqual(f.values.tolist(), a1.tolist())
-            self.assertIs(f.index._map, None)
-            self.assertIs(f.columns._map, None)
+            self.assertIs(f.index._map, None) # type: ignore
+            self.assertIs(f.columns._map, None) # type: ignore
 
     def test_archive_components_npz_write_arrays_b(self) -> None:
         with temp_file('.zip') as fp:
