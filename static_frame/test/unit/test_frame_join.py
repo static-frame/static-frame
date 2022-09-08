@@ -176,7 +176,7 @@ class TestUnit(TestCase):
         f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0)
         self.assertTrue(f6.equals(f3, compare_dtype=True))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_join_d(self) -> None:
         index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
         index2 = IndexHierarchy.from_product(('A', 'B'), index1)
@@ -458,16 +458,16 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_join_sort_a(self) -> None:
-        from static_frame.core.join import join_sort
+    # def test_frame_join_sort_a(self) -> None:
+    #     from static_frame.core.join import join_sort
 
-        sff_left = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
+    #     sff_left = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
 
-        sff_right = ff.parse('s(8,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
+    #     sff_right = ff.parse('s(8,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
 
-        post = join_sort(sff_left, sff_right, left_columns='zZbu', right_columns=0)
-        ref = sff_left.join_left(sff_right, left_columns='zZbu', right_columns=0)
+    #     post = join_sort(sff_left, sff_right, left_columns='zZbu', right_columns=0)
+    #     ref = sff_left.join_left(sff_right, left_columns='zZbu', right_columns=0)
 
-        # import ipdb; ipdb.set_trace()
+    #     # import ipdb; ipdb.set_trace()
 
 
