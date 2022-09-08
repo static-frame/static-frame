@@ -56,10 +56,8 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_pylt37
-from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_win
-
-import static_frame as sf
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 

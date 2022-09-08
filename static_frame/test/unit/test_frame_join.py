@@ -1,18 +1,15 @@
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
-
-from static_frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
 import static_frame as sf
+from static_frame import Frame
+from static_frame import IndexDate
+from static_frame import IndexHierarchy
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame import IndexHierarchy
-from static_frame import IndexDate
 from static_frame.core.join import join
-
-
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 
 class TestUnit(TestCase):
