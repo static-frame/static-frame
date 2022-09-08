@@ -9,14 +9,14 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_fill_value import InterfaceFillValue #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_fill_value import InterfaceBatchFillValue #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_fill_value import InterfaceBatchFillValue  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_fill_value import InterfaceFillValue  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
 TContainer = tp.TypeVar('TContainer',
@@ -76,8 +76,8 @@ class InterfaceTranspose(Interface[TContainer]):
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
-        from static_frame.core.node_fill_value import InterfaceFillValue
         from static_frame.core.frame import Frame
+        from static_frame.core.node_fill_value import InterfaceFillValue
         assert isinstance(self._container, Frame)
         return InterfaceFillValue(
                 container=self._container,

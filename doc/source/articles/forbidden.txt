@@ -1,0 +1,24 @@
+
+
+
+
+The Forbidden `dtypes`: How Pandas Blocks Certain NumPy Types
+
+
+
+
+>>> pd.read_csv(io.StringIO('a,c\nd,f'), dtype=np.dtype('U3')).dtypes
+TypeError: the dtype <U3 is not supported for parsing
+
+
+
+
+>>> a1 = np.array(('33','33'))
+>>> a1
+array(['33', '33'], dtype='<U2')
+>>> pd.Series(a1)
+0    33
+1    33
+dtype: object
+>>> pd.Series(a1).values
+array(['33', '33'], dtype=object)

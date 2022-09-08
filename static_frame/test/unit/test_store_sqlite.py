@@ -1,15 +1,15 @@
-from fractions import Fraction
 import typing as tp
+from fractions import Fraction
 
 import numpy as np
 
 from static_frame.core.frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import StoreConfig
-from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):

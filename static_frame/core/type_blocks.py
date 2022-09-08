@@ -1,8 +1,8 @@
 import typing as tp
-from itertools import zip_longest
-from itertools import chain
-from functools import partial
 from copy import deepcopy
+from functools import partial
+from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -26,47 +26,49 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import binary_transition
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import dtype_from_element
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_ARRAY_OBJECT
 from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import OptionalArrayList
+from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import ShapeType
+from static_frame.core.util import UFunc
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import array_deepcopy
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import binary_transition
+from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import dtype_to_fill_value
+from static_frame.core.util import full_for_fill
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin_array
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import isin_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import array_deepcopy
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import roll_1d
-from static_frame.core.util import ShapeType
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import OptionalArrayList
-from static_frame.core.util import blocks_to_array_2d
 
-from static_frame.core.style_config import StyleConfig
 
 #---------------------------------------------------------------------------
 def group_match(
@@ -448,7 +450,7 @@ class TypeBlocks(ContainerOperand):
                 tb_proto = type_blocks
 
             # all TypeBlocks have the same number of blocks by here
-            for block_idx in range(len(tb_proto[0]._blocks)):
+            for block_idx in range(len(tb_proto[0]._blocks)): # pylint: disable=C0200
                 block_parts = []
                 for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
                     b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
@@ -503,14 +505,14 @@ class TypeBlocks(ContainerOperand):
             b.flags.writeable = False
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'TypeBlocks':
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._blocks = [array_deepcopy(b, memo) for b in self._blocks]
         obj._dtypes = deepcopy(self._dtypes, memo)
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     def __copy__(self) -> 'TypeBlocks':
         '''
@@ -819,20 +821,21 @@ class TypeBlocks(ContainerOperand):
                 self._reblock_signature(),
                 other._reblock_signature()))
 
-    @classmethod
-    def _concatenate_blocks(cls,
-            group: tp.Iterable[np.ndarray],
-            dtype: DtypeSpecifier = None,
+    @staticmethod
+    def _concatenate_blocks(
+            blocks: tp.Iterable[np.ndarray],
+            dtype: DtypeSpecifier,
+            columns: int,
             ) -> np.array:
-        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array.
+        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned amonng the provided blocks.
         '''
-        # NOTE: if len(group) is 1, can return
-        post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
-        # NOTE: if give non-native byteorder dtypes, will convert them to native
-        if dtype is not None and post.dtype != dtype:
-            # could use `out` argument of np.concatenate to avoid copy, but would have to calculate resultant size first
-            return post.astype(dtype)
-        return post
+        # NOTE: when this is called we always have 2 or more blocks
+        blocks_norm = [column_2d_filter(x) for x in blocks]
+        # assert len(blocks_norm) >= 2
+        rows = blocks_norm[0].shape[0] # all 2D
+        array = np.empty((rows, columns), dtype=dtype)
+        np.concatenate(blocks_norm, axis=1, out=array)
+        return array
 
     @classmethod
     def consolidate_blocks(cls,
@@ -850,8 +853,8 @@ class TypeBlocks(ContainerOperand):
             if group_dtype is None: # first block of a type
                 group_dtype = block.dtype
                 group.append(block)
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
                 continue
-
             # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
             if block.dtype != group_dtype:
                 # new group found, return stored
@@ -860,18 +863,20 @@ class TypeBlocks(ContainerOperand):
                     yield group[0]
                 else: # combine groups
                     # could pre allocating and assing as necessary for large groups
-                    yield cls._concatenate_blocks(group, group_dtype)
+                    yield cls._concatenate_blocks(group, group_dtype, group_columns)
                 group_dtype = block.dtype
                 group = [block]
+                group_columns = 1 if block.ndim == 1 else block.shape[1]
             else: # new block has same group dtype
                 group.append(block)
+                group_columns += 1 if block.ndim == 1 else block.shape[1]
 
         # always have one or more leftover
         if group:
             if len(group) == 1:
                 yield group[0]
             else:
-                yield cls._concatenate_blocks(group, group_dtype)
+                yield cls._concatenate_blocks(group, group_dtype, group_columns)
 
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
@@ -2053,7 +2058,6 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype #type: ignore
         else:
             value_dtype = dtype_from_element(value)
-        # import ipdb; ipdb.set_trace()
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,
@@ -2245,8 +2249,8 @@ class TypeBlocks(ContainerOperand):
             # evaluate after updating target
             if not target.any(): # works for ndim 1 and 2
                 yield block
-
-            if block.ndim == 1:
+                col += 1 if block.ndim == 1 else block.shape[1]
+            elif block.ndim == 1:
                 value = get_col_fill_value(col, block.dtype)
                 value_dtype = dtype_from_element(value)
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
@@ -2258,7 +2262,6 @@ class TypeBlocks(ContainerOperand):
                 assigned[target] = value
                 assigned.flags.writeable = False
                 yield assigned
-
                 col += 1
             else:
                 target_flat = target.any(axis=0)
@@ -2280,7 +2283,6 @@ class TypeBlocks(ContainerOperand):
                         assigned[target[NULL_SLICE, i]] = value
                         assigned.flags.writeable = False
                         yield assigned
-
                     col += 1
 
     def _assign_from_boolean_blocks_by_blocks(self,
@@ -2782,9 +2784,9 @@ class TypeBlocks(ContainerOperand):
 
     def extract_bloc(self,
             bloc_key: np.ndarray,
-            ) -> tp.Tuple[tp.List[tp.Tuple[int, int]], np.ndarray]:
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
-        Extract a 1D array from TypeBlocks, doing minimal type coercion.
+        Extract a 1D array from TypeBlocks, doing minimal type coercion. This returns results in row-major ordering.
         '''
         parts = []
         coords = []
@@ -2827,14 +2829,23 @@ class TypeBlocks(ContainerOperand):
             t_start = t_end
 
         # if size is zero, dt_resolve will be None
-        if size > 0:
-            array = np.empty(shape=size, dtype=dt_resolve)
-            np.concatenate(parts, out=array)
-            array.flags.writeable = False
-        else:
-            array = EMPTY_ARRAY
+        if size == 0:
+            return EMPTY_ARRAY_OBJECT, EMPTY_ARRAY
 
-        return coords, array
+        array = np.empty(shape=size, dtype=dt_resolve)
+        np.concatenate(parts, out=array)
+
+        # # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
+
+        coords_array = np.empty(len(array), dtype=object)
+        coords_array[:] = coords # force creation of 1D object array
+
+        # NOTE: in this sort there should never be ties, so we can use an unstable sort
+        order = np.argsort(coords_array, kind=DEFAULT_FAST_SORT_KIND)
+        array = array[order]
+        array.flags.writeable = False
+
+        return coords_array[order], array
 
     #---------------------------------------------------------------------------
     # assignment interfaces

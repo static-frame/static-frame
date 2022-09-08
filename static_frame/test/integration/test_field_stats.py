@@ -1,8 +1,8 @@
 import typing as tp
 
 import numpy as np
-import static_frame as sf
 
+import static_frame as sf
 from static_frame.test.test_case import TestCase
 
 CHARACTERS_REFERENCE = dict((
@@ -71,8 +71,6 @@ def process(
 
 
             post = sf.Frame.from_concat(observations(fields))
-
-            # import ipdb; ipdb.set_trace()
 
             # create more rows with axis config.CHARACTERS over the groups
             def gen() -> tp.Iterator[sf.Frame]:

@@ -1,15 +1,16 @@
-numpy==1.22.2
+numpy==1.23.1
 automap==0.5.1
-arraykit==0.1.8
+arraykit==0.1.13
 
-pytest==6.2.5
+pytest==7.1.2
 pytest-cov==3.0.0
 codecov>=2.0.15
 hypothesis==6.40.0
 scipy==1.8.0
-mypy==0.800
-pylint==2.4.4
+mypy==0.971
+pylint==2.15.0
 invoke==1.4.0
+isort==5.10.1
 
 pyinstrument==3.4.1
 Pygments==2.7.4
@@ -20,7 +21,7 @@ sphinx==4.5.0
 sphinx-jinja==1.1.1
 sphinx_rtd_theme>=0.5.1
 sphinxcontrib-napoleon==0.7.0
-pandas==1.4.2
+pandas==1.4.3
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.21.1

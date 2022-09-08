@@ -1,18 +1,17 @@
-from io import StringIO
 import datetime
+from io import StringIO
 
 import numpy as np
 
+from static_frame.core.frame import Frame
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import STORE_FILTER_DISABLE
 from static_frame.core.store_filter import StoreFilter
-from static_frame.test.test_case import TestCase
-from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
+from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import NAT
-
-from static_frame.core.frame import Frame
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

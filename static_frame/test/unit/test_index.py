@@ -1,32 +1,32 @@
-import unittest
-import pickle
-import datetime
 import copy
+import datetime
+import pickle
 import typing as tp
+import unittest
 from io import StringIO
 
 import numpy as np
 from arraykit import mloc
 
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexHierarchy
-from static_frame import Series
-from static_frame import IndexYear
+from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import ILoc
+from static_frame import Index
 from static_frame import IndexAutoFactory
-from static_frame.test.test_case import TestCase
-from static_frame.core.index import _index_initializer_needs_init
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexYear
+from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import LocInvalid
+from static_frame.core.index import _index_initializer_needs_init
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
-from static_frame.core.util import NULL_SLICE
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -572,7 +572,7 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(len(index.__slots__), 8)
+        self.assertEqual(len(index.__slots__), 3)
         self.assertFalse(index.STATIC)
         self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
         self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
@@ -704,7 +704,6 @@ class TestUnit(TestCase):
             pbytes = pickle.dumps(index)
             index_new = pickle.loads(pbytes)
             for v in index: # iter labels
-                # import ipdb; ipdb.set_trace()
                 # this compares Index objects
                 self.assertFalse(index_new._labels.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
@@ -1331,16 +1330,10 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
-    #---------------------------------------------------------------------------
-
     def test_index_via_str_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
-
-        self.assertEqual(a1.tolist(),
-                ['A', 'B', 'C', 'D', 'E']
-                )
 
     def test_index_via_str_b(self) -> None:
 
@@ -1375,6 +1368,15 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6, 2, 4]
                 )
+
+
+    def test_index_via_values_a(self) -> None:
+
+        idx1 = IndexGO((10, 20, 30))
+        idx1.append(40)
+        idx2 = idx1.via_values.apply(lambda x: (x * .5).astype(int))
+        self.assertEqual(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), [5, 10, 15, 20])
 
     #---------------------------------------------------------------------------
 
@@ -1640,7 +1642,12 @@ class TestUnit(TestCase):
         idx2 = idx1.dropfalsy()
         self.assertEqual(idx2.values.tolist(), [2])
 
-        # import ipdb; ipdb.set_trace()
+    #---------------------------------------------------------------------------
+    def test_index_display_a(self) -> None:
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        post = idx.display(DisplayConfig(type_show=False, type_color=False))
+        self.assertEqual(str(post), 'a\nb\nc\nd\ne')
 
 if __name__ == '__main__':
     unittest.main()

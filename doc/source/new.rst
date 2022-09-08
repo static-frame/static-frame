@@ -1,11 +1,92 @@
-What is New in Static Frame
+What is New in StaticFrame
 ===============================
+
+0.9.14
+----------
+
+Corrected issues with selection on zero-sized ``IndexHierarchy``.
+
+
+0.9.13
+----------
+
+Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``.
+
+Added ``test_example_gen.py`` to test and enforce automatic example generation.
+
+Improved usage of ``__slots__`` throughout.
+
+Continuous integration quality checks now using pylint 2.15.0 and isort 5.10.1
+
+Minimum pyarrow set to 0.17.0
+
+
+0.9.12
+----------
+
+``ErrorNPYEncode`` exceptions raised during authoring NPZ files or NPY directories now remove those files or directories.
+
+``ErrorNPYEncode`` exceptions raised during ``to_zip_npz()`` now remove the archive.
+
+Authoring NPYs to a pre-existing directory will now raise a ``RuntimeError``.
+
+
+0.9.11
+----------
+
+Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
+
+Corrected issue with ``fillna`` and ``fillfalsy`` functions when non-elemental fill values are supplied.
+
+Updated ``arraykit`` to 0.1.13.
+
+
+0.9.10
+----------
+
+Corrected single depth selection issue with ``IndexHierarchy``.
+
+
+0.9.9
+----------
+
+Updated ``arraykit`` to 0.1.12.
+
+Set minimum ``numpy`` to 1.18.5.
+
+Added ``index_constructors`` parameter to ``Frame.relabel_shift_in()``.
+
+Corrected issue when ``Frame.astype()`` called with an empty ``Frame``.
+
+Extended ``via_values`` property to take optional consolidation arguments via ``__call__()`` constructor; usage of ``via_values`` instance returns same-typed, same-sized container.
+
+
+0.9.8
+----------
+
+Added ``via_values`` property to ``Series``, ``Index``, ``Frame``, ``IndexHierarchy`` and ``Batch``; permits applying functions to complete containers with ``apply()`` and supports usage as arguments in arbitrary NumPy functions with ``__array_ufunc__()``.
+
+Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
+
+Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
+
+Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
+
+Added ``via_str.contains()``.
+
+Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
+
+``Frame.to_sqlite()`` now requires a named ``Frame`` or an explicit ``label``; ``Frame.from_sqlite()``, ``Frame.from_hdf5()`` now make ``label`` a required argument.
+
+API Documentation re-organized, now using procedurally generated code examples.
 
 
 0.9.7
 ----------
 
 Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
+
+Normalized ordering of results from ``Frame.bloc[]`` selections.
 
 
 0.9.6
@@ -57,7 +138,7 @@ Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Seri
 
 Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
 
-Corrected issue when using binary operators with a `FrameGO` and a `Series`.
+Corrected issue when using binary operators with a ``FrameGO`` and a ``Series``.
 
 Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
 
@@ -131,7 +212,7 @@ Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Fra
 
 Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
 
-Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on :obj:`Series` and :obj:`Frame` for selections that potentially contain new labels filled with the fill value.
+Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on ``Series`` and ``Frame`` for selections that potentially contain new labels filled with the fill value.
 
 
 0.8.34

@@ -51,7 +51,6 @@ class MMapTest:
         partitions = 100
         ref = np.arange(len(self.fixture.columns))
         self.selections = [(ref % partitions) == i for i in range(partitions)]
-        # import ipdb; ipdb.set_trace()
         print(self, 'init complete')
 
     def clear(self) -> None:
@@ -217,7 +216,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 
 

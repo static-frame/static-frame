@@ -10,27 +10,28 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import write_optional_file
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import DTYPE_INT_DEFAULT
-
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_str import InterfaceString
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -255,7 +256,11 @@ class IndexBase(ContainerOperand):
             ) -> tp.Tuple[I, np.ndarray]:
         raise NotImplementedError() #pragma: no cover
 
-    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self,
+            level: tp.Hashable,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self,
@@ -513,7 +518,7 @@ class IndexBase(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if fp and show:
-            import webbrowser #pragma: no cover
+            import webbrowser  # pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
 
         return fp

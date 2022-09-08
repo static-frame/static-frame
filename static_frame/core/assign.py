@@ -1,3 +1,5 @@
+import typing as tp
+
 
 class Assign:
     '''
@@ -5,7 +7,7 @@ class Assign:
     '''
     __slots__ = ()
 
-    INTERFACE = (
+    INTERFACE: tp.Tuple[str, ...] = (
         '__call__',
         'apply',
         )

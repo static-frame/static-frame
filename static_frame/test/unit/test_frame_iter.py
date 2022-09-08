@@ -1,18 +1,18 @@
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
 import static_frame as sf
-from static_frame import IndexHierarchy
-from static_frame import IndexDate
-from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
 from static_frame import HLoc
-from static_frame.test.test_case import TestCase
+from static_frame import IndexDate
+from static_frame import IndexHierarchy
+from static_frame import Series
+from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
+from static_frame.test.test_case import TestCase
 
 nan = np.nan
 
@@ -194,7 +194,35 @@ class TestUnit(TestCase):
         self.assertEqual(post[0],
             (np.datetime64('2210-12-26'), np.datetime64('164167'))
             )
-        # import ipdb; ipdb.set_trace()
+
+    def test_frame_iter_tuple_g(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None})
+        self.assertEqual(post.to_pairs(),
+                (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
+                )
+
+    def test_frame_iter_tuple_h(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill({('w', (False, False)): None}, fill_value=0)
+        self.assertEqual(post.to_pairs(),
+            (('z', 0), ('x', 0), ('w', None), ('y', 0))
+            )
+
 
     #---------------------------------------------------------------------------
 
@@ -233,6 +261,18 @@ class TestUnit(TestCase):
         post5 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=object)
         self.assertEqual(post5.dtype, object)
         self.assertEqual(post5.shape, (10,))
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_series_items_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series_items(axis=0))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post1],
+                [('zZbu', [-88017, 92867]), ('ztsv', [162197, -41157]), ('zUvW', [-3648, 91301]), ('zkuW', [129017, 35021]), ('zmVj', [58768, 146284]), ('z2Oo', [84967, 13448]), ('z5l6', [146284, 170440]), ('zCE3', [137759, -62964])])
+
+        post2 = tuple(f1.iter_series_items(axis=1))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post2],
+                [('zZbu', [-88017, 162197, -3648, 129017, 58768, 84967, 146284, 137759]), ('ztsv', [92867, -41157, 91301, 35021, 146284, 13448, 170440, -62964])]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -361,6 +401,15 @@ class TestUnit(TestCase):
         f2 = f1.iter_element(axis=1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
+
+    def test_frame_iter_element_f(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3))
+
+        mapping = {x: x*3 for x in range(3)}
+        f2 = f1.iter_element(axis=1).map_fill(mapping, fill_value=-1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
+            )
 
     #---------------------------------------------------------------------------
 

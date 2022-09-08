@@ -1,16 +1,15 @@
-import typing as tp
 import datetime
 import fractions
+import typing as tp
+
 import numpy as np
-
-from hypothesis import strategies as st
-from hypothesis import given
-
+from arraykit import isna_element
 from arraykit import mloc
-from arraykit import shape_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-from arraykit import isna_element
+from arraykit import shape_filter
+from hypothesis import given
+from hypothesis import strategies as st
 
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
@@ -101,7 +100,7 @@ class TestUnit(TestCase):
     @given(get_dtype())
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
         post = util.dtype_to_fill_value(dtype)
-        self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
+        self.assertTrue(post in {0, False, None, '', np.nan, util.NAT}) # pylint: disable=W0130
 
     @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
     def test_ufunc_axis_skipna(self, array: np.ndarray) -> None:

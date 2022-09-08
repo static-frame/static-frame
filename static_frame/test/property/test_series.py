@@ -1,16 +1,14 @@
 import operator
 
-from hypothesis import given
 from arraykit import isna_element
-
-from static_frame.core.interface import UFUNC_UNARY_OPERATORS
-from static_frame.core.interface import UFUNC_BINARY_OPERATORS
-from static_frame.core.interface import UFUNC_AXIS_SKIPNA
-
-from static_frame.test.property import strategies as sfst
-from static_frame.test.test_case import TestCase
+from hypothesis import given
 
 from static_frame import Series
+from static_frame.core.interface import UFUNC_AXIS_SKIPNA
+from static_frame.core.interface import UFUNC_BINARY_OPERATORS
+from static_frame.core.interface import UFUNC_UNARY_OPERATORS
+from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

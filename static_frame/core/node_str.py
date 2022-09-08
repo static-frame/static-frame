@@ -7,22 +7,21 @@ from numpy import char as npc
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import array_from_element_method
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import UFunc
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import AnyCallable
-
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import UFunc
+from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
 BlocksType = tp.Iterable[np.ndarray]
@@ -32,6 +31,7 @@ INTERFACE_STR = (
         '__getitem__',
         'capitalize',
         'center',
+        'contains',
         'count',
         'decode',
         'encode',
@@ -182,6 +182,18 @@ class InterfaceString(Interface[TContainer]):
         Return a container with its elements centered in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
+        return self._blocks_to_container(block_gen)
+
+    def contains(self,  item: str) -> TContainer:
+        '''
+        Return a Boolean container showing True of item is a substring of elements.
+        '''
+        block_gen = self._process_element_blocks(
+                blocks=self._blocks,
+                method_name='__contains__',
+                args=(item,),
+                dtype=DTYPE_STR,
+                )
         return self._blocks_to_container(block_gen)
 
     def count(self,
@@ -591,6 +603,14 @@ class InterfaceBatchString(InterfaceBatch):
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
         return self._batch_apply(lambda c: c.via_str.count(sub, start, end))
+
+    def contains(self,
+            item: str,
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.contains(item))
 
     def decode(self,
             encoding: tp.Optional[str] = None,

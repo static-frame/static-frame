@@ -143,7 +143,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     run_test()

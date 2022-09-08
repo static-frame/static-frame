@@ -22,33 +22,38 @@ import typing as tp
 import static_frame as sf
 
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
+from static_frame.core.interface import INTERFACE_GROUP_DOC
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
-from static_frame.test.unit.test_doc import api_example_str
+# from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
 PREFIX_END = '#end_'
 
 def get_defined() -> tp.Set[str]:
 
+    source_dir = os.path.abspath(os.path.dirname(__file__))
+    fp = os.path.join(source_dir, 'examples.txt')
+
     defined = set()
     signature_start = ''
     signature_end = ''
 
-    for line in api_example_str.split('\n'):
-        if line.startswith(PREFIX_START):
-            signature_start = line.replace(PREFIX_START, '').strip()
-        elif line.startswith(PREFIX_END):
-            signature_end = line.replace(PREFIX_END, '').strip()
-            if signature_start == signature_end:
-                if signature_start in defined:
-                    raise RuntimeError(f'duplicate definition: {signature_start}')
-                defined.add(signature_start)
-                signature_start = ''
-                signature_end = ''
-            else:
-                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
-
+    with open(fp) as f:
+        for line in f:
+            line = line.rstrip()
+            if line.startswith(PREFIX_START):
+                signature_start = line.replace(PREFIX_START, '').strip()
+            elif line.startswith(PREFIX_END):
+                signature_end = line.replace(PREFIX_END, '').strip()
+                if signature_start == signature_end:
+                    if signature_start in defined:
+                        raise RuntimeError(f'duplicate definition: {signature_start}')
+                    defined.add(signature_start)
+                    signature_start = ''
+                    signature_end = ''
+                else:
+                    raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
     return defined
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -87,47 +92,56 @@ DOCUMENTED_COMPONENTS = (
         sf.IndexMicrosecondGO,
         sf.IndexNanosecond,
         sf.IndexNanosecondGO,
+        sf.HLoc,
+        sf.ILoc,
+        sf.FillValueAuto,
+        sf.DisplayActive,
         sf.DisplayConfig,
         sf.StoreConfig,
         sf.StoreFilter,
+        sf.IndexAutoFactory,
+        sf.IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        sf.IndexAutoConstructorFactory,
         sf.NPZ,
         sf.NPY,
+        sf.Platform,
         )
 
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
+    # NOTE: we build dictionaries here so that we can pre-select groups when setting up args into the jina tempalates in source_build.py
+
     post: tp.Dict[str, tp.Any] = {}
-
-    # performance_cls = []
-    # for name in dir(core):
-    #     obj = getattr(core, name)
-    #     if inspect.isclass(obj) and issubclass(obj, PerfTest):
-    #         performance_cls.append(obj.__name__)
-
-    # post['performance_cls'] = performance_cls
 
     # for docs
     post['examples_defined'] = get_defined()
-    # post['interface_groups'] = INTERFACE_GROUP_ORDER
-
+    post['interface_group_doc'] = INTERFACE_GROUP_DOC
+    post['toc'] = {}
     post['interface'] = {}
-    for target in DOCUMENTED_COMPONENTS:
-        inter = InterfaceSummary.to_frame(target, #type: ignore
+    for cls in DOCUMENTED_COMPONENTS:
+        inter = InterfaceSummary.to_frame(cls,
                 minimized=False,
                 max_args=99, # +inf, but keep as int
                 )
-        # break into iterable of group, frame
-        inter_items = []
-        for g in INTERFACE_GROUP_ORDER:
-            inter_sub = inter.loc[inter['group'] == g]
-            if len(inter_sub): # some groups are empty
-                inter_items.append((g, inter_sub))
-        post['interface'][target.__name__] = (
-                target.__name__,
-                target,
-                inter_items,
-                )
+        post['interface'][cls.__name__] = {}
+
+        groups = []
+        for ig in INTERFACE_GROUP_ORDER:
+            ig_tag = ig.replace('-', '_').replace(' ', '_').lower()
+            inter_sub = inter.loc[inter['group'] == ig]
+            if len(inter_sub) == 0: # skip empty groups
+                continue
+            post['interface'][cls.__name__][ig_tag] = (
+                    cls.__name__,
+                    ig,
+                    ig_tag,
+                    inter_sub,
+                    )
+            groups.append((ig, ig_tag))
+
+        post['toc'][cls.__name__] = tuple(groups)
+
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}
@@ -146,7 +160,7 @@ extensions = [
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
         'sphinxcontrib.napoleon',
-        'sphinxcontrib.jinja',
+        'sphinx_jinja',
         ]
 
 
@@ -218,18 +232,34 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd:
-    html_theme = 'default'
-else:
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# on_rtd = os.environ.get('READTHEDOCS') == 'True'
+# if on_rtd:
+#     html_theme = 'default'
+# else:
+#     import sphinx_rtd_theme
+#     html_theme = 'sphinx_rtd_theme'
+#     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+import sphinx_rtd_theme
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+
+html_theme_options = {
+    'logo_only': True,
+    'display_version': False,
+    'prev_next_buttons_location': 'both',
+    'style_nav_header_background': '#343131',
+    'collapse_navigation': True,
+    'sticky_navigation': False,
+    'navigation_depth': 4,
+    'includehidden': False,
+    'titles_only': False
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -243,7 +273,7 @@ else:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = '../images/sf-logo-web_icon-small.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -366,3 +396,6 @@ texinfo_documents: tp.List[tp.Tuple[str, str, str, str, str, str, str]] = []
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+autodoc_typehints = 'none'

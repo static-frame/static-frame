@@ -1,44 +1,42 @@
-from collections import OrderedDict
-from io import StringIO
-import string
-import pickle
-import datetime
-import typing as tp
-from enum import Enum
 import copy
+import datetime
+import pickle
 import re
+import string
+import typing as tp
+from collections import OrderedDict
+from enum import Enum
+from io import StringIO
 
 import numpy as np
 
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
-
 import static_frame as sf
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import Series
+from static_frame import DisplayConfig
+from static_frame import FillValueAuto
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import FrameHE
-from static_frame import mloc
-from static_frame import DisplayConfig
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexDate
-from static_frame import IndexSecond
-from static_frame import IndexYearMonth
-from static_frame import IndexYear
-from static_frame import IndexAutoFactory
-from static_frame import IndexDefaultFactory
-from static_frame import FillValueAuto
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import isna_array
-
 from static_frame import HLoc
 from static_frame import ILoc
-
+from static_frame import Index
+from static_frame import IndexAutoFactory
+from static_frame import IndexDate
+from static_frame import IndexDefaultFactory
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
+from static_frame import IndexYear
+from static_frame import IndexYearMonth
+from static_frame import Series
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import isna_array
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 
@@ -123,7 +121,7 @@ class TestUnit(TestCase):
             s1 = Series(range(4), own_index=True, index=None)
 
     def test_series_init_h(self) -> None:
-        s1 = Series(range(4), index_constructor=IndexSecond)
+        s1 = Series(range(4), index=np.arange(4), index_constructor=IndexSecond)
         self.assertEqual(s1.to_pairs(),
             ((np.datetime64('1970-01-01T00:00:00'), 0),
             (np.datetime64('1970-01-01T00:00:01'), 1),
@@ -640,16 +638,12 @@ class TestUnit(TestCase):
     def test_series_binary_operator_v(self) -> None:
         s1 = Series((2, 5, 10), index=list('abc'))
 
-        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) > s1).equals(5 > s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) < s1).equals(5 < s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) == s1).equals(5 == s1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) != s1).equals(5 != s1)) #pylint: disable=C0122
-
-
-
-        # import ipdb; ipdb.set_trace()
+        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1))
+        self.assertTrue((np.int64(5) > s1).equals(5 > s1))
+        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1))
+        self.assertTrue((np.int64(5) < s1).equals(5 < s1))
+        self.assertTrue((np.int64(5) == s1).equals(5 == s1))
+        self.assertTrue((np.int64(5) != s1).equals(5 != s1))
 
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
@@ -801,13 +795,13 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index)))
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)]))
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
@@ -824,13 +818,13 @@ class TestUnit(TestCase):
                 dt(2021,1,31),
                 )))
 
-        s2 = s1.reindex(IndexDate(reversed(s1.index))) #type: ignore
+        s2 = s1.reindex(IndexDate(reversed(s1.index)))
         self.assertEqual(s2.to_pairs(),
                 ((dt(2021, 1, 31), 1),
                 (dt(2021, 1, 15), 0),
                 (dt(2020, 12, 31), 3)))
 
-        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)])) #type: ignore
+        s3 = s1.reindex(IndexDate([dt64(d) for d in reversed(s1.index)]))
         self.assertEqual(s3.to_pairs(),
                 ((dt64('2021-01-31'), 1),
                 (dt64('2021-01-15'), 0),
@@ -1494,7 +1488,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # should raise with bad keyword argumenty
-            s2.median(skip_na=False)
+            s2.median(skip_na=False) # pylint: disable=E1123
 
     #---------------------------------------------------------------------------
 
@@ -1774,17 +1768,6 @@ class TestUnit(TestCase):
                 s1.iter_group_items().apply(lambda g, s: (g * s).values.tolist()).to_pairs(),
                 ((10, [100, 100, 100]), (20, [400, 400])))
 
-    def test_series_group_d(self) -> None:
-        from static_frame import SeriesHE
-        s1 = SeriesHE((10, 10, 10, 20, 20),
-                index=('a', 'b', 'c', 'd', 'e'),
-                )
-        mapping = {s1.iloc[:3]: 100}
-        groups = s1.iter_group().map_fill(mapping, fill_value=None)
-        self.assertEqual(groups.to_pairs(),
-                ((10, 100), (20, None)),
-                )
-
     #---------------------------------------------------------------------------
     def test_series_group_array_c(self) -> None:
 
@@ -2028,6 +2011,18 @@ class TestUnit(TestCase):
         mapping = {('b', 3): 300, ('d', 21): 200}
         post = tuple(s1.iter_element_items().map_fill_iter(mapping, fill_value=None))
         self.assertEqual(post, (None, 300, None, 200, None))
+
+    def test_series_iter_element_map_fill_e(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = s1.iter_element_items().map_fill({('d', 21): -1}, fill_value=0)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', 0), ('c', 0), ('d', -1), ('e', 0))
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -2901,7 +2896,6 @@ class TestUnit(TestCase):
                 np.dtype('float64')
                 )
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.shift(4, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', 2), ('f', 3))
                 )
@@ -3009,7 +3003,7 @@ class TestUnit(TestCase):
 
         with temp_file('.html', path=True) as fp:
             s1.to_html_datatables(fp, show=False)
-            with open(fp) as file:
+            with open(fp, encoding='utf-8') as file:
                 data = file.read()
                 self.assertTrue('SFTable' in data)
                 self.assertTrue(len(data) > 800)
@@ -3081,8 +3075,8 @@ class TestUnit(TestCase):
                 index=IndexAutoFactory,
                 columns=IndexAutoFactory,
                 )
-        self.assertTrue(f1.index._map is None)
-        self.assertTrue(f1.columns._map is None)
+        self.assertTrue(f1.index._map is None) # type: ignore
+        self.assertTrue(f1.columns._map is None) # type: ignore
 
     def test_series_to_frame_f(self) -> None:
         s1 = Series((2, 3), index=list('ab'), name='alt')
@@ -3118,6 +3112,12 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 ((0, ((0, 2),)), (1, ((0, 3),)))
                 )
+
+    def test_series_to_frame_j(self) -> None:
+        s1 = Series((2, 3), index=list('ab'))
+        with self.assertRaises(InvalidDatetime64Initializer):
+            # RuntimeError: Attempting to create IndexDate from an IndexAutoFactory, which is generally not desired as the result will be an offset from the epoch.
+            f1 = s1.to_frame(columns_constructor=IndexDate)
 
     #---------------------------------------------------------------------------
 
@@ -3393,7 +3393,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.iloc_searchsorted(87), 2)
         self.assertEqual(s1.iloc_searchsorted(87, side_left=False), 3)
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(s1.iloc_searchsorted([0, 123]).tolist(), [0, 3])
         self.assertEqual(s1.iloc_searchsorted([0, 6]).tolist(), [0, 1])
         self.assertEqual(s1.iloc_searchsorted([3, 8234]).tolist(), [0, 6])
@@ -4044,6 +4043,13 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'c'), (2, 'd'))
                 )
 
+    def test_series_str_contains_a(self) -> None:
+        s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
+        s2 = s1.via_str.contains('cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'True'), (1, 'True'), (2, 'False'))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_year_a(self) -> None:
@@ -4381,6 +4387,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [datetime.date(2014, 12, 2),
                 datetime.date(2013, 11, 28)])
+
+    #---------------------------------------------------------------------------
+    def test_series_via_values_a(self) -> None:
+        s1 = Series((10, 20), index=('x', 'y'))
+        s2 = s1.via_values.apply(lambda v: v * 2)
+        self.assertEqual(s2.values.tolist(), [20, 40])
+        self.assertEqual(np.sum(s1.values), 30)
+
+    def test_series_via_values_b(self) -> None:
+        s1 = Series((0, 20), index=('x', 'y'))
+        s2 = s1.via_values(dtype=str).apply(np.sort)
+        self.assertEqual(s2.to_pairs(),
+                (('x', '0'), ('y', '20')))
 
     #---------------------------------------------------------------------------
 
@@ -5016,6 +5035,14 @@ class TestUnit(TestCase):
         self.assertEqual(s3.to_pairs(),
                 (('a', 0), ('b', 2), ('c', 4), ('d', 3), ('e', 4))
                 )
+
+    def test_series_via_fill_value_j(self) -> None:
+
+        s1 = Series(range(3), index=tuple('abc'))
+        s2 = Series(range(5), index=tuple('abcde'))
+
+        with self.assertRaises(NotImplementedError):
+            s2.via_fill_value(0).via_T * s2
 
     #---------------------------------------------------------------------------
 

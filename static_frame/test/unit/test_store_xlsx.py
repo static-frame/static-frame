@@ -10,8 +10,8 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):
