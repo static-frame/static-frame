@@ -1258,7 +1258,7 @@ class IndexHierarchy(IndexBase):
                 or func is self.__class__._UFUNC_UNION
             ):
                 # NOTE: this will delegate name attr
-                return self if self.STATIC else self.copy()
+                return self if self.STATIC else self.__deepcopy__({})
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # we will no longer have type associations per depth
                 return self._from_empty((), depth_reference=self.depth)
@@ -1918,13 +1918,19 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         if key is None:
-            return self
+            return self if self.STATIC else self.__deepcopy__({})
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
             return tuple(self._blocks.iter_row_elements(key))
 
         tb = self._blocks._extract(row_key=key)
+        if len(tb) == 0:
+            return self.__class__._from_empty((),
+                    name=self._name,
+                    depth_reference=tb.shape[1],
+                    index_constructors=self._index_constructors,
+                    )
 
         new_indices: tp.List[Index] = []
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
@@ -1944,7 +1950,7 @@ class IndexHierarchy(IndexBase):
         return self.__class__(
                 indices=new_indices,
                 indexers=new_indexers,
-                name=self.name,
+                name=self._name,
                 blocks=tb,
                 own_blocks=True,
                 )
