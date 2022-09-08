@@ -901,6 +901,17 @@ class TestUnit(TestCase):
         self.assertTrue(post.equals(ih1)) # type: ignore
         self.assertIs(post, ih1)
 
+    def test_hierarchy_extract_iloc_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_labels((('a', 'a'), ('b','b')))
+        ih2 = ih1[None]
+        ih2.append(('c', 'c')) #type: ignore
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 'a'], ['b', 'b']])
+
+        self.assertEqual(ih2.values.tolist(), #type: ignore
+                [['a', 'a'], ['b', 'b'], ['c', 'c']])
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_getitem_astype_a(self) -> None:
@@ -3390,6 +3401,11 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.sort(ascending=(False, True, False)).values.tolist(),
             [['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x']]
             )
+
+    def test_hierarchy_sort_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels((), depth_reference=2)
+        ih2 = ih1.sort()
+        self.assertEqual(ih1.shape, ih2.shape)
 
     #---------------------------------------------------------------------------
     def test_hierarchy_isin_a(self) -> None:
