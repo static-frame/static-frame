@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+0.9.14
+----------
+
+Corrected issues with selection on zero-sized ``IndexHierarchy``.
+
+
 0.9.13
 ----------
 
