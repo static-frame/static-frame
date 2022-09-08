@@ -381,7 +381,7 @@ def index_from_optional_constructor(
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
-                default_constructor=default_constructor, #type: ignore
+                default_constructor=default_constructor,
                 explicit_constructor=explicit_constructor,
                 )
 
