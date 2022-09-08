@@ -239,123 +239,123 @@ def join(frame: 'Frame',
 
 
 
-# def join_sort(left: 'Frame',
-#         right: 'Frame', # support a named Series as a 1D frame?
-#         *,
-#         # join_type: Join, # intersect, left, right, union,
-#         left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         left_columns: GetItemKeyType = None,
-#         right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         right_columns: GetItemKeyType = None,
-#         left_template: str = '{}',
-#         right_template: str = '{}',
-#         fill_value: tp.Any = np.nan,
-#         composite_index: bool = True,
-#         composite_index_fill_value: tp.Hashable = None,
-#         ) -> 'Frame':
+def join_sort(left: 'Frame',
+        right: 'Frame', # support a named Series as a 1D frame?
+        *,
+        # join_type: Join, # intersect, left, right, union,
+        left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        left_columns: GetItemKeyType = None,
+        right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        right_columns: GetItemKeyType = None,
+        left_template: str = '{}',
+        right_template: str = '{}',
+        fill_value: tp.Any = np.nan,
+        composite_index: bool = True,
+        composite_index_fill_value: tp.Hashable = None,
+        ) -> 'Frame':
 
-#     from static_frame.core.frame import Frame
+    from static_frame.core.frame import Frame
 
-#     if is_fill_value_factory_initializer(fill_value):
-#         raise InvalidFillValue(fill_value, 'join')
+    if is_fill_value_factory_initializer(fill_value):
+        raise InvalidFillValue(fill_value, 'join')
 
-#     left_index = left.index
-#     right_index = right.index
+    left_index = left.index
+    right_index = right.index
 
-#     # NOTE: creating a new TypeBlocks instance as we might be combining index and normal columns; keep TypeBlocks for sorting;
-#     # NOTE: might optimize for single-arrays, operating only an array
-#     l_targets = TypeBlocks.from_blocks(
-#             arrays_from_index_frame(left, left_depth_level, left_columns))
-#     r_targets = TypeBlocks.from_blocks(
-#             arrays_from_index_frame(right, right_depth_level, right_columns))
+    # NOTE: creating a new TypeBlocks instance as we might be combining index and normal columns; keep TypeBlocks for sorting;
+    # NOTE: might optimize for single-arrays, operating only an array
+    l_targets = TypeBlocks.from_blocks(
+            arrays_from_index_frame(left, left_depth_level, left_columns))
+    r_targets = TypeBlocks.from_blocks(
+            arrays_from_index_frame(right, right_depth_level, right_columns))
 
-#     if l_targets.shape[1] != r_targets.shape[1]:
-#         raise RuntimeError('left and right selections must be the same width.')
-#     target_depth = l_targets.shape[1]
+    if l_targets.shape[1] != r_targets.shape[1]:
+        raise RuntimeError('left and right selections must be the same width.')
+    target_depth = l_targets.shape[1]
 
-#     l_target_sorted, l_order = l_targets.sort(1, key=NULL_SLICE)
-#     r_target_sorted, r_order = r_targets.sort(1, key=NULL_SLICE)
-#     l_blocks_sorted = left._blocks._extract(l_order)
-#     r_blocks_sorted = right._blocks._extract(r_order)
+    l_target_sorted, l_order = l_targets.sort(1, key=NULL_SLICE)
+    r_target_sorted, r_order = r_targets.sort(1, key=NULL_SLICE)
+    l_blocks_sorted = left._blocks._extract(l_order)
+    r_blocks_sorted = right._blocks._extract(r_order)
 
-#     get_col_fill_value = lambda i, dtype: FILL_VALUE_AUTO_DEFAULT[dtype]
-#     l_shifted = TypeBlocks.from_blocks(
-#             l_target_sorted._shift_blocks_fill_by_callable(
-#             row_shift=1,
-#             column_shift=0,
-#             wrap=False,
-#             get_col_fill_value=get_col_fill_value
-#             ))
+    get_col_fill_value = lambda i, dtype: FILL_VALUE_AUTO_DEFAULT[dtype]
+    l_shifted = TypeBlocks.from_blocks(
+            l_target_sorted._shift_blocks_fill_by_callable(
+            row_shift=1,
+            column_shift=0,
+            wrap=False,
+            get_col_fill_value=get_col_fill_value
+            ))
 
-#     r_shifted = TypeBlocks.from_blocks(
-#             r_target_sorted._shift_blocks_fill_by_callable(
-#             row_shift=1,
-#             column_shift=0,
-#             wrap=False,
-#             get_col_fill_value=get_col_fill_value
-#             ))
+    r_shifted = TypeBlocks.from_blocks(
+            r_target_sorted._shift_blocks_fill_by_callable(
+            row_shift=1,
+            column_shift=0,
+            wrap=False,
+            get_col_fill_value=get_col_fill_value
+            ))
 
-#     # ignore first comparison because it was filled
-#     l_tt = (l_target_sorted != l_shifted).values.any(axis=1)
-#     l_tt[0] = False
-#     l_transitions = np.flatnonzero(l_tt)
+    # ignore first comparison because it was filled
+    l_tt = (l_target_sorted != l_shifted).values.any(axis=1)
+    l_tt[0] = False
+    l_transitions = np.flatnonzero(l_tt)
 
-#     r_tt = (r_target_sorted != r_shifted).values.any(axis=1)
-#     r_tt[0] = False
-#     r_transitions = np.flatnonzero(r_tt)
+    r_tt = (r_target_sorted != r_shifted).values.any(axis=1)
+    r_tt[0] = False
+    r_transitions = np.flatnonzero(r_tt)
 
-#     # not sure if we need this...
-#     # l_unique = set((0,))
-#     # l_unique.update(l_transitions)
-#     def get_slices(
-#             transitions: np.ndarray,
-#             targets: TypeBlocks
-#             ) -> tp.Tuple[tp.List[tp.Tuple[tp.Tuple[tp.Any, ...], slice]], bool]:
-#         slices = [] # maybe a dictionary?
-#         multi = False
-#         start = 0
-#         for t in transitions:
-#             slc = slice(start, t)
-#             if multi is False and t - start > 1:
-#                 multi = True
-#             slices.append((tuple(targets.iter_row_elements(start)), slc))
-#             # can determine if any is more than 1
-#             start = t
+    # not sure if we need this...
+    # l_unique = set((0,))
+    # l_unique.update(l_transitions)
+    def get_slices(
+            transitions: np.ndarray,
+            targets: TypeBlocks
+            ) -> tp.Tuple[tp.List[tp.Tuple[tp.Tuple[tp.Any, ...], slice]], bool]:
+        slices = [] # maybe a dictionary?
+        multi = False
+        start = 0
+        for t in transitions:
+            slc = slice(start, t)
+            if multi is False and t - start > 1:
+                multi = True
+            slices.append((tuple(targets.iter_row_elements(start)), slc))
+            # can determine if any is more than 1
+            start = t
 
-#         slc = slice(start, len(targets))
-#         if multi is False and t - start > 1:
-#             multi = True
-#         slices.append((tuple(targets.iter_row_elements(start)), slc))
+        slc = slice(start, len(targets))
+        if multi is False and t - start > 1:
+            multi = True
+        slices.append((tuple(targets.iter_row_elements(start)), slc))
 
-#         return slices, multi
+        return slices, multi
 
-#     # NOTE: while getting slices we can find out if either left/right has a target with more than one row; this indicates a many situation
-#     l_slices, l_multi = get_slices(l_transitions, l_target_sorted)
-#     r_slices, r_multi = get_slices(r_transitions, r_target_sorted)
-#     r_slices_iter = iter(r_slices)
+    # NOTE: while getting slices we can find out if either left/right has a target with more than one row; this indicates a many situation
+    l_slices, l_multi = get_slices(l_transitions, l_target_sorted)
+    r_slices, r_multi = get_slices(r_transitions, r_target_sorted)
+    r_slices_iter = iter(r_slices)
 
-#     for l_target, l_slice in l_slices:
-#         if target_depth == 1:
-#             target = l_target[0]
-#         else:
-#             raise NotImplementedError()
+    for l_target, l_slice in l_slices:
+        if target_depth == 1:
+            target = l_target[0]
+        else:
+            raise NotImplementedError()
 
-#         l_sel = l_blocks_sorted._extract(l_slice)
+        l_sel = l_blocks_sorted._extract(l_slice)
 
-#         match = False
-#         for r_target, r_slice in r_slices_iter:
-#             if l_target == r_target:
-#                 match = True
-#                 break
+        match = False
+        for r_target, r_slice in r_slices_iter:
+            if l_target == r_target:
+                match = True
+                break
 
-#         if match:
-#             # for every col on the left, match one or more on the right
-#             pass
+        if match:
+            # for every col on the left, match one or more on the right
+            pass
 
-#         # import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
-#     return Frame() # temp
+    return Frame() # temp
 
 
 
