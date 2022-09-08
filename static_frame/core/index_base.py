@@ -24,6 +24,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import IndexConstructor
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

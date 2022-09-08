@@ -2457,7 +2457,7 @@ class Frame(ContainerOperand):
                 )
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def gen() -> tp.Iterator[np.ndarray]:
             pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
@@ -2499,9 +2499,9 @@ class Frame(ContainerOperand):
         if value.size == 0:
             blocks = TypeBlocks.from_zero_size_shape(value.shape, get_col_dtype)
         elif consolidate_blocks:
-            blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+            blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(gen()))
         else:
-            blocks = TypeBlocks.from_blocks(blocks())
+            blocks = TypeBlocks.from_blocks(gen())
 
         if name is not NAME_DEFAULT:
             pass # keep
@@ -2625,7 +2625,7 @@ class Frame(ContainerOperand):
 
                 if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
-                    columns_labels.append(name)
+                    columns_labels.append(name) # type: ignore
 
                 yield array_final
 
@@ -2665,7 +2665,7 @@ class Frame(ContainerOperand):
                 )
 
         if index_depth == 1:
-            index_values = index_arrays[0]
+            index_values = index_arrays[0] # type: ignore
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
             index_values = index_arrays
@@ -2736,7 +2736,7 @@ class Frame(ContainerOperand):
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
-        fp = path_filter(fp)
+        fp: str = path_filter(fp) # type: ignore
 
         if columns_select is not None and not isinstance(columns_select, list):
             columns_select = list(columns_select)
@@ -2752,7 +2752,7 @@ class Frame(ContainerOperand):
                 missing = set(columns_select) - set(table.column_names)
                 raise ErrorInitFrame(f'cannot load all columns in columns_select: missing {missing}')
 
-        return cls.from_arrow(table,
+        return cls.from_arrow(table, # type: ignore
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 index_constructors=index_constructors,
@@ -2836,7 +2836,7 @@ class Frame(ContainerOperand):
         unpackb = partial(msgpack.unpackb, object_hook=decode)
         element_decode = partial(MessagePackElement.decode, unpackb=unpackb)
 
-        return unpackb(msgpack_data)
+        return unpackb(msgpack_data) # type: ignore
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Frame')
@@ -2876,13 +2876,13 @@ class Frame(ContainerOperand):
 
         if data.__class__ is TypeBlocks: # PERF: no sublcasses supported
             if own_data:
-                self._blocks = data
+                self._blocks = data # type: ignore
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
-                self._blocks = TypeBlocks.from_blocks(data._blocks)
+                self._blocks = TypeBlocks.from_blocks(data._blocks) # type: ignore
         elif data.__class__ is np.ndarray:
             if own_data:
-                data.flags.writeable = False
+                data.flags.writeable = False # type: ignore
             # from_blocks will apply immutable filter
             self._blocks = TypeBlocks.from_blocks(data)
         elif data is FRAME_INITIALIZER_DEFAULT:
@@ -2922,7 +2922,7 @@ class Frame(ContainerOperand):
         # columns assignment
 
         if own_columns:
-            self._columns = columns
+            self._columns = columns # type: ignore
             col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
@@ -2945,7 +2945,7 @@ class Frame(ContainerOperand):
         # index assignment
 
         if own_index:
-            self._index = index
+            self._index = index # type: ignore
             row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
@@ -3055,14 +3055,14 @@ class Frame(ContainerOperand):
 
     @property
     def drop(self) -> InterfaceSelectTrio['Frame']:
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore # NOTE: does not reuturn Frame, but a delegate
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
     def mask(self) -> InterfaceSelectTrio['Frame']:
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore # NOTE: does not return Frame, but a delegate
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
@@ -3074,9 +3074,10 @@ class Frame(ContainerOperand):
             func_loc=self._extract_loc_masked_array,
             func_getitem=self._extract_getitem_masked_array)
 
+    # NOTE: the typing needs work as it does not return `Frame`, but FrameAssignILoc
     @property
     def assign(self) -> InterfaceAssignQuartet['Frame']:
-        return InterfaceAssignQuartet(
+        return InterfaceAssignQuartet( # type: ignore
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
             func_getitem=self._extract_getitem_assign,
@@ -3534,7 +3535,7 @@ class Frame(ContainerOperand):
             raise RuntimeError(('cannot assign '
                     + value.__class__.__name__
                     + ' with key configuration'), (nm_row, nm_column))
-        return v
+        return v # type: ignore
 
     @doc_inject(selector='reindex', class_name='Frame')
     def reindex(self,
