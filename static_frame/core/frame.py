@@ -183,7 +183,7 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
     import pyarrow  # pylint: disable=W0611 #pragma: no cover
-    from xarray import Dataset  #type: ignore # pylint: disable=W0611 #pragma: no cover
+    from xarray import Dataset  # type: ignore # pylint: disable=W0611 #pragma: no cover
 
 
 class Frame(ContainerOperand):

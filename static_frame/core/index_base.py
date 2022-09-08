@@ -19,12 +19,12 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import IndexConstructor
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
