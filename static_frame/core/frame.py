@@ -6704,7 +6704,6 @@ class Frame(ContainerOperand):
     def corr(self,
             *,
             axis: int = 1,
-            dtype: tp.Optional[DtypeSpecifier] = None,
             ) -> 'Frame':
         '''Compute a correlation matrix.
 
@@ -6723,7 +6722,7 @@ class Frame(ContainerOperand):
             own_index = self.STATIC
             own_columns = self.STATIC
 
-        values = np.corrcoef(self.values, rowvar=rowvar, dtype=dtype)
+        values = np.corrcoef(self.values, rowvar=rowvar)
         values.flags.writeable = False
 
         return self.__class__(values,

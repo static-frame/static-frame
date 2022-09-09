@@ -1658,7 +1658,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def corr(self, *,
             axis: int = 1,
-            dtype: tp.Optional[DtypeSpecifier] = None,
             ) -> 'Batch':
         '''
         Compute a correlation matrix.
@@ -1670,7 +1669,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
                 attr='corr',
                 axis=axis,
-                dtype=dtype,
                 )
 
     #---------------------------------------------------------------------------

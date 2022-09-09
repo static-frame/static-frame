@@ -3389,7 +3389,7 @@ class TestUnit(TestCase):
 
         s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
         s2 = Series((145, 234, 3, 8234, 87, 543, 3), index=tuple('abcdefg'))
-        self.assertAlmostEqualArray(s1.corr(s2).round(6), -0.191699)
+        self.assertAlmostEqualArray(round(s1.corr(s2), 6), -0.191699)
 
 
     #---------------------------------------------------------------------------

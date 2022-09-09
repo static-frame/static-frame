@@ -2660,8 +2660,6 @@ class Series(ContainerOperand):
 
     def corr(self,
             other: tp.Union['Series', np.ndarray],
-            *,
-            dtype: DtypeSpecifier = None,
             ) -> float:
         '''
         Return the index-aligned correlation to the supplied :obj:`Series`.
@@ -2672,7 +2670,7 @@ class Series(ContainerOperand):
         if isinstance(other, Series):
             other = other.loc[self._index].values
         # by convention, we return just the corner
-        return np.corrcoef(self.values, other, dtype=dtype)[0, -1] #type: ignore [no-any-return]
+        return np.corrcoef(self.values, other)[0, -1] #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
 
