@@ -2655,9 +2655,22 @@ class Series(ContainerOperand):
         '''
         if isinstance(other, Series):
             other = other.loc[self._index].values
-
         # by convention, we return just the corner
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
+
+    def corr(self,
+            other: tp.Union['Series', np.ndarray],
+            ) -> float:
+        '''
+        Return the index-aligned correlation to the supplied :obj:`Series`.
+
+        Args:
+            other: Series to be correlated with by selection on corresponding labels.
+        '''
+        if isinstance(other, Series):
+            other = other.loc[self._index].values
+        # by convention, we return just the corner
+        return np.corrcoef(self.values, other)[0, -1] #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
 

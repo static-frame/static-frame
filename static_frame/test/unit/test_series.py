@@ -3385,6 +3385,15 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_series_corr_a(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = Series((145, 234, 3, 8234, 87, 543, 3), index=tuple('abcdefg'))
+        self.assertAlmostEqualArray(round(s1.corr(s2), 6), -0.191699)
+
+
+    #---------------------------------------------------------------------------
+
     def test_series_iloc_searchsorted(self) -> None:
         s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
         self.assertEqual(s1.iloc_searchsorted(88), 3)
