@@ -3075,8 +3075,8 @@ class TestUnit(TestCase):
                 index=IndexAutoFactory,
                 columns=IndexAutoFactory,
                 )
-        self.assertTrue(f1.index._map is None)
-        self.assertTrue(f1.columns._map is None)
+        self.assertTrue(f1.index._map is None) # type: ignore
+        self.assertTrue(f1.columns._map is None) # type: ignore
 
     def test_series_to_frame_f(self) -> None:
         s1 = Series((2, 3), index=list('ab'), name='alt')
@@ -3382,6 +3382,15 @@ class TestUnit(TestCase):
         s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
         s2 = np.array([3, 34, 87, 145, 234, 543, 8234])
         self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+    #---------------------------------------------------------------------------
+
+    def test_series_corr_a(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = Series((145, 234, 3, 8234, 87, 543, 3), index=tuple('abcdefg'))
+        self.assertAlmostEqualArray(round(s1.corr(s2), 6), -0.191699)
+
 
     #---------------------------------------------------------------------------
 

@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+0.9.14
+----------
+
+Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr``.
+
+Corrected issue with selection on zero-sized ``IndexHierarchy``.
+
+
 0.9.13
 ----------
 

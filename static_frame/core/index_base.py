@@ -19,6 +19,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
@@ -255,7 +256,11 @@ class IndexBase(ContainerOperand):
             ) -> tp.Tuple[I, np.ndarray]:
         raise NotImplementedError() #pragma: no cover
 
-    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self,
+            level: tp.Hashable,
+            *,
+            index_constructor: IndexConstructor = None,
+            ) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self,

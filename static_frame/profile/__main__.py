@@ -966,6 +966,42 @@ class Pivot_R(Pivot, Reference):
 
 
 #-------------------------------------------------------------------------------
+class JoinLeft(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = ff.parse('s(1000,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = ff.parse('s(20,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.pdf_right = self.sff_right.to_pandas()
+
+        # NOTE: SF returns a composite index of tuples; Pandas just returns a auto index
+        from static_frame.core.join import join
+        self.meta = {
+            'basic': FunctionMetaData(
+                line_target=join,
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            }
+
+class JoinLeft_N(JoinLeft, Native):
+
+    def basic(self) -> None:
+        post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
+        assert post.shape == (5046, 7)
+
+class JoinLeft_R(JoinLeft, Reference):
+
+    def basic(self) -> None:
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
+        assert post.shape == (5046, 7)
+
+
+
+#-------------------------------------------------------------------------------
 class BusItemsZipPickle(PerfPrivate):
     NUMBER = 1
 

@@ -534,7 +534,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
         else: # an iterable of labels, or an index subclass
-            self._index = index_from_optional_constructor(index, #type: ignore
+            self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
@@ -2655,9 +2655,22 @@ class Series(ContainerOperand):
         '''
         if isinstance(other, Series):
             other = other.loc[self._index].values
-
         # by convention, we return just the corner
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
+
+    def corr(self,
+            other: tp.Union['Series', np.ndarray],
+            ) -> float:
+        '''
+        Return the index-aligned correlation to the supplied :obj:`Series`.
+
+        Args:
+            other: Series to be correlated with by selection on corresponding labels.
+        '''
+        if isinstance(other, Series):
+            other = other.loc[self._index].values
+        # by convention, we return just the corner
+        return np.corrcoef(self.values, other)[0, -1] #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
 
