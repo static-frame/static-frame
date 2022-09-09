@@ -1656,6 +1656,22 @@ class Batch(ContainerOperand, StoreClientMixin):
                 ddof=ddof,
                 )
 
+    def corr(self, *,
+            axis: int = 1,
+            dtype: tp.Optional[DtypeSpecifier] = None,
+            ) -> 'Batch':
+        '''
+        Compute a correlation matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            dtype: Set the dtype of the returned values.
+        '''
+        return self._apply_attr(
+                attr='corr',
+                axis=axis,
+                dtype=dtype,
+                )
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

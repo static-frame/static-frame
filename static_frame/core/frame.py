@@ -6706,7 +6706,7 @@ class Frame(ContainerOperand):
             axis: int = 1,
             dtype: tp.Optional[DtypeSpecifier] = None,
             ) -> 'Frame':
-        '''Compute a covariance matrix.
+        '''Compute a correlation matrix.
 
         Args:
             axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
