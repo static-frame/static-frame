@@ -13,6 +13,7 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
+from sys import getsizeof
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -3005,6 +3006,18 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
+
+    def __sizeof__(self: 'Frame') -> int:
+        # TODO: Check if we need to count weakref
+        # TODO: Make sure these don't have duplicates
+        # TODO: Consider skipping counting arrays used in multiple nested objects
+        return sum(getsizeof(o) for o in [
+            self.__weakref__,
+            self._blocks,
+            self._columns,
+            self._index,
+            self._name
+        ])
 
     #---------------------------------------------------------------------------
     # name interface

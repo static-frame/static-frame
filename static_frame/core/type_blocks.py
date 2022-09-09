@@ -3,6 +3,7 @@ from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import zip_longest
+from sys import getsizeof
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -530,6 +531,17 @@ class TypeBlocks(ContainerOperand):
         Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
         '''
         return self.__copy__()
+
+    def __sizeof__(self: 'TypeBlocks') -> int:
+        # TODO: Make sure these don't have duplicates
+        return sum(getsizeof(o) for o in [
+            self._blocks,
+            *self._blocks,
+            self._dtypes,
+            self._index,
+            self._shape,
+            self._row_dtype
+        ])
 
     #---------------------------------------------------------------------------
     # new properties

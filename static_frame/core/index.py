@@ -2,6 +2,7 @@ import typing as tp
 from collections import Counter
 from copy import deepcopy
 from itertools import zip_longest
+from sys import getsizeof
 
 import numpy as np
 from arraykit import immutable_filter
@@ -381,6 +382,16 @@ class Index(IndexBase):
         Return shallow copy of this Index.
         '''
         return self.__copy__() #type: ignore
+
+    def __sizeof__(self: I) -> I:
+        # TODO: Could labels and positions be is-equal?
+        return sum(getsizeof(o) for o in (
+            self._map,
+            self.labels,
+            self.positions,
+            self.recache,
+            self.name
+        ))
 
     #---------------------------------------------------------------------------
     # name interface

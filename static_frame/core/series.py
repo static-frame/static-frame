@@ -4,6 +4,7 @@ from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import product
+from sys import getsizeof
 
 import numpy as np
 from arraykit import immutable_filter
@@ -586,6 +587,13 @@ class Series(ContainerOperand):
     #             name=self._name,
     #             own_index=True,
     #             )
+
+    def __sizeof__(self: 'Series') -> int:
+        return sum(getsizeof(o) for o in (
+            self.values,
+            self._index,
+            self._name
+        ))
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
