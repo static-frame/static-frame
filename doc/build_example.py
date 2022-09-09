@@ -691,8 +691,11 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_G)})'
             yield f"s.{attr_func}(skipna=True)"
             yield f"s.{attr_func}(unique=True)"
-
         elif attr in ('cov()',):
+            yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s1.{attr_func}(s2)"
+        elif attr in ('corr()',):
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s1.{attr_func}(s2)"
@@ -4414,7 +4417,7 @@ class ExGenBatch(ExGen):
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(skipna=True).to_frame()"
             yield f"bt.{attr_func}(unique=True).to_frame()"
-        elif attr in ('cov()', 'cumprod()', 'cumsum()'):
+        elif attr in ('cov()', 'corr()', 'cumprod()', 'cumsum()'):
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f"bt.{attr_func}().to_frame()"
         elif attr in (
