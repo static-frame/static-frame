@@ -6667,7 +6667,8 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
-    def cov(self, *,
+    def cov(self,
+            *,
             axis: int = 1,
             ddof: int = 1,
             ) -> 'Frame':
@@ -6709,6 +6710,7 @@ class Frame(ContainerOperand):
 
         Args:
             axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            dtype: Set the dtype of the returned values.
         '''
         if axis == 0:
             rowvar = True

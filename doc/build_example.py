@@ -1685,6 +1685,9 @@ class ExGenFrame(ExGen):
         elif attr in ('cov()',):
             yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
             yield f"f1.{attr_func}()"
+        elif attr in ('corr()',):
+            yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
+            yield f"f1.{attr_func}()"
         elif attr in (
                 'drop_duplicated()',
                 'dropna()',
