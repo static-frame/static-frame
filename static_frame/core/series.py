@@ -4,7 +4,6 @@ from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import product
-from sys import getsizeof
 
 import numpy as np
 from arraykit import immutable_filter
@@ -105,6 +104,7 @@ from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
 
@@ -589,11 +589,11 @@ class Series(ContainerOperand):
     #             )
 
     def __sizeof__(self: 'Series') -> int:
-        return sum(getsizeof(o) for o in (
+        return total_getsizeof([
             self.values,
             self._index,
             self._name
-        ))
+        ])
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:

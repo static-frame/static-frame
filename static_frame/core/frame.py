@@ -13,7 +13,6 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
-from sys import getsizeof
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -175,6 +174,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_normalize
 from static_frame.core.util import path_filter
+from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -3008,11 +3008,8 @@ class Frame(ContainerOperand):
     #     return self.__copy__() #type: ignore
 
     def __sizeof__(self: 'Frame') -> int:
-        # TODO: Check if we need to count weakref
-        # TODO: Make sure these don't have duplicates
         # TODO: Consider skipping counting arrays used in multiple nested objects
-        return sum(getsizeof(o) for o in [
-            self.__weakref__,
+        return total_getsizeof([
             self._blocks,
             self._columns,
             self._index,

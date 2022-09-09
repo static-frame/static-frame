@@ -3,11 +3,11 @@ import datetime
 import pickle
 import re
 import string
-import sys
 import typing as tp
 from collections import OrderedDict
 from enum import Enum
 from io import StringIO
+from sys import getsizeof
 
 import numpy as np
 
@@ -5380,12 +5380,12 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillfalsy(Series.from_dict({'c':20, 'b':30})).to_pairs(),
                 (('a', 'a'), ('b', 30), ('c', 20)),
                 )
+    
+    #---------------------------------------------------------------------------
 
     def test_sizeof(self):
-        # TODO: Make sure positionsallocater doesn't cause trouble
-        # if this is run in different orders on different runs
-        #self.assertEqual(s1.__sizeof__(), 0)
-        pass
+        s = Series(('a', 'b', 'c'))
+        self.assertEqual(getsizeof(s), 292)
 
 
 if __name__ == '__main__':

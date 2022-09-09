@@ -17,6 +17,7 @@ from io import StringIO
 from itertools import chain
 from itertools import zip_longest
 from os import PathLike
+from sys import getsizeof
 from types import TracebackType
 from urllib import request
 
@@ -3186,5 +3187,16 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-
-
+def total_getsizeof(iter: tp.Iterable[any]) -> int:
+    '''
+    Gives the total size of an iterable of elements
+    '''
+    total = 0
+    seen = set()
+    for e in iter:
+        if id(e) in seen:
+            continue
+        seen.add(id(e))
+        total += getsizeof(e)
+    return total
+    #return sum(getsizeof(e) for e in iter)

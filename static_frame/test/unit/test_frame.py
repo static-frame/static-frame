@@ -14556,6 +14556,11 @@ class TestUnit(TestCase):
                 (((3, 'z'), 0), ((3, None), 1), ((2, 'z'), 2), ((2, None), 3), ((1, 'z'), 4), ((1, None), 5))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_sizeof_a(self) -> None:
+        f = ff.parse('s(3,4)')
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()

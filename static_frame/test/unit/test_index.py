@@ -4,6 +4,7 @@ import pickle
 import typing as tp
 import unittest
 from io import StringIO
+from sys import getsizeof
 
 import numpy as np
 from arraykit import mloc
@@ -26,6 +27,7 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import total_getsizeof
 from static_frame.test.test_case import TestCase
 
 
@@ -1648,6 +1650,12 @@ class TestUnit(TestCase):
         idx.append('e')
         post = idx.display(DisplayConfig(type_show=False, type_color=False))
         self.assertEqual(str(post), 'a\nb\nc\nd\ne')
+    
+    #---------------------------------------------------------------------------
+    def test_sizeof_a(self):
+        # TODO: Look into determistically finding the size on different platforms / versions of python
+        idx = Index(('a', 'b', 'c'))
+        self.assertEqual(getsizeof(idx), 700)
 
 if __name__ == '__main__':
     unittest.main()

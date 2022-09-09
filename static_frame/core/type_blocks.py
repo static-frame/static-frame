@@ -67,6 +67,7 @@ from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
 
@@ -533,8 +534,7 @@ class TypeBlocks(ContainerOperand):
         return self.__copy__()
 
     def __sizeof__(self: 'TypeBlocks') -> int:
-        # TODO: Make sure these don't have duplicates
-        return sum(getsizeof(o) for o in [
+        return total_getsizeof([
             self._blocks,
             *self._blocks,
             self._dtypes,

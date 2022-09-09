@@ -2,7 +2,6 @@ import typing as tp
 from collections import Counter
 from copy import deepcopy
 from itertools import zip_longest
-from sys import getsizeof
 
 import numpy as np
 from arraykit import immutable_filter
@@ -76,6 +75,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
+from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import union1d
 
@@ -384,14 +384,13 @@ class Index(IndexBase):
         return self.__copy__() #type: ignore
 
     def __sizeof__(self: I) -> I:
-        # TODO: Could labels and positions be is-equal?
-        return sum(getsizeof(o) for o in (
+        return total_getsizeof([
             self._map,
-            self.labels,
-            self.positions,
-            self.recache,
-            self.name
-        ))
+            self._labels,
+            self._positions,
+            self._recache,
+            self._name
+        ])
 
     #---------------------------------------------------------------------------
     # name interface

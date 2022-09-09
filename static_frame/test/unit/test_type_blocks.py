@@ -1,6 +1,7 @@
 import copy
 import pickle
 from itertools import zip_longest
+from sys import getsizeof
 
 import frame_fixtures as ff
 import numpy as np
@@ -4030,6 +4031,12 @@ class TestUnit(TestCase):
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
+    
+    #---------------------------------------------------------------------------
+    def test_sizeof_a(self) -> None:
+        a = np.array([1, 2, 3])
+        tb = TypeBlocks.from_blocks(a)
+        self.assertTrue(getsizeof(tb), 552)
 
 if __name__ == '__main__':
     import unittest
