@@ -6700,6 +6700,18 @@ class Frame(ContainerOperand):
                 name=self._name,
                 )
 
+    def corr(self,
+            other: 'Frame',
+            *,
+            axis: int = 1,
+            ddof: int = 1,
+            ) -> 'Frame':
+        '''Compute a covariance matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+            ddof: Delta degrees of freedom, defaults to 1.
+        '''
 
 
     #---------------------------------------------------------------------------
