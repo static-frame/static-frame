@@ -11365,6 +11365,11 @@ class TestUnit(TestCase):
 
         self.assertEqual(f3.name, 'f1')
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_corr(self) -> None:
+        pass
+
     #---------------------------------------------------------------------------
 
     def test_frame_bloc_a(self) -> None:

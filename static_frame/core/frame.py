@@ -6701,18 +6701,36 @@ class Frame(ContainerOperand):
                 )
 
     def corr(self,
-            other: 'Frame',
             *,
             axis: int = 1,
-            ddof: int = 1,
+            dtype: tp.Optional[DtypeSpecifier] = None,
             ) -> 'Frame':
         '''Compute a covariance matrix.
 
         Args:
             axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
-            ddof: Delta degrees of freedom, defaults to 1.
         '''
+        if axis == 0:
+            rowvar = True
+            # labels = self._index
+            own_index = True
+            own_columns = self.STATIC
+        else:
+            rowvar = False
+            # labels = self._columns
+            own_index = self.STATIC
+            own_columns = self.STATIC
 
+        values = np.corrcoef(self.values, rowvar=rowvar, dtype=dtype)
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=labels,
+                columns=labels,
+                own_index=own_index,
+                own_columns=own_columns,
+                name=self._name,
+                )
 
     #---------------------------------------------------------------------------
     # pivot family
