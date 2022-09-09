@@ -1,5 +1,6 @@
 
 import typing as tp
+import zipfile
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.store import StoreConfigMap
@@ -48,6 +49,7 @@ class StoreClientMixin:
             fp: PathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of TSV files.
@@ -56,13 +58,14 @@ class StoreClientMixin:
         '''
         store = StoreZipTSV(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_csv(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of CSV files.
@@ -71,13 +74,14 @@ class StoreClientMixin:
         '''
         store = StoreZipCSV(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_pickle(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of pickles.
@@ -86,13 +90,14 @@ class StoreClientMixin:
         '''
         store = StoreZipPickle(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_npz(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of NPZ files.
@@ -101,14 +106,14 @@ class StoreClientMixin:
         '''
         store = StoreZipNPZ(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
-
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_npy(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of NPY files.
@@ -117,14 +122,14 @@ class StoreClientMixin:
         '''
         store = StoreZipNPY(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
-
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_parquet(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a zipped archive of parquet files.
@@ -133,13 +138,13 @@ class StoreClientMixin:
         '''
         store = StoreZipParquet(fp)
         config = self._filter_config(config)
-        store.write(self._items_store(), config=config)
+        store.write(self._items_store(), config=config, compression=compression)
 
     @doc_inject(selector='store_client_exporter')
     def to_xlsx(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as a XLSX workbook.
@@ -154,7 +159,7 @@ class StoreClientMixin:
     def to_sqlite(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as an SQLite database file.
@@ -169,7 +174,7 @@ class StoreClientMixin:
     def to_hdf5(self,
             fp: PathSpecifier,
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
             ) -> None:
         '''
         Write the complete :obj:`Bus` as an HDF5 table.
