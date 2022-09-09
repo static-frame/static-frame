@@ -2665,7 +2665,7 @@ class Series(ContainerOperand):
         Return the index-aligned correlation to the supplied :obj:`Series`.
 
         Args:
-            ddof: Delta degrees of freedom, defaults to 1.
+            other: Series to be correlated with by selection on corresponding labels.
         '''
         if isinstance(other, Series):
             other = other.loc[self._index].values

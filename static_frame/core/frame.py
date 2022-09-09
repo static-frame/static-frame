@@ -6709,7 +6709,6 @@ class Frame(ContainerOperand):
 
         Args:
             axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
-            dtype: Set the dtype of the returned values.
         '''
         if axis == 0:
             rowvar = True
