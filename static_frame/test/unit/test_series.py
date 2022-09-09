@@ -5383,8 +5383,12 @@ class TestUnit(TestCase):
     
     #---------------------------------------------------------------------------
 
-    def test_sizeof_a(self):
+    def test_sizeof_simple(self):
         s = Series(('a', 'b', 'c'))
+        self.assertEqual(getsizeof(s), 292)
+
+    def test_sizeof_simple(self):
+        s = Series(('a', 'b', 'c'), index=(0, 1, 2))
         self.assertEqual(getsizeof(s), 292)
 
 

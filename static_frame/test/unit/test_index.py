@@ -1656,33 +1656,44 @@ class TestUnit(TestCase):
         # TODO: Look into determistically finding the size on different platforms / versions of python
         idx = Index(('a', 'b', 'c'))
         self.assertEqual(getsizeof(idx), 850)
-
-    def test_sizeof_named_index(self):
-        idx = Index(('a', 'b', 'c'), name='named_index')
-        self.assertEqual(getsizeof(idx), 894)
-
+    
     def test_sizeof_object_index(self):
         idx = Index((1, 'b', (2, 3)))
         self.assertEqual(getsizeof(idx), 846)
-
-    def test_sizeof_object_index_nested_compare(self):
-        idx1 = Index((1, 'b', (2, 3)))
-        idx2 = Index((1, 'b', (2, 3, 4, 5)))
-        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
-
-    def test_sizeof_empty_index(self):
-        idx = Index(())
-        self.assertEqual(getsizeof(idx), 592)
-
+    
     def test_sizeof_loc_is_iloc(self):
         idx = Index((0, 1, 2), loc_is_iloc=True)
         self.assertEqual(getsizeof(idx), 272)
+    
+    def test_sizeof_empty_index(self):
+        idx = Index(())
+        self.assertEqual(getsizeof(idx), 592)
+    
+    def test_sizeof_name_adds_size(self):
+        idx1 = Index(('a', 'b', 'c'))
+        idx2 = idx1.rename('with_name')
+        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
+    
+    def test_sizeof_more_values_adds_size(self):
+        idx1 = Index(('a', 'b', 'c'))
+        idx2 = Index(('a', 'b', 'c', 'd'))
+        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
 
-    def test_sizeof_loc_is_iloc_is_smaller(self):
+    def test_sizeof_more_nested_values_adds_size(self):
+        idx1 = Index((1, 'b', (2, 3)))
+        idx2 = Index((1, 'b', (2, 3, 4, 5)))
+        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
+    
+    def test_sizeof_more_doubly_nested_values_maintains_size(self):
+        idx1 = Index((1, 'b', ('c', (8, 9), 'd')))
+        idx2 = Index((1, 'b', ('c', (8, 9, 10), 'd')))
+        self.assertEqual(getsizeof(idx1), getsizeof(idx2))
+
+    def test_sizeof_loc_is_iloc_reduces_size(self):
         # idx1 will be smaller since the _positions and _labels variables point to the same array
         idx1 = Index((0, 1, 2), loc_is_iloc=True)
         idx2 = Index((0, 1, 2))
-        self.assertTrue(getsizeof(idx2) > getsizeof(idx1))
+        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
 
 if __name__ == '__main__':
     unittest.main()
