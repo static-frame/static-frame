@@ -6,6 +6,8 @@ What is New in StaticFrame
 
 Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr``.
 
+Added ``compression`` argument to ``StoreClientMixin`` exporters that write ZIPs.
+
 Corrected issue with selection on zero-sized ``IndexHierarchy``.
 
 
