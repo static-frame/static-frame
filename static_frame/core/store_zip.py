@@ -235,7 +235,8 @@ class _StoreZip(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess = (config_map.default.write_max_workers is not None and
@@ -260,7 +261,11 @@ class _StoreZip(Store):
             label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
         try:
-            with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(self._fp,
+                    mode='w',
+                    compression=compression,
+                    allowZip64=True,
+                    ) as zf:
                 for label, frame_bytes in label_and_bytes():
                     label_encoded = config_map.default.label_encode(label)
                     # this will write it without a container
@@ -472,12 +477,17 @@ class StoreZipNPY(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
 
         try:
-            with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(self._fp,
+                    mode='w',
+                    compression=compression,
+                    allowZip64=True,
+                    ) as zf:
                 archive = ArchiveZipWrapper(zf,
                         writeable=True,
                         memory_map=False,

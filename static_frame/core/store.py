@@ -276,7 +276,6 @@ class StoreConfig(StoreConfigHE):
                 write_max_workers=write_max_workers,
                 write_chunksize=write_chunksize,
         )
-        # NOTE: if only encode is provide, should we raise?
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
 
