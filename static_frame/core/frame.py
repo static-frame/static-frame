@@ -6712,12 +6712,12 @@ class Frame(ContainerOperand):
         '''
         if axis == 0:
             rowvar = True
-            # labels = self._index
+            labels = self._index
             own_index = True
             own_columns = self.STATIC
         else:
             rowvar = False
-            # labels = self._columns
+            labels = self._columns
             own_index = self.STATIC
             own_columns = self.STATIC
 
