@@ -4,7 +4,7 @@ What is New in StaticFrame
 0.9.14
 ----------
 
-Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr``.
+Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr()``.
 
 Added ``compression`` argument to ``StoreClientMixin`` exporters that write ZIPs.
 
