@@ -11,6 +11,7 @@ import unittest
 from collections import OrderedDict
 from collections import namedtuple
 from io import StringIO
+from sys import getsizeof
 from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
@@ -14559,8 +14560,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_sizeof_a(self) -> None:
         f = ff.parse('s(3,4)')
-        pass
-
+        self.assertEqual(getsizeof(f), 976)
 
 if __name__ == '__main__':
     unittest.main()

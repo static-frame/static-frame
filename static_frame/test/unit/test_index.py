@@ -1652,10 +1652,37 @@ class TestUnit(TestCase):
         self.assertEqual(str(post), 'a\nb\nc\nd\ne')
     
     #---------------------------------------------------------------------------
-    def test_sizeof_a(self):
+    def test_sizeof_simple_index(self):
         # TODO: Look into determistically finding the size on different platforms / versions of python
         idx = Index(('a', 'b', 'c'))
-        self.assertEqual(getsizeof(idx), 700)
+        self.assertEqual(getsizeof(idx), 850)
+
+    def test_sizeof_named_index(self):
+        idx = Index(('a', 'b', 'c'), name='named_index')
+        self.assertEqual(getsizeof(idx), 894)
+
+    def test_sizeof_object_index(self):
+        idx = Index((1, 'b', (2, 3)))
+        self.assertEqual(getsizeof(idx), 846)
+
+    def test_sizeof_object_index_nested_compare(self):
+        idx1 = Index((1, 'b', (2, 3)))
+        idx2 = Index((1, 'b', (2, 3, 4, 5)))
+        self.assertTrue(getsizeof(idx1) < getsizeof(idx2))
+
+    def test_sizeof_empty_index(self):
+        idx = Index(())
+        self.assertEqual(getsizeof(idx), 592)
+
+    def test_sizeof_loc_is_iloc(self):
+        idx = Index((0, 1, 2), loc_is_iloc=True)
+        self.assertEqual(getsizeof(idx), 272)
+
+    def test_sizeof_loc_is_iloc_is_smaller(self):
+        # idx1 will be smaller since the _positions and _labels variables point to the same array
+        idx1 = Index((0, 1, 2), loc_is_iloc=True)
+        idx2 = Index((0, 1, 2))
+        self.assertTrue(getsizeof(idx2) > getsizeof(idx1))
 
 if __name__ == '__main__':
     unittest.main()

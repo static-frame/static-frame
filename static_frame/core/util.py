@@ -3199,4 +3199,3 @@ def total_getsizeof(iter: tp.Iterable[any]) -> int:
         seen.add(id(e))
         total += getsizeof(e)
     return total
-    #return sum(getsizeof(e) for e in iter)
