@@ -3198,7 +3198,8 @@ def total_getsizeof(it: tp.Iterable[any], *, seen=None) -> int:
         dict: lambda d: chain.from_iterable(d.items()),
         set: iter,
         frozenset: iter,
-        FrozenAutoMap: iter
+        FrozenAutoMap: iter,
+        np.ndarray: lambda d: iter(d) if d.dtype == np.object else []
     }
     seen = set() if seen is None else seen
     total = 0
