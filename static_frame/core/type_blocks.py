@@ -535,7 +535,6 @@ class TypeBlocks(ContainerOperand):
     def __sizeof__(self: 'TypeBlocks') -> int:
         return total_getsizeof([
             self._blocks,
-            *self._blocks,
             self._dtypes,
             self._index,
             self._shape,

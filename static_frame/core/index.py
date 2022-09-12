@@ -386,7 +386,6 @@ class Index(IndexBase):
     def __sizeof__(self: I) -> int:
         return total_getsizeof([
             self._map,
-            *(self._map if self._map is not None else ()),
             self._labels,
             self._positions,
             self._recache,

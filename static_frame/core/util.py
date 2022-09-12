@@ -3187,15 +3187,27 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def total_getsizeof(iter: tp.Iterable[any]) -> int:
+def total_getsizeof(it: tp.Iterable[any], *, seen=None) -> int:
     '''
     Gives the total size of an iterable of elements
+    see also: https://code.activestate.com/recipes/577504/
     '''
+    handlers = {
+        tuple: iter,
+        list: iter,
+        dict: lambda d: chain.from_iterable(d.items()),
+        set: iter,
+        frozenset: iter,
+        FrozenAutoMap: iter
+    }
+    seen = set() if seen is None else seen
     total = 0
-    seen = set()
-    for e in iter:
-        if id(e) in seen:
+    for el in it:
+        if id(el) in seen:
             continue
-        seen.add(id(e))
-        total += getsizeof(e)
+        seen.add(id(el))
+        total += getsizeof(el)
+        for t, h in handlers.items():
+            if isinstance(el, t):
+                total += total_getsizeof(h(el), seen=seen)
     return total

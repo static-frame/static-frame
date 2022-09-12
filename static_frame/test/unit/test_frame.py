@@ -14560,7 +14560,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_sizeof_a(self) -> None:
         f = ff.parse('s(3,4)')
-        self.assertEqual(getsizeof(f), 976)
+        self.assertEqual(getsizeof(f), 1336)
 
 if __name__ == '__main__':
     unittest.main()

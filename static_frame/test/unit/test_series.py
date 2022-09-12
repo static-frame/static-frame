@@ -5387,9 +5387,35 @@ class TestUnit(TestCase):
         s = Series(('a', 'b', 'c'))
         self.assertEqual(getsizeof(s), 292)
 
-    def test_sizeof_simple(self):
+    def test_sizeof_with_index(self):
+        # This is notably larger since the index is not loc_is_iloc optimised
         s = Series(('a', 'b', 'c'), index=(0, 1, 2))
-        self.assertEqual(getsizeof(s), 292)
+        self.assertEqual(getsizeof(s), 932)
+
+    def test_sizeof_with_name_is_larger(self):
+        s1 = Series(('a', 'b', 'c'))
+        s2 = s1.rename('named_series')
+        self.assertTrue(getsizeof(s1) < getsizeof(s2))
+
+    def test_sizeof_larger_series_is_larger_a(self):
+        s1 = Series(('a', 'b', 'c'))
+        s2 = Series(('a', 'b', 'c', 'd'))
+        self.assertTrue(getsizeof(s1) < getsizeof(s2))
+
+    def test_sizeof_larger_series_is_larger_b(self):
+        s1 = Series(('a', 'b', 'c'))
+        s2 = Series(('abc', 'def', 'ghi'))
+        self.assertTrue(getsizeof(s1) < getsizeof(s2))
+
+    def test_sizeof_larger_nested_series_maintains_size(self):
+        s1 = Series(('a', (2, (4, 5), 8), 'c'))
+        s2 = Series(('a', (2, (4, 5, 6), 8), 'c'))
+        self.assertEqual(getsizeof(s1), getsizeof(s2))
+
+    def test_sizeof_larger_index_is_larger(self):
+        s1 = Series(('a', 'b', 'c'), index=(0, 1, 2))
+        s2 = Series(('a', 'b', 'c'), index=('abc', 'def', 'ghi'))
+        self.assertTrue(getsizeof(s1) < getsizeof(s2))
 
 
 if __name__ == '__main__':

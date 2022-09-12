@@ -11,6 +11,7 @@ from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 
 from static_frame.core.exception import InvalidDatetime64Comparison
+from static_frame.core.index import Index
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
@@ -63,6 +64,7 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -2736,6 +2738,22 @@ class TestUnit(TestCase):
 
         self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
+
+    #---------------------------------------------------------------------------
+    def test_total_getsizeof_a(self) -> None:
+        self.assertEqual(total_getsizeof([(2, 3, 4)]), 148)
+
+    def test_total_getsizeof_b(self) -> None:
+        self.assertEqual(total_getsizeof([np.arange(3)]), 120)
+
+    def test_total_getsizeof_c(self) -> None:
+        self.assertEqual(total_getsizeof([(2, 'b', (2, 3))]), 226)
+
+    def test_total_getsizeof_c(self) -> None:
+        self.assertEqual(total_getsizeof([Index((2, 3, 4))]), 796)
+
+    def test_total_getsizeof_c(self) -> None:
+        self.assertEqual(total_getsizeof([Index((2, 'b', (2, 3)))]), 874)
 
 if __name__ == '__main__':
     unittest.main()
