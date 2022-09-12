@@ -2790,7 +2790,7 @@ class TestUnit(TestCase):
         self.assertEqual(total_getsizeof([(2, 3, 4)]), sum(getsizeof(e) for e in [
             2, 3, 4,
             (2, 3, 4)
-        ])) # 148
+        ]))
 
 
     def test_total_getsizeof_nested_tuple(self) -> None:
@@ -2798,7 +2798,7 @@ class TestUnit(TestCase):
             2, 'b', 3,
             (2, 3),
             (2, 'b', (2, 3))
-        ])) # 226
+        ]))
 
     def test_total_getsizeof_larger_values_is_larger(self) -> None:
         a = ('a', 'b', 'c')

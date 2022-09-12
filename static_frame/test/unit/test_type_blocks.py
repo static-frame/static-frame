@@ -4036,7 +4036,73 @@ class TestUnit(TestCase):
     def test_sizeof_a(self) -> None:
         a = np.array([1, 2, 3])
         tb = TypeBlocks.from_blocks(a)
-        self.assertTrue(getsizeof(tb), 552)
+        self.assertTrue(getsizeof(tb), sum(getsizeof(e) for e in [
+            # _blocks
+            np.array([1, 2, 3]),
+            [np.array([1, 2, 3])],
+            # _index
+            0,
+            (0, 0),
+            [(0, 0)],
+            # _shape
+            3, 1,
+            (3, 1),
+            # _dtypes
+            np.dtype('int64'),
+            [np.dtype('int64')],
+            # _row_dtype is np.dtype('int64'), skipped since already included
+            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+        ]))
+
+    def test_sizeof_b(self) -> None:
+        tb = TypeBlocks.from_blocks([
+            np.array([1, 2, 3]),
+            np.array([4, 5, 6])
+        ])
+        self.assertEqual(getsizeof(tb), sum(getsizeof(e) for e in [
+            # _blocks
+            np.array([1, 2, 3]),
+            np.array([4, 5, 6]),
+            tb._blocks, # [np.array([1, 2, 3]), np.array([4, 5, 6])],
+            # _index
+            0,
+            (0, 0),
+            1,
+            (1, 0),
+            tb._index, # [(0, 0), (1, 0)],
+            # _shape
+            3, 2,
+            tb._shape, # (3, 2),
+            # _dtypes
+            np.dtype('int64'),
+            tb._dtypes, # [np.dtype('int64'), np.dtype('int64')],
+            # _row_dtype is np.dtype('int64'), skipped since already included
+            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+        ]))
+
+    def test_sizeof_b(self) -> None:
+        tb = TypeBlocks.from_blocks(np.array([[1, 2, 3], [4, 5, 6]]))
+        self.assertEqual(getsizeof(tb), sum(getsizeof(e) for e in [
+            # _blocks
+            np.array([[1, 2, 3],[4, 5, 6]]),
+            tb._blocks, # [np.array([[1, 2, 3],[4, 5, 6]])],
+            # _index
+            0,
+            (0, 0),
+            1,
+            (0, 1),
+            2,
+            (0, 2),
+            tb._index, # [(0, 0), (0, 1), (0, 2)],
+            # _shape
+            3,
+            tb._shape, # (2, 3),
+            # _dtypes
+            np.dtype('int64'),
+            tb._dtypes, #[np.dtype('int64'), np.dtype('int64'), np.dtype('int64')],
+            # _row_dtype is np.dtype('int64'), skipped since already included
+            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+        ]))
 
 if __name__ == '__main__':
     import unittest
