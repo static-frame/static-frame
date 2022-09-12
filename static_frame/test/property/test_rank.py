@@ -1,11 +1,11 @@
-from hypothesis import given
 import numpy as np
+from hypothesis import given
 from scipy.stats import rankdata
 
-from static_frame.test.property import strategies as sfst
-from static_frame.test.test_case import TestCase
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
+from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

@@ -2,14 +2,15 @@ numpy==1.19.5 # 1.20 introduces np.typing incompatibilities
 automap==0.5.1
 arraykit==0.1.13
 
-pytest==4.6.11
+pytest==7.1.2
 pytest-cov==3.0.0
 codecov>=2.0.15
 hypothesis==6.40.0
 scipy==1.5.4
-mypy==0.800
-pylint==2.4.4
+mypy==0.971
+pylint==2.15.0
 invoke==1.4.0
+isort==5.10.1
 
 pyinstrument==3.4.1
 Pygments==2.7.4

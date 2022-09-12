@@ -112,6 +112,11 @@ def mypy(context):
     '''
     context.run('mypy --strict')
 
+@invoke.task
+def isort(context):
+    '''Run isort as a check.
+    '''
+    context.run('isort static_frame --check')
 
 @invoke.task
 def lint(context):
@@ -119,10 +124,17 @@ def lint(context):
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, lint))
+@invoke.task(pre=(mypy, lint, isort))
 def quality(context):
     '''Perform all quality checks.
     '''
+
+@invoke.task
+def format(context):
+    '''Run mypy static analysis.
+    '''
+    context.run('isort static_frame')
+
 
 #-------------------------------------------------------------------------------
 

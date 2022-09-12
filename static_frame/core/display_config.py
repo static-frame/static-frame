@@ -1,14 +1,13 @@
-from enum import Enum
-import typing as tp
-import re
 import json
+import re
+import typing as tp
+from enum import Enum
 
 import numpy as np
 
-from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core import display_html_datatables
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.style_config import StyleConfig
-
 
 ColorConstructor = tp.Union[int, str]
 
@@ -172,7 +171,7 @@ class DisplayFormatHTMLPre(DisplayFormat):
             ) -> str:
 
         style = 'style="white-space: pre; font-family: monospace"'
-        id_str = 'id="{}" '.format(identifier) if identifier else ''
+        id_str = 'id="{identifier}" ' if identifier else ''
         return f'<div {id_str}{style}>{msg}</div>'
 
 
@@ -364,7 +363,7 @@ class DisplayConfig(metaclass=InterfaceMeta):
 
     @classmethod
     def from_file(cls, fp: str) -> 'DisplayConfig':
-        with open(fp) as f:
+        with open(fp, encoding='utf-8') as f:
             return cls.from_json(f.read())
 
     @classmethod
@@ -466,12 +465,12 @@ class DisplayConfig(metaclass=InterfaceMeta):
     def write(self, fp: str) -> None:
         '''Write a JSON file.
         '''
-        with open(fp, 'w') as f:
+        with open(fp, 'w', encoding='utf-8') as f:
             f.write(self.to_json() + '\n')
 
     def __repr__(self) -> str:
         return '<' + self.__class__.__name__ + ' ' + ' '.join(
-                '{k}={v}'.format(k=k, v=getattr(self, k))
+                f'{k}={getattr(self, k)}'
                 for k in self.__slots__) + '>'
 
     def to_dict(self, **kwargs: object) -> tp.Dict[str, tp.Any]:

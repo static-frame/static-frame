@@ -1,18 +1,3 @@
-from collections import abc
-from collections import defaultdict
-from collections import namedtuple
-from collections import Counter
-from enum import Enum
-from functools import partial
-from functools import reduce
-from io import StringIO
-from itertools import chain
-from itertools import zip_longest
-from os import PathLike
-from urllib import request
-from copy import deepcopy
-from types import TracebackType
-
 import contextlib
 import datetime
 import operator
@@ -20,24 +5,37 @@ import os
 import tempfile
 import typing as tp
 import warnings
+from collections import Counter
+from collections import abc
+from collections import defaultdict
+from collections import namedtuple
+from copy import deepcopy
+from enum import Enum
+from functools import partial
+from functools import reduce
+from io import StringIO
+from itertools import chain
+from itertools import zip_longest
+from os import PathLike
+from types import TracebackType
+from urllib import request
 
-from arraykit import resolve_dtype
-from arraykit import column_2d_filter
-
-from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
+from arraykit import column_2d_filter
+from arraykit import resolve_dtype
+from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import InvalidDatetime64Comparison
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -431,15 +429,15 @@ class WarningsSilent:
     FILTER = [('ignore', None, Warning, None, 0)]
 
     def __enter__(self) -> None:
-        self.previous_warnings = warnings.filters #type: ignore
-        warnings.filters = self.FILTER #type: ignore
+        self.previous_warnings = warnings.filters
+        warnings.filters = self.FILTER
 
     def __exit__(self,
             type: tp.Type[BaseException],
             value: BaseException,
             traceback: TracebackType,
             ) -> None:
-        warnings.filters = self.previous_warnings #type: ignore
+        warnings.filters = self.previous_warnings
 
 #-------------------------------------------------------------------------------
 class UFuncCategory(Enum):
@@ -1645,8 +1643,8 @@ def pos_loc_slice_to_iloc_slice(
             if key.stop >= length:
                 # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                 raise LocInvalid(f'Invalid loc: {key}')
-        except TypeError: # if stop is not an int
-            raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError as e: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}') from e
 
         stop = key.stop + 1
     return slice(start, stop, key.step)
@@ -2478,7 +2476,7 @@ def _ufunc_set_2d(
 
     if width == 1:
         # let the function flatten the array, then reshape into 2D
-        post = func(array, other, **func_kwargs)  # type: ignore
+        post = func(array, other, **func_kwargs)
         post = post.reshape(len(post), width)
         post.flags.writeable = False
         return post
@@ -2490,7 +2488,7 @@ def _ufunc_set_2d(
     # creates a view of tuples for 1D operation
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
-    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
+    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width)
     post.flags.writeable = False
     return post
 
@@ -3120,7 +3118,7 @@ def write_optional_file(
     if f is None: # do not have a file object
         try:
             assert isinstance(fp, str)
-            with tp.cast(StringIO, open(fp, 'w')) as f:
+            with tp.cast(StringIO, open(fp, 'w', encoding='utf-8')) as f:
                 f.write(content)
         finally:
             if fd is not None:
@@ -3177,7 +3175,7 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''
     if isinstance(key, str) or not hasattr(key, '__len__'):
-        return [key]
+        return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
 

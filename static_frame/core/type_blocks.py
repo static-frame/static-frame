@@ -450,7 +450,7 @@ class TypeBlocks(ContainerOperand):
                 tb_proto = type_blocks
 
             # all TypeBlocks have the same number of blocks by here
-            for block_idx in range(len(tb_proto[0]._blocks)):
+            for block_idx in range(len(tb_proto[0]._blocks)): # pylint: disable=C0200
                 block_parts = []
                 for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
                     b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
@@ -505,14 +505,14 @@ class TypeBlocks(ContainerOperand):
             b.flags.writeable = False
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'TypeBlocks':
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._blocks = [array_deepcopy(b, memo) for b in self._blocks]
         obj._dtypes = deepcopy(self._dtypes, memo)
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     def __copy__(self) -> 'TypeBlocks':
         '''

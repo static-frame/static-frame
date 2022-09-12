@@ -33,6 +33,7 @@ from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
@@ -46,6 +47,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
@@ -55,7 +57,6 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.util import DtypesSpecifier
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -203,7 +204,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -226,7 +227,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -244,6 +245,29 @@ class Batch(ContainerOperand, StoreClientMixin):
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                )
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 max_workers=max_workers,
@@ -1632,6 +1656,19 @@ class Batch(ContainerOperand, StoreClientMixin):
                 ddof=ddof,
                 )
 
+    def corr(self, *,
+            axis: int = 1,
+            ) -> 'Batch':
+        '''
+        Compute a correlation matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+        '''
+        return self._apply_attr(
+                attr='corr',
+                axis=axis,
+                )
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

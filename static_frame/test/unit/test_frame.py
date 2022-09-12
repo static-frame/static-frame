@@ -1,21 +1,22 @@
-from collections import namedtuple
-from collections import OrderedDict
-from io import StringIO
 import copy
 import datetime
+import io
 import itertools as it
+import os
 import pickle
 import sqlite3
 import string
 import typing as tp
 import unittest
-import os
-import io
+from collections import OrderedDict
+from collections import namedtuple
+from io import StringIO
 from tempfile import TemporaryDirectory
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
+import static_frame as sf
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
@@ -23,44 +24,40 @@ from static_frame import FrameHE
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
-from static_frame import IndexGO
+from static_frame import IndexAutoConstructorFactory
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
+from static_frame import IndexDefaultFactory
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
-from static_frame import IndexSecond
-from static_frame import mloc
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import IndexDefaultFactory
-from static_frame import IndexAutoConstructorFactory
-
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import InvalidDatetime64Initializer
-
-from static_frame.core.frame import FrameAssignILoc
+from static_frame.core.exception import InvalidFillValue
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
+from static_frame.core.frame import FrameAssignILoc
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.fill_value_auto import FillValueAuto
-
+from static_frame.core.util import iloc_to_insertion_iloc
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
-import static_frame as sf
 
 nan = np.nan
 
@@ -323,7 +320,7 @@ class TestUnit(TestCase):
         f2 = FrameGO(index=IndexAutoFactory(2))
         f2['a'] = (3, 9)
         f2['b'] = (4, 5)
-        self.assertEqual(f2.index._map, None)
+        self.assertEqual(f2.index._map, None) # type: ignore
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 3), (1, 9))), ('b', ((0, 4), (1, 5))))
                 )
@@ -619,7 +616,7 @@ class TestUnit(TestCase):
                  ('d', ((0, 'a'), (1, 'b'))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_from_pandas_g(self) -> None:
         import pandas as pd
 
@@ -885,7 +882,7 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_to_pandas_d(self) -> None:
         records = (
                 (1, 2, 'a', False),
@@ -1310,7 +1307,7 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 sf.Frame.from_parquet(fp, columns_depth=2)
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_parquet_d(self) -> None:
         dt64 = np.datetime64
         dtype = np.dtype
@@ -2669,7 +2666,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_attrs_a(self) -> None:
 
         records = (
@@ -3870,9 +3867,9 @@ class TestUnit(TestCase):
     def test_frame_std_b(self) -> None:
 
         f1 = Frame(np.arange(1, 21).reshape(4, 5))
-        self.assertEqual(round(f1.std(), 2).values.tolist(), #type: ignore [attr-defined]
+        self.assertEqual(round(f1.std(), 2).values.tolist(),
                 [5.59, 5.59, 5.59, 5.59, 5.59])
-        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+        self.assertEqual(round(f1.std(ddof=1), 2).values.tolist(),
                 [6.45, 6.45, 6.45, 6.45, 6.45])
 
     #---------------------------------------------------------------------------
@@ -3903,9 +3900,9 @@ class TestUnit(TestCase):
 
         f1 = Frame(np.arange(1, 21).reshape(4, 5))
 
-        self.assertEqual(round(f1.var(), 2).values.tolist(), #type: ignore [attr-defined]
+        self.assertEqual(round(f1.var(), 2).values.tolist(),
                 [31.25, 31.25, 31.25, 31.25, 31.25])
-        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(), #type: ignore [attr-defined]
+        self.assertEqual(round(f1.var(ddof=1), 2).values.tolist(),
                 [41.67, 41.67, 41.67, 41.67, 41.67])
 
     #---------------------------------------------------------------------------
@@ -4031,7 +4028,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f1.min(axis=1).items()),
                 (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)))
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_row_dtype_a(self) -> None:
         # reindex both axis
         records = (
@@ -4336,17 +4333,17 @@ class TestUnit(TestCase):
                 columns=('p', 'q'),
                 index=('w', 'x'),
                 )
-        self.assertTrue((np.int64(10) * f1).equals(10 * f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) + f1).equals(10 + f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) / f1).equals(10 / f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) // f1).equals(10 // f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(10) - f1).equals(10 - f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) > f1).equals(5 > f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) < f1).equals(5 < f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) == f1).equals(5 == f1)) #pylint: disable=C0122
-        self.assertTrue((np.int64(5) != f1).equals(5 != f1)) #pylint: disable=C0122
+        self.assertTrue((np.int64(10) * f1).equals(10 * f1))
+        self.assertTrue((np.int64(10) + f1).equals(10 + f1))
+        self.assertTrue((np.int64(10) / f1).equals(10 / f1))
+        self.assertTrue((np.int64(10) // f1).equals(10 // f1))
+        self.assertTrue((np.int64(10) - f1).equals(10 - f1))
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
+        self.assertTrue((np.int64(5) == f1).equals(5 == f1))
+        self.assertTrue((np.int64(5) != f1).equals(5 != f1))
 
 
 
@@ -4794,6 +4791,11 @@ class TestUnit(TestCase):
         self.assertEqual(f1.sort_index(ascending=(False, False, True)).to_pairs(),
                 (('a', ((('b', 5, 'x'), 17), (('b', 5, 'y'), 15), (('b', 5, 'z'), 16), (('b', 3, 'x'), 20), (('b', 3, 'y'), 18), (('b', 3, 'z'), 19), (('b', 1, 'x'), 14), (('b', 1, 'y'), 12), (('b', 1, 'z'), 13), (('b', -4, 'x'), 23), (('b', -4, 'y'), 21), (('b', -4, 'z'), 22), (('a', 5, 'x'), 5), (('a', 5, 'y'), 3), (('a', 5, 'z'), 4), (('a', 3, 'x'), 8), (('a', 3, 'y'), 6), (('a', 3, 'z'), 7), (('a', 1, 'x'), 2), (('a', 1, 'y'), 0), (('a', 1, 'z'), 1), (('a', -4, 'x'), 11), (('a', -4, 'y'), 9), (('a', -4, 'z'), 10))), ('b', ((('b', 5, 'x'), 17), (('b', 5, 'y'), 15), (('b', 5, 'z'), 16), (('b', 3, 'x'), 20), (('b', 3, 'y'), 18), (('b', 3, 'z'), 19), (('b', 1, 'x'), 14), (('b', 1, 'y'), 12), (('b', 1, 'z'), 13), (('b', -4, 'x'), 23), (('b', -4, 'y'), 21), (('b', -4, 'z'), 22), (('a', 5, 'x'), 5), (('a', 5, 'y'), 3), (('a', 5, 'z'), 4), (('a', 3, 'x'), 8), (('a', 3, 'y'), 6), (('a', 3, 'z'), 7), (('a', 1, 'x'), 2), (('a', 1, 'y'), 0), (('a', 1, 'z'), 1), (('a', -4, 'x'), 11), (('a', -4, 'y'), 9), (('a', -4, 'z'), 10))))
                 )
+
+    def test_frame_sort_index_e(self) -> None:
+        f1 = Frame(index=IndexHierarchy.from_labels((), depth_reference=2)).sort_index()
+        self.assertEqual(f1.shape, (0, 0))
+        self.assertEqual(f1.index.shape, (0, 2))
 
     #---------------------------------------------------------------------------
 
@@ -5635,7 +5637,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_fillna_a(self) -> None:
         dtype = np.dtype
 
@@ -5661,7 +5663,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', dtype('O')), ('B', dtype('int64')), ('C', dtype('O')), ('D', dtype('int64'))))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_fillna_b(self) -> None:
 
         f1 = Frame.from_records([
@@ -6101,7 +6103,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
     #---------------------------------------------------------------------------
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_csv_a(self) -> None:
         # header, mixed types, no index
 
@@ -6203,7 +6205,7 @@ class TestUnit(TestCase):
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_frame_from_csv_i(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
 
@@ -6285,7 +6287,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_structured_array_to_d_ia_cl_a(self) -> None:
 
         a1 = np.array(np.arange(12).reshape((3, 4)))
@@ -6357,7 +6359,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', 'a|True|20.2', 'b|False|85.3')))
                 file.close()
 
@@ -6372,7 +6374,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
                 file.close()
 
@@ -6463,7 +6465,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6569,7 +6571,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
 
-            with open(fp, 'w') as file:
+            with open(fp, 'w', encoding='utf-8') as file:
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
@@ -6737,7 +6739,7 @@ class TestUnit(TestCase):
                     include_columns_name=True))
 
     #---------------------------------------------------------------------------
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_a(self) -> None:
 
         records = (
@@ -6750,13 +6752,13 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_b(self) -> None:
 
         records = (
@@ -6771,7 +6773,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=None)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '__index0__|__index1__|r|s\n',
@@ -6781,7 +6783,7 @@ class TestUnit(TestCase):
                     '2|b|3|x\n'
                     ])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_c(self) -> None:
 
         records = (
@@ -6802,7 +6804,7 @@ class TestUnit(TestCase):
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf1)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines1 = f.readlines()
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
@@ -6811,14 +6813,14 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines2 = f.readlines()
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
                     'w|False|2.0000e-08|1.2300e-07\n',
                     'x|True|1.1190e-06|\n'])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_d(self) -> None:
 
         records = (
@@ -6833,7 +6835,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     'foo|bar|r|s\n',
@@ -6845,7 +6847,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines, [
                     '||r|s\n',
@@ -6855,7 +6857,7 @@ class TestUnit(TestCase):
                     '2|b|3|x\n'
                     ])
 
-    @skip_win # type: ignore
+    @skip_win
     def test_frame_to_delimited_e(self) -> None:
 
         records = (
@@ -6868,7 +6870,7 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp1:
             f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
-            with open(fp1) as f:
+            with open(fp1, encoding='utf-8') as f:
                 lines = f.readlines()
             self.assertEqual(lines,
                     ['|1|1|2|2\n',
@@ -6881,7 +6883,7 @@ class TestUnit(TestCase):
                     store_filter=None,
                     include_index_name=False,
                     include_columns_name=True)
-            with open(fp2) as f:
+            with open(fp2, encoding='utf-8') as f:
                 lines = f.readlines()
 
 
@@ -6953,7 +6955,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
                 # nan has been converted to string
                 self.assertEqual(lines[1], 'w,2,,a,False,None\n')
@@ -6969,7 +6971,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,
@@ -6991,7 +6993,7 @@ class TestUnit(TestCase):
         with temp_file('.csv') as fp:
             f1.to_csv(fp)
 
-            with open(fp) as f:
+            with open(fp, encoding='utf-8') as f:
                 lines = f.readlines()
 
             self.assertEqual(lines,
@@ -7208,7 +7210,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
 
             with self.assertRaises(RuntimeError):
-                _ = f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
+                f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
 
             f1.to_xlsx(fp)
             f2 = Frame.from_xlsx(fp)
@@ -7971,7 +7973,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 2), ('a', 30))), ('q', (('x', 2), ('a', 34))), ('t', (('x', False), ('a', False))), ('r', (('x', 'c'), ('a', 'd'))), ('s', (('x', False), ('a', True))))
                 )
 
-    @skip_win  #type: ignore
+    @skip_win
     def test_frame_from_concat_d(self) -> None:
         records = (
                 (2, 2, False),
@@ -8001,7 +8003,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 (('p', (('a', 2), ('b', 30), ('c', 2), ('d', 30))), ('q', (('a', 2), ('b', 34), ('c', 2), ('d', 34))), ('r', (('a', False), ('b', False), ('c', False), ('d', False)))))
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_concat_e(self) -> None:
 
         f1 = Frame.from_items(zip(
@@ -8343,7 +8345,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_from_concat_w(self) -> None:
 
         a = sf.Frame.from_dict({0:(1,2), 1:(2,3), 2:(True, True)})
@@ -8443,8 +8445,8 @@ class TestUnit(TestCase):
                 columns=sf.IndexHierarchy.from_labels(f2_col_labels),
                 index=sf.IndexHierarchy.from_labels(f2_idx_labels)
         )
-        intersection_cols: sf.Index = f1.columns.intersection(f2.columns)
-        intersection_idx: sf.Index = f1.index.intersection(f2.index)
+        intersection_cols: sf.Index = f1.columns.intersection(f2.columns) # type: ignore
+        intersection_idx: sf.Index = f1.index.intersection(f2.index) # type: ignore
 
         f1_reindexed = f1.reindex(intersection_idx)[intersection_cols]
         f2_reindexed = f2.reindex(intersection_idx)[intersection_cols]
@@ -9221,7 +9223,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
                 )
 
-    @skip_pylt37 #type: ignore
+    @skip_pylt37
     def test_frame_from_records_r(self) -> None:
         import dataclasses
         @dataclasses.dataclass
@@ -10580,7 +10582,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's', 't'])
         self.assertEqual(f2.columns.values.tolist(), ['p', 'q', 'r', 's', 't', 'u'])
 
-    @skip_win  # type: ignore
+    @skip_win
     def test_frame_display_a(self) -> None:
 
         f1 = Frame.from_records(((1,2),(True,False)), name='foo',
@@ -11363,6 +11365,34 @@ class TestUnit(TestCase):
 
         self.assertEqual(f3.name, 'f1')
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_corr_a(self) -> None:
+        # >>> pd.DataFrame([[1, 2, 10, 0], [8, 4, 2, 0], [20, 24, 16, 1]], index=('a', 'b', 'c'), columns=('x', 'y', 'z', 'w')).corr()
+        #           x         y         z         w
+        # x  1.000000  0.958094  0.558094  0.931305
+        # y  0.958094  1.000000  0.772401  0.996616
+        # z  0.558094  0.772401  1.000000  0.821995
+        # w  0.931305  0.996616  0.821995  1.000000
+        f1 = sf.Frame.from_records(
+                [[1, 2, 10, 0], [8, 4, 2, 0], [20, 24, 16, 1]],
+                index=('a', 'b', 'c'),
+                columns=('x', 'y', 'z', 'w'),
+                ).corr()
+        self.assertEqual(round(f1, 6).to_pairs(),
+                (('x', (('x', 1.0), ('y', 0.958094), ('z', 0.558094), ('w', 0.931305))), ('y', (('x', 0.958094), ('y', 1.0), ('z', 0.772401), ('w', 0.996616))), ('z', (('x', 0.558094), ('y', 0.772401), ('z', 1.0), ('w', 0.821995))), ('w', (('x', 0.931305), ('y', 0.996616), ('z', 0.821995), ('w', 1.0))))
+                )
+
+    def test_frame_corr_b(self) -> None:
+        f1 = sf.Frame.from_records(
+                [[1, 2, 10, 0], [8, 4, 2, 0], [20, 24, 16, 1]],
+                index=('a', 'b', 'c'),
+                columns=('x', 'y', 'z', 'w'),
+                ).corr(axis=0)
+        self.assertEqual(round(f1, 6).to_pairs(),
+                (('a', (('a', 1.0), ('b', -0.202714), ('c', 0.215843))), ('b', (('a', -0.202714), ('b', 1.0), ('c', 0.723736))), ('c', (('a', 0.215843), ('b', 0.723736), ('c', 1.0))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_bloc_a(self) -> None:
@@ -11522,7 +11552,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc[0, 0], 'a')
         self.assertEqual(f2.loc[sf.ILoc[0], 0], 'a')
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_unset_index_f(self) -> None:
         records = (
                 (2, 2),
@@ -11600,7 +11630,7 @@ class TestUnit(TestCase):
         ]
 
     #---------------------------------------------------------------------------
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_a(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -11711,7 +11741,7 @@ class TestUnit(TestCase):
                 (('down', (('left', 43), ('right', 45))), ('up', (('left', 39), ('right', 41))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_e1(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -11751,7 +11781,7 @@ class TestUnit(TestCase):
                 (('a', (('far', 6), ('near', 22))), ('b', (('far', 82), ('near', 86))))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_f(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -12105,7 +12135,7 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
             ((0, (('A', 0), (None, 1), ('B', 2))), (2, (('A', 10), (None, 20), ('B', 30)))))
 
-    @skip_win #type: ignore
+    @skip_win
     def test_frame_pivot_x(self) -> None:
         f = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
@@ -12843,449 +12873,6 @@ class TestUnit(TestCase):
         self.assertFalse(f1.equals(f1.values, compare_class=False))
 
     #---------------------------------------------------------------------------
-
-    def test_frame_join_a(self) -> None:
-
-        # joiing index to index
-
-        f1 = Frame.from_dict(
-                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
-                index=(0, 1, 2, 'foo', 'x'))
-        f2 = Frame.from_dict(
-                dict(c=('foo', 'bar'), d=(10, 20)),
-                index=('x', 'y'))
-
-        # df1 = f1.to_pandas()
-        # df2 = f2.to_pandas()
-
-        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, composite_index=False)
-
-        self.assertEqual(f3.to_pairs(0),
-                (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
-                )
-
-        f4 = f1.join_outer(f2,
-                left_depth_level=0,
-                right_depth_level=0,
-                composite_index=False).fillna(None)
-
-        # NOTE: this indexes ordering after union is not stable, so do an explict selection before testing
-        locs4 = [0, 1, 2, 'foo', 'x', 'y']
-        f4 = f4.reindex(locs4)
-
-        self.assertEqual(f4.to_pairs(0),
-                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', 'bar'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', 20.0))))
-                )
-
-        f5 = f1.join_left(f2,
-                left_depth_level=0,
-                right_depth_level=0,
-                composite_index=False).fillna(None)
-
-        self.assertEqual(f5.to_pairs(0),
-                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
-                )
-
-        f6 = f1.join_right(f2,
-                left_depth_level=0,
-                right_depth_level=0,
-                composite_index=False).fillna(None)
-        self.assertEqual(f6.to_pairs(0),
-                (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
-                )
-
-    def test_frame_join_b(self) -> None:
-
-        # joining on column to column
-
-        f1 = Frame.from_dict(
-            {
-            'LastName': ('Raf', 'Jon', 'Hei', 'Rob', 'Smi', 'Wil'),
-            'DepartmentID': (31, 33, 33, 34, 34, None),
-            },
-            index=tuple('abcdef'),
-            )
-
-        f2 = Frame.from_dict(
-            {
-            'DepartmentID': (31, 33, 34, 35),
-            'DepartmentName': ('Sales', 'Engineering', 'Clerical', 'Marketing'),
-            },
-            index=range(10, 14),
-            )
-
-        df1 = f1.to_pandas()
-        df2 = f2.to_pandas()
-
-        f3 = f1.join_outer(f2,
-                left_columns='DepartmentID',
-                left_template='Employee.{}',
-                right_columns='DepartmentID',
-                right_template='Department.{}',
-                )
-        self.assertEqual(f3.shape, (7, 4))
-        self.assertEqual(f3.fillna(None).to_pairs(0),
-                (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None), ((None, 13), 35.0))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None), ((None, 13), 'Marketing'))))
-
-                )
-
-        f4 = f1.join_inner(f2,
-                left_columns='DepartmentID',
-                left_template='Employee.{}',
-                right_columns='DepartmentID',
-                right_template='Department.{}',
-                )
-        self.assertEqual(f4.shape, (5, 4))
-
-        self.assertEqual(f4.fillna(None).to_pairs(0),
-                (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'))))
-
-                )
-
-        f5 = f1.join_left(f2,
-                left_columns='DepartmentID',
-                left_template='Employee.{}',
-                right_columns='DepartmentID',
-                right_template='Department.{}',
-                )
-        self.assertEqual(f5.shape, (6, 4))
-        self.assertEqual(f5.fillna(None).to_pairs(0),
-                (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None))))
-                )
-
-
-        # df1.merge(df2, how='right', left_on='DepartmentID', right_on='DepartmentID')
-
-        f6 = f1.join_right(f2,
-                left_columns='DepartmentID',
-                left_template='Employee.{}',
-                right_columns='DepartmentID',
-                right_template='Department.{}',
-                )
-
-        self.assertEqual(f6.shape, (6, 4))
-        self.assertEqual(f6.fillna(None).to_pairs(0),
-                (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), 35))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), ((None, 13), 'Marketing'))))
-                )
-
-        with self.assertRaises(RuntimeError):
-            f1.join_right(f2,
-                    left_columns='DepartmentID',
-                    left_template='Employee.{}',
-                    right_columns='DepartmentID',
-                    right_template='Department.{}',
-                    composite_index=False,
-                    )
-
-    def test_frame_join_c(self) -> None:
-        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
-        with self.assertRaises(RuntimeError):
-            _ = f1.join_left(f2, left_columns=['a', 'b'], right_depth_level=0)
-
-
-        f3 = f1.join_left(f2, left_columns='b', right_depth_level=0)
-        self.assertEqual(f3.fillna(None).to_pairs(0),
-                (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20), ((4, None), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'), ((4, None), 'z'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'), ((4, None), None))), ('d', (((0, 'x'), 10.0), ((1, 'x'), 10.0), ((2, 'y'), 20.0), ((3, 'y'), 20.0), ((4, None), None))))
-                )
-
-        f4 = f1.join_inner(f2, left_columns='b', right_depth_level=0)
-        self.assertEqual(f4.to_pairs(0),
-                (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'))), ('d', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))))
-                )
-
-        # right is same as inner
-        f5 = f1.join_right(f2, left_columns='b', right_depth_level=0)
-        self.assertTrue(f5.equals(f4, compare_dtype=True))
-
-        # left is same as outer
-        f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0)
-        self.assertTrue(f6.equals(f3, compare_dtype=True))
-
-    @skip_win #type: ignore
-    def test_frame_join_d(self) -> None:
-        index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
-        index2 = IndexHierarchy.from_product(('A', 'B'), index1)
-
-        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
-        f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
-
-        f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
-
-        self.assertEqual(f3.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64'), np.dtype('<U1')]
-                )
-        self.assertEqual(f3.shape, (10, 4))
-
-        self.assertEqual(
-                f3.to_pairs(0),
-                (('a', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 0), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 1), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 2), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 3), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 4), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 5), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 6), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 7), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 8), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 9))), ('b', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'p'), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'q'), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'r'), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 's'), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 't'), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'u'), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'v'), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'w'), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'x'), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'y'))), ('c', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 10), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 11), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 12), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 13), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 14), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 10), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 11), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 12), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 13), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 14))), ('d', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'f'), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'f'), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'f'), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'g'), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'g'), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'f'), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'f'), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'f'), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'g'), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'g'))))
-                )
-
-        # inner join is equivalent to left, right, outer
-        self.assertTrue(f1.join_inner(f2, left_depth_level=1, right_depth_level=0).equals(f3))
-        self.assertTrue(f1.join_right(f2, left_depth_level=1, right_depth_level=0).equals(f3))
-        self.assertTrue(f1.join_outer(f2, left_depth_level=1, right_depth_level=0).equals(f3))
-
-    def test_frame_join_e(self) -> None:
-
-        # matching on hierarchical indices
-
-        index1 = IndexHierarchy.from_product(('A', 'B'), (1, 2, 3, 4, 5))
-        index2 = IndexHierarchy.from_labels((('B', 3), ('B', 5), ('A', 2)))
-        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')),
-                index=index1)
-        f2 = Frame.from_dict(dict(c=tuple(range(10, 13)), d=tuple('fgh')),
-                index=index2)
-
-        f3 = f1.join_left(f2,
-                left_depth_level=(0, 1),
-                right_depth_level=(0, 1),
-                fill_value=None,
-                composite_index=False,
-                )
-
-        self.assertEqual(f3.to_pairs(0),
-                (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
-                )
-
-        f4 = f1.join_left(f2,
-                left_depth_level=(0, 1),
-                right_depth_level=(0, 1),
-                fill_value=None,
-                composite_index=False,
-                )
-
-        self.assertEqual(f4.to_pairs(0),
-                (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
-                )
-
-    def test_frame_join_f(self) -> None:
-        # column on column
-
-        f1 = Frame.from_dict(
-                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
-                index=tuple('abcde'))
-
-        f2 = Frame.from_dict(
-                dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
-                index=('q', 'p', 'r'))
-
-        # case of when a non-index value is joined on, where the right as repeated values; Pandas df1.merge(df2, how='left', left_on='b', right_on='c') will add rows for all unique combinations and drop the resulting index.
-
-        f3 = f1.join_left(f2, left_columns='b', right_columns='c')
-        self.assertEqual(f3.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None))), ('d', ((('c', 'q'), 1000.0), (('c', 'p'), 3000.0), (('d', 'q'), 1000.0), (('d', 'p'), 3000.0), (('a', None), None), (('b', None), None), (('e', None), None))))
-                )
-
-        f4 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None)
-        self.assertEqual(f4.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), ((None, 'r'), 2000))))
-                )
-
-        f5 = f1.join_inner(f2, left_columns='b', right_columns='c')
-        self.assertEqual(f5.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000))))
-                )
-
-        f6 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None)
-        self.assertEqual(f6.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 2000))))
-                )
-
-    def test_frame_join_g(self) -> None:
-
-        f1 = Frame.from_records(
-                ((1,'apple'),
-                (2,'banana'),
-                (3,'kiwi fruit'),
-                (4,'strawberries'),
-                (5,'flour'),
-                (6,'fruit juice'),
-                (7,'butter'),
-                (8,'sugar')),
-                columns=('ingredient_id', 'ingredient_name'),
-                index=tuple('abcdefgh'))
-
-        f2 = Frame.from_records(
-                ((1,'Apple Crumble'),
-                (2,'Fruit Salad',),
-                (3,'Weekday Risotto',),
-                (4,'Beans Chili',),
-                (5,'Chicken Casserole',)),
-                columns=('recipe_id', 'recipe_name'),
-                index=tuple('stuvw')
-                )
-
-        f3 = Frame.from_records(
-                ((1,1),(1,5),(1,7),(1,8),(2,6),(2,2),(2,1),(2,3),(2,4)),
-                index=tuple('ijklmnopq'),
-                columns=('recipe_id', 'ingredient_id')
-                )
-
-        f4 = f2.join_inner(f3,
-                left_columns='recipe_id',
-                right_columns='recipe_id',
-                right_template='new_{}'
-                )
-        self.assertEqual(f4.to_pairs(0),
-                (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'))), ('new_recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('new_ingredient_id', ((('s', 'i'), 1), (('s', 'j'), 5), (('s', 'k'), 7), (('s', 'l'), 8), (('t', 'm'), 6), (('t', 'n'), 2), (('t', 'o'), 1), (('t', 'p'), 3), (('t', 'q'), 4))))
-                )
-
-        f7 = f2.join_outer(f3,
-                left_columns='recipe_id',
-                right_columns='recipe_id',
-                right_template='new_{}'
-                )
-
-        self.assertEqual(f7.fillna(None).to_pairs(0),
-                (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2), (('u', None), 3), (('v', None), 4), (('w', None), 5))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'), (('u', None), 'Weekday Risotto'), (('v', None), 'Beans Chili'), (('w', None), 'Chicken Casserole'))), ('new_recipe_id', ((('s', 'i'), 1.0), (('s', 'j'), 1.0), (('s', 'k'), 1.0), (('s', 'l'), 1.0), (('t', 'm'), 2.0), (('t', 'n'), 2.0), (('t', 'o'), 2.0), (('t', 'p'), 2.0), (('t', 'q'), 2.0), (('u', None), None), (('v', None), None), (('w', None), None))), ('new_ingredient_id', ((('s', 'i'), 1.0), (('s', 'j'), 5.0), (('s', 'k'), 7.0), (('s', 'l'), 8.0), (('t', 'm'), 6.0), (('t', 'n'), 2.0), (('t', 'o'), 1.0), (('t', 'p'), 3.0), (('t', 'q'), 4.0), (('u', None), None), (('v', None), None), (('w', None), None))))
-                )
-
-
-        f5 = f2.join_right(f3,
-                left_columns='recipe_id',
-                right_columns='recipe_id',
-                right_template='new_{}'
-                )
-
-        self.assertEqual(f5.to_pairs(0),
-                (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'))), ('new_recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('new_ingredient_id', ((('s', 'i'), 1), (('s', 'j'), 5), (('s', 'k'), 7), (('s', 'l'), 8), (('t', 'm'), 6), (('t', 'n'), 2), (('t', 'o'), 1), (('t', 'p'), 3), (('t', 'q'), 4))))
-                )
-
-
-        f6 = f2.join_left(f3,
-                left_columns='recipe_id',
-                right_columns='recipe_id',
-                right_template='new_{}'
-                )
-
-        self.assertEqual(f6.fillna(None).to_pairs(0),
-                (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2), (('u', None), 3), (('v', None), 4), (('w', None), 5))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'), (('u', None), 'Weekday Risotto'), (('v', None), 'Beans Chili'), (('w', None), 'Chicken Casserole'))), ('new_recipe_id', ((('s', 'i'), 1.0), (('s', 'j'), 1.0), (('s', 'k'), 1.0), (('s', 'l'), 1.0), (('t', 'm'), 2.0), (('t', 'n'), 2.0), (('t', 'o'), 2.0), (('t', 'p'), 2.0), (('t', 'q'), 2.0), (('u', None), None), (('v', None), None), (('w', None), None))), ('new_ingredient_id', ((('s', 'i'), 1.0), (('s', 'j'), 5.0), (('s', 'k'), 7.0), (('s', 'l'), 8.0), (('t', 'm'), 6.0), (('t', 'n'), 2.0), (('t', 'o'), 1.0), (('t', 'p'), 3.0), (('t', 'q'), 4.0), (('u', None), None), (('v', None), None), (('w', None), None))))
-                )
-
-    def test_frame_join_h1(self) -> None:
-
-        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
-        # df1 = f1.to_pandas()
-        # df2 = f2.to_pandas()
-        #df1.merge(df2, left_on='b', right_index=True)
-
-        f3 = f2.join_inner(f1, left_depth_level=0, right_depth_level=0)
-        self.assertEqual(f3.to_pairs(0),
-                (('c', ()), ('d', ()), ('a', ()), ('b', ()))
-                )
-
-        f4 = f2.join_right(f1,
-                left_depth_level=0,
-                right_depth_level=0,
-                fill_value=None,
-                composite_index=False,
-                )
-        self.assertEqual(f4.to_pairs(0),
-                (('c', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
-                )
-
-        f5 = f2.join_left(f1,
-                left_depth_level=0,
-                right_depth_level=0,
-                fill_value=None,
-                composite_index=False,
-                )
-        self.assertEqual(f5.to_pairs(0),
-                (('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))), ('a', (('x', None), ('y', None))), ('b', (('x', None), ('y', None))))
-                )
-
-        f6 = f2.join_outer(f1,
-                left_depth_level=0,
-                right_depth_level=0,
-                fill_value=None,
-                composite_index=False,
-                )
-        f6 = f6.loc[[0, 1, 2, 3, 4, 'y', 'x']] # get stable ordering
-        self.assertEqual(f6.to_pairs(0),
-                (('c', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 'bar'), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 20), ('x', 10))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20), ('y', None), ('x', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'), ('y', None), ('x', None))))
-                )
-
-    def test_frame_join_h2(self) -> None:
-
-        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-        with self.assertRaises(InvalidFillValue):
-            _ = f2.join_inner(f1, left_depth_level=0, right_depth_level=0, fill_value=FillValueAuto)
-
-
-    def test_frame_join_i(self) -> None:
-
-        f1 = Frame.from_dict(
-                dict(a=(10,10,20,20), b=('x','x','y','z')),
-                index=('a', 'b', 'c', 'd'))
-        f2 = Frame.from_dict(
-                dict(c=('foo', 'bar'), d=(10, 20)),
-                index=('c', 'd'))
-
-        f3 = f1.join_left(f2, left_depth_level=0,
-                right_depth_level=0,
-                fill_value=None,
-                composite_index=False)
-
-        self.assertEqual(f3.to_pairs(0),
-                (('a', (('a', 10), ('b', 10), ('c', 20), ('d', 20))), ('b', (('a', 'x'), ('b', 'x'), ('c', 'y'), ('d', 'z'))), ('c', (('a', None), ('b', None), ('c', 'foo'), ('d', 'bar'))), ('d', (('a', None), ('b', None), ('c', 10), ('d', 20))))
-                )
-
-        f4 = f1.join_inner(f2, left_depth_level=0,
-                right_depth_level=0,
-                fill_value=None,
-                composite_index=False,
-                )
-        self.assertEqual( f4.to_pairs(0),
-                (('a', (('c', 20), ('d', 20))), ('b', (('c', 'y'), ('d', 'z'))), ('c', (('c', 'foo'), ('d', 'bar'))), ('d', (('c', 10), ('d', 20))))
-                )
-
-    def test_frame_join_j(self) -> None:
-
-        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
-        with self.assertRaises(RuntimeError):
-            # composite index is required
-            _ = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=False)
-
-        f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=True)
-
-        self.assertEqual(f3.to_pairs(0),
-                (('c', ((('x', 0), 'foo'), (('x', 1), 'foo'), (('y', 2), 'bar'), (('y', 3), 'bar'))), ('d', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('a', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('b', ((('x', 0), 'x'), (('x', 1), 'x'), (('y', 2), 'y'), (('y', 3), 'y')))))
-
-    def test_frame_join_k(self) -> None:
-        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
-        with self.assertRaises(RuntimeError):
-            f1._join(f2, join_type=None)
-        with self.assertRaises(RuntimeError):
-            f1._join(f2, join_type=None, left_depth_level=0)
-
-        with self.assertRaises(NotImplementedError):
-            f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
-
-    def test_frame_join_l(self) -> None:
-        f1 = sf.Frame.from_dict(dict(a=(10, 20), b=('y','z')))
-        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
-        f2 = f1.join_inner(f2,
-                left_columns='a',
-                right_columns='d',
-                composite_index=False,
-                )
-        self.assertEqual(f2.to_pairs(),
-                (('a', ((0, 10), (1, 20))), ('b', ((0, 'y'), (1, 'z'))), ('c', ((0, 'foo'), (1, 'bar'))), ('d', ((0, 10), (1, 20))))
-                )
-
-    #---------------------------------------------------------------------------
-
     def test_frame_append_a(self) -> None:
 
         f1 = FrameGO(
@@ -13989,7 +13576,7 @@ class TestUnit(TestCase):
     def test_frame_via_T_or_a(self) -> None:
         f1 = ff.parse('s(6,3)|v(int)')
 
-        f2 = (f1 < 0).via_T | (True, False, False, False, False, True)
+        f2 = (f1 < 0).via_T | (True, False, False, False, False, True) # pylint: disable=E1131
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))

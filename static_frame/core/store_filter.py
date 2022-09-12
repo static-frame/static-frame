@@ -4,22 +4,22 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.util import COMPLEX_TYPES
+from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_COMPLEX_KIND
-from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_FLOAT_KIND
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_SET
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import DTYPE_FLOAT_KIND
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_STR
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DT64_MONTH
 
 # from static_frame.core.util import InexactTypes
 

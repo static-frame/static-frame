@@ -1,5 +1,3 @@
-# from io import StringIO
-import typing as tp
 from collections import defaultdict
 import json
 from pathlib import Path
@@ -8,12 +6,8 @@ from zipfile import ZipFile
 # import sys
 # import datetime
 
-import numpy as np
-import static_frame as sf
-import pandas as pd
-
 from static_frame.core.interface import InterfaceSummary
-from doc.build_example import bundle as doc_bundle
+from doc.build_example import to_json_bundle
 # from static_frame.core.interface import InterfaceGroup
 # from static_frame.core.container_util import ContainerMap
 
@@ -47,7 +41,7 @@ def build(fp: Path) -> str:
             method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
 
-    sig_to_example = doc_bundle()
+    sig_to_example = to_json_bundle()
 
     assert len(methods) == len(method_to_sig)
     assert len(sigs) == len(sig_to_sig_full)
@@ -69,3 +63,6 @@ def build(fp: Path) -> str:
 
 if __name__ == '__main__':
     build(Path('/tmp/sf-api.zip'))
+
+
+

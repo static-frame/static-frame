@@ -6,6 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 from io import BytesIO
 from io import StringIO
 
+from static_frame.core.archive_npy import ArchiveFrameConverter
+from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.frame import Frame
@@ -199,7 +201,6 @@ class _StoreZip(Store):
                         continue
 
                     c: StoreConfig = config_map[label]
-
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
@@ -208,7 +209,7 @@ class _StoreZip(Store):
                             name=label,
                             config=c.to_store_config_he(),
                             constructor=constructor,
-                    )
+                            )
 
         chunksize = config_map.default.read_chunksize
 
@@ -220,7 +221,6 @@ class _StoreZip(Store):
                     yield cached_frame
                 else:
                     frame = next(frame_gen)
-
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = frame
                     yield frame
@@ -235,7 +235,8 @@ class _StoreZip(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
             *,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
             ) -> None:
         config_map = StoreConfigMap.from_initializer(config)
         multiprocess = (config_map.default.write_max_workers is not None and
@@ -260,7 +261,11 @@ class _StoreZip(Store):
             label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
         try:
-            with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(self._fp,
+                    mode='w',
+                    compression=compression,
+                    allowZip64=True,
+                    ) as zf:
                 for label, frame_bytes in label_and_bytes():
                     label_encoded = config_map.default.label_encode(label)
                     # this will write it without a container
@@ -460,3 +465,95 @@ class StoreZipParquet(_StoreZip):
                 include_columns_name=c.include_columns_name,
                 )
         return payload.name, dst.getvalue()
+
+#-------------------------------------------------------------------------------
+class StoreZipNPY(Store):
+    '''A zip of NPY files. This does not presently support multi-processing.
+    '''
+    _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
+    _DELIMITER = '/'
+
+    @store_coherent_write
+    def write(self,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            *,
+            config: StoreConfigMapInitializer = None,
+            compression: int = zipfile.ZIP_DEFLATED,
+            ) -> None:
+        config_map = StoreConfigMap.from_initializer(config)
+
+        try:
+            with zipfile.ZipFile(self._fp,
+                    mode='w',
+                    compression=compression,
+                    allowZip64=True,
+                    ) as zf:
+                archive = ArchiveZipWrapper(zf,
+                        writeable=True,
+                        memory_map=False,
+                        delimiter=self._DELIMITER,
+                        )
+                for label, frame in items:
+                    c: StoreConfig = config_map[label]
+                    archive.prefix = config_map.default.label_encode(label) # mutate
+                    ArchiveFrameConverter.frame_encode(
+                            archive=archive,
+                            frame=frame,
+                            include_index=c.include_index,
+                            include_columns=c.include_columns,
+                            consolidate_blocks=c.consolidate_blocks,
+                            )
+        except ErrorNPYEncode:
+            # NOTE: catch NPY failures and remove self._fp to not leave a malformed zip
+            if os.path.exists(self._fp):
+                os.remove(self._fp)
+            raise
+
+    @store_coherent_non_write
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True, # not used
+            ) -> tp.Iterator[tp.Hashable]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            archive = ArchiveZipWrapper(zf,
+                    writeable=False,
+                    memory_map=False,
+                    delimiter=self._DELIMITER,
+                    )
+            # NOTE: this labels() delibers directories of NPY, not individual NPY
+            yield from (config_map.default.label_decode(name)
+                    for name in archive.labels())
+
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[tp.Hashable],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> tp.Iterator[Frame]:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp) as zf:
+            archive = ArchiveZipWrapper(zf,
+                    writeable=False,
+                    memory_map=False,
+                    delimiter=self._DELIMITER,
+                    )
+            for label in labels:
+                cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+                if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                    yield _StoreZip._set_container_type(cache_lookup, container_type)
+                    continue
+
+                archive.prefix = config_map.default.label_encode(label) # mutate
+                frame = ArchiveFrameConverter.frame_decode(
+                            archive=archive,
+                            constructor=container_type,
+                            )
+                # Newly read frame, add it to our weak_cache
+                self._weak_cache[label] = frame
+                yield frame

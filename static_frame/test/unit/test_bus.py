@@ -256,7 +256,7 @@ class TestUnit(TestCase):
                     (('f1', None), ('f2', (3, 2)), ('f3', (2, 2 )))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_nbytes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -289,7 +289,7 @@ class TestUnit(TestCase):
 
             self.assertEqual(b2.nbytes, 112)
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_dtypes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -324,7 +324,7 @@ class TestUnit(TestCase):
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1548,7 +1548,7 @@ class TestUnit(TestCase):
             a1 = b2.values
             self.assertNotEqual(id(a1), id(b2._values_mutable))
             self.assertEqual(b2.status['loaded'].sum(), 2)
-            self.assertTrue(all([f.__class__ is Frame for f in a1]))
+            self.assertTrue(all(f.__class__ is Frame for f in a1))
 
     #---------------------------------------------------------------------------
 
@@ -2267,6 +2267,43 @@ class TestUnit(TestCase):
             with self.assertRaises(ErrorNPYEncode):
                 b1.to_zip_npz(fp)
             self.assertFalse(os.path.exists(fp))
+
+    #---------------------------------------------------------------------------
+    def test_bus_npy_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npy(fp, config=config, max_persist=3)
+            b3 = b2['f2':]
+            self.assertEqual(b3['f5'].to_pairs(),
+                ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
+                )
+
+    def test_bus_npy_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3').astype(object)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                b1.to_zip_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+
+
 
 
 if __name__ == '__main__':

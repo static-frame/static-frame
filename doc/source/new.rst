@@ -1,6 +1,30 @@
 What is New in StaticFrame
 ===============================
 
+0.9.14
+----------
+
+Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr()``.
+
+Added ``compression`` argument to ``StoreClientMixin`` exporters that write ZIPs.
+
+Corrected issue with selection on zero-sized ``IndexHierarchy``.
+
+
+0.9.13
+----------
+
+Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``.
+
+Added ``test_example_gen.py`` to test and enforce automatic example generation.
+
+Improved usage of ``__slots__`` throughout.
+
+Continuous integration quality checks now using pylint 2.15.0 and isort 5.10.1
+
+Minimum pyarrow set to 0.17.0
+
+
 0.9.12
 ----------
 

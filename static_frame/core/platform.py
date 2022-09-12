@@ -1,11 +1,12 @@
-import typing as tp
 import importlib
 import platform as platform_mod
 import sys
+import typing as tp
 
-from static_frame.core.series import Series
-from static_frame.core.display import Display
 import static_frame
+from static_frame.core.display import Display
+from static_frame.core.series import Series
+
 
 class Platform:
 
@@ -37,9 +38,9 @@ class Platform:
                     continue #pragma: no cover
 
                 if hasattr(mod, '__version__'):
-                    yield package, mod.__version__ #type: ignore
+                    yield package, mod.__version__
                 elif hasattr(mod, 'version'): # msgpack
-                    yield package, mod.version #type: ignore
+                    yield package, mod.version
                 else:
                     yield package, None
 
