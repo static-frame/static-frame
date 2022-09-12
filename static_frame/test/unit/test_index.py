@@ -1655,7 +1655,7 @@ class TestUnit(TestCase):
     def test_sizeof_simple_index(self):
         # TODO: Look into determistically finding the size on different platforms / versions of python
         idx = Index(('a', 'b', 'c'))
-        self.assertEqual(getsizeof(idx), 850)
+        self.assertEqual(getsizeof(idx), 700)
 
     def test_sizeof_object_index(self):
         idx = Index((1, 'b', (2, 3)))

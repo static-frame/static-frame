@@ -3,12 +3,14 @@ import typing as tp
 import unittest
 import warnings
 from enum import Enum
+from sys import getsizeof
 
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
+from automap import FrozenAutoMap
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.index import Index
@@ -2740,20 +2742,88 @@ class TestUnit(TestCase):
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
 
     #---------------------------------------------------------------------------
-    def test_total_getsizeof_a(self) -> None:
-        self.assertEqual(total_getsizeof([(2, 3, 4)]), 148)
+    def test_total_getsizeof_int(self) -> None:
+        self.assertEqual(total_getsizeof([2]), getsizeof(2))
 
-    def test_total_getsizeof_b(self) -> None:
-        self.assertEqual(total_getsizeof([np.arange(3)]), 120)
+    def test_total_getsizeof_set(self) -> None:
+        self.assertEqual(
+            total_getsizeof([set(['a', 'b', 4])]),
+            sum(getsizeof(e) for e in [
+                'a', 'b', 4,
+                set(['a', 'b', 4])
+            ])
+        )
 
-    def test_total_getsizeof_c(self) -> None:
-        self.assertEqual(total_getsizeof([(2, 'b', (2, 3))]), 226)
+    def test_total_getsizeof_frozenset(self) -> None:
+        self.assertEqual(
+            total_getsizeof([frozenset(['a', 'b', 4])]),
+            sum(getsizeof(e) for e in [
+                'a', 'b', 4,
+                frozenset(['a', 'b', 4])
+            ])
+        )
 
-    def test_total_getsizeof_c(self) -> None:
-        self.assertEqual(total_getsizeof([Index((2, 3, 4))]), 796)
+    def test_total_getsizeof_np_array(self) -> None:
+        self.assertEqual(
+            total_getsizeof([np.arange(3)]),
+            getsizeof(np.arange(3))
+        )
 
-    def test_total_getsizeof_c(self) -> None:
-        self.assertEqual(total_getsizeof([Index((2, 'b', (2, 3)))]), 874)
+    def test_total_getsizeof_frozenautomap(self) -> None:
+        self.assertEqual(
+            total_getsizeof([FrozenAutoMap(['a', 'b', 'c'])]),
+            getsizeof(FrozenAutoMap(['a', 'b', 'c']))
+        )
+
+    def test_total_getsizeof_dict(self) -> None:
+        self.assertEqual(
+            total_getsizeof([{ 'a': 2, 'b': 3, 'c': (4, 5) }]),
+            sum(getsizeof(e) for e in [
+                'a', 2,
+                'b', 3,
+                'c', 4, 5, (4, 5),
+                { 'a': 2, 'b': 3, 'c': (4, 5) }
+            ])
+        )
+
+    def test_total_getsizeof_tuple(self) -> None:
+        self.assertEqual(total_getsizeof([(2, 3, 4)]), sum(getsizeof(e) for e in [
+            2, 3, 4,
+            (2, 3, 4)
+        ])) # 148
+
+
+    def test_total_getsizeof_nested_tuple(self) -> None:
+        self.assertEqual(total_getsizeof([(2, 'b', (2, 3))]), sum(getsizeof(e) for e in [
+            2, 'b', 3,
+            (2, 3),
+            (2, 'b', (2, 3))
+        ])) # 226
+
+    def test_total_getsizeof_larger_values_is_larger(self) -> None:
+        a = ('a', 'b', 'c')
+        b = ('abc', 'def', 'ghi')
+        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+
+    def test_total_getsizeof_more_values_is_larger_a(self) -> None:
+        a = ('a', 'b', 'c')
+        b = ('a', 'b', 'c', 'd')
+        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+
+    def test_total_getsizeof_more_values_is_larger_b(self) -> None:
+        a = ('a', 'b', 'c')
+        b = 'd'
+        self.assertTrue(total_getsizeof([a]) < total_getsizeof([a, b]))
+
+    def test_total_getsizeof_more_values_is_larger_nested_a(self) -> None:
+        a = ('a', (2, (8, 9), 4), 'c')
+        b = ('a', (2, (8, 9, 10), 4), 'c')
+        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+
+    def test_total_getsizeof_more_values_is_larger_nested_b(self) -> None:
+        a = np.array(['a', [2, (8, 9), 4], 'c'], dtype=object)
+        b = np.array(['a', [2, (8, 9, 10), 4], 'c'], dtype=object)
+        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
 
 if __name__ == '__main__':
     unittest.main()

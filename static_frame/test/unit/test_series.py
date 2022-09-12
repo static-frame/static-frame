@@ -5390,7 +5390,7 @@ class TestUnit(TestCase):
     def test_sizeof_with_index(self):
         # This is notably larger than simple since the index is not loc_is_iloc optimised
         s = Series(('a', 'b', 'c'), index=(0, 1, 2))
-        self.assertEqual(getsizeof(s), 932)
+        self.assertEqual(getsizeof(s), 852)
 
     def test_sizeof_with_name_is_larger(self):
         s1 = Series(('a', 'b', 'c'))
