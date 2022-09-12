@@ -1655,19 +1655,51 @@ class TestUnit(TestCase):
     def test_sizeof_simple_index(self):
         # TODO: Look into determistically finding the size on different platforms / versions of python
         idx = Index(('a', 'b', 'c'))
-        self.assertEqual(getsizeof(idx), 700)
+        self.assertEqual(getsizeof(idx), sum(getsizeof(e) for e in [
+            idx._map,
+            idx._labels,
+            idx._positions,
+            idx._recache,
+            idx._name,
+            None # for Index instance garbage collector overhead
+        ]))
 
     def test_sizeof_object_index(self):
         idx = Index((1, 'b', (2, 3)))
-        self.assertEqual(getsizeof(idx), 902)
+        self.assertEqual(getsizeof(idx), sum(getsizeof(e) for e in [
+            idx._map,
+            idx._labels,
+            # _positions is an object dtype numpy array
+            1, 'b',
+            2, 3,
+            (2, 3),
+            idx._positions,
+            idx._recache,
+            idx._name,
+            None # for Index instance garbage collector overhead
+        ]))
 
     def test_sizeof_loc_is_iloc(self):
         idx = Index((0, 1, 2), loc_is_iloc=True)
-        self.assertEqual(getsizeof(idx), 272)
+        self.assertEqual(getsizeof(idx), sum(getsizeof(e) for e in [
+            idx._map,
+            idx._labels,
+            idx._positions,
+            idx._recache,
+            # idx._name, # both _map and _name are None
+            None # for Index instance garbage collector overhead
+        ]))
 
     def test_sizeof_empty_index(self):
         idx = Index(())
-        self.assertEqual(getsizeof(idx), 592)
+        self.assertEqual(getsizeof(idx), sum(getsizeof(e) for e in [
+            idx._map,
+            idx._labels,
+            idx._positions,
+            idx._recache,
+            idx._name,
+            None # for Index instance garbage collector overhead
+        ]))
 
     def test_sizeof_name_adds_size(self):
         idx1 = Index(('a', 'b', 'c'))

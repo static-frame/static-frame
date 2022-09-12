@@ -4031,7 +4031,7 @@ class TestUnit(TestCase):
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
-    
+
     #---------------------------------------------------------------------------
     def test_sizeof_a(self) -> None:
         a = np.array([1, 2, 3])
@@ -4050,8 +4050,8 @@ class TestUnit(TestCase):
             # _dtypes
             np.dtype('int64'),
             tb._dtypes, # [np.dtype('int64')],
-            # _row_dtype is np.dtype('int64'), skipped since already included
-            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+            # _row_dtype, # np.dtype('int64') is already included
+            None # for TypeBlocks instance garbage collector overhead
         ]))
 
     def test_sizeof_b(self) -> None:
@@ -4076,8 +4076,8 @@ class TestUnit(TestCase):
             # _dtypes
             np.dtype('int64'),
             tb._dtypes, # [np.dtype('int64'), np.dtype('int64')],
-            # _row_dtype is np.dtype('int64'), skipped since already included
-            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+            # _row_dtype, # np.dtype('int64') is already included
+            None # for TypeBlocks instance garbage collector overhead
         ]))
 
     def test_sizeof_b(self) -> None:
@@ -4100,8 +4100,8 @@ class TestUnit(TestCase):
             # _dtypes
             np.dtype('int64'),
             tb._dtypes, #[np.dtype('int64'), np.dtype('int64'), np.dtype('int64')],
-            # _row_dtype is np.dtype('int64'), skipped since already included
-            None # to add the size+garbage collector overhead of the TypeBlocks instance itself
+            # _row_dtype, # np.dtype('int64') is already included
+            None # for TypeBlocks instance garbage collector overhead
         ]))
 
 if __name__ == '__main__':

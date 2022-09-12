@@ -3008,7 +3008,6 @@ class Frame(ContainerOperand):
     #     return self.__copy__() #type: ignore
 
     def __sizeof__(self: 'Frame') -> int:
-        # TODO: Consider skipping counting arrays used in multiple nested objects
         return getsizeof_recursive([
             self._blocks,
             self._columns,
