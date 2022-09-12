@@ -58,6 +58,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import full_for_fill
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
@@ -66,7 +67,6 @@ from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
 
@@ -533,7 +533,7 @@ class TypeBlocks(ContainerOperand):
         return self.__copy__()
 
     def __sizeof__(self: 'TypeBlocks') -> int:
-        return total_getsizeof([
+        return getsizeof_recursive([
             self._blocks,
             self._dtypes,
             self._index,

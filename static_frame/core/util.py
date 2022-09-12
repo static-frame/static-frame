@@ -3187,7 +3187,7 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def total_getsizeof(it: tp.Iterable[any], *, seen=None) -> int:
+def getsizeof_recursive(it: tp.Iterable[any], *, seen=None) -> int:
     '''
     Gives the total size of an iterable of elements
     see also: https://code.activestate.com/recipes/577504/
@@ -3198,7 +3198,7 @@ def total_getsizeof(it: tp.Iterable[any], *, seen=None) -> int:
         dict: lambda d: chain.from_iterable(d.items()),
         set: iter,
         frozenset: iter,
-        np.ndarray: lambda d: iter(d) if d.dtype == np.object else []
+        np.ndarray: lambda d: iter(d) if d.dtype == np.object else ()
     }
     seen = set() if seen is None else seen
     total = 0
@@ -3209,5 +3209,5 @@ def total_getsizeof(it: tp.Iterable[any], *, seen=None) -> int:
         total += getsizeof(el)
         for t, h in handlers.items():
             if isinstance(el, t):
-                total += total_getsizeof(h(el), seen=seen)
+                total += getsizeof_recursive(h(el), seen=seen)
     return total

@@ -46,6 +46,7 @@ from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_objectable_dt64
@@ -66,7 +67,6 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
-from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -2743,11 +2743,11 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_total_getsizeof_int(self) -> None:
-        self.assertEqual(total_getsizeof([2]), getsizeof(2))
+        self.assertEqual(getsizeof_recursive([2]), getsizeof(2))
 
     def test_total_getsizeof_set(self) -> None:
         self.assertEqual(
-            total_getsizeof([set(['a', 'b', 4])]),
+            getsizeof_recursive([set(['a', 'b', 4])]),
             sum(getsizeof(e) for e in [
                 'a', 'b', 4,
                 set(['a', 'b', 4])
@@ -2756,7 +2756,7 @@ class TestUnit(TestCase):
 
     def test_total_getsizeof_frozenset(self) -> None:
         self.assertEqual(
-            total_getsizeof([frozenset(['a', 'b', 4])]),
+            getsizeof_recursive([frozenset(['a', 'b', 4])]),
             sum(getsizeof(e) for e in [
                 'a', 'b', 4,
                 frozenset(['a', 'b', 4])
@@ -2765,19 +2765,19 @@ class TestUnit(TestCase):
 
     def test_total_getsizeof_np_array(self) -> None:
         self.assertEqual(
-            total_getsizeof([np.arange(3)]),
+            getsizeof_recursive([np.arange(3)]),
             getsizeof(np.arange(3))
         )
 
     def test_total_getsizeof_frozenautomap(self) -> None:
         self.assertEqual(
-            total_getsizeof([FrozenAutoMap(['a', 'b', 'c'])]),
+            getsizeof_recursive([FrozenAutoMap(['a', 'b', 'c'])]),
             getsizeof(FrozenAutoMap(['a', 'b', 'c']))
         )
 
     def test_total_getsizeof_dict(self) -> None:
         self.assertEqual(
-            total_getsizeof([{ 'a': 2, 'b': 3, 'c': (4, 5) }]),
+            getsizeof_recursive([{ 'a': 2, 'b': 3, 'c': (4, 5) }]),
             sum(getsizeof(e) for e in [
                 'a', 2,
                 'b', 3,
@@ -2787,14 +2787,14 @@ class TestUnit(TestCase):
         )
 
     def test_total_getsizeof_tuple(self) -> None:
-        self.assertEqual(total_getsizeof([(2, 3, 4)]), sum(getsizeof(e) for e in [
+        self.assertEqual(getsizeof_recursive([(2, 3, 4)]), sum(getsizeof(e) for e in [
             2, 3, 4,
             (2, 3, 4)
         ]))
 
 
     def test_total_getsizeof_nested_tuple(self) -> None:
-        self.assertEqual(total_getsizeof([(2, 'b', (2, 3))]), sum(getsizeof(e) for e in [
+        self.assertEqual(getsizeof_recursive([(2, 'b', (2, 3))]), sum(getsizeof(e) for e in [
             2, 'b', 3,
             (2, 3),
             (2, 'b', (2, 3))
@@ -2803,27 +2803,27 @@ class TestUnit(TestCase):
     def test_total_getsizeof_larger_values_is_larger(self) -> None:
         a = ('a', 'b', 'c')
         b = ('abc', 'def', 'ghi')
-        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+        self.assertTrue(getsizeof_recursive([a]) < getsizeof_recursive([b]))
 
     def test_total_getsizeof_more_values_is_larger_a(self) -> None:
         a = ('a', 'b', 'c')
         b = ('a', 'b', 'c', 'd')
-        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+        self.assertTrue(getsizeof_recursive([a]) < getsizeof_recursive([b]))
 
     def test_total_getsizeof_more_values_is_larger_b(self) -> None:
         a = ('a', 'b', 'c')
         b = 'd'
-        self.assertTrue(total_getsizeof([a]) < total_getsizeof([a, b]))
+        self.assertTrue(getsizeof_recursive([a]) < getsizeof_recursive([a, b]))
 
     def test_total_getsizeof_more_values_is_larger_nested_a(self) -> None:
         a = ('a', (2, (8, 9), 4), 'c')
         b = ('a', (2, (8, 9, 10), 4), 'c')
-        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+        self.assertTrue(getsizeof_recursive([a]) < getsizeof_recursive([b]))
 
     def test_total_getsizeof_more_values_is_larger_nested_b(self) -> None:
         a = np.array(['a', [2, (8, 9), 4], 'c'], dtype=object)
         b = np.array(['a', [2, (8, 9, 10), 4], 'c'], dtype=object)
-        self.assertTrue(total_getsizeof([a]) < total_getsizeof([b]))
+        self.assertTrue(getsizeof_recursive([a]) < getsizeof_recursive([b]))
 
 if __name__ == '__main__':
     unittest.main()

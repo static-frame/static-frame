@@ -165,6 +165,7 @@ from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_dtype_specifier
@@ -174,7 +175,6 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_normalize
 from static_frame.core.util import path_filter
-from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -3009,7 +3009,7 @@ class Frame(ContainerOperand):
 
     def __sizeof__(self: 'Frame') -> int:
         # TODO: Consider skipping counting arrays used in multiple nested objects
-        return total_getsizeof([
+        return getsizeof_recursive([
             self._blocks,
             self._columns,
             self._index,

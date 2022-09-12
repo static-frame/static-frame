@@ -27,7 +27,7 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
-from static_frame.core.util import total_getsizeof
+from static_frame.core.util import getsizeof_recursive
 from static_frame.test.test_case import TestCase
 
 

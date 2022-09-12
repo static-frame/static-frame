@@ -96,6 +96,7 @@ from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import full_for_fill
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import intersect1d
 from static_frame.core.util import is_callable_or_mapping
@@ -104,7 +105,6 @@ from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
-from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
 
@@ -589,7 +589,7 @@ class Series(ContainerOperand):
     #             )
 
     def __sizeof__(self: 'Series') -> int:
-        return total_getsizeof([
+        return getsizeof_recursive([
             self.values,
             self._index,
             self._name

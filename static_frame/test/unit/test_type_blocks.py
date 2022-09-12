@@ -4039,17 +4039,17 @@ class TestUnit(TestCase):
         self.assertTrue(getsizeof(tb), sum(getsizeof(e) for e in [
             # _blocks
             np.array([1, 2, 3]),
-            [np.array([1, 2, 3])],
+            tb._blocks, # [np.array([1, 2, 3])],
             # _index
             0,
             (0, 0),
-            [(0, 0)],
+            tb._index, # [(0, 0)],
             # _shape
             3, 1,
-            (3, 1),
+            tb._shape, # (3, 1),
             # _dtypes
             np.dtype('int64'),
-            [np.dtype('int64')],
+            tb._dtypes, # [np.dtype('int64')],
             # _row_dtype is np.dtype('int64'), skipped since already included
             None # to add the size+garbage collector overhead of the TypeBlocks instance itself
         ]))

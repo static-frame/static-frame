@@ -67,6 +67,7 @@ from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import intersect1d
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
@@ -75,7 +76,6 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
-from static_frame.core.util import total_getsizeof
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import union1d
 
@@ -384,7 +384,7 @@ class Index(IndexBase):
         return self.__copy__() #type: ignore
 
     def __sizeof__(self: I) -> int:
-        return total_getsizeof([
+        return getsizeof_recursive([
             self._map,
             self._labels,
             self._positions,
