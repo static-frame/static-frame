@@ -3246,6 +3246,14 @@ class SeriesHE(Series):
     __slots__ = ('_hash',)
     _hash: int
 
+    def __sizeof__(self) -> int:
+        if not hasattr(self, '_hash'):
+            return Series.__sizeof__(self)
+        else:
+            return Series.__sizeof__(self) + getsizeof_recursive([
+                self._hash
+            ])
+
     def __eq__(self, other: tp.Any) -> bool:
         '''
         Return True if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.

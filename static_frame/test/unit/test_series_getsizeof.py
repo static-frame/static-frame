@@ -66,5 +66,26 @@ class TestUnit(TestCase):
         s2 = Series(('a', 'b', 'c'), index=('abc', 'def', 'ghi'))
         self.assertTrue(getsizeof(s1) < getsizeof(s2))
 
+    def test_series_he_before_hash(self):
+        s = Series(('a', 'b', 'c')).to_series_he()
+        self.assertEqual(getsizeof(s), sum(getsizeof(e) for e in (
+            s.values,
+            s._index,
+            s._name,
+            # s._hash, # has not been initialized yet
+            None # for Series instance garbage collector overhead
+        )))
+
+    def test_series_he_after_hash(self):
+        s = Series(('a', 'b', 'c')).to_series_he()
+        hash(s) # to initialize _hash
+        self.assertEqual(getsizeof(s), sum(getsizeof(e) for e in (
+            s.values,
+            s._index,
+            s._name,
+            s._hash,
+            None # for Series instance garbage collector overhead
+        )))
+
 if __name__ == '__main__':
     unittest.main()

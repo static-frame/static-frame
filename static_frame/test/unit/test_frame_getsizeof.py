@@ -46,7 +46,29 @@ class TestUnit(TestCase):
             f._name,
             None # for Frame instance garbage collector overhead
         )))
-    pass
+
+    def test_frame_he_before_hash(self) -> None:
+        f = ff.parse('s(3,4)').to_frame_he()
+        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
+            f._blocks,
+            f._columns,
+            f._index,
+            f._name,
+            # f._hash, # has not been initialized yet
+            None # for FrameHE instance garbage collector overhead
+        )))
+
+    def test_frame_he_after_hash(self) -> None:
+        f = ff.parse('s(3,4)').to_frame_he()
+        hash(f) # to initialize _hash
+        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
+            f._blocks,
+            f._columns,
+            f._index,
+            f._name,
+            f._hash,
+            None # for FrameHE instance garbage collector overhead
+        )))
 
 if __name__ == '__main__':
     unittest.main()
