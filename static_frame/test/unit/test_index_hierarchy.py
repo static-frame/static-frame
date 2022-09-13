@@ -3654,18 +3654,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.values_at_depth(2).dtype, np.dtype('<U7'))
 
     def test_hierarchy_index_at_depth_a(self) -> None:
-        ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
-
-        for depth in range(3):
-            assert ih1.index_at_depth(depth) is ih1._indices[depth]
-            assert ih1.index_at_depth([depth]) == [ih1._indices[depth]]
-            assert ih1.index_at_depth(iter([depth])) == [ih1._indices[depth]]
-
-        assert ih1.index_at_depth([0, 1]) == ih1.index_at_depth([1, 0])[::-1]
-        assert ih1.index_at_depth([2, 0]) == [ih1._indices[2], ih1._indices[0]]
-        assert ih1.index_at_depth(iter(range(3))) == ih1._indices
-
-    def test_hierarchy_index_at_depth_a(self) -> None:
         ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
         ih1.append((1, 300, '2020-01'))
 
