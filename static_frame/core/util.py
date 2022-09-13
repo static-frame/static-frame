@@ -3192,14 +3192,6 @@ def getsizeof_recursive(it: tp.Iterable[any], *, seen=None) -> int:
     Gives the total size of an iterable of elements
     see also: https://code.activestate.com/recipes/577504/
     '''
-    handlers = {
-        tuple: iter,
-        list: iter,
-        dict: lambda d: chain.from_iterable(d.items()),
-        set: iter,
-        frozenset: iter,
-        np.ndarray: lambda d: iter(d) if d.dtype == np.object else ()
-    }
     seen = set() if seen is None else seen
     total = 0
     for el in it:
@@ -3209,7 +3201,18 @@ def getsizeof_recursive(it: tp.Iterable[any], *, seen=None) -> int:
         total += getsizeof(el)
         # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(el, '__iter__') and not isinstance(el, str):
-            for t, h in handlers.items():
-                if isinstance(el, t):
-                    total += getsizeof_recursive(h(el), seen=seen)
+            if (
+                (isinstance(el, np.ndarray) and el.dtype == np.object)
+                or isinstance(el, tuple)
+                or isinstance(el, list)
+                or isinstance(el, set)
+                or isinstance(el, frozenset)
+            ):
+                total += getsizeof_recursive(iter(el), seen=seen)
+            elif isinstance(el, dict):
+                total += getsizeof_recursive(chain.from_iterable(el.items()))
+            else:
+                # Treat the full size of the object as included in the original getsizeof call
+                # e.g. FrozenAutoMap, integer numpy arrays, etc.
+                pass
     return total

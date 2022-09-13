@@ -389,7 +389,7 @@ class Index(IndexBase):
             self._labels,
             self._positions,
             self._recache,
-            self._name
+            self._name,
         ))
 
     #---------------------------------------------------------------------------
@@ -1412,7 +1412,7 @@ class _IndexGOMixin:
         return Index.__sizeof__(self) + getsizeof_recursive((
             self._labels_mutable,
             self._labels_mutable_dtype,
-            self._positions_mutable_count
+            self._positions_mutable_count,
         ))
 
     #---------------------------------------------------------------------------

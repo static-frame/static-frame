@@ -538,7 +538,7 @@ class TypeBlocks(ContainerOperand):
             self._dtypes,
             self._index,
             self._shape,
-            self._row_dtype
+            self._row_dtype,
         ))
 
     #---------------------------------------------------------------------------

@@ -3012,7 +3012,7 @@ class Frame(ContainerOperand):
             self._blocks,
             self._columns,
             self._index,
-            self._name
+            self._name,
         ))
 
     #---------------------------------------------------------------------------
@@ -8756,9 +8756,9 @@ class FrameHE(Frame):
         if not hasattr(self, '_hash'):
             return Frame.__sizeof__(self)
         else:
-            return Frame.__sizeof__(self) + getsizeof_recursive([
-                self._hash
-            ])
+            return Frame.__sizeof__(self) + getsizeof_recursive((
+                self._hash,
+            ))
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

@@ -592,7 +592,7 @@ class Series(ContainerOperand):
         return getsizeof_recursive((
             self.values,
             self._index,
-            self._name
+            self._name,
         ))
 
     # ---------------------------------------------------------------------------
@@ -3251,7 +3251,7 @@ class SeriesHE(Series):
             return Series.__sizeof__(self)
         else:
             return Series.__sizeof__(self) + getsizeof_recursive((
-                self._hash
+                self._hash,
             ))
 
     def __eq__(self, other: tp.Any) -> bool:
