@@ -705,7 +705,7 @@ class IndexHierarchy(IndexBase):
                     np.repeat(val, repeats=reps)
                     for val, reps in zip(labels, repeats)
                 ])
-
+        outer_level.flags.writeable = False
         assert len(outer_level) == sum(map(len, blocks)) # sanity check
 
         def gen_blocks() -> tp.Iterable[np.ndarray]:
