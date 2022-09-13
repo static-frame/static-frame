@@ -1408,6 +1408,13 @@ class _IndexGOMixin:
         memo[id(self)] = obj
         return obj
 
+    def __sizeof__(self):
+        return Index.__sizeof__(self) + getsizeof_recursive([
+            self._labels_mutable,
+            self._labels_mutable_dtype,
+            self._positions_mutable_count
+        ])
+
     #---------------------------------------------------------------------------
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
@@ -1502,13 +1509,6 @@ class IndexGO(_IndexGOMixin, Index):
 
     _IMMUTABLE_CONSTRUCTOR = Index
     __slots__ = INDEX_GO_LEAF_SLOTS
-
-    def __sizeof__(self):
-        return Index.__sizeof__(self) + getsizeof_recursive([
-            self._labels_mutable,
-            self._labels_mutable_dtype,
-            self._positions_mutable_count
-        ])
 
 
 # update class attr on Index after class initialziation

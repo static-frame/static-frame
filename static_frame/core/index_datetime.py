@@ -30,6 +30,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
+from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
@@ -182,6 +183,13 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _DTYPE: tp.Optional[np.dtype]
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
+
+    def __sizeof__(self):
+        return Index.__sizeof__(self) + getsizeof_recursive([
+            self._labels_mutable,
+            self._labels_mutable_dtype,
+            self._positions_mutable_count
+        ])
 
     def append(self, value: tp.Hashable) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None

@@ -1,8 +1,11 @@
 import unittest
 from sys import getsizeof
 
+import numpy as np
+
 from static_frame import Index
 from static_frame import IndexGO
+from static_frame.core.index_datetime import IndexDateGO
 from static_frame.test.test_case import TestCase
 
 
@@ -93,7 +96,7 @@ class TestUnit(TestCase):
             idx._labels_mutable,
             idx._labels_mutable_dtype,
             idx._positions_mutable_count,
-            None # for Index instance garbage collector overhead
+            None # for IndexGO instance garbage collector overhead
         )))
 
     def test_index_go_after_append(self):
@@ -109,7 +112,22 @@ class TestUnit(TestCase):
             idx._labels_mutable,
             idx._labels_mutable_dtype,
             idx._positions_mutable_count,
-            None # for Index instance garbage collector overhead
+            None # for IndexGO instance garbage collector overhead
+        )))
+
+    def test_index_datetime_go(self):
+        idx = IndexDateGO.from_date_range('1994-01-01', '1995-01-01')
+        self.assertEqual(getsizeof(idx), sum(getsizeof(e) for e in (
+            idx._map,
+            idx._labels,
+            idx._positions,
+            idx._recache,
+            idx._name,
+            *idx._labels_mutable, # Note: _labels_mutable is not nested
+            idx._labels_mutable,
+            idx._labels_mutable_dtype,
+            idx._positions_mutable_count,
+            None # for IndexDateGO instance garbage collector overhead
         )))
 
 if __name__ == '__main__':
