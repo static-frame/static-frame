@@ -2214,7 +2214,7 @@ class IndexHierarchy(IndexBase):
                 labels = self.values_at_depth(pos)
                 label_indexes = ufunc_unique1d_positions(labels)[0]
                 label_indexes.sort()
-                return labels[label_indexes] # type: ignore
+                return labels[label_indexes]
 
             return self._indices[pos].values
 
