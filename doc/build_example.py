@@ -1,7 +1,11 @@
-from io import StringIO
-import typing as tp
 import os
 import sys
+
+DOC_DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
+
+from io import StringIO
+import typing as tp
 
 import numpy as np
 import pandas as pd

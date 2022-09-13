@@ -13,6 +13,7 @@ dist
 
 *.egg-info
 *.so
+*.diff
 
 # Wing
 *.wp[ur]
