@@ -1,27 +1,25 @@
+import argparse
+import cProfile
+import datetime
+import fnmatch
 import io
 import itertools
 import os
-import argparse
-import typing as tp
-import fnmatch
-import timeit
-import string
-import cProfile
 import pstats
+import random
+import string
 import sys
-import datetime
 import tempfile
+import timeit
+import typing as tp
 from enum import Enum
 
-from pyinstrument import Profiler #type: ignore
-from line_profiler import LineProfiler #type: ignore
-import gprof2dot #type: ignore
-
+import frame_fixtures as ff
+import gprof2dot  # type: ignore
 import numpy as np
 import pandas as pd
-import random
-import frame_fixtures as ff
-
+from line_profiler import LineProfiler  # type: ignore
+from pyinstrument import Profiler  # type: ignore
 
 sys.path.append(os.getcwd())
 
@@ -760,6 +758,7 @@ class FrameIterTuple(Perf):
 
 
         from static_frame.core.type_blocks import TypeBlocks
+
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
 
@@ -825,6 +824,7 @@ class FrameIterGroupApply(Perf):
 
 
         from static_frame.core.type_blocks import TypeBlocks
+
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
 
@@ -963,6 +963,42 @@ class Pivot_R(Pivot, Reference):
     def index1_columns1_data3(self) -> None:
         post = self.pdf4.pivot_table(index=0, columns=1, values=[3, 4, 5], aggfunc=np.nansum)
         assert post.shape == (6, 9)
+
+
+#-------------------------------------------------------------------------------
+class JoinLeft(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = ff.parse('s(1000,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = ff.parse('s(20,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.pdf_right = self.sff_right.to_pandas()
+
+        # NOTE: SF returns a composite index of tuples; Pandas just returns a auto index
+        from static_frame.core.join import join
+        self.meta = {
+            'basic': FunctionMetaData(
+                line_target=join,
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            }
+
+class JoinLeft_N(JoinLeft, Native):
+
+    def basic(self) -> None:
+        post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
+        assert post.shape == (5046, 7)
+
+class JoinLeft_R(JoinLeft, Reference):
+
+    def basic(self) -> None:
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
+        assert post.shape == (5046, 7)
+
 
 
 #-------------------------------------------------------------------------------
@@ -1136,6 +1172,7 @@ class Group(Perf):
         self.pdf2 = self.sff2.to_pandas()
 
         from static_frame import Frame
+
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations
         self.meta = {
@@ -1229,6 +1266,7 @@ class FrameFromConcat(Perf):
 
 
         from static_frame import Frame
+
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations
         # self.meta = {

@@ -1,38 +1,38 @@
-from functools import wraps
-import unittest
-import pickle
-import datetime
-import typing as tp
-from collections import OrderedDict
 import copy
+import datetime
+import pickle
+import typing as tp
+import unittest
+from collections import OrderedDict
+from functools import wraps
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
 from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
 from static_frame import HLoc
 from static_frame import ILoc
 from static_frame import Index
-from static_frame import IndexGO
 from static_frame import IndexDate
-from static_frame import IndexYear
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
+from static_frame import IndexYear
+from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
 from static_frame import Series
+from static_frame import TypeBlocks
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_hierarchy import build_indexers_from_product
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
-from static_frame.core.index_auto import IndexAutoConstructorFactory
 
 SelfT = tp.TypeVar('SelfT')
 
@@ -900,6 +900,17 @@ class TestUnit(TestCase):
         post = ih1._extract_iloc(None)
         self.assertTrue(post.equals(ih1)) # type: ignore
         self.assertIs(post, ih1)
+
+    def test_hierarchy_extract_iloc_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_labels((('a', 'a'), ('b','b')))
+        ih2 = ih1[None]
+        ih2.append(('c', 'c')) #type: ignore
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 'a'], ['b', 'b']])
+
+        self.assertEqual(ih2.values.tolist(), #type: ignore
+                [['a', 'a'], ['b', 'b'], ['c', 'c']])
+
 
     #---------------------------------------------------------------------------
 
@@ -2253,11 +2264,11 @@ class TestUnit(TestCase):
 
         # Depth levels are not unique
         with self.assertRaises(ValueError):
-            ih.relabel_at_depth(dict(), depth_level=[0, 0])
+            ih.relabel_at_depth({}, depth_level=[0, 0])
 
         # Depth level is too shallow
         with self.assertRaises(ValueError):
-            ih.relabel_at_depth(dict(), depth_level=2)
+            ih.relabel_at_depth({}, depth_level=2)
 
         # Depth level outside range positive
         with self.assertRaises(ValueError):
@@ -3226,7 +3237,7 @@ class TestUnit(TestCase):
 
         with temp_file('.html', path=True) as fp:
             ih1.to_html_datatables(fp, show=False)
-            with open(fp) as file:
+            with open(fp, encoding='utf-8') as file:
                 data = file.read()
                 self.assertTrue('SFTable' in data)
                 self.assertTrue(len(data) > 1000)
@@ -3461,6 +3472,11 @@ class TestUnit(TestCase):
             [['b', -4, 'z'], ['b', -4, 'y'], ['b', -4, 'x'], ['b', 1, 'z'], ['b', 1, 'y'], ['b', 1, 'x'], ['b', 3, 'z'], ['b', 3, 'y'], ['b', 3, 'x'], ['b', 5, 'z'], ['b', 5, 'y'], ['b', 5, 'x'], ['a', -4, 'z'], ['a', -4, 'y'], ['a', -4, 'x'], ['a', 1, 'z'], ['a', 1, 'y'], ['a', 1, 'x'], ['a', 3, 'z'], ['a', 3, 'y'], ['a', 3, 'x'], ['a', 5, 'z'], ['a', 5, 'y'], ['a', 5, 'x']]
             )
 
+    def test_hierarchy_sort_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels((), depth_reference=2)
+        ih2 = ih1.sort()
+        self.assertEqual(ih1.shape, ih2.shape)
+
     #---------------------------------------------------------------------------
     def test_hierarchy_isin_a(self) -> None:
 
@@ -3662,7 +3678,7 @@ class TestUnit(TestCase):
                 (1, IndexYearMonth))
                 )
 
-    @skip_win #type: ignore
+    @skip_win
     def test_hierarchy_astype_e(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 
@@ -3699,7 +3715,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win #type: ignore
+    @skip_win
     def test_hierarchy_values_at_depth_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
         post = ih1.values_at_depth([0, 1])

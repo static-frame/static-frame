@@ -6,8 +6,8 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from arraykit import name_filter
 from arraykit import get_new_indexers_and_screen
+from arraykit import name_filter
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructor
@@ -459,7 +459,7 @@ class IndexHierarchy(IndexBase):
             try:
                 [size] = set(map(len, arrays))
             except ValueError:
-                raise ErrorInitIndex('All arrays must have the same length')
+                raise ErrorInitIndex('All arrays must have the same length') from None
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
@@ -1014,7 +1014,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        obj: IH = self.__new__(self.__class__)
+        obj: IH = self.__class__.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = array_deepcopy(self._indexers, memo)
         obj._blocks = self._blocks.__deepcopy__(memo)
@@ -1251,7 +1251,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        total = sum(map(_NBYTES_GETTER, self._indices))
+        total: int = sum(map(_NBYTES_GETTER, self._indices))
         total += sum(map(_NBYTES_GETTER, self._indexers))
         total += self._blocks.nbytes
         total += self._map.nbytes
@@ -1331,7 +1331,7 @@ class IndexHierarchy(IndexBase):
                 or func is self.__class__._UFUNC_UNION
             ):
                 # NOTE: this will delegate name attr
-                return self if self.STATIC else self.copy()
+                return self if self.STATIC else self.__deepcopy__({})
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # we will no longer have type associations per depth
                 return self._from_empty((), depth_reference=self.depth)
@@ -1991,13 +1991,19 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         if key is None:
-            return self
+            return self if self.STATIC else self.__deepcopy__({})
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
             return tuple(self._blocks.iter_row_elements(key))
 
         tb = self._blocks._extract(row_key=key)
+        if len(tb) == 0:
+            return self.__class__._from_empty((),
+                    name=self._name,
+                    depth_reference=tb.shape[1],
+                    index_constructors=self._index_constructors,
+                    )
 
         new_indices: tp.List[Index] = []
         new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
@@ -2017,7 +2023,7 @@ class IndexHierarchy(IndexBase):
         return self.__class__(
                 indices=new_indices,
                 indexers=new_indexers,
-                name=self.name,
+                name=self._name,
                 blocks=tb,
                 own_blocks=True,
                 )

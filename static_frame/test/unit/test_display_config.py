@@ -1,6 +1,5 @@
-from static_frame.test.test_case import TestCase
-
 from static_frame import DisplayConfig
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

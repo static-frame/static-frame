@@ -1,26 +1,29 @@
-import os
-from tempfile import TemporaryDirectory
-from io import UnsupportedOperation, StringIO
 import contextlib
+import os
+import zipfile
+from io import StringIO
+from io import UnsupportedOperation
+from tempfile import TemporaryDirectory
 
-import numpy as np
-from numpy.lib.format import write_array # type: ignore
 import frame_fixtures as ff
+import numpy as np
+from numpy.lib.format import write_array  # type: ignore
 
-from static_frame.core.frame import Frame
-from static_frame.core.index import Index
-from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.archive_npy import NPY
+from static_frame.core.archive_npy import NPZ
 from static_frame.core.archive_npy import ArchiveDirectory
 from static_frame.core.archive_npy import ArchiveZip
-from static_frame.core.archive_npy import NPZ
-from static_frame.core.archive_npy import NPY
-
+from static_frame.core.archive_npy import ArchiveZipWrapper
+from static_frame.core.archive_npy import Label
+from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.bus import Bus
+from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import AxisInvalid
-
-from static_frame.test.test_case import temp_file
+from static_frame.core.frame import Frame
+from static_frame.core.index import Index
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):
@@ -197,6 +200,8 @@ class TestUnit(TestCase):
 
     def test_archive_directory_d(self) -> None:
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+
             a1 = np.arange(10)
             ad1 = ArchiveDirectory(fp, writeable=True, memory_map=False)
             ad1.write_array('a1.npy', a1)
@@ -214,8 +219,8 @@ class TestUnit(TestCase):
 
             f = Frame.from_npz(fp)
             self.assertEqual(f.values.tolist(), a1.tolist())
-            self.assertIs(f.index._map, None)
-            self.assertIs(f.columns._map, None)
+            self.assertIs(f.index._map, None) # type: ignore
+            self.assertIs(f.columns._map, None) # type: ignore
 
     def test_archive_components_npz_write_arrays_b(self) -> None:
         with temp_file('.zip') as fp:
@@ -319,7 +324,17 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 NPZ(fp, 'foo').from_arrays(blocks=(a1,))
 
-    #-----------------------------------------------------------------------------
+    def test_archive_components_npz_write_arrays_k(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,str,bool,bool)')
+
+        with temp_file('.zip') as fp:
+            f1.to_npz(fp)
+            a1 = np.arange(12).reshape(3, 4)
+            with self.assertRaises(UnsupportedOperation):
+                NPZ(fp, 'r').from_arrays(blocks=(a1,))
+
+
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npy_write_arrays_h(self) -> None:
 
@@ -328,6 +343,8 @@ class TestUnit(TestCase):
         a3 = np.array([True, False, True])
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+
             columns=Index(('a', 'b', 'c', 'd', 'e', 'f'), name='foo')
             NPY(fp, 'w').from_arrays(blocks=(a1, a2, a3), columns=columns, name='bar', axis=1)
 
@@ -345,6 +362,7 @@ class TestUnit(TestCase):
         a3 = np.array([True, False, True])
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             columns=('a', 'b', 'c', 'd', 'e', 'f')
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_arrays(blocks=(a1, a2, a3), columns=columns, name='bar')
@@ -356,6 +374,8 @@ class TestUnit(TestCase):
         a3 = np.array([True, False, True])
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+
             columns=np.arange(6).astype('datetime64[D]')
             NPY(fp, 'w').from_arrays(blocks=(a1, a2, a3), columns=columns, name='bar', axis=1)
             f = Frame.from_npy(fp)
@@ -364,23 +384,16 @@ class TestUnit(TestCase):
                     ((dt64('1970-01-01'), ((0, 0), (1, 4), (2, 8))), (dt64('1970-01-02'), ((0, 1), (1, 5), (2, 9))), (dt64('1970-01-03'), ((0, 2), (1, 6), (2, 10))), (dt64('1970-01-04'), ((0, 3), (1, 7), (2, 11))), (dt64('1970-01-05'), ((0, 'a'), (1, 'b'), (2, 'c'))), (dt64('1970-01-06'), ((0, True), (1, False), (2, True))))
                     )
 
-    def test_archive_components_npy_write_arrays_k(self) -> None:
 
-        a1 = np.arange(12).reshape(3, 4)
-        a2 = np.array(['a', 'b', 'c'])
-        a3 = np.array([True, False, True])
-
-        with TemporaryDirectory() as fp:
-            with self.assertRaises(UnsupportedOperation):
-                NPY(fp, 'r').from_arrays(blocks=(a1, a2, a3))
-
-    #-----------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npz_from_frames_a(self) -> None:
         f1 = ff.parse('s(2,2)|v(int)').relabel(index=('a', 'b'))
         f2 = ff.parse('s(2,2)|v(int)').relabel(index=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=0)
 
             f = Frame.from_npy(fp)
@@ -393,6 +406,8 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(index=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
+
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=0, include_index=False)
 
             f = Frame.from_npy(fp)
@@ -405,6 +420,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(columns=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=1)
 
             f = Frame.from_npy(fp)
@@ -417,6 +433,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(columns=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=1, include_columns=False)
 
             f = Frame.from_npy(fp)
@@ -429,6 +446,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=0)
 
@@ -437,6 +455,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)')
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=1)
 
@@ -445,6 +464,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(columns=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=1, include_index=False)
 
@@ -453,6 +473,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(index=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=0, include_columns=False)
 
@@ -461,6 +482,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(float)').relabel(index=('b', 'c'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=1, include_columns=False)
             f = Frame.from_npy(fp).fillna(0)
             self.assertEqual(f.to_pairs(),
@@ -472,6 +494,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(float)').relabel(columns=('b', 'c'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             NPY(fp, 'w').from_frames(frames=(f1, f2), axis=0, include_index=False)
             f = Frame.from_npy(fp).fillna(0)
             self.assertEqual(f.to_pairs(),
@@ -483,6 +506,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(int)').relabel(index=('c', 'd'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(RuntimeError):
                 NPY(fp, 'w').from_frames(frames=(f1, f2), axis=3)
 
@@ -491,6 +515,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)|v(float)').relabel(columns=('b', 'c'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with NPY(fp, 'w') as npy:
                 npy.from_frames(frames=(f1, f2), axis=0, include_index=False)
                 f = Frame.from_npy(fp).fillna(0)
@@ -506,12 +531,13 @@ class TestUnit(TestCase):
             with self.assertRaises(UnsupportedOperation):
                 NPY(fp, 'r').from_frames(frames=(f1, f2), axis=3)
 
-    #-----------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     def test_archive_components_npy_contents_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
 
             npy = NPY(fp, 'r')
@@ -523,7 +549,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
-            f1.to_npy(fp)
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(UnsupportedOperation):
                 _ = NPY(fp, 'w').contents
 
@@ -540,6 +566,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
             npy = NPY(fp, 'r')
             self.assertEqual(npy.contents['size'].sum(), npy.nbytes)
@@ -548,10 +575,19 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
 
         with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             f1.to_npy(fp)
-            npy = NPY(fp, 'w')
+            with self.assertRaises(RuntimeError):
+                npy = NPY(fp, 'w')
+
+    def test_archive_components_npy_nbytes_c(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int,str,bool,bool)').relabel(index=('a', 'b'))
+
+        with TemporaryDirectory() as fp:
+            os.rmdir(fp) # let it be re-created
             with self.assertRaises(UnsupportedOperation):
-                _ = npy.nbytes
+                _ = NPY(fp, 'w').nbytes
+
 
     def test_archive_zip_missing_cleanup(self) -> None:
         # Test for cases where the specified file doesn't exist.
@@ -564,6 +600,36 @@ class TestUnit(TestCase):
 
         # Assert that no error was printed to stderr.
         self.assertEqual(buffer.getvalue(), '')
+
+    #---------------------------------------------------------------------------
+    def test_archive_zip_file_open_a(self) -> None:
+
+        with temp_file('.zip') as fp:
+            with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+                with self.assertRaises(RuntimeError):
+                    ArchiveZipWrapper(zf, writeable=True, memory_map=True, delimiter='/')
+
+    def test_archive_zip_file_open_b(self) -> None:
+        f1 = ff.parse('s(2,2)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(bool)').rename('b')
+        b = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            b.to_zip_npy(fp)
+
+            with zipfile.ZipFile(fp, 'r', zipfile.ZIP_DEFLATED) as zf:
+                archive = ArchiveZipWrapper(zf, writeable=False, memory_map=False, delimiter='/')
+
+                archive.prefix = 'b'
+                post1 = archive.read_array_header(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                self.assertEqual(post1, (np.dtype('bool'), False, (2, 2)))
+
+                post2 = archive.size_array(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                self.assertEqual(post2, 68)
+
+                post3 = archive.size_metadata()
+                self.assertEqual(post3, 90)
+
 
 
 if __name__ == '__main__':

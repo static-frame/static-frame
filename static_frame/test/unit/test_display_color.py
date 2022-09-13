@@ -1,5 +1,5 @@
-from static_frame.test.test_case import TestCase
 from static_frame.core.display_color import HexColor
+from static_frame.test.test_case import TestCase
 
 # assuming located in the same directory
 # from static_frame import Index

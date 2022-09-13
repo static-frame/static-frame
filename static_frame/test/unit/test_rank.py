@@ -1,10 +1,9 @@
 import numpy as np
 
-from static_frame.test.test_case import TestCase
+from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
-
-from static_frame.core.rank import RankMethod
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

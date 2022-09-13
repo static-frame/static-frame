@@ -2,19 +2,19 @@ from io import StringIO
 import typing as tp
 import os
 import sys
-import datetime
 
 import numpy as np
-import static_frame as sf
 import pandas as pd
 
+import static_frame as sf
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.container_util import ContainerMap
+from static_frame.core.container import ContainerBase
 
 dt64 = np.datetime64
 
-def repr_value(v) -> str:
+def repr_value(v: tp.Any) -> str:
     if isinstance(v, tuple):
         return f"({', '.join(repr_value(x) for x in v)})"
     if v is np.nan:
@@ -30,10 +30,10 @@ def repr_value(v) -> str:
 def kwa(params: tp.Dict[str, tp.Any],
         arg_first: bool = True,
         star_expand_first: bool = False,
-        ):
+        ) -> str:
     if star_expand_first:
         params_iter = iter(params.items())
-        msg = [] # will comma join at end
+        msg: tp.List[str] = [] # will comma join at end
         msg.extend((repr_value(v) for v in next(params_iter)[1]))
         msg.extend(f'{k}={repr_value(v)}' for k, v in params_iter)
         return ', '.join(msg)
@@ -308,18 +308,23 @@ class ExGen:
         '''Derive the function name from the group label, then get the function from the cls.
         '''
         attr = str(ig).lower().replace(' ', '_').replace('-', '_')
-        return getattr(cls, attr)
+        return getattr(cls, attr) #type: ignore
 
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
+
 
     @staticmethod
-    def attribute(row: sf.Series,
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _attribute(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -328,17 +333,19 @@ class ExGen:
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args'] # drop paren
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
-
         yield f'{name} = {ctr}'
         yield f'{name}.{attr}'
 
-
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
-    def dictionary_like(row: sf.Series,
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _dictionary_like(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -368,7 +375,11 @@ class ExGen:
             yield f'{name}.{attr_func}()'
 
     @staticmethod
-    def display(row: sf.Series,
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _display(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -404,30 +415,34 @@ class ExGen:
 
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @staticmethod
-    def accessor_string(row: sf.Series,
+    def accessor_string(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_string(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -488,14 +503,18 @@ class ExGen:
 
     @staticmethod
     def accessor_transpose(row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-        return
+        raise StopIteration()
+
+    @classmethod
+    def accessor_regular_expression(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
 
     @staticmethod
-    def accessor_regular_expression(row: sf.Series,
+    def _accessor_regular_expression(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -520,8 +539,12 @@ class ExGen:
         else:
             yield f"{name}.via_re('[X123]').{attr_funcs[1]}(){exporter}"
 
+    @classmethod
+    def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
     @staticmethod
-    def accessor_values(row: sf.Series,
+    def _accessor_values(row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -607,7 +630,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 's', '', SERIES_INIT_A)
+        yield from ExGen._attribute(row, 's', '', SERIES_INIT_A)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -668,8 +691,11 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_G)})'
             yield f"s.{attr_func}(skipna=True)"
             yield f"s.{attr_func}(unique=True)"
-
         elif attr in ('cov()',):
+            yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s1.{attr_func}(s2)"
+        elif attr in ('corr()',):
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
             yield f"s1.{attr_func}(s2)"
@@ -835,11 +861,11 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 's', '', SERIES_INIT_A)
+        yield from ExGen._dictionary_like(row, 's', '', SERIES_INIT_A)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 's', '', SERIES_INIT_A)
+        yield from ExGen._display(row, 's', '', SERIES_INIT_A)
 
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
@@ -1296,7 +1322,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 's', '', SERIES_INIT_X)
+        yield from ExGen._accessor_string(row, 's', '', SERIES_INIT_X)
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -1339,11 +1365,11 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 's', '', SERIES_INIT_A)
+        yield from ExGen._accessor_regular_expression(row, 's', '', SERIES_INIT_A)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 's', '', SERIES_INIT_A)
+        yield from ExGen._accessor_values(row, 's', '', SERIES_INIT_A)
 
 
 class ExGenFrame(ExGen):
@@ -1380,12 +1406,14 @@ class ExGenFrame(ExGen):
         elif attr == 'from_csv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_csv('/tmp/f.csv')"
-            yield "open('/tmp/f.csv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.csv').read_text()"
             yield f"{iattr}('/tmp/f.csv', index_depth=1)"
         elif attr == 'from_delimited':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-            yield "open('/tmp/f.psv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.psv').read_text()"
             yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
         elif attr == 'from_dict':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
@@ -1426,6 +1454,8 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"{iattr}('/tmp/f.npy')"
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
 
         elif attr == 'from_npy_mmap':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -1433,6 +1463,8 @@ class ExGenFrame(ExGen):
             yield f"f2, closer = {iattr}('/tmp/f.npy')"
             yield 'f2'
             yield 'closer() # close mmaps after usage'
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
 
         elif attr == 'from_npz':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -1492,7 +1524,8 @@ class ExGenFrame(ExGen):
         elif attr == 'from_tsv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_tsv('/tmp/f.tsv')"
-            yield "open('/tmp/f.tsv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.tsv').read_text()"
             yield f"{iattr}('/tmp/f.tsv', index_depth=1)"
 
         elif attr == 'from_xlsx':
@@ -1534,11 +1567,13 @@ class ExGenFrame(ExGen):
         elif attr == 'to_csv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_csv('/tmp/f.csv')"
-            yield "open('/tmp/f.csv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.csv').read_text()"
         elif attr == 'to_delimited()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
-            yield "open('/tmp/f.psv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.psv').read_text()"
         elif attr == 'to_hdf5()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_hdf5('/tmp/f.h5')"
@@ -1546,6 +1581,8 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"sf.Frame.from_npy('/tmp/f.npy')"
+            yield f'import shutil'
+            yield f"shutil.rmtree('/tmp/f.npy')"
         elif attr == 'to_npz()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npz('/tmp/f.npz')"
@@ -1566,7 +1603,8 @@ class ExGenFrame(ExGen):
         elif attr == 'to_tsv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_tsv('/tmp/f.tsv')"
-            yield "open('/tmp/f.tsv').read()"
+            yield f'from pathlib import Path'
+            yield "Path('/tmp/f.tsv').read_text()"
         elif attr == 'to_xlsx()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
@@ -1580,7 +1618,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
+        yield from ExGen._attribute(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -1648,6 +1686,9 @@ class ExGenFrame(ExGen):
             yield f"f.{attr_func}(unique=True)"
 
         elif attr in ('cov()',):
+            yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
+            yield f"f1.{attr_func}()"
+        elif attr in ('corr()',):
             yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
             yield f"f1.{attr_func}()"
         elif attr in (
@@ -1892,11 +1933,11 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
+        yield from ExGen._dictionary_like(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
+        yield from ExGen._display(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
 
     @staticmethod
@@ -2407,7 +2448,7 @@ class ExGenFrame(ExGen):
                 'iter_group_labels().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
-            yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
+            yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum()))"
 
         elif attr == 'iter_group_labels_array().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
@@ -2603,7 +2644,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_C)
+        yield from ExGen._accessor_string(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_C)
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -2664,11 +2705,11 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
+        yield from ExGen._accessor_regular_expression(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
+        yield from ExGen._accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
 
 
@@ -2715,7 +2756,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'ix', '', INDEX_INIT_A1)
+        yield from ExGen._attribute(row, 'ix', '', INDEX_INIT_A1)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -2873,11 +2914,11 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 'ix', '', INDEX_INIT_A1)
+        yield from ExGen._dictionary_like(row, 'ix', '', INDEX_INIT_A1)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'ix', '', INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', INDEX_INIT_C)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -3019,22 +3060,22 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'ix', '', INDEX_INIT_E)
+        yield from ExGen._accessor_string(row, 'ix', '', INDEX_INIT_E)
 
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 'ix', '', INDEX_INIT_E)
+        yield from ExGen._accessor_regular_expression(row, 'ix', '', INDEX_INIT_E)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'ix', '', INDEX_INIT_B2)
+        yield from ExGen._accessor_values(row, 'ix', '', INDEX_INIT_B2)
 
 
 class _ExGenIndexDT64(ExGen):
-    INDEX_INIT_A = () # oroginal
-    INDEX_INIT_B = () # can be extended to a
-    INDEX_INIT_C = () # has NaT
+    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
+    INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
+    INDEX_INIT_C: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
 
     @classmethod
@@ -3084,7 +3125,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def attribute(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'ix', '', cls.INDEX_INIT_A)
+        yield from ExGen._attribute(row, 'ix', '', cls.INDEX_INIT_A)
 
     @classmethod
     def method(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -3241,7 +3282,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def dictionary_like(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 'ix', '', cls.INDEX_INIT_A)
+        yield from ExGen._dictionary_like(row, 'ix', '', cls.INDEX_INIT_A)
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
@@ -3269,7 +3310,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def display(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'ix', '', cls.INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', cls.INDEX_INIT_C)
 
     @classmethod
     def selector(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -3410,15 +3451,15 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def accessor_string(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'ix', '', cls.INDEX_INIT_A)
+        yield from ExGen._accessor_string(row, 'ix', '', cls.INDEX_INIT_A)
 
     @classmethod
     def accessor_regular_expression(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 'ix', '', cls.INDEX_INIT_A)
+        yield from ExGen._accessor_regular_expression(row, 'ix', '', cls.INDEX_INIT_A)
 
     @classmethod
     def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
+        yield from ExGen._accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
 
 
 
@@ -3537,7 +3578,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
+        yield from ExGen._attribute(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -3716,11 +3757,11 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
+        yield from ExGen._dictionary_like(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
+        yield from ExGen._display(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -3857,7 +3898,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
+        yield from ExGen._accessor_string(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
 
 
     @classmethod
@@ -3883,11 +3924,11 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
+        yield from ExGen._accessor_regular_expression(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
+        yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
 
 
@@ -3933,6 +3974,10 @@ class ExGenBus(ExGen):
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f"b.to_zip_csv('/tmp/b.zip')"
             yield f"{iattr}('/tmp/b.zip')"
+        elif attr == 'from_zip_npy':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b.to_zip_npy('/tmp/b.zip')"
+            yield f"{iattr}('/tmp/b.zip')"
         elif attr == 'from_zip_npz':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f"b.to_zip_npz('/tmp/b.zip')"
@@ -3977,6 +4022,7 @@ class ExGenBus(ExGen):
         elif attr in (
                 'to_zip_csv()',
                 'to_zip_npz()',
+                'to_zip_npy()',
                 'to_zip_parquet()',
                 'to_zip_pickle()',
                 'to_zip_tsv()',
@@ -3995,7 +4041,7 @@ class ExGenBus(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
+        yield from ExGen._attribute(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -4083,11 +4129,11 @@ class ExGenBus(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.dictionary_like(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
+        yield from ExGen._dictionary_like(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
+        yield from ExGen._display(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -4237,6 +4283,11 @@ class ExGenBatch(ExGen):
             yield f"bt1.to_zip_csv('/tmp/f.zip')"
             yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
             yield 'bt2.to_frame()'
+        elif attr == 'from_zip_npy':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_zip_npy('/tmp/f.zip')"
+            yield f"bt2 = {iattr}('/tmp/f.zip')"
+            yield 'bt2.to_frame()'
         elif attr == 'from_zip_npz':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt1.to_zip_npz('/tmp/f.zip')"
@@ -4285,6 +4336,7 @@ class ExGenBatch(ExGen):
             yield f"bt1.{attr_func}('/tmp/f.xlsx')"
         elif attr in (
                 'to_zip_csv()',
+                'to_zip_npy()',
                 'to_zip_npz()',
                 'to_zip_parquet()',
                 'to_zip_pickle()',
@@ -4302,7 +4354,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.attribute(row, 'bt', '', BATCH_INIT_A)
+        yield from ExGen._attribute(row, 'bt', '', BATCH_INIT_A)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -4365,7 +4417,7 @@ class ExGenBatch(ExGen):
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(skipna=True).to_frame()"
             yield f"bt.{attr_func}(unique=True).to_frame()"
-        elif attr in ('cov()', 'cumprod()', 'cumsum()'):
+        elif attr in ('cov()', 'corr()', 'cumprod()', 'cumsum()'):
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f"bt.{attr_func}().to_frame()"
         elif attr in (
@@ -4531,7 +4583,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.display(row, 'bt', '', BATCH_INIT_G)
+        yield from ExGen._display(row, 'bt', '', BATCH_INIT_G)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -4596,7 +4648,7 @@ class ExGenBatch(ExGen):
             yield f"(bt {cls.SIG_TO_OP_MATMUL[attr]} (1, 0.5)).to_frame()"
         elif attr in cls.SIG_TO_OP_BIT:
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-            yield f"bt {cls.SIG_TO_OP_BIT[attr]} 1"
+            yield f"(bt {cls.SIG_TO_OP_BIT[attr]} 1).to_frame()"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4645,7 +4697,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_string(row, 'bt', '', BATCH_INIT_K, ".to_frame()")
+        yield from ExGen._accessor_string(row, 'bt', '', BATCH_INIT_K, ".to_frame()")
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -4706,11 +4758,11 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_regular_expression(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
+        yield from ExGen._accessor_regular_expression(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen.accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
+        yield from ExGen._accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
 
 
 class ExGenHLoc(ExGen):
@@ -4913,6 +4965,16 @@ class ExGenFillValueAuto(ExGen):
 TAG_START = '#start_'
 TAG_END = '#end_'
 
+def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
+    exceptions = []
+    try:
+        import tkinter as tk
+        exceptions.append(tk.TclError)
+    except (ImportError, ModuleNotFoundError):
+        pass
+    exceptions.extend((ValueError, RuntimeError, NotImplementedError, TypeError))
+    return tuple(exceptions)
+
 def calls_to_msg(calls: tp.Iterator[str],
         row: sf.Series
         ) -> tp.Iterator[str]:
@@ -4923,6 +4985,8 @@ def calls_to_msg(calls: tp.Iterator[str],
     g['np'] = np
     g['pd'] = pd
     l = locals()
+
+    repr_except = get_repr_exceptions()
 
     i = -1
     for i, call in enumerate(calls):
@@ -4937,18 +5001,18 @@ def calls_to_msg(calls: tp.Iterator[str],
                 yield from str(post).split('\n')
         except SyntaxError:
             exec(call, g, l)
-        except (ValueError, RuntimeError, NotImplementedError, TypeError) as e:
+        except repr_except as e:
             yield repr(e) # show this error
 
     if i >= 0:
         yield f'{TAG_END}{cls.__name__}-{row["signature_no_args"]}'
         yield ''
 
-def gen_examples(target, exg: ExGen) -> tp.Iterator[str]:
+def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]:
 
     sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 
-    inter = InterfaceSummary.to_frame(target, #type: ignore
+    inter = InterfaceSummary.to_frame(target,
             minimized=False,
             max_args=99,
             )
@@ -5027,19 +5091,31 @@ def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.ILoc, ExGenILoc)
     yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
 
+#-----------------------------------------------------------------------------
+# exporters
 
-def write():
+def get_examples_fp() -> str:
     doc_dir = os.path.abspath(os.path.dirname(__file__))
-    fp = os.path.join(doc_dir, 'source', 'examples.txt')
+    return os.path.join(doc_dir, 'source', 'examples.txt')
 
+def to_file() -> None:
+    fp = get_examples_fp()
     with open(fp, 'w') as f:
         for line in gen_all_examples():
             f.write(line)
             f.write('\n')
 
-def bundle() -> tp.Dict[str, tp.Sequence[str]]:
+def to_string_io() -> StringIO:
+    sio = StringIO()
+    for line in gen_all_examples():
+        sio.write(line)
+        sio.write('\n')
+    sio.seek(0)
+    return sio
+
+def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
     post = {}
-    lines = []
+    lines: tp.List[str] = []
     sig = ''
     for line in gen_all_examples():
         if line.startswith(TAG_START):
@@ -5056,9 +5132,10 @@ def bundle() -> tp.Dict[str, tp.Sequence[str]]:
     return post
 
 if __name__ == '__main__':
-    for line in gen_all_examples():
-        print(line)
-    # write()
+
+    # for line in gen_all_examples():
+    #     print(line)
+    to_file()
     # post = bundle()
 
 

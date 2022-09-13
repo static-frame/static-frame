@@ -1,21 +1,21 @@
-import time
 import datetime
+import time
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
-from static_frame.core.frame import Frame
-from static_frame.core.series import Series
 from static_frame.core.batch import Batch
-from static_frame.test.test_case import TestCase
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.display_config import DisplayConfig
-from static_frame.test.test_case import temp_file
-from static_frame.core.store import StoreConfig
 from static_frame.core.batch import normalize_container
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.frame import Frame
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.series import Series
+from static_frame.core.store import StoreConfig
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 
@@ -1283,7 +1283,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_batch_iloc_cov_a(self) -> None:
+    def test_batch_cov_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(b=(1,2,3), a=(4,5,6)),
                 index=('z', 'y', 'x'),
@@ -1300,6 +1300,24 @@ class TestUnit(TestCase):
         f4 = Batch.from_frames((f1, f2)).cov(axis=0).to_frame()
         self.assertEqual( f4.to_pairs(),
                 (('x', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 388.0), (('f2', 'x'), 4704.5))), ('y', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 0.0), (('f2', 'x'), 0.0))), ('z', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 32.0), (('f2', 'x'), 388.0)))))
+
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_corr_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(1,2,3), a=(4,5,6)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,10,100), a=(1,2,3)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).corr().to_frame()
+        self.assertEqual(round(f3, 6).to_pairs(), # type: ignore
+                (('b', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 1.0), (('f2', 'a'), 0.904194))), ('a', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 0.904194), (('f2', 'a'), 1.0))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -1598,6 +1616,21 @@ class TestUnit(TestCase):
             frames = dict(b2.items())
 
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
+    #---------------------------------------------------------------------------
+    def test_batch_to_npy(self) -> None:
+
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        b1 = Batch.from_frames((f1, f2))
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            b2 = Batch.from_zip_npy(fp)
+            frames = dict(b2.items())
+
+            self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
 
     #---------------------------------------------------------------------------
     def test_batch_via_values_a(self) -> None:

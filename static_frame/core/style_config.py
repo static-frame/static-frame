@@ -2,9 +2,8 @@ import typing as tp
 
 from static_frame.core.display_color import HexColor
 
-
 if tp.TYPE_CHECKING:
-    from static_frame.core.container import ContainerOperand #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.container import ContainerOperand  # pylint: disable=W0611 #pragma: no cover
 
 CSSDict = tp.Dict[str, str]
 

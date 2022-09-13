@@ -1,17 +1,14 @@
 import typing as tp
-from arraykit import isna_element
 
 import numpy as np
-
+from arraykit import isna_element
 from hypothesis import given
-
-from static_frame.test.property.strategies import get_labels
-from static_frame.test.property.strategies import get_index_any
-
-from static_frame.test.test_case import TestCase
 
 from static_frame import Index
 from static_frame import IndexGO
+from static_frame.test.property.strategies import get_index_any
+from static_frame.test.property.strategies import get_labels
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

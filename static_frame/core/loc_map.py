@@ -1,37 +1,35 @@
 import itertools
 import sys
 import typing as tp
-from functools import reduce
 from copy import deepcopy
+from functools import reduce
 
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import LocEmpty
-
+from static_frame.core.exception import LocInvalid
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
+from static_frame.core.util import DTYPE_UINT_DEFAULT
+from static_frame.core.util import EMPTY_ARRAY_INT
+from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
+from static_frame.core.util import EMPTY_SLICE
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import OPERATORS
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
-from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import INT_TYPES
-
+from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index #pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
 
 
 HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
@@ -232,7 +230,7 @@ class HierarchicalLocMap:
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        obj: _HLMap = self.__new__(self.__class__)
+        obj: _HLMap = self.__class__.__new__(self.__class__)
         obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
         obj.encoded_indexer_map = deepcopy(self.encoded_indexer_map, memo)
