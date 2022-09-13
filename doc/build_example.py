@@ -293,7 +293,6 @@ class ExGen:
         '__lshift__()': '<<',
     }
 
-
     @classmethod
     def group_to_method(cls,
             ig: InterfaceGroup
@@ -920,7 +919,6 @@ class ExGenSeries(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
 
@@ -1241,7 +1239,6 @@ class ExGenSeries(ExGen):
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
-
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -1931,7 +1928,6 @@ class ExGenFrame(ExGen):
     def display(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._display(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_A)
 
-
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
 
@@ -2561,7 +2557,6 @@ class ExGenFrame(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
@@ -3052,7 +3047,6 @@ class ExGenIndex(ExGen):
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_string(row, 'ix', '', INDEX_INIT_E)
-
 
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
@@ -3750,6 +3744,14 @@ class ExGenIndexHierarchy(ExGen):
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
             yield f"ih.{attr_func}(0)"
             yield f"ih.{attr_func}(2)"
+        elif attr == 'index_at_depth()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
+            yield f"ih.{attr_func}(0)"
+            yield f"ih.{attr_func}((2, 0))"
+        elif attr == 'indexer_at_depth()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
+            yield f"ih.{attr_func}(0)"
+            yield f"ih.{attr_func}((2, 0))"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -3897,7 +3899,6 @@ class ExGenIndexHierarchy(ExGen):
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_string(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
-
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -4228,7 +4229,6 @@ class ExGenBus(ExGen):
             yield f"b.{attr_func}(func, use_threads=True)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
-
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -4908,7 +4908,6 @@ class ExGenFillValueAuto(ExGen):
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         yield f"{icls}.from_default().{attr}"
 
-
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
 
@@ -5102,12 +5101,13 @@ def get_examples_fp() -> str:
     return os.path.join(DOC_DIR, 'source', 'examples.txt')
 
 
-def to_file() -> None:
+def to_file() -> str:
     fp = get_examples_fp()
     with open(fp, 'w') as f:
         for line in gen_all_examples():
             f.write(line)
             f.write('\n')
+    return fp
 
 
 def to_string_io() -> StringIO:
@@ -5141,5 +5141,5 @@ def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
 if __name__ == '__main__':
     # for line in gen_all_examples():
     #     print(line)
-    to_file()
     # post = bundle()
+    print(to_file())
