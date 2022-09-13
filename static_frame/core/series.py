@@ -588,8 +588,9 @@ class Series(ContainerOperand):
     #             own_index=True,
     #             )
 
-    def __sizeof__(self: 'Series') -> int:
-        return getsizeof_recursive((
+    def __sizeof__(self: 'Series', *, seen=None) -> int:
+        seen = set() if seen is None else seen
+        return sum(getsizeof_recursive(el, seen=seen) for el in (
             self.values,
             self._index,
             self._name,
@@ -3246,13 +3247,17 @@ class SeriesHE(Series):
     __slots__ = ('_hash',)
     _hash: int
 
-    def __sizeof__(self) -> int:
+    def __sizeof__(self, *, seen=None) -> int:
         if not hasattr(self, '_hash'):
             return Series.__sizeof__(self)
         else:
-            return Series.__sizeof__(self) + getsizeof_recursive((
-                self._hash,
-            ))
+            seen = set() if seen is None else seen
+            return (
+                Series.__sizeof__(self, seen=seen) +
+                sum(getsizeof_recursive(el, seen=seen) for el in (
+                    self._hash,
+                ))
+            )
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

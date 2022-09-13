@@ -184,12 +184,16 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def __sizeof__(self):
-        return Index.__sizeof__(self) + getsizeof_recursive([
-            self._labels_mutable,
-            self._labels_mutable_dtype,
-            self._positions_mutable_count
-        ])
+    def __sizeof__(self, *, seen=None):
+        seen = set() if seen is None else seen
+        return (
+            Index.__sizeof__(self, seen=seen) +
+            sum(getsizeof_recursive(el, seen=seen) for el in (
+                self._labels_mutable,
+                self._labels_mutable_dtype,
+                self._positions_mutable_count
+            ))
+        )
 
     def append(self, value: tp.Hashable) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None

@@ -3187,32 +3187,34 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def getsizeof_recursive(it: tp.Iterable[any], *, seen=None) -> int:
+def all_nested_elements(it: any, seen=None) -> tp.Iterable[any]:
+    pass
+
+def getsizeof_recursive(obj: any, *, seen=None) -> int:
     '''
     Gives the total size of an iterable of elements
     see also: https://code.activestate.com/recipes/577504/
     '''
-    seen = set() if seen is None else seen
     total = 0
-    for el in it:
-        if id(el) in seen:
-            continue
-        seen.add(id(el))
-        total += getsizeof(el)
-        # Check if iterable or a string first for fewer isinstance calls on common types
-        if hasattr(el, '__iter__') and not isinstance(el, str):
-            if (
-                (isinstance(el, np.ndarray) and el.dtype == np.object)
-                or isinstance(el, tuple)
-                or isinstance(el, list)
-                or isinstance(el, set)
-                or isinstance(el, frozenset)
-            ):
-                total += getsizeof_recursive(iter(el), seen=seen)
-            elif isinstance(el, dict):
-                total += getsizeof_recursive(chain.from_iterable(el.items()))
-            else:
-                # Treat the full size of the object as included in the original getsizeof call
-                # e.g. FrozenAutoMap, integer numpy arrays, etc.
-                pass
+    seen = set() if seen is None else seen
+    if id(obj) in seen:
+        return 0
+    seen.add(id(obj))
+    total += getsizeof(obj)
+    # Check if iterable or a string first for fewer isinstance calls on common types
+    if hasattr(obj, '__iter__') and not isinstance(obj, str):
+        if (
+            (isinstance(obj, np.ndarray) and obj.dtype == np.object)
+            or isinstance(obj, tuple)
+            or isinstance(obj, list)
+            or isinstance(obj, set)
+            or isinstance(obj, frozenset)
+        ):
+            total += sum(getsizeof_recursive(el, seen=seen) for el in obj)
+        elif isinstance(obj, dict):
+            total += sum(getsizeof_recursive(el, seen=seen) for el in chain.from_iterable(obj.items()))
+        else:
+            # Treat the full size of the object as included in the original getsizeof call
+            # e.g. FrozenAutoMap, integer numpy arrays, etc.
+            pass
     return total

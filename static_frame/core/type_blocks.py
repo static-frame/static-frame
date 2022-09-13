@@ -532,8 +532,9 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.__copy__()
 
-    def __sizeof__(self: 'TypeBlocks') -> int:
-        return getsizeof_recursive((
+    def __sizeof__(self: 'TypeBlocks', *, seen=None) -> int:
+        seen = set() if seen is None else seen
+        return sum(getsizeof_recursive(el, seen=seen) for el in (
             self._blocks,
             self._dtypes,
             self._index,

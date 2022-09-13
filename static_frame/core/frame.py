@@ -1,4 +1,3 @@
-
 import csv
 import json
 import pickle
@@ -3007,8 +3006,9 @@ class Frame(ContainerOperand):
     #     '''
     #     return self.__copy__() #type: ignore
 
-    def __sizeof__(self: 'Frame') -> int:
-        return getsizeof_recursive((
+    def __sizeof__(self: 'Frame', *, seen=None) -> int:
+        seen = set() if seen is None else seen
+        return sum(getsizeof_recursive(el, seen=seen) for el in (
             self._blocks,
             self._columns,
             self._index,
@@ -8752,13 +8752,17 @@ class FrameHE(Frame):
 
     _hash: int
 
-    def __sizeof__(self) -> int:
+    def __sizeof__(self, *, seen=None) -> int:
         if not hasattr(self, '_hash'):
             return Frame.__sizeof__(self)
         else:
-            return Frame.__sizeof__(self) + getsizeof_recursive((
-                self._hash,
-            ))
+            seen = set() if seen is None else seen
+            return (
+                Frame.__sizeof__(self, seen=seen) +
+                sum(getsizeof_recursive(el, seen=seen) for el in (
+                    self._hash,
+                ))
+            )
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

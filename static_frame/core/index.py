@@ -383,8 +383,9 @@ class Index(IndexBase):
         '''
         return self.__copy__() #type: ignore
 
-    def __sizeof__(self: I) -> int:
-        return getsizeof_recursive((
+    def __sizeof__(self: I, *, seen=None) -> int:
+        seen = set() if seen is None else seen
+        return sum(getsizeof_recursive(el, seen=seen) for el in (
             self._map,
             self._labels,
             self._positions,
@@ -1408,8 +1409,9 @@ class _IndexGOMixin:
         memo[id(self)] = obj
         return obj
 
-    def __sizeof__(self):
-        return Index.__sizeof__(self) + getsizeof_recursive((
+    def __sizeof__(self, *, seen=None):
+        seen = set() if seen is None else seen
+        return Index.__sizeof__(self, seen=seen) + sum(getsizeof_recursive(el, seen=seen) for el in (
             self._labels_mutable,
             self._labels_mutable_dtype,
             self._positions_mutable_count,
