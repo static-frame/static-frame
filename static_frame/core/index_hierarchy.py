@@ -658,7 +658,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             ) -> IH:
         '''
-        Given an iterable of pairs of label, :obj:`IndexBase`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
+        Given an iterable of pairs of label, :obj:`IndexBase`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1. While the provided :obj:`IndexBase` can be `Index` or `IndexHierarchy`, across all pairs all depths must be the same.
 
         Args:
             items: iterable of pairs of label, :obj:`IndexBase`.
