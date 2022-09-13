@@ -2737,5 +2737,6 @@ class TestUnit(TestCase):
         self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
 
+
 if __name__ == '__main__':
     unittest.main()
