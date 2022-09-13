@@ -5385,12 +5385,38 @@ class TestUnit(TestCase):
 
     def test_sizeof_simple(self):
         s = Series(('a', 'b', 'c'))
-        self.assertEqual(getsizeof(s), 292)
+        self.assertEqual(getsizeof(s), sum(getsizeof(e) for e in (
+            s.values,
+            s._index,
+            s._name,
+            None # for Series instance garbage collector overhead
+        )))
 
     def test_sizeof_with_index(self):
         # This is notably larger than simple since the index is not loc_is_iloc optimised
         s = Series(('a', 'b', 'c'), index=(0, 1, 2))
-        self.assertEqual(getsizeof(s), 852)
+        self.assertEqual(getsizeof(s), sum(getsizeof(e) for e in (
+            s.values,
+            s._index,
+            s._name,
+            None # for Series instance garbage collector overhead
+        )))
+
+    def test_sizeof_object_values(self):
+        s = Series(('a', (2, (3, 4), 5), 'c'))
+        self.assertEqual(getsizeof(s), sum(getsizeof(e) for e in (
+            'a',
+            2,
+            3, 4,
+            (3, 4),
+            5,
+            (2, (3, 4), 5),
+            'c',
+            s.values,
+            s._index,
+            s._name,
+            None # for Series instance garbage collector overhead
+        )))
 
     def test_sizeof_with_name_is_larger(self):
         s1 = Series(('a', 'b', 'c'))
