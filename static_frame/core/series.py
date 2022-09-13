@@ -589,11 +589,11 @@ class Series(ContainerOperand):
     #             )
 
     def __sizeof__(self: 'Series') -> int:
-        return getsizeof_recursive([
+        return getsizeof_recursive((
             self.values,
             self._index,
             self._name
-        ])
+        ))
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
@@ -3250,9 +3250,9 @@ class SeriesHE(Series):
         if not hasattr(self, '_hash'):
             return Series.__sizeof__(self)
         else:
-            return Series.__sizeof__(self) + getsizeof_recursive([
+            return Series.__sizeof__(self) + getsizeof_recursive((
                 self._hash
-            ])
+            ))
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

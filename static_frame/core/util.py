@@ -3207,7 +3207,9 @@ def getsizeof_recursive(it: tp.Iterable[any], *, seen=None) -> int:
             continue
         seen.add(id(el))
         total += getsizeof(el)
-        for t, h in handlers.items():
-            if isinstance(el, t):
-                total += getsizeof_recursive(h(el), seen=seen)
+        # Check if iterable or a string first for fewer isinstance calls on common types
+        if hasattr(el, '__iter__') and not isinstance(el, str):
+            for t, h in handlers.items():
+                if isinstance(el, t):
+                    total += getsizeof_recursive(h(el), seen=seen)
     return total

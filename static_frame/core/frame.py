@@ -3008,12 +3008,12 @@ class Frame(ContainerOperand):
     #     return self.__copy__() #type: ignore
 
     def __sizeof__(self: 'Frame') -> int:
-        return getsizeof_recursive([
+        return getsizeof_recursive((
             self._blocks,
             self._columns,
             self._index,
             self._name
-        ])
+        ))
 
     #---------------------------------------------------------------------------
     # name interface

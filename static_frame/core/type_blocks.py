@@ -533,13 +533,13 @@ class TypeBlocks(ContainerOperand):
         return self.__copy__()
 
     def __sizeof__(self: 'TypeBlocks') -> int:
-        return getsizeof_recursive([
+        return getsizeof_recursive((
             self._blocks,
             self._dtypes,
             self._index,
             self._shape,
             self._row_dtype
-        ])
+        ))
 
     #---------------------------------------------------------------------------
     # new properties
