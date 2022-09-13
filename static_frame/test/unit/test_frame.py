@@ -14557,46 +14557,6 @@ class TestUnit(TestCase):
                 (((3, 'z'), 0), ((3, None), 1), ((2, 'z'), 2), ((2, None), 3), ((1, 'z'), 4), ((1, None), 5))
                 )
 
-    #---------------------------------------------------------------------------
-    def test_sizeof_a(self) -> None:
-        f = ff.parse('s(3,4)')
-        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
-            f._blocks,
-            f._columns,
-            f._index,
-            f._name,
-            None # for Frame instance garbage collector overhead
-        )))
-
-    def test_sizeof_b(self) -> None:
-        f = ff.parse('s(3,4)|i(I,str)|c(I,str)')
-        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
-            f._blocks,
-            f._columns,
-            f._index,
-            f._name,
-            None # for Frame instance garbage collector overhead
-        )))
-
-    def test_sizeof_c(self) -> None:
-        f = ff.parse('s(8,12)|i(I,object)|c(I,str)')
-        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
-            f._blocks,
-            f._columns,
-            f._index,
-            f._name,
-            None # for Frame instance garbage collector overhead
-        )))
-
-    def test_sizeof_d(self) -> None:
-        f = ff.parse('s(8,4)|i(I,object)|c(I,str)|v(object,int,bool,str)')
-        self.assertEqual(getsizeof(f), sum(getsizeof(e) for e in (
-            f._blocks,
-            f._columns,
-            f._index,
-            f._name,
-            None # for Frame instance garbage collector overhead
-        )))
 
 if __name__ == '__main__':
     unittest.main()
