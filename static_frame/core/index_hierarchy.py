@@ -733,7 +733,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        return cls(indices=indices, indexers=indexers, name=name)
+        return cls(indices=indices, indexers=indexers, name=name, blocks=tb)
 
     @classmethod
     def from_labels_delimited(cls: tp.Type[IH],
