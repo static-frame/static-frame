@@ -714,11 +714,11 @@ class IndexHierarchy(IndexBase):
 
         tb = TypeBlocks.from_blocks(gen_blocks())
 
-        size, depth = tb.shape
+        _, depth = tb.shape
 
         def gen_columns() -> tp.Iterator[np.ndarray]:
             for i in range(depth):
-                yield tb._extract_array_column(i).reshape(size)
+                yield tb._extract_array_column(i)
 
         if index_constructor is None:
             index_constructor = cls._INDEX_CONSTRUCTOR
