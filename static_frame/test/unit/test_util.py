@@ -9,10 +9,8 @@ from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
-from automap import FrozenAutoMap
 
 from static_frame.core.exception import InvalidDatetime64Comparison
-from static_frame.core.index import Index
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
@@ -45,7 +43,6 @@ from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_objectable_dt64

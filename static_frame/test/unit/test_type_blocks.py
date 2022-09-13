@@ -4031,7 +4031,6 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
 
-
 if __name__ == '__main__':
     import unittest
     unittest.main()

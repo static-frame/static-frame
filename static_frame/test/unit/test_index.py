@@ -26,7 +26,6 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
-from static_frame.core.util import getsizeof_recursive
 from static_frame.test.test_case import TestCase
 
 
@@ -1649,7 +1648,6 @@ class TestUnit(TestCase):
         idx.append('e')
         post = idx.display(DisplayConfig(type_show=False, type_color=False))
         self.assertEqual(str(post), 'a\nb\nc\nd\ne')
-
 
 if __name__ == '__main__':
     unittest.main()
