@@ -57,4 +57,4 @@ class HLoc(metaclass=HLocMeta):
 
                 yield result
 
-        return f'HLoc[{",".join(gen_nested_keys())}]'
+        return f'<HLoc[{",".join(gen_nested_keys())}]>'

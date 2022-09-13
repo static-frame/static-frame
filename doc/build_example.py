@@ -1,7 +1,11 @@
-from io import StringIO
-import typing as tp
 import os
 import sys
+
+DOC_DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
+
+from io import StringIO
+import typing as tp
 
 import numpy as np
 import pandas as pd
@@ -59,18 +63,14 @@ SERIES_INIT_G = dict(values=(8, 5, None, 8), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_H = dict(values=('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_I = dict(values=('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_J = dict(values=('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
-SERIES_INIT_K = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan),
-        index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_L = dict(values=(np.nan, np.nan, 10.235, 2.124, 8.734),
-        index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_M = dict(values=(10.235, 2.124, 8.734, np.nan, np.nan),
-        index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_K = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_L = dict(values=(np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_M = dict(values=(10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_N = dict(values=(2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_O = dict(values=(2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_P = dict(values=(8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
-SERIES_INIT_R = dict(values=(3, 2, 8, 7),
-        index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
+SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
@@ -94,7 +94,6 @@ FRAME_INIT_A3 = dict(data=b'np.arange(100, 106).reshape(3,2) / 3', index=(('p', 
 
 FRAME_INIT_B1 = dict(data=b'(np.arange(6).reshape(3,2) % 2).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='y')
 FRAME_INIT_B2 = dict(data=b'(np.arange(6).reshape(3,2) % 3).astype(bool)', index=(('p', 'q', 'r')), columns=(('c', 'd')), name='w')
-
 
 FRAME_INIT_C = dict(data=b'(np.arange(6).reshape(3,2) * 4/3)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='y')
 FRAME_INIT_D= dict(data=b'(np.concatenate((np.arange(8) * 2, np.arange(8) ** 2)).reshape(4,4))', index=(('p', 'q', 'r', 's')), columns=(('a', 'b', 'c', 'd')), name='x')
@@ -178,7 +177,6 @@ INDEX_INIT_U = dict(labels=b'(datetime.datetime(1517, 1, 1), datetime.datetime(1
 INDEX_INIT_V = dict(labels=('1/1/1517', '4/1/1517', '6/30/1517'))
 INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
 
-
 #-------------------------------------------------------------------------------
 IH_INIT_FROM_LABELS_A = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
 IH_INIT_FROM_LABELS_B = dict(labels=(('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=b'(sf.Index, sf.Index, sf.IndexDate)', name=b"('x', 'y', 'z')")
@@ -186,8 +184,6 @@ IH_INIT_FROM_LABELS_C = dict(labels=((0, 1024, 32), (1, -2048, 32), (1, 1024, 32
 IH_INIT_FROM_LABELS_D = dict(labels=((False, True, True), (True, True, True), (False, True, False)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_E = dict(labels=(('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 IH_INIT_FROM_LABELS_F = dict(labels=(('b', 2048, True), ('c', 4096, True), ('c', 1024, True)), name='y')
-
-
 
 IH_INIT_FROM_LABELS_E1 = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 IH_INIT_FROM_LABELS_E2 = dict(labels=(('a', 1024, True), ('b', 1024, True)), name='y')
@@ -211,13 +207,11 @@ IH_INIT_FROM_LABELS_W = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517
 
 IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
-
 #-------------------------------------------------------------------------------
 BUS_INIT_FROM_FRAMES_A = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), name='i')
 BUS_INIT_FROM_FRAMES_B = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')), name='j')
 
 BUS_INIT_FROM_FRAMES_C = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')))
-
 
 BUS_INIT_FROM_DICT_A = dict(j=f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), k=f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'))
 
@@ -260,7 +254,6 @@ BATCH_INIT_L = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 
 # for from fill value
 BATCH_INIT_M = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'.encode('utf-8'))))
-
 
 
 #-------------------------------------------------------------------------------
@@ -564,7 +557,6 @@ class ExGen:
             yield f'np.sin({name}.via_values(unify_blocks=True)){exporter}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
-
 
 
 class ExGenSeries(ExGen):
@@ -2712,7 +2704,6 @@ class ExGenFrame(ExGen):
         yield from ExGen._accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
 
-
 class ExGenIndex(ExGen):
 
     @staticmethod
@@ -3462,12 +3453,12 @@ class _ExGenIndexDT64(ExGen):
         yield from ExGen._accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
 
 
-
 class ExGenIndexYear(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517', '1520', '1518'))
     INDEX_INIT_B = dict(labels=('2022', '2021', '2018'))
     INDEX_INIT_C = dict(labels=('1620', 'NaT', '1619')) # has NaT
     INDEX_COMPONENT = '1518'
+
 
 class ExGenIndexYearMonth(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04', '1517-12', '1517-06'))
@@ -3475,11 +3466,13 @@ class ExGenIndexYearMonth(_ExGenIndexDT64):
     INDEX_INIT_C = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
     INDEX_COMPONENT = '1517-06'
 
+
 class ExGenIndexDate(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
+
 
 class ExGenIndexMinute(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
@@ -3487,11 +3480,13 @@ class ExGenIndexMinute(_ExGenIndexDT64):
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
+
 class ExGenIndexHour(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
+
 
 class ExGenIndexSecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -3499,17 +3494,20 @@ class ExGenIndexSecond(_ExGenIndexDT64):
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
+
 class ExGenIndexMillisecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
+
 class ExGenIndexMicrosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
     INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
+
 
 class ExGenIndexNanosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -3931,7 +3929,6 @@ class ExGenIndexHierarchy(ExGen):
         yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
 
-
 class ExGenBus(ExGen):
 
     @staticmethod
@@ -4246,6 +4243,7 @@ class ExGenBus(ExGen):
             yield f'b1 {cls.SIG_TO_OP_NUMERIC[attr]} b1'
         else:
             raise NotImplementedError(f'no handling for {attr}')
+
 
 class ExGenBatch(ExGen):
 
@@ -4826,6 +4824,7 @@ class ExGenHLoc(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+
 class ExGenILoc(ExGen):
 
     @staticmethod
@@ -4883,6 +4882,7 @@ class ExGenILoc(ExGen):
             yield f"str(il)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
+
 
 class ExGenFillValueAuto(ExGen):
 
@@ -4959,6 +4959,7 @@ class ExGenFillValueAuto(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -4974,6 +4975,7 @@ def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
         pass
     exceptions.extend((ValueError, RuntimeError, NotImplementedError, TypeError))
     return tuple(exceptions)
+
 
 def calls_to_msg(calls: tp.Iterator[str],
         row: sf.Series
@@ -5007,6 +5009,7 @@ def calls_to_msg(calls: tp.Iterator[str],
     if i >= 0:
         yield f'{TAG_END}{cls.__name__}-{row["signature_no_args"]}'
         yield ''
+
 
 def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]:
 
@@ -5042,6 +5045,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             # print(func, row)
             calls = func(row)
             yield from calls_to_msg(calls, row)
+
 
 def gen_all_examples() -> tp.Iterator[str]:
     yield from gen_examples(sf.Series, ExGenSeries)
@@ -5095,8 +5099,8 @@ def gen_all_examples() -> tp.Iterator[str]:
 # exporters
 
 def get_examples_fp() -> str:
-    doc_dir = os.path.abspath(os.path.dirname(__file__))
-    return os.path.join(doc_dir, 'source', 'examples.txt')
+    return os.path.join(DOC_DIR, 'source', 'examples.txt')
+
 
 def to_file() -> None:
     fp = get_examples_fp()
@@ -5104,6 +5108,7 @@ def to_file() -> None:
         for line in gen_all_examples():
             f.write(line)
             f.write('\n')
+
 
 def to_string_io() -> StringIO:
     sio = StringIO()
@@ -5113,8 +5118,9 @@ def to_string_io() -> StringIO:
     sio.seek(0)
     return sio
 
+
 def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
-    post = {}
+    post: tp.Dict[str, tp.List[str]] = {}
     lines: tp.List[str] = []
     sig = ''
     for line in gen_all_examples():
@@ -5131,12 +5137,9 @@ def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
             lines.append(line)
     return post
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # for line in gen_all_examples():
     #     print(line)
     to_file()
     # post = bundle()
-
-
-

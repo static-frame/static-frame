@@ -26,22 +26,22 @@ class TestUnit(TestCase):
         assert HLoc[:, :, 4].key == (slice(None), slice(None), 4)
 
     def test_hloc_repr(self) -> None:
-        assert repr(HLoc[1]) == 'HLoc[1]'
-        assert repr(HLoc[1,]) == 'HLoc[1]'
-        assert repr(HLoc[1, 2]) == 'HLoc[1,2]'
-        assert repr(HLoc[:,1]) == 'HLoc[:,1]'
-        assert repr(HLoc[:,1,2]) == 'HLoc[:,1,2]'
-        assert repr(HLoc[1:2,:]) == 'HLoc[1:2,:]'
-        assert repr(HLoc[1:2,:2]) == 'HLoc[1:2,:2]'
-        assert repr(HLoc[1:2,:2,:3]) == 'HLoc[1:2,:2,:3]'
-        assert repr(HLoc[::1]) == 'HLoc[:]'
-        assert repr(HLoc[1:,1:2,1:2:3,:2,:2:3,::3]) == 'HLoc[1:,1:2,1:2:3,:2,:2:3,::3]'
-        assert repr(HLoc[()]) == 'HLoc[()]'
-        assert repr(HLoc[(1,),]) == 'HLoc[(1,)]'
-        assert repr(HLoc[(),]) == 'HLoc[()]'
-        assert repr(HLoc[:]) == 'HLoc[:]'
-        assert repr(HLoc[:,:]) == 'HLoc[:,:]'
-        assert repr(HLoc[:, :, 4]) == 'HLoc[:,:,4]'
+        assert repr(HLoc[1]) == '<HLoc[1]>'
+        assert repr(HLoc[1,]) == '<HLoc[1]>'
+        assert repr(HLoc[1, 2]) == '<HLoc[1,2]>'
+        assert repr(HLoc[:,1]) == '<HLoc[:,1]>'
+        assert repr(HLoc[:,1,2]) == '<HLoc[:,1,2]>'
+        assert repr(HLoc[1:2,:]) == '<HLoc[1:2,:]>'
+        assert repr(HLoc[1:2,:2]) == '<HLoc[1:2,:2]>'
+        assert repr(HLoc[1:2,:2,:3]) == '<HLoc[1:2,:2,:3]>'
+        assert repr(HLoc[::1]) == '<HLoc[:]>'
+        assert repr(HLoc[1:,1:2,1:2:3,:2,:2:3,::3]) == '<HLoc[1:,1:2,1:2:3,:2,:2:3,::3]>'
+        assert repr(HLoc[()]) == '<HLoc[()]>'
+        assert repr(HLoc[(1,),]) == '<HLoc[(1,)]>'
+        assert repr(HLoc[(),]) == '<HLoc[()]>'
+        assert repr(HLoc[:]) == '<HLoc[:]>'
+        assert repr(HLoc[:,:]) == '<HLoc[:,:]>'
+        assert repr(HLoc[:, :, 4]) == '<HLoc[:,:,4]>'
 
 
 if __name__ == '__main__':
