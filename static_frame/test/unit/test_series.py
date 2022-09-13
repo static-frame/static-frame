@@ -7,7 +7,6 @@ import typing as tp
 from collections import OrderedDict
 from enum import Enum
 from io import StringIO
-from sys import getsizeof
 
 import numpy as np
 

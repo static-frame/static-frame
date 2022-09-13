@@ -1,7 +1,6 @@
 import copy
 import pickle
 from itertools import zip_longest
-from sys import getsizeof
 
 import frame_fixtures as ff
 import numpy as np

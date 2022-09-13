@@ -4,7 +4,6 @@ import pickle
 import typing as tp
 import unittest
 from io import StringIO
-from sys import getsizeof
 
 import numpy as np
 from arraykit import mloc

@@ -3,7 +3,6 @@ import typing as tp
 import unittest
 import warnings
 from enum import Enum
-from sys import getsizeof
 
 import numpy as np
 from arraykit import column_1d_filter
