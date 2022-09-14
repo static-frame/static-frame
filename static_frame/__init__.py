@@ -98,8 +98,8 @@ from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
-from static_frame.core.store import StoreConfig as StoreConfig
-from static_frame.core.store import StoreConfigMap as StoreConfigMap
+from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
