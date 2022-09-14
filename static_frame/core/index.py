@@ -67,7 +67,6 @@ from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import intersect1d
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
@@ -75,6 +74,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import setdiff1d
+from static_frame.core.util import sizeof_helper
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import union1d
@@ -384,14 +384,7 @@ class Index(IndexBase):
         return self.__copy__() #type: ignore
 
     def __sizeof__(self: I, *, seen=None) -> int:
-        seen = set() if seen is None else seen
-        return sum(getsizeof_recursive(el, seen=seen) for el in (
-            self._map,
-            self._labels,
-            self._positions,
-            self._recache,
-            self._name,
-        ))
+        return sizeof_helper(Index, self, seen=seen)
 
     #---------------------------------------------------------------------------
     # name interface
@@ -1409,14 +1402,6 @@ class _IndexGOMixin:
         memo[id(self)] = obj
         return obj
 
-    def __sizeof__(self, *, seen=None):
-        seen = set() if seen is None else seen
-        return Index.__sizeof__(self, seen=seen) + sum(getsizeof_recursive(el, seen=seen) for el in (
-            self._labels_mutable,
-            self._labels_mutable_dtype,
-            self._positions_mutable_count,
-        ))
-
     #---------------------------------------------------------------------------
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
@@ -1511,6 +1496,9 @@ class IndexGO(_IndexGOMixin, Index):
 
     _IMMUTABLE_CONSTRUCTOR = Index
     __slots__ = INDEX_GO_LEAF_SLOTS
+
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexGO, self, seen=seen)
 
 
 # update class attr on Index after class initialziation

@@ -96,7 +96,6 @@ from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import full_for_fill
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import intersect1d
 from static_frame.core.util import is_callable_or_mapping
@@ -104,6 +103,7 @@ from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import sizeof_helper
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -589,12 +589,7 @@ class Series(ContainerOperand):
     #             )
 
     def __sizeof__(self: 'Series', *, seen=None) -> int:
-        seen = set() if seen is None else seen
-        return sum(getsizeof_recursive(el, seen=seen) for el in (
-            self.values,
-            self._index,
-            self._name,
-        ))
+        return sizeof_helper(Series, self, seen=seen)
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
@@ -3248,16 +3243,7 @@ class SeriesHE(Series):
     _hash: int
 
     def __sizeof__(self, *, seen=None) -> int:
-        if not hasattr(self, '_hash'):
-            return Series.__sizeof__(self)
-        else:
-            seen = set() if seen is None else seen
-            return (
-                Series.__sizeof__(self, seen=seen) +
-                sum(getsizeof_recursive(el, seen=seen) for el in (
-                    self._hash,
-                ))
-            )
+        return sizeof_helper(SeriesHE, self, seen=seen)
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

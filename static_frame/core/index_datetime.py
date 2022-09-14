@@ -30,8 +30,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import sizeof_helper
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 
@@ -184,17 +184,6 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def __sizeof__(self, *, seen=None):
-        seen = set() if seen is None else seen
-        return (
-            Index.__sizeof__(self, seen=seen) +
-            sum(getsizeof_recursive(el, seen=seen) for el in (
-                self._labels_mutable,
-                self._labels_mutable_dtype,
-                self._positions_mutable_count,
-            ))
-        )
-
     def append(self, value: tp.Hashable) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
@@ -286,6 +275,9 @@ class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):
     _IMMUTABLE_CONSTRUCTOR = IndexYear
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexYearGO, self, seen=seen)
+
 IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
 
 #-------------------------------------------------------------------------------
@@ -368,6 +360,9 @@ class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
     _IMMUTABLE_CONSTRUCTOR = IndexYearMonth
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexYearMonthGO, self, seen=seen)
+
 IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
 
 #-------------------------------------------------------------------------------
@@ -440,6 +435,9 @@ class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):
     _IMMUTABLE_CONSTRUCTOR = IndexDate
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexDateGO, self, seen=seen)
+
 IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
 #-------------------------------------------------------------------------------
@@ -454,6 +452,9 @@ class IndexHourGO(_IndexDatetimeGOMixin, IndexHour):
 
     _IMMUTABLE_CONSTRUCTOR = IndexHour
     __slots__ = INDEX_GO_LEAF_SLOTS
+
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexHourGO, self, seen=seen)
 
 IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
 
@@ -470,6 +471,9 @@ class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
     _IMMUTABLE_CONSTRUCTOR = IndexMinute
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexMinuteGO, self, seen=seen)
+
 IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
 
 #-------------------------------------------------------------------------------
@@ -484,6 +488,9 @@ class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexSecond
     __slots__ = INDEX_GO_LEAF_SLOTS
+
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexSecondGO, self, seen=seen)
 
 IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 
@@ -500,6 +507,9 @@ class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
     _IMMUTABLE_CONSTRUCTOR = IndexMillisecond
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexMillisecondGO, self, seen=seen)
+
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 
 #-------------------------------------------------------------------------------
@@ -515,6 +525,9 @@ class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
     _IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
     __slots__ = INDEX_GO_LEAF_SLOTS
 
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexMicrosecondGO, self, seen=seen)
+
 IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 
 #-------------------------------------------------------------------------------
@@ -529,6 +542,9 @@ class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexNanosecond
     __slots__ = INDEX_GO_LEAF_SLOTS
+
+    def __sizeof__(self, *, seen=None):
+        return sizeof_helper(IndexNanosecondGO, self, seen=seen)
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 

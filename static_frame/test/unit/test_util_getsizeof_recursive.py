@@ -193,7 +193,6 @@ class TestUnit(TestCase):
             (2, 3, 4),
         )))
 
-
     def test_nested_tuple(self) -> None:
         obj = (2, 'b', (2, 3))
         self.assertEqual(getsizeof_recursive(obj), sum(getsizeof(e) for e in (
@@ -236,6 +235,7 @@ class TestUnit(TestCase):
         a = np.array(['a', [2, (8, 9), 4], 'c'], dtype=object)
         b = np.array(['a', [2, (8, 9, 10), 4], 'c'], dtype=object)
         self.assertTrue(getsizeof_recursive(a) < getsizeof_recursive(b))
+
 
 if __name__ == '__main__':
     unittest.main()

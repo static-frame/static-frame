@@ -3218,16 +3218,12 @@ def getsizeof_recursive(obj: any, *, seen=None) -> int:
     seen = set() if seen is None else seen
     return sum(getsizeof(el) for el in all_nested_elements(obj, seen=seen))
 
-def getsizeof_recursive_a(obj: any, *, seen=None) -> int:
-    '''
-    Gives the total size of an iterable of elements
-    see also: https://code.activestate.com/recipes/577504/
-    '''
+def sizeof_helper(cls, self, *, seen):
     seen = set() if seen is None else seen
-    total = 0
-    if id(obj) in seen:
-        return 0
-    seen.add(id(obj))
-    total += getsizeof(obj)
-    total += sum(getsizeof_recursive(el, seen=seen) for el in get_unsized_children_iter(obj))
-    return total
+    return (
+        super(cls, self).__sizeof__(seen=seen) +
+        sum(
+            getsizeof_recursive(getattr(self, slot), seen=seen)
+            for slot in cls.__slots__ if slot != '__weakref__' and hasattr(self, slot)
+        ) if hasattr(self, '__slots__') else 0
+    )

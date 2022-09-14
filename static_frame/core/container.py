@@ -163,6 +163,10 @@ class ContainerOperand(ContainerBase):
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
+    def __sizeof__(self, *, seen=None):
+        return 0 # super().__sizeof__() # TODO: Adding this adds 40...
+
+    #---------------------------------------------------------------------------
     def __pos__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
 

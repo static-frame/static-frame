@@ -164,7 +164,6 @@ from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_dtype_specifier
@@ -174,6 +173,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_normalize
 from static_frame.core.util import path_filter
+from static_frame.core.util import sizeof_helper
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -3007,13 +3007,7 @@ class Frame(ContainerOperand):
     #     return self.__copy__() #type: ignore
 
     def __sizeof__(self: 'Frame', *, seen=None) -> int:
-        seen = set() if seen is None else seen
-        return sum(getsizeof_recursive(el, seen=seen) for el in (
-            self._blocks,
-            self._columns,
-            self._index,
-            self._name,
-        ))
+        return sizeof_helper(Frame, self, seen=seen)
 
     #---------------------------------------------------------------------------
     # name interface
@@ -8753,16 +8747,7 @@ class FrameHE(Frame):
     _hash: int
 
     def __sizeof__(self, *, seen=None) -> int:
-        if not hasattr(self, '_hash'):
-            return Frame.__sizeof__(self)
-        else:
-            seen = set() if seen is None else seen
-            return (
-                Frame.__sizeof__(self, seen=seen) +
-                sum(getsizeof_recursive(el, seen=seen) for el in (
-                    self._hash,
-                ))
-            )
+        return sizeof_helper(FrameHE, self, seen=seen)
 
     def __eq__(self, other: tp.Any) -> bool:
         '''
