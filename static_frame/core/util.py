@@ -3201,8 +3201,8 @@ def get_unsized_children_iter(obj):
         elif isinstance(obj, dict):
             yield from chain.from_iterable(obj.items())
         else:
-            # The full size of the object as included in the original getsizeof call
-            # e.g. FrozenAutoMap, integer numpy arrays, etc.
+            # The full size of the object is included in a getsizeof call
+            # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
             pass
 
 def all_nested_elements(obj: any, *, seen=None) -> tp.Iterable[any]:
