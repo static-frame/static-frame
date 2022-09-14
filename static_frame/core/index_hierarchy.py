@@ -1414,7 +1414,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(depth_level, INT_TYPES):
             return self._indices[depth_level]
 
-        return list(map(self._indices.__getitem__, depth_level))
+        return tuple(map(self._indices.__getitem__, depth_level))
 
     def indexer_at_depth(self: IH,
             depth_level: DepthLevelSpecifier = 0,
