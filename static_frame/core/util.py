@@ -3187,20 +3187,7 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def all_nested_elements(it: any, seen=None) -> tp.Iterable[any]:
-    pass
-
-def getsizeof_recursive(obj: any, *, seen=None) -> int:
-    '''
-    Gives the total size of an iterable of elements
-    see also: https://code.activestate.com/recipes/577504/
-    '''
-    total = 0
-    seen = set() if seen is None else seen
-    if id(obj) in seen:
-        return 0
-    seen.add(id(obj))
-    total += getsizeof(obj)
+def get_unsized_children_iter(obj):
     # Check if iterable or a string first for fewer isinstance calls on common types
     if hasattr(obj, '__iter__') and not isinstance(obj, str):
         if (
@@ -3210,11 +3197,37 @@ def getsizeof_recursive(obj: any, *, seen=None) -> int:
             or isinstance(obj, set)
             or isinstance(obj, frozenset)
         ):
-            total += sum(getsizeof_recursive(el, seen=seen) for el in obj)
+            yield from obj
         elif isinstance(obj, dict):
-            total += sum(getsizeof_recursive(el, seen=seen) for el in chain.from_iterable(obj.items()))
+            yield from chain.from_iterable(obj.items())
         else:
-            # Treat the full size of the object as included in the original getsizeof call
+            # The full size of the object as included in the original getsizeof call
             # e.g. FrozenAutoMap, integer numpy arrays, etc.
             pass
+
+def all_nested_elements(obj: any, *, seen=None) -> tp.Iterable[any]:
+    seen = set() if seen is None else seen
+    if id(obj) in seen:
+        return
+    seen.add(id(obj))
+    for el in get_unsized_children_iter(obj):
+        yield from all_nested_elements(el, seen=seen)
+    yield obj
+
+def getsizeof_recursive(obj: any, *, seen=None) -> int:
+    seen = set() if seen is None else seen
+    return sum(getsizeof(el) for el in all_nested_elements(obj, seen=seen))
+
+def getsizeof_recursive_a(obj: any, *, seen=None) -> int:
+    '''
+    Gives the total size of an iterable of elements
+    see also: https://code.activestate.com/recipes/577504/
+    '''
+    seen = set() if seen is None else seen
+    total = 0
+    if id(obj) in seen:
+        return 0
+    seen.add(id(obj))
+    total += getsizeof(obj)
+    total += sum(getsizeof_recursive(el, seen=seen) for el in get_unsized_children_iter(obj))
     return total

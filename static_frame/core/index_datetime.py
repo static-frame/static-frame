@@ -191,7 +191,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
             sum(getsizeof_recursive(el, seen=seen) for el in (
                 self._labels_mutable,
                 self._labels_mutable_dtype,
-                self._positions_mutable_count
+                self._positions_mutable_count,
             ))
         )
 
