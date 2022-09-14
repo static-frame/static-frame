@@ -12,12 +12,12 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigHE
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigHE
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
 

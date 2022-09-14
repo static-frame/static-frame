@@ -48,7 +48,7 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc
-from static_frame.core.store import StoreConfig
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
