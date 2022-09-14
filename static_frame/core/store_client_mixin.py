@@ -3,8 +3,8 @@ import typing as tp
 import zipfile
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX

@@ -16,7 +16,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexSecond
 from static_frame.core.quilt import Quilt
-from static_frame.core.store import StoreConfig
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
