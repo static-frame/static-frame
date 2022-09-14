@@ -3187,11 +3187,11 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def get_unsized_children_iter(obj):
+def _unsized_children(obj):
     # Check if iterable or a string first for fewer isinstance calls on common types
     if hasattr(obj, '__iter__') and not isinstance(obj, str):
         if (
-            (isinstance(obj, np.ndarray) and obj.dtype == np.object)
+            (obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND)
             or isinstance(obj, tuple)
             or isinstance(obj, list)
             or isinstance(obj, set)
@@ -3205,18 +3205,18 @@ def get_unsized_children_iter(obj):
             # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
             pass
 
-def all_nested_elements(obj: any, *, seen=None) -> tp.Iterable[any]:
+def _nested_sizable_elements(obj: any, *, seen=None) -> tp.Iterable[any]:
     seen = set() if seen is None else seen
     if id(obj) in seen:
         return
     seen.add(id(obj))
-    for el in get_unsized_children_iter(obj):
-        yield from all_nested_elements(el, seen=seen)
+    for el in _unsized_children(obj):
+        yield from _nested_sizable_elements(el, seen=seen)
     yield obj
 
 def getsizeof_recursive(obj: any, *, seen=None) -> int:
     seen = set() if seen is None else seen
-    return sum(getsizeof(el) for el in all_nested_elements(obj, seen=seen))
+    return sum(getsizeof(el) for el in _nested_sizable_elements(obj, seen=seen))
 
 def collect_slots(obj):
     return frozenset().union(
