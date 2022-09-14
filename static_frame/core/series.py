@@ -103,7 +103,6 @@ from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import sizeof_helper
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -587,9 +586,6 @@ class Series(ContainerOperand):
     #             name=self._name,
     #             own_index=True,
     #             )
-
-    def __sizeof__(self: 'Series', *, seen=None) -> int:
-        return sizeof_helper(Series, self, seen=seen)
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
@@ -3241,9 +3237,6 @@ class SeriesHE(Series):
     '''
     __slots__ = ('_hash',)
     _hash: int
-
-    def __sizeof__(self, *, seen=None) -> int:
-        return sizeof_helper(SeriesHE, self, seen=seen)
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

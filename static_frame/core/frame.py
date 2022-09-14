@@ -173,7 +173,6 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_normalize
 from static_frame.core.util import path_filter
-from static_frame.core.util import sizeof_helper
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
@@ -3005,9 +3004,6 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
-
-    def __sizeof__(self: 'Frame', *, seen=None) -> int:
-        return sizeof_helper(Frame, self, seen=seen)
 
     #---------------------------------------------------------------------------
     # name interface
@@ -8745,9 +8741,6 @@ class FrameHE(Frame):
             )
 
     _hash: int
-
-    def __sizeof__(self, *, seen=None) -> int:
-        return sizeof_helper(FrameHE, self, seen=seen)
 
     def __eq__(self, other: tp.Any) -> bool:
         '''

@@ -3218,12 +3218,7 @@ def getsizeof_recursive(obj: any, *, seen=None) -> int:
     seen = set() if seen is None else seen
     return sum(getsizeof(el) for el in all_nested_elements(obj, seen=seen))
 
-def sizeof_helper(cls, self, *, seen):
-    seen = set() if seen is None else seen
-    return (
-        super(cls, self).__sizeof__(seen=seen) +
-        sum(
-            getsizeof_recursive(getattr(self, slot), seen=seen)
-            for slot in cls.__slots__ if slot != '__weakref__' and hasattr(self, slot)
-        ) if hasattr(self, '__slots__') else 0
+def collect_slots(obj):
+    return frozenset().union(
+        *(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
     )

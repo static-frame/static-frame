@@ -64,7 +64,6 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import roll_1d
-from static_frame.core.util import sizeof_helper
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -531,9 +530,6 @@ class TypeBlocks(ContainerOperand):
         Return shallow copy of this TypeBlocks. Underlying arrays are not copied.
         '''
         return self.__copy__()
-
-    def __sizeof__(self: 'TypeBlocks', *, seen=None) -> int:
-        return sizeof_helper(TypeBlocks, self, seen=seen)
 
     #---------------------------------------------------------------------------
     # new properties
