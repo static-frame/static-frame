@@ -19,8 +19,6 @@ from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
 from static_frame.core.util import UFunc
-from static_frame.core.util import collect_slots
-from static_frame.core.util import getsizeof_recursive
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
@@ -163,16 +161,6 @@ class ContainerOperand(ContainerBase):
             fill_value: object = np.nan,
             ) -> T:
         raise NotImplementedError() #pragma: no cover
-
-    #---------------------------------------------------------------------------
-    def __sizeof__(self):
-        seen = set()
-        return sum(
-            getsizeof_recursive(getattr(self, slot), seen=seen)
-            for slot in collect_slots(self)
-                if slot != '__weakref__' and hasattr(self, slot)
-        )
-        #return 0 # super().__sizeof__() # TODO: Adding this adds 40...
 
     #---------------------------------------------------------------------------
     def __pos__(self) -> 'ContainerOperand':

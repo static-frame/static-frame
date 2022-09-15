@@ -1,5 +1,6 @@
 import contextlib
 import datetime
+import gc
 import operator
 import os
 import tempfile
@@ -3205,20 +3206,31 @@ def _unsized_children(obj):
             # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
             pass
 
-def _nested_sizable_elements(obj: any, *, seen=None) -> tp.Iterable[any]:
-    seen = set() if seen is None else seen
+def _attrs(obj):
+    attrs = (getattr(obj, slot) for slot in collect_slots(obj) if slot != '__weakref__' and hasattr(obj, slot))
+    return attrs
+
+_mjp = 0
+def _nested_sizable_elements(obj: any, *, seen=None, level=0) -> tp.Iterable[any]:
+    global _mjp
+    seen = set() if seen is None else seen # TODO: Remove this line, just include in tests
     if id(obj) in seen:
         return
     seen.add(id(obj))
+
     for el in _unsized_children(obj):
-        yield from _nested_sizable_elements(el, seen=seen)
+        yield from _nested_sizable_elements(el, seen=seen, level=level+1)
+    for el in _attrs(obj):
+        yield from _nested_sizable_elements(el, seen=seen, level=level+1)
+
     yield obj
 
-def getsizeof_recursive(obj: any, *, seen=None) -> int:
-    seen = set() if seen is None else seen
-    return sum(getsizeof(el) for el in _nested_sizable_elements(obj, seen=seen))
-
 def collect_slots(obj):
-    return frozenset().union(
-        *(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
-    )
+    return frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
+
+def getsizeof_total(obj, *, seen=None):
+    global _mjp
+    _mjp = 0
+    seen = set() if seen is None else seen
+    total = sum(getsizeof(el) for el in _nested_sizable_elements(obj, seen=seen))
+    return total

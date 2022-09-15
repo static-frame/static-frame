@@ -22,7 +22,7 @@ class TestUnit(TestCase):
             np.dtype('int64'),
             tb._dtypes, # [np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
-            None # for TypeBlocks instance garbage collector overhead
+            tb
         )))
 
     def test_list_of_1d_arrays(self) -> None:
@@ -44,7 +44,7 @@ class TestUnit(TestCase):
             np.dtype('int64'),
             tb._dtypes, # [np.dtype('int64'), np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
-            None # for TypeBlocks instance garbage collector overhead
+            tb
         )))
 
     def test_2d_array(self) -> None:
@@ -64,7 +64,7 @@ class TestUnit(TestCase):
             np.dtype('int64'),
             tb._dtypes, #[np.dtype('int64'), np.dtype('int64'), np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
-            None # for TypeBlocks instance garbage collector overhead
+            tb
         )))
 
 if __name__ == '__main__':
