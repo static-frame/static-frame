@@ -58,15 +58,15 @@ class TestUnit(TestCase):
         '''
         >>> import numpy as np
         >>> a = np.array([np.array([None, None, None]), np.array([None, None, None])])
-        >>> 
+        >>>
         >>> id(a[0])
         140280363921536
         >>> id(a[0])
         140280363921536
-        >>> 
+        >>>
         >>> a[0]
         array([None, None, None], dtype=object)
-        >>> 
+        >>>
         >>> id(a[0])
         140280362690400
         >>> id(a[0])

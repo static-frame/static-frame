@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from automap import FrozenAutoMap
+from automap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame.core.util import _unsized_children
 from static_frame.test.test_case import TestCase

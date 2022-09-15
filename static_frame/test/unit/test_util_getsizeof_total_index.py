@@ -1,8 +1,6 @@
 import unittest
 from sys import getsizeof
 
-import numpy as np
-
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame.core.index_datetime import IndexDateGO

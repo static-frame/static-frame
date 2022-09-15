@@ -1,6 +1,5 @@
 import contextlib
 import datetime
-import gc
 import operator
 import os
 import tempfile

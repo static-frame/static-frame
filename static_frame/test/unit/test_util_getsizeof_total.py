@@ -2,7 +2,7 @@ import unittest
 from sys import getsizeof
 
 import numpy as np
-from automap import FrozenAutoMap
+from automap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame.core.util import getsizeof_total
 from static_frame.test.test_case import TestCase
