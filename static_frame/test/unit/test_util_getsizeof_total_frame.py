@@ -1,3 +1,4 @@
+import typing as tp
 import unittest
 from sys import getsizeof
 
@@ -10,7 +11,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
     def test_simple(self) -> None:
         f = ff.parse('s(3,4)')
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),
@@ -21,7 +22,7 @@ class TestUnit(TestCase):
 
     def test_string_index(self) -> None:
         f = ff.parse('s(3,4)|i(I,str)|c(I,str)')
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),
@@ -32,7 +33,7 @@ class TestUnit(TestCase):
 
     def test_object_index(self) -> None:
         f = ff.parse('s(8,12)|i(I,object)|c(I,str)')
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),
@@ -43,7 +44,7 @@ class TestUnit(TestCase):
 
     def test_multiple_value_types(self) -> None:
         f = ff.parse('s(8,4)|i(I,object)|c(I,str)|v(object,int,bool,str)')
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),
@@ -54,7 +55,7 @@ class TestUnit(TestCase):
 
     def test_frame_he_before_hash(self) -> None:
         f = ff.parse('s(3,4)').to_frame_he()
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),
@@ -67,7 +68,7 @@ class TestUnit(TestCase):
     def test_frame_he_after_hash(self) -> None:
         f = ff.parse('s(3,4)').to_frame_he()
         hash(f) # to initialize _hash
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),

@@ -1,4 +1,4 @@
-from copy import deepcopy
+import typing as tp
 from sys import getsizeof
 
 from hypothesis import given
@@ -17,7 +17,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_index())
     def test_getsizeof_total_index(self, i: Index) -> None:
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(i), sum((
             getsizeof_total(i._map, seen=seen),
             getsizeof_total(i._labels, seen=seen),
@@ -29,7 +29,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_index_go())
     def test_getsizeof_total_index_go(self, i: IndexGO) -> None:
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(i), sum((
             getsizeof_total(i._map, seen=seen),
             getsizeof_total(i._labels, seen=seen),
@@ -44,7 +44,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_series())
     def test_getsizeof_total_series(self, s: Series) -> None:
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(s), sum((
             getsizeof_total(s.values, seen=seen),
             getsizeof_total(s._index, seen=seen),
@@ -76,7 +76,7 @@ class TestUnit(TestCase):
         >>> id(a[0])
         140280363921536
         '''
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(tb), sum((
             getsizeof_total(tb._blocks, seen=seen),
             getsizeof_total(tb._index, seen=seen),
@@ -88,7 +88,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go())
     def test_getsizeof_total_frame(self, f: Frame) -> None:
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
             getsizeof_total(f._blocks, seen=seen),
             getsizeof_total(f._columns, seen=seen),

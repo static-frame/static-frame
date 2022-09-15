@@ -83,7 +83,7 @@ class TestUnit(TestCase):
             (2, 8),
             (4, 5, (2, 8))
         )))
-    
+
     # TODO: Add predefined_seen where it includes all elements already
 
     def test_larger_values_is_larger(self) -> None:

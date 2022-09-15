@@ -3188,7 +3188,7 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def _unsized_children(obj):
+def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
     # Check if iterable or a string first for fewer isinstance calls on common types
     if hasattr(obj, '__iter__') and not isinstance(obj, str):
         if (
@@ -3206,31 +3206,24 @@ def _unsized_children(obj):
             # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
             pass
 
-def _attrs(obj):
-    attrs = (getattr(obj, slot) for slot in collect_slots(obj) if slot != '__weakref__' and hasattr(obj, slot))
+def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
+    slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
+    attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
     return attrs
 
-_mjp = 0
-def _nested_sizable_elements(obj: any, *, seen=None, level=0) -> tp.Iterable[any]:
-    global _mjp
-    seen = set() if seen is None else seen # TODO: Remove this line, just include in tests
+def _nested_sizable_elements(obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
     if id(obj) in seen:
         return
     seen.add(id(obj))
 
     for el in _unsized_children(obj):
-        yield from _nested_sizable_elements(el, seen=seen, level=level+1)
-    for el in _attrs(obj):
-        yield from _nested_sizable_elements(el, seen=seen, level=level+1)
+        yield from _nested_sizable_elements(el, seen=seen)
+    for el in _sizable_slot_attrs(obj):
+        yield from _nested_sizable_elements(el, seen=seen)
 
     yield obj
 
-def collect_slots(obj):
-    return frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
-
-def getsizeof_total(obj, *, seen=None):
-    global _mjp
-    _mjp = 0
+def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
     seen = set() if seen is None else seen
     total = sum(getsizeof(el) for el in _nested_sizable_elements(obj, seen=seen))
     return total
