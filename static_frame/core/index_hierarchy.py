@@ -1401,9 +1401,9 @@ class IndexHierarchy(IndexBase):
 
     def index_at_depth(self: IH,
             depth_level: DepthLevelSpecifier = 0,
-            ) -> tp.Union[Index, tp.List[Index]]:
+            ) -> tp.Union[Index, tp.Tuple[Index]]:
         '''
-        Return an index, or a list of indices for the ``depth_level`` specified.
+        Return an index, or a tuple of indices for the ``depth_level`` specified.
 
         Args:
             depth_level: a single depth level, or iterable depth of depth levels.
