@@ -1,6 +1,18 @@
 What is New in StaticFrame
 ===============================
 
+0.9.15
+----------
+
+Added ``__repr()__`` for ``HLoc``.
+
+Added ``IndexHierarchy.index_at_depth()``
+
+Added ``IndexHierarchy.indexer_at_depth()``
+
+Added ``order_by_occurrence`` parameter to ``unique()`` on ``IndexBase`` subclasses.
+
+
 0.9.14
 ----------
 
