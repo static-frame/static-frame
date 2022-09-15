@@ -3192,16 +3192,14 @@ def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
     if hasattr(obj, '__iter__') and not isinstance(obj, str):
         if (
             (obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND)
-            or isinstance(obj, tuple)
-            or isinstance(obj, list)
-            or isinstance(obj, set)
-            or isinstance(obj, frozenset)
+            or isinstance(obj, abc.Sequence) # tuple, list
+            or isinstance(obj, abc.Set) # set, frozenset
         ):
             yield from obj
         elif isinstance(obj, dict):
             yield from chain.from_iterable(obj.items())
         else:
-            # The full size of the object is included in a getsizeof call
+            # The full size of the object is included in its getsizeof call
             # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
             pass
 
