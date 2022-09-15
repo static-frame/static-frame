@@ -4,6 +4,7 @@ from sys import getsizeof
 import numpy as np
 
 from static_frame import TypeBlocks
+from static_frame.core.util import getsizeof_total
 from static_frame.test.test_case import TestCase
 
 
@@ -11,7 +12,7 @@ class TestUnit(TestCase):
     def test_1d_array(self) -> None:
         a = np.array([1, 2, 3])
         tb = TypeBlocks.from_blocks(a)
-        self.assertTrue(getsizeof(tb), sum(getsizeof(e) for e in (
+        self.assertTrue(getsizeof_total(tb), sum(getsizeof(e) for e in (
             np.array([1, 2, 3]),
             tb._blocks, # [np.array([1, 2, 3])],
             0,
@@ -30,7 +31,7 @@ class TestUnit(TestCase):
             np.array([1, 2, 3]),
             np.array([4, 5, 6])
         ])
-        self.assertEqual(getsizeof(tb), sum(getsizeof(e) for e in (
+        self.assertEqual(getsizeof_total(tb), sum(getsizeof(e) for e in (
             np.array([1, 2, 3]),
             np.array([4, 5, 6]),
             tb._blocks, # [np.array([1, 2, 3]), np.array([4, 5, 6])],
@@ -49,7 +50,7 @@ class TestUnit(TestCase):
 
     def test_2d_array(self) -> None:
         tb = TypeBlocks.from_blocks(np.array([[1, 2, 3], [4, 5, 6]]))
-        self.assertEqual(getsizeof(tb), sum(getsizeof(e) for e in (
+        self.assertEqual(getsizeof_total(tb), sum(getsizeof(e) for e in (
             np.array([[1, 2, 3],[4, 5, 6]]),
             tb._blocks, # [np.array([[1, 2, 3],[4, 5, 6]])],
             0,
