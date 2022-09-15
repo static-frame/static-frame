@@ -154,6 +154,7 @@ STATIC_ATTR = 'STATIC'
 ELEMENT_TUPLE = (None,)
 
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
+EMPTY_TUPLE: tp.Tuple[()] = ()
 
 # defaults to float64
 EMPTY_ARRAY = np.array((), dtype=None)

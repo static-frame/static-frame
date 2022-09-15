@@ -12,11 +12,11 @@ from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import BOOL_TYPES

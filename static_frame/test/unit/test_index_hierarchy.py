@@ -3723,6 +3723,32 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, np.dtype(int))
         self.assertEqual(ih1.values_at_depth(2).dtype, np.dtype('<U7'))
 
+    def test_hierarchy_index_at_depth_a(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+        ih1.append((1, 300, '2020-01'))
+
+        for depth in range(3):
+            assert ih1.index_at_depth(depth) is ih1._indices[depth]
+            assert ih1.index_at_depth([depth]) == (ih1._indices[depth],)
+            assert ih1.index_at_depth(iter([depth])) == (ih1._indices[depth],)
+
+        assert ih1.index_at_depth([0, 1]) == ih1.index_at_depth([1, 0])[::-1]
+        assert ih1.index_at_depth([2, 0]) == (ih1._indices[2], ih1._indices[0])
+        assert ih1.index_at_depth(iter(range(3))) == tuple(ih1._indices)
+
+    def test_hierarchy_indexer_at_depth_a(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+        ih1.append((1, 300, '2020-01'))
+
+        for depth in range(3):
+            assert (ih1.indexer_at_depth(depth) == ih1._indexers[depth]).all()
+            assert (ih1.indexer_at_depth([depth]) == ih1._indexers[[depth]]).all()
+            assert (ih1.indexer_at_depth(iter([depth])) == ih1._indexers[[depth]]).all()
+
+        assert (ih1.indexer_at_depth([0, 1]) == ih1.indexer_at_depth([1, 0])[::-1]).all().all()
+        assert (ih1.indexer_at_depth([2, 0]) == [ih1._indexers[2], ih1._indexers[0]]).all().all()
+        assert (ih1.indexer_at_depth(iter(range(3))) == ih1._indexers).all().all()
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_head_a(self) -> None:
@@ -4156,6 +4182,12 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         self.assertEqual(ih1.unique([1]).tolist(), ['a', 'b'])
 
+    def test_hierarchy_unique_c(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        with self.assertRaises(RuntimeError):
+            ih1.unique((0, 2), order_by_occurrence=True)
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_union_a(self) -> None:
@@ -4238,8 +4270,8 @@ class TestUnit(TestCase):
         ]
         ih = IndexHierarchy.from_labels(labels)
 
-        depth0 = list(ih._get_unique_labels_in_occurence_order(0))
-        depth1 = list(ih._get_unique_labels_in_occurence_order(1))
+        depth0 = ih.unique(depth_level=0, order_by_occurrence=True).tolist()
+        depth1 = ih.unique(depth_level=1, order_by_occurrence=True).tolist()
 
         self.assertListEqual([1, 3, 2, 0, 4, 5], depth0)
         self.assertListEqual(list("ABCFDE"), depth1)
