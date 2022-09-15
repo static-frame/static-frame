@@ -1107,13 +1107,15 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: DepthLevelSpecifier = 0,
+            order_by_occurrence: bool = False,
             ) -> np.ndarray:
         '''
         Return a NumPy array of unique values.
 
         Args:
             depth_level: defaults to 0 for for a 1D Index.
+            order_by_occurrence: for 1D indices, this argument is a no-op. Provided for compatibility with IndexHierarchy.
 
         Returns:
             :obj:`numpy.ndarray`

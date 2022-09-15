@@ -504,8 +504,8 @@ class Yarn(ContainerBase, StoreClientMixin):
             return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
-        target_bus_index = target_hierarchy._get_unique_labels_in_occurence_order(depth=0)
-        target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index) # type: ignore
+        target_bus_index = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
+        target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index)
 
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
@@ -522,7 +522,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             extract_per_bus = valid[pos: pos+width]
             pos += width
 
-            idx = target_bus_index.loc_to_iloc(bus_label) # type: ignore
+            idx = target_bus_index.loc_to_iloc(bus_label)
             buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
 
         buses.flags.writeable = False
