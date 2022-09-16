@@ -926,6 +926,19 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.shape, (100, 20))
 
+    def test_frame_to_pandas_h(self) -> None:
+        df = Frame().to_pandas()
+        self.assertEqual(df.shape, (0, 0))
+
+    def test_frame_to_pandas_i(self) -> None:
+        df = FrameGO(index=range(10)).to_pandas()
+        self.assertEqual(df.shape, (10, 0))
+
+    def test_frame_to_pandas_j(self) -> None:
+        df = Frame.from_element('', columns=range(10), index=()).to_pandas()
+        self.assertEqual(df.shape, (0, 10))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_arrow_a(self) -> None:

@@ -7355,7 +7355,7 @@ class Frame(ContainerOperand):
         '''
         import pandas
 
-        if self._blocks.unified:
+        if self._blocks.unified and self._blocks._blocks:
             # make copy to get writeable
             array = self._blocks._blocks[0].copy()
             df = pandas.DataFrame(array,
