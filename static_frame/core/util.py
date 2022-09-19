@@ -3190,6 +3190,10 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
 class MemoryMeasurements:
     @staticmethod
     def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
+        '''
+        Generates the iterable children that have not been counted by a getsizeof call
+        on the parent object
+        '''
         # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
             if (
@@ -3207,15 +3211,23 @@ class MemoryMeasurements:
 
     @staticmethod
     def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
-        slots = frozenset().union(*(
-            (cls.__slots__,) if isinstance(cls.__slots__, str) else cls.__slots__
-            for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
-        )
+        '''
+        Generates an iterable of the values of all slot-based attributes in an object, including the slots
+        contained in the object's parent classes based on the MRO
+        '''
+        # NOTE: This does NOT support 'single-string' slots (i.e. __slots__ = 'foo')
+        slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
         attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
         return attrs
 
     @staticmethod
     def _nested_sizable_elements(obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
+        '''
+        Generates an iterable of all objects the parent object has references to, including nested references.
+        This function considers both the iterable unsized children (based on _unsized_children) and the sizable
+        attributes listed in its slots. The resulting generator is in pre-order and includes the parent object
+        at the end.
+        '''
         if id(obj) in seen:
             return
         seen.add(id(obj))
@@ -3228,6 +3240,9 @@ class MemoryMeasurements:
         yield obj
 
 def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
+    '''
+    Returns the total size of the object and its references, including nested refrences
+    '''
     seen = set() if seen is None else seen
     total = sum(getsizeof(el) for el in MemoryMeasurements._nested_sizable_elements(obj, seen=seen))
     return total

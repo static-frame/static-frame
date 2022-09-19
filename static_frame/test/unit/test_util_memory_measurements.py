@@ -84,7 +84,7 @@ class TestUnit(TestCase):
                 'dumplings',
                 'eggs'
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 self.apples = 'a'
                 self.bananas = 'b'
                 self.carrots = 'c'
@@ -92,14 +92,6 @@ class TestUnit(TestCase):
                 self.eggs = 'e'
         obj = A()
         self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
-
-    def test_sizable_slot_attrs_string_slots(self) -> None:
-        class A:
-            __slots__ = 'apples'
-            def __init__(self):
-                self.apples = 'a'
-        obj = A()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a',)))
 
     def test_sizable_slot_attrs_not_all_initialized(self) -> None:
         class A:
@@ -110,7 +102,7 @@ class TestUnit(TestCase):
                 'dumplings',
                 'eggs'
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 self.apples = 'a'
                 self.bananas = 'b'
                 self.eggs = 'e'
@@ -123,7 +115,7 @@ class TestUnit(TestCase):
                 'apples',
                 'bananas',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 self.apples = 'a'
                 self.bananas = 'b'
         class B(A):
@@ -132,7 +124,7 @@ class TestUnit(TestCase):
                 'dumplings',
                 'eggs'
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.carrots = 'c'
                 self.dumplings = 'd'
@@ -146,7 +138,7 @@ class TestUnit(TestCase):
                 'apples',
                 'bananas',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 self.apples = 'a'
                 self.bananas = 'b'
         class B(A):
@@ -154,7 +146,7 @@ class TestUnit(TestCase):
                 'carrots',
                 'dumplings',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.carrots = 'c'
                 self.dumplings = 'd'
@@ -162,7 +154,7 @@ class TestUnit(TestCase):
             __slots__ = (
                 'eggs',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.eggs = 'e'
         obj = C()
@@ -177,7 +169,7 @@ class TestUnit(TestCase):
                 'carrots',
                 'dumplings',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 self.apples = 'a'
                 self.bananas = 'b'
                 self.carrots = 'c'
@@ -188,7 +180,7 @@ class TestUnit(TestCase):
             __slots__ = (
                 'eggs',
             )
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.eggs = 'e'
         obj = C()
@@ -268,8 +260,7 @@ class TestUnit(TestCase):
     def test_nested_sizable_elements_frozenautomap(self) -> None:
         obj = FrozenAutoMap([2, 3, 4])
         self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (obj,))
-    
+
 
 if __name__ == '__main__':
     unittest.main()
-

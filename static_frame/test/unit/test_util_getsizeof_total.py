@@ -1,16 +1,16 @@
+import typing as tp
 import unittest
 from sys import getsizeof
 
-import numpy as np
 import frame_fixtures as ff
-import typing as tp
+import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame import Bus
 from static_frame import Frame
 from static_frame import Index
-from static_frame import IndexGO
 from static_frame import IndexDateGO
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import StoreConfig
@@ -479,7 +479,7 @@ class TestUnit(TestCase):
         idxa = Index(('a', 'b', 'c'))
         idxb = Index((1, 2, 3))
         idx = IndexHierarchy.from_product(idxa, idxb)
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(idx), sum(getsizeof_total(e, seen=seen) for e in (
             idx._indices,
             idx._indexers,
@@ -491,7 +491,7 @@ class TestUnit(TestCase):
             idx._index_types,
             idx._pending_extensions,
         )) + getsizeof(idx))
-    
+
     #---------------------------------------------------------------------------
     # Bus
 
@@ -499,7 +499,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(3,6)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         b = Bus.from_frames((f1, f2))
-        seen = set()
+        seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(b), sum(getsizeof_total(e, seen=seen) for e in (
             b._loaded,
             b._loaded_all,
@@ -532,7 +532,7 @@ class TestUnit(TestCase):
 
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
 
-            seen = set()
+            seen: tp.Set[int] = set()
             self.assertEqual(getsizeof_total(b2), sum(getsizeof_total(e, seen=seen) for e in (
                 b2._loaded,
                 b2._loaded_all,
@@ -547,4 +547,3 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
