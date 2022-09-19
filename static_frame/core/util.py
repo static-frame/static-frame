@@ -3201,10 +3201,34 @@ class MemoryMeasurements:
                 # _nested_sizable_elements only runs id(obj) in seen to check to skip elements
                 # _unsized_children needs to make that each element is fully initialized. Otherwise,
                 # the ids of each element could be reused by numpy (Python 3.8.12/NumPy 1.19.5).
-                # This could in elements getting skipped because their id was the same as a previous
-                # element, even though they represent a different object.
-                # By yielding from a list generator, we force each element in the list to be
-                # initialized before any are yielded.
+                # If an element's id is the same as a previous element, and the element is different from
+                # the previous element, it would result in the element getting improperly skipped.
+                # By yielding from a list comprehension, each element in the numpy object array must be
+                # serialized to a PyObject first, ensuring that the ids are not reused.
+                # Code Example
+                '''
+                >>> import numpy as np
+                >>> a = np.array([np.array([None, None, i // 2]) for i in range(5)])
+                >>> b = [el for el in a]
+                >>> c = [id(el) for el in a]
+                >>> d = [id(el) for el in b]
+                >>>
+                >>> a
+                array([[None, None, 0],
+                       [None, None, 0],
+                       [None, None, 1],
+                       [None, None, 1],
+                       [None, None, 2]], dtype=object)
+                >>> c
+                [139739654711216, 139739654711376, 139739654711216, 139739654711376, 139739654711216]
+                >>> d
+                [139741882702784, 139741882701984, 139739654688320, 139739654711136, 139739654711056]
+                >>>
+                >>> set(c)
+                {139739654711216, 139739654711376}
+                >>> set(d)
+                {139741882702784, 139739654688320, 139739654711136, 139741882701984, 139739654711056}
+                '''
                 yield from [el for el in obj]
             elif (
                 isinstance(obj, abc.Sequence) # tuple, list
