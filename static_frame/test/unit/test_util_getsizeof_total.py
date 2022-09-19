@@ -12,6 +12,7 @@ from static_frame import Index
 from static_frame import IndexDateGO
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
+from static_frame import Quilt
 from static_frame import Series
 from static_frame import StoreConfig
 from static_frame import TypeBlocks
@@ -567,6 +568,66 @@ class TestUnit(TestCase):
             y._index,
             y._deepcopy_from_bus,
         )) + getsizeof(y))
+
+    #---------------------------------------------------------------------------
+    # Quilt
+
+    def test_getsizeof_total_quilt_simple_before_columns(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+        q = Quilt(y1, retain_labels=True)
+        seen: tp.Set[int] = set()
+        self.assertEqual(getsizeof_total(q), sum(getsizeof_total(e, seen=seen) for e in (
+            q._bus,
+            q._axis,
+            q._axis_hierarchy,
+            q._axis_opposite,
+            q._assign_axis,
+            #q._columns, # not initialized until after get columns property
+            #q._index, # not initialized until after get columns property
+            q._retain_labels,
+            q._deepcopy_from_bus,
+        )) + getsizeof(q))
+
+    def test_getsizeof_total_quilt_simple_after_columns(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,2)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+        f5 = ff.parse('s(4,2)').rename('f5')
+        f6 = ff.parse('s(6,2)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4,), name='b2')
+        b3 = Bus.from_frames((f5, f6), name='b3')
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+
+        q = Quilt(y1, retain_labels=True)
+        q.columns # force columns initialization
+        seen: tp.Set[int] = set()
+        self.assertEqual(getsizeof_total(q), sum(getsizeof_total(e, seen=seen) for e in (
+            q._bus,
+            q._axis,
+            q._axis_hierarchy,
+            q._axis_opposite,
+            q._assign_axis,
+            q._columns,
+            q._index,
+            q._retain_labels,
+            q._deepcopy_from_bus,
+        )) + getsizeof(q))
 
 if __name__ == '__main__':
     unittest.main()
