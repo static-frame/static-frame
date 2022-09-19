@@ -3237,7 +3237,6 @@ class MemoryMeasurements:
         for el in MemoryMeasurements._sizable_slot_attrs(obj):
             yield from MemoryMeasurements._nested_sizable_elements(el, seen=seen)
 
-        #print('s', obj, '=', getsizeof(obj))
         yield obj
 
 def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
@@ -3246,6 +3245,5 @@ def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None)
     '''
     seen = set() if seen is None else seen
     total = sum(getsizeof(el) for el in MemoryMeasurements._nested_sizable_elements(obj, seen=seen))
-    #print('t', obj, '=', total)
     return total
 
