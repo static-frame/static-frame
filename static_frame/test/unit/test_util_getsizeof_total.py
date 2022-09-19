@@ -615,7 +615,7 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         q = Quilt(y1, retain_labels=True)
-        q.columns # force columns initialization
+        q.columns # pylint:disable=W0104 # force columns initialization
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(q), sum(getsizeof_total(e, seen=seen) for e in (
             q._bus,

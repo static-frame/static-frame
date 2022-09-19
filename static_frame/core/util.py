@@ -3196,9 +3196,18 @@ class MemoryMeasurements:
         '''
         # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
-            if (
-                (obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND)
-                or isinstance(obj, abc.Sequence) # tuple, list
+            if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
+                # What springs up this corner case, you might ask? Well here's the story...
+                # _nested_sizable_elements only runs id(obj) in seen to check to skip elements
+                # _unsized_children needs to make that each element is fully initialized. Otherwise,
+                # the ids of each element could be reused by numpy (Python 3.8.12/NumPy 1.19.5).
+                # This could in elements getting skipped because their id was the same as a previous
+                # element, even though they represent a different object.
+                # By yielding from a list generator, we force each element in the list to be
+                # initialized before any are yielded.
+                yield from [el for el in obj]
+            elif (
+                isinstance(obj, abc.Sequence) # tuple, list
                 or isinstance(obj, abc.Set) # set, frozenset
             ):
                 yield from obj

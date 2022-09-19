@@ -54,28 +54,6 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks())
     def test_getsizeof_total_type_blocks(self, tb: TypeBlocks) -> None:
-        # FAILING (maybe this is OK?), caused by numpy object arrays returning odd results, see below
-        '''
-        >>> import numpy as np
-        >>> a = np.array([np.array([None, None, None]), np.array([None, None, None])])
-        >>>
-        >>> id(a[0])
-        140280363921536
-        >>> id(a[0])
-        140280363921536
-        >>>
-        >>> a[0]
-        array([None, None, None], dtype=object)
-        >>>
-        >>> id(a[0])
-        140280362690400
-        >>> id(a[0])
-        140280363921536
-        >>> id(a[0])
-        140280363921536
-        >>> id(a[0])
-        140280363921536
-        '''
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(tb), sum((
             getsizeof_total(tb._blocks, seen=seen),

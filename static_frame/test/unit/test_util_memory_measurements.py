@@ -66,6 +66,12 @@ class TestUnit(TestCase):
         obj = FrozenAutoMap([2, 3, 4])
         self.assertEqual(tuple(_unsized_children(obj)), ())
 
+    def test_unsized_children_numpy_array_object_complex_has_unique_ids(self) -> None:
+        # See comment in MemoryMeasurements._unsized_children for more detail
+        # on what this is testing and why it is needed
+        obj = np.array([np.array([None, None, i // 2]) for i in range(10)])
+        self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 10)
+
     #---------------------------------------------------------------------------
     # MemoryMeasurements._nested_sizable_elements
 
