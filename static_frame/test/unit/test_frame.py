@@ -10525,6 +10525,30 @@ class TestUnit(TestCase):
                 (('p', (('x', -1), ('y', -1), ('z', 2))), ('q', (('x', -1), ('y', -1), ('z', 2))), ('r', (('x', 'na'), ('y', 'na'), ('z', 'a'))), ('s', (('x', True), ('y', True), ('z', False))), ('t', (('x', True), ('y', True), ('z', False))))
                 )
 
+    def test_frame_shift_c(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a'], index=[1])
+
+        f2 = f1.shift(index=-1, fill_value=0)
+        self.assertEqual(f2.to_pairs(), (('a', ((1, 0),)),))
+
+        f3 = f1.shift(columns=-1, fill_value=0)
+        self.assertEqual(f3.to_pairs(), (('a', ((1, 0),)),))
+
+
+    def test_frame_shift_d(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a', 'b', 'c'], index=[1])
+        f2 = f1.shift(index=-3, fill_value=0)
+        self.assertEqual(f2.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f3 = f1.shift(index=-5, fill_value=0)
+        self.assertEqual(f3.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f4 = f1.shift(index=3, fill_value=0)
+        self.assertEqual(f4.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f5 = f1.shift(index=5, fill_value=0)
+        self.assertEqual(f5.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
 
     #---------------------------------------------------------------------------
 
