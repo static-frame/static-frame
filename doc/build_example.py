@@ -5116,7 +5116,7 @@ def get_examples_fp() -> str:
 
 
 def to_file(
-        component: tp.Optional[tp.Type[ContainerBase]],
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
         ) -> str:
     fp = get_examples_fp()
     with open(fp, 'w') as f:
