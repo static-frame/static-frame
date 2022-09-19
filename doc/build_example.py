@@ -4,6 +4,7 @@ import sys
 DOC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
 
+import argparse
 from io import StringIO
 import typing as tp
 
@@ -5046,53 +5047,66 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             yield from calls_to_msg(calls, row)
 
 
-def gen_all_examples() -> tp.Iterator[str]:
-    yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+CLS_TO_EX_GEN = {
+        sf.Series: ExGenSeries,
+        sf.SeriesHE: ExGenSeries,
 
-    yield from gen_examples(sf.Frame, ExGenFrame)
-    yield from gen_examples(sf.FrameHE, ExGenFrame)
-    yield from gen_examples(sf.FrameGO, ExGenFrame)
+        sf.Frame: ExGenFrame,
+        sf.FrameHE: ExGenFrame,
+        sf.FrameGO: ExGenFrame,
 
-    yield from gen_examples(sf.Index, ExGenIndex)
-    yield from gen_examples(sf.IndexGO, ExGenIndex)
+        sf.Index: ExGenIndex,
+        sf.IndexGO: ExGenIndex,
 
-    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+        sf.IndexYear: ExGenIndexYear,
+        sf.IndexYearGO: ExGenIndexYear,
 
-    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+        sf.IndexYearMonth: ExGenIndexYearMonth,
+        sf.IndexYearMonthGO: ExGenIndexYearMonth,
 
-    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+        sf.IndexDate: ExGenIndexDate,
+        sf.IndexDateGO: ExGenIndexDate,
 
-    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+        sf.IndexMinute: ExGenIndexMinute,
+        sf.IndexMinuteGO: ExGenIndexMinute,
 
-    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+        sf.IndexHour: ExGenIndexHour,
+        sf.IndexHourGO: ExGenIndexHour,
 
-    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+        sf.IndexSecond: ExGenIndexSecond,
+        sf.IndexSecondGO: ExGenIndexSecond,
 
-    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+        sf.IndexMillisecond: ExGenIndexMillisecond,
+        sf.IndexMillisecondGO: ExGenIndexMillisecond,
 
-    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+        sf.IndexMicrosecond: ExGenIndexMicrosecond,
+        sf.IndexMicrosecondGO: ExGenIndexMicrosecond,
 
-    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+        sf.IndexNanosecond: ExGenIndexNanosecond,
+        sf.IndexNanosecondGO: ExGenIndexNanosecond,
 
-    yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
+        sf.IndexHierarchy: ExGenIndexHierarchy,
+        sf.IndexHierarchyGO: ExGenIndexHierarchy,
 
-    yield from gen_examples(sf.Bus, ExGenBus)
-    yield from gen_examples(sf.Batch, ExGenBatch)
+        sf.Bus: ExGenBus,
+        sf.Batch: ExGenBatch,
 
-    yield from gen_examples(sf.HLoc, ExGenHLoc)
-    yield from gen_examples(sf.ILoc, ExGenILoc)
-    yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
+        sf.HLoc: ExGenHLoc,
+        sf.ILoc: ExGenILoc,
+        sf.FillValueAuto: ExGenFillValueAuto,
+        }
+
+CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}
+
+def gen_all_examples(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> tp.Iterator[str]:
+
+    if component is None:
+        for component, ex_gen in CLS_TO_EX_GEN.items():
+            yield from gen_examples(component, ex_gen)
+    else:
+        yield from gen_examples(component, CLS_TO_EX_GEN[component])
 
 #-----------------------------------------------------------------------------
 # exporters
@@ -5101,29 +5115,37 @@ def get_examples_fp() -> str:
     return os.path.join(DOC_DIR, 'source', 'examples.txt')
 
 
-def to_file() -> str:
+def to_file(
+        component: tp.Optional[tp.Type[ContainerBase]],
+        ) -> str:
     fp = get_examples_fp()
     with open(fp, 'w') as f:
-        for line in gen_all_examples():
+        for line in gen_all_examples(component):
             f.write(line)
             f.write('\n')
     return fp
 
 
-def to_string_io() -> StringIO:
+def to_string_io(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> StringIO:
     sio = StringIO()
-    for line in gen_all_examples():
+    for line in gen_all_examples(component):
         sio.write(line)
         sio.write('\n')
     sio.seek(0)
     return sio
 
 
-def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
+def to_json_bundle(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> tp.Dict[str, tp.List[str]]:
+
     post: tp.Dict[str, tp.List[str]] = {}
     lines: tp.List[str] = []
     sig = ''
-    for line in gen_all_examples():
+
+    for line in gen_all_examples(component):
         if line.startswith(TAG_START):
             prefix, method = line.split('-')
             cls_name = prefix.replace(TAG_START, '')
@@ -5138,8 +5160,37 @@ def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
     return post
 
 
+def get_arg_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+            description='Build Example',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            )
+    p.add_argument('--print',
+            help='Print output.',
+            action='store_true',
+            )
+    p.add_argument('--write',
+            help=f'Write output to {get_examples_fp()}.',
+            action='store_true',
+            )
+    p.add_argument('--component',
+            help='Name of class to process, else all.',
+            )
+    return p
+
+
 if __name__ == '__main__':
-    # for line in gen_all_examples():
-    #     print(line)
-    # post = bundle()
-    print(to_file())
+
+    options = get_arg_parser().parse_args()
+    component = (None if not options.component else
+            CLS_NAME_TO_CLS[options.component])
+
+    if options.print:
+        for line in gen_all_examples(component):
+            print(line)
+    if options.write:
+        print(to_file(component))
+
+
+
+
