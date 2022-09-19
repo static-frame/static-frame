@@ -3207,7 +3207,10 @@ class MemoryMeasurements:
 
     @staticmethod
     def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
-        slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
+        slots = frozenset().union(*(
+            (cls.__slots__,) if isinstance(cls.__slots__, str) else cls.__slots__
+            for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
+        )
         attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
         return attrs
 
@@ -3228,3 +3231,4 @@ def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None)
     seen = set() if seen is None else seen
     total = sum(getsizeof(el) for el in MemoryMeasurements._nested_sizable_elements(obj, seen=seen))
     return total
+
