@@ -1925,7 +1925,11 @@ class TypeBlocks(ContainerOperand):
             block_start_idx, block_start_column = self._index[index_start_pos]
             block_start = self._blocks[block_start_idx]
 
-            if block_start_column == 0:
+            if not wrap and abs(column_shift) >= column_count: # no data will be retained
+                # blocks will be set below
+                block_head_iter = ()
+                block_tail_iter = ()
+            elif block_start_column == 0:
                 # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
                 block_head_iter = chain(
                         (block_start,),
