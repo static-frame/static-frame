@@ -3187,40 +3187,44 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
 
-def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
-    # Check if iterable or a string first for fewer isinstance calls on common types
-    if hasattr(obj, '__iter__') and not isinstance(obj, str):
-        if (
-            (obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND)
-            or isinstance(obj, abc.Sequence) # tuple, list
-            or isinstance(obj, abc.Set) # set, frozenset
-        ):
-            yield from obj
-        elif isinstance(obj, dict):
-            yield from chain.from_iterable(obj.items())
-        else:
-            # The full size of the object is included in its getsizeof call
-            # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
-            pass
+class MemoryMeasurements:
+    @staticmethod
+    def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
+        # Check if iterable or a string first for fewer isinstance calls on common types
+        if hasattr(obj, '__iter__') and not isinstance(obj, str):
+            if (
+                (obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND)
+                or isinstance(obj, abc.Sequence) # tuple, list
+                or isinstance(obj, abc.Set) # set, frozenset
+            ):
+                yield from obj
+            elif isinstance(obj, dict):
+                yield from chain.from_iterable(obj.items())
+            else:
+                # The full size of the object is included in its getsizeof call
+                # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
+                pass
 
-def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
-    slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
-    attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
-    return attrs
+    @staticmethod
+    def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
+        slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
+        attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
+        return attrs
 
-def _nested_sizable_elements(obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
-    if id(obj) in seen:
-        return
-    seen.add(id(obj))
+    @staticmethod
+    def _nested_sizable_elements(obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
+        if id(obj) in seen:
+            return
+        seen.add(id(obj))
 
-    for el in _unsized_children(obj):
-        yield from _nested_sizable_elements(el, seen=seen)
-    for el in _sizable_slot_attrs(obj):
-        yield from _nested_sizable_elements(el, seen=seen)
+        for el in MemoryMeasurements._unsized_children(obj):
+            yield from MemoryMeasurements._nested_sizable_elements(el, seen=seen)
+        for el in MemoryMeasurements._sizable_slot_attrs(obj):
+            yield from MemoryMeasurements._nested_sizable_elements(el, seen=seen)
 
-    yield obj
+        yield obj
 
 def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
     seen = set() if seen is None else seen
-    total = sum(getsizeof(el) for el in _nested_sizable_elements(obj, seen=seen))
+    total = sum(getsizeof(el) for el in MemoryMeasurements._nested_sizable_elements(obj, seen=seen))
     return total
