@@ -3208,9 +3208,10 @@ class MemoryMeasurements:
                 '''
                 >>> import numpy as np
                 >>> a = np.array([np.array([None, None, i // 2]) for i in range(5)])
-                >>> b = [el for el in a]
+                >>> b = [id(a[0]), id(a[1]), id(a[2]), id(a[3]), id(a[4])]
                 >>> c = [id(el) for el in a]
-                >>> d = [id(el) for el in b]
+                >>> d = [el for el in a]
+                >>> e = [id(el) for el in d]
                 >>>
                 >>> a
                 array([[None, None, 0],
@@ -3218,15 +3219,14 @@ class MemoryMeasurements:
                        [None, None, 1],
                        [None, None, 1],
                        [None, None, 2]], dtype=object)
+                >>> b
+                [139999659995264, 139999659995264, 139999659995264, 139999659995264, 139999659995264]
                 >>> c
-                [139739654711216, 139739654711376, 139739654711216, 139739654711376, 139739654711216]
+                [139999659995264, 139999658764368, 139999659995264, 139999658764368, 139999659995264]
                 >>> d
-                [139741882702784, 139741882701984, 139739654688320, 139739654711136, 139739654711056]
-                >>>
-                >>> set(c)
-                {139739654711216, 139739654711376}
-                >>> set(d)
-                {139741882702784, 139739654688320, 139739654711136, 139741882701984, 139739654711056}
+                [array([None, None, 0], dtype=object), array([None, None, 0], dtype=object), array([None, None, 1], dtype=object), array([None, None, 1], dtype=object), array([None, None, 2], dtype=object)]
+                >>> e
+                [139999659995264, 139999658764368, 139999658765088, 139997430769344, 139997430769104]
                 '''
                 yield from [el for el in obj]
             elif (
