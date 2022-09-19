@@ -15,6 +15,7 @@ from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import StoreConfig
 from static_frame import TypeBlocks
+from static_frame import Yarn
 from static_frame.core.util import getsizeof_total
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -544,6 +545,28 @@ class TestUnit(TestCase):
                 b2._last_accessed,
                 b2._max_persist,
             )) + getsizeof(b2))
+
+    #---------------------------------------------------------------------------
+    # Yarn
+
+    def test_getsizeof_total_yarn_simple(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        y = Yarn((b1, b2))
+        seen: tp.Set[int] = set()
+        self.assertEqual(getsizeof_total(y), sum(getsizeof_total(e, seen=seen) for e in (
+            y._series,
+            y._hierarchy,
+            y._index,
+            y._deepcopy_from_bus,
+        )) + getsizeof(y))
 
 if __name__ == '__main__':
     unittest.main()
