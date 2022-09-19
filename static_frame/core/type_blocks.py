@@ -1912,6 +1912,9 @@ class TypeBlocks(ContainerOperand):
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
 
+        block_head_iter: tp.Iterable[np.ndarray]
+        block_tail_iter: tp.Iterable[np.ndarray]
+
         # possibly be truthy
         # index is columns here
         if wrap and index_start_pos == 0 and row_start_pos == 0:
@@ -1924,10 +1927,10 @@ class TypeBlocks(ContainerOperand):
 
             if block_start_column == 0:
                 # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter: tp.Iterable[np.ndarray] = chain(
+                block_head_iter = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+                block_tail_iter = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),
