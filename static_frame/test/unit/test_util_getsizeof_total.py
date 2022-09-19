@@ -118,27 +118,27 @@ class TestUnit(TestCase):
     def test_getsizeof_total_larger_values_is_larger(self) -> None:
         a = ('a', 'b', 'c')
         b = ('abc', 'def', 'ghi')
-        self.assertTrue(getsizeof_total(a) < getsizeof_total(b))
+        self.assertLess(getsizeof_total(a), getsizeof_total(b))
 
     def test_getsizeof_total_more_values_is_larger_a(self) -> None:
         a = ('a', 'b', 'c')
         b = ('a', 'b', 'c', 'd')
-        self.assertTrue(getsizeof_total(a) < getsizeof_total(b))
+        self.assertLess(getsizeof_total(a), getsizeof_total(b))
 
     def test_getsizeof_total_more_values_is_larger_b(self) -> None:
         a = ('a', 'b', 'c')
         b = 'd'
-        self.assertTrue(getsizeof_total([a]) < getsizeof_total([a, b]))
+        self.assertLess(getsizeof_total([a]), getsizeof_total([a, b]))
 
     def test_getsizeof_total_more_values_is_larger_nested_a(self) -> None:
         a = ('a', (2, (8, 9), 4), 'c')
         b = ('a', (2, (8, 9, 10), 4), 'c')
-        self.assertTrue(getsizeof_total(a) < getsizeof_total(b))
+        self.assertLess(getsizeof_total(a), getsizeof_total(b))
 
     def test_getsizeof_total_more_values_is_larger_nested_b(self) -> None:
         a = np.array(['a', [2, (8, 9), 4], 'c'], dtype=object)
         b = np.array(['a', [2, (8, 9, 10), 4], 'c'], dtype=object)
-        self.assertTrue(getsizeof_total(a) < getsizeof_total(b))
+        self.assertLess(getsizeof_total(a), getsizeof_total(b))
 
     #---------------------------------------------------------------------------
     # Frame
@@ -266,28 +266,28 @@ class TestUnit(TestCase):
     def test_getsizeof_total_index_name_adds_size(self) -> None:
         idx1 = Index(('a', 'b', 'c'))
         idx2 = idx1.rename('with_name')
-        self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
+        self.assertLess(getsizeof_total(idx1), getsizeof_total(idx2))
 
     def test_getsizeof_total_index_more_values_adds_size(self) -> None:
         idx1 = Index(('a', 'b', 'c'))
         idx2 = Index(('a', 'b', 'c', 'd'))
-        self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
+        self.assertLess(getsizeof_total(idx1), getsizeof_total(idx2))
 
     def test_getsizeof_total_index_more_nested_values_adds_size(self) -> None:
         idx1 = Index((1, 'b', (2, 3)))
         idx2 = Index((1, 'b', (2, 3, 4, 5)))
-        self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
+        self.assertLess(getsizeof_total(idx1), getsizeof_total(idx2))
 
     def test_getsizeof_total_index_more_doubly_nested_values_adds_size(self) -> None:
         idx1 = Index((1, 'b', ('c', (8, 9), 'd')))
         idx2 = Index((1, 'b', ('c', (8, 9, 10), 'd')))
-        self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
+        self.assertLess(getsizeof_total(idx1), getsizeof_total(idx2))
 
     def test_getsizeof_total_index_loc_is_iloc_reduces_size(self) -> None:
         # idx1 will be smaller since the _positions and _labels variables point to the same array
         idx1 = Index((0, 1, 2), loc_is_iloc=True)
         idx2 = Index((0, 1, 2))
-        self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
+        self.assertLess(getsizeof_total(idx1), getsizeof_total(idx2))
 
     def test_getsizeof_total_index_go(self) -> None:
         idx = IndexGO(('a', 'b', 'c'))
@@ -368,27 +368,27 @@ class TestUnit(TestCase):
     def test_getsizeof_total_series_with_name_is_larger(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = s1.rename('named_series')
-        self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
+        self.assertLess(getsizeof_total(s1), getsizeof_total(s2))
 
     def test_getsizeof_total_series_larger_series_is_larger_a(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = Series(('a', 'b', 'c', 'd'))
-        self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
+        self.assertLess(getsizeof_total(s1), getsizeof_total(s2))
 
     def test_getsizeof_total_series_larger_series_is_larger_b(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = Series(('abc', 'def', 'ghi'))
-        self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
+        self.assertLess(getsizeof_total(s1), getsizeof_total(s2))
 
     def test_getsizeof_total_series_larger_nested_series_is_larger(self) -> None:
         s1 = Series(('a', (2, (4, 5), 8), 'c'))
         s2 = Series(('a', (2, (4, 5, 6), 8), 'c'))
-        self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
+        self.assertLess(getsizeof_total(s1), getsizeof_total(s2))
 
     def test_getsizeof_total_series_larger_index_is_larger(self) -> None:
         s1 = Series(('a', 'b', 'c'), index=(0, 1, 2))
         s2 = Series(('a', 'b', 'c'), index=('abc', 'def', 'ghi'))
-        self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
+        self.assertLess(getsizeof_total(s1), getsizeof_total(s2))
 
     def test_getsizeof_total_series_he_before_hash(self) -> None:
         s = Series(('a', 'b', 'c')).to_series_he()
