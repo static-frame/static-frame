@@ -186,7 +186,7 @@ class TestUnit(TestCase):
             getsizeof(f)
         )))
 
-    def test_getsizeof_total_frame_frame_he_before_hash(self) -> None:
+    def test_getsizeof_total_frame_he_before_hash(self) -> None:
         f = ff.parse('s(3,4)').to_frame_he()
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(f), sum((
@@ -198,7 +198,7 @@ class TestUnit(TestCase):
             getsizeof(f)
         )))
 
-    def test_getsizeof_total_frame_frame_he_after_hash(self) -> None:
+    def test_getsizeof_total_frame_he_after_hash(self) -> None:
         f = ff.parse('s(3,4)').to_frame_he()
         hash(f) # to initialize _hash
         seen: tp.Set[int] = set()
@@ -214,7 +214,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # Index
 
-    def test_index_simple(self) -> None:
+    def test_getsizeof_total_index_simple(self) -> None:
         idx = Index(('a', 'b', 'c'))
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -225,7 +225,7 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_object(self) -> None:
+    def test_getsizeof_total_index_object(self) -> None:
         idx = Index((1, 'b', (2, 3)))
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -240,7 +240,7 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_loc_is_iloc(self) -> None:
+    def test_getsizeof_total_index_loc_is_iloc(self) -> None:
         idx = Index((0, 1, 2), loc_is_iloc=True)
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -251,7 +251,7 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_empty(self) -> None:
+    def test_getsizeof_total_index_empty(self) -> None:
         idx = Index(())
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -262,33 +262,33 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_name_adds_size(self) -> None:
+    def test_getsizeof_total_index_name_adds_size(self) -> None:
         idx1 = Index(('a', 'b', 'c'))
         idx2 = idx1.rename('with_name')
         self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
 
-    def test_index_more_values_adds_size(self) -> None:
+    def test_getsizeof_total_index_more_values_adds_size(self) -> None:
         idx1 = Index(('a', 'b', 'c'))
         idx2 = Index(('a', 'b', 'c', 'd'))
         self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
 
-    def test_index_more_nested_values_adds_size(self) -> None:
+    def test_getsizeof_total_index_more_nested_values_adds_size(self) -> None:
         idx1 = Index((1, 'b', (2, 3)))
         idx2 = Index((1, 'b', (2, 3, 4, 5)))
         self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
 
-    def test_index_more_doubly_nested_values_adds_size(self) -> None:
+    def test_getsizeof_total_index_more_doubly_nested_values_adds_size(self) -> None:
         idx1 = Index((1, 'b', ('c', (8, 9), 'd')))
         idx2 = Index((1, 'b', ('c', (8, 9, 10), 'd')))
         self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
 
-    def test_index_loc_is_iloc_reduces_size(self) -> None:
+    def test_getsizeof_total_index_loc_is_iloc_reduces_size(self) -> None:
         # idx1 will be smaller since the _positions and _labels variables point to the same array
         idx1 = Index((0, 1, 2), loc_is_iloc=True)
         idx2 = Index((0, 1, 2))
         self.assertTrue(getsizeof_total(idx1) < getsizeof_total(idx2))
 
-    def test_index_go(self) -> None:
+    def test_getsizeof_total_index_go(self) -> None:
         idx = IndexGO(('a', 'b', 'c'))
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -303,7 +303,7 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_go_after_append(self) -> None:
+    def test_getsizeof_total_index_go_after_append(self) -> None:
         idx = IndexGO(('a', 'b', 'c'))
         idx.append('d')
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
@@ -319,7 +319,7 @@ class TestUnit(TestCase):
             idx
         )))
 
-    def test_index_datetime_go(self) -> None:
+    def test_getsizeof_total_index_datetime_go(self) -> None:
         idx = IndexDateGO.from_date_range('1994-01-01', '1995-01-01')
         self.assertEqual(getsizeof_total(idx), sum(getsizeof(e) for e in (
             idx._map,
@@ -337,7 +337,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # Series
 
-    def test_series_simple(self) -> None:
+    def test_getsizeof_total_series_simple(self) -> None:
         s = Series(('a', 'b', 'c'))
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(s), sum(getsizeof_total(e, seen=seen) for e in (
@@ -346,7 +346,7 @@ class TestUnit(TestCase):
             s._name,
         )) + getsizeof(s))
 
-    def test_series_with_index(self) -> None:
+    def test_getsizeof_total_series_with_index(self) -> None:
         s = Series(('a', 'b', 'c'), index=(0, 1, 2))
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(s), sum(getsizeof_total(e, seen=seen) for e in (
@@ -355,7 +355,7 @@ class TestUnit(TestCase):
             s._name,
         )) + getsizeof(s))
 
-    def test_series_object_values(self) -> None:
+    def test_getsizeof_total_series_object_values(self) -> None:
         s = Series(('a', (2, (3, 4), 5), 'c'))
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(s), sum(getsizeof_total(e, seen=seen) for e in (
@@ -364,32 +364,32 @@ class TestUnit(TestCase):
             s._name,
         )) + getsizeof(s))
 
-    def test_series_with_name_is_larger(self) -> None:
+    def test_getsizeof_total_series_with_name_is_larger(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = s1.rename('named_series')
         self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
 
-    def test_series_larger_series_is_larger_a(self) -> None:
+    def test_getsizeof_total_series_larger_series_is_larger_a(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = Series(('a', 'b', 'c', 'd'))
         self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
 
-    def test_series_larger_series_is_larger_b(self) -> None:
+    def test_getsizeof_total_series_larger_series_is_larger_b(self) -> None:
         s1 = Series(('a', 'b', 'c'))
         s2 = Series(('abc', 'def', 'ghi'))
         self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
 
-    def test_series_larger_nested_series_is_larger(self) -> None:
+    def test_getsizeof_total_series_larger_nested_series_is_larger(self) -> None:
         s1 = Series(('a', (2, (4, 5), 8), 'c'))
         s2 = Series(('a', (2, (4, 5, 6), 8), 'c'))
         self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
 
-    def test_series_larger_index_is_larger(self) -> None:
+    def test_getsizeof_total_series_larger_index_is_larger(self) -> None:
         s1 = Series(('a', 'b', 'c'), index=(0, 1, 2))
         s2 = Series(('a', 'b', 'c'), index=('abc', 'def', 'ghi'))
         self.assertTrue(getsizeof_total(s1) < getsizeof_total(s2))
 
-    def test_series_he_before_hash(self) -> None:
+    def test_getsizeof_total_series_he_before_hash(self) -> None:
         s = Series(('a', 'b', 'c')).to_series_he()
         seen: tp.Set[int] = set()
         self.assertEqual(getsizeof_total(s), sum(getsizeof_total(e, seen=seen) for e in (
@@ -399,7 +399,7 @@ class TestUnit(TestCase):
             # s._hash, # not initialized yet
         )) + getsizeof(s))
 
-    def test_series_he_after_hash(self) -> None:
+    def test_getsizeof_total_series_he_after_hash(self) -> None:
         s = Series(('a', 'b', 'c')).to_series_he()
         hash(s) # to initialize _hash
         seen: tp.Set[int] = set()
@@ -413,7 +413,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # TypeBlocks
 
-    def test_type_blocks_1d_array(self) -> None:
+    def test_getsizeof_total_type_blocks_1d_array(self) -> None:
         a = np.array([1, 2, 3])
         tb = TypeBlocks.from_blocks(a)
         self.assertTrue(getsizeof_total(tb), sum(getsizeof(e) for e in (
@@ -430,7 +430,7 @@ class TestUnit(TestCase):
             tb
         )))
 
-    def test_type_blocks_list_of_1d_arrays(self) -> None:
+    def test_getsizeof_total_type_blocks_list_of_1d_arrays(self) -> None:
         tb = TypeBlocks.from_blocks([
             np.array([1, 2, 3]),
             np.array([4, 5, 6])
@@ -452,7 +452,7 @@ class TestUnit(TestCase):
             tb
         )))
 
-    def test_type_blocks_2d_array(self) -> None:
+    def test_getsizeof_total_type_blocks_2d_array(self) -> None:
         tb = TypeBlocks.from_blocks(np.array([[1, 2, 3], [4, 5, 6]]))
         self.assertEqual(getsizeof_total(tb), sum(getsizeof(e) for e in (
             np.array([[1, 2, 3],[4, 5, 6]]),
@@ -475,7 +475,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # IndexHierarchy
 
-    def test_index_hierarchy_simple(self) -> None:
+    def test_getsizeof_total_index_hierarchy_simple(self) -> None:
         idxa = Index(('a', 'b', 'c'))
         idxb = Index((1, 2, 3))
         idx = IndexHierarchy.from_product(idxa, idxb)
@@ -495,7 +495,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # Bus
 
-    def test_bus_simple(self) -> None:
+    def test_getsizeof_total_bus_simple(self) -> None:
         f1 = ff.parse('s(3,6)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         b = Bus.from_frames((f1, f2))
@@ -512,7 +512,7 @@ class TestUnit(TestCase):
             b._max_persist,
         )) + getsizeof(b))
 
-    def test_bus_maxpersist(self) -> None:
+    def test_getsizeof_total_bus_maxpersist(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(20):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
