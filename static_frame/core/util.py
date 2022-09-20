@@ -3198,13 +3198,11 @@ class MemoryMeasurements:
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
             if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
                 # _nested_sizable_elements only runs id(obj) in seen to check to skip elements
-                # _unsized_children needs to make that each element is fully initialized. Otherwise,
-                # the ids of each element could be reused by numpy (Python 3.8.12/NumPy 1.19.5).
                 # If an element's id is the same as a previous element, and the element is different from
                 # the previous element, it would result in the element getting improperly skipped.
                 # By yielding from a list comprehension, each element in the numpy object array must be
                 # serialized to a PyObject first, ensuring that the ids are not reused.
-                # Example:
+                # Example (Python 3.8.12/NumPy 1.19.5):
                 # >>> import numpy as np
                 # >>> a = np.array([np.array([None, None, i // 2]) for i in range(5)])
                 # >>> b = [id(a[0]), id(a[1]), id(a[2]), id(a[3]), id(a[4])]
