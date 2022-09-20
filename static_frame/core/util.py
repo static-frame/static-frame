@@ -3197,34 +3197,9 @@ class MemoryMeasurements:
         # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
             if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
-                # _nested_sizable_elements only runs id(obj) in seen to check to skip elements
-                # If an element's id is the same as a previous element, and the element is different from
-                # the previous element, it would result in the element getting improperly skipped.
-                # By yielding from a list comprehension, each element in the numpy object array must be
-                # serialized to a PyObject first, ensuring that the ids are not reused.
-                # Example (Python 3.8.12/NumPy 1.19.5):
-                # >>> import numpy as np
-                # >>> a = np.array([np.array([None, None, i // 2]) for i in range(5)])
-                # >>> b = [id(a[0]), id(a[1]), id(a[2]), id(a[3]), id(a[4])]
-                # >>> c = [id(el) for el in a]
-                # >>> d = [el for el in a]
-                # >>> e = [id(el) for el in d]
-                # >>>
-                # >>> a
-                # array([[None, None, 0],
-                #        [None, None, 0],
-                #        [None, None, 1],
-                #        [None, None, 1],
-                #        [None, None, 2]], dtype=object)
-                # >>> b
-                # [139999659995264, 139999659995264, 139999659995264, 139999659995264, 139999659995264]
-                # >>> c
-                # [139999659995264, 139999658764368, 139999659995264, 139999658764368, 139999659995264]
-                # >>> d
-                # [array([None, None, 0], dtype=object), array([None, None, 0], dtype=object), array([None, None, 1], dtype=object), array([None, None, 1], dtype=object), array([None, None, 2], dtype=object)]
-                # >>> e
-                # [139999659995264, 139999658764368, 139999658765088, 139997430769344, 139997430769104]
-                yield from [el for el in obj]
+                # Only return the referenced python objects not counted by numpy.
+                # Note: iter(obj) would return slices for multi-dimensional object arrays
+                yield from (obj[loc] for loc in np.ndindex(obj.shape))
             elif (
                 isinstance(obj, abc.Sequence) # tuple, list
                 or isinstance(obj, abc.Set) # set, frozenset
