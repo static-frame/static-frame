@@ -117,7 +117,7 @@ class TestUnit(TestCase):
         self.assertEqual(getsizeof_total(obj, seen=seen), 0)
 
     def test_getsizeof_total_larger_values_is_larger(self) -> None:
-        a = ('a', 'b', 'c')
+        a = ('ab', 'cd', 'ef')
         b = ('abc', 'def', 'ghi')
         self.assertLess(getsizeof_total(a), getsizeof_total(b))
 
