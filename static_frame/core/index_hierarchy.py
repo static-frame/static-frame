@@ -50,7 +50,9 @@ from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import INT_TYPES
@@ -74,6 +76,7 @@ from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_neither_slice_nor_mask
+from static_frame.core.util import is_strict_int
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isin_array
@@ -2000,6 +2003,37 @@ class IndexHierarchy(IndexBase):
         '''
         return self._extract_iloc(key)
 
+
+    def _loc_is_iloc_opposite_axis_validate(self: IH,
+            key: GetItemKeyType,
+            ) -> None:
+        '''An `IndexHierarchy` exposes its "rows" as its primary selection interface. Nonetheless, at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required). We cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness. This function serves as filter for those selections, and is globally more efficient than lower level adjustments as generally `IndexHierarchy` has shallow depth.
+        '''
+        if key.__class__ is np.ndarray:
+            # let object dtype use iterable path
+            if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
+                return
+            elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
+                for e in key: # type: ignore
+                    if not is_strict_int(e):
+                        raise KeyError(f'Cannot select depths by non integer {e}')
+                return
+            raise KeyError(f'Cannot select depths by NumPy array of dtype {key.dtype}') # type: ignore
+        elif key.__class__ is slice:
+            if key.start is not None and not is_strict_int(key.start): # type: ignore
+                raise KeyError(f'Cannot select depths by non integer slices {key}')
+            if key.stop is not None and not is_strict_int(key.stop): # type: ignore
+                raise KeyError(f'Cannot select depths by non integer slices {key}')
+            return
+        elif isinstance(key, list):
+            # an iterable, or an object dtype array
+            for e in key:
+                if not is_strict_int(e):
+                    raise KeyError(f'Cannot select depths by non integer {e}')
+        else: # an element
+            if not is_strict_int(key):
+                raise KeyError(f'Cannot select depths by non integer {key}')
+
     # --------------------------------------------------------------------------
 
     def _extract_getitem_astype(self: IH,
@@ -2011,7 +2045,7 @@ class IndexHierarchy(IndexBase):
         # key is an iloc key
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
-
+        self._loc_is_iloc_opposite_axis_validate(key)
         return IndexHierarchyAsType(self, key=key)
 
     # --------------------------------------------------------------------------
@@ -2829,6 +2863,10 @@ class IndexHierarchyAsType:
             container: IndexHierarchy,
             key: GetItemKeyType
             ) -> None:
+        '''
+        Args:
+            key: must be normalized iloc key via _loc_is_iloc_opposite_axis_validate()
+        '''
         self.container = container
         self.key = key
 
@@ -2849,12 +2887,10 @@ class IndexHierarchyAsType:
                 container._blocks._astype_blocks(column_key=self.key, dtype=dtype)
                 )
 
-        # avoid coercion of datetime64 arrays that were not targetted in the selection
         index_constructors = container.index_types.values.copy()
 
         dtype_post = blocks.dtypes[self.key] # can select element or array
-
-        if isinstance(dtype_post, np.dtype):
+        if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.key] = dtype_to_index_cls(
                     container.STATIC,
                     dtype_post,

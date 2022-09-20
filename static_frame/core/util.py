@@ -296,6 +296,16 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
 
+def is_strict_int(value: tp.Any) -> bool:
+    '''Strict check that does not include bools as an int
+    '''
+    if value is None:
+        return False
+    if value.__class__ is bool or value.__class__ is np.bool_:
+        return False
+    return isinstance(value, INT_TYPES)
+
+
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,
