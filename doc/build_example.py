@@ -4334,30 +4334,40 @@ class ExGenYarn(ExGen):
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._attribute(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
 
-    # @staticmethod
-    # def method(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr == '__bool__()':
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield f"bool(b)"
-    #     elif attr == '__len__()':
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield f"len(b)"
-    #     elif attr == 'equals()':
-    #         yield f'b1 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield f'b2 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
-    #         yield f"b1.{attr_func}(b2)"
-    #     elif attr in (
-    #             'head()',
-    #             'tail()',
-    #             ):
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}(2)"
+        if attr == '__bool__()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"bool(y)"
+        elif attr == '__len__()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"len(y)"
+        elif attr == 'equals()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'b3 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1'
+            yield f'y2 = sf.Yarn.from_buses((b3,), retain_labels=False)'
+            yield 'y2'
+            yield f"y1.{attr_func}(y2)"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_func}(2)"
     #     elif attr == 'sort_index()':
     #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
     #         yield 'b'
@@ -4376,47 +4386,62 @@ class ExGenYarn(ExGen):
     #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
     #         yield 'b'
     #         yield f"b.{attr_func}(2, fill_value=sf.Frame()).status"
-    #     elif attr == 'rehierarch()':
-    #         yield f'b = {icls}.from_items({kwa(BUS_INIT_FROM_ITEMS_B)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}((1, 0))"
+        elif attr == 'rehierarch()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}((1, 0))"
     #     elif attr == 'reindex()':
     #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
     #         yield 'b'
     #         yield f"b.{attr_func}(('y', 'z'), fill_value=sf.Frame()).status"
-    #     elif attr == 'relabel()':
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}(('A', 'B'))"
-    #         yield f"b.{attr_func}(dict(x='A'))"
-    #         yield f"b.{attr_func}(lambda l: f'+{{l.upper()}}+')"
-    #     elif attr == 'relabel_flat()':
-    #         yield f'b = {icls}.from_items({kwa(BUS_INIT_FROM_ITEMS_B)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}()"
-    #     elif attr == 'relabel_level_add()':
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}(2048)"
-    #     elif attr == 'relabel_level_drop()':
-    #         yield f'b = {icls}.from_items({kwa(BUS_INIT_FROM_ITEMS_B)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}()"
-    #     elif attr == 'rename()':
-    #         yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield 'b'
-    #         yield f"b.{attr_func}('j')"
-    #     elif attr in 'unpersist()':
-    #         yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-    #         yield f"b1.to_zip_npz('/tmp/b.zip')"
-    #         yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
-    #         yield f'b2'
-    #         yield f'tuple(b2.values)'
-    #         yield f'b2'
-    #         yield f'b2.{attr_func}()'
-    #         yield 'b2'
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        elif attr == 'relabel()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}(('A', 'B', 'C', 'D'))"
+            yield f"y.{attr_func}({{('j', 'v'):('A', 'x')}})"
+        elif attr == 'relabel_flat()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}()"
+        elif attr == 'relabel_level_add()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}('A')"
+        elif attr == 'relabel_level_drop()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}()"
+        elif attr == 'rename()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield f"y.{attr_func}('j')"
+        elif attr in 'unpersist()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f'tuple(y.values)'
+            yield f'y'
+            yield f'y.{attr_func}()'
+            yield 'y'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
     # @staticmethod
     # def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
