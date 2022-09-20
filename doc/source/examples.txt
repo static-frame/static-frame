@@ -197,7 +197,7 @@ c
 #start_Series-mloc
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-94342870693232
+94738279235440
 #end_Series-mloc
 
 #start_Series-name
@@ -340,7 +340,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_Series-corr()
 
 #start_Series-count()
@@ -5081,7 +5081,7 @@ c
 #start_SeriesHE-mloc
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.mloc
-94342868578608
+94738279646048
 #end_SeriesHE-mloc
 
 #start_SeriesHE-name
@@ -5224,7 +5224,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -9754,10 +9754,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -10233,10 +10229,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -10539,7 +10531,7 @@ c           datetime64[D]
 #start_Frame-mloc
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94342877813456 94342877505776 94342878669520]
+[94738271786192 94738286789808 94738286834976]
 #end_Frame-mloc
 
 #start_Frame-name
@@ -16905,10 +16897,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -17384,10 +17372,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -17690,7 +17674,7 @@ c           datetime64[D]
 #start_FrameHE-mloc
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94342877978336 94342869806976 94342880724528]
+[94738287498368 94738291976176 94738286204608]
 #end_FrameHE-mloc
 
 #start_FrameHE-name
@@ -24028,10 +24012,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -24507,10 +24487,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -24813,7 +24789,7 @@ c           datetime64[D]
 #start_FrameGO-mloc
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.mloc
-[94342867940400 94342878669536 94342878419664]
+[94738286390176 94738286882128 94738280037584]
 #end_FrameGO-mloc
 
 #start_FrameGO-name
@@ -31295,7 +31271,7 @@ x        <Index>
 #start_Index-mloc
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-94342869328656
+94738280745952
 #end_Index-mloc
 
 #start_Index-name
@@ -33110,7 +33086,7 @@ x        <IndexGO>
 #start_IndexGO-mloc
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.mloc
-94342883709312
+94738280017216
 #end_IndexGO-mloc
 
 #start_IndexGO-name
@@ -34970,7 +34946,7 @@ None     <IndexYear>
 #start_IndexYear-mloc
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.mloc
-94342885807840
+94738286574784
 #end_IndexYear-mloc
 
 #start_IndexYear-name
@@ -36647,7 +36623,7 @@ None     <IndexYearGO>
 #start_IndexYearGO-mloc
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.mloc
-94342884878800
+94738292708592
 #end_IndexYearGO-mloc
 
 #start_IndexYearGO-name
@@ -38373,7 +38349,7 @@ None     <IndexYearMonth>
 #start_IndexYearMonth-mloc
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-94342877059088
+94738286091040
 #end_IndexYearMonth-mloc
 
 #start_IndexYearMonth-name
@@ -40072,7 +40048,7 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-mloc
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.mloc
-94342870669696
+94738278349536
 #end_IndexYearMonthGO-mloc
 
 #start_IndexYearMonthGO-name
@@ -41844,7 +41820,7 @@ None     <IndexDate>
 #start_IndexDate-mloc
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94342885807840
+94738286574784
 #end_IndexDate-mloc
 
 #start_IndexDate-name
@@ -43592,7 +43568,7 @@ None     <IndexDateGO>
 #start_IndexDateGO-mloc
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94342871369376
+94738281855424
 #end_IndexDateGO-mloc
 
 #start_IndexDateGO-name
@@ -45275,7 +45251,7 @@ None     <IndexMinute>
 #start_IndexMinute-mloc
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94342870669696
+94738278349536
 #end_IndexMinute-mloc
 
 #start_IndexMinute-name
@@ -46936,7 +46912,7 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-mloc
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.mloc
-94342885807840
+94738286574784
 #end_IndexMinuteGO-mloc
 
 #start_IndexMinuteGO-name
@@ -48624,7 +48600,7 @@ None     <IndexHour>
 #start_IndexHour-mloc
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342870669696
+94738278349536
 #end_IndexHour-mloc
 
 #start_IndexHour-name
@@ -50288,7 +50264,7 @@ None     <IndexHourGO>
 #start_IndexHourGO-mloc
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342877800704
+94738287289616
 #end_IndexHourGO-mloc
 
 #start_IndexHourGO-name
@@ -51979,7 +51955,7 @@ None     <IndexSecond>
 #start_IndexSecond-mloc
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342884878800
+94738292708592
 #end_IndexSecond-mloc
 
 #start_IndexSecond-name
@@ -53648,7 +53624,7 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-mloc
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342870669696
+94738278349536
 #end_IndexSecondGO-mloc
 
 #start_IndexSecondGO-name
@@ -55344,7 +55320,7 @@ None     <IndexMillisecond>
 #start_IndexMillisecond-mloc
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342877059088
+94738286091040
 #end_IndexMillisecond-mloc
 
 #start_IndexMillisecond-name
@@ -57032,7 +57008,7 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-mloc
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342877800704
+94738287289616
 #end_IndexMillisecondGO-mloc
 
 #start_IndexMillisecondGO-name
@@ -58747,7 +58723,7 @@ None     <IndexMicrosecond>
 #start_IndexMicrosecond-mloc
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342871369376
+94738281855424
 #end_IndexMicrosecond-mloc
 
 #start_IndexMicrosecond-name
@@ -60437,7 +60413,7 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-mloc
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.mloc
-94342885807840
+94738286574784
 #end_IndexMicrosecondGO-mloc
 
 #start_IndexMicrosecondGO-name
@@ -62154,7 +62130,7 @@ None     <IndexNanosecond>
 #start_IndexNanosecond-mloc
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-94342870669696
+94738278349536
 #end_IndexNanosecond-mloc
 
 #start_IndexNanosecond-name
@@ -63843,7 +63819,7 @@ None     <IndexNanosecondGO>
 #start_IndexNanosecondGO-mloc
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.mloc
-94342884878800
+94738292708592
 #end_IndexNanosecondGO-mloc
 
 #start_IndexNanosecondGO-name
@@ -65651,7 +65627,7 @@ z        <IndexDate>
 #start_IndexHierarchy-mloc
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[94342882051632 94342883685456 94342877565952]
+[94738292703840 94738273322960 94738286551200]
 #end_IndexHierarchy-mloc
 
 #start_IndexHierarchy-name
@@ -65669,7 +65645,7 @@ z        <IndexDate>
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-693
+677
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -66082,13 +66058,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f38cb1f8670> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f6e224c2280> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f38c8b013a0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f6e22277040> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66215,7 +66191,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f38cb1f8820>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f6e224c2430>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66277,7 +66253,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f38cb1f89d0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f6e224c25e0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -68013,7 +67989,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-mloc
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.mloc
-[94342882051632 94342878624944 94342877878608]
+[94738292703840 94738299051216 94738280787568]
 #end_IndexHierarchyGO-mloc
 
 #start_IndexHierarchyGO-name
@@ -68031,7 +68007,7 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-693
+677
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -68465,13 +68441,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f38cb1f8670> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f6e224c2280> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f38c8b013a0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f6e22277040> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -68598,7 +68574,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f38cb1f8820>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f6e224c2430>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -68660,7 +68636,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f38cb1f89d0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f6e224c25e0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -70535,8 +70511,8 @@ y
 >>> b.mloc
 <Series>
 <Index>
-x        (94342870901296,)
-y        (94342883663840,)
+x        (94738272966032,)
+y        (94738279833648,)
 <<U1>    <object>
 #end_Bus-mloc
 
@@ -70611,21 +70587,21 @@ False
 #end_Bus-equals()
 
 #start_Bus-head()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.head(2)
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+<<U1>    <object>
 #end_Bus-head()
 
 #start_Bus-rehierarch()
@@ -70760,35 +70736,35 @@ y        Frame
 #end_Bus-rename()
 
 #start_Bus-roll()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.roll(2)
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 #end_Bus-roll()
 
 #start_Bus-shift()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.shift(2, fill_value=sf.Frame()).status
 <Frame>
 <Index> loaded size      nbytes    shape    <<U6>
@@ -70801,77 +70777,77 @@ w       True   6.0       6.0       (3, 2)
 #end_Bus-shift()
 
 #start_Bus-sort_index()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.sort_index()
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-w       Frame
-x       Frame
-y       Frame
-<<U1>   <object>
+v        Frame
+w        Frame
+x        Frame
+y        Frame
+<<U1>    <object>
 >>> b.sort_index(ascending=False)
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-x       Frame
-w       Frame
-v       Frame
-<<U1>   <object>
+y        Frame
+x        Frame
+w        Frame
+v        Frame
+<<U1>    <object>
 #end_Bus-sort_index()
 
 #start_Bus-sort_values()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.sort_values(key=lambda s:s.iter_element().apply(lambda f: f.nbytes))
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-w       Frame
-x       Frame
-v       Frame
-<<U1>   <object>
+y        Frame
+w        Frame
+x        Frame
+v        Frame
+<<U1>    <object>
 >>> b.sort_values(key=lambda s:s.iter_element().apply(lambda f: f.nbytes), ascending=False)
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-x       Frame
-w       Frame
-y       Frame
-<<U1>   <object>
+v        Frame
+x        Frame
+w        Frame
+y        Frame
+<<U1>    <object>
 #end_Bus-sort_values()
 
 #start_Bus-tail()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.tail(2)
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-w       Frame
-<<U1>   <object>
+v        Frame
+w        Frame
+<<U1>    <object>
 #end_Bus-tail()
 
 #start_Bus-unpersist()
@@ -71082,75 +71058,75 @@ y        Frame
 #end_Bus-display_wide()
 
 #start_Bus-drop[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.drop['x']
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.drop['v':]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+<<U1>    <object>
 >>> b.drop[['w', 'y']]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-v       Frame
-<<U1>   <object>
+x        Frame
+v        Frame
+<<U1>    <object>
 #end_Bus-drop[]
 
 #start_Bus-drop.iloc[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.drop.iloc[1]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.drop.iloc[1:]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-<<U1>   <object>
+x        Frame
+<<U1>    <object>
 >>> b.drop.iloc[[0, 3]]
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-v       Frame
-<<U1>   <object>
+y        Frame
+v        Frame
+<<U1>    <object>
 #end_Bus-drop.iloc[]
 
 #start_Bus-drop.loc[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.drop.loc['w']
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+<<U1>    <object>
 >>> b.drop.loc['v':]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+<<U1>    <object>
 >>> b.drop.loc[['v', 'x']]
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-w       Frame
-<<U1>   <object>
+y        Frame
+w        Frame
+<<U1>    <object>
 #end_Bus-drop.loc[]
 
 #start_Bus-[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b['w']
 <Frame: w>
 <Index>    c      d      <<U1>
@@ -71160,21 +71136,21 @@ q          True   False
 r          True   True
 <<U1>      <bool> <bool>
 >>> b['v':]
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-w       Frame
-<<U1>   <object>
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b[['v', 'x']]
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-x       Frame
-<<U1>   <object>
+v        Frame
+x        Frame
+<<U1>    <object>
 #end_Bus-[]
 
 #start_Bus-iloc[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.iloc[1]
 <Frame: y>
 <Index>    c      d      <<U1>
@@ -71184,22 +71160,22 @@ q          False  True
 r          False  True
 <<U1>      <bool> <bool>
 >>> b.iloc[1:]
-<Bus>
+<Bus: k>
 <Index>
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.iloc[[0, 3]]
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+w        Frame
+<<U1>    <object>
 #end_Bus-iloc[]
 
 #start_Bus-loc[]
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.loc['w']
 <Frame: w>
 <Index>    c      d      <<U1>
@@ -71209,21 +71185,21 @@ q          True   False
 r          True   True
 <<U1>      <bool> <bool>
 >>> b.loc['v':]
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-w       Frame
-<<U1>   <object>
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> b.loc[['v', 'x']]
-<Bus>
+<Bus: k>
 <Index>
-v       Frame
-x       Frame
-<<U1>   <object>
+v        Frame
+x        Frame
+<<U1>    <object>
 #end_Bus-loc[]
 
 #start_Bus-iter_element()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> tuple(b.iter_element())
 (<Frame: x>
 <Index>    a       b       <<U1>
@@ -71253,7 +71229,7 @@ r          True   True
 #end_Bus-iter_element()
 
 #start_Bus-iter_element().apply()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.iter_element().apply(lambda f: f.shape)
 <Series>
 <Index>
@@ -71265,43 +71241,43 @@ w        (3, 2)
 #end_Bus-iter_element().apply()
 
 #start_Bus-iter_element().apply_iter()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> tuple(b.iter_element().apply_iter(lambda f: f.nbytes))
 (48, 6, 48, 6)
 #end_Bus-iter_element().apply_iter()
 
 #start_Bus-iter_element().apply_iter_items()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> tuple(b.iter_element().apply_iter_items(lambda f: f.nbytes))
 (('x', 48), ('y', 6), ('v', 48), ('w', 6))
 #end_Bus-iter_element().apply_iter_items()
 
 #start_Bus-iter_element().apply_pool()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> def func(f): return f.sum().sum()
 >>> b.iter_element().apply_pool(func, use_threads=True)
 <Series>
@@ -71314,7 +71290,7 @@ w        4
 #end_Bus-iter_element().apply_pool()
 
 #start_Bus-iter_element_items()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> tuple(b.iter_element_items())
 (('x', <Frame: x>
 <Index>    a       b       <<U1>
@@ -71344,7 +71320,7 @@ r          True   True
 #end_Bus-iter_element_items()
 
 #start_Bus-iter_element_items().apply()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b.iter_element_items().apply(lambda l, f: f.size if l != 'v' else 0)
 <Series>
 <Index>
@@ -71356,43 +71332,43 @@ w        6
 #end_Bus-iter_element_items().apply()
 
 #start_Bus-iter_element_items().apply_iter()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> tuple(b.iter_element_items().apply_iter(lambda l, f: f.shape if l != 'x' else 0))
 (0, (3, 2), (3, 2), (3, 2))
 #end_Bus-iter_element_items().apply_iter()
 
 #start_Bus-iter_element_items().apply_iter_items()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> tuple(b.iter_element_items().apply_iter_items(lambda l, f: f.shape if l != 'x' else 0))
 (('x', 0), ('y', (3, 2)), ('v', (3, 2)), ('w', (3, 2)))
 #end_Bus-iter_element_items().apply_iter_items()
 
 #start_Bus-iter_element_items().apply_pool()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')))
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
-<Bus>
+<Bus: k>
 <Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
 >>> def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1
 >>> b.iter_element_items().apply_pool(func, use_threads=True)
 <Series>
@@ -71404,10 +71380,1102 @@ w        4
 <<U1>    <int64>
 #end_Bus-iter_element_items().apply_pool()
 
+#start_Yarn-__init__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> sf.Yarn((b1, b2), index=('2020-01', '2020-02', '2020-03', '2020-04'), index_constructor=sf.IndexYearMonth)
+<Yarn>
+<IndexYearMonth>
+2020-01          Frame
+2020-02          Frame
+2020-03          Frame
+2020-04          Frame
+<datetime64[M]>  <object>
+#end_Yarn-__init__()
+
+#start_Yarn-from_buses()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> sf.Yarn.from_buses((b1, b2), retain_labels=True)
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> sf.Yarn.from_buses((b1, b2), retain_labels=False)
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Yarn-from_buses()
+
+#start_Yarn-from_concat()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b3 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+>>> y1 = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y2 = sf.Yarn.from_buses((b3,), retain_labels=True)
+>>> sf.Yarn.from_concat((y1, y2))
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+k                x     Frame
+k                y     Frame
+k                v     Frame
+k                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-from_concat()
+
+#start_Yarn-to_hdf5()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.to_hdf5('/tmp/y.hdf5')
+#end_Yarn-to_hdf5()
+
+#start_Yarn-to_series()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.to_series()
+<Series>
+<Index>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
+#end_Yarn-to_series()
+
+#start_Yarn-to_sqlite()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.to_sqlite('/tmp/y.sqlite')
+#end_Yarn-to_sqlite()
+
+#start_Yarn-to_xlsx()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.to_xlsx('/tmp/y.xlsx')
+#end_Yarn-to_xlsx()
+
+#start_Yarn-to_zip_csv()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_csv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_csv()
+
+#start_Yarn-to_zip_npy()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_npy('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_npy()
+
+#start_Yarn-to_zip_npz()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_npz('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_npz()
+
+#start_Yarn-to_zip_parquet()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_parquet('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_parquet()
+
+#start_Yarn-to_zip_pickle()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_pickle('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_pickle()
+
+#start_Yarn-to_zip_tsv()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.to_zip_tsv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+#end_Yarn-to_zip_tsv()
+
+#start_Yarn-STATIC
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.STATIC
+True
+#end_Yarn-STATIC
+
+#start_Yarn-dtype
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.dtype
+object
+#end_Yarn-dtype
+
+#start_Yarn-dtypes
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.dtypes
+<Frame>
+<Index>                a        b        c        d        <<U1>
+<IndexHierarchy>
+i                x     int64    int64    None     None
+i                y     None     None     bool     bool
+j                v     int64    int64    None     None
+j                w     None     None     bool     bool
+<<U1>            <<U1> <object> <object> <object> <object>
+#end_Yarn-dtypes
+
+#start_Yarn-index
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.index
+<IndexHierarchy>
+i                x
+i                y
+j                v
+j                w
+<<U1>            <<U1>
+#end_Yarn-index
+
+#start_Yarn-mloc
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.mloc
+<Series>
+<IndexHierarchy>
+i                x     (94738302467600,)
+i                y     (94738292443136,)
+j                v     (94738277702576,)
+j                w     (94738275008784,)
+<<U1>            <<U1> <object>
+#end_Yarn-mloc
+
+#start_Yarn-name
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.name
+#end_Yarn-name
+
+#start_Yarn-nbytes
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.nbytes
+108
+#end_Yarn-nbytes
+
+#start_Yarn-ndim
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.ndim
+1
+#end_Yarn-ndim
+
+#start_Yarn-shape
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.shape
+(4,)
+#end_Yarn-shape
+
+#start_Yarn-shapes
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.shapes
+<Series: shape>
+<IndexHierarchy>
+i                x     (3, 2)
+i                y     (3, 2)
+j                v     (3, 2)
+j                w     (3, 2)
+<<U1>            <<U1> <object>
+#end_Yarn-shapes
+
+#start_Yarn-size
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.size
+4
+#end_Yarn-size
+
+#start_Yarn-status
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.status
+<Frame>
+<Index>                loaded size      nbytes    shape    <<U6>
+<IndexHierarchy>
+i                x     True   6.0       48.0      (3, 2)
+i                y     True   6.0       6.0       (3, 2)
+j                v     True   6.0       48.0      (3, 2)
+j                w     True   6.0       6.0       (3, 2)
+<<U1>            <<U1> <bool> <float64> <float64> <object>
+#end_Yarn-status
+
+#start_Yarn-__bool__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> bool(y)
+ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+#end_Yarn-__bool__()
+
+#start_Yarn-__len__()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> len(y)
+4
+#end_Yarn-__len__()
+
+#start_Yarn-equals()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b3 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+>>> y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y1
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y2 = sf.Yarn.from_buses((b3,), retain_labels=False)
+>>> y2
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y1.equals(y2)
+True
+#end_Yarn-equals()
+
+#start_Yarn-head()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.head(2)
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+#end_Yarn-head()
+
+#start_Yarn-rehierarch()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.rehierarch((1, 0))
+<Yarn>
+<IndexHierarchy>
+x                i     Frame
+y                i     Frame
+v                j     Frame
+w                j     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-rehierarch()
+
+#start_Yarn-relabel()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.relabel(('A', 'B', 'C', 'D'))
+<Yarn>
+<Index>
+A       Frame
+B       Frame
+C       Frame
+D       Frame
+<<U1>   <object>
+>>> y.relabel({('j', 'v'):('A', 'x')})
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+A                x     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-relabel()
+
+#start_Yarn-relabel_flat()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.relabel_flat()
+<Yarn>
+<Index>
+('i', 'x') Frame
+('i', 'y') Frame
+('j', 'v') Frame
+('j', 'w') Frame
+<object>   <object>
+#end_Yarn-relabel_flat()
+
+#start_Yarn-relabel_level_add()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.relabel_level_add('A')
+<Yarn>
+<IndexHierarchy>
+A                i     x     Frame
+A                i     y     Frame
+A                j     v     Frame
+A                j     w     Frame
+<<U1>            <<U1> <<U1> <object>
+#end_Yarn-relabel_level_add()
+
+#start_Yarn-relabel_level_drop()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.relabel_level_drop()
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Yarn-relabel_level_drop()
+
+#start_Yarn-rename()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=True)
+>>> y.rename('j')
+<Yarn: j>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-rename()
+
+#start_Yarn-tail()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.tail(2)
+<Yarn>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+#end_Yarn-tail()
+
+#start_Yarn-unpersist()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b1.to_zip_npz('/tmp/b1.zip')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> b2.to_zip_npz('/tmp/b2.zip')
+>>> b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')
+>>> b1
+<Bus: a>
+<Index>
+x        <FrameDeferred>
+y        <FrameDeferred>
+<<U1>    <object>
+>>> b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')
+>>> b2
+<Bus: b>
+<Index>
+v        <FrameDeferred>
+w        <FrameDeferred>
+<<U1>    <object>
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.values)
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>, <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>, <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.unpersist()
+>>> y
+<Yarn>
+<Index>
+x       <FrameDeferred>
+y       <FrameDeferred>
+v       <FrameDeferred>
+w       <FrameDeferred>
+<<U1>   <object>
+#end_Yarn-unpersist()
+
+#start_Yarn-__contains__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.__contains__('a')
+RuntimeError('Invalid key length for a; must be length 2.')
+#end_Yarn-__contains__()
+
+#start_Yarn-__iter__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.__iter__())
+(('i', 'x'), ('i', 'y'), ('j', 'v'), ('j', 'w'))
+#end_Yarn-__iter__()
+
+#start_Yarn-__reversed__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.__reversed__())
+(('j', 'w'), ('j', 'v'), ('i', 'y'), ('i', 'x'))
+#end_Yarn-__reversed__()
+
+#start_Yarn-get()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.get('a')
+RuntimeError('Invalid key length for a; must be length 2.')
+>>> y.get('z', -1)
+RuntimeError('Invalid key length for z; must be length 2.')
+#end_Yarn-get()
+
+#start_Yarn-items()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.items())
+((('i', 'x'), <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), (('i', 'y'), <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>), (('j', 'v'), <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>), (('j', 'w'), <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>))
+#end_Yarn-items()
+
+#start_Yarn-keys()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.keys()
+<IndexHierarchy>
+i                x
+i                y
+j                v
+j                w
+<<U1>            <<U1>
+#end_Yarn-keys()
+
+#start_Yarn-values
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.values
+[<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>
+ <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>
+ <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>
+ <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>]
+#end_Yarn-values
+
+#start_Yarn-interface
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.interface
+<Frame>
+<Index>                              cls_name group       doc                  <<U18>
+<Index: signature>
+__init__(series, *, index, index_... Yarn     Constructor Args: series: An ...
+from_buses(buses, *, name, retain... Yarn     Constructor Return a Yarn fro...
+from_concat(containers, *, index,... Yarn     Constructor Concatenate multi...
+to_hdf5(fp, *, config)               Yarn     Exporter    Write the complet...
+to_series()                          Yarn     Exporter    Return a Series w...
+to_sqlite(fp, *, config)             Yarn     Exporter    Write the complet...
+to_visidata()                        Yarn     Exporter    Open an interacti...
+to_xlsx(fp, *, config)               Yarn     Exporter    Write the complet...
+to_zip_csv(fp, *, config, compres... Yarn     Exporter    Write the complet...
+to_zip_npy(fp, *, config, compres... Yarn     Exporter    Write the complet...
+to_zip_npz(fp, *, config, compres... Yarn     Exporter    Write the complet...
+to_zip_parquet(fp, *, config, com... Yarn     Exporter    Write the complet...
+to_zip_pickle(fp, *, config, comp... Yarn     Exporter    Write the complet...
+to_zip_tsv(fp, *, config, compres... Yarn     Exporter    Write the complet...
+STATIC                               Yarn     Attribute   bool(x) -> bool R...
+dtype                                Yarn     Attribute   Return the dtype ...
+dtypes                               Yarn     Attribute   Returns a Frame o...
+...                                  ...      ...         ...
+display_wide(config)                 Yarn     Display     Maximize horizont...
+drop[key]                            Yarn     Selector    Label-based selec...
+drop.iloc[key]                       Yarn     Selector
+drop.loc[key]                        Yarn     Selector
+[key]                                Yarn     Selector    Selector of value...
+iloc[key]                            Yarn     Selector
+loc[key]                             Yarn     Selector
+iter_element()                       Yarn     Iterator    Iterator of eleme...
+iter_element().apply(func, *, dty... Yarn     Iterator    Apply a function ...
+iter_element().apply_iter(func)      Yarn     Iterator    Apply a function ...
+iter_element().apply_iter_items(f... Yarn     Iterator    Apply a function ...
+iter_element().apply_pool(func, *... Yarn     Iterator    Apply a function ...
+iter_element_items()                 Yarn     Iterator    Iterator of label...
+iter_element_items().apply(func, ... Yarn     Iterator    Apply a function ...
+iter_element_items().apply_iter(f... Yarn     Iterator    Apply a function ...
+iter_element_items().apply_iter_i... Yarn     Iterator    Apply a function ...
+iter_element_items().apply_pool(f... Yarn     Iterator    Apply a function ...
+<<U58>                               <<U4>    <<U15>      <<U83>
+#end_Yarn-interface
+
+#start_Yarn-__repr__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> repr(y)
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-__repr__()
+
+#start_Yarn-__str__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> str(y)
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-__str__()
+
+#start_Yarn-display()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.display()
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+>>> y.display(sf.DisplayConfig(type_show=False))
+i x Frame
+i y Frame
+j v Frame
+j w Frame
+#end_Yarn-display()
+
+#start_Yarn-display_tall()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.display_tall()
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-display_tall()
+
+#start_Yarn-display_wide()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.display_wide()
+<Yarn>
+<IndexHierarchy>
+i                x     Frame
+i                y     Frame
+j                v     Frame
+j                w     Frame
+<<U1>            <<U1> <object>
+#end_Yarn-display_wide()
+
+#start_Yarn-drop[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.drop['x']
+<Yarn>
+<Index>
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.drop['v':]
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> y.drop[['w', 'y']]
+<Yarn>
+<Index>
+x       Frame
+v       Frame
+<<U1>   <object>
+#end_Yarn-drop[]
+
+#start_Yarn-drop.iloc[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.drop.iloc[1]
+<Yarn>
+<Index>
+x       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.drop.iloc[1:]
+<Yarn>
+<Index>
+x       Frame
+<<U1>   <object>
+>>> y.drop.iloc[[0, 3]]
+<Yarn>
+<Index>
+y       Frame
+v       Frame
+<<U1>   <object>
+#end_Yarn-drop.iloc[]
+
+#start_Yarn-drop.loc[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.drop.loc['w']
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+<<U1>   <object>
+>>> y.drop.loc['v':]
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+<<U1>   <object>
+>>> y.drop.loc[['v', 'x']]
+<Yarn>
+<Index>
+y       Frame
+w       Frame
+<<U1>   <object>
+#end_Yarn-drop.loc[]
+
+#start_Yarn-[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y['w']
+<Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>
+>>> y['v':]
+<Yarn>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y[['v', 'x']]
+<Yarn>
+<Index>
+v       Frame
+x       Frame
+<<U1>   <object>
+#end_Yarn-[]
+
+#start_Yarn-iloc[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.iloc[1]
+<Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>
+>>> y.iloc[1:]
+<Yarn>
+<Index>
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.iloc[[0, 3]]
+<Yarn>
+<Index>
+x       Frame
+w       Frame
+<<U1>   <object>
+#end_Yarn-iloc[]
+
+#start_Yarn-loc[]
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.loc['w']
+<Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>
+>>> y.loc['v':]
+<Yarn>
+<Index>
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.loc[['v', 'x']]
+<Yarn>
+<Index>
+v       Frame
+x       Frame
+<<U1>   <object>
+#end_Yarn-loc[]
+
+#start_Yarn-iter_element()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element())
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>, <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>, <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>)
+#end_Yarn-iter_element()
+
+#start_Yarn-iter_element().apply()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.iter_element().apply(lambda f: f.shape)
+<Series>
+<Index>
+x        (3, 2)
+y        (3, 2)
+v        (3, 2)
+w        (3, 2)
+<<U1>    <object>
+#end_Yarn-iter_element().apply()
+
+#start_Yarn-iter_element().apply_iter()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element().apply_iter(lambda f: f.nbytes))
+(48, 6, 48, 6)
+#end_Yarn-iter_element().apply_iter()
+
+#start_Yarn-iter_element().apply_iter_items()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element().apply_iter_items(lambda f: f.nbytes))
+(('x', 48), ('y', 6), ('v', 48), ('w', 6))
+#end_Yarn-iter_element().apply_iter_items()
+
+#start_Yarn-iter_element().apply_pool()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> def func(f): return f.sum().sum()
+>>> y.iter_element().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+x        15
+y        3
+v        255
+w        4
+<<U1>    <int64>
+#end_Yarn-iter_element().apply_pool()
+
+#start_Yarn-iter_element_items()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element_items())
+(('x', <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), ('y', <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>), ('v', <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>), ('w', <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>))
+#end_Yarn-iter_element_items()
+
+#start_Yarn-iter_element_items().apply()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y.iter_element_items().apply(lambda l, f: f.size if l != 'v' else 0)
+<Series>
+<Index>
+x        6
+y        6
+v        0
+w        6
+<<U1>    <int64>
+#end_Yarn-iter_element_items().apply()
+
+#start_Yarn-iter_element_items().apply_iter()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element_items().apply_iter(lambda l, f: f.shape if l != 'x' else 0))
+(0, (3, 2), (3, 2), (3, 2))
+#end_Yarn-iter_element_items().apply_iter()
+
+#start_Yarn-iter_element_items().apply_iter_items()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> tuple(y.iter_element_items().apply_iter_items(lambda l, f: f.shape if l != 'x' else 0))
+(('x', 0), ('y', (3, 2)), ('v', (3, 2)), ('w', (3, 2)))
+#end_Yarn-iter_element_items().apply_iter_items()
+
+#start_Yarn-iter_element_items().apply_pool()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1
+>>> y.iter_element_items().apply_pool(func, use_threads=True)
+<Series>
+<Index>
+x        15
+y        3
+v        -1
+w        4
+<<U1>    <int64>
+#end_Yarn-iter_element_items().apply_pool()
+
 #start_Batch-__init__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt
-<Batch at 0x7f3822758ea0>
+<Batch at 0x7f6df340def0>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -71424,7 +72492,7 @@ j                r     44      45
 #start_Batch-from_frames()
 >>> bt = sf.Batch.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')))
 >>> bt
-<Batch at 0x7f3822758180>
+<Batch at 0x7f6d7e68e680>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -71680,7 +72748,7 @@ True
 #start_Batch-T
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.T
-<Batch at 0x7f3822752950>
+<Batch at 0x7f6df3445950>
 #end_Batch-T
 
 #start_Batch-name
@@ -71701,7 +72769,7 @@ j               (3, 2)
 #start_Batch-via_container
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.via_container
-<Batch at 0x7f38227876d0>
+<Batch at 0x7f6df3445130>
 #end_Batch-via_container
 
 #start_Batch-__array__()
@@ -72841,13 +73909,13 @@ via_re(pattern, flags).subn(repl,... Batch    Accessor Regular ... Perform the s
 #start_Batch-__repr__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> repr(bt)
-<Batch at 0x7f382270bc20>
+<Batch at 0x7f6df33cc040>
 #end_Batch-__repr__()
 
 #start_Batch-__str__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> str(bt)
-<Batch at 0x7f382270b9a0>
+<Batch at 0x7f6df33cc3b0>
 #end_Batch-__str__()
 
 #start_Batch-display()
@@ -73805,7 +74873,7 @@ j                r     1620-06-30 1976-06-30
 #start_Batch-via_str.__getitem__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa270>
+<Batch at 0x7f6df342cc70>
 >>> bt.via_str[-1].to_frame()
 <Frame>
 <Index>                   a     b     c        <<U1>
@@ -73824,7 +74892,7 @@ j                s        3           nan
 #start_Batch-via_str.capitalize()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227faa90>
+<Batch at 0x7f6df33cc630>
 >>> bt.via_str.capitalize().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -73843,7 +74911,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.center()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa220>
+<Batch at 0x7f6df342c4a0>
 >>> bt.via_str.center(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -73862,7 +74930,7 @@ j                s           3        wX    nan
 #start_Batch-via_str.contains()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa3b0>
+<Batch at 0x7f6df33ccf90>
 >>> bt.via_str.contains('X').to_frame()
 <Frame>
 <Index>                   a     b     c        <<U1>
@@ -73881,7 +74949,7 @@ j                s        False True  nan
 #start_Batch-via_str.count()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa2c0>
+<Batch at 0x7f6df33cc310>
 >>> bt.via_str.count('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73900,7 +74968,7 @@ j                s        0       1       nan
 #start_Batch-via_str.decode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')))).astype(bytes)
 >>> bt
-<Batch at 0x7f3822700900>
+<Batch at 0x7f6df342c220>
 >>> bt.via_str.decode().to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -73919,7 +74987,7 @@ j                s        3      wX   nan
 #start_Batch-via_str.encode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f3822700360>
+<Batch at 0x7f6df342c400>
 >>> bt.via_str.encode().to_frame()
 <Frame>
 <Index>                   a     b       c             <<U1>
@@ -73938,7 +75006,7 @@ j                s        b'3'  b' wX ' nan
 #start_Batch-via_str.endswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f3822700450>
+<Batch at 0x7f6df3445590>
 >>> bt.via_str.endswith(' ').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -73957,7 +75025,7 @@ j                s        False  True   nan
 #start_Batch-via_str.find()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f3822700bd0>
+<Batch at 0x7f6dfbe62180>
 >>> bt.via_str.find('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -73976,7 +75044,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.index()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f3822700ef0>
+<Batch at 0x7f6df3445bd0>
 >>> bt.via_str.index('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.index()
@@ -73984,7 +75052,7 @@ ValueError('substring not found')
 #start_Batch-via_str.isalnum()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f3822700540>
+<Batch at 0x7f6df3445130>
 >>> bt.via_str.isalnum().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74003,7 +75071,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isalpha()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227005e0>
+<Batch at 0x7f6df34454a0>
 >>> bt.via_str.isalpha().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74022,7 +75090,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isdecimal()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270be50>
+<Batch at 0x7f6df3445590>
 >>> bt.via_str.isdecimal().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74041,7 +75109,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isdigit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bf90>
+<Batch at 0x7f6df3445a90>
 >>> bt.via_str.isdigit().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74060,7 +75128,7 @@ j                s        True   False  nan
 #start_Batch-via_str.islower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b4a0>
+<Batch at 0x7f6df3445770>
 >>> bt.via_str.islower().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74079,7 +75147,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isnumeric()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b040>
+<Batch at 0x7f6df3445e00>
 >>> bt.via_str.isnumeric().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74098,7 +75166,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isspace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bf90>
+<Batch at 0x7f6df3445950>
 >>> bt.via_str.isspace().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74117,7 +75185,7 @@ j                s        False  False  nan
 #start_Batch-via_str.istitle()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270be50>
+<Batch at 0x7f6df33cc040>
 >>> bt.via_str.istitle().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74136,7 +75204,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isupper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227faea0>
+<Batch at 0x7f6df33ccb30>
 >>> bt.via_str.isupper().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74155,7 +75223,7 @@ j                s        False  False  nan
 #start_Batch-via_str.ljust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bc20>
+<Batch at 0x7f6dfbe62680>
 >>> bt.via_str.ljust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -74174,7 +75242,7 @@ j                s        3         wX      nan
 #start_Batch-via_str.len()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227002c0>
+<Batch at 0x7f6d7e68eb80>
 >>> bt.via_str.len().to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -74193,7 +75261,7 @@ j                s        1       4       nan
 #start_Batch-via_str.lower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bf90>
+<Batch at 0x7f6df341b8b0>
 >>> bt.via_str.lower().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74212,7 +75280,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.lstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bc20>
+<Batch at 0x7f6dfbe62180>
 >>> bt.via_str.lstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74231,7 +75299,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.partition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b6d0>
+<Batch at 0x7f6df3445770>
 >>> bt.via_str.partition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -74250,7 +75318,7 @@ j                s        ('3', '', '')  (' w', 'X', ' ') nan
 #start_Batch-via_str.replace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bc70>
+<Batch at 0x7f6dfbe626d0>
 >>> bt.via_str.replace('X', '*').to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -74269,7 +75337,7 @@ j                s        3      w*   nan
 #start_Batch-via_str.rfind()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270ba90>
+<Batch at 0x7f6d7e6983b0>
 >>> bt.via_str.rfind('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -74288,7 +75356,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.rindex()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bc20>
+<Batch at 0x7f6df342cc70>
 >>> bt.via_str.rindex('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.rindex()
@@ -74296,7 +75364,7 @@ ValueError('substring not found')
 #start_Batch-via_str.rjust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa450>
+<Batch at 0x7f6df342c770>
 >>> bt.via_str.rjust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -74315,7 +75383,7 @@ j                s               3      wX  nan
 #start_Batch-via_str.rpartition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b9a0>
+<Batch at 0x7f6df34454a0>
 >>> bt.via_str.rpartition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -74334,7 +75402,7 @@ j                s        ('', '', '3')  (' w', 'X', ' ') nan
 #start_Batch-via_str.rsplit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b270>
+<Batch at 0x7f6df3445950>
 >>> bt.via_str.rsplit('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -74353,7 +75421,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.rstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270be50>
+<Batch at 0x7f6df3445e00>
 >>> bt.via_str.rstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74372,7 +75440,7 @@ j                s        3       wX   nan
 #start_Batch-via_str.split()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bc70>
+<Batch at 0x7f6df3445ae0>
 >>> bt.via_str.split('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -74391,7 +75459,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.startswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270bbd0>
+<Batch at 0x7f6df3445bd0>
 >>> bt.via_str.startswith('X').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -74410,7 +75478,7 @@ j                s        False  False  nan
 #start_Batch-via_str.strip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b6d0>
+<Batch at 0x7f6df3445950>
 >>> bt.via_str.strip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74429,7 +75497,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.swapcase()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227006d0>
+<Batch at 0x7f6d7e6984a0>
 >>> bt.via_str.swapcase().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74448,7 +75516,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.title()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382274de00>
+<Batch at 0x7f6dfbe62220>
 >>> bt.via_str.title().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74467,7 +75535,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.upper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f38227fa9a0>
+<Batch at 0x7f6d7e68e450>
 >>> bt.via_str.upper().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -74486,7 +75554,7 @@ j                s        3       WX   nan
 #start_Batch-via_str.zfill()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f382270b9a0>
+<Batch at 0x7f6d7e634720>
 >>> bt.via_str.zfill(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -75325,7 +76393,7 @@ j                c     20      12
 #start_Batch-via_re().search()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f38227bbd60>
+<Batch at 0x7f6df340def0>
 >>> bt.via_re('[X123]').search().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75343,7 +76411,7 @@ j                3        True   True   True
 #start_Batch-via_re().match()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f38227bba90>
+<Batch at 0x7f6df3445e00>
 >>> bt.via_re('[X123]').match().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75361,7 +76429,7 @@ j                3        True   True   True
 #start_Batch-via_re().fullmatch()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f3822700400>
+<Batch at 0x7f6d7e6984a0>
 >>> bt.via_re('123').fullmatch().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75379,7 +76447,7 @@ j                3        False  True   False
 #start_Batch-via_re().split()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f3822700310>
+<Batch at 0x7f6d7e6980e0>
 >>> bt.via_re('[X123]').split().to_frame()
 <Frame>
 <Index>                   a           b                c                    <<U1>
@@ -75397,7 +76465,7 @@ j                3        ('', '.0')  ('', '', '', '') ('', '5', '7-04-0...
 #start_Batch-via_re().findall()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f3822700450>
+<Batch at 0x7f6d7e6984a0>
 >>> bt.via_re('[X123]').findall().to_frame()
 <Frame>
 <Index>                   a        b               c                    <<U1>
@@ -75415,7 +76483,7 @@ j                3        ('2',)   ('1', '2', '3') ('1', '1', '1')
 #start_Batch-via_re().sub()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f38227bbb30>
+<Batch at 0x7f6df340d590>
 >>> bt.via_re('[X123]').sub('==').to_frame()
 <Frame>
 <Index>                   a     b      c              <<U1>
@@ -75433,7 +76501,7 @@ j                3        ==.0  ====== ==5==7-04-0==
 #start_Batch-via_re().subn()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f38227bbf40>
+<Batch at 0x7f6df340def0>
 >>> bt.via_re('[X123]').subn('==', 1).to_frame()
 <Frame>
 <Index>                   a            b           c                  <<U1>
@@ -75611,13 +76679,13 @@ slice(-2, None, None)
 #start_ILoc-__repr__()
 >>> il = sf.ILoc[-2:]
 >>> repr(il)
-<static_frame.core.index.ILoc object at 0x7f38227a6760>
+<static_frame.core.index.ILoc object at 0x7f6d7e62ffa0>
 #end_ILoc-__repr__()
 
 #start_ILoc-__str__()
 >>> il = sf.ILoc[-2:]
 >>> str(il)
-<static_frame.core.index.ILoc object at 0x7f38227a6790>
+<static_frame.core.index.ILoc object at 0x7f6d7e62ffa0>
 #end_ILoc-__str__()
 
 #start_FillValueAuto-__init__()
@@ -75653,7 +76721,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f3822747a40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6df35042c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -75713,13 +76781,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f38227479c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6df3504140>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f3822747f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6df3504340>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
