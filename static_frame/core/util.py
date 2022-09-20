@@ -3248,8 +3248,8 @@ class MemoryMeasurements:
         attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
         return attrs
 
-    @staticmethod
-    def _nested_sizable_elements(obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
+    @classmethod
+    def nested_sizable_elements(cls, obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
         '''
         Generates an iterable of all objects the parent object has references to, including nested references.
         This function considers both the iterable unsized children (based on _unsized_children) and the sizable
@@ -3260,10 +3260,10 @@ class MemoryMeasurements:
             return
         seen.add(id(obj))
 
-        for el in MemoryMeasurements._unsized_children(obj):
-            yield from MemoryMeasurements._nested_sizable_elements(el, seen=seen)
-        for el in MemoryMeasurements._sizable_slot_attrs(obj):
-            yield from MemoryMeasurements._nested_sizable_elements(el, seen=seen)
+        for el in cls._unsized_children(obj):
+            yield from cls.nested_sizable_elements(el, seen=seen)
+        for el in cls._sizable_slot_attrs(obj):
+            yield from cls.nested_sizable_elements(el, seen=seen)
 
         yield obj
 
@@ -3272,6 +3272,6 @@ def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None)
     Returns the total size of the object and its references, including nested refrences
     '''
     seen = set() if seen is None else seen
-    total = sum(getsizeof(el) for el in MemoryMeasurements._nested_sizable_elements(obj, seen=seen))
+    total = sum(getsizeof(el) for el in MemoryMeasurements.nested_sizable_elements(obj, seen=seen))
     return total
 

@@ -8,7 +8,7 @@ from static_frame.test.test_case import TestCase
 
 _unsized_children = MemoryMeasurements._unsized_children
 _sizable_slot_attrs = MemoryMeasurements._sizable_slot_attrs
-_nested_sizable_elements = MemoryMeasurements._nested_sizable_elements
+nested_sizable_elements = MemoryMeasurements.nested_sizable_elements
 
 class TestUnit(TestCase):
     #---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 10)
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._nested_sizable_elements
+    # MemoryMeasurements._sizable_slot_attrs
 
     def test_sizable_slot_attrs_empty(self) -> None:
         class A:
@@ -198,36 +198,36 @@ class TestUnit(TestCase):
     # >   slot layouts) - violations raise TypeError.
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._nested_sizable_elements
+    # MemoryMeasurements.nested_sizable_elements
 
     def test_nested_sizable_elements_none(self) -> None:
-        self.assertEqual(tuple(_nested_sizable_elements(None, seen=set())), (None,))
+        self.assertEqual(tuple(nested_sizable_elements(None, seen=set())), (None,))
 
     def test_nested_sizable_elements_int(self) -> None:
-        self.assertEqual(tuple(_nested_sizable_elements(3, seen=set())), (3,))
+        self.assertEqual(tuple(nested_sizable_elements(3, seen=set())), (3,))
 
     def test_nested_sizable_elements_str(self) -> None:
-        self.assertEqual(tuple(_nested_sizable_elements('abc', seen=set())), ('abc',))
+        self.assertEqual(tuple(nested_sizable_elements('abc', seen=set())), ('abc',))
 
     def test_nested_sizable_elements_float(self) -> None:
-        self.assertEqual(tuple(_nested_sizable_elements(4.5, seen=set())), (4.5,))
+        self.assertEqual(tuple(nested_sizable_elements(4.5, seen=set())), (4.5,))
 
     def test_nested_sizable_elements_numpy_array_int(self) -> None:
         obj = np.array([2, 3, 4], dtype=np.int64)
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (obj,))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
 
     def test_nested_sizable_elements_numpy_array_object(self) -> None:
         obj = np.array([2, 'a', 4], dtype=np.object)
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (2, 'a', 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 'a', 4, obj))
 
     def test_nested_sizable_elements_tuple(self) -> None:
         obj = (2, 3, 4)
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_tuple_nested(self) -> None:
         obj = (2, ('a', 'b', ('c', 'd')), 4)
         self.assertEqual(
-            tuple(_nested_sizable_elements(obj, seen=set())),
+            tuple(nested_sizable_elements(obj, seen=set())),
             (2, 'a', 'b', 'c', 'd', ('c', 'd'), ('a', 'b', ('c', 'd')), 4, obj)
         )
 
@@ -236,36 +236,36 @@ class TestUnit(TestCase):
         obj = (2, ('a', 'b', cd), 4)
         seen = set(id(el) for el in ('a', 'c', 'd', cd))
         self.assertEqual(
-            tuple(_nested_sizable_elements(obj, seen=seen)),
+            tuple(nested_sizable_elements(obj, seen=seen)),
             (2, 'b', ('a', 'b', ('c', 'd')), 4, obj)
         )
 
     def test_nested_sizable_elements_list(self) -> None:
         obj = [2, 3, 4]
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_list_nested(self) -> None:
         obj = [2, ('a', 'b', ('c', 'd')), 4]
         self.assertEqual(
-            tuple(_nested_sizable_elements(obj, seen=set())),
+            tuple(nested_sizable_elements(obj, seen=set())),
             (2, 'a', 'b', 'c', 'd', ('c', 'd'), ('a', 'b', ('c', 'd')), 4, obj)
         )
 
     def test_nested_sizable_elements_set(self) -> None:
         obj = set((2, 3, 4))
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_frozenset(self) -> None:
         obj = frozenset((2, 3, 4))
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_dict(self) -> None:
         obj = { 'a': 2, 'b': 3, 'c': 4 }
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), ('a', 2, 'b', 3, 'c', 4, obj))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), ('a', 2, 'b', 3, 'c', 4, obj))
 
     def test_nested_sizable_elements_frozenautomap(self) -> None:
         obj = FrozenAutoMap([2, 3, 4])
-        self.assertEqual(tuple(_nested_sizable_elements(obj, seen=set())), (obj,))
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
 
 
 if __name__ == '__main__':
