@@ -1829,12 +1829,18 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[np.ndarray]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
+
+        Args:
+            column_shift: a positive value moves column data to the right.
         '''
         row_count, column_count = self._shape
 
         # new start index is the opposite of the shift; if shifting by 2, the new start is the second from the end
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
+
+        block_head_iter: tp.Iterable[np.ndarray]
+        block_tail_iter: tp.Iterable[np.ndarray]
 
         # possibly be truthy
         # index is columns here
@@ -1843,15 +1849,18 @@ class TypeBlocks(ContainerOperand):
         elif not wrap and column_shift == 0 and row_shift == 0:
             yield from self._blocks
         else:
-            block_start_idx, block_start_column = self._index[index_start_pos]
+            block_start_idx, block_start_column = self._index[index_start_pos] # modulo adjusted
             block_start = self._blocks[block_start_idx]
 
-            if block_start_column == 0:
-                # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter: tp.Iterable[np.ndarray] = chain(
+            if not wrap and abs(column_shift) >= column_count: # no data will be retained
+                # blocks will be set below
+                block_head_iter = ()
+                block_tail_iter = ()
+            elif block_start_column == 0: # we are starting at the start of the block
+                block_head_iter = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+                block_tail_iter = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),
@@ -1862,8 +1871,12 @@ class TypeBlocks(ContainerOperand):
                         )
 
             if not wrap:
+                # provide a consolidated single block for missing values
                 shape = (row_count, min(column_count, abs(column_shift)))
                 empty = np.full(shape, fill_value)
+                empty.flags.writeable = False
+
+                # NOTE: this will overwrite values set above
                 if column_shift > 0:
                     block_head_iter = (empty,)
                 elif column_shift < 0:
@@ -1873,7 +1886,7 @@ class TypeBlocks(ContainerOperand):
             for b in chain(block_head_iter, block_tail_iter):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
-                else:
+                else: # do all row shifting here
                     array = array_shift(
                             array=b,
                             shift=row_shift,
@@ -1899,6 +1912,9 @@ class TypeBlocks(ContainerOperand):
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
 
+        block_head_iter: tp.Iterable[np.ndarray]
+        block_tail_iter: tp.Iterable[np.ndarray]
+
         # possibly be truthy
         # index is columns here
         if wrap and index_start_pos == 0 and row_start_pos == 0:
@@ -1909,12 +1925,16 @@ class TypeBlocks(ContainerOperand):
             block_start_idx, block_start_column = self._index[index_start_pos]
             block_start = self._blocks[block_start_idx]
 
-            if block_start_column == 0:
+            if not wrap and abs(column_shift) >= column_count: # no data will be retained
+                # blocks will be set below
+                block_head_iter = ()
+                block_tail_iter = ()
+            elif block_start_column == 0:
                 # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter: tp.Iterable[np.ndarray] = chain(
+                block_head_iter = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+                block_tail_iter = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),
