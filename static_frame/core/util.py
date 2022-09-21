@@ -3242,6 +3242,7 @@ class MemoryMeasurements:
             yield from cls.nested_sizable_elements(el, seen=seen)
 
         if obj.__class__ is np.ndarray and obj.base is not None:
+            # include the base array for numpy slices / views
             yield from cls.nested_sizable_elements(obj.base, seen=seen)
 
         yield obj
