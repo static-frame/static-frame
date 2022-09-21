@@ -3657,6 +3657,15 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             idx2 = idx1.astype[[False, True]]("datetime64[D]")
 
+    def test_hierarchy_astype_h(self) -> None:
+        d = datetime.date
+        days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
+        idx1 = IndexHierarchy.from_product(range(3), days, (10, 20))
+        idx2 = idx1.astype({0:str, 2:str})
+        self.assertEqual([dt.kind for dt in idx2.dtypes.values], ['U', 'O', 'U'])
+
+        idx3 = idx1.astype((float, np.datetime64, float))
+        self.assertEqual([dt.kind for dt in idx3.dtypes.values], ['f', 'M', 'f'])
 
     #---------------------------------------------------------------------------
 
