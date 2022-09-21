@@ -51,7 +51,31 @@ class TestUnit(TestCase):
         obj = np.arange(3)
         self.assertEqual(
             getsizeof_total(obj),
-            getsizeof(np.arange(3))
+            getsizeof(obj)
+        )
+
+    def test_getsizeof_total_np_array_slice(self) -> None:
+        arr = np.arange(5)
+        obj = arr[2:]
+        self.assertEqual(
+            getsizeof_total(obj),
+            sum(getsizeof(e) for e in (
+                obj,
+                obj.base,
+            ))
+        )
+
+    def test_getsizeof_total_np_array_with_slice(self) -> None:
+        arr = np.arange(5)
+        sli = arr[2:]
+        obj = [arr, sli]
+        self.assertEqual(
+            getsizeof_total(obj),
+            sum(getsizeof(e) for e in (
+                arr,
+                sli,
+                obj,
+            ))
         )
 
     def test_getsizeof_total_frozenautomap(self) -> None:
@@ -222,6 +246,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             idx
@@ -237,6 +262,7 @@ class TestUnit(TestCase):
             2, 3,
             (2, 3),
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             idx
@@ -248,6 +274,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             # idx._name, # both _map and _name are None
             idx
@@ -259,6 +286,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             idx
@@ -296,6 +324,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             'a', 'b', 'c',
@@ -312,6 +341,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             'a', 'b', 'c', 'd',
@@ -327,6 +357,7 @@ class TestUnit(TestCase):
             idx._map,
             idx._labels,
             idx._positions,
+            idx._positions.base, # from PositionsAllocator.get
             idx._recache,
             idx._name,
             *idx._labels_mutable, # Note: _labels_mutable is not nested

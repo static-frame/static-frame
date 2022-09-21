@@ -3241,6 +3241,9 @@ class MemoryMeasurements:
         for el in cls._sizable_slot_attrs(obj):
             yield from cls.nested_sizable_elements(el, seen=seen)
 
+        if obj.__class__ is np.ndarray and obj.base is not None:
+            yield from cls.nested_sizable_elements(obj.base, seen=seen)
+
         yield obj
 
 def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
