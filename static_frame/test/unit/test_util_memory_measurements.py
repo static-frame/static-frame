@@ -148,7 +148,7 @@ class TestUnit(TestCase):
                 self.apples = 'a'
                 self.bananas = 'b'
         class B(A):
-            __slots__ = (
+            __slots__ = ( # pylint: disable=W0244 # intentionally redefining 'carrots'
                 'carrots',
                 'dumplings',
                 'eggs'
