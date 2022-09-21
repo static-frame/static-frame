@@ -10,12 +10,12 @@ from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
 
 from static_frame.core.container_util import constructor_from_optional_constructor
+from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -74,6 +74,7 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
@@ -91,8 +92,6 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import is_dtype_specifier
-
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover

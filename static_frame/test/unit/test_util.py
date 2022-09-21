@@ -46,6 +46,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_objectable_dt64
+from static_frame.core.util import is_strict_int
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
@@ -75,9 +76,7 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import is_strict_int
 from static_frame.core.util import validate_depth_selection
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
