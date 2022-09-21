@@ -50,9 +50,7 @@ from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import INT_TYPES
