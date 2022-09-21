@@ -305,10 +305,12 @@ def is_strict_int(value: tp.Any) -> bool:
         return False
     return isinstance(value, INT_TYPES)
 
-def validate_strict_iloc(
+def validate_depth_selection(
         key: GetItemKeyType,
         ) -> None:
     '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
+
+    This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
     '''
     if key.__class__ is np.ndarray:
         # let object dtype use iterable path
