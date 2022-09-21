@@ -3751,11 +3751,11 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == 'index_at_depth()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
             yield f"ih.{attr_func}(0)"
-            yield f"ih.{attr_func}((2, 0))"
+            yield f"ih.{attr_func}([2, 0])"
         elif attr == 'indexer_at_depth()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
             yield f"ih.{attr_func}(0)"
-            yield f"ih.{attr_func}((2, 0))"
+            yield f"ih.{attr_func}([2, 0])"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
