@@ -76,7 +76,7 @@ from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_neither_slice_nor_mask
-from static_frame.core.util import is_strict_int
+from static_frame.core.util import validate_strict_iloc
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isin_array
@@ -444,7 +444,7 @@ class IndexHierarchy(IndexBase):
             arrays: tp.Sequence[np.ndarray],
             *,
             name: NameType = None,
-            depth_reference: tp.Optional[DepthLevelSpecifier] = None,
+            depth_reference: tp.Optional[int] = None,
             index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
@@ -496,7 +496,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: IndexConstructors = None,
-            depth_reference: tp.Optional[DepthLevelSpecifier] = None,
+            depth_reference: tp.Optional[int] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
             ) -> IH:
         '''
@@ -1005,6 +1005,8 @@ class IndexHierarchy(IndexBase):
         '''
         if depth_level is None: # default to full labels
             depth_level = list(range(self.depth))
+        else:
+            validate_strict_iloc(depth_level)
 
         if isinstance(depth_level, INT_TYPES):
             yield from self.values_at_depth(depth_level)
@@ -1398,6 +1400,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        validate_strict_iloc(depth_level)
+
         if isinstance(depth_level, INT_TYPES):
             return self._blocks._extract_array_column(depth_level)
         return self._blocks._extract_array(column_key=list(depth_level))
@@ -1413,6 +1417,8 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
+
+        validate_strict_iloc(depth_level)
 
         if isinstance(depth_level, INT_TYPES):
             return self._indices[depth_level]
@@ -1432,8 +1438,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if not isinstance(depth_level, INT_TYPES):
-            depth_level = list(depth_level)
+        validate_strict_iloc(depth_level)
 
         return self._indexers[depth_level]
 
@@ -1460,6 +1465,8 @@ class IndexHierarchy(IndexBase):
 
         if depth_level is None:
             raise NotImplementedError('depth_level of None is not supported')
+
+        validate_strict_iloc(depth_level)
 
         if not isinstance(depth_level, INT_TYPES):
             sel = list(depth_level)
@@ -1585,6 +1592,8 @@ class IndexHierarchy(IndexBase):
 
         albeit more efficient.
         '''
+        validate_strict_iloc(depth_level)
+
         if isinstance(depth_level, INT_TYPES):
             depth_level = [depth_level]
             target_depths = set(depth_level)
@@ -2003,37 +2012,6 @@ class IndexHierarchy(IndexBase):
         '''
         return self._extract_iloc(key)
 
-
-    def _loc_is_iloc_opposite_axis_validate(self: IH,
-            key: GetItemKeyType,
-            ) -> None:
-        '''An `IndexHierarchy` exposes its "rows" as its primary selection interface. Nonetheless, at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required). We cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness. This function serves as filter for those selections, and is globally more efficient than lower level adjustments as generally `IndexHierarchy` has shallow depth.
-        '''
-        if key.__class__ is np.ndarray:
-            # let object dtype use iterable path
-            if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
-                return
-            elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
-                for e in key: # type: ignore
-                    if not is_strict_int(e):
-                        raise KeyError(f'Cannot select depths by non integer {e}')
-                return
-            raise KeyError(f'Cannot select depths by NumPy array of dtype {key.dtype}') # type: ignore
-        elif key.__class__ is slice:
-            if key.start is not None and not is_strict_int(key.start): # type: ignore
-                raise KeyError(f'Cannot select depths by non integer slices {key}')
-            if key.stop is not None and not is_strict_int(key.stop): # type: ignore
-                raise KeyError(f'Cannot select depths by non integer slices {key}')
-            return
-        elif isinstance(key, list):
-            # an iterable, or an object dtype array
-            for e in key:
-                if not is_strict_int(e):
-                    raise KeyError(f'Cannot select depths by non integer {e}')
-        else: # an element
-            if not is_strict_int(key):
-                raise KeyError(f'Cannot select depths by non integer {key}')
-
     # --------------------------------------------------------------------------
 
     def _extract_getitem_astype(self: IH,
@@ -2045,7 +2023,7 @@ class IndexHierarchy(IndexBase):
         # key is an iloc key
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
-        self._loc_is_iloc_opposite_axis_validate(key)
+        validate_strict_iloc(key)
         return IndexHierarchyAsType(self, key=key)
 
     # --------------------------------------------------------------------------
@@ -2231,6 +2209,8 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`numpy.ndarray`
         '''
+        validate_strict_iloc(depth_level)
+
         pos: tp.Optional[int] = None
         if not isinstance(depth_level, INT_TYPES):
             sel = list(depth_level)
@@ -2865,7 +2845,7 @@ class IndexHierarchyAsType:
             ) -> None:
         '''
         Args:
-            key: must be normalized iloc key via _loc_is_iloc_opposite_axis_validate()
+            key: must be normalized iloc key via validate_strict_iloc()
         '''
         self.container = container
         self.key = key
