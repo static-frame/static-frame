@@ -3189,7 +3189,7 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
 
 class MemoryMeasurements:
     @staticmethod
-    def _unsized_children(obj: tp.Any) -> tp.Iterable[tp.Any]:
+    def _unsized_children(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
         Generates the iterable children that have not been counted by a getsizeof call
         on the parent object
@@ -3198,8 +3198,9 @@ class MemoryMeasurements:
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
             if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
                 # Only return the referenced python objects not counted by numpy.
-                # Note: iter(obj) would return slices for multi-dimensional object arrays
+                # NOTE: iter(obj) would return slices for multi-dimensional object arrays
                 yield from (obj[loc] for loc in np.ndindex(obj.shape))
+                # What about numpy array references, double-check the data
             elif (
                 isinstance(obj, abc.Sequence) # tuple, list
                 or isinstance(obj, abc.Set) # set, frozenset
@@ -3213,7 +3214,7 @@ class MemoryMeasurements:
                 pass
 
     @staticmethod
-    def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterable[tp.Any]:
+    def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of the values of all slot-based attributes in an object, including the slots
         contained in the object's parent classes based on the MRO
@@ -3221,10 +3222,10 @@ class MemoryMeasurements:
         # NOTE: This does NOT support 'single-string' slots (i.e. __slots__ = 'foo')
         slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
         attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
-        return attrs
+        yield from attrs
 
     @classmethod
-    def nested_sizable_elements(cls, obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterable[tp.Any]:
+    def nested_sizable_elements(cls, obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of all objects the parent object has references to, including nested references.
         This function considers both the iterable unsized children (based on _unsized_children) and the sizable

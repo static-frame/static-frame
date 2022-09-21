@@ -67,10 +67,9 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(_unsized_children(obj)), ())
 
     def test_unsized_children_numpy_array_object_complex_has_unique_ids(self) -> None:
-        # See comment in MemoryMeasurements._unsized_children for more detail
-        # on what this is testing and why it is needed
-        obj = np.array([np.array([None, None, i // 2]) for i in range(10)])
-        self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 10)
+        # make sure that all elements are looped through in a multi-dimensional object array
+        obj = np.array([np.array([None, None, i]) for i in range(10)])
+        self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 11)
 
     #---------------------------------------------------------------------------
     # MemoryMeasurements._sizable_slot_attrs
@@ -137,6 +136,31 @@ class TestUnit(TestCase):
                 self.eggs = 'e'
         obj = B()
         self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+
+    def test_sizable_slot_attrs_inheritance_1_layer_overlapping_slots(self) -> None:
+        class A:
+            __slots__ = (
+                'apples',
+                'bananas',
+                'carrots',
+            )
+            def __init__(self) -> None:
+                self.apples = 'a'
+                self.bananas = 'b'
+        class B(A):
+            __slots__ = (
+                'carrots',
+                'dumplings',
+                'eggs'
+            )
+            def __init__(self) -> None:
+                super().__init__()
+                self.carrots = 'c'
+                self.dumplings = 'd'
+                self.eggs = 'e'
+        obj = B()
+        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+        self.assertEqual(len(tuple(_sizable_slot_attrs(obj))), 5)
 
     def test_sizable_slot_attrs_inheritance_2_layers(self) -> None:
         class A:
