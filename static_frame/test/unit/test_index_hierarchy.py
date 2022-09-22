@@ -3661,8 +3661,8 @@ class TestUnit(TestCase):
         d = datetime.date
         days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
         idx1 = IndexHierarchy.from_product(range(3), days)
-        with self.assertRaises(KeyError):
-            idx2 = idx1.astype[[False, True]]((str, int, bool))
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.astype[np.array([False, True])]((str, int, bool))
 
     def test_hierarchy_astype_h(self) -> None:
         d = datetime.date
