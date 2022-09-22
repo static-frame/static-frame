@@ -2,16 +2,14 @@ import typing as tp
 
 import numpy as np
 
-
-from static_frame.core.protocol_dfi_abc import DataFrame
-from static_frame.core.protocol_dfi_abc import Column
 from static_frame.core.protocol_dfi_abc import Buffer
-from static_frame.core.protocol_dfi_abc import DtypeKind
 from static_frame.core.protocol_dfi_abc import CategoricalDescription
-from static_frame.core.protocol_dfi_abc import ColumnNullType
+from static_frame.core.protocol_dfi_abc import Column
 from static_frame.core.protocol_dfi_abc import ColumnBuffers
+from static_frame.core.protocol_dfi_abc import ColumnNullType
+from static_frame.core.protocol_dfi_abc import DataFrame
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
-
+from static_frame.core.protocol_dfi_abc import DtypeKind
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import NAT
 

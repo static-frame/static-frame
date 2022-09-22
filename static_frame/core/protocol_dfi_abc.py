@@ -9,7 +9,6 @@ from typing import Sequence
 from typing import Tuple
 from typing import TypedDict
 
-
 #NOTE: these ABC and utility classes are from https://github.com/data-apis/dataframe-api/blob/main/protocol/dataframe_protocol.py
 
 class DlpackDeviceType(enum.IntEnum):
