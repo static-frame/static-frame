@@ -7,8 +7,8 @@ from numpy import char as npc
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
