@@ -5,8 +5,8 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT

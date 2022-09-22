@@ -48,7 +48,7 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc
-from static_frame.core.store import StoreConfig
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
@@ -925,6 +925,19 @@ class TestUnit(TestCase):
 
         df = f.to_pandas()
         self.assertEqual(df.shape, (100, 20))
+
+    def test_frame_to_pandas_h(self) -> None:
+        df = Frame().to_pandas()
+        self.assertEqual(df.shape, (0, 0))
+
+    def test_frame_to_pandas_i(self) -> None:
+        df = FrameGO(index=range(10)).to_pandas()
+        self.assertEqual(df.shape, (10, 0))
+
+    def test_frame_to_pandas_j(self) -> None:
+        df = Frame.from_element('', columns=range(10), index=()).to_pandas()
+        self.assertEqual(df.shape, (0, 10))
+
 
     #---------------------------------------------------------------------------
 
@@ -10524,6 +10537,52 @@ class TestUnit(TestCase):
                 f1.shift(2, fill_value=FillValueAuto(i=-1, U='na', b=True)).to_pairs(),
                 (('p', (('x', -1), ('y', -1), ('z', 2))), ('q', (('x', -1), ('y', -1), ('z', 2))), ('r', (('x', 'na'), ('y', 'na'), ('z', 'a'))), ('s', (('x', True), ('y', True), ('z', False))), ('t', (('x', True), ('y', True), ('z', False))))
                 )
+
+    def test_frame_shift_c1(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a'], index=[1])
+
+        f2 = f1.shift(index=-1, fill_value=0)
+        self.assertEqual(f2.to_pairs(), (('a', ((1, 0),)),))
+
+        f3 = f1.shift(columns=-1, fill_value=0)
+        self.assertEqual(f3.to_pairs(), (('a', ((1, 0),)),))
+
+    def test_frame_shift_c2(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a'], index=[1])
+
+        f2 = f1.shift(index=-1, fill_value=[-1])
+        self.assertEqual(f2.to_pairs(), (('a', ((1, -1),)),))
+
+        f3 = f1.shift(columns=-1, fill_value=[-1])
+        self.assertEqual(f3.to_pairs(), (('a', ((1, -1),)),))
+
+    def test_frame_shift_d1(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a', 'b', 'c'], index=[1])
+        f2 = f1.shift(index=-3, fill_value=0)
+        self.assertEqual(f2.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f3 = f1.shift(index=-5, fill_value=0)
+        self.assertEqual(f3.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f4 = f1.shift(index=3, fill_value=0)
+        self.assertEqual(f4.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+        f5 = f1.shift(index=5, fill_value=0)
+        self.assertEqual(f5.to_pairs(), (('a', ((1, 0),)), ('b', ((1, 0),)), ('c', ((1, 0),))))
+
+    def test_frame_shift_d2(self) -> None:
+        f1 = sf.Frame.from_element(1, columns=['a', 'b', 'c'], index=[1])
+        f2 = f1.shift(index=-3, fill_value=[-1, -2, -3])
+        self.assertEqual(f2.to_pairs(), (('a', ((1, -1),)), ('b', ((1, -2),)), ('c', ((1, -3),))))
+
+        f3 = f1.shift(index=-5, fill_value=[-1, -2, -3])
+        self.assertEqual(f3.to_pairs(), (('a', ((1, -1),)), ('b', ((1, -2),)), ('c', ((1, -3),))))
+
+        f4 = f1.shift(index=3, fill_value=[-1, -2, -3])
+        self.assertEqual(f4.to_pairs(), (('a', ((1, -1),)), ('b', ((1, -2),)), ('c', ((1, -3),))))
+
+        f5 = f1.shift(index=5, fill_value=[-1, -2, -3])
+        self.assertEqual(f5.to_pairs(), (('a', ((1, -1),)), ('b', ((1, -2),)), ('c', ((1, -3),))))
 
 
     #---------------------------------------------------------------------------

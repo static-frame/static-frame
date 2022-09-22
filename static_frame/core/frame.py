@@ -2263,7 +2263,7 @@ class Frame(ContainerOperand):
         Args:
             label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(fp)
@@ -2302,7 +2302,7 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an SQLite database file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(fp)
@@ -2335,7 +2335,7 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an HDF5 file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_hdf5 import StoreHDF5
 
         st = StoreHDF5(fp)
@@ -7355,7 +7355,7 @@ class Frame(ContainerOperand):
         '''
         import pandas
 
-        if self._blocks.unified:
+        if self._blocks.unified and self._blocks._blocks:
             # make copy to get writeable
             array = self._blocks._blocks[0].copy()
             df = pandas.DataFrame(array,
@@ -7935,7 +7935,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-sheet XLSX file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
         config = StoreConfig(
@@ -7962,7 +7962,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-table SQLite file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
         config = StoreConfig(
@@ -7992,7 +7992,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-table SQLite file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_hdf5 import StoreHDF5
 
         config = StoreConfig(

@@ -155,6 +155,7 @@ STATIC_ATTR = 'STATIC'
 ELEMENT_TUPLE = (None,)
 
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
+EMPTY_TUPLE: tp.Tuple[()] = ()
 
 # defaults to float64
 EMPTY_ARRAY = np.array((), dtype=None)
@@ -295,6 +296,48 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
+
+def is_strict_int(value: tp.Any) -> bool:
+    '''Strict check that does not include bools as an int
+    '''
+    if value is None:
+        return False
+    if value.__class__ is bool or value.__class__ is np.bool_:
+        return False
+    return isinstance(value, INT_TYPES)
+
+def validate_depth_selection(
+        key: GetItemKeyType,
+        ) -> None:
+    '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
+
+    This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
+    '''
+    if key.__class__ is np.ndarray:
+        # let object dtype use iterable path
+        if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
+            return
+        elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
+            for e in key: # type: ignore
+                if not is_strict_int(e):
+                    raise KeyError(f'Cannot select depths by non integer: {e!r}')
+            return
+        raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
+    elif key.__class__ is slice:
+        if key.start is not None and not is_strict_int(key.start): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        if key.stop is not None and not is_strict_int(key.stop): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        return
+    elif isinstance(key, list):
+        # an iterable, or an object dtype array
+        for e in key:
+            if not is_strict_int(e):
+                raise KeyError(f'Cannot select depths by non integer: {e!r}')
+    else: # an element
+        if not is_strict_int(key):
+            raise KeyError(f'Cannot select depths by non integer: {key!r}')
+
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
