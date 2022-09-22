@@ -552,3 +552,9 @@ class DataFrame(ABC):
 # <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d147349a0>
 # >>> dfi.select_columns_by_name(('zmVj', 'zUvW'))
 # <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4910>
+
+
+# >>> tuple(dfi.get_chunks())[0]
+# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4bb0>
+# >>> tuple(dfi.get_chunks())[0].column_names()
+# Index(['zZbu', 'ztsv', 'zUvW', 'zkuW', 'zmVj', 'z2Oo'], dtype='object')
