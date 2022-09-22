@@ -2753,10 +2753,14 @@ class TestUnit(TestCase):
     def test_validate_depth_selection(self) -> None:
         validate_depth_selection(np.array([True, False]))
         validate_depth_selection(np.array([2, 3]))
+        validate_depth_selection(np.array([2, 3], dtype=object))
         validate_depth_selection([2, 3])
 
         with self.assertRaises(KeyError):
             validate_depth_selection(np.array([1.3, 2.5]))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(np.array([2, 3, True], dtype=object))
 
         with self.assertRaises(KeyError):
             validate_depth_selection(slice('a', 'b'))
