@@ -46,6 +46,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import is_objectable_dt64
+from static_frame.core.util import is_strict_int
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
@@ -75,6 +76,7 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
+from static_frame.core.util import validate_depth_selection
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
@@ -2736,6 +2738,50 @@ class TestUnit(TestCase):
 
         self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
+
+    #---------------------------------------------------------------------------
+    def test_is_strict_int_a(self) -> None:
+        self.assertTrue(is_strict_int(3))
+        self.assertTrue(is_strict_int(np.array([3])[0]))
+
+        self.assertFalse(is_strict_int(None))
+        self.assertFalse(is_strict_int(False))
+        self.assertFalse(is_strict_int(True))
+        self.assertFalse(is_strict_int(np.array([True])[0]))
+
+    #---------------------------------------------------------------------------
+    def test_validate_depth_selection(self) -> None:
+        validate_depth_selection(np.array([True, False]))
+        validate_depth_selection(np.array([2, 3]))
+        validate_depth_selection(np.array([2, 3], dtype=object))
+        validate_depth_selection([2, 3])
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(np.array([1.3, 2.5]))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(np.array([2, 3, True], dtype=object))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(slice('a', 'b'))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(slice(None, 'b'))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(slice(None, True))
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection([3, 4, False])
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(False)
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(5.4)
+
+        with self.assertRaises(KeyError):
+            validate_depth_selection(None)
 
 if __name__ == '__main__':
     unittest.main()
