@@ -46,6 +46,7 @@ class InterfaceBatch:
     __slots__ = ()
     INTERFACE: tp.Tuple[str, ...] = ()
 
+
 class InterfaceGetItem(Interface[TContainer]):
 
     __slots__ = ('_func',)

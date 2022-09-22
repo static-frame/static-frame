@@ -209,7 +209,7 @@ class _StoreZip(Store):
                             name=label,
                             config=c.to_store_config_he(),
                             constructor=constructor,
-                    )
+                            )
 
         chunksize = config_map.default.read_chunksize
 
