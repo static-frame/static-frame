@@ -1485,6 +1485,7 @@ class TypeBlocks(ContainerOperand):
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
                 elif isinstance(key, KEY_ITERABLE_TYPES):
                     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
+                    # NOTE: we assume key is a list of integers: if key is a list of Booleans, we will not get the same elementwise selection as if we selected from an array
                     if retain_key_order:
                         indices = (self._index[x] for x in key)
                     else:

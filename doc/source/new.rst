@@ -10,7 +10,7 @@ Added ``IndexHierarchy.index_at_depth()``
 
 Added ``IndexHierarchy.indexer_at_depth()``
 
-Added ``order_by_occurrence`` parameter to ``unique()`` on ``IndexBase`` subclasses.
+Added ``depth_level`` and ``order_by_occurrence`` parameters to ``unique()`` on ``IndexBase`` subclasses.
 
 Corrected issue calling ``Frame.to_pandas()`` with an empty ``Frame``.
 
