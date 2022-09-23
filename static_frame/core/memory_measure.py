@@ -84,6 +84,12 @@ class MemoryMeasure:
 
         yield obj
 
+# Options for expression array usage:
+# local: only the data used for the array, ignoring referenced data
+# shared: include shared data, which will not be double counted if it is used somewhere else
+# materialized: represent size as the array and the byte data it would take without sharing
+# data only: ignore everything but materialized array data
+
 def getsizeof_total(
         obj: tp.Any,
         *,
