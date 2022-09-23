@@ -8,7 +8,7 @@ from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame.core.util import getsizeof_total
+from static_frame.core.memory_measure import getsizeof_total
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 

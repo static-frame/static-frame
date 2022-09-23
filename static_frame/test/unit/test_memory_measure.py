@@ -3,16 +3,16 @@ import unittest
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
 
-from static_frame.core.util import MemoryMeasurements
+from static_frame.core.memory_measure import MemoryMeasure
 from static_frame.test.test_case import TestCase
 
-_unsized_children = MemoryMeasurements._unsized_children
-_sizable_slot_attrs = MemoryMeasurements._sizable_slot_attrs
-nested_sizable_elements = MemoryMeasurements.nested_sizable_elements
+_unsized_children = MemoryMeasure._unsized_children
+_sizable_slot_attrs = MemoryMeasure._sizable_slot_attrs
+nested_sizable_elements = MemoryMeasure.nested_sizable_elements
 
 class TestUnit(TestCase):
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._unsized_children
+    # MemoryMeasure._unsized_children
 
     def test_unsized_children_none(self) -> None:
         self.assertEqual(tuple(_unsized_children(None)), ())
@@ -72,7 +72,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 11)
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._sizable_slot_attrs
+    # MemoryMeasure._sizable_slot_attrs
 
     def test_sizable_slot_attrs_empty(self) -> None:
         class A:
@@ -222,7 +222,7 @@ class TestUnit(TestCase):
     # >   slot layouts) - violations raise TypeError.
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements.nested_sizable_elements
+    # MemoryMeasure.nested_sizable_elements
 
     def test_nested_sizable_elements_none(self) -> None:
         self.assertEqual(tuple(nested_sizable_elements(None, seen=set())), (None,))
