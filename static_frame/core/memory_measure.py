@@ -1,9 +1,11 @@
 import typing as tp
-from sys import getsizeof
 from collections import abc
 from itertools import chain
-from static_frame.core.util import DTYPE_OBJECT_KIND
+from sys import getsizeof
+
 import numpy as np
+
+from static_frame.core.util import DTYPE_OBJECT_KIND
 
 
 class MemoryMeasure:
@@ -11,8 +13,7 @@ class MemoryMeasure:
     @staticmethod
     def _unsized_children(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
-        Generates the iterable children that have not been counted by a getsizeof call
-        on the parent object
+        Generates the iterable children that have not been counted by a getsizeof call on the parent object
         '''
         # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
@@ -36,11 +37,10 @@ class MemoryMeasure:
     @staticmethod
     def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
-        Generates an iterable of the values of all slot-based attributes in an object, including the slots
-        contained in the object's parent classes based on the MRO
+        Generates an iterable of the values of all slot-based attributes in an object, including the slots contained in the object's parent classes based on the MRO
         '''
         # NOTE: This does NOT support 'single-string' slots (i.e. __slots__ = 'foo')
-        slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
+        slots = chain.from_iterable(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
         attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
         yield from attrs
 
@@ -51,10 +51,8 @@ class MemoryMeasure:
             seen: tp.Set[int],
             ) -> tp.Iterator[tp.Any]:
         '''
-        Generates an iterable of all objects the parent object has references to, including nested references.
-        This function considers both the iterable unsized children (based on _unsized_children) and the sizable
-        attributes listed in its slots. The resulting generator is in pre-order and includes the parent object
-        at the end.
+        Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _unsized_children) and the sizable
+        attributes listed in its slots. The resulting generator is in pre-order and includes the parent object at the end.
         '''
         if id(obj) in seen:
             return
@@ -66,7 +64,7 @@ class MemoryMeasure:
             yield from cls.nested_sizable_elements(el, seen=seen)
 
         if obj.__class__ is np.ndarray and obj.base is not None:
-            # include the base array for numpy slices / views
+            # include the base array for numpy slices / views only if that base has not been seen
             yield from cls.nested_sizable_elements(obj.base, seen=seen)
 
         yield obj
