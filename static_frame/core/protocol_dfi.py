@@ -85,14 +85,36 @@ class ArrowCType:
             raise NotImplementedError(f'no support for dtype: {dtype}')
 
 
+def np_dtype_to_dfi_dtype(dtype: np.dtype) -> np.Tuple[DtypeKind, int, str, str]:
+    return (NP_KIND_TO_DFI_KIND[dtype.kind],
+            dtype.itemsize * 8, # bits!
+            ArrowCType.from_dtype(dtype),
+            '=',
+            )
+
+
 class DFIBuffer(Buffer):
+    __slots__ = (
+        '_array',
+        )
+
+    def __init__(self, array: np.ndarray) -> None:
+        self._array = array
+
+        # always one dimensional
+        assert self._array.ndim == 1
+
+        # NOTE: woud be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
+        if not self._array.data.contiguous:
+            self._array = np.ascontiguousarray(self._array)
+
     @property
     def bufsize(self) -> int:
-        return 0
+        return self._array.nbytes # type: ignore
 
     @property
     def ptr(self) -> int:
-        return 0
+        return self._array.__array_interface__['data'][0] # type: ignore
 
     def __dlpack__(self) -> tp.Any:
         raise NotImplementedError("__dlpack__")
@@ -125,12 +147,7 @@ class DFIColumn(Column):
 
     @property
     def dtype(self) -> tp.Tuple[DtypeKind, int, str, str]:
-        dtype = self._array.dtype
-        return (NP_KIND_TO_DFI_KIND[dtype.kind],
-                dtype.itemsize * 8, # bits!
-                ArrowCType.from_dtype(dtype),
-                '=',
-                )
+        return np_dtype_to_dfi_dtype(self._array.dtype) # type: ignore
 
     @property
     def describe_categorical(self) -> CategoricalDescription:
@@ -178,7 +195,18 @@ class DFIColumn(Column):
 
 
     def get_buffers(self) -> ColumnBuffers:
-        return dict(data=(DFIBuffer(), None), validity=None, offsets=None)
+        kind = self._array.dtype.kind
+        if kind in ('f', 'c', 'm', 'M'):
+            va = np.isna(self._array)
+            validity = (DFIBuffer(va), np_dtype_to_dfi_dtype(va.dtype))
+        else:
+            validity = None
+
+        return dict(
+                data=(DFIBuffer(self._array), self.dtype),
+                validity=validity,
+                offsets=None,
+                )
 
 
 #-------------------------------------------------------------------------------
