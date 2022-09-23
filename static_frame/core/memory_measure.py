@@ -7,25 +7,32 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
 
+class MaterializedArray:
+    '''Wrapper of array that delivers the sizeof as the fully realized size, ignoring any potential sharing of memory.
+    '''
+
+    __slots__ = ('_array',)
+    BASE_ARRAY_BYTES = getsizeof(np.array(()))
+
+    def __init__(self, array: np.ndarray):
+        self._array = array
+
+    def __sizeof__(self) -> int:
+        return self.BASE_ARRAY_BYTES + self._array.nbytes
+
 
 class MemoryMeasure:
 
     @staticmethod
-    def _unsized_children(obj: tp.Any) -> tp.Iterator[tp.Any]:
+    def _iter_iterable(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
         Generates the iterable children that have not been counted by a getsizeof call on the parent object
         '''
-        # Check if iterable or a string first for fewer isinstance calls on common types
         if hasattr(obj, '__iter__') and not isinstance(obj, str):
             if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
-                # Only return the referenced python objects not counted by numpy.
-                # NOTE: iter(obj) would return slices for multi-dimensional object arrays
+                # NOTE: iter(obj) would return slices for multi-dimensional arrays
                 yield from (obj[loc] for loc in np.ndindex(obj.shape))
-                # What about numpy array references, double-check the data
-            elif (
-                isinstance(obj, abc.Sequence) # tuple, list
-                or isinstance(obj, abc.Set) # set, frozenset
-            ):
+            elif isinstance(obj, (abc.Sequence, abc.Set)):
                 yield from obj
             elif isinstance(obj, dict):
                 yield from chain.from_iterable(obj.items())
@@ -35,13 +42,16 @@ class MemoryMeasure:
                 pass
 
     @staticmethod
-    def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterator[tp.Any]:
+    def _iter_slots(obj: tp.Any) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of the values of all slot-based attributes in an object, including the slots contained in the object's parent classes based on the MRO
         '''
         # NOTE: This does NOT support 'single-string' slots (i.e. __slots__ = 'foo')
-        slots = chain.from_iterable(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__'))
-        attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
+        slots = chain.from_iterable(
+                cls.__slots__ for cls in obj.__class__.__mro__
+                if hasattr(cls, '__slots__'))
+        attrs = (getattr(obj, slot) for slot in slots
+                if slot != '__weakref__' and hasattr(obj, slot))
         yield from attrs
 
     @classmethod
@@ -51,29 +61,39 @@ class MemoryMeasure:
             seen: tp.Set[int],
             ) -> tp.Iterator[tp.Any]:
         '''
-        Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _unsized_children) and the sizable
+        Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _iter_iterable) and the sizable
         attributes listed in its slots. The resulting generator is in pre-order and includes the parent object at the end.
         '''
         if id(obj) in seen:
             return
         seen.add(id(obj))
+        is_array = obj.__class__ is np.ndarray
 
-        for el in cls._unsized_children(obj):
-            yield from cls.nested_sizable_elements(el, seen=seen)
-        for el in cls._sizable_slot_attrs(obj):
+        if is_array and obj.dtype.kind != DTYPE_OBJECT_KIND:
+            pass # non-object arrays report included elements
+        else:
+            for el in cls._iter_iterable(obj):
+                yield from cls.nested_sizable_elements(el, seen=seen)
+
+        for el in cls._iter_slots(obj):
             yield from cls.nested_sizable_elements(el, seen=seen)
 
-        if obj.__class__ is np.ndarray and obj.base is not None:
+        if is_array and obj.base is not None:
             # include the base array for numpy slices / views only if that base has not been seen
             yield from cls.nested_sizable_elements(obj.base, seen=seen)
 
         yield obj
 
-def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
+def getsizeof_total(
+        obj: tp.Any,
+        *,
+        seen: tp.Union[None, tp.Set[tp.Any]] = None,
+        ) -> int:
     '''
     Returns the total size of the object and its references, including nested refrences
     '''
     seen = set() if seen is None else seen
-    total = sum(getsizeof(el) for el in MemoryMeasure.nested_sizable_elements(obj, seen=seen))
+    total = sum(getsizeof(el) for el in
+            MemoryMeasure.nested_sizable_elements(obj, seen=seen))
     return total
 
