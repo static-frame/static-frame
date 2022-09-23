@@ -18,6 +18,8 @@ Implemented argument checking on all ``IndexHierarchy`` depth selection paramete
 
 ``IndexHierarchy.astype()`` now accepts a ``dtypes`` argument to assign dtypes by tuple or mapping.
 
+Corrected return type of ``via_str.contains()`` to return Booleans.
+
 
 0.9.14
 ----------
