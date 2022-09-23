@@ -18,7 +18,7 @@ class MaterializedArray:
         self._array = array
 
     def __sizeof__(self) -> int:
-        return self.BASE_ARRAY_BYTES + self._array.nbytes
+        return self.BASE_ARRAY_BYTES + self._array.nbytes # type: ignore
 
 
 class MemoryMeasure:
