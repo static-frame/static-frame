@@ -76,13 +76,13 @@ class ArrowCType:
             try:
                 res = cls.NP_DT64_UNIT_TO_RESOLUTION[unit]
             except KeyError as e:
-                raise NotImplementedError(f'no support for datetime64 unit: {dtype}')
+                raise NotImplementedError(f'no support for datetime64 unit: {dtype}') from e
             return f'{prefix}{res}'
 
         try:
             return cls.KIND_ITEMSIZE_TO_FORMAT[(kind, dtype.itemsize)]
-        except KeyError:
-            raise NotImplementedError(f'no support for dtype: {dtype}')
+        except KeyError as e:
+            raise NotImplementedError(f'no support for dtype: {dtype}') from e
 
 
 def np_dtype_to_dfi_dtype(dtype: np.dtype) -> np.Tuple[DtypeKind, int, str, str]:
