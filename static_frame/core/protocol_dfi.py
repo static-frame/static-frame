@@ -108,6 +108,7 @@ class DFIBuffer(Buffer):
         # NOTE: woud be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
         if not self._array.data.contiguous:
             self._array = np.ascontiguousarray(self._array)
+            self._array.flags.writeable = False
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
@@ -146,9 +147,13 @@ class DFIColumn(Column):
             array: np.ndarray,
             index: 'Index',
             ):
+        assert len(array) == len(index)
         # NOTE: for efficiency, we do not store a Series, but just an array and the index (for metadata)
         self._array = array # always a 1D array
         self._index = index
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
     def __array__(self, dtype: np.dtype = None) -> np.ndarray:
         '''
