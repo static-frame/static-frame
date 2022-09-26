@@ -2,10 +2,12 @@ import numpy as np
 
 from static_frame.core.protocol_dfi import ArrowCType
 from static_frame.core.protocol_dfi import DFIBuffer
+from static_frame.core.protocol_dfi import np_dtype_to_dfi_dtype
 from static_frame.core.protocol_dfi import DFIColumn
 from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.test.test_case import TestCase
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
+from static_frame.core.protocol_dfi_abc import DtypeKind
 
 
 class TestUnit(TestCase):
@@ -45,7 +47,24 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             ArrowCType.from_dtype(np.dtype(complex))
 
+    #---------------------------------------------------------------------------
+    def test_np_dtype_to_dfi_dtype_a(self):
+        self.assertEqual(np_dtype_to_dfi_dtype(
+                np.dtype(bool)),
+                (DtypeKind.BOOL, 8, 'b', '='),
+                )
 
+    def test_np_dtype_to_dfi_dtype_b(self):
+        self.assertEqual(np_dtype_to_dfi_dtype(
+                np.dtype(np.float64)),
+                (DtypeKind.FLOAT, 64, 'g', '='),
+                )
+
+    def test_np_dtype_to_dfi_dtype_c(self):
+        self.assertEqual(np_dtype_to_dfi_dtype(
+                np.dtype(np.uint8)),
+                (DtypeKind.UINT, 8, 'C', '='),
+                )
 
     #---------------------------------------------------------------------------
     def test_dfi_buffer_a(self):
