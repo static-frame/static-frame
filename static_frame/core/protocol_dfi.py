@@ -9,6 +9,7 @@ from static_frame.core.protocol_dfi_abc import ColumnBuffers
 from static_frame.core.protocol_dfi_abc import ColumnNullType
 from static_frame.core.protocol_dfi_abc import DataFrame
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
+from static_frame.core.protocol_dfi_abc import Dtype
 from static_frame.core.protocol_dfi_abc import DtypeKind
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import NAT
@@ -85,7 +86,7 @@ class ArrowCType:
             raise NotImplementedError(f'no support for dtype: {dtype}') from e
 
 
-def np_dtype_to_dfi_dtype(dtype: np.dtype) -> np.Tuple[DtypeKind, int, str, str]:
+def np_dtype_to_dfi_dtype(dtype: np.dtype) -> Dtype:
     return (NP_KIND_TO_DFI_KIND[dtype.kind],
             dtype.itemsize * 8, # bits!
             ArrowCType.from_dtype(dtype),
@@ -107,6 +108,17 @@ class DFIBuffer(Buffer):
         # NOTE: woud be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
         if not self._array.data.contiguous:
             self._array = np.ascontiguousarray(self._array)
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
+
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning an array of values.
+        '''
+        if dtype is None:
+            return self._array
+        return self._array.astype(dtype)
 
     @property
     def bufsize(self) -> int:
@@ -138,6 +150,14 @@ class DFIColumn(Column):
         self._array = array # always a 1D array
         self._index = index
 
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning an array of values.
+        '''
+        if dtype is None:
+            return self._array
+        return self._array.astype(dtype)
+
     def size(self) -> int:
         return self._array.size # type: ignore
 
@@ -146,7 +166,7 @@ class DFIColumn(Column):
         return 0
 
     @property
-    def dtype(self) -> tp.Tuple[DtypeKind, int, str, str]:
+    def dtype(self) -> Dtype:
         return np_dtype_to_dfi_dtype(self._array.dtype) # type: ignore
 
     @property

@@ -55,6 +55,8 @@ class DtypeKind(enum.IntEnum):
     CATEGORICAL = 23
 
 
+Dtype = Tuple[DtypeKind, int, str, str]
+
 class ColumnNullType(enum.IntEnum):
     """
     Integer enum for null type representation.
@@ -83,18 +85,18 @@ class ColumnNullType(enum.IntEnum):
 class ColumnBuffers(TypedDict):
     # first element is a buffer containing the column data;
     # second element is the data buffer's associated dtype
-    data: Tuple["Buffer", Any]
+    data: Tuple["Buffer", Dtype]
 
     # first element is a buffer containing mask values indicating missing data;
     # second element is the mask value buffer's associated dtype.
     # None if the null representation is not a bit or byte mask
-    validity: Optional[Tuple["Buffer", Any]]
+    validity: Optional[Tuple["Buffer", Dtype]]
 
     # first element is a buffer containing the offset values for
     # variable-size binary data (e.g., variable-length strings);
     # second element is the offsets buffer's associated dtype.
     # None if the data buffer does not have an associated offsets buffer
-    offsets: Optional[Tuple["Buffer", Any]]
+    offsets: Optional[Tuple["Buffer", Dtype]]
 
 
 class CategoricalDescription(TypedDict):
@@ -232,7 +234,7 @@ class Column(ABC):
 
     @property
     @abstractmethod
-    def dtype(self) -> Tuple[DtypeKind, int, str, str]:
+    def dtype(self) -> Dtype:
         """
         Dtype description as a tuple ``(kind, bit-width, format string, endianness)``.
 
