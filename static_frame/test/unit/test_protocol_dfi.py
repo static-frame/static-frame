@@ -1,7 +1,6 @@
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.protocol_dfi import ArrowCType
 from static_frame.core.protocol_dfi import DFIBuffer
@@ -11,7 +10,6 @@ from static_frame.core.protocol_dfi import np_dtype_to_dfi_dtype
 from static_frame.core.protocol_dfi_abc import ColumnNullType
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
 from static_frame.core.protocol_dfi_abc import DtypeKind
-from static_frame.core.series import Series
 from static_frame.core.util import NAT
 from static_frame.test.test_case import TestCase
 
@@ -372,3 +370,4 @@ class TestUnit(TestCase):
 if __name__ == '__main__':
     import unittest
     unittest.main()
+
