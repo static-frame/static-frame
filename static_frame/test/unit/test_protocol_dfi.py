@@ -343,7 +343,6 @@ class TestUnit(TestCase):
         f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
         dfif1 = DFIDataFrame(f)
         dfif2 = dfif1.select_columns_by_name(['ztsv', 'zkuW'])
-        import ipdb; ipdb.set_trace()
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
         self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
 
