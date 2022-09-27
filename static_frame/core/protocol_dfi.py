@@ -257,6 +257,9 @@ class DFIDataFrame(DataFrame):
             ) -> "DFIDataFrame":
         return self.__class__(self._frame, nan_as_null, allow_copy)
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}: shape={self._frame.shape}>'
+
     @property
     def metadata(self) -> tp.Dict[str, tp.Any]:
         return {'static-frame.index': self._frame._index}

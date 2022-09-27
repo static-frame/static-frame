@@ -282,7 +282,12 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-        # import ipdb; ipdb.set_trace()
+    def test_dfi_df_init_a(self):
+        f = ff.parse('s(3,2)|v(bool,float,str)')
+        dfif1 = DFIDataFrame(f)
+        dfif2 = dfif1.__dataframe__()
+
+        import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
