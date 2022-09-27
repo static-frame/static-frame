@@ -238,24 +238,16 @@ class DFIColumn(Column):
 class DFIDataFrame(DataFrame):
     __slots__ = (
             '_frame',
-            '_nan_as_null',
-            '_allow_copy',
             )
 
     def __init__(self,
             frame: 'Frame',
-            nan_as_null: bool = False,
-            allow_copy: bool = True,
             ):
         self._frame = frame
-        self._nan_as_null = nan_as_null
-        self._allow_copy = allow_copy
 
     def __dataframe__(self,
-            nan_as_null: bool = False,
-            allow_copy: bool = True,
             ) -> "DFIDataFrame":
-        return self.__class__(self._frame, nan_as_null, allow_copy)
+        return self.__class__(self._frame)
 
     def __array__(self, dtype: np.dtype = None) -> np.ndarray:
         '''
@@ -299,8 +291,6 @@ class DFIDataFrame(DataFrame):
 
         return self.__class__(
                 self._frame.iloc[NULL_SLICE, indices],
-                self._nan_as_null,
-                self._allow_copy,
                 )
 
     def select_columns_by_name(self, names: tp.Sequence[str]) -> "DFIDataFrame":
@@ -322,72 +312,8 @@ class DFIDataFrame(DataFrame):
             for start in range(0, step * n_chunks, step):
                 yield DFIDataFrame(
                         self._frame.iloc[start: start + step, NULL_SLICE],
-                        self._nan_as_null,
-                        self._allow_copy,
                         )
         else:
             yield self
 
-
-
-# examples of Pandas implementation
-
-# >>> df = ff.parse('s(4,6)|v(int,bool,float,str,dtns)|i(I,str)|c(I,str)').to_pandas()
-# >>> df
-#        zZbu   ztsv     zUvW  zkuW                          zmVj    z2Oo
-# zZbu -88017  False   694.30  z2Oo 1970-01-01 00:00:00.000058768   84967
-# ztsv  92867  False   -72.96  z5l6 1970-01-01 00:00:00.000146284   13448
-# zUvW  84967  False  1826.02  zCE3 1970-01-01 00:00:00.000170440  175579
-# zkuW  13448  False   604.10  zr4u 1970-01-01 00:00:00.000032395   58768
-
-# >>> df.__dataframe__()
-# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4a00>
-# >>> dfi = df.__dataframe__()
-# >>> dfi.metadata()
-# Traceback (most recent call last):
-#   File "<console>", line 1, in <module>
-# TypeError: 'dict' object is not callable
-# >>> dfi.metadata
-# {'pandas.index': Index(['zZbu', 'ztsv', 'zUvW', 'zkuW'], dtype='object')}
-# >>> dfi.num_columns
-# <bound method PandasDataFrameXchg.num_columns of <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4bb0>>
-# >>> dfi.num_columns()
-# 6
-# >>> dfi.num_rows()
-# 4
-# >>> dfi.num_chunks()
-# 1
-# >>> dfi.column_names()
-# Index(['zZbu', 'ztsv', 'zUvW', 'zkuW', 'zmVj', 'z2Oo'], dtype='object')
-# >>> dfi.get_column(0)
-# <pandas.core.interchange.column.PandasColumn object at 0x7f2d14cb4af0>
-
-# NOTE: a new instance is created each time
-# >>> dfi.get_column_by_name('zUvW')
-# <pandas.core.interchange.column.PandasColumn object at 0x7f2d147349a0>
-# >>>
-# >>> dfi.get_column_by_name('zUvW')
-# <pandas.core.interchange.column.PandasColumn object at 0x7f2d14cb4910>
-
-# NOTE: pandas is not lazy; spec says iterator
-# >>> dfi.get_columns()
-# [<pandas.core.interchange.column.PandasColumn object at 0x7f2d14734c70>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d14734ee0>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d14734e20>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d14718100>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d147182b0>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d14718430>]
-
-
-# >>> dfi.select_columns([1, 4])
-# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4af0>
-
-# >>> dfi.select_columns([1, 4]).get_columns()
-# [<pandas.core.interchange.column.PandasColumn object at 0x7f2d14734430>, <pandas.core.interchange.column.PandasColumn object at 0x7f2d14718100>]
-
-# >>> dfi.select_columns_by_name(('zmVj',))
-# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d147349a0>
-# >>> dfi.select_columns_by_name(('zmVj', 'zUvW'))
-# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4910>
-
-
-# >>> tuple(dfi.get_chunks())[0]
-# <pandas.core.interchange.dataframe.PandasDataFrameXchg object at 0x7f2d14cb4bb0>
-# >>> tuple(dfi.get_chunks())[0].column_names()
-# Index(['zZbu', 'ztsv', 'zUvW', 'zkuW', 'zmVj', 'z2Oo'], dtype='object')
 
