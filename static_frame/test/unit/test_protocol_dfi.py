@@ -1,4 +1,5 @@
 import numpy as np
+import frame_fixtures as ff
 
 from static_frame.core.protocol_dfi import ArrowCType
 from static_frame.core.protocol_dfi import DFIBuffer
@@ -124,69 +125,162 @@ class TestUnit(TestCase):
     def test_dfi_column_array_a(self):
         a1 = np.array((True, False))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.__array__().tolist(), a1.tolist())
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.__array__().tolist(), a1.tolist())
 
     def test_dfi_column_array_b(self):
         a1 = np.array((True, False))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.__array__(str).tolist(), a1.astype(str).tolist())
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.__array__(str).tolist(), a1.astype(str).tolist())
 
     def test_dfi_column_size_a(self):
         a1 = np.array((True, False))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.size(), 2)
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.size(), 2)
 
     def test_dfi_column_offset_a(self):
         a1 = np.array((True, False))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.offset, 0)
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.offset, 0)
 
     def test_dfi_column_dtype_a(self):
         a1 = np.array((True, False))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.dtype, (DtypeKind.BOOL, 8, 'b', '='))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.dtype, (DtypeKind.BOOL, 8, 'b', '='))
 
     def test_dfi_column_dtype_b(self):
         a1 = np.array((1.1, 2.2), dtype=np.float64)
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.dtype, (DtypeKind.FLOAT, 64, 'g', '='))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.dtype, (DtypeKind.FLOAT, 64, 'g', '='))
 
     def test_dfi_column_dtype_c(self):
         a1 = np.array((1.1, 2.2), dtype=np.float16)
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.dtype, (DtypeKind.FLOAT, 16, 'e', '='))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.dtype, (DtypeKind.FLOAT, 16, 'e', '='))
 
     def test_dfi_column_describe_categorical_a(self):
         a1 = np.array((1.1, 2.2), dtype=np.float64)
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
+        dfic = DFIColumn(a1, idx1)
         with self.assertRaises(TypeError):
-            dfib.describe_categorical()
+            dfic.describe_categorical()
 
     def test_dfi_column_describe_null_a(self):
         a1 = np.array((1.1, 2.2, np.nan), dtype=np.float64)
         idx1 = Index(('a', 'b', 'c'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.describe_null, (ColumnNullType.USE_NAN, None))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.describe_null, (ColumnNullType.USE_NAN, None))
 
     def test_dfi_column_describe_null_b(self):
         a1 = np.array(('2020-01', '2022-05', NAT), dtype=np.datetime64)
         idx1 = Index(('a', 'b', 'c'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.describe_null, (ColumnNullType.USE_SENTINEL, NAT))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.describe_null, (ColumnNullType.USE_SENTINEL, NAT))
 
     def test_dfi_column_describe_null_c(self):
         a1 = np.array((3, 4))
         idx1 = Index(('a', 'b'))
-        dfib = DFIColumn(a1, idx1)
-        self.assertEqual(dfib.describe_null, (ColumnNullType.NON_NULLABLE, None))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.describe_null, (ColumnNullType.NON_NULLABLE, None))
+
+    def test_dfi_column_null_count_a(self):
+        a1 = np.array((1.1, 2.2, np.nan), dtype=np.float64)
+        idx1 = Index(('a', 'b', 'c'))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.null_count, 1)
+
+    def test_dfi_column_null_count_b(self):
+        a1 = np.array(('2020-01', '2022-05', NAT), dtype=np.datetime64)
+        idx1 = Index(('a', 'b', 'c'))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.null_count, 1)
+
+    def test_dfi_column_null_count_c(self):
+        a1 = np.array((3, 4))
+        idx1 = Index(('a', 'b'))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.null_count, 0)
+
+    def test_dfi_column_metadata_a(self):
+        a1 = np.array((3, 4))
+        idx1 = Index(('a', 'b'))
+        dfic = DFIColumn(a1, idx1)
+        [(mk, mv)] = dfic.metadata.items()
+        self.assertEqual(mk, 'static-frame.index')
+        self.assertTrue(mv.equals(mv))
+
+    def test_dfi_column_num_chunks_a(self):
+        a1 = np.array((3, 4))
+        idx1 = Index(('a', 'b'))
+        dfic = DFIColumn(a1, idx1)
+        self.assertEqual(dfic.num_chunks(), 1)
+
+    def test_dfi_column_chunks_a(self):
+        a1 = np.arange(5)
+        idx1 = Index(('a', 'b', 'c', 'd', 'e'))
+        dfic = DFIColumn(a1, idx1)
+        post = tuple(dfic.get_chunks(2))
+
+        self.assertEqual(
+                [c.__array__().tolist() for c in post],
+                [[0, 1, 2], [3, 4]],
+                )
+
+    def test_dfi_column_chunks_b(self):
+        a1 = np.arange(5)
+        idx1 = Index(('a', 'b', 'c', 'd', 'e'))
+        dfic = DFIColumn(a1, idx1)
+        post = tuple(dfic.get_chunks(5))
+
+        self.assertEqual(
+                [c.__array__().tolist() for c in post],
+                [[0], [1], [2], [3], [4]],
+                )
+
+    def test_dfi_column_chunks_c(self):
+        a1 = np.arange(5)
+        idx1 = Index(('a', 'b', 'c', 'd', 'e'))
+        dfic = DFIColumn(a1, idx1)
+        post = tuple(dfic.get_chunks(1))
+
+        self.assertEqual(
+                [c.__array__().tolist() for c in post],
+                [[0, 1, 2, 3, 4]],
+                )
+
+    def test_dfi_column_get_buffers_a(self):
+        a1 = np.array((1.1, 2.2, np.nan), dtype=np.float64)
+        idx1 = Index(('a', 'b', 'c'))
+        dfic = DFIColumn(a1, idx1)
+        post = dfic.get_buffers()
+
+        self.assertEqual(str(post['data'][0]), '<DFIBuffer: shape=(3,) dtype=<f8>')
+        self.assertEqual(post['data'][1], (DtypeKind.FLOAT, 64, 'g', '='))
+
+        self.assertEqual(str(post['validity'][0]), '<DFIBuffer: shape=(3,) dtype=|b1>')
+        self.assertEqual(post['validity'][1], (DtypeKind.BOOL, 8, 'b', '='))
+
+        self.assertEqual(post['offsets'], None)
+
+    def test_dfi_column_get_buffers_b(self):
+        a1 = np.array((False, True, False), dtype=bool)
+        idx1 = Index(('a', 'b', 'c'))
+        dfic = DFIColumn(a1, idx1)
+        post = dfic.get_buffers()
+
+        self.assertEqual(str(post['data'][0]), '<DFIBuffer: shape=(3,) dtype=|b1>')
+        self.assertEqual(post['data'][1], (DtypeKind.BOOL, 8, 'b', '='))
+
+        self.assertEqual(post['validity'], None)
+        self.assertEqual(post['offsets'], None)
+
+    #---------------------------------------------------------------------------
 
         # import ipdb; ipdb.set_trace()
 

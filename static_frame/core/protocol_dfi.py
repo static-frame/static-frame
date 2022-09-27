@@ -222,7 +222,7 @@ class DFIColumn(Column):
     def get_buffers(self) -> ColumnBuffers:
         kind = self._array.dtype.kind
         if kind in ('f', 'c', 'm', 'M'):
-            va = np.isna(self._array)
+            va = np.isnan(self._array)
             validity = (DFIBuffer(va), np_dtype_to_dfi_dtype(va.dtype))
         else:
             validity = None
