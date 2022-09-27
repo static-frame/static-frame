@@ -283,12 +283,69 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_dfi_df_init_a(self):
-        f = ff.parse('s(3,2)|v(bool,float,str)')
+        f = ff.parse('s(3,2)|v(bool,float)')
         dfif1 = DFIDataFrame(f)
         dfif2 = dfif1.__dataframe__()
+        self.assertEqual(str(dfif1), str(dfif2))
 
+    def test_dfi_df_metadata_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)')
+        dfif = DFIDataFrame(f)
+        [(mk, mv)] = dfif.metadata.items()
+        self.assertEqual(mk, 'static-frame.index')
+        self.assertTrue(mv.equals(f.index))
+
+    def test_dfi_df_num_columns_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(dfif.num_columns(), 2)
+
+    def test_dfi_df_num_rows_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(dfif.num_rows(), 3)
+
+    def test_dfi_df_num_chunks_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(dfif.num_chunks(), 1)
+
+    def test_dfi_df_column_names_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(tuple(dfif.column_names()), (0, 1))
+
+    def test_dfi_df_get_column_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)|c(I,str)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(str(dfif.get_column(0)), '<DFIColumn: shape=(3,) dtype=|b1>')
+
+    def test_dfi_df_get_column_by_name_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)|c(I,str)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(str(dfif.get_column_by_name('zZbu')), '<DFIColumn: shape=(3,) dtype=|b1>')
+
+    def test_dfi_df_get_columns_a(self):
+        f = ff.parse('s(3,2)|v(bool,float)|c(I,str)')
+        dfif = DFIDataFrame(f)
+        self.assertEqual(
+                [str(c) for c in dfif.get_columns()],
+                ['<DFIColumn: shape=(3,) dtype=|b1>', '<DFIColumn: shape=(3,) dtype=<f8>']
+                )
+
+    def test_dfi_df_select_columns_a(self):
+        f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        dfif2 = dfif1.select_columns([0, 3])
+        self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
+
+    def test_dfi_df_select_columns_by_name_a(self):
+        f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        dfif2 = dfif1.select_columns_by_name(['ztsv', 'zkuW'])
         import ipdb; ipdb.set_trace()
-
+        self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
+        self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
 
 if __name__ == '__main__':
     import unittest

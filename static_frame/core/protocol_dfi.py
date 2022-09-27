@@ -11,7 +11,7 @@ from static_frame.core.protocol_dfi_abc import DataFrame
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
 from static_frame.core.protocol_dfi_abc import Dtype
 from static_frame.core.protocol_dfi_abc import DtypeKind
-from static_frame.core.util import EMPTY_SLICE
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import NAT
 
 if tp.TYPE_CHECKING:
@@ -285,14 +285,14 @@ class DFIDataFrame(DataFrame):
 
     def get_columns(self) -> tp.Iterable[DFIColumn]:
         index = self._frame._index
-        yield from (DFIColumn(a, index) for a in self._frame._blocks.axis_values(1))
+        yield from (DFIColumn(a, index) for a in self._frame._blocks.axis_values(0))
 
     def select_columns(self, indices: tp.Sequence[int]) -> "DFIDataFrame":
         if not isinstance(indices, list):
             indices = list(indices)
 
         return self.__class__(
-                self._frame.iloc[EMPTY_SLICE, indices],
+                self._frame.iloc[NULL_SLICE, indices],
                 self._nan_as_null,
                 self._allow_copy,
                 )
@@ -315,7 +315,7 @@ class DFIDataFrame(DataFrame):
 
             for start in range(0, step * n_chunks, step):
                 yield DFIDataFrame(
-                        self._frame.iloc[start: start + step, EMPTY_SLICE],
+                        self._frame.iloc[start: start + step, NULL_SLICE],
                         self._nan_as_null,
                         self._allow_copy,
                         )
