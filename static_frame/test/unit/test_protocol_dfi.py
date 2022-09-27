@@ -258,8 +258,12 @@ class TestUnit(TestCase):
         dfic = DFIColumn(a1, idx1)
         post = dfic.get_buffers()
 
+        assert post['data'] is not None
+
         self.assertEqual(str(post['data'][0]), '<DFIBuffer: shape=(3,) dtype=<f8>')
         self.assertEqual(post['data'][1], (DtypeKind.FLOAT, 64, 'g', '='))
+
+        assert post['validity'] is not None
 
         self.assertEqual(str(post['validity'][0]), '<DFIBuffer: shape=(3,) dtype=|b1>')
         self.assertEqual(post['validity'][1], (DtypeKind.BOOL, 8, 'b', '='))
@@ -271,6 +275,8 @@ class TestUnit(TestCase):
         idx1 = Index(('a', 'b', 'c'))
         dfic = DFIColumn(a1, idx1)
         post = dfic.get_buffers()
+
+        assert post['data'] is not None
 
         self.assertEqual(str(post['data'][0]), '<DFIBuffer: shape=(3,) dtype=|b1>')
         self.assertEqual(post['data'][1], (DtypeKind.BOOL, 8, 'b', '='))
@@ -344,12 +350,27 @@ class TestUnit(TestCase):
         dfif2 = dfif1.select_columns([0, 3])
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
 
+    def test_dfi_df_select_columns_b(self) -> None:
+        f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        dfif2 = dfif1.select_columns(range(2))
+        self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
+
+
     def test_dfi_df_select_columns_by_name_a(self) -> None:
         f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
         dfif1 = DFIDataFrame(f)
         dfif2 = dfif1.select_columns_by_name(['ztsv', 'zkuW'])
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
         self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
+
+    def test_dfi_df_select_columns_by_name_b(self) -> None:
+        f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        dfif2 = dfif1.select_columns_by_name((x for x in ('ztsv', 'zkuW')))
+        self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
+        self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
+
 
     def test_dfi_df_get_chunks_a(self) -> None:
         f = ff.parse('s(5,4)|v(bool,int64)|c(I,str)')

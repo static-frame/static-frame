@@ -7,7 +7,7 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 from typing import Tuple
-from typing import TypedDict
+# from typing import TypedDict # PY38
 
 #NOTE: these ABC and utility classes are from https://github.com/data-apis/dataframe-api/blob/main/protocol/dataframe_protocol.py
 
@@ -82,31 +82,35 @@ class ColumnNullType(enum.IntEnum):
     USE_BYTEMASK = 4
 
 
-class ColumnBuffers(TypedDict):
-    # first element is a buffer containing the column data;
-    # second element is the data buffer's associated dtype
-    data: Tuple["Buffer", Dtype]
+# class ColumnBuffers(TypedDict):
+#     # first element is a buffer containing the column data;
+#     # second element is the data buffer's associated dtype
+#     data: Tuple["Buffer", Dtype]
 
-    # first element is a buffer containing mask values indicating missing data;
-    # second element is the mask value buffer's associated dtype.
-    # None if the null representation is not a bit or byte mask
-    validity: Optional[Tuple["Buffer", Dtype]]
+#     # first element is a buffer containing mask values indicating missing data;
+#     # second element is the mask value buffer's associated dtype.
+#     # None if the null representation is not a bit or byte mask
+#     validity: Optional[Tuple["Buffer", Dtype]]
 
-    # first element is a buffer containing the offset values for
-    # variable-size binary data (e.g., variable-length strings);
-    # second element is the offsets buffer's associated dtype.
-    # None if the data buffer does not have an associated offsets buffer
-    offsets: Optional[Tuple["Buffer", Dtype]]
+#     # first element is a buffer containing the offset values for
+#     # variable-size binary data (e.g., variable-length strings);
+#     # second element is the offsets buffer's associated dtype.
+#     # None if the data buffer does not have an associated offsets buffer
+#     offsets: Optional[Tuple["Buffer", Dtype]]
+
+ColumnBuffers = Dict[str, Optional[Tuple["Buffer", Dtype]]]
 
 
-class CategoricalDescription(TypedDict):
-    # whether the ordering of dictionary indices is semantically meaningful
-    is_ordered: bool
-    # whether a dictionary-style mapping of categorical values to other objects exists
-    is_dictionary: bool
-    # Python-level only (e.g. ``{int: str}``).
-    # None if not a dictionary-style categorical.
-    categories: Optional['Column']
+# class CategoricalDescription(TypedDict):
+#     # whether the ordering of dictionary indices is semantically meaningful
+#     is_ordered: bool
+#     # whether a dictionary-style mapping of categorical values to other objects exists
+#     is_dictionary: bool
+#     # Python-level only (e.g. ``{int: str}``).
+#     # None if not a dictionary-style categorical.
+#     categories: Optional['Column']
+
+CategoricalDescription = Any
 
 
 class Buffer(ABC):
@@ -153,7 +157,7 @@ class Buffer(ABC):
         Useful to have to connect to array libraries. Support optional because
         it's not completely trivial to implement for a Python-only library.
         """
-        raise NotImplementedError("__dlpack__")
+        raise NotImplementedError("__dlpack__") #pragma: no cover
 
     @abstractmethod
     def __dlpack_device__(self) -> Tuple[DlpackDeviceType, Optional[int]]:

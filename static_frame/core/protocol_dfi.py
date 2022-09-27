@@ -172,7 +172,7 @@ class DFIColumn(Column):
 
     @property
     def dtype(self) -> Dtype:
-        return np_dtype_to_dfi_dtype(self._array.dtype) # type: ignore
+        return np_dtype_to_dfi_dtype(self._array.dtype)
 
     @property
     def describe_categorical(self) -> CategoricalDescription:
