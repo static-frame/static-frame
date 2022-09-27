@@ -245,6 +245,7 @@ class DFIDataFrame(DataFrame):
             frame: 'Frame',
             ):
         self._frame = frame
+        # NOTE: we might implement TypeBlock functionality to recast internal blocks in all contiguous sliceable, meaning either 1D arrays or 2D arrays in Fortran ordering (which reduces overhead while permitting contiguous columnar slices)
 
     def __dataframe__(self,
             ) -> "DFIDataFrame":
