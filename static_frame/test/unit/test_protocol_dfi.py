@@ -288,6 +288,13 @@ class TestUnit(TestCase):
         dfif2 = dfif1.__dataframe__()
         self.assertEqual(str(dfif1), str(dfif2))
 
+    def test_dfi_df_array_a(self):
+        f = ff.parse('s(3,2)|v(bool)')
+        dfif = DFIDataFrame(f)
+        post = dfif.__array__(str).tolist()
+        self.assertEqual(post,
+                [['False', 'False'], ['False', 'False'], ['False', 'False']])
+
     def test_dfi_df_metadata_a(self):
         f = ff.parse('s(3,2)|v(bool,float)')
         dfif = DFIDataFrame(f)
@@ -345,6 +352,22 @@ class TestUnit(TestCase):
         dfif2 = dfif1.select_columns_by_name(['ztsv', 'zkuW'])
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
         self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
+
+    def test_dfi_df_get_chunks_a(self):
+        f = ff.parse('s(5,4)|v(bool,int64)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        post = [df.__array__().tolist() for df in dfif1.get_chunks(2)]
+        self.assertEqual(post,
+            [[[False, 162197, True, 129017], [False, -41157, False, 35021], [False, 5729, False, 166924]], [[True, -168387, True, 122246], [False, 140627, False, 197228]]])
+
+    def test_dfi_df_get_chunks_b(self):
+        f = ff.parse('s(5,4)|v(bool,int64)|c(I,str)')
+        dfif1 = DFIDataFrame(f)
+        post = [str(df) for df in dfif1.get_chunks(1)]
+        self.assertEqual(post, ['<DFIDataFrame: shape=(5, 4)>'])
+
+
+
 
 if __name__ == '__main__':
     import unittest

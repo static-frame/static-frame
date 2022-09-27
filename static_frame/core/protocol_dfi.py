@@ -11,8 +11,8 @@ from static_frame.core.protocol_dfi_abc import DataFrame
 from static_frame.core.protocol_dfi_abc import DlpackDeviceType
 from static_frame.core.protocol_dfi_abc import Dtype
 from static_frame.core.protocol_dfi_abc import DtypeKind
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import NAT
+from static_frame.core.util import NULL_SLICE
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -256,6 +256,12 @@ class DFIDataFrame(DataFrame):
             allow_copy: bool = True,
             ) -> "DFIDataFrame":
         return self.__class__(self._frame, nan_as_null, allow_copy)
+
+    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+        '''
+        Support the __array__ interface, returning an array of values.
+        '''
+        return self._frame.__array__(dtype)
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._frame.shape}>'
