@@ -105,8 +105,9 @@ class DFIBuffer(Buffer):
         # always one dimensional
         assert self._array.ndim == 1
 
-        # NOTE: woud be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
-        if not self._array.data.contiguous:
+        # NOTE: would be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
+        # NOTE: expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
+        if not self._array.flags['C_CONTIGUOUS']:
             self._array = np.ascontiguousarray(self._array)
             self._array.flags.writeable = False
 

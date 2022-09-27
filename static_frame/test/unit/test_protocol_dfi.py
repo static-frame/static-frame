@@ -176,10 +176,11 @@ class TestUnit(TestCase):
         self.assertEqual(dfic.describe_null, (ColumnNullType.USE_NAN, None))
 
     def test_dfi_column_describe_null_b(self) -> None:
-        a1 = np.array(('2020-01', '2022-05', NAT), dtype=np.datetime64)
+        a1 = np.array(('2020-01-01', '2022-05-01', NAT), dtype=np.datetime64)
         idx1 = Index(('a', 'b', 'c'))
         dfic = DFIColumn(a1, idx1)
         self.assertEqual(dfic.describe_null, (ColumnNullType.USE_SENTINEL, NAT))
+        post = dfic.get_buffers()
 
     def test_dfi_column_describe_null_c(self) -> None:
         a1 = np.array((3, 4))
