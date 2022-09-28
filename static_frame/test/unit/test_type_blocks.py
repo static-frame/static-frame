@@ -525,8 +525,6 @@ class TestUnit(TestCase):
 
     def test_type_blocks_consolidate_b(self) -> None:
         # if we hava part of TB consolidated, we do not reallocate
-
-
         a1 = np.array([
             [1, 2, 3],
             [10,50,30],
@@ -568,6 +566,11 @@ class TestUnit(TestCase):
         tb2 = tb1.contiguous_columnar()
         post2 = [(a.flags['F_CONTIGUOUS']) for a in tb2.axis_values(0)]
         self.assertEqual(post2, [True, True, True])
+
+        tb3 = tb2.contiguous_columnar()
+        post3 = [(a.flags['F_CONTIGUOUS']) for a in tb3.axis_values(0)]
+        self.assertEqual(post3, [True, True, True])
+
 
 
     #---------------------------------------------------------------------------
