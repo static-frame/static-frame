@@ -41,6 +41,13 @@ _ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
 _ZERO_PAD_ARRAY.flags.writeable = False
 
 
+class FirstDuplicatePosition(Exception):
+    __slots__ = ('first_dup',)
+
+    def __init__(self, first_dup: int) -> None:
+        self.first_dup = first_dup
+
+
 class LocMap:
 
     @staticmethod
@@ -222,7 +229,14 @@ class HierarchicalLocMap:
         self.bit_offset_encoders, self.encoding_can_overflow = self.build_offsets_and_overflow(
                 num_unique_elements_per_depth=list(map(len, indices))
                 )
-        self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+        try:
+            self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+        except FirstDuplicatePosition as e:
+            duplicate_labels = tuple(
+                    index[indexer[e.first_dup]]
+                    for (index, indexer) in zip(indices, indexers)
+                    )
+            raise ErrorInitIndexNonUnique(duplicate_labels) from None
 
     def __deepcopy__(self: _HLMap,
             memo: tp.Dict[int, tp.Any],
@@ -340,7 +354,11 @@ class HierarchicalLocMap:
         try:
             return FrozenAutoMap(encoded_indexers.tolist()) # Automap is faster with Python lists :(
         except ValueError as e:
-            raise ErrorInitIndexNonUnique(*e.args) from None
+            # nonzero returns arrays of indices per dimension. We are 1D, so we
+            # will receive an array containing one other array. Of that inner
+            # array, we only need the first occurrence
+            [[first_duplicate, *_]] = np.nonzero(encoded_indexers == e.args[0])
+            raise FirstDuplicatePosition(first_duplicate) from None
 
     @staticmethod
     def is_single_element(element: tp.Hashable) -> bool:
