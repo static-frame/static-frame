@@ -4056,7 +4056,7 @@ class TestUnit(TestCase):
         s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
         s2 = s1.via_str.contains('cd')
         self.assertEqual(s2.to_pairs(),
-                ((0, 'True'), (1, 'True'), (2, 'False'))
+                ((0, True), (1, True), (2, False))
                 )
 
     #---------------------------------------------------------------------------

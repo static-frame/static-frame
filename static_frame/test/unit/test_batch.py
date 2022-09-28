@@ -1697,7 +1697,7 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
         post = Batch.from_frames((f1, f2)).via_str.contains('zU').to_frame()
         self.assertEqual(post.to_pairs(),
-                (('zZbu', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('ztsv', ((('a', 34715), 'False'), (('a', -3648), 'False'), (('b', 34715), 'False'), (('b', -3648), 'False'))), ('zUvW', ((('a', 34715), 'False'), (('a', -3648), 'True'), (('b', 34715), 'False'), (('b', -3648), 'True'))))
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))))
                 )
 
     def test_batch_via_str_count(self) -> None:
