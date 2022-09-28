@@ -41,7 +41,7 @@ _ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
 _ZERO_PAD_ARRAY.flags.writeable = False
 
 
-class FirstDuplicatePosition(Exception):
+class FirstDuplicatePosition(KeyError):
     __slots__ = ('first_dup',)
 
     def __init__(self, first_dup: int) -> None:
