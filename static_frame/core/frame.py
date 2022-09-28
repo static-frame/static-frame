@@ -3015,11 +3015,14 @@ class Frame(ContainerOperand):
     def __dataframe__(self,
             nan_as_null: bool = False,
             allow_copy: bool = True,
-            ):
+            ) -> DFIDataFrame:
+        '''Return a data-frame interchange protocol compliant object. See https://data-apis.org/dataframe-protocol/latest for more information.
+        '''
         return DFIDataFrame(self,
-            nan_as_null=nan_as_null,
-            allow_copy=allow_copy,
-            )
+                nan_as_null=nan_as_null,
+                allow_copy=allow_copy,
+                recast_blocks=True,
+                )
 
     #---------------------------------------------------------------------------
     # name interface
