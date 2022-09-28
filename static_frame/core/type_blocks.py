@@ -689,7 +689,6 @@ class TypeBlocks(ContainerOperand):
             # key: tp.Union[int, slice]
             row_dtype= self._row_dtype if self._row_dtype is not None else DTYPE_FLOAT_DEFAULT
             row_length = self._shape[0]
-            column_length = self._shape[1]
 
             if not reverse:
                 row_idx_iter = range(row_length)
