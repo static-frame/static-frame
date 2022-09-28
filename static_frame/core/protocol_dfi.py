@@ -234,28 +234,50 @@ class DFIColumn(Column):
 class DFIDataFrame(DataFrame):
     __slots__ = (
             '_frame',
+            '_nan_as_null',
+            '_allow_copy',
             )
 
     def __init__(self,
             frame: 'Frame',
+            *,
+            nan_as_null: bool = False,
+            allow_copy: bool = True,
+            recast_blocks: bool = True,
             ):
+        '''
+        Args:
+            nan_as_null: "...intended for the consumer to tell the producer to overwrite null values in the data with ``NaN``"; this is not relevant of StaticFrame does not use bit / byte masks.
+            allow_copy: "... that defines whether or not the library is allowed to make a copy of the data"; this is always the case with StaticFrame as data will be made columnar contiguous.
+        '''
         # NOTE: we recast internal blocks in be all contiguous columnar, meaning either 1D arrays or 2D arrays in Fortran ordering (which reduces overhead while permitting contiguous columnar slices)
-        from static_frame.core.frame import Frame
-        self._frame = Frame(
-                frame._blocks.contiguous_columnar(),
-                index=frame._index,
-                columns=frame._columns,
-                name=frame._name,
-                own_data=True,
-                own_index=True,
-                own_columns=frame.STATIC,
-                )
+        self._nan_as_null = nan_as_null
+        self._allow_copy = allow_copy
+
+        if recast_blocks:
+            from static_frame.core.frame import Frame
+            self._frame = Frame(
+                    frame._blocks.contiguous_columnar(),
+                    index=frame._index,
+                    columns=frame._columns,
+                    name=frame._name,
+                    own_data=True,
+                    own_index=True,
+                    own_columns=frame.STATIC,
+                    )
+        else:
+            assert frame.STATIC
+            self._frame = frame
 
     def __dataframe__(self,
             nan_as_null: bool = False,
             allow_copy: bool = True,
             ) -> "DFIDataFrame":
-        return self.__class__(self._frame)
+        return self.__class__(self._frame,
+                nan_as_null=self._nan_as_null,
+                allow_copy=self._allow_copy,
+                recast_blocks=False,
+                )
 
     def __array__(self, dtype: np.dtype = None) -> np.ndarray:
         '''
@@ -301,6 +323,9 @@ class DFIDataFrame(DataFrame):
 
         return self.__class__(
                 self._frame.iloc[NULL_SLICE, indices],
+                nan_as_null=self._nan_as_null,
+                allow_copy=self._allow_copy,
+                recast_blocks=False,
                 )
 
     def select_columns_by_name(self, names: tp.Sequence[str]) -> "DFIDataFrame":
@@ -322,6 +347,9 @@ class DFIDataFrame(DataFrame):
             for start in range(0, step * n_chunks, step):
                 yield DFIDataFrame(
                         self._frame.iloc[start: start + step, NULL_SLICE],
+                        nan_as_null=self._nan_as_null,
+                        allow_copy=self._allow_copy,
+                        recast_blocks=True,
                         )
         else:
             yield self

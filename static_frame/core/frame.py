@@ -95,6 +95,7 @@ from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
+from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.series import Series
@@ -3007,6 +3008,18 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
+
+    #---------------------------------------------------------------------------
+    # external protocols
+
+    def __dataframe__(self,
+            nan_as_null: bool = False,
+            allow_copy: bool = True,
+            ):
+        return DFIDataFrame(self,
+            nan_as_null=nan_as_null,
+            allow_copy=allow_copy,
+            )
 
     #---------------------------------------------------------------------------
     # name interface
