@@ -4,7 +4,7 @@ import numpy as np
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.index import Index
+from static_frame.core.index import I, Index
 
 
 class IndexHierarchySetResult(tp.NamedTuple):
@@ -17,13 +17,22 @@ class IndexHierarchySetResult(tp.NamedTuple):
 
 
 def _index_hierarchy_set(
-        lhs: IndexHierarchy, rhs: IndexHierarchy
-        ) -> IndexHierarchySetResult:
+        lhs: IndexHierarchy,
+        rhs: IndexHierarchy,
+    ) -> IndexHierarchy:
     '''
-    Shared logic between union and intersection.
-    They both need all of these steps completed, but they both require different
-    amounts of work to be returned
+    Shared logic for all set operations (union, intersection, difference)
+
+    They all need each of these steps to be completed, but they require
+    different amounts of intermediate work to be returned
     '''
+
+    if lhs._recache:
+        lhs._update_array_cache()
+
+    if rhs._recache:
+        rhs._update_array_cache()
+
     remapped_indexers_lhs: tp.List[np.ndarray] = []
     remapped_indexers_rhs: tp.List[np.ndarray] = []
     num_unique_elements_per_depth: tp.List[int] = []
@@ -85,14 +94,27 @@ def _index_hierarchy_set(
 
 
 def index_hierarchy_intersection(
-        lhs: IndexHierarchy, rhs: IndexHierarchy
-        ) -> IndexHierarchy:
+        lhs: IndexHierarchy,
+        *rhs: IndexHierarchy,
+    ) -> IndexHierarchy:
     '''
-    lhs & rhs # (where lhs and rhs are IndexHierarchies)
+    Equivalent to:
+
+        >>> for ih in rhs:
+        >>>     lhs &= ih
 
     Note:
         The result is not guaranteed to be sorted.
     '''
+
+    if len(rhs) != 1:
+        raise NotImplementedError('only one rhs supported')
+
+    [rhs] = rhs
+
+    if lhs.equals(rhs):
+        return lhs if lhs.STATIC else lhs.__deepcopy__({})
+
     result = _index_hierarchy_set(lhs, rhs)
 
     # Since the encoding utilitzed the union, we can safely ask for the
@@ -111,28 +133,45 @@ def index_hierarchy_intersection(
 
 
 def index_hierarchy_union(
-    lhs: IndexHierarchy,
-    rhs: IndexHierarchy,
-) -> IndexHierarchy:
+        lhs: IndexHierarchy,
+        *rhs: IndexHierarchy,
+    ) -> IndexHierarchy:
+    '''
+    Equivalent to:
+
+        >>> for ih in rhs:
+        >>>     lhs |= ih
+
+    Note:
+        The result is not guaranteed to be sorted.
+    '''
+
+    if len(rhs) != 1:
+        raise NotImplementedError('only one rhs supported')
+
+    [rhs] = rhs
+
+    if lhs.equals(rhs):
+        return lhs if lhs.STATIC else lhs.__deepcopy__({})
 
     result = _index_hierarchy_set(lhs, rhs)
 
     # Since the encoding utilitzed the union, we can safely ask for the
     # intersection between the mappings
-    unique_to_b = np.in1d(result.rhs_encodings, result.lhs_encodings, invert=True)
+    unique_to_rhs = np.in1d(result.rhs_encodings, result.lhs_encodings, invert=True)
 
     # We can now build up our new IndexHierarchy from each component.
     # Basically, we choose everything from lhs, and then concat the unique
     # elements from rhs.
     indexers = np.hstack(
-        (result.remapped_indexers_lhs, result.remapped_indexers_rhs.T[unique_to_b].T)
+        (result.remapped_indexers_lhs, result.remapped_indexers_rhs.T[unique_to_rhs].T)
     )
     if result.encoding_can_overflow:
         indexers = indexers.astype(np.uint64)
     indexers.flags.writeable = False
 
     lhs_blocks = lhs._blocks
-    rhs_blocks = rhs._blocks._extract(unique_to_b)
+    rhs_blocks = rhs._blocks._extract(unique_to_rhs)
     blocks = TypeBlocks.from_blocks(
         TypeBlocks.vstack_blocks_to_blocks((lhs_blocks, rhs_blocks))
     )
@@ -143,4 +182,42 @@ def index_hierarchy_union(
         name=lhs.name,
         blocks=blocks,
         own_blocks=True,
+    )
+
+
+def index_hierarchy_difference(
+        lhs: IndexHierarchy,
+        *rhs: IndexHierarchy,
+    ) -> IndexHierarchy:
+    '''
+    Equivalent to:
+
+        >>> for ih in rhs:
+        >>>     lhs -= ih
+
+    Note:
+        The result is not guaranteed to be sorted.
+    '''
+
+    if len(rhs) != 1:
+        raise NotImplementedError('only one rhs supported')
+
+    [rhs] = rhs
+
+    if lhs.equals(rhs):
+        return IndexHierarchy._from_empty((), depth_reference=lhs.depth)
+
+    result = _index_hierarchy_set(lhs, rhs)
+
+    # Now, simply filter by which encodings only appear in lhs
+    unique_to_lhs = np.in1d(result.lhs_encodings, result.rhs_encodings, invert=True)
+
+    # Now, extract the true union block.
+    blocks = lhs._blocks._extract(unique_to_lhs)
+
+    return IndexHierarchy._from_type_blocks(
+        blocks,
+        name=lhs.name,
+        own_blocks=True,
+        index_constructors=lhs._index_constructors,
     )
