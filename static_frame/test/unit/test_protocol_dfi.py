@@ -77,9 +77,9 @@ class TestUnit(TestCase):
         self.assertTrue(dfib.__array__().data.contiguous)
 
     def test_dfi_buffer_b(self) -> None:
-        dfib = DFIBuffer((np.arange(12).reshape(6, 2) % 3 == 0)[:, 0])
-        self.assertEqual(str(dfib), '<DFIBuffer: shape=(6,) dtype=|b1>')
-        self.assertTrue(dfib.__array__().data.contiguous)
+        # only accept already-contiguous arrays
+        with self.assertRaises(ValueError):
+            dfib = DFIBuffer((np.arange(12).reshape(6, 2) % 3 == 0)[:, 0])
 
     def test_dfi_buffer_array_a(self) -> None:
         a1 = np.array((True, False))
@@ -301,11 +301,13 @@ class TestUnit(TestCase):
                 [['False', 'False'], ['False', 'False'], ['False', 'False']])
 
     def test_dfi_df_metadata_a(self) -> None:
-        f = ff.parse('s(3,2)|v(bool,float)')
+        f = ff.parse('s(3,2)|v(bool,float)').rename('foo')
         dfif = DFIDataFrame(f)
-        [(mk, mv)] = dfif.metadata.items()
+        [(mk, mv), (mnk, mnv)] = dfif.metadata.items()
         self.assertEqual(mk, 'static-frame.index')
         self.assertTrue(mv.equals(f.index))
+        self.assertEqual(mnk, 'static-frame.name')
+        self.assertEqual(mnv, f.name)
 
     def test_dfi_df_num_columns_a(self) -> None:
         f = ff.parse('s(3,2)|v(bool,float)')

@@ -890,7 +890,9 @@ class TypeBlocks(ContainerOperand):
         for b in raw_blocks:
             # NOTE: 1D contiguous array sets both C_CONTIGUOUS and F_CONTIGUOUS; applying asfortranarray() to a 1D array is the same as ascontiguousarray(); columnar slices on F_CONTIGUOUS are contiguous;
             if not b.flags['F_CONTIGUOUS']:
-                yield np.asfortranarray(b)
+                b = np.asfortranarray(b)
+                b.flags.writeable = False
+                yield b
             else:
                 yield b
 

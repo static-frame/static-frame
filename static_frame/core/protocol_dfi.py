@@ -102,14 +102,9 @@ class DFIBuffer(Buffer):
     def __init__(self, array: np.ndarray) -> None:
         self._array = array
 
-        # always one dimensional
-        assert self._array.ndim == 1
-
-        # NOTE: would be better to do this transformation upstream to avoid reproducing the same contiguous buffer on repeated calls
-        # NOTE: expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
-        if not self._array.flags['C_CONTIGUOUS']:
-            self._array = np.ascontiguousarray(self._array)
-            self._array.flags.writeable = False
+        # NOTE: would expect transformation upstream to avoid reproducing the same contiguous buffer on repeated calls;expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
+        if self._array.ndim != 1 or not self._array.flags['F_CONTIGUOUS']:
+            raise ValueError('provided array is not contiguous')
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
@@ -244,8 +239,17 @@ class DFIDataFrame(DataFrame):
     def __init__(self,
             frame: 'Frame',
             ):
-        self._frame = frame
-        # NOTE: we might implement TypeBlock functionality to recast internal blocks in all contiguous sliceable, meaning either 1D arrays or 2D arrays in Fortran ordering (which reduces overhead while permitting contiguous columnar slices)
+        # NOTE: we recast internal blocks in be all contiguous columnar, meaning either 1D arrays or 2D arrays in Fortran ordering (which reduces overhead while permitting contiguous columnar slices)
+        from static_frame.core.frame import Frame
+        self._frame = Frame(
+                frame._blocks.contiguous_columnar(),
+                index=frame._index,
+                columns=frame._columns,
+                name=frame._name,
+                own_data=True,
+                own_index=True,
+                own_columns=frame.STATIC,
+                )
 
     def __dataframe__(self,
             nan_as_null: bool = False,
@@ -264,7 +268,9 @@ class DFIDataFrame(DataFrame):
 
     @property
     def metadata(self) -> tp.Dict[str, tp.Any]:
-        return {'static-frame.index': self._frame._index}
+        return {'static-frame.index': self._frame._index,
+                'static-frame.name': self._frame._name,
+                }
 
     def num_columns(self) -> int:
         return self._frame._blocks.shape[1]
