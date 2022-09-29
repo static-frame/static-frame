@@ -32,11 +32,25 @@ class MaterializedArray:
             return self._array.nbytes # type: ignore
         return self.BASE_ARRAY_BYTES + self._array.nbytes # type: ignore
 
-class MeasureFormat(str, Enum):
-    LOCAL = 'local' # only the array data unique to the array, ignoring referenced data
-    SHARED = 'shared' # array data unique to the array and any referenced array data
-    MATERIALIZED = 'materialized' # ignore sharing get overall size based on data footprint
-    MATERIALIZED_DATA = 'materialized_data' # just get data foot print, ignore all other components
+
+# data only / all object components
+# local / shared : arrays only, do we include reference data
+# materialized / not: arrays only, just measure nbytes
+
+from typing import NamedTuple
+
+class MFConfig(NamedTuple):
+    data_only: bool
+    local_only: bool
+    materialized: bool
+
+class MeasureFormat(Enum):
+    LOCAL = MFConfig(data_only=False, local_only=True, materialized=False) # only the array data unique to the array, ignoring referenced data
+    SHARED = MFConfig(data_only=False, local_only=False, materialized=False) # array data unique to the array and any referenced array data
+    MATERIALIZED = MFConfig(data_only=False, local_only=False, materialized=True) # ignore sharing get overall size based on data footprint
+    MATERIALIZED_DATA = MFConfig(data_only=True, local_only=False, materialized=True) # just get data foot print, ignore all other components
+
+MF = MeasureFormat
 
 
 class MemoryMeasure:
@@ -89,17 +103,16 @@ class MemoryMeasure:
 
         if obj.__class__ is np.ndarray:
 
-            if format in (MeasureFormat.MATERIALIZED, MeasureFormat.MATERIALIZED_DATA):
-                obj = MaterializedArray(obj, data_only=format is MeasureFormat.MATERIALIZED_DATA)
+            if format.value.materialized:
+                obj = MaterializedArray(obj, data_only=format.value.data_only)
 
             else:
-                if obj.dtype.kind != DTYPE_OBJECT_KIND:
-                    pass # non-object arrays report included elements
-                else: # only iter over object arrays
+                # non-object arrays report included elements
+                if obj.dtype.kind == DTYPE_OBJECT_KIND:
                     for el in cls._iter_iterable(obj):
                         yield from cls.nested_sizable_elements(el, seen=seen, format=format)
 
-                if obj.base is not None:
+                if not format.value.local_only and obj.base is not None:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
 
@@ -107,7 +120,7 @@ class MemoryMeasure:
             # if a MaterializedArray was passed direclty in
             pass
 
-        else: # not array
+        elif not format.value.data_only: # not array
             for el in cls._iter_iterable(obj): # will not yield anything if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
             # arrays do not have slots
@@ -122,7 +135,7 @@ class MemoryMeasure:
 def getsizeof_total(
         obj: tp.Any,
         *,
-        format: MeasureFormat = MeasureFormat.SHARED,
+        format: MF = MF.SHARED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
         ) -> int:
     '''
@@ -133,9 +146,9 @@ def getsizeof_total(
     def gen() -> tp.Iterator[int]:
         for component in MemoryMeasure.nested_sizable_elements(obj, seen=seen, format=format):
             # import ipdb; ipdb.set_trace()
-            if format is MeasureFormat.MATERIALIZED_DATA:
-                if component.__class__ is MaterializedArray:
-                    yield component.__sizeof__() # call directly to avoid garbage collector ovehead
+            # if format is MF.MATERIALIZED_DATA:
+            if component.__class__ is MaterializedArray:
+                yield component.__sizeof__() # call directly to avoid gc ovehead
                 # ignore all other components
             else:
                 yield getsizeof(component)

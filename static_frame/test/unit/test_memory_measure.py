@@ -36,7 +36,7 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(_iter_iterable(obj)), ())
 
     def test_unsized_children_numpy_array_object(self) -> None:
-        obj = np.array([2, 'a', 4], dtype=np.object)
+        obj = np.array([2, 'a', 4], dtype=object)
         self.assertEqual(tuple(_iter_iterable(obj)), (2, 'a', 4))
 
     def test_unsized_children_tuple(self) -> None:
@@ -245,7 +245,7 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
 
     def test_nested_sizable_elements_numpy_array_object(self) -> None:
-        obj = np.array([2, 'a', 4], dtype=np.object)
+        obj = np.array([2, 'a', 4], dtype=object)
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 'a', 4, obj))
 
     def test_nested_sizable_elements_tuple(self) -> None:
@@ -329,22 +329,61 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(getsizeof_total(empty,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(None) + getsizeof(empty), # this is just the GC component
+                getsizeof(empty),
                 )
 
         self.assertEqual(getsizeof_total(a1,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                getsizeof(empty) + a1.nbytes,
                 )
 
         self.assertEqual(getsizeof_total(a2,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                getsizeof(empty) + a1.nbytes,
                 )
 
+    def test_measure_format_c(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
 
+        self.assertEqual(getsizeof_total(empty,
+                format=MeasureFormat.LOCAL),
+                getsizeof(empty),
+                )
+
+        self.assertEqual(getsizeof_total(a1,
+                format=MeasureFormat.LOCAL),
+                getsizeof(a1),
+                )
+
+        self.assertEqual(getsizeof_total(a2,
+                format=MeasureFormat.LOCAL),
+                getsizeof(a2),
+                )
+
+    def test_measure_format_d(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(getsizeof_total(empty,
+                format=MeasureFormat.SHARED),
+                getsizeof(empty),
+                )
+
+        self.assertEqual(getsizeof_total(a1,
+                format=MeasureFormat.SHARED),
+                getsizeof(a1),
+                )
+
+        self.assertEqual(getsizeof_total(a2,
+                format=MeasureFormat.SHARED),
+                getsizeof(a2) + getsizeof(a1),
+                )
 
         # import ipdb; ipdb.set_trace()
 
