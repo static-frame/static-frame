@@ -406,3 +406,88 @@ class HierarchicalLocMap:
 
         indexers = np.bitwise_or.reduce(indexers, axis=1)
         return list(map(self.encoded_indexer_map.__getitem__, indexers))
+
+    @staticmethod
+    def unpack_encoding(
+            encoded_arr: np.ndarray,
+            bit_offset_encoders: np.ndarray,
+            ) -> np.ndarray:
+        '''
+        Given an encoding, unpack it into its constituent parts
+
+        Ex:
+            bit_offset_encoders = [0, 2, 4]
+
+            Encodings:
+                36  => [0, 4, 32] => [0, 1, 2]
+                 8  => [0, 8,  0] => [0, 2, 0]
+                10  => [2, 8,  0] => [2, 2, 0]
+                17  => [1, 0, 16] => [1, 0, 1]
+
+            Step 1:
+            Expand bit_offset_encoders into something more helpful -> masks
+
+            [0, 2, 4] is where the bit offsets start. They end one bit before the next offset.
+            Thus, the bit offset ends are:
+            [1, 3, 64] # since 64 is the max bit offset
+
+            From here, we build up a list of masks that each have the correct number of up bits
+
+            0 => [11] # 2 bit mask
+            2 => [11] # 2 bit mask
+            4 => [11] # 2 bit mask
+
+            Now, for each component (i.e. the number of bit_offset_encoders), we
+            apply to corresponding mask to the values AFTER they have been shifted backwards
+
+            36 == [10 01 00]
+             8 == [00 10 00]
+            10 == [00 10 10]
+            17 == [01 00 01]
+
+            Depth 0:
+                offset = bit_offset_encoders[0] = 0
+                36 => ([10 01 00] << 0) => [10 01 00] & [11] => [00 00 00] => 0
+                 8 => ([00 10 00] << 0) => [00 10 00] & [11] => [00 00 00] => 0
+                10 => ([00 10 10] << 0) => [00 10 10] & [11] => [00 00 10] => 2
+                17 => ([01 00 01] << 0) => [01 00 01] & [11] => [00 00 01] => 1
+
+            Depth 1:
+                offset = bit_offset_encoders[1] = 2
+                36 => ([10 01 00] << 2) => [10 01] & [11] => [00 01] => 1
+                 8 => ([00 10 00] << 2) => [00 10] & [11] => [00 10] => 2
+                10 => ([00 10 10] << 2) => [00 10] & [11] => [00 10] => 2
+                17 => ([01 00 01] << 2) => [01 00] & [11] => [00 00] => 0
+
+            Depth 2:
+                offset = bit_offset_encoders[2] = 4
+                36 => ([10 01 00] << 4) => [10] & [11] => [10] => 2
+                 8 => ([00 10 00] << 4) => [00] & [11] => [00] => 0
+                10 => ([00 10 10] << 4) => [00] & [11] => [00] => 0
+                17 => ([01 00 01] << 4) => [01] & [11] => [01] => 1
+
+            Result:
+                36 => [0, 1, 2]
+                 8 => [0, 2, 0]
+                10 => [2, 2, 0]
+                17 => [1, 0, 1]
+
+            NOTE: This is the inverse of the documentation in `build_encoded_indexers_map`
+        '''
+        assert bit_offset_encoders.dtype == np.uint64
+        assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
+        assert encoded_arr.ndim == 1 # Encodings are always 1D
+
+        # TODO: 64 is not correct! It can be larger if encoding_can_overflow
+        starts = bit_offset_encoders
+        stops = np.concatenate((starts[1:], np.array([64], dtype=np.uint64)))
+        lens = stops - starts
+        masks = [x for x in (1 << lens) - 1]
+
+        target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=np.uint64)
+
+        for i in range(len(bit_offset_encoders)):
+            target[i] = (encoded_arr >> starts[i]) & masks[i]
+
+        target.flags.writeable = False
+        return target

@@ -4,7 +4,8 @@ import numpy as np
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.index import I, Index
+from static_frame.core.index import Index
+from static_frame.core.util import ufunc_unique1d
 
 
 class IndexHierarchySetResult(tp.NamedTuple):
@@ -35,7 +36,6 @@ def _index_hierarchy_set(
 
     remapped_indexers_lhs: tp.List[np.ndarray] = []
     remapped_indexers_rhs: tp.List[np.ndarray] = []
-    num_unique_elements_per_depth: tp.List[int] = []
 
     union_indices: tp.List[Index] = []
 
@@ -54,7 +54,6 @@ def _index_hierarchy_set(
         # map to a shared base
         union = idx_lhs.union(idx_rhs)
         union_indices.append(union)
-        num_unique_elements_per_depth.append(len(union))
 
         # Build up the mappings for both indices to the shared base
         remapped_lhs = idx_lhs._index_iloc_map(union)
@@ -68,7 +67,7 @@ def _index_hierarchy_set(
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
     bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
-        num_unique_elements_per_depth=num_unique_elements_per_depth
+        num_unique_elements_per_depth=list(map(len, union_indices)),
     )
     encoding_dtype = object if encoding_can_overflow else np.uint64
 
@@ -114,10 +113,17 @@ def index_hierarchy_intersection(
 
     if lhs.equals(rhs):
         return lhs if lhs.STATIC else lhs.__deepcopy__({})
+    elif not lhs.size or not rhs.size:
+        # If either are empty, the intersection will also be empty
+        return IndexHierarchy._from_empty(
+                (),
+                depth_reference=lhs.depth,
+                index_constructors=lhs._index_constructors,
+                )
 
     result = _index_hierarchy_set(lhs, rhs)
 
-    # Since the encoding utilitzed the union, we can safely ask for the
+    # Since the encoding utilized the union, we can safely ask for the
     # intersection between the mappings
     mask = np.in1d(result.lhs_encodings, result.rhs_encodings)
 
@@ -134,30 +140,27 @@ def index_hierarchy_intersection(
 
 def index_hierarchy_union(
         lhs: IndexHierarchy,
-        *rhs: IndexHierarchy,
+        rhs: IndexHierarchy,
     ) -> IndexHierarchy:
     '''
     Equivalent to:
 
-        >>> for ih in rhs:
-        >>>     lhs |= ih
+        >>> lhs |= rhs
 
     Note:
         The result is not guaranteed to be sorted.
     '''
-
-    if len(rhs) != 1:
-        raise NotImplementedError('only one rhs supported')
-
-    [rhs] = rhs
-
-    if lhs.equals(rhs):
+    if lhs.equals(rhs) or not rhs.size:
         return lhs if lhs.STATIC else lhs.__deepcopy__({})
+    elif not lhs.size:
+        rhs_copy = rhs if rhs.STATIC else rhs.__deepcopy__({})
+        return rhs_copy.rename(lhs.name)
 
     result = _index_hierarchy_set(lhs, rhs)
 
-    # Since the encoding utilitzed the union, we can safely ask for the
-    # intersection between the mappings
+    # Since the encoding utilized the union, we can safely ask for the which
+    # values only appear in the rhs
+    # Heavy
     unique_to_rhs = np.in1d(result.rhs_encodings, result.lhs_encodings, invert=True)
 
     # We can now build up our new IndexHierarchy from each component.
@@ -205,7 +208,14 @@ def index_hierarchy_difference(
     [rhs] = rhs
 
     if lhs.equals(rhs):
-        return IndexHierarchy._from_empty((), depth_reference=lhs.depth)
+        return IndexHierarchy._from_empty(
+                (),
+                depth_reference=lhs.depth,
+                index_constructors=lhs._index_constructors,
+                )
+    elif not lhs.size or not rhs.size:
+        # If either are empty, the difference will be the same as lhs
+        return lhs if lhs.STATIC else lhs.__deepcopy__({})
 
     result = _index_hierarchy_set(lhs, rhs)
 
@@ -220,4 +230,80 @@ def index_hierarchy_difference(
         name=lhs.name,
         own_blocks=True,
         index_constructors=lhs._index_constructors,
+    )
+
+
+def index_hierarchy_union_many(
+        lhs: IndexHierarchy,
+        *others: IndexHierarchy,
+    ) -> IndexHierarchy:
+    '''
+    Equivalent to:
+
+        >>> for ih in rhs:
+        >>>     lhs |= ih
+
+    Note:
+        The result is not guaranteed to be sorted.
+    '''
+    if lhs._recache:
+        lhs._update_array_cache()
+
+    remapped_indexers_lhs: tp.List[np.ndarray] = []
+    remapped_indexers_others: tp.List[tp.List[np.ndarray]] = [[] for _ in others]
+
+    union_indices: tp.List[Index] = []
+
+    for i in range(lhs.depth):
+        idx_lhs = lhs.index_at_depth(i)
+        indexer_lhs = lhs.indexer_at_depth(i)
+
+        # Determine the union of both indices, to ensure that both indexers can
+        # map to a shared base
+        union = idx_lhs.union(*(rhs.index_at_depth(i) for rhs in others))
+        union_indices.append(union)
+
+        # Build up the mappings for both indices to the shared base
+        remapped_lhs = idx_lhs._index_iloc_map(union)
+
+        # Apply that mapping to the both indexers
+        remapped_indexers_lhs.append(remapped_lhs[indexer_lhs])
+
+        for j, rhs in enumerate(others):
+            idx_rhs = rhs.index_at_depth(i)
+            indexer_rhs = rhs.indexer_at_depth(i)
+
+            remapped_rhs = idx_rhs._index_iloc_map(union)
+            remapped_indexers_others[j].append(remapped_rhs[indexer_rhs])
+
+    # Our encoding scheme requires that we know the number of unique elements
+    # for each union depth
+    # `num_unique_elements_per_depth` is used as a bit union for the encodings
+    bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
+        num_unique_elements_per_depth=list(map(len, union_indices)),
+    )
+    encoding_dtype = object if encoding_can_overflow else np.uint64
+
+    remapped_indexers_lhs = np.array(remapped_indexers_lhs, dtype=encoding_dtype)
+    remapped_indexers_others = [
+        np.array(remapped_indexers_rhs, dtype=encoding_dtype) for remapped_indexers_rhs in remapped_indexers_others
+    ]
+
+    def _encode_indexers(indexers: np.ndarray) -> np.ndarray:
+        # See HierarchicalLocMap docs for more details on the encoding scheme
+        return np.bitwise_or.reduce(indexers.T << bit_offset_encoders, axis=1)
+
+    lhs_encodings = _encode_indexers(remapped_indexers_lhs)
+    rhs_encodings = [
+        _encode_indexers(remapped_indexers_rhs) for remapped_indexers_rhs in remapped_indexers_others
+    ]
+
+    union_encodings = ufunc_unique1d(np.hstack((lhs_encodings, *rhs_encodings)))
+
+    union_indexers = HierarchicalLocMap.unpack_encoding(union_encodings, bit_offset_encoders)
+
+    return IndexHierarchy(
+        indices=union_indices,
+        indexers=union_indexers,
+        name=lhs.name,
     )
