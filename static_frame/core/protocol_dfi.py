@@ -214,7 +214,6 @@ class DFIColumn(Column):
         else:
             yield self
 
-
     def get_buffers(self) -> ColumnBuffers:
         kind = self._array.dtype.kind
         if kind in ('f', 'c', 'm', 'M'):
