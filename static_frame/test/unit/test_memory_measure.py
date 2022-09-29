@@ -1,9 +1,13 @@
 import unittest
+from sys import getsizeof
 
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
 
+from static_frame.core.memory_measure import MaterializedArray
+from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.memory_measure import MemoryMeasure
+from static_frame.core.memory_measure import getsizeof_total
 from static_frame.test.test_case import TestCase
 
 _iter_iterable = MemoryMeasure._iter_iterable
@@ -11,6 +15,7 @@ _iter_slots = MemoryMeasure._iter_slots
 nested_sizable_elements = MemoryMeasure.nested_sizable_elements
 
 class TestUnit(TestCase):
+
     #---------------------------------------------------------------------------
     # MemoryMeasure._iter_iterable
 
@@ -290,6 +295,58 @@ class TestUnit(TestCase):
         obj = FrozenAutoMap([2, 3, 4])
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
 
+    #---------------------------------------------------------------------------
+    def test_measure_format_a(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        mempty = MaterializedArray(empty, data_only=True)
+        ma1 = MaterializedArray(a1, data_only=True)
+
+        self.assertEqual(getsizeof_total(mempty,
+                format=MeasureFormat.MATERIALIZED_DATA),
+                0)
+        self.assertEqual(getsizeof_total(empty,
+                format=MeasureFormat.MATERIALIZED_DATA),
+                0)
+
+        self.assertEqual(getsizeof_total(ma1,
+                format=MeasureFormat.MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+        self.assertEqual(getsizeof_total(a1,
+                format=MeasureFormat.MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+        self.assertEqual(getsizeof_total(a2,
+                format=MeasureFormat.MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+
+    def test_measure_format_b(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(getsizeof_total(empty,
+                format=MeasureFormat.MATERIALIZED),
+                getsizeof(None) + getsizeof(empty), # this is just the GC component
+                )
+
+        self.assertEqual(getsizeof_total(a1,
+                format=MeasureFormat.MATERIALIZED),
+                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                )
+
+        self.assertEqual(getsizeof_total(a2,
+                format=MeasureFormat.MATERIALIZED),
+                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                )
+
+
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

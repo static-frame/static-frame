@@ -1,5 +1,6 @@
 import typing as tp
 from collections import abc
+from enum import Enum
 from itertools import chain
 from sys import getsizeof
 
@@ -7,18 +8,35 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
 
+
 class MaterializedArray:
     '''Wrapper of array that delivers the sizeof as the fully realized size, ignoring any potential sharing of memory.
     '''
 
-    __slots__ = ('_array',)
+    __slots__ = (
+            '_array',
+            '_data_only',
+            )
     BASE_ARRAY_BYTES = getsizeof(np.array(()))
 
-    def __init__(self, array: np.ndarray):
+    def __init__(self,
+            array: np.ndarray,
+            data_only: bool = False,
+            ):
         self._array = array
+        self._data_only = data_only
 
     def __sizeof__(self) -> int:
+        if self._data_only:
+            # NOTE: when called with getsizeof, the value here is
+            return self._array.nbytes # type: ignore
         return self.BASE_ARRAY_BYTES + self._array.nbytes # type: ignore
+
+class MeasureFormat(str, Enum):
+    LOCAL = 'local' # only the array data unique to the array, ignoring referenced data
+    SHARED = 'shared' # array data unique to the array and any referenced array data
+    MATERIALIZED = 'materialized' # ignore sharing get overall size based on data footprint
+    MATERIALIZED_DATA = 'materialized_data' # just get data foot print, ignore all other components
 
 
 class MemoryMeasure:
@@ -58,6 +76,7 @@ class MemoryMeasure:
     def nested_sizable_elements(cls,
             obj: tp.Any,
             *,
+            format: MeasureFormat = MeasureFormat.SHARED,
             seen: tp.Set[int],
             ) -> tp.Iterator[tp.Any]:
         '''
@@ -67,39 +86,58 @@ class MemoryMeasure:
         if id(obj) in seen:
             return
         seen.add(id(obj))
-        is_array = obj.__class__ is np.ndarray
 
-        if is_array and obj.dtype.kind != DTYPE_OBJECT_KIND:
-            pass # non-object arrays report included elements
-        else:
-            for el in cls._iter_iterable(obj):
-                yield from cls.nested_sizable_elements(el, seen=seen)
+        if obj.__class__ is np.ndarray:
 
-        for el in cls._iter_slots(obj):
-            yield from cls.nested_sizable_elements(el, seen=seen)
+            if format in (MeasureFormat.MATERIALIZED, MeasureFormat.MATERIALIZED_DATA):
+                obj = MaterializedArray(obj, data_only=format is MeasureFormat.MATERIALIZED_DATA)
 
-        if is_array and obj.base is not None:
-            # include the base array for numpy slices / views only if that base has not been seen
-            yield from cls.nested_sizable_elements(obj.base, seen=seen)
+            else:
+                if obj.dtype.kind != DTYPE_OBJECT_KIND:
+                    pass # non-object arrays report included elements
+                else: # only iter over object arrays
+                    for el in cls._iter_iterable(obj):
+                        yield from cls.nested_sizable_elements(el, seen=seen, format=format)
 
+                if obj.base is not None:
+                    # include the base array for numpy slices / views only if that base has not been seen
+                    yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
+
+        elif obj.__class__ is MaterializedArray:
+            # if a MaterializedArray was passed direclty in
+            pass
+
+        else: # not array
+            for el in cls._iter_iterable(obj): # will not yield anything if no __iter__
+                yield from cls.nested_sizable_elements(el, seen=seen, format=format)
+            # arrays do not have slots
+            for el in cls._iter_slots(obj):
+                yield from cls.nested_sizable_elements(el, seen=seen, format=format)
+
+        # import ipdb; ipdb.set_trace()
         yield obj
 
-# Options for expression array usage:
-# local: only the data used for the array, ignoring referenced data
-# shared: include shared data, which will not be double counted if it is used somewhere else
-# materialized: represent size as the array and the byte data it would take without sharing
-# data only: ignore everything but materialized array data
+
 
 def getsizeof_total(
         obj: tp.Any,
         *,
+        format: MeasureFormat = MeasureFormat.SHARED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
         ) -> int:
     '''
     Returns the total size of the object and its references, including nested refrences
     '''
     seen = set() if seen is None else seen
-    total = sum(getsizeof(el) for el in
-            MemoryMeasure.nested_sizable_elements(obj, seen=seen))
-    return total
 
+    def gen() -> tp.Iterator[int]:
+        for component in MemoryMeasure.nested_sizable_elements(obj, seen=seen, format=format):
+            # import ipdb; ipdb.set_trace()
+            if format is MeasureFormat.MATERIALIZED_DATA:
+                if component.__class__ is MaterializedArray:
+                    yield component.__sizeof__() # call directly to avoid garbage collector ovehead
+                # ignore all other components
+            else:
+                yield getsizeof(component)
+
+    return sum(gen())
