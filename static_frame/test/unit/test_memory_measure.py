@@ -329,20 +329,19 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(getsizeof_total(empty,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(empty),
+                getsizeof(None) + getsizeof(empty), # this is just the GC component
                 )
 
         self.assertEqual(getsizeof_total(a1,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(empty) + a1.nbytes,
+                getsizeof(None) + getsizeof(empty) + a1.nbytes,
                 )
 
         self.assertEqual(getsizeof_total(a2,
                 format=MeasureFormat.MATERIALIZED),
-                getsizeof(empty) + a1.nbytes,
+                getsizeof(None) + getsizeof(empty) + a1.nbytes,
                 )
 
     def test_measure_format_c(self) -> None:

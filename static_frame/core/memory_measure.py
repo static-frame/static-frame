@@ -147,8 +147,8 @@ def getsizeof_total(
         for component in MemoryMeasure.nested_sizable_elements(obj, seen=seen, format=format):
             # import ipdb; ipdb.set_trace()
             # if format is MF.MATERIALIZED_DATA:
-            if component.__class__ is MaterializedArray:
-                yield component.__sizeof__() # call directly to avoid gc ovehead
+            if format.value.data_only and component.__class__ is MaterializedArray:
+                yield component.__sizeof__() # call directly to avoid gc ovehead addition
                 # ignore all other components
             else:
                 yield getsizeof(component)
