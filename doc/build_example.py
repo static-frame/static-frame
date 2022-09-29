@@ -327,10 +327,13 @@ class ExGen:
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-        attr = row['signature_no_args'] # drop paren
-        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
-        yield f'{name} = {ctr}'
-        yield f'{name}.{attr}'
+        attr = row['signature_no_args']
+        if attr == 'mloc':
+            pass
+        else:
+            ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+            yield f'{name} = {ctr}'
+            yield f'{name}.{attr}'
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -1643,6 +1646,10 @@ class ExGenFrame(ExGen):
         elif attr == '__bool__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"bool(f)"
+        elif attr == '__dataframe__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield f'dfi = f.{attr}'
+            yield f"tuple(dfi.get_columns())"
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
