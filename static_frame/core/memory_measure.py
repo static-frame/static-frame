@@ -10,16 +10,41 @@ import numpy as np
 from static_frame.core.util import DTYPE_OBJECT_KIND
 
 class MFConfig(NamedTuple):
-    data_only: bool # only array byte payloads, or all objects
-    local_only: bool # only data locally owned by arrays, or all refereenced data
+    local_only: bool # only data locally owned by arrays, or all referenced data
     materialized: bool # measure byte payload nbytes (regardless of sharing)
+    data_only: bool # only array byte payloads, or all objects
 
 class MeasureFormat(Enum):
-    LOCAL = MFConfig(data_only=False, local_only=True, materialized=False)
-    LOCAL_MATERIALIZED_DATA = MFConfig(data_only=True, local_only=True, materialized=True)
-    SHARED = MFConfig(data_only=False, local_only=False, materialized=False)
-    MATERIALIZED = MFConfig(data_only=False, local_only=False, materialized=True)
-    MATERIALIZED_DATA = MFConfig(data_only=True, local_only=False, materialized=True)
+    LOCAL = MFConfig(
+            local_only=True,
+            materialized=False,
+            data_only=False,
+            )
+    LOCAL_MATERIALIZED = MFConfig(
+            local_only=True,
+            materialized=True,
+            data_only=False,
+            )
+    LOCAL_MATERIALIZED_DATA = MFConfig(
+            local_only=True,
+            materialized=True,
+            data_only=True,
+            )
+    SHARED = MFConfig(
+            local_only=False,
+            materialized=False,
+            data_only=False,
+            )
+    SHARED_MATERIALIZED = MFConfig(
+            local_only=False,
+            materialized=True,
+            data_only=False,
+            )
+    SHARED_MATERIALIZED_DATA = MFConfig(
+            local_only=False,
+            materialized=True,
+            data_only=True,
+            )
 
 
 class MaterializedArray:
