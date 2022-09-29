@@ -14200,6 +14200,13 @@ class TestUnit(TestCase):
                 (((3, 'z'), 0), ((3, None), 1), ((2, 'z'), 2), ((2, None), 3), ((1, 'z'), 4), ((1, None), 5))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_dfi_a(self) -> None:
+        f = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        dfi = f.__dataframe__()
+        self.assertEqual(dfi.num_columns(), 8)
+        self.assertEqual(dfi.num_rows(), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
