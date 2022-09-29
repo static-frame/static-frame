@@ -301,8 +301,8 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        mempty = MaterializedArray(empty, data_only=True)
-        ma1 = MaterializedArray(a1, data_only=True)
+        mempty = MaterializedArray(empty, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
 
         self.assertEqual(getsizeof_total(mempty,
                 format=MeasureFormat.MATERIALIZED_DATA),
@@ -382,6 +382,27 @@ class TestUnit(TestCase):
         self.assertEqual(getsizeof_total(a2,
                 format=MeasureFormat.SHARED),
                 getsizeof(a2) + getsizeof(a1),
+                )
+
+
+    def test_measure_format_e(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(getsizeof_total(empty,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                0,
+                )
+
+        self.assertEqual(getsizeof_total(a1,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+
+        self.assertEqual(getsizeof_total(a2,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                0,
                 )
 
         # import ipdb; ipdb.set_trace()

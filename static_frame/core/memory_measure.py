@@ -2,11 +2,24 @@ import typing as tp
 from collections import abc
 from enum import Enum
 from itertools import chain
+from typing import NamedTuple
 from sys import getsizeof
 
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
+
+class MFConfig(NamedTuple):
+    data_only: bool # only array byte payloads, or all objects
+    local_only: bool # only data locally owned by arrays, or all refereenced data
+    materialized: bool # measure byte payload nbytes (regardless of sharing)
+
+class MeasureFormat(Enum):
+    LOCAL = MFConfig(data_only=False, local_only=True, materialized=False)
+    LOCAL_MATERIALIZED_DATA = MFConfig(data_only=True, local_only=True, materialized=True)
+    SHARED = MFConfig(data_only=False, local_only=False, materialized=False)
+    MATERIALIZED = MFConfig(data_only=False, local_only=False, materialized=True)
+    MATERIALIZED_DATA = MFConfig(data_only=True, local_only=False, materialized=True)
 
 
 class MaterializedArray:
@@ -15,42 +28,29 @@ class MaterializedArray:
 
     __slots__ = (
             '_array',
-            '_data_only',
+            '_format',
             )
     BASE_ARRAY_BYTES = getsizeof(np.array(()))
 
     def __init__(self,
             array: np.ndarray,
-            data_only: bool = False,
+            format: MeasureFormat = MeasureFormat.LOCAL,
             ):
         self._array = array
-        self._data_only = data_only
+        self._format = format
 
     def __sizeof__(self) -> int:
-        if self._data_only:
-            # NOTE: when called with getsizeof, the value here is
-            return self._array.nbytes # type: ignore
-        return self.BASE_ARRAY_BYTES + self._array.nbytes # type: ignore
+        size = 0
+        if self._format.value.local_only and self._array.base is not None:
+            pass # all data referenced externally
+        else:
+            size += self._array.nbytes # type: ignore
 
+        if not self._format.value.data_only:
+            size += self.BASE_ARRAY_BYTES
 
-# data only / all object components
-# local / shared : arrays only, do we include reference data
-# materialized / not: arrays only, just measure nbytes
+        return size # type: ignore
 
-from typing import NamedTuple
-
-class MFConfig(NamedTuple):
-    data_only: bool
-    local_only: bool
-    materialized: bool
-
-class MeasureFormat(Enum):
-    LOCAL = MFConfig(data_only=False, local_only=True, materialized=False) # only the array data unique to the array, ignoring referenced data
-    SHARED = MFConfig(data_only=False, local_only=False, materialized=False) # array data unique to the array and any referenced array data
-    MATERIALIZED = MFConfig(data_only=False, local_only=False, materialized=True) # ignore sharing get overall size based on data footprint
-    MATERIALIZED_DATA = MFConfig(data_only=True, local_only=False, materialized=True) # just get data foot print, ignore all other components
-
-MF = MeasureFormat
 
 
 class MemoryMeasure:
@@ -104,8 +104,7 @@ class MemoryMeasure:
         if obj.__class__ is np.ndarray:
 
             if format.value.materialized:
-                obj = MaterializedArray(obj, data_only=format.value.data_only)
-
+                obj = MaterializedArray(obj, format=format)
             else:
                 # non-object arrays report included elements
                 if obj.dtype.kind == DTYPE_OBJECT_KIND:
@@ -127,7 +126,6 @@ class MemoryMeasure:
             for el in cls._iter_slots(obj):
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
 
-        # import ipdb; ipdb.set_trace()
         yield obj
 
 
@@ -135,7 +133,7 @@ class MemoryMeasure:
 def getsizeof_total(
         obj: tp.Any,
         *,
-        format: MF = MF.SHARED,
+        format: MeasureFormat = MeasureFormat.SHARED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
         ) -> int:
     '''
@@ -146,10 +144,8 @@ def getsizeof_total(
     def gen() -> tp.Iterator[int]:
         for component in MemoryMeasure.nested_sizable_elements(obj, seen=seen, format=format):
             # import ipdb; ipdb.set_trace()
-            # if format is MF.MATERIALIZED_DATA:
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
-                # ignore all other components
             else:
                 yield getsizeof(component)
 
