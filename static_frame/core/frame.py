@@ -7602,7 +7602,7 @@ class Frame(ContainerOperand):
         '''
         Return Frame version of this Frame, which (as the Frame is immutable) is self.
         '''
-        return self._to_frame(Frame, name=name) #type: ignore
+        return self._to_frame(Frame, name=name)
 
     def to_frame_he(self,
             *,
@@ -8679,7 +8679,7 @@ class FrameHE(Frame):
         '''
         Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
         '''
-        return self._to_frame(FrameHE, name=name)
+        return self._to_frame(FrameHE, name=name)  #type: ignore [return-value]
 
     def to_frame(self,
             *,
