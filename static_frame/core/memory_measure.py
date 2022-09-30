@@ -167,7 +167,7 @@ class MemoryMeasure:
 
         yield obj
 
-
+``
 def getsizeof_total(
         obj: tp.Any,
         *,
@@ -215,6 +215,6 @@ def memory_display(
             gen(),
             columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
             )
-    if data_label:
+    if size_label:
         f = f.iter_element().apply(bytes_to_size_label)
     return f # type: ignore
