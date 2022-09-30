@@ -9,6 +9,7 @@ from typing import NamedTuple
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
+from static_frame.core.util import bytes_to_data_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -35,29 +36,32 @@ class MeasureFormat(Enum):
             materialized=True,
             data_only=True,
             )
-    SHARED = MFConfig(
+    # NOTE MFConfig(local_only=True, materialized=False, data_only=True) is invalid
+
+    REFERENCED = MFConfig(
             local_only=False,
             materialized=False,
             data_only=False,
             )
-    SHARED_MATERIALIZED = MFConfig(
+    REFERENCED_MATERIALIZED = MFConfig(
             local_only=False,
             materialized=True,
             data_only=False,
             )
-    SHARED_MATERIALIZED_DATA = MFConfig(
+    REFERENCED_MATERIALIZED_DATA = MFConfig(
             local_only=False,
             materialized=True,
             data_only=True,
             )
+    # NOTE MFConfig(local_only=False, materialized=False, data_only=True) is invalid
 
 FORMAT_TO_DISPLAY = {
-        MeasureFormat.LOCAL: 'local',
-        MeasureFormat.LOCAL_MATERIALIZED: 'local_material',
-        MeasureFormat.LOCAL_MATERIALIZED_DATA: 'local_material_data',
-        MeasureFormat.SHARED: 'shared',
-        MeasureFormat.SHARED_MATERIALIZED: 'shared_material',
-        MeasureFormat.SHARED_MATERIALIZED_DATA: 'shared_material_data',
+        MeasureFormat.LOCAL: 'L',
+        MeasureFormat.LOCAL_MATERIALIZED: 'LM',
+        MeasureFormat.LOCAL_MATERIALIZED_DATA: 'LMD',
+        MeasureFormat.REFERENCED: 'R',
+        MeasureFormat.REFERENCED_MATERIALIZED: 'RM',
+        MeasureFormat.REFERENCED_MATERIALIZED_DATA: 'RMD',
         }
 
 class MaterializedArray:
@@ -127,7 +131,7 @@ class MemoryMeasure:
     def nested_sizable_elements(cls,
             obj: tp.Any,
             *,
-            format: MeasureFormat = MeasureFormat.SHARED,
+            format: MeasureFormat = MeasureFormat.REFERENCED,
             seen: tp.Set[int],
             ) -> tp.Iterator[tp.Any]:
         '''
@@ -165,20 +169,10 @@ class MemoryMeasure:
         yield obj
 
 
-def bytes_to_data_label(size_bytes: int) -> str:
-    if size_bytes == 0:
-        return '0B'
-    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
-    i = int(math.floor(math.log(size_bytes, 1024)))
-    p = math.pow(1024, i)
-    s = round(size_bytes / p, 2)
-    return f'{s} {size_name[i]}'
-
-
 def getsizeof_total(
         obj: tp.Any,
         *,
-        format: MeasureFormat = MeasureFormat.SHARED,
+        format: MeasureFormat = MeasureFormat.REFERENCED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
         ) -> int:
     '''

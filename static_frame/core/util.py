@@ -609,6 +609,16 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
+def bytes_to_data_label(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return '0B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return f'{s} {size_name[i]}'
+
+
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
@@ -693,7 +703,7 @@ class PairRight(Pair):
 #             yield v
 #         last = v
 
-def _gen_skip_middle(
+def gen_skip_middle(
         forward_iter: CallableToIterType,
         forward_count: int,
         reverse_iter: CallableToIterType,
