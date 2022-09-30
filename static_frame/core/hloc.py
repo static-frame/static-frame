@@ -5,6 +5,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import key_to_str
 
+
 class HLocMeta(type):
 
     def __getitem__(cls, key: GetItemKeyType) -> 'HLoc':
