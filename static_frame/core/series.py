@@ -2907,7 +2907,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
-            name=name,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
