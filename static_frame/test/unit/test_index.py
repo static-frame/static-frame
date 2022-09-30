@@ -31,6 +31,24 @@ from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
+    def test_iloc_repr(self) -> None:
+        self.assertEqual(repr(ILoc[1]), '<ILoc[1]>')
+        self.assertEqual(repr(ILoc[1,]), '<ILoc[1]>')
+        self.assertEqual(repr(ILoc[1, 2]), '<ILoc[1,2]>')
+        self.assertEqual(repr(ILoc[:, 1]), '<ILoc[:,1]>')
+        self.assertEqual(repr(ILoc[:, 1, 2]), '<ILoc[:,1,2]>')
+        self.assertEqual(repr(ILoc[1:2, :]), '<ILoc[1:2,:]>')
+        self.assertEqual(repr(ILoc[1:2, :2]), '<ILoc[1:2,:2]>')
+        self.assertEqual(repr(ILoc[1:2, :2, :3]), '<ILoc[1:2,:2,:3]>')
+        self.assertEqual(repr(ILoc[::1]), '<ILoc[:]>')
+        self.assertEqual(repr(ILoc[1:, 1:2, 1:2:3, :2, :2:3, ::3]), '<ILoc[1:,1:2,1:2:3,:2,:2:3,::3]>')
+        # self.assertEqual(repr(ILoc[()]), '<ILoc[()]>')
+        self.assertEqual(repr(ILoc[(1,),]), '<ILoc[(1,)]>')
+        self.assertEqual(repr(ILoc[(),]), '<ILoc[()]>')
+        self.assertEqual(repr(ILoc[:]), '<ILoc[:]>')
+        self.assertEqual(repr(ILoc[:, :]), '<ILoc[:,:]>')
+        self.assertEqual(repr(ILoc[:, :, 4]), '<ILoc[:,:,4]>')
+
     def test_positions_allocator_a(self) -> None:
 
         a1 = PositionsAllocator.get(3)

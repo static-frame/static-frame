@@ -77,6 +77,8 @@ from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import union1d
+from static_frame.core.util import key_to_str
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -106,6 +108,12 @@ class ILoc(metaclass=ILocMeta):
 
     def __init__(self, key: GetItemKeyType):
         self.key = key
+
+    def __repr__(self) -> str:
+        if isinstance(self.key, tuple):
+            return f'<ILoc[{",".join(map(key_to_str, self.key))}]>'
+        return f'<ILoc[{key_to_str(self.key)}]>'
+
 
 
 def immutable_index_filter(index: I) -> IndexBase:
