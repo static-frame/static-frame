@@ -1,7 +1,6 @@
 import typing as tp
 
 from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import key_to_str
 
