@@ -9704,8 +9704,10 @@ class TestUnit(TestCase):
         from datetime import date
         f = Frame.from_element(1, columns=IndexDate([date.today()]), index=[1])
         s = f[sf.ILoc[-1]]
-        f = s.to_frame(index_constructor=sf.IndexDate)
-        import ipdb; ipdb.set_trace()
+        f = s.to_frame(columns_constructor=sf.IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((np.datetime64('2022-09-30'), ((1, 1),)),)
+                )
 
     #---------------------------------------------------------------------------
 
