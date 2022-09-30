@@ -184,7 +184,6 @@ def getsizeof_total(
                 seen=seen,
                 format=format,
                 ):
-            # print(type(component))
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
             else:
@@ -199,7 +198,7 @@ def memory_display(
         obj: tp.Any,
         components: tp.Sequence[str],
         *,
-        data_label: bool = True,
+        size_label: bool = True,
         ) -> 'Frame':
 
     from static_frame.core.frame import Frame

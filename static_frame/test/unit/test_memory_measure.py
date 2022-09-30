@@ -328,22 +328,28 @@ class TestUnit(TestCase):
 
     def test_measure_format_b(self) -> None:
         empty = np.array(())
-        a1 = np.array((1, 2), dtype=np.int64)
-        a2 = a1[:]
+        mempty = MaterializedArray(empty, format=MeasureFormat.REFERENCED_MATERIALIZED)
 
+        a1 = np.array((1, 2), dtype=np.int64)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.REFERENCED_MATERIALIZED)
+
+        a2 = a1[:]
+        ma2 = MaterializedArray(a2, format=MeasureFormat.REFERENCED_MATERIALIZED)
+
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(getsizeof_total(empty,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
-                getsizeof(None) + getsizeof(empty), # this is just the GC component
+                getsizeof(mempty),
                 )
 
         self.assertEqual(getsizeof_total(a1,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
-                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                getsizeof(ma1)
                 )
 
         self.assertEqual(getsizeof_total(a2,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
-                getsizeof(None) + getsizeof(empty) + a1.nbytes,
+                getsizeof(ma2)
                 )
 
     def test_measure_format_c(self) -> None:
