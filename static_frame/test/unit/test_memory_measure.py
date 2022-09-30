@@ -418,19 +418,23 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
+        mempty = MaterializedArray(empty, format=MeasureFormat.LOCAL_MATERIALIZED)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED)
+        ma2 = MaterializedArray(a2, format=MeasureFormat.LOCAL_MATERIALIZED)
+
         self.assertEqual(memory_total(empty,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
-                getsizeof(None) + getsizeof(empty),
+                getsizeof(mempty),
                 )
 
         self.assertEqual(memory_total(a1,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
-                getsizeof(None) + getsizeof(a1),
+                getsizeof(ma1),
                 )
 
         self.assertEqual(memory_total(a2,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
-                getsizeof(None) + getsizeof(a2),
+                getsizeof(ma2),
                 )
 
     #---------------------------------------------------------------------------
