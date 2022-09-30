@@ -973,6 +973,16 @@ class IndexHierarchy(IndexBase):
         '''
         return self.__copy__()
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, str]]:
+        return (('Indices', self._indices),
+                ('Indexers', self._indexers),
+                ('Blocks', self._blocks),
+                ('Values', self._values),
+                )
+
+
+
     # --------------------------------------------------------------------------
     # name interface
 

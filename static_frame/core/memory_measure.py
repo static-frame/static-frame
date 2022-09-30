@@ -110,7 +110,7 @@ class MemoryMeasure:
                 yield from chain.from_iterable(obj.items())
             else:
                 # The full size of the object is included in its getsizeof call
-                # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
+                # e.g. SF Containers, FrozenAutoMap, integer numpy arrays, int, float, etc.
                 pass
 
     @staticmethod
@@ -132,11 +132,14 @@ class MemoryMeasure:
             *,
             format: MeasureFormat = MeasureFormat.REFERENCED,
             seen: tp.Set[int],
+            skip_parent: bool = False,
             ) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _iter_iterable) and the sizable
         attributes listed in its slots. The resulting generator is in pre-order and includes the parent object at the end.
         '''
+        from static_frame.core.container import ContainerBase
+
         if id(obj) in seen:
             return
         seen.add(id(obj))
@@ -154,25 +157,27 @@ class MemoryMeasure:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
 
-        if obj.__class__ is MaterializedArray:
-            # if a MaterializedArray was passed direclty in
+        if obj.__class__ is np.ndarray or obj.__class__ is MaterializedArray:
+            # classes that naturally report total size without introspection of iterables or slots
             pass
-        elif obj.__class__ is not np.ndarray:
+        else:
             # elif not format.value.data_only: # not array
-            for el in cls._iter_iterable(obj): # will not yield anything if no __iter__
+            for el in cls._iter_iterable(obj): # will not yield if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
             # arrays do not have slots
             for el in cls._iter_slots(obj):
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
 
-        yield obj
+        if not skip_parent:
+            yield obj
 
 
-def getsizeof_total(
+def memory_total(
         obj: tp.Any,
         *,
         format: MeasureFormat = MeasureFormat.REFERENCED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
+        skip_parent: bool = False,
         ) -> int:
     '''
     Returns the total size of the object and its references, including nested refrences
@@ -183,6 +188,7 @@ def getsizeof_total(
         for component in MemoryMeasure.nested_sizable_elements(obj,
                 seen=seen,
                 format=format,
+                skip_parent=skip_parent,
                 ):
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
@@ -194,22 +200,26 @@ def getsizeof_total(
 
 def memory_display(
         obj: tp.Any,
-        components: tp.Sequence[str],
+        label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
         *,
         size_label: bool = True,
         ) -> 'Frame':
-
+    '''
+    Args:
+        label_component_pairs: provide paris of label, attribute component
+    '''
     from static_frame.core.frame import Frame
 
-    parts = chain((getattr(obj, c) for c in components), (obj,))
+    parts = chain(label_component_pairs, (('Total', obj),))
 
     def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
-        for part, label in zip(parts, tuple(components) + ('total',)):
+
+        for label, part in parts:
             sizes = []
             for format in MeasureFormat:
                 # NOTE: not sharing seen accross evaluations
-                sizes.append(getsizeof_total(part, format=format))
-            yield (label, part.__class__.__name__), sizes
+                sizes.append(memory_total(part, format=format))
+            yield label, sizes
 
     f = Frame.from_records_items(
             gen(),

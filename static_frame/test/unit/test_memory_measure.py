@@ -8,7 +8,7 @@ from automap import FrozenAutoMap  # pylint: disable=E0611
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.memory_measure import MemoryMeasure
-from static_frame.core.memory_measure import getsizeof_total
+from static_frame.core.memory_measure import memory_total
 from static_frame.core.memory_measure import memory_display
 from static_frame.test.test_case import TestCase
 
@@ -306,22 +306,22 @@ class TestUnit(TestCase):
         mempty = MaterializedArray(empty, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
         ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
 
-        self.assertEqual(getsizeof_total(mempty,
+        self.assertEqual(memory_total(mempty,
                 format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 0)
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 0)
 
-        self.assertEqual(getsizeof_total(ma1,
+        self.assertEqual(memory_total(ma1,
                 format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
@@ -337,17 +337,17 @@ class TestUnit(TestCase):
         ma2 = MaterializedArray(a2, format=MeasureFormat.REFERENCED_MATERIALIZED)
 
         # import ipdb; ipdb.set_trace()
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(mempty),
                 )
 
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(ma1)
                 )
 
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(ma2)
                 )
@@ -357,17 +357,17 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.LOCAL),
                 getsizeof(empty),
                 )
 
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.LOCAL),
                 getsizeof(a1),
                 )
 
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.LOCAL),
                 getsizeof(a2),
                 )
@@ -377,17 +377,17 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.REFERENCED),
                 getsizeof(empty),
                 )
 
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.REFERENCED),
                 getsizeof(a1),
                 )
 
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.REFERENCED),
                 getsizeof(a2) + getsizeof(a1),
                 )
@@ -398,17 +398,17 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
                 0,
                 )
 
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
 
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
                 0,
                 )
@@ -418,28 +418,45 @@ class TestUnit(TestCase):
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
-        self.assertEqual(getsizeof_total(empty,
+        self.assertEqual(memory_total(empty,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
                 getsizeof(None) + getsizeof(empty),
                 )
 
-        self.assertEqual(getsizeof_total(a1,
+        self.assertEqual(memory_total(a1,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
                 getsizeof(None) + getsizeof(a1),
                 )
 
-        self.assertEqual(getsizeof_total(a2,
+        self.assertEqual(memory_total(a2,
                 format=MeasureFormat.LOCAL_MATERIALIZED),
                 getsizeof(None) + getsizeof(a2),
                 )
 
     #---------------------------------------------------------------------------
 
-    def test_memory_display(self) -> None:
+
+    def test_memory_display_a(self) -> None:
         f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
 
-        size = getsizeof_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
-        post = memory_display(f, ('_index', '_columns', '_blocks'))
+        # size = memory_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+        post = memory_display(f,
+                (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
+                size_label=False,
+                )
+        self.assertEqual(post.loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
+
+        import ipdb; ipdb.set_trace()
+
+# <Frame>
+# <Index> L       LM      LMD     R        RM      RMD     <<U3>
+# <Index>
+# Index   1.55 KB 1.59 KB 1.37 KB 9.65 KB  1.71 KB 1.49 KB
+# Columns 208.0 B 224.0 B 112.0 B 8.3 KB   288.0 B 176.0 B
+# Values  3.87 KB 4.0 KB  3.12 KB 3.87 KB  4.0 KB  3.12 KB
+# Total   5.66 KB 5.83 KB 4.63 KB 13.75 KB 6.02 KB 4.82 KB
+# <<U7>   <<U7>   <<U7>   <<U7>   <<U8>    <<U7>   <<U7>
+
         # import ipdb; ipdb.set_trace()
 
 

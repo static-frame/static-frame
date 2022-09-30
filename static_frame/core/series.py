@@ -587,6 +587,10 @@ class Series(ContainerOperand):
     #             own_index=True,
     #             )
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, str]]:
+        return (('Index', self._index), ('Values', self.values))
+
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''

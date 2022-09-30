@@ -3009,6 +3009,13 @@ class Frame(ContainerOperand):
     #     '''
     #     return self.__copy__() #type: ignore
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, str]]:
+        return (('Index', self._index),
+                ('Columns', self._columns),
+                ('Blocks', self._blocks),
+                )
+
     #---------------------------------------------------------------------------
     # external protocols
 
