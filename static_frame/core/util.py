@@ -616,6 +616,7 @@ def bytes_to_size_label(size_bytes: int) -> str:
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
     i = int(math.floor(math.log(size_bytes, 1024)))
     p = math.pow(1024, i)
+    s: tp.Union[int, float]
     if size_name[i] == 'B':
         s = size_bytes
     else:

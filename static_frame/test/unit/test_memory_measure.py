@@ -446,7 +446,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post.loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
 
-        import ipdb; ipdb.set_trace()
 
 # <Frame>
 # <Index> L       LM      LMD     R        RM      RMD     <<U3>
