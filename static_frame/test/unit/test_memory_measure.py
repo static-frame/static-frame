@@ -307,22 +307,22 @@ class TestUnit(TestCase):
         ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
 
         self.assertEqual(getsizeof_total(mempty,
-                format=MeasureFormat.SHARED_MATERIALIZED_DATA),
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 0)
         self.assertEqual(getsizeof_total(empty,
-                format=MeasureFormat.SHARED_MATERIALIZED_DATA),
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 0)
 
         self.assertEqual(getsizeof_total(ma1,
-                format=MeasureFormat.SHARED_MATERIALIZED_DATA),
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
         self.assertEqual(getsizeof_total(a1,
-                format=MeasureFormat.SHARED_MATERIALIZED_DATA),
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
         self.assertEqual(getsizeof_total(a2,
-                format=MeasureFormat.SHARED_MATERIALIZED_DATA),
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
                 a1.nbytes,
                 )
 
@@ -332,17 +332,17 @@ class TestUnit(TestCase):
         a2 = a1[:]
 
         self.assertEqual(getsizeof_total(empty,
-                format=MeasureFormat.SHARED_MATERIALIZED),
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(None) + getsizeof(empty), # this is just the GC component
                 )
 
         self.assertEqual(getsizeof_total(a1,
-                format=MeasureFormat.SHARED_MATERIALIZED),
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(None) + getsizeof(empty) + a1.nbytes,
                 )
 
         self.assertEqual(getsizeof_total(a2,
-                format=MeasureFormat.SHARED_MATERIALIZED),
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
                 getsizeof(None) + getsizeof(empty) + a1.nbytes,
                 )
 
@@ -372,17 +372,17 @@ class TestUnit(TestCase):
         a2 = a1[:]
 
         self.assertEqual(getsizeof_total(empty,
-                format=MeasureFormat.SHARED),
+                format=MeasureFormat.REFERENCED),
                 getsizeof(empty),
                 )
 
         self.assertEqual(getsizeof_total(a1,
-                format=MeasureFormat.SHARED),
+                format=MeasureFormat.REFERENCED),
                 getsizeof(a1),
                 )
 
         self.assertEqual(getsizeof_total(a2,
-                format=MeasureFormat.SHARED),
+                format=MeasureFormat.REFERENCED),
                 getsizeof(a2) + getsizeof(a1),
                 )
 
