@@ -1,84 +1,91 @@
 import unittest
+from sys import getsizeof
 
+import frame_fixtures as ff
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
 
-from static_frame.core.util import MemoryMeasurements
+from static_frame.core.memory_measure import MaterializedArray
+from static_frame.core.memory_measure import MeasureFormat
+from static_frame.core.memory_measure import MemoryMeasure
+from static_frame.core.memory_measure import memory_display
+from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
-_unsized_children = MemoryMeasurements._unsized_children
-_sizable_slot_attrs = MemoryMeasurements._sizable_slot_attrs
-nested_sizable_elements = MemoryMeasurements.nested_sizable_elements
+_iter_iterable = MemoryMeasure._iter_iterable
+_iter_slots = MemoryMeasure._iter_slots
+nested_sizable_elements = MemoryMeasure.nested_sizable_elements
 
 class TestUnit(TestCase):
+
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._unsized_children
+    # MemoryMeasure._iter_iterable
 
     def test_unsized_children_none(self) -> None:
-        self.assertEqual(tuple(_unsized_children(None)), ())
+        self.assertEqual(tuple(_iter_iterable(None)), ())
 
     def test_unsized_children_int(self) -> None:
-        self.assertEqual(tuple(_unsized_children(3)), ())
+        self.assertEqual(tuple(_iter_iterable(3)), ())
 
     def test_unsized_children_str(self) -> None:
-        self.assertEqual(tuple(_unsized_children('abc')), ())
+        self.assertEqual(tuple(_iter_iterable('abc')), ())
 
     def test_unsized_children_float(self) -> None:
-        self.assertEqual(tuple(_unsized_children(4.5)), ())
+        self.assertEqual(tuple(_iter_iterable(4.5)), ())
 
     def test_unsized_children_numpy_array_int(self) -> None:
         obj = np.array([2, 3, 4], dtype=np.int64)
-        self.assertEqual(tuple(_unsized_children(obj)), ())
+        self.assertEqual(tuple(_iter_iterable(obj)), ())
 
     def test_unsized_children_numpy_array_object(self) -> None:
-        obj = np.array([2, 'a', 4], dtype=np.object)
-        self.assertEqual(tuple(_unsized_children(obj)), (2, 'a', 4))
+        obj = np.array([2, 'a', 4], dtype=object)
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, 'a', 4))
 
     def test_unsized_children_tuple(self) -> None:
         obj = (2, 3, 4)
-        self.assertEqual(tuple(_unsized_children(obj)), (2, 3, 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, 3, 4))
 
     def test_unsized_children_tuple_nested(self) -> None:
         obj = (2, ('a', 'b', ('c', 'd')), 4)
-        self.assertEqual(tuple(_unsized_children(obj)), (2, ('a', 'b', ('c', 'd')), 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, ('a', 'b', ('c', 'd')), 4))
 
     def test_unsized_children_list(self) -> None:
         obj = [2, 3, 4]
-        self.assertEqual(tuple(_unsized_children(obj)), (2, 3, 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, 3, 4))
 
     def test_unsized_children_list_nested(self) -> None:
         obj = [2, ('a', 'b', ('c', 'd')), 4]
-        self.assertEqual(tuple(_unsized_children(obj)), (2, ('a', 'b', ('c', 'd')), 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, ('a', 'b', ('c', 'd')), 4))
 
     def test_unsized_children_set(self) -> None:
         obj = set((2, 3, 4))
-        self.assertEqual(tuple(_unsized_children(obj)), (2, 3, 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, 3, 4))
 
     def test_unsized_children_frozenset(self) -> None:
         obj = frozenset((2, 3, 4))
-        self.assertEqual(tuple(_unsized_children(obj)), (2, 3, 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), (2, 3, 4))
 
     def test_unsized_children_dict(self) -> None:
         obj = { 'a': 2, 'b': 3, 'c': 4 }
-        self.assertEqual(tuple(_unsized_children(obj)), ('a', 2, 'b', 3, 'c', 4))
+        self.assertEqual(tuple(_iter_iterable(obj)), ('a', 2, 'b', 3, 'c', 4))
 
     def test_unsized_children_frozenautomap(self) -> None:
         obj = FrozenAutoMap([2, 3, 4])
-        self.assertEqual(tuple(_unsized_children(obj)), ())
+        self.assertEqual(tuple(_iter_iterable(obj)), ())
 
     def test_unsized_children_numpy_array_object_complex_has_unique_ids(self) -> None:
         # make sure that all elements are looped through in a multi-dimensional object array
         obj = np.array([np.array([None, None, i]) for i in range(10)])
-        self.assertEqual(len(set(id(el) for el in _unsized_children(obj))), 11)
+        self.assertEqual(len(set(id(el) for el in _iter_iterable(obj))), 11)
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements._sizable_slot_attrs
+    # MemoryMeasure._iter_slots
 
     def test_sizable_slot_attrs_empty(self) -> None:
         class A:
             pass
         obj = A()
-        self.assertEqual(tuple(_sizable_slot_attrs(obj)), ())
+        self.assertEqual(tuple(_iter_slots(obj)), ())
 
     def test_sizable_slot_attrs_simple(self) -> None:
         class A:
@@ -96,7 +103,7 @@ class TestUnit(TestCase):
                 self.dumplings = 'd'
                 self.eggs = 'e'
         obj = A()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+        self.assertEqual(frozenset(_iter_slots(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
 
     def test_sizable_slot_attrs_not_all_initialized(self) -> None:
         class A:
@@ -112,7 +119,7 @@ class TestUnit(TestCase):
                 self.bananas = 'b'
                 self.eggs = 'e'
         obj = A()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'e')))
+        self.assertEqual(frozenset(_iter_slots(obj)), frozenset(('a', 'b', 'e')))
 
     def test_sizable_slot_attrs_inheritance_1_layer(self) -> None:
         class A:
@@ -135,7 +142,7 @@ class TestUnit(TestCase):
                 self.dumplings = 'd'
                 self.eggs = 'e'
         obj = B()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+        self.assertEqual(frozenset(_iter_slots(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
 
     def test_sizable_slot_attrs_inheritance_1_layer_overlapping_slots(self) -> None:
         class A:
@@ -149,7 +156,6 @@ class TestUnit(TestCase):
                 self.bananas = 'b'
         class B(A):
             __slots__ = ( # pylint: disable=W0244 # intentionally redefining 'carrots'
-                'carrots',
                 'dumplings',
                 'eggs'
             )
@@ -159,8 +165,8 @@ class TestUnit(TestCase):
                 self.dumplings = 'd'
                 self.eggs = 'e'
         obj = B()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
-        self.assertEqual(len(tuple(_sizable_slot_attrs(obj))), 5)
+        self.assertEqual(frozenset(_iter_slots(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+        self.assertEqual(len(tuple(_iter_slots(obj))), 5)
 
     def test_sizable_slot_attrs_inheritance_2_layers(self) -> None:
         class A:
@@ -188,7 +194,7 @@ class TestUnit(TestCase):
                 super().__init__()
                 self.eggs = 'e'
         obj = C()
-        sizables = frozenset(_sizable_slot_attrs(obj))
+        sizables = frozenset(_iter_slots(obj))
         self.assertEqual(sizables, frozenset(('a', 'b', 'c', 'd', 'e')))
 
     def test_sizable_slot_attrs_inheritance_multiple(self) -> None:
@@ -214,7 +220,7 @@ class TestUnit(TestCase):
                 super().__init__()
                 self.eggs = 'e'
         obj = C()
-        self.assertEqual(frozenset(_sizable_slot_attrs(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
+        self.assertEqual(frozenset(_iter_slots(obj)), frozenset(('a', 'b', 'c', 'd', 'e')))
 
     # NOTE: From https://docs.python.org/3/reference/datamodel.html#notes-on-using-slots
     # > Multiple inheritance with multiple slotted parent classes can be used, but only one
@@ -222,7 +228,7 @@ class TestUnit(TestCase):
     # >   slot layouts) - violations raise TypeError.
 
     #---------------------------------------------------------------------------
-    # MemoryMeasurements.nested_sizable_elements
+    # MemoryMeasure.nested_sizable_elements
 
     def test_nested_sizable_elements_none(self) -> None:
         self.assertEqual(tuple(nested_sizable_elements(None, seen=set())), (None,))
@@ -241,7 +247,7 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
 
     def test_nested_sizable_elements_numpy_array_object(self) -> None:
-        obj = np.array([2, 'a', 4], dtype=np.object)
+        obj = np.array([2, 'a', 4], dtype=object)
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 'a', 4, obj))
 
     def test_nested_sizable_elements_tuple(self) -> None:
@@ -290,6 +296,171 @@ class TestUnit(TestCase):
     def test_nested_sizable_elements_frozenautomap(self) -> None:
         obj = FrozenAutoMap([2, 3, 4])
         self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (obj,))
+
+    #---------------------------------------------------------------------------
+    def test_measure_format_a(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        mempty = MaterializedArray(empty, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+
+        self.assertEqual(memory_total(mempty,
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
+                0)
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
+                0)
+
+        self.assertEqual(memory_total(ma1,
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.REFERENCED_MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+
+    def test_measure_format_b(self) -> None:
+        empty = np.array(())
+        mempty = MaterializedArray(empty, format=MeasureFormat.REFERENCED_MATERIALIZED)
+
+        a1 = np.array((1, 2), dtype=np.int64)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.REFERENCED_MATERIALIZED)
+
+        a2 = a1[:]
+        ma2 = MaterializedArray(a2, format=MeasureFormat.REFERENCED_MATERIALIZED)
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
+                getsizeof(mempty),
+                )
+
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
+                getsizeof(ma1)
+                )
+
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.REFERENCED_MATERIALIZED),
+                getsizeof(ma2)
+                )
+
+    def test_measure_format_c(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.LOCAL),
+                getsizeof(empty),
+                )
+
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.LOCAL),
+                getsizeof(a1),
+                )
+
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.LOCAL),
+                getsizeof(a2),
+                )
+
+    def test_measure_format_d(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.REFERENCED),
+                getsizeof(empty),
+                )
+
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.REFERENCED),
+                getsizeof(a1),
+                )
+
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.REFERENCED),
+                getsizeof(a2) + getsizeof(a1),
+                )
+
+
+    def test_measure_format_e(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                0,
+                )
+
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                a1.nbytes,
+                )
+
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.LOCAL_MATERIALIZED_DATA),
+                0,
+                )
+
+    def test_measure_format_f(self) -> None:
+        empty = np.array(())
+        a1 = np.array((1, 2), dtype=np.int64)
+        a2 = a1[:]
+
+        mempty = MaterializedArray(empty, format=MeasureFormat.LOCAL_MATERIALIZED)
+        ma1 = MaterializedArray(a1, format=MeasureFormat.LOCAL_MATERIALIZED)
+        ma2 = MaterializedArray(a2, format=MeasureFormat.LOCAL_MATERIALIZED)
+
+        self.assertEqual(memory_total(empty,
+                format=MeasureFormat.LOCAL_MATERIALIZED),
+                getsizeof(mempty),
+                )
+
+        self.assertEqual(memory_total(a1,
+                format=MeasureFormat.LOCAL_MATERIALIZED),
+                getsizeof(ma1),
+                )
+
+        self.assertEqual(memory_total(a2,
+                format=MeasureFormat.LOCAL_MATERIALIZED),
+                getsizeof(ma2),
+                )
+
+    #---------------------------------------------------------------------------
+
+
+    def test_memory_display_a(self) -> None:
+        f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
+
+        # size = memory_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+        post = memory_display(f,
+                (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
+                size_label=False,
+                )
+        self.assertEqual(post.loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
+
+
+# <Frame>
+# <Index> L       LM      LMD     R        RM      RMD     <<U3>
+# <Index>
+# Index   1.55 KB 1.59 KB 1.37 KB 9.65 KB  1.71 KB 1.49 KB
+# Columns 208.0 B 224.0 B 112.0 B 8.3 KB   288.0 B 176.0 B
+# Values  3.87 KB 4.0 KB  3.12 KB 3.87 KB  4.0 KB  3.12 KB
+# Total   5.66 KB 5.83 KB 4.63 KB 13.75 KB 6.02 KB 4.82 KB
+# <<U7>   <<U7>   <<U7>   <<U7>   <<U8>    <<U7>   <<U7>
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

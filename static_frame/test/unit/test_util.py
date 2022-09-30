@@ -18,7 +18,6 @@ from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
-from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
 from static_frame.core.util import _isin_2d
 from static_frame.core.util import _ufunc_logical_skipna
@@ -42,6 +41,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
+from static_frame.core.util import gen_skip_middle
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
@@ -89,7 +89,7 @@ class TestUnit(TestCase):
         forward = lambda: [3, 2, 5]
         reverse = lambda: [3, 2, 5]
 
-        post = _gen_skip_middle(
+        post = gen_skip_middle(
                 forward_iter=forward,
                 forward_count=3,
                 reverse_iter=reverse,
@@ -98,7 +98,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(list(post), [3, 2, 5, -1, 5, 2, 3])
 
-        post = _gen_skip_middle(
+        post = gen_skip_middle(
                 forward_iter=forward,
                 forward_count=2,
                 reverse_iter=reverse,
