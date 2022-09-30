@@ -8,6 +8,7 @@ from typing import NamedTuple
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
@@ -71,7 +72,7 @@ class MaterializedArray:
             '_array',
             '_format',
             )
-    BASE_ARRAY_BYTES = getsizeof(np.array(()))
+    BASE_ARRAY_BYTES = getsizeof(EMPTY_ARRAY)
 
     def __init__(self,
             array: np.ndarray,
