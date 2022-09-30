@@ -3,11 +3,13 @@ from sys import getsizeof
 
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
+import frame_fixtures as ff
 
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.memory_measure import MemoryMeasure
 from static_frame.core.memory_measure import getsizeof_total
+from static_frame.core.memory_measure import memory_display
 from static_frame.test.test_case import TestCase
 
 _iter_iterable = MemoryMeasure._iter_iterable
@@ -424,6 +426,12 @@ class TestUnit(TestCase):
                 format=MeasureFormat.LOCAL_MATERIALIZED),
                 getsizeof(None) + getsizeof(a2),
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_memory_display(self) -> None:
+        f = ff.parse('s(5,8)|i(I,str)')
+        post = memory_display(f, ('_index', '_columns', '_blocks'))
 
 
 

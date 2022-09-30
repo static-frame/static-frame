@@ -9,6 +9,10 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+
+
 class MFConfig(NamedTuple):
     local_only: bool # only data locally owned by arrays, or all referenced data
     materialized: bool # measure byte payload nbytes (regardless of sharing)
@@ -46,6 +50,14 @@ class MeasureFormat(Enum):
             data_only=True,
             )
 
+FORMAT_TO_DISPLAY = {
+        MeasureFormat.LOCAL: 'local',
+        MeasureFormat.LOCAL_MATERIALIZED: 'local_material',
+        MeasureFormat.LOCAL_MATERIALIZED_DATA: 'local_material_data',
+        MeasureFormat.SHARED: 'shared',
+        MeasureFormat.SHARED_MATERIALIZED: 'shared_material',
+        MeasureFormat.SHARED_MATERIALIZED_DATA: 'shared_material_data',
+        }
 
 class MaterializedArray:
     '''Wrapper of array that delivers the sizeof as the fully realized size, ignoring any potential sharing of memory.
@@ -75,7 +87,6 @@ class MaterializedArray:
             size += self.BASE_ARRAY_BYTES
 
         return size # type: ignore
-
 
 
 class MemoryMeasure:
@@ -154,7 +165,6 @@ class MemoryMeasure:
         yield obj
 
 
-
 def getsizeof_total(
         obj: tp.Any,
         *,
@@ -175,3 +185,26 @@ def getsizeof_total(
                 yield getsizeof(component)
 
     return sum(gen())
+
+from itertools import chain
+
+def memory_display(
+        obj: tp.Any,
+        components: tp.Sequence[str],
+        ) -> 'Frame':
+    from static_frame.core.frame import Frame
+
+    parts = chain((getattr(obj, c) for c in components), (obj,))
+
+    def gen():
+        for part, label in zip(parts, tuple(components) + ('total',)):
+            sizes = []
+            for format in MeasureFormat:
+                # NOTE: not sharing seen accross evaluations
+                sizes.append(getsizeof_total(part, format=format))
+            yield (label, part.__class__.__name__), sizes
+
+    return Frame.from_records_items(
+            gen(),
+            columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
+            )
