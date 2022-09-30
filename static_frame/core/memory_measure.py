@@ -82,12 +82,12 @@ class MaterializedArray:
         if self._format.value.local_only and self._array.base is not None:
             pass # all data referenced externally
         else:
-            size += self._array.nbytes # type: ignore
+            size += self._array.nbytes
 
         if not self._format.value.data_only:
             size += self.BASE_ARRAY_BYTES
 
-        return size # type: ignore
+        return size
 
 
 class MemoryMeasure:
@@ -213,7 +213,7 @@ def memory_display(
 
     parts = chain((getattr(obj, c) for c in components), (obj,))
 
-    def gen():
+    def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
         for part, label in zip(parts, tuple(components) + ('total',)):
             sizes = []
             for format in MeasureFormat:
@@ -227,4 +227,4 @@ def memory_display(
             )
     if data_label:
         f = f.iter_element().apply(bytes_to_data_label)
-    return f
+    return f # type: ignore
