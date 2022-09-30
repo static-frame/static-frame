@@ -430,9 +430,11 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_memory_display(self) -> None:
-        f = ff.parse('s(5,8)|i(I,str)')
-        post = memory_display(f, ('_index', '_columns', '_blocks'))
+        f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
 
+        size = getsizeof_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
+        post = memory_display(f, ('_index', '_columns', '_blocks'))
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

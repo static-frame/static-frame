@@ -138,7 +138,6 @@ class MemoryMeasure:
         seen.add(id(obj))
 
         if obj.__class__ is np.ndarray:
-
             if format.value.materialized:
                 obj = MaterializedArray(obj, format=format)
             else:
@@ -151,11 +150,11 @@ class MemoryMeasure:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
 
-        elif obj.__class__ is MaterializedArray:
+        if obj.__class__ is MaterializedArray:
             # if a MaterializedArray was passed direclty in
             pass
-
-        elif not format.value.data_only: # not array
+        elif not obj.__class__ is np.ndarray:
+            # elif not format.value.data_only: # not array
             for el in cls._iter_iterable(obj): # will not yield anything if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
             # arrays do not have slots
@@ -163,6 +162,18 @@ class MemoryMeasure:
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
 
         yield obj
+
+
+import math
+
+def bytes_to_data_label(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return '0B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return f'{s} {size_name[i]}'
 
 
 def getsizeof_total(
@@ -177,8 +188,11 @@ def getsizeof_total(
     seen = set() if seen is None else seen
 
     def gen() -> tp.Iterator[int]:
-        for component in MemoryMeasure.nested_sizable_elements(obj, seen=seen, format=format):
-            # import ipdb; ipdb.set_trace()
+        for component in MemoryMeasure.nested_sizable_elements(obj,
+                seen=seen,
+                format=format,
+                ):
+            # print(type(component))
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
             else:
@@ -191,7 +205,10 @@ from itertools import chain
 def memory_display(
         obj: tp.Any,
         components: tp.Sequence[str],
+        *,
+        data_label: bool = True,
         ) -> 'Frame':
+
     from static_frame.core.frame import Frame
 
     parts = chain((getattr(obj, c) for c in components), (obj,))
@@ -204,7 +221,10 @@ def memory_display(
                 sizes.append(getsizeof_total(part, format=format))
             yield (label, part.__class__.__name__), sizes
 
-    return Frame.from_records_items(
+    f = Frame.from_records_items(
             gen(),
             columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
             )
+    if data_label:
+        f = f.iter_element().apply(bytes_to_data_label)
+    return f
