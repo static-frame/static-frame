@@ -213,7 +213,6 @@ def memory_display(
     parts = chain(label_component_pairs, (('Total', obj),))
 
     def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
-
         for label, part in parts:
             sizes = []
             for format in MeasureFormat:
@@ -221,10 +220,18 @@ def memory_display(
                 sizes.append(memory_total(part, format=format))
             yield label, sizes
 
+    if hasattr(obj, 'name') and obj.name is not None:
+        name = f'<{obj.__class__.__name__}: {obj.name}>'
+    else:
+        name = f'<{obj.__class__.__name__}>'
+
     f = Frame.from_records_items(
             gen(),
             columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
+            name=name,
             )
     if size_label:
-        f = f.iter_element().apply(bytes_to_size_label)
+        f = f.iter_element().apply(bytes_to_size_label, name=name)
     return f # type: ignore
+
+
