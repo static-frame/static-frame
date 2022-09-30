@@ -1,9 +1,10 @@
+import math
 import typing as tp
 from collections import abc
 from enum import Enum
 from itertools import chain
-from typing import NamedTuple
 from sys import getsizeof
+from typing import NamedTuple
 
 import numpy as np
 
@@ -164,8 +165,6 @@ class MemoryMeasure:
         yield obj
 
 
-import math
-
 def bytes_to_data_label(size_bytes: int) -> str:
     if size_bytes == 0:
         return '0B'
@@ -201,6 +200,7 @@ def getsizeof_total(
     return sum(gen())
 
 from itertools import chain
+
 
 def memory_display(
         obj: tp.Any,

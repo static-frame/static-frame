@@ -1,9 +1,9 @@
 import unittest
 from sys import getsizeof
 
+import frame_fixtures as ff
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable=E0611
-import frame_fixtures as ff
 
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
