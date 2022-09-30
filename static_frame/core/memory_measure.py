@@ -157,7 +157,7 @@ class MemoryMeasure:
         if obj.__class__ is MaterializedArray:
             # if a MaterializedArray was passed direclty in
             pass
-        elif not obj.__class__ is np.ndarray:
+        elif obj.__class__ is not np.ndarray:
             # elif not format.value.data_only: # not array
             for el in cls._iter_iterable(obj): # will not yield anything if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
@@ -190,8 +190,6 @@ def getsizeof_total(
                 yield getsizeof(component)
 
     return sum(gen())
-
-from itertools import chain
 
 
 def memory_display(
