@@ -9700,6 +9700,14 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_frame_to_frame_a(self) -> None:
+        from datetime import date
+        f = Frame.from_element(1, columns=IndexDate([date.today()]), index=[1])
+        s = f[sf.ILoc[-1]]
+        f = s.to_frame(index_constructor=sf.IndexDate)
+        import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
 
     def test_frame_to_frame_he_a(self) -> None:
 
