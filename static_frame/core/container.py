@@ -10,9 +10,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.memory_measure import memory_total
 from static_frame.core.memory_measure import memory_display
-from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.style_config import StyleConfig

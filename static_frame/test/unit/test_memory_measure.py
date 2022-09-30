@@ -8,8 +8,8 @@ from automap import FrozenAutoMap  # pylint: disable=E0611
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.memory_measure import MemoryMeasure
-from static_frame.core.memory_measure import memory_total
 from static_frame.core.memory_measure import memory_display
+from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
 _iter_iterable = MemoryMeasure._iter_iterable
