@@ -9,7 +9,7 @@ from typing import NamedTuple
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import bytes_to_data_label
+from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -220,5 +220,5 @@ def memory_display(
             columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
             )
     if data_label:
-        f = f.iter_element().apply(bytes_to_data_label)
+        f = f.iter_element().apply(bytes_to_size_label)
     return f # type: ignore

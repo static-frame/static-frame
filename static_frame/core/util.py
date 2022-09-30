@@ -609,7 +609,7 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
-def bytes_to_data_label(size_bytes: int) -> str:
+def bytes_to_size_label(size_bytes: int) -> str:
     if size_bytes == 0:
         return '0B'
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
@@ -618,7 +618,7 @@ def bytes_to_data_label(size_bytes: int) -> str:
     s = round(size_bytes / p, 2)
     return f'{s} {size_name[i]}'
 
-
+#-------------------------------------------------------------------------------
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
