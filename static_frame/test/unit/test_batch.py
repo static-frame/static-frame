@@ -226,7 +226,10 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='f2')
         b1 = Batch.from_frames((f1, f2))
-        self.assertTrue(repr(b1).startswith('<Batch at '))
+        self.assertEqual(repr(b1), ('<Batch max_workers=None>'))
+
+        b2 = Batch.from_frames((f1, f2), max_workers=3)
+        self.assertEqual(repr(b2), ('<Batch max_workers=3>'))
 
     #---------------------------------------------------------------------------
 
