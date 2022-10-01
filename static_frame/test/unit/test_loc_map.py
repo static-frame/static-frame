@@ -156,6 +156,27 @@ class TestHierarchicalLocMapUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             HierarchicalLocMap(indices=indices, indexers=indexers)
 
+    def test_init_d(self) -> None:
+        indices = [Index(tuple('ab')), Index(tuple('bc')), Index(tuple('cd'))]
+        indexers = np.array(
+            [
+                [0, 0, 1, 1, 0],
+                [0, 1, 0, 1, 1],
+                [0, 1, 0, 1, 1],
+                #--------------
+                #a, a, b, b, a
+                #b, c, b, c, c
+                #c, d, c, d, d
+            ]
+        )
+
+        try:
+            HierarchicalLocMap(indices=indices, indexers=indexers)
+        except ErrorInitIndexNonUnique as e:
+            assert e.args[0] == ('a', 'c', 'd')
+        else:
+            assert False, 'exception not raised'
+
     #---------------------------------------------------------------------------
 
     def test_build_offsets_and_overflow_a(self) -> None:

@@ -3538,7 +3538,10 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == 'from_index_items':
             yield f'ix1 = sf.Index({kwa(INDEX_INIT_A4)})'
             yield f'ix2 = sf.Index({kwa(INDEX_INIT_B1)})'
-            yield f'{iattr}(((ix1.name, ix1), (ix2.name, ix2)))'
+            yield f"ih1 = {iattr}(((ix1.name, ix1), (ix2.name, ix2)), name='ih1')"
+            yield f"ih1"
+            yield f"ih2 = {iattr}(((ix2.name, ix2), (ix1.name, ix1)), name='ih2')"
+            yield f"{iattr}(((ih1.name, ih1), (ih2.name, ih2)))"
         elif attr == 'from_labels':
             yield f'{iattr}({kwa(IH_INIT_FROM_LABELS_A)})'
         elif attr == 'from_labels_delimited':

@@ -1290,6 +1290,76 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_index_items(())
         self.assertEqual((0, 2), ih.shape)
 
+    def test_hierarchy_from_index_items_d(self) -> None:
+        ih1 = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        ih2 = IndexHierarchy.from_labels((('p', 0), ('q', 1)))
+        ih3 = IndexHierarchy.from_index_items((('a', ih1), ('b', ih2)))
+
+        assert ih3.shape == (len(ih1) + len(ih2), 3)
+
+        assert set(ih3._indices[0]) == {"a", "b"}
+        assert set(ih3._indices[1]) == {"x", "y", "p", "q"}
+        assert set(ih3._indices[2]) == {0, 1}
+
+        assert ih3._indices[1].equals(ih1._indices[0].union(ih2._indices[0]))
+        assert ih3._indices[2].equals(ih1._indices[1].union(ih2._indices[1]))
+
+        assert tuple(ih3) == (
+                ('a', 'x', 0),
+                ('a', 'y', 1),
+                ('b', 'p', 0),
+                ('b', 'q', 1),
+                )
+
+    def test_hierarchy_from_index_items_e(self) -> None:
+        ih1 = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        ih2 = IndexHierarchy.from_labels((('p', "2022-12-30"), ('q', "2022-12-31")), index_constructors=[Index, IndexDate])
+        ih3 = IndexHierarchy.from_index_items((('a', ih1), ('b', ih2)))
+
+        assert ih3.shape == (len(ih1) + len(ih2), 3)
+
+        assert set(ih3._indices[0]) == {"a", "b"}
+        assert set(ih3._indices[1]) == {"x", "y", "p", "q"}
+        # Note the downcast to Python date objects
+        assert set(ih3._indices[2]) == {0, 1, datetime.date(2022, 12, 30), datetime.date(2022, 12, 31)}
+
+        assert ih3._indices[1].equals(ih1._indices[0].union(ih2._indices[0]))
+
+        # Note the downcast effect here as well
+        assert set(ih3._indices[2]) == set(ih1._indices[1].union(ih2._indices[1]))
+
+        assert tuple(ih3) == (
+                ('a', 'x', 0),
+                ('a', 'y', 1),
+                ('b', 'p', datetime.date(2022, 12, 30)),
+                ('b', 'q', datetime.date(2022, 12, 31)),
+                )
+
+    def test_hierarchy_from_index_items_f(self) -> None:
+        ih = IndexHierarchy.from_labels((('x', 0), ('y', 1)))
+        idx = Index(('A', 'B', 'C'))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_index_items((('a', ih), ('b', idx)))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_index_items((('a', idx), ('b', ih)))
+
+    def test_hierarchy_from_index_items_g(self) -> None:
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+
+        ih = IndexHierarchy.from_index_items({"2020-12-30": idx1, "2020-12-31": idx2}.items(), index_constructor=IndexDate)
+
+        assert ih.shape == (len(idx1) + len(idx2), 2)
+        assert tuple(ih.astype(str)) == (
+                ('2020-12-30', 'A'),
+                ('2020-12-30', 'B'),
+                ('2020-12-30', 'C'),
+                ('2020-12-31', 'x'),
+                ('2020-12-31', 'y'),
+        )
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_labels_delimited_a(self) -> None:
