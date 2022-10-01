@@ -702,12 +702,15 @@ class IndexHierarchy(IndexBase):
                 if constructor != existing_index_constructors[i]:
                     existing_index_constructors[i] = cls._INDEX_CONSTRUCTOR
 
-
-        outer_level = np.hstack(
-                [
-                    np.repeat(val, repeats=reps)
+        outer_level, _ = iterable_to_array_1d(
+            itertools.chain.from_iterable(
+                (
+                    itertools.repeat(val, times=reps)
                     for val, reps in zip(labels, repeats)
-                ])
+                )
+            ),
+            count=sum(repeats),
+        )
         outer_level.flags.writeable = False
         assert len(outer_level) == sum(map(len, blocks)) # sanity check
 
