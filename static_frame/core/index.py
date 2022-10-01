@@ -1,95 +1,90 @@
 import typing as tp
-from itertools import zip_longest
-from copy import deepcopy
 from collections import Counter
+from copy import deepcopy
+from itertools import zip_longest
 
 import numpy as np
-
-from automap import AutoMap
-from automap import FrozenAutoMap
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-
+from automap import AutoMap  # pylint: disable=E0611
+from automap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import matmul
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
+from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_re import InterfaceRe
-
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_sample
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import concat_resolved
-
-from static_frame.core.util import dtype_from_element
+from static_frame.core.node_values import InterfaceValues
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import intersect1d
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import pos_loc_slice_to_iloc_slice
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import union1d
-from static_frame.core.util import argsort_array
-from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import UFunc
+from static_frame.core.util import argsort_array
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import DTYPE_NA_KINDS
-
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.loc_map import LocMap
-
+from static_frame.core.util import array_sample
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import intersect1d
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import key_to_str
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
+from static_frame.core.util import setdiff1d
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import union1d
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611 #pragma: no cover
-    from static_frame import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
+    import pandas  # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound=IndexBase)
 
@@ -113,6 +108,12 @@ class ILoc(metaclass=ILocMeta):
     def __init__(self, key: GetItemKeyType):
         self.key = key
 
+    def __repr__(self) -> str:
+        if isinstance(self.key, tuple):
+            return f'<ILoc[{",".join(map(key_to_str, self.key))}]>'
+        return f'<ILoc[{key_to_str(self.key)}]>'
+
+
 
 def immutable_index_filter(index: I) -> IndexBase:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
@@ -134,18 +135,17 @@ def mutable_immutable_index_filter(
     return index.__class__(index) # create new instance
 
 #-------------------------------------------------------------------------------
-_INDEX_SLOTS = (
+
+class Index(IndexBase):
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
+
+    __slots__ = (
         '_map',
         '_labels',
         '_positions',
         '_recache',
         '_name'
         )
-
-class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
-
-    __slots__ = _INDEX_SLOTS
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
@@ -158,6 +158,7 @@ class Index(IndexBase):
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
+    _NDIM: int = 1
 
     _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
@@ -363,7 +364,7 @@ class Index(IndexBase):
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         assert not self._recache # __deepcopy__ is implemented on derived GO class
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
         obj._labels = array_deepcopy(self._labels, memo) #type: ignore
         obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
@@ -371,7 +372,7 @@ class Index(IndexBase):
         obj._name = self._name # should be hashable/immutable
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     def __copy__(self: I) -> I:
         '''
@@ -607,6 +608,17 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
+
+    @property
+    def via_values(self) -> InterfaceValues['Index']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return InterfaceValues(self)
+
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
         '''
@@ -753,9 +765,9 @@ class Index(IndexBase):
         # We want to return these indices to match ar1 before it was sorted
         try:
             indexer = indexer[ar1_indexer]
-        except IndexError:
+        except IndexError as e:
             # Display the first missing element
-            raise KeyError(self.difference(other)[0])
+            raise KeyError(self.difference(other)[0]) from e
 
         indexer.flags.writeable = False
         return indexer
@@ -892,11 +904,11 @@ class Index(IndexBase):
                 try:
                     # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
                     result = self._positions[key]
-                except IndexError:
+                except IndexError as e:
                     # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
                     if is_array and key.dtype == DTYPE_BOOL: #type: ignore
                         raise # loc selection on Boolean array selection returns IndexError
-                    raise KeyError(key)
+                    raise KeyError(key) from e
                 # NOTE: not certain as to when a TypeError is raised here; might no longer be necessary
                 # except TypeError:
                 #     raise LocInvalid(f'Invalid loc: {key}')
@@ -985,8 +997,8 @@ class Index(IndexBase):
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
 
         if self._recache:
             self._update_array_cache()
@@ -1102,13 +1114,15 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: DepthLevelSpecifier = 0,
+            order_by_occurrence: bool = False,
             ) -> np.ndarray:
         '''
         Return a NumPy array of unique values.
 
         Args:
             depth_level: defaults to 0 for for a 1D Index.
+            order_by_occurrence: for 1D indices, this argument is a no-op. Provided for compatibility with IndexHierarchy.
 
         Returns:
             :obj:`numpy.ndarray`
@@ -1152,6 +1166,8 @@ class Index(IndexBase):
             return False
         if compare_name and self.name != other.name:
             return False
+        if self._map is None and other._map is None:
+            return True # have same length must be same integer range and dtype
         if compare_dtype and self.dtype != other.dtype:
             return False
         return arrays_equal(self.values, other.values, skipna=skipna)
@@ -1319,10 +1335,10 @@ class Index(IndexBase):
             *,
             index_constructor:
         '''
-        from static_frame import IndexHierarchy
-        from static_frame import IndexHierarchyGO
         from static_frame import Index
         from static_frame import IndexGO
+        from static_frame import IndexHierarchy
+        from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
         cls_depth = Index if self.STATIC else IndexGO
@@ -1351,6 +1367,7 @@ class Index(IndexBase):
         '''Return a Pandas Index.
         '''
         import pandas
+
         # must copy to remove immutability, decouple reference
         if self._map is None:
             return pandas.RangeIndex(self.__len__(), name=self._name)
@@ -1358,22 +1375,11 @@ class Index(IndexBase):
                 name=self._name)
 
 #-------------------------------------------------------------------------------
-_INDEX_GO_SLOTS = (
-        '_map',
-        '_labels',
-        '_positions',
-        '_recache',
-        '_name',
-        '_labels_mutable',
-        '_labels_mutable_dtype',
-        '_positions_mutable_count',
-        )
-
 
 class _IndexGOMixin:
 
     STATIC = False
-    # NOTE: must define in derived class or get TypeError: multiple bases have instance lay-out conflict
+    # NOTE: must define __slots__ in derived class or get TypeError: multiple bases have instance lay-out conflict
     __slots__ = ()
 
     _map: tp.Optional[AutoMap]
@@ -1388,18 +1394,18 @@ class _IndexGOMixin:
         if self._recache:
             self._update_array_cache()
 
-        obj = self.__new__(self.__class__)
+        obj = self.__class__.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo) #type: ignore
         obj._labels = array_deepcopy(self._labels, memo) #type: ignore
         obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
-        obj._recache = False
-        obj._name = self._name # should be hashable/immutable
+        obj._recache = False # pylint: disable=E0237
+        obj._name = self._name # pylint: disable=E0237
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     #---------------------------------------------------------------------------
     def _extract_labels(self,
@@ -1440,7 +1446,7 @@ class _IndexGOMixin:
                 self._labels_mutable,
                 dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
-        self._recache = False
+        self._recache = False # pylint: disable=E0237
 
     #---------------------------------------------------------------------------
     # grow only mutation
@@ -1473,7 +1479,7 @@ class _IndexGOMixin:
             self._map = AutoMap(self._labels_mutable)
 
         self._positions_mutable_count += 1
-        self._recache = True
+        self._recache = True # pylint: disable=E0237
 
     def extend(self, values: KeyIterableTypes) -> None:
         '''Append multiple values
@@ -1483,13 +1489,18 @@ class _IndexGOMixin:
         for value in values:
             self.append(value)
 
+INDEX_GO_LEAF_SLOTS = (
+        '_labels_mutable',
+        '_labels_mutable_dtype',
+        '_positions_mutable_count',
+        )
 
 class IndexGO(_IndexGOMixin, Index):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
     '''
 
     _IMMUTABLE_CONSTRUCTOR = Index
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 
 # update class attr on Index after class initialziation

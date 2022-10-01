@@ -1,23 +1,22 @@
 import os
 import sqlite3
 import typing as tp
-from fractions import Fraction
 from contextlib import suppress
-import numpy as np
+from fractions import Fraction
 
+import numpy as np
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import STORE_LABEL_DEFAULT
 
 
 class StoreSQLite(Store):
@@ -65,7 +64,7 @@ class StoreSQLite(Store):
                 )
 
         index = frame._index
-        columns = frame._columns
+        # columns = frame._columns
 
         if not include_index:
             create_primary_key = ''
@@ -121,11 +120,8 @@ class StoreSQLite(Store):
             for label, frame in items:
                 c = config_map[label]
 
-                # for interface compatibility with StoreXLSX, where label can be None
-                if label is STORE_LABEL_DEFAULT:
-                    label = 'None'
-                else:
-                    label = config_map.default.label_encode(label)
+                # if label is STORE_LABEL_DEFAULT this will raise
+                label = config_map.default.label_encode(label)
 
                 self._frame_to_table(frame=frame,
                         label=label,
@@ -155,12 +151,8 @@ class StoreSQLite(Store):
             for label in labels:
                 c = config_map[label]
 
-                if label is STORE_LABEL_DEFAULT:
-                    label_encoded = 'None'
-                    name = None
-                else:
-                    label_encoded = config_map.default.label_encode(label)
-                    name = label
+                label_encoded = config_map.default.label_encode(label)
+                name = label
 
                 query = f'SELECT * from "{label_encoded}"'
 

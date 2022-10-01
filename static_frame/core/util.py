@@ -1,7 +1,16 @@
+import contextlib
+import datetime
+import math
+import operator
+import os
+import tempfile
+import typing as tp
+import warnings
+from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
-from collections import Counter
+from copy import deepcopy
 from enum import Enum
 from functools import partial
 from functools import reduce
@@ -9,34 +18,25 @@ from io import StringIO
 from itertools import chain
 from itertools import zip_longest
 from os import PathLike
-from urllib import request
-from copy import deepcopy
 from types import TracebackType
+from urllib import request
 
-import contextlib
-import datetime
-import operator
-import os
-import tempfile
-import typing as tp
-import warnings
-
-from arraykit import resolve_dtype
-from arraykit import column_2d_filter
-
-from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
+from arraykit import column_2d_filter
+from arraykit import resolve_dtype
+from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import InvalidDatetime64Comparison
+from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -103,11 +103,21 @@ DTYPE_OBJECTABLE_KINDS = frozenset((
         'i', 'u' # int kinds
         ))
 
-# all dt64 units that tolist() to go to a compatible Python type
+# all dt64 units that tolist() to go to a compatible Python type. Note that datetime.date.MINYEAR, MAXYEAR sets a limit that is more narrow than dt64
 # NOTE: similar to DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO
 DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
+
+def is_objectable_dt64(array: np.ndarray) -> bool:
+    if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
+        return False
+    years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
+    if np.any(years < datetime.MINYEAR):
+        return False
+    if np.any(years > datetime.MAXYEAR):
+        return False
+    return True
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
@@ -144,8 +154,8 @@ STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
 
-() = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
+EMPTY_TUPLE: tp.Tuple[()] = ()
 
 # defaults to float64
 EMPTY_ARRAY = np.array((), dtype=None)
@@ -156,6 +166,10 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
+
+EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
+EMPTY_ARRAY_OBJECT.flags.writeable = False
+
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
@@ -282,6 +296,48 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
+
+def is_strict_int(value: tp.Any) -> bool:
+    '''Strict check that does not include bools as an int
+    '''
+    if value is None:
+        return False
+    if value.__class__ is bool or value.__class__ is np.bool_:
+        return False
+    return isinstance(value, INT_TYPES)
+
+def validate_depth_selection(
+        key: GetItemKeyType,
+        ) -> None:
+    '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
+
+    This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
+    '''
+    if key.__class__ is np.ndarray:
+        # let object dtype use iterable path
+        if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
+            return
+        elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
+            for e in key: # type: ignore
+                if not is_strict_int(e):
+                    raise KeyError(f'Cannot select depths by non integer: {e!r}')
+            return
+        raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
+    elif key.__class__ is slice:
+        if key.start is not None and not is_strict_int(key.start): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        if key.stop is not None and not is_strict_int(key.stop): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        return
+    elif isinstance(key, list):
+        # an iterable, or an object dtype array
+        for e in key:
+            if not is_strict_int(e):
+                raise KeyError(f'Cannot select depths by non integer: {e!r}')
+    else: # an element
+        if not is_strict_int(key):
+            raise KeyError(f'Cannot select depths by non integer: {key!r}')
+
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
@@ -416,15 +472,15 @@ class WarningsSilent:
     FILTER = [('ignore', None, Warning, None, 0)]
 
     def __enter__(self) -> None:
-        self.previous_warnings = warnings.filters #type: ignore
-        warnings.filters = self.FILTER #type: ignore
+        self.previous_warnings = warnings.filters
+        warnings.filters = self.FILTER
 
     def __exit__(self,
             type: tp.Type[BaseException],
             value: BaseException,
             traceback: TracebackType,
             ) -> None:
-        warnings.filters = self.previous_warnings #type: ignore
+        warnings.filters = self.previous_warnings
 
 #-------------------------------------------------------------------------------
 class UFuncCategory(Enum):
@@ -554,6 +610,20 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
+def bytes_to_size_label(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return '0 B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s: tp.Union[int, float]
+    if size_name[i] == 'B':
+        s = size_bytes
+    else:
+        s = round(size_bytes / p, 2)
+    return f'{s} ({size_name[i]})'
+
+#-------------------------------------------------------------------------------
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
@@ -638,7 +708,7 @@ class PairRight(Pair):
 #             yield v
 #         last = v
 
-def _gen_skip_middle(
+def gen_skip_middle(
         forward_iter: CallableToIterType,
         forward_count: int,
         reverse_iter: CallableToIterType,
@@ -1630,13 +1700,27 @@ def pos_loc_slice_to_iloc_slice(
             if key.stop >= length:
                 # while a valid slice of positions, loc lookups do not permit over-stating boundaries
                 raise LocInvalid(f'Invalid loc: {key}')
-        except TypeError: # if stop is not an int
-            raise LocInvalid(f'Invalid loc: {key}')
+        except TypeError as e: # if stop is not an int
+            raise LocInvalid(f'Invalid loc: {key}') from e
 
         stop = key.stop + 1
     return slice(start, stop, key.step)
 
 
+def key_to_str(key: GetItemKeyType) -> str:
+    if key.__class__ is not slice:
+        return str(key)
+    if key == NULL_SLICE:
+        return ':'
+
+    result = ':' if key.start is None else f'{key.start}:' # type: ignore [union-attr]
+
+    if key.stop is not None: # type: ignore [union-attr]
+        result += str(key.stop) # type: ignore [union-attr]
+    if key.step is not None and key.step != 1: # type: ignore [union-attr]
+        result += f':{key.step}' # type: ignore [union-attr]
+
+    return result
 
 #-------------------------------------------------------------------------------
 # dates
@@ -1664,7 +1748,7 @@ TD64_MS = np.timedelta64(1, 'ms')
 TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
+_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
@@ -1683,11 +1767,10 @@ def to_datetime64(
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
-                if dtype == DT64_YEAR:
-                    # convert to string as that is likely what is wanted
+                if dtype == DT64_YEAR: # convert to string as that is generally what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
-                    raise RuntimeError('attempting to create {} from an integer, which is generally not desired as the result will be offset from the epoch.'.format(dtype))
+                    raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
@@ -1699,7 +1782,7 @@ def to_datetime64(
         if dtype:
             # dtype can be either generic, or a matching specific dtype
             if dtype != np.datetime64 and dtype != dt.dtype:
-                raise RuntimeError(f'value ({dt}) is not a supported dtype ({dtype})')
+                raise InvalidDatetime64Initializer(f'value ({dt}) is not a supported dtype ({dtype})')
     return dt
 
 def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
@@ -2299,20 +2382,23 @@ def _ufunc_set_1d(
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
     if (array_is_str ^ other_is_str) or dtype.kind == 'O':
-        # NOTE: we convert applicable dt64 types to objects to permit date object to dt64 comparisons when  possible
-        if array_is_dt64 and np.datetime_data(array.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+        # NOTE: we convert applicable dt64 types to objects to permit date object to dt64 comparisons when possible
+        if array_is_dt64 and is_objectable_dt64(array):
             array = array.astype(DTYPE_OBJECT)
-        elif other_is_dt64 and np.datetime_data(other.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS:
+        elif other_is_dt64 and is_objectable_dt64(other):
             # the case of both is handled above
             other = other.astype(DTYPE_OBJECT)
 
-        # NOTE: taking a frozenset of dt64 arrays does not force elements to date/datetime objects
-        if is_union:
-            result = frozenset(array) | frozenset(other)
-        elif is_intersection:
-            result = frozenset(array) & frozenset(other)
-        else:
-            result = frozenset(array).difference(frozenset(other))
+        # NOTE: taking a frozenset of dt64 arrays does not force elements to date/datetime objects, which is what we want here
+        with WarningsSilent():
+            # NOTE: dt64 element comparisons will warn about elementwise comparison, even those they are elements
+            if is_union:
+                result = frozenset(array) | frozenset(other)
+            elif is_intersection:
+                result = frozenset(array) & frozenset(other)
+            else:
+                result = frozenset(array).difference(frozenset(other))
+
         # NOTE: try to sort, as set ordering is not stable
         try:
             result = sorted(result) #type: ignore
@@ -2461,7 +2547,7 @@ def _ufunc_set_2d(
 
     if width == 1:
         # let the function flatten the array, then reshape into 2D
-        post = func(array, other, **func_kwargs)  # type: ignore
+        post = func(array, other, **func_kwargs)
         post = post.reshape(len(post), width)
         post.flags.writeable = False
         return post
@@ -2473,7 +2559,7 @@ def _ufunc_set_2d(
     # creates a view of tuples for 1D operation
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
-    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
+    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width)
     post.flags.writeable = False
     return post
 
@@ -3103,7 +3189,7 @@ def write_optional_file(
     if f is None: # do not have a file object
         try:
             assert isinstance(fp, str)
-            with tp.cast(StringIO, open(fp, 'w')) as f:
+            with tp.cast(StringIO, open(fp, 'w', encoding='utf-8')) as f:
                 f.write(content)
         finally:
             if fd is not None:
@@ -3160,7 +3246,7 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''
     if isinstance(key, str) or not hasattr(key, '__len__'):
-        return [key]
+        return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
 
@@ -3171,6 +3257,3 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
-
-
-

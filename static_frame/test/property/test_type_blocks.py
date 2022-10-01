@@ -2,15 +2,12 @@ import typing as tp
 import unittest
 
 import numpy as np
-
-from hypothesis import strategies as st
 from hypothesis import given
-
-from static_frame.test.property import strategies as sfst
-
-from static_frame.test.test_case import TestCase
+from hypothesis import strategies as st
 
 from static_frame import TypeBlocks
+from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -116,10 +113,6 @@ class TestUnit(TestCase):
         # if the shapes are different, they cannot be block compatible
         if tb1.shape[1] != tb2.shape[1]:
             self.assertFalse(post1)
-
-    @unittest.skip('pending')
-    def test_concatenate_blocks(self) -> None:
-        pass
 
     @given(sfst.get_type_blocks())
     def test_consolidate_blocks(self, tb: TypeBlocks) -> None:

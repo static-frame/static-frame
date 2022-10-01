@@ -1,9 +1,8 @@
 from hypothesis import given
-from static_frame.test.test_case import TestCase
-
-from static_frame.test.property.strategies import get_index_hierarchy_any
 
 from static_frame import IndexHierarchy
+from static_frame.test.property.strategies import get_index_hierarchy_any
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):

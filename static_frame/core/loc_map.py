@@ -1,37 +1,35 @@
 import itertools
 import sys
 import typing as tp
-from functools import reduce
 from copy import deepcopy
+from functools import reduce
 
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import LocEmpty
-
+from static_frame.core.exception import LocInvalid
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
+from static_frame.core.util import DTYPE_UINT_DEFAULT
+from static_frame.core.util import EMPTY_ARRAY_INT
+from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
+from static_frame.core.util import EMPTY_SLICE
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import OPERATORS
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
-from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import INT_TYPES
-
+from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index #pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
 
 
 HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
@@ -41,6 +39,11 @@ LocEmptyInstance = LocEmpty()
 
 _ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
 _ZERO_PAD_ARRAY.flags.writeable = False
+
+
+class FirstDuplicatePosition(KeyError):
+    def __init__(self, first_dup: int) -> None:
+        self.first_dup = first_dup
 
 
 class LocMap:
@@ -224,7 +227,14 @@ class HierarchicalLocMap:
         self.bit_offset_encoders, self.encoding_can_overflow = self.build_offsets_and_overflow(
                 num_unique_elements_per_depth=list(map(len, indices))
                 )
-        self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+        try:
+            self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+        except FirstDuplicatePosition as e:
+            duplicate_labels = tuple(
+                    index[indexer[e.first_dup]]
+                    for (index, indexer) in zip(indices, indexers)
+                    )
+            raise ErrorInitIndexNonUnique(duplicate_labels) from None
 
     def __deepcopy__(self: _HLMap,
             memo: tp.Dict[int, tp.Any],
@@ -232,7 +242,7 @@ class HierarchicalLocMap:
         '''
         Return a deep copy of this IndexHierarchy.
         '''
-        obj: _HLMap = self.__new__(self.__class__)
+        obj: _HLMap = self.__class__.__new__(self.__class__)
         obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
         obj.encoded_indexer_map = deepcopy(self.encoded_indexer_map, memo)
@@ -342,7 +352,11 @@ class HierarchicalLocMap:
         try:
             return FrozenAutoMap(encoded_indexers.tolist()) # Automap is faster with Python lists :(
         except ValueError as e:
-            raise ErrorInitIndexNonUnique(*e.args) from None
+            # nonzero returns arrays of indices per dimension. We are 1D, so we
+            # will receive an array containing one other array. Of that inner
+            # array, we only need the first occurrence
+            [[first_duplicate, *_]] = np.nonzero(encoded_indexers == e.args[0])
+            raise FirstDuplicatePosition(first_duplicate) from None
 
     @staticmethod
     def is_single_element(element: tp.Hashable) -> bool:

@@ -3,21 +3,21 @@ import datetime
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.test.test_case import TestCase
-from static_frame.core.bus import Bus
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.yarn import Yarn
-from static_frame.core.frame import Frame
-from static_frame.test.test_case import temp_file
-from static_frame.core.exception import ErrorInitYarn
-from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.index_datetime import IndexDate
-from static_frame import ILoc
 from static_frame import HLoc
+from static_frame import ILoc
+from static_frame.core.bus import Bus
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.frame import Frame
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.yarn import Yarn
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):

@@ -76,7 +76,7 @@ from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
@@ -91,13 +91,15 @@ from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_values import InterfaceBatchValues
+from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
-from static_frame.core.store import StoreConfig as StoreConfig
-from static_frame.core.store import StoreConfigMap as StoreConfigMap
+from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
@@ -112,4 +114,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.7'
+__version__ = '0.9.15'

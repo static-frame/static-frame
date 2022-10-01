@@ -412,6 +412,7 @@ class DOC_TEMPLATE:
         Args:
             {FP}
             {STORE_CONFIG_MAP}
+            compression: Provide a zip compression setting using values from the Python ``zipfile`` module; ``zipfile.ZIP_DEFLATED`` is standard zlib compression; ``zipfile.ZIP_STORED`` disables compression and may give better performance at the cost of larger file sizes.
             '''
             )
 

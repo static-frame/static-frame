@@ -68,34 +68,6 @@ def interface(context, container=None, doc=False):
     dc = sf.DisplayConfig(cell_max_width_leftmost=99, cell_max_width=60, display_rows=99999, display_columns=99)
     print(f.display(dc))
 
-@invoke.task
-def example(context, container=None):
-    '''
-    Discover API members that have a code example.
-    '''
-    from static_frame.core.display_color import HexColor
-    from doc.source.conf import get_jinja_contexts
-
-    contexts = get_jinja_contexts()
-    defined = contexts['examples_defined']
-    signatures = set()
-
-    # discover all signatures; if it is defined, print in a darker color
-    for name, cls, frames in contexts['interface'].values():
-        for group, frame in frames:
-            for signature, row in frame.iter_tuple_items(axis=1):
-                target = f'{name}-{row.signature_no_args}'
-                signatures.add(target) # accumulate all signatures
-                if container and name != container:
-                    continue
-                if target in defined:
-                    print(HexColor.format_terminal(0x505050, target))
-                else:
-                    print(target)
-
-    for line in sorted(defined - signatures):
-        print(HexColor.format_terminal(0x00ccff, line))
-
 
 #-------------------------------------------------------------------------------
 
@@ -140,6 +112,11 @@ def mypy(context):
     '''
     context.run('mypy --strict')
 
+@invoke.task
+def isort(context):
+    '''Run isort as a check.
+    '''
+    context.run('isort static_frame --check')
 
 @invoke.task
 def lint(context):
@@ -147,10 +124,17 @@ def lint(context):
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, lint))
+@invoke.task(pre=(mypy, lint, isort))
 def quality(context):
     '''Perform all quality checks.
     '''
+
+@invoke.task
+def format(context):
+    '''Run mypy static analysis.
+    '''
+    context.run('isort static_frame')
+
 
 #-------------------------------------------------------------------------------
 

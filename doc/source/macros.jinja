@@ -1,29 +1,20 @@
 {# api_detail /////////////////////////////////////////////////////////////// #}
-{% macro api_detail(name, cls, frame_items, examples_defined) -%}
+{% macro api_detail(name, ig, ig_tag, frame_items, examples_defined, toc) -%}
 
-.. _api-detail-{{ name }}:
+{# `name`: str class name, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
 
-{{ name }}
-================================================================================
 
-Overview: :ref:`api-overview-{{ name }}`
+.. _api-detail-{{ name }}-{{ ig_tag }}:
 
-{# docs are on __init__, not the class, so this just provides an anchor for obj refs #}
-.. autoclass:: static_frame.{{cls.__name__}}
+Detail: {{ name }}: {{ ig }}
+--------------------------------------------------------------------------------
 
-{% for group, frame_sub in frame_items %}
+:ref:`api-overview-{{ name }}-{{ ig_tag }}`
 
-.. _api-detail-{{ name }}-{{ group }}:
-
-{{ name }}: {{ group }}
-................................................................................
-
-Overview: :ref:`api-overview-{{ name }}-{{ group }}`
-
-{% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
+{% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
 
 {# anchor for linking from overview #}
-.. _api-sig-{{ name }}-{{ row.signature_no_args }}:
+.. _api-sig-{{ name }}-{{ row.sna_label }}:
 
 
 {% if row.use_signature and signature.startswith('[') %}
@@ -39,22 +30,19 @@ Overview: :ref:`api-overview-{{ name }}-{{ group }}`
 {% elif row.use_signature and not row.is_attr %}
 
 .. py:method:: {{ name }}.{{ signature }}
-    :noindex:
 
 {% elif row.use_signature and row.is_attr %}
 
 .. py:attribute:: {{ name }}.{{ signature }}
-    :noindex:
+    :noindex: {# NOTE: collides with iter_*, via_* usage below #}
 
-{% elif group == 'Attribute' or signature == 'values' or row.is_attr %}
+{% elif ig == 'Attribute' or signature == 'values' or row.is_attr %}
 
 .. autoattribute:: static_frame.{{ row.reference }}
-    :noindex:
 
 {% else %}
 
 .. automethod:: static_frame.{{ row.reference }}
-    :noindex:
 
 {% endif %}
 
@@ -96,11 +84,10 @@ Overview: :ref:`api-overview-{{ name }}-{{ group }}`
 
 
 {# example ////////////////////////////////////////////////////////////////// #}
-{# for debugging: ``start_{{ name }}-{{ row.signature_no_args }}`` #}
 
 {% if name + '-' + row.signature_no_args in examples_defined %}
 
-    .. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+    .. literalinclude:: ../examples.txt
        :language: python
        :start-after: start_{{ name }}-{{ row.signature_no_args }}
        :end-before: end_{{ name }}-{{ row.signature_no_args }}
@@ -109,43 +96,90 @@ Overview: :ref:`api-overview-{{ name }}-{{ group }}`
 
 {% endfor %}
 
-:ref:`api-detail-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-detail-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %}
+:ref:`{{ name }}<api-detail-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
 
-{% endfor %}
 {%- endmacro %}
 
+
+
+
 {# api_overview ///////////////////////////////////////////////////////////// #}
-{% macro api_overview(name, cls, frame_items, examples_defined) -%}
+{% macro api_overview(name, ig, ig_tag, frame_items, examples_defined, toc) -%}
 
-.. _api-overview-{{ name }}:
+{# `name`: str class name, `ig`: full interface group str, `ig_tag`: linkable interface group str, `frame_items`: sub-frame for group #}
 
-{{ name }}
-================================================================================
+.. _api-overview-{{ name }}-{{ ig_tag }}:
 
-Detail: :ref:`api-detail-{{ name }}`
-
-
-{% for group, frame_sub in frame_items %}
-
-.. _api-overview-{{ name }}-{{ group }}:
-
-{{ name }}: {{ group }}
+Overview: {{ name }}: {{ ig }}
 --------------------------------------------------------------------------------
 
-Detail: :ref:`api-detail-{{ name }}-{{ group }}`
+:ref:`api-detail-{{ name }}-{{ ig_tag }}`
 
 .. csv-table::
     :header-rows: 0
 
-    {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
+    {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
         {% if signature.startswith('[') -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
         {% else -%}
-        :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
+        :ref:`Detail<api-sig-{{ name }}-{{ row.sna_label }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
         {% endif -%}
     {% endfor %}
 
-:ref:`api-overview-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-overview-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %}
+:ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
+
+{%- endmacro %}
+
+
+
+
+{# api_detail_toc /////////////////////////////////////////////////////////////// #}
+{% macro api_detail_toc(name, toc, interface_group_doc) -%}
+
+.. _api-detail-{{ name }}:
+
+Detail: {{ name }}
+================================================================================
+
+:ref:`api-overview-{{ name }}`
+
+
+.. autoclass:: static_frame.{{ name }}
+
+
+{% for ig, ig_tag in toc[name] -%}
+
+* :ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`: {{ interface_group_doc[ig] }}
 
 {% endfor %}
+
+
+:ref:`{{ name }}<api-detail-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-detail-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
+
+{%- endmacro %}
+
+
+
+
+{# api_overview_toc /////////////////////////////////////////////////////////////// #}
+{% macro api_overview_toc(name, toc, interface_group_doc) -%}
+
+.. _api-overview-{{ name }}:
+
+Overview: {{ name }}
+================================================================================
+
+:ref:`api-detail-{{ name }}`
+
+
+.. csv-table::
+    :header-rows: 0
+
+    {% for ig, ig_tag in toc[name] -%}
+        :ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`, "{{ interface_group_doc[ig] }}"
+    {% endfor %}
+
+
+:ref:`{{ name }}<api-overview-{{ name }}>`: {% for ig, ig_tag in toc[name] %}:ref:`{{ ig }}<api-overview-{{ name }}-{{ ig_tag }}>`{{ " | " if not loop.last }}{% endfor %}
+
 {%- endmacro %}

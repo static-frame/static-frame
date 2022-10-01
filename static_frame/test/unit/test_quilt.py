@@ -3,25 +3,23 @@ import typing as tp
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.test.test_case import TestCase
-
-from static_frame.core.quilt import Quilt
-from static_frame.core.hloc import HLoc
+from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.batch import Batch
+from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.frame import Frame
+from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
-from static_frame.core.frame import Frame
-from static_frame.core.bus import Bus
-from static_frame.core.yarn import Yarn
-from static_frame.core.batch import Batch
-from static_frame.core.store import StoreConfig
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexSecond
-
+from static_frame.core.quilt import Quilt
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.yarn import Yarn
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.axis_map import bus_to_hierarchy
 
 
 class TestUnit(TestCase):
@@ -1205,6 +1203,7 @@ class TestUnit(TestCase):
 
     def test_quilt_iter_window_b1(self) -> None:
         from string import ascii_lowercase
+
         # indexes are heterogenous but columns are not
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
@@ -1239,6 +1238,7 @@ class TestUnit(TestCase):
 
     def test_quilt_iter_window_b2(self) -> None:
         from string import ascii_lowercase
+
         # indexes are heterogenous but columns are not
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
@@ -1536,6 +1536,21 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             q1.to_zip_npz(fp)
             q2 = Quilt.from_zip_npz(fp, retain_labels=True, axis=1)
+
+            self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+    #---------------------------------------------------------------------------
+
+    def test_quilt_to_zip_npy_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_npy(fp)
+            q2 = Quilt.from_zip_npy(fp, retain_labels=True, axis=1)
 
             self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
 

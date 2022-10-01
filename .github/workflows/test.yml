@@ -11,11 +11,10 @@ env:
 
 jobs:
   build:
-
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-18.04', 'windows-2019', 'macos-11']
+        os: ['ubuntu-20.04', 'windows-2019', 'macos-11']
         python-version: ['3.7', '3.8']
 
     runs-on: ${{ matrix.os }}
@@ -55,10 +54,6 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install wheel==0.35.1
-        pip install numpy==1.19.5
-        pip install Cython==0.29.28
-        pip install setuptools==41.2.0
         pip install -r requirements-test.txt
 
     - name: Invoke Test

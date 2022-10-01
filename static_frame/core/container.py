@@ -1,6 +1,7 @@
 import typing as tp
-from functools import partial
 from collections import deque
+from functools import partial
+
 import numpy as np
 
 from static_frame.core.display import Display
@@ -9,22 +10,23 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.memory_measure import memory_display
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_transpose import InterfaceBatchTranspose
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
+from static_frame.core.util import OPERATORS
+from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.node_fill_value import InterfaceBatchFillValue
-from static_frame.core.node_transpose import InterfaceBatchTranspose
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
 
@@ -49,6 +51,32 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(self.__class__)
+
+    # def __sizeof__(self) -> int:
+        # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).
+        # return memory_total(self, format=MeasureFormat.REFERENCED, skip_parent=True)
+
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return ()
+
+    @property
+    def memory(self) -> 'Frame':
+        '''Return size in memory of this object. For compound containers, component sizes will also be provioded. Size can be interpreted through six combinations of three configurations:
+
+        L: Local: memory ignoring referenced array data provided via views.
+        LM: Local Materialized: memory where arrays that are locally owned report their byte payload
+        LMD: Local Materialized Data: locally owned memory of arrays byte payloads, excluding all other components
+
+        R: Referenced: memory including referenced array data provided via views
+        RM: Referenced Materialized: memory where arrays that are locally owned or referenced report their byte payload
+        RMD: Referenced Materialized Data: localy owned and referenced array byte payloads, excluding all other components
+        '''
+        label_component_pairs = self._memory_label_component_pairs()
+        return memory_display(self,
+                label_component_pairs=label_component_pairs,
+                size_label=True,
+                )
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
@@ -96,6 +124,7 @@ class ContainerBase(metaclass=InterfaceMeta):
                 ))
         return self.display(config=DisplayConfig(**args))
 
+
     #---------------------------------------------------------------------------
     def equals(self,
             other: tp.Any,
@@ -115,11 +144,29 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''
         raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 
+    def __lt__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __le__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __eq__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __ne__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __gt__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
+    def __ge__(self, other: tp.Any) -> tp.Any:
+        return NotImplemented #pragma: no cover
+
     #---------------------------------------------------------------------------
     def to_visidata(self) -> None:
         '''Open an interactive VisiData session.
         '''
-        from static_frame.core.display_visidata import view_sf #pragma: no cover
+        from static_frame.core.display_visidata import view_sf  # pragma: no cover
         view_sf(self) #type: ignore [no-untyped-call] #pragma: no cover
 
 
@@ -246,7 +293,7 @@ class ContainerOperand(ContainerBase):
     # --------------------------------------------------------------------------
     def __array__(self, dtype: np.dtype = None) -> np.ndarray:
         '''
-        Support the __array__ interface, returning a 1D array of values.
+        Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values

@@ -1,15 +1,15 @@
 from itertools import product
+
 import numpy as np
 
-from static_frame.core.store import Store
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigHE
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.frame import Frame
-
-from static_frame.test.test_case import TestCase
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreParameterConflict
+from static_frame.core.frame import Frame
+from static_frame.core.store import Store
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigHE
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
