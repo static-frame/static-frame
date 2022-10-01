@@ -24,8 +24,6 @@ class IndexHierarchySetResult_Old(tp.NamedTuple):
     encoding_can_overflow: bool
 
 
-
-
 def _index_hierarchy_set_many(
         lhs: IndexHierarchy,
         *others: IndexHierarchy,
