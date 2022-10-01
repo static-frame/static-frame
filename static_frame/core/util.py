@@ -1,5 +1,6 @@
 import contextlib
 import datetime
+import math
 import operator
 import os
 import tempfile
@@ -17,7 +18,6 @@ from io import StringIO
 from itertools import chain
 from itertools import zip_longest
 from os import PathLike
-from sys import getsizeof
 from types import TracebackType
 from urllib import request
 
@@ -610,6 +610,20 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
+def bytes_to_size_label(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return '0 B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s: tp.Union[int, float]
+    if size_name[i] == 'B':
+        s = size_bytes
+    else:
+        s = round(size_bytes / p, 2)
+    return f'{s} ({size_name[i]})'
+
+#-------------------------------------------------------------------------------
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
@@ -694,7 +708,7 @@ class PairRight(Pair):
 #             yield v
 #         last = v
 
-def _gen_skip_middle(
+def gen_skip_middle(
         forward_iter: CallableToIterType,
         forward_count: int,
         reverse_iter: CallableToIterType,
@@ -1693,6 +1707,20 @@ def pos_loc_slice_to_iloc_slice(
     return slice(start, stop, key.step)
 
 
+def key_to_str(key: GetItemKeyType) -> str:
+    if key.__class__ is not slice:
+        return str(key)
+    if key == NULL_SLICE:
+        return ':'
+
+    result = ':' if key.start is None else f'{key.start}:' # type: ignore [union-attr]
+
+    if key.stop is not None: # type: ignore [union-attr]
+        result += str(key.stop) # type: ignore [union-attr]
+    if key.step is not None and key.step != 1: # type: ignore [union-attr]
+        result += f':{key.step}' # type: ignore [union-attr]
+
+    return result
 
 #-------------------------------------------------------------------------------
 # dates
@@ -3229,72 +3257,3 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
-
-class MemoryMeasurements:
-    @staticmethod
-    def _unsized_children(obj: tp.Any) -> tp.Iterator[tp.Any]:
-        '''
-        Generates the iterable children that have not been counted by a getsizeof call
-        on the parent object
-        '''
-        # Check if iterable or a string first for fewer isinstance calls on common types
-        if hasattr(obj, '__iter__') and not isinstance(obj, str):
-            if obj.__class__ is np.ndarray and obj.dtype.kind == DTYPE_OBJECT_KIND:
-                # Only return the referenced python objects not counted by numpy.
-                # NOTE: iter(obj) would return slices for multi-dimensional object arrays
-                yield from (obj[loc] for loc in np.ndindex(obj.shape))
-                # What about numpy array references, double-check the data
-            elif (
-                isinstance(obj, abc.Sequence) # tuple, list
-                or isinstance(obj, abc.Set) # set, frozenset
-            ):
-                yield from obj
-            elif isinstance(obj, dict):
-                yield from chain.from_iterable(obj.items())
-            else:
-                # The full size of the object is included in its getsizeof call
-                # e.g. FrozenAutoMap, integer numpy arrays, int, float, etc.
-                pass
-
-    @staticmethod
-    def _sizable_slot_attrs(obj: tp.Any) -> tp.Iterator[tp.Any]:
-        '''
-        Generates an iterable of the values of all slot-based attributes in an object, including the slots
-        contained in the object's parent classes based on the MRO
-        '''
-        # NOTE: This does NOT support 'single-string' slots (i.e. __slots__ = 'foo')
-        slots = frozenset().union(*(cls.__slots__ for cls in obj.__class__.__mro__ if hasattr(cls, '__slots__')))
-        attrs = (getattr(obj, slot) for slot in slots if slot != '__weakref__' and hasattr(obj, slot))
-        yield from attrs
-
-    @classmethod
-    def nested_sizable_elements(cls, obj: tp.Any, *, seen: tp.Set[int]) -> tp.Iterator[tp.Any]:
-        '''
-        Generates an iterable of all objects the parent object has references to, including nested references.
-        This function considers both the iterable unsized children (based on _unsized_children) and the sizable
-        attributes listed in its slots. The resulting generator is in pre-order and includes the parent object
-        at the end.
-        '''
-        if id(obj) in seen:
-            return
-        seen.add(id(obj))
-
-        for el in cls._unsized_children(obj):
-            yield from cls.nested_sizable_elements(el, seen=seen)
-        for el in cls._sizable_slot_attrs(obj):
-            yield from cls.nested_sizable_elements(el, seen=seen)
-
-        if obj.__class__ is np.ndarray and obj.base is not None:
-            # include the base array for numpy slices / views
-            yield from cls.nested_sizable_elements(obj.base, seen=seen)
-
-        yield obj
-
-def getsizeof_total(obj: tp.Any, *, seen: tp.Union[None, tp.Set[tp.Any]] = None) -> int:
-    '''
-    Returns the total size of the object and its references, including nested refrences
-    '''
-    seen = set() if seen is None else seen
-    total = sum(getsizeof(el) for el in MemoryMeasurements.nested_sizable_elements(obj, seen=seen))
-    return total
-

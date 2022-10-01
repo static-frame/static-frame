@@ -72,6 +72,7 @@ from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import key_to_str
 from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
@@ -106,6 +107,12 @@ class ILoc(metaclass=ILocMeta):
 
     def __init__(self, key: GetItemKeyType):
         self.key = key
+
+    def __repr__(self) -> str:
+        if isinstance(self.key, tuple):
+            return f'<ILoc[{",".join(map(key_to_str, self.key))}]>'
+        return f'<ILoc[{key_to_str(self.key)}]>'
+
 
 
 def immutable_index_filter(index: I) -> IndexBase:

@@ -95,6 +95,7 @@ from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
+from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.series import Series
@@ -3007,6 +3008,28 @@ class Frame(ContainerOperand):
     #     Return shallow copy of this Frame.
     #     '''
     #     return self.__copy__() #type: ignore
+
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Index', self._index),
+                ('Columns', self._columns),
+                ('Blocks', self._blocks),
+                )
+
+    #---------------------------------------------------------------------------
+    # external protocols
+
+    def __dataframe__(self,
+            nan_as_null: bool = False,
+            allow_copy: bool = True,
+            ) -> DFIDataFrame:
+        '''Return a data-frame interchange protocol compliant object. See https://data-apis.org/dataframe-protocol/latest for more information.
+        '''
+        return DFIDataFrame(self,
+                nan_as_null=nan_as_null,
+                allow_copy=allow_copy,
+                recast_blocks=True,
+                )
 
     #---------------------------------------------------------------------------
     # name interface

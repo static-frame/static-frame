@@ -689,7 +689,6 @@ class TypeBlocks(ContainerOperand):
             # key: tp.Union[int, slice]
             row_dtype= self._row_dtype if self._row_dtype is not None else DTYPE_FLOAT_DEFAULT
             row_length = self._shape[0]
-            column_length = self._shape[1]
 
             if not reverse:
                 row_idx_iter = range(row_length)
@@ -708,7 +707,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[i]
             else:
                 # PERF: only creating and yielding one array at a time is shown to be slower; performance optimized: consolidate into a single array and then take slices
-                # NOTE: this might force unnecessary type coercion if going to a tuple
+                # NOTE: this might force unnecessary type coercion if going to a tuple, but if going to an array, the type consolidation is necessary
                 b = blocks_to_array_2d(
                         blocks=self._blocks,
                         shape=self._shape,
@@ -878,6 +877,24 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield cls._concatenate_blocks(group, group_dtype, group_columns)
 
+    @classmethod
+    def contiguous_columnar_blocks(cls,
+            raw_blocks: tp.Iterable[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Generator consumer, generator producer of np.ndarray, ensuring that blocks are contiguous in columnar access.
+
+        Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
+        '''
+
+        for b in raw_blocks:
+            # NOTE: 1D contiguous array sets both C_CONTIGUOUS and F_CONTIGUOUS; applying asfortranarray() to a 1D array is the same as ascontiguousarray(); columnar slices on F_CONTIGUOUS are contiguous;
+            if not b.flags['F_CONTIGUOUS']:
+                b = np.asfortranarray(b)
+                b.flags.writeable = False
+                yield b
+            else:
+                yield b
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
         '''Generator of new block that consolidate adjacent types that are the same.
@@ -888,6 +905,11 @@ class TypeBlocks(ContainerOperand):
         '''Return a new TypeBlocks that unifies all adjacent types.
         '''
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
+
+    def contiguous_columnar(self) -> 'TypeBlocks':
+        '''Return a new TypeBlocks that makes all columns or column slices contiguous.
+        '''
+        return self.from_blocks(self.contiguous_columnar_blocks(raw_blocks=self._blocks))
 
     #---------------------------------------------------------------------------
     def resize_blocks_by_element(self, *,
