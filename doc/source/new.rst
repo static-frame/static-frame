@@ -10,6 +10,10 @@ Implemented ``__repr__()`` for ``ILoc``.
 
 Updated ``Batch.__repr__()``.
 
+Improved error reporting for invalid ``IndexHiearchy``.
+
+``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
+
 
 0.9.15
 ----------
