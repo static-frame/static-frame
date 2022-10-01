@@ -4,7 +4,6 @@ This module us for utilty functions that take as input and / or return Container
 
 import datetime
 import typing as tp
-from collections import defaultdict
 from enum import Enum
 from fractions import Fraction
 from functools import partial
