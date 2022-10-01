@@ -198,12 +198,12 @@ c
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
 <Frame: <Series>>
-<Index>           L       LM      LMD     R         RM       RMD     <<U3>
+<Index>           L       LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Index             756 (B) 788 (B) 564 (B) 8.83 (KB) 812 (B)  588 (B)
-Values            120 (B) 136 (B) 24 (B)  120 (B)   136 (B)  24 (B)
-Total             932 (B) 980 (B) 644 (B) 9.0 (KB)  1004 (B) 668 (B)
-<<U6>             <<U7>   <<U7>   <<U7>   <<U9>     <<U8>    <<U7>
+Index             772 (B) 836 (B)   580 (B) 8.85 (KB) 860 (B)   604 (B)
+Values            120 (B) 152 (B)   24 (B)  120 (B)   152 (B)   24 (B)
+Total             964 (B) 1.04 (KB) 676 (B) 9.04 (KB) 1.06 (KB) 700 (B)
+<<U6>             <<U7>   <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_Series-memory
 
 #start_Series-name
@@ -5088,12 +5088,12 @@ c
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
 <Frame: <SeriesHE>>
-<Index>             L       LM      LMD     R         RM       RMD     <<U3>
+<Index>             L       LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Index               756 (B) 788 (B) 564 (B) 8.83 (KB) 812 (B)  588 (B)
-Values              120 (B) 136 (B) 24 (B)  120 (B)   136 (B)  24 (B)
-Total               940 (B) 988 (B) 652 (B) 9.01 (KB) 1012 (B) 676 (B)
-<<U6>               <<U7>   <<U7>   <<U7>   <<U9>     <<U8>    <<U7>
+Index               772 (B) 836 (B)   580 (B) 8.85 (KB) 860 (B)   604 (B)
+Values              120 (B) 152 (B)   24 (B)  120 (B)   152 (B)   24 (B)
+Total               972 (B) 1.04 (KB) 684 (B) 9.04 (KB) 1.07 (KB) 708 (B)
+<<U6>               <<U7>   <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -9766,6 +9766,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -10241,6 +10245,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -10546,10 +10554,10 @@ c           datetime64[D]
 <Frame: <Frame: x>>
 <Index>             L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Index               208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns             756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
-Blocks              1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total               2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
+Index               224 (B)   256 (B)   128 (B)   8.31 (KB)  288 (B)   160 (B)
+Columns             772 (B)   836 (B)   580 (B)   8.85 (KB)  860 (B)   604 (B)
+Blocks              1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB)  1.62 (KB) 1.25 (KB)
+Total               2.6 (KB)  2.78 (KB) 2.03 (KB) 10.69 (KB) 2.84 (KB) 2.09 (KB)
 <<U7>               <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Frame-memory
 
@@ -16923,6 +16931,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -17398,6 +17410,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -17701,13 +17717,13 @@ c           datetime64[D]
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
 <Frame: <FrameHE: x>>
-<Index>               L         LM        LMD       R          RM        RMD       <<U3>
+<Index>               L         LM        LMD       R         RM        RMD       <<U3>
 <Index>
-Index                 208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns               756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
-Blocks                1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total                 2.43 (KB) 2.53 (KB) 1.87 (KB) 10.53 (KB) 2.58 (KB) 1.92 (KB)
-<<U7>                 <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
+Index                 224 (B)   256 (B)   128 (B)   8.31 (KB) 288 (B)   160 (B)
+Columns               772 (B)   836 (B)   580 (B)   8.85 (KB) 860 (B)   604 (B)
+Blocks                1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB) 1.62 (KB) 1.25 (KB)
+Total                 2.6 (KB)  2.79 (KB) 2.04 (KB) 10.7 (KB) 2.85 (KB) 2.1 (KB)
+<<U7>                 <<U9>     <<U9>     <<U9>     <<U9>     <<U9>     <<U9>
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -24052,6 +24068,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -24527,6 +24547,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -24832,10 +24856,10 @@ c           datetime64[D]
 <Frame: <FrameGO: x>>
 <Index>               L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Index                 208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns               1.11 (KB) 1.14 (KB) 942 (B)   9.2 (KB)   1.16 (KB) 966 (B)
-Blocks                1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total                 2.77 (KB) 2.86 (KB) 2.2 (KB)  10.86 (KB) 2.91 (KB) 2.26 (KB)
+Index                 224 (B)   256 (B)   128 (B)   8.31 (KB)  288 (B)   160 (B)
+Columns               1.14 (KB) 1.2 (KB)  974 (B)   9.23 (KB)  1.22 (KB) 998 (B)
+Blocks                1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB)  1.62 (KB) 1.25 (KB)
+Total                 2.95 (KB) 3.14 (KB) 2.39 (KB) 11.05 (KB) 3.2 (KB)  2.45 (KB)
 <<U7>                 <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_FrameGO-memory
 
@@ -31328,7 +31352,7 @@ x        <Index>
 <Frame: <Index: x>>
 <Index>             L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total               878 (B) 910 (B) 686 (B) 8.95 (KB) 950 (B) 726 (B)
+Total               894 (B) 958 (B) 702 (B) 8.97 (KB) 998 (B) 742 (B)
 <<U5>               <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_Index-memory
 
@@ -33147,7 +33171,7 @@ x        <IndexGO>
 <Frame: <IndexGO: x>>
 <Index>               L         LM        LMD       R         RM        RMD       <<U3>
 <Index>
-Total                 1.34 (KB) 1.37 (KB) 1.15 (KB) 9.43 (KB) 1.41 (KB) 1.19 (KB)
+Total                 1.37 (KB) 1.43 (KB) 1.18 (KB) 9.46 (KB) 1.47 (KB) 1.22 (KB)
 <<U5>                 <<U9>     <<U9>     <<U9>     <<U9>     <<U9>     <<U9>
 #end_IndexGO-memory
 
@@ -35011,7 +35035,7 @@ None     <IndexYear>
 <Frame: <IndexYear>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexYear-memory
 
@@ -36690,10 +36714,10 @@ None     <IndexYearGO>
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
 <Frame: <IndexYearGO>>
-<Index>                L         LM       LMD     R         RM        RMD     <<U3>
+<Index>                L        LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                  1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
-<<U5>                  <<U9>     <<U8>    <<U7>   <<U9>     <<U9>     <<U7>
+Total                  1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
+<<U5>                  <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -38422,7 +38446,7 @@ None     <IndexYearMonth>
 <Frame: <IndexYearMonth>>
 <Index>                   L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                     768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                     784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                     <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexYearMonth-memory
 
@@ -40123,10 +40147,10 @@ None     <IndexYearMonthGO>
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
 <Frame: <IndexYearMonthGO>>
-<Index>                     L         LM       LMD     R         RM        RMD     <<U3>
+<Index>                     L        LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                       1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
-<<U5>                       <<U9>     <<U8>    <<U7>   <<U9>     <<U9>     <<U7>
+Total                       1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
+<<U5>                       <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -41901,7 +41925,7 @@ None     <IndexDate>
 <Frame: <IndexDate>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexDate-memory
 
@@ -43651,10 +43675,10 @@ None     <IndexDateGO>
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexDateGO>>
-<Index>                L         LM       LMD     R         RM        RMD     <<U3>
+<Index>                L        LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                  1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
-<<U5>                  <<U9>     <<U8>    <<U7>   <<U9>     <<U9>     <<U7>
+Total                  1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
+<<U5>                  <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -45340,7 +45364,7 @@ None     <IndexMinute>
 <Frame: <IndexMinute>>
 <Index>                L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                  768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                  784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                  <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMinute-memory
 
@@ -47003,10 +47027,10 @@ None     <IndexMinuteGO>
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMinuteGO>>
-<Index>                  L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                  L         LM        LMD     R         RM        RMD      <<U3>
 <Index>
-Total                    1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
-<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                    1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
+<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -48697,7 +48721,7 @@ None     <IndexHour>
 <Frame: <IndexHour>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexHour-memory
 
@@ -50363,10 +50387,10 @@ None     <IndexHourGO>
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexHourGO>>
-<Index>                L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                L         LM        LMD     R         RM        RMD      <<U3>
 <Index>
-Total                  1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
-<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                  1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
+<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -52060,7 +52084,7 @@ None     <IndexSecond>
 <Frame: <IndexSecond>>
 <Index>                L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                  768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                  784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                  <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexSecond-memory
 
@@ -53731,10 +53755,10 @@ None     <IndexSecondGO>
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexSecondGO>>
-<Index>                  L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                  L         LM        LMD     R         RM        RMD      <<U3>
 <Index>
-Total                    1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
-<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                    1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
+<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -55433,7 +55457,7 @@ None     <IndexMillisecond>
 <Frame: <IndexMillisecond>>
 <Index>                     L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                       768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                       784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                       <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMillisecond-memory
 
@@ -57123,10 +57147,10 @@ None     <IndexMillisecondGO>
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMillisecondGO>>
-<Index>                       L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                       L         LM        LMD     R         RM        RMD      <<U3>
 <Index>
-Total                         1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
-<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                         1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
+<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -58844,7 +58868,7 @@ None     <IndexMicrosecond>
 <Frame: <IndexMicrosecond>>
 <Index>                     L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                       768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                       784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                       <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMicrosecond-memory
 
@@ -60536,10 +60560,10 @@ None     <IndexMicrosecondGO>
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMicrosecondGO>>
-<Index>                       L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                       L         LM        LMD     R         RM        RMD      <<U3>
 <Index>
-Total                         1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
-<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                         1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
+<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -62259,7 +62283,7 @@ None     <IndexNanosecond>
 <Frame: <IndexNanosecond>>
 <Index>                    L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                      768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total                      784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
 <<U5>                      <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexNanosecond-memory
 
@@ -63950,10 +63974,10 @@ None     <IndexNanosecondGO>
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
 <Frame: <IndexNanosecondGO>>
-<Index>                      L         LM        LMD     R         RM        RMD     <<U3>
+<Index>                      L         LM        LMD     R        RM       RMD     <<U3>
 <Index>
-Total                        1.08 (KB) 1.11 (KB) 912 (B) 9.17 (KB) 1.13 (KB) 936 (B)
-<<U5>                        <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                        1.11 (KB) 1.17 (KB) 944 (B) 9.2 (KB) 1.2 (KB) 968 (B)
+<<U5>                        <<U9>     <<U9>     <<U7>   <<U8>    <<U8>    <<U7>
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -65609,15 +65633,32 @@ b                2048
 #start_IndexHierarchy-from_index_items()
 >>> ix1 = sf.Index(('a', 'b', 'c'), name='x')
 >>> ix2 = sf.Index((1024, 2048, 4096), name='y')
->>> sf.IndexHierarchy.from_index_items(((ix1.name, ix1), (ix2.name, ix2)))
+>>> ih1 = sf.IndexHierarchy.from_index_items(((ix1.name, ix1), (ix2.name, ix2)), name='ih1')
+>>> ih1
+<IndexHierarchy: ih1>
+x                     a
+x                     b
+x                     c
+y                     1024
+y                     2048
+y                     4096
+<<U1>                 <object>
+>>> ih2 = sf.IndexHierarchy.from_index_items(((ix2.name, ix2), (ix1.name, ix1)), name='ih2')
+>>> sf.IndexHierarchy.from_index_items(((ih1.name, ih1), (ih2.name, ih2)))
 <IndexHierarchy>
-x                a
-x                b
-x                c
-y                1024
-y                2048
-y                4096
-<<U1>            <object>
+ih1              x     a
+ih1              x     b
+ih1              x     c
+ih1              y     1024
+ih1              y     2048
+ih1              y     4096
+ih2              y     1024
+ih2              y     2048
+ih2              y     4096
+ih2              x     a
+ih2              x     b
+ih2              x     c
+<<U3>            <<U1> <object>
 #end_IndexHierarchy-from_index_items()
 
 #start_IndexHierarchy-from_labels()
@@ -65764,11 +65805,11 @@ z        <IndexDate>
 <Frame: <IndexHierarchy: ('x', 'y...
 <Index>                              L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Indices                              2.23 (KB) 2.33 (KB) 1.67 (KB) 10.33 (KB) 2.39 (KB) 1.73 (KB)
-Indexers                             184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
-Blocks                               1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
+Indices                              2.3 (KB)  2.48 (KB) 1.73 (KB) 10.39 (KB) 2.55 (KB) 1.8 (KB)
+Indexers                             184 (B)   200 (B)   72 (B)    184 (B)    200 (B)   72 (B)
+Blocks                               1.49 (KB) 1.59 (KB) 1.21 (KB) 1.49 (KB)  1.59 (KB) 1.21 (KB)
 Values                               16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total                                4.72 (KB) 4.87 (KB) 3.67 (KB) 12.81 (KB) 4.94 (KB) 3.73 (KB)
+Total                                4.95 (KB) 5.28 (KB) 3.91 (KB) 13.05 (KB) 5.34 (KB) 3.97 (KB)
 <<U8>                                <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_IndexHierarchy-memory
 
@@ -66200,13 +66241,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f33bd6d71f0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f76f99f1320> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f33bd489f70> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f76f94ea950> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66333,7 +66374,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f33bd6d73a0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f76f99f1560>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66395,7 +66436,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f33bd6d7550>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f76f99f17a0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -67979,15 +68020,32 @@ b                  2048
 #start_IndexHierarchyGO-from_index_items()
 >>> ix1 = sf.Index(('a', 'b', 'c'), name='x')
 >>> ix2 = sf.Index((1024, 2048, 4096), name='y')
->>> sf.IndexHierarchyGO.from_index_items(((ix1.name, ix1), (ix2.name, ix2)))
+>>> ih1 = sf.IndexHierarchyGO.from_index_items(((ix1.name, ix1), (ix2.name, ix2)), name='ih1')
+>>> ih1
+<IndexHierarchyGO: ih1>
+x                       a
+x                       b
+x                       c
+y                       1024
+y                       2048
+y                       4096
+<<U1>                   <object>
+>>> ih2 = sf.IndexHierarchyGO.from_index_items(((ix2.name, ix2), (ix1.name, ix1)), name='ih2')
+>>> sf.IndexHierarchyGO.from_index_items(((ih1.name, ih1), (ih2.name, ih2)))
 <IndexHierarchyGO>
-x                  a
-x                  b
-x                  c
-y                  1024
-y                  2048
-y                  4096
-<<U1>              <object>
+ih1                x     a
+ih1                x     b
+ih1                x     c
+ih1                y     1024
+ih1                y     2048
+ih1                y     4096
+ih2                y     1024
+ih2                y     2048
+ih2                y     4096
+ih2                x     a
+ih2                x     b
+ih2                x     c
+<<U3>              <<U1> <object>
 #end_IndexHierarchyGO-from_index_items()
 
 #start_IndexHierarchyGO-from_labels()
@@ -68134,11 +68192,11 @@ z        <IndexDateGO>
 <Frame: <IndexHierarchyGO: ('x', ...
 <Index>                              L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Indices                              3.14 (KB) 3.23 (KB) 2.57 (KB) 11.23 (KB) 3.29 (KB) 2.64 (KB)
-Indexers                             184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
-Blocks                               1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
+Indices                              3.25 (KB) 3.43 (KB) 2.68 (KB) 11.34 (KB) 3.5 (KB)  2.75 (KB)
+Indexers                             184 (B)   200 (B)   72 (B)    184 (B)    200 (B)   72 (B)
+Blocks                               1.49 (KB) 1.59 (KB) 1.21 (KB) 1.49 (KB)  1.59 (KB) 1.21 (KB)
 Values                               16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total                                5.28 (KB) 5.43 (KB) 4.23 (KB) 13.37 (KB) 5.5 (KB)  4.29 (KB)
+Total                                5.56 (KB) 5.89 (KB) 4.51 (KB) 13.65 (KB) 5.95 (KB) 4.57 (KB)
 <<U8>                                <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_IndexHierarchyGO-memory
 
@@ -68375,7 +68433,7 @@ False
 >>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
 >>> ih1.extend(ih2)
 >>> ih1
-ErrorInitIndexNonUnique(0)
+ErrorInitIndexNonUnique(('a', 1024, True))
 #end_IndexHierarchyGO-extend()
 
 #start_IndexHierarchyGO-fillfalsy()
@@ -68591,13 +68649,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f33bd6d71f0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f76f99f1320> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f33bd489f70> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f76f94ea950> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -68724,7 +68782,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f33bd6d73a0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f76f99f1560>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -68786,7 +68844,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f33bd6d7550>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f76f99f17a0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -70660,10 +70718,10 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
 <Frame: <Bus: i>>
-<Index>           L         LM        LMD       R          RM        RMD       <<U3>
+<Index>           L         LM        LMD       R          RM       RMD      <<U3>
 <Index>
-Total             6.02 (KB) 1.58 (KB) 1.14 (KB) 14.12 (KB) 1.59 (KB) 1.15 (KB)
-<<U5>             <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
+Total             6.58 (KB) 1.88 (KB) 1.38 (KB) 14.67 (KB) 1.9 (KB) 1.4 (KB)
+<<U5>             <<U9>     <<U9>     <<U9>     <<U10>     <<U8>    <<U8>
 #end_Bus-memory
 
 #start_Bus-name
@@ -71783,7 +71841,7 @@ j                w
 <Frame: <Yarn>>
 <Index>         L          LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Total           15.79 (KB) 4.62 (KB) 3.42 (KB) 23.88 (KB) 4.68 (KB) 3.48 (KB)
+Total           17.12 (KB) 5.03 (KB) 3.65 (KB) 25.21 (KB) 5.09 (KB) 3.72 (KB)
 <<U5>           <<U10>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Yarn-memory
 
@@ -72623,7 +72681,7 @@ w        4
 #start_Batch-__init__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt
-<Batch at 0x7f337e613a90>
+<Batch max_workers=None>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -72640,7 +72698,7 @@ j                r     44      45
 #start_Batch-from_frames()
 >>> bt = sf.Batch.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')))
 >>> bt
-<Batch at 0x7f337e613680>
+<Batch max_workers=None>
 >>> bt.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -72896,7 +72954,7 @@ True
 #start_Batch-T
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.T
-<Batch at 0x7f337e613680>
+<Batch max_workers=None>
 #end_Batch-T
 
 #start_Batch-memory
@@ -72905,7 +72963,7 @@ True
 <Frame: <Batch>>
 <Index>          L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Total            5.24 (KB) 5.37 (KB) 4.27 (KB) 13.34 (KB) 5.45 (KB) 4.35 (KB)
+Total            5.83 (KB) 6.11 (KB) 4.86 (KB) 13.92 (KB) 6.19 (KB) 4.94 (KB)
 <<U5>            <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Batch-memory
 
@@ -72927,7 +72985,7 @@ j               (3, 2)
 #start_Batch-via_container
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.via_container
-<Batch at 0x7f337e5bc130>
+<Batch max_workers=None>
 #end_Batch-via_container
 
 #start_Batch-__array__()
@@ -74067,13 +74125,13 @@ via_re(pattern, flags).subn(repl,... Batch    Accessor Regular ... Perform the s
 #start_Batch-__repr__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> repr(bt)
-<Batch at 0x7f337e5be680>
+<Batch max_workers=None>
 #end_Batch-__repr__()
 
 #start_Batch-__str__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((23, 83, 19, 87), (True, True, False, False), ('2022-01-01', '2023-04-01', '2022-12-31', '2024-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> str(bt)
-<Batch at 0x7f337e5bed60>
+<Batch max_workers=None>
 #end_Batch-__str__()
 
 #start_Batch-display()
@@ -75031,7 +75089,7 @@ j                r     1620-06-30 1976-06-30
 #start_Batch-via_str.__getitem__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5be130>
+<Batch max_workers=None>
 >>> bt.via_str[-1].to_frame()
 <Frame>
 <Index>                   a     b     c        <<U1>
@@ -75050,7 +75108,7 @@ j                s        3           nan
 #start_Batch-via_str.capitalize()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5be130>
+<Batch max_workers=None>
 >>> bt.via_str.capitalize().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75069,7 +75127,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.center()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5beea0>
+<Batch max_workers=None>
 >>> bt.via_str.center(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -75088,7 +75146,7 @@ j                s           3        wX    nan
 #start_Batch-via_str.contains()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613a90>
+<Batch max_workers=None>
 >>> bt.via_str.contains('X').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75107,7 +75165,7 @@ j                s        False  True   nan
 #start_Batch-via_str.count()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5beea0>
+<Batch max_workers=None>
 >>> bt.via_str.count('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -75126,7 +75184,7 @@ j                s        0       1       nan
 #start_Batch-via_str.decode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')))).astype(bytes)
 >>> bt
-<Batch at 0x7f337e5bec70>
+<Batch max_workers=None>
 >>> bt.via_str.decode().to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -75145,7 +75203,7 @@ j                s        3      wX   nan
 #start_Batch-via_str.encode()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5be680>
+<Batch max_workers=None>
 >>> bt.via_str.encode().to_frame()
 <Frame>
 <Index>                   a     b       c             <<U1>
@@ -75164,7 +75222,7 @@ j                s        b'3'  b' wX ' nan
 #start_Batch-via_str.endswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b91d0>
+<Batch max_workers=None>
 >>> bt.via_str.endswith(' ').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75183,7 +75241,7 @@ j                s        False  True   nan
 #start_Batch-via_str.find()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9f90>
+<Batch max_workers=None>
 >>> bt.via_str.find('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -75202,7 +75260,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.index()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9680>
+<Batch max_workers=None>
 >>> bt.via_str.index('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.index()
@@ -75210,7 +75268,7 @@ ValueError('substring not found')
 #start_Batch-via_str.isalnum()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9900>
+<Batch max_workers=None>
 >>> bt.via_str.isalnum().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75229,7 +75287,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isalpha()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9040>
+<Batch max_workers=None>
 >>> bt.via_str.isalpha().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75248,7 +75306,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isdecimal()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b92c0>
+<Batch max_workers=None>
 >>> bt.via_str.isdecimal().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75267,7 +75325,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isdigit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9900>
+<Batch max_workers=None>
 >>> bt.via_str.isdigit().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75286,7 +75344,7 @@ j                s        True   False  nan
 #start_Batch-via_str.islower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9680>
+<Batch max_workers=None>
 >>> bt.via_str.islower().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75305,7 +75363,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isnumeric()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5bebd0>
+<Batch max_workers=None>
 >>> bt.via_str.isnumeric().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75324,7 +75382,7 @@ j                s        True   False  nan
 #start_Batch-via_str.isspace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9f90>
+<Batch max_workers=None>
 >>> bt.via_str.isspace().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75343,7 +75401,7 @@ j                s        False  False  nan
 #start_Batch-via_str.istitle()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9ea0>
+<Batch max_workers=None>
 >>> bt.via_str.istitle().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75362,7 +75420,7 @@ j                s        False  False  nan
 #start_Batch-via_str.isupper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9040>
+<Batch max_workers=None>
 >>> bt.via_str.isupper().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75381,7 +75439,7 @@ j                s        False  False  nan
 #start_Batch-via_str.ljust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9bd0>
+<Batch max_workers=None>
 >>> bt.via_str.ljust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -75400,7 +75458,7 @@ j                s        3         wX      nan
 #start_Batch-via_str.len()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9540>
+<Batch max_workers=None>
 >>> bt.via_str.len().to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -75419,7 +75477,7 @@ j                s        1       4       nan
 #start_Batch-via_str.lower()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9d60>
+<Batch max_workers=None>
 >>> bt.via_str.lower().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75438,7 +75496,7 @@ j                s        3       wx   nan
 #start_Batch-via_str.lstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b92c0>
+<Batch max_workers=None>
 >>> bt.via_str.lstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75457,7 +75515,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.partition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9040>
+<Batch max_workers=None>
 >>> bt.via_str.partition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -75476,7 +75534,7 @@ j                s        ('3', '', '')  (' w', 'X', ' ') nan
 #start_Batch-via_str.replace()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9ae0>
+<Batch max_workers=None>
 >>> bt.via_str.replace('X', '*').to_frame()
 <Frame>
 <Index>                   a     b     c          <<U1>
@@ -75495,7 +75553,7 @@ j                s        3      w*   nan
 #start_Batch-via_str.rfind()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9f90>
+<Batch max_workers=None>
 >>> bt.via_str.rfind('X').to_frame()
 <Frame>
 <Index>                   a       b       c         <<U1>
@@ -75514,7 +75572,7 @@ j                s        -1      2       nan
 #start_Batch-via_str.rindex()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9270>
+<Batch max_workers=None>
 >>> bt.via_str.rindex('X').to_frame()
 ValueError('substring not found')
 #end_Batch-via_str.rindex()
@@ -75522,7 +75580,7 @@ ValueError('substring not found')
 #start_Batch-via_str.rjust()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9ea0>
+<Batch max_workers=None>
 >>> bt.via_str.rjust(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -75541,7 +75599,7 @@ j                s               3      wX  nan
 #start_Batch-via_str.rpartition()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9220>
+<Batch max_workers=None>
 >>> bt.via_str.rpartition('X').to_frame()
 <Frame>
 <Index>                   a              b                c                    <<U1>
@@ -75560,7 +75618,7 @@ j                s        ('', '', '3')  (' w', 'X', ' ') nan
 #start_Batch-via_str.rsplit()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9d10>
+<Batch max_workers=None>
 >>> bt.via_str.rsplit('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -75579,7 +75637,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.rstrip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9ae0>
+<Batch max_workers=None>
 >>> bt.via_str.rstrip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75598,7 +75656,7 @@ j                s        3       wX   nan
 #start_Batch-via_str.split()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e5b9d60>
+<Batch max_workers=None>
 >>> bt.via_str.split('X').to_frame()
 <Frame>
 <Index>                   a        b           c               <<U1>
@@ -75617,7 +75675,7 @@ j                s        ('3',)   (' w', ' ') nan
 #start_Batch-via_str.startswith()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613810>
+<Batch max_workers=None>
 >>> bt.via_str.startswith('X').to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -75636,7 +75694,7 @@ j                s        False  False  nan
 #start_Batch-via_str.strip()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e6132c0>
+<Batch max_workers=None>
 >>> bt.via_str.strip().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75655,7 +75713,7 @@ j                s        3      wX    nan
 #start_Batch-via_str.swapcase()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613450>
+<Batch max_workers=None>
 >>> bt.via_str.swapcase().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75674,7 +75732,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.title()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613810>
+<Batch max_workers=None>
 >>> bt.via_str.title().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75693,7 +75751,7 @@ j                s        3       Wx   nan
 #start_Batch-via_str.upper()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613400>
+<Batch max_workers=None>
 >>> bt.via_str.upper().to_frame()
 <Frame>
 <Index>                   a      b     c          <<U1>
@@ -75712,7 +75770,7 @@ j                s        3       WX   nan
 #start_Batch-via_str.zfill()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
-<Batch at 0x7f337e613a90>
+<Batch max_workers=None>
 >>> bt.via_str.zfill(8).to_frame()
 <Frame>
 <Index>                   a        b        c        <<U1>
@@ -76551,7 +76609,7 @@ j                c     20      12
 #start_Batch-via_re().search()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e6134f0>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').search().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -76569,7 +76627,7 @@ j                3        True   True   True
 #start_Batch-via_re().match()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e613040>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').match().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -76587,7 +76645,7 @@ j                3        True   True   True
 #start_Batch-via_re().fullmatch()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e613040>
+<Batch max_workers=None>
 >>> bt.via_re('123').fullmatch().to_frame()
 <Frame>
 <Index>                   a      b      c        <<U1>
@@ -76605,7 +76663,7 @@ j                3        False  True   False
 #start_Batch-via_re().split()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e6139f0>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').split().to_frame()
 <Frame>
 <Index>                   a           b                c                    <<U1>
@@ -76623,7 +76681,7 @@ j                3        ('', '.0')  ('', '', '', '') ('', '5', '7-04-0...
 #start_Batch-via_re().findall()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e613d60>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').findall().to_frame()
 <Frame>
 <Index>                   a        b               c                    <<U1>
@@ -76641,7 +76699,7 @@ j                3        ('2',)   ('1', '2', '3') ('1', '1', '1')
 #start_Batch-via_re().sub()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e613630>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').sub('==').to_frame()
 <Frame>
 <Index>                   a     b      c              <<U1>
@@ -76659,7 +76717,7 @@ j                3        ==.0  ====== ==5==7-04-0==
 #start_Batch-via_re().subn()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
 >>> bt
-<Batch at 0x7f337e613b30>
+<Batch max_workers=None>
 >>> bt.via_re('[X123]').subn('==', 1).to_frame()
 <Frame>
 <Index>                   a            b           c                  <<U1>
@@ -76837,13 +76895,13 @@ slice(-2, None, None)
 #start_ILoc-__repr__()
 >>> il = sf.ILoc[-2:]
 >>> repr(il)
-<static_frame.core.index.ILoc object at 0x7f3319658af0>
+<ILoc[-2:]>
 #end_ILoc-__repr__()
 
 #start_ILoc-__str__()
 >>> il = sf.ILoc[-2:]
 >>> str(il)
-<static_frame.core.index.ILoc object at 0x7f337e5a4850>
+<ILoc[-2:]>
 #end_ILoc-__str__()
 
 #start_FillValueAuto-__init__()
@@ -76879,7 +76937,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f33196c3540>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f7693376dd0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -76939,13 +76997,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f33196c38c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f76933769e0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f33196c3c40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f76933769e0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
