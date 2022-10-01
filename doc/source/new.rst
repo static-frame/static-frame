@@ -6,6 +6,10 @@ What is New in StaticFrame
 
 Added ``memory`` property to display memory usage.
 
+Implemented ``__repr__()`` for ``ILoc``.
+
+Updated ``Batch.__repr__()``.
+
 
 0.9.15
 ----------
