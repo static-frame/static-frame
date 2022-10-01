@@ -3121,7 +3121,7 @@ class TestUnit(TestCase):
 
     def test_series_to_frame_k(self) -> None:
         from datetime import date
-        f = Frame.from_element(1, columns=IndexDate([date.today()]), index=[1])
+        f = Frame.from_element(1, columns=IndexDate([date(2022, 9, 30)]), index=[1])
         s = f[sf.ILoc[-1]]
         f = s.to_frame(columns_constructor=sf.IndexDate)
         self.assertEqual(f.to_pairs(),
