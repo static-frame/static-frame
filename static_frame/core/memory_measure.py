@@ -198,41 +198,56 @@ def memory_total(
 
     return sum(gen())
 
+class MemoryDisplay:
 
-def memory_display(
-        obj: tp.Any,
-        label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
-        *,
-        size_label: bool = True,
-        ) -> 'Frame':
-    '''
-    Args:
-        label_component_pairs: provide paris of label, attribute component
-    '''
-    from static_frame.core.frame import Frame
-
-    parts = chain(label_component_pairs, (('Total', obj),))
-
-    def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
-        for label, part in parts:
-            sizes = []
-            for format in MeasureFormat:
-                # NOTE: not sharing seen accross evaluations
-                sizes.append(memory_total(part, format=format))
-            yield label, sizes
-
-    if hasattr(obj, 'name') and obj.name is not None:
-        name = f'<{obj.__class__.__name__}: {obj.name}>'
-    else:
-        name = f'<{obj.__class__.__name__}>'
-
-    f = Frame.from_records_items(
-            gen(),
-            columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
-            name=name,
+    __slots__ = (
+            '_frame',
+            '_repr',
             )
-    if size_label:
-        f = f.iter_element().apply(bytes_to_size_label, name=name)
-    return f # type: ignore
 
+    @classmethod
+    def from_any(cls,
+            obj: tp.Any,
+            label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
+            ) -> 'MemoryDisplay':
+        from static_frame.core.frame import Frame
+
+        parts = chain(label_component_pairs, (('Total', obj),))
+
+        def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
+            for label, part in parts:
+                sizes = []
+                for format in MeasureFormat:
+                    # NOTE: not sharing seen accross evaluations
+                    sizes.append(memory_total(part, format=format))
+                yield label, sizes
+
+        if getattr(obj, 'name') and obj.name is not None:
+            name = f'<{obj.__class__.__name__}: {obj.name}>'
+        else:
+            name = f'<{obj.__class__.__name__}>'
+
+        f = Frame.from_records_items(
+                gen(),
+                columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
+                name=name,
+                )
+        return cls(f)
+
+    def __init__(self, frame: 'Frame'):
+        self._frame = frame
+        self._repr = ''
+
+    def __repr__(self) -> str:
+        from static_frame.core.display import DisplayConfig
+        dc = DisplayConfig(type_show=False)
+        if not self._repr:
+            self._repr = self._frame.iter_element().apply(
+                bytes_to_size_label,
+                name=self._frame._name,
+                ).display(config=dc).__repr__()
+        return self._repr
+
+    def to_frame(self) -> 'Frame':
+        return self._frame
 

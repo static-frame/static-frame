@@ -10,7 +10,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.memory_measure import memory_display
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.style_config import StyleConfig
@@ -61,7 +61,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         return ()
 
     @property
-    def memory(self) -> 'Frame':
+    def memory(self) -> MemoryDisplay:
         '''Return size in memory of this object. For compound containers, component sizes will also be provioded. Size can be interpreted through six combinations of three configurations:
 
         L: Local: memory ignoring referenced array data provided via views.
@@ -73,9 +73,8 @@ class ContainerBase(metaclass=InterfaceMeta):
         RMD: Referenced Materialized Data: localy owned and referenced array byte payloads, excluding all other components
         '''
         label_component_pairs = self._memory_label_component_pairs()
-        return memory_display(self,
+        return MemoryDisplay.from_any(self,
                 label_component_pairs=label_component_pairs,
-                size_label=True,
                 )
 
     def display(self,

@@ -8,7 +8,7 @@ from automap import FrozenAutoMap  # pylint: disable=E0611
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
 from static_frame.core.memory_measure import MemoryMeasure
-from static_frame.core.memory_measure import memory_display
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
@@ -443,13 +443,12 @@ class TestUnit(TestCase):
     def test_memory_display_a(self) -> None:
         f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
 
-        # size = memory_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
-        post = memory_display(f,
+        post = MemoryDisplay.from_any(f,
                 (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
-                size_label=False,
                 )
-        self.assertEqual(post.loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
+        self.assertEqual(post.to_frame().loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
 
+        # import ipdb; ipdb.set_trace()
 
 # <Frame>
 # <Index> L       LM      LMD     R        RM      RMD     <<U3>
