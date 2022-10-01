@@ -2124,17 +2124,17 @@ class TestUnit(TestCase):
         ih = index_class.from_product(('I', 'II'), ('A', 'B'))
 
         # Mapping
-        ih1 = ih.relabel_at_depth(dict(I=1, B=2), depth_level=(0, 1))
+        ih1 = ih.relabel_at_depth(dict(I=1, B=2), depth_level=[0, 1])
         self.assertEqual(ih1.values.tolist(),
                 [[1, 'A'], [1, 2], ['II', 'A'], ['II', 2]])
 
         # Func
-        ih2 = ih.relabel_at_depth(lambda x: x*2, depth_level=(1, 0))
+        ih2 = ih.relabel_at_depth(lambda x: x*2, depth_level=[1, 0])
         self.assertEqual(ih2.values.tolist(),
                 [['II', 'AA'], ['II', 'BB'], ['IIII', 'AA'], ['IIII', 'BB']])
 
         # Sequence
-        ih3 = ih.relabel_at_depth(tuple('abcd'), depth_level=(1, 0))
+        ih3 = ih.relabel_at_depth(tuple('abcd'), depth_level=[1, 0])
         self.assertEqual(ih3.values.tolist(),
                 [['a', 'a'], ['b', 'b'], ['c', 'c'], ['d', 'd']])
 
@@ -2158,7 +2158,7 @@ class TestUnit(TestCase):
             )
 
         # Sequence
-        ih3 = ih.relabel_at_depth(np.arange(2**3), depth_level=(2,))
+        ih3 = ih.relabel_at_depth(np.arange(2**3), depth_level=[2,])
         self.assertEqual(ih3.values.tolist(),
                 [['I', 'B', 0],
                  ['I', 'B', 1],
@@ -2177,19 +2177,19 @@ class TestUnit(TestCase):
         ih = index_class.from_product(('I', 'II'), ('B', 'A'), (2, 1))
 
         # Mapping
-        ih1 = ih.relabel_at_depth({'II': 99, 1: 101}, depth_level=iter((0, 2)))
+        ih1 = ih.relabel_at_depth({'II': 99, 1: 101}, depth_level=list((0, 2)))
         self.assertTrue(ih1.equals(
             index_class.from_product(('I', 99), ('B', 'A'), (2, 101)))
             )
 
         # Function
-        ih2 = ih.relabel_at_depth(lambda x: x*3, depth_level={2, 0})
+        ih2 = ih.relabel_at_depth(lambda x: x*3, depth_level=[2, 0])
         self.assertTrue(ih2.equals(
             index_class.from_product(('III', 'IIIIII'), ('B', 'A'), (6, 3)))
             )
 
         # Sequence
-        ih3 = ih.relabel_at_depth(iter(range(9, 1, -1)), depth_level={0: None, 1: None})
+        ih3 = ih.relabel_at_depth(iter(range(9, 1, -1)), depth_level=list({0: None, 1: None}))
         self.assertEqual(ih3.values.tolist(),
                 [[9, 9, 2],
                  [8, 8, 1],
@@ -2225,7 +2225,7 @@ class TestUnit(TestCase):
         def func(arg: tp.Any) -> int:
             return next(numbers)
 
-        ih2 = ih.relabel_at_depth(func, depth_level=(l for l in (1, 0, 2)))
+        ih2 = ih.relabel_at_depth(func, depth_level=list(l for l in (1, 0, 2)))
         self.assertEqual(ih2.values.tolist(),
                 [[1, 3, 5],
                  [1, 3, 6],
@@ -2237,7 +2237,7 @@ class TestUnit(TestCase):
                  [2, 4, 6]])
 
         # Sequence
-        ih3 = ih.relabel_at_depth(range(8), depth_level=range(3))
+        ih3 = ih.relabel_at_depth(range(8), depth_level=list(range(3)))
         self.assertEqual(ih3.values.tolist(),
                 [[0, 0, 0],
                  [1, 1, 1],
@@ -3713,6 +3713,37 @@ class TestUnit(TestCase):
         idx3 = idx2.astype[np.array([True, True])](str)
         self.assertEqual([d.kind for d in idx3.dtypes.values], ['U', 'U'])
 
+    def test_hierarchy_astype_g1(self) -> None:
+        d = datetime.date
+        days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
+        idx1 = IndexHierarchy.from_product(range(3), days)
+        idx2 = idx1.astype[np.array([False, True])]("datetime64[D]")
+        self.assertEqual(idx2.index_types.values.tolist(), [Index, IndexDate])
+
+    def test_hierarchy_astype_g2(self) -> None:
+        d = datetime.date
+        days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
+        idx1 = IndexHierarchy.from_product(range(3), days)
+        with self.assertRaises(KeyError):
+            idx2 = idx1.astype[[False, True]]("datetime64[D]")
+
+    def test_hierarchy_astype_g3(self) -> None:
+        d = datetime.date
+        days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
+        idx1 = IndexHierarchy.from_product(range(3), days)
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.astype[np.array([False, True])]((str, int, bool))
+
+    def test_hierarchy_astype_h(self) -> None:
+        d = datetime.date
+        days = [d(2020, 1, 1), d(2020, 1, 2), d(2020, 1, 3)]
+        idx1 = IndexHierarchy.from_product(range(3), days, (10, 20))
+        idx2 = idx1.astype({0:str, 2:str})
+        self.assertEqual([dt.kind for dt in idx2.dtypes.values], ['U', 'O', 'U'])
+
+        idx3 = idx1.astype((float, np.datetime64, float))
+        self.assertEqual([dt.kind for dt in idx3.dtypes.values], ['f', 'M', 'f'])
+
     #---------------------------------------------------------------------------
 
     @skip_win
@@ -3730,11 +3761,10 @@ class TestUnit(TestCase):
         for depth in range(3):
             assert ih1.index_at_depth(depth) is ih1._indices[depth]
             assert ih1.index_at_depth([depth]) == (ih1._indices[depth],)
-            assert ih1.index_at_depth(iter([depth])) == (ih1._indices[depth],)
 
         assert ih1.index_at_depth([0, 1]) == ih1.index_at_depth([1, 0])[::-1]
         assert ih1.index_at_depth([2, 0]) == (ih1._indices[2], ih1._indices[0])
-        assert ih1.index_at_depth(iter(range(3))) == tuple(ih1._indices)
+        assert ih1.index_at_depth(list(range(3))) == tuple(ih1._indices)
 
     def test_hierarchy_indexer_at_depth_a(self) -> None:
         ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
@@ -3743,11 +3773,10 @@ class TestUnit(TestCase):
         for depth in range(3):
             assert (ih1.indexer_at_depth(depth) == ih1._indexers[depth]).all()
             assert (ih1.indexer_at_depth([depth]) == ih1._indexers[[depth]]).all()
-            assert (ih1.indexer_at_depth(iter([depth])) == ih1._indexers[[depth]]).all()
 
         assert (ih1.indexer_at_depth([0, 1]) == ih1.indexer_at_depth([1, 0])[::-1]).all().all()
         assert (ih1.indexer_at_depth([2, 0]) == [ih1._indexers[2], ih1._indexers[0]]).all().all()
-        assert (ih1.indexer_at_depth(iter(range(3))) == ih1._indexers).all().all()
+        assert (ih1.indexer_at_depth(list(range(3))) == ih1._indexers).all().all()
 
     #---------------------------------------------------------------------------
 
@@ -4173,9 +4202,9 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.unique(0).tolist(), [1, 2])
         self.assertEqual(ih1.unique(1).tolist(), ['a', 'b'])
         self.assertEqual(ih1.unique(2).tolist(), [2, 5])
-        self.assertEqual(ih1.unique((0, 2)).tolist(),
+        self.assertEqual(ih1.unique([0, 2]).tolist(),
                 [(1, 2), (1, 5), (2, 2), (2, 5)])
-        self.assertEqual(ih1.unique((1, 2)).tolist(),
+        self.assertEqual(ih1.unique([1, 2]).tolist(),
                 [('a', 2), ('a', 5), ('b', 2), ('b', 5)])
 
     def test_hierarchy_unique_b(self) -> None:
@@ -4186,7 +4215,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
         with self.assertRaises(RuntimeError):
-            ih1.unique((0, 2), order_by_occurrence=True)
+            ih1.unique([0, 2], order_by_occurrence=True)
 
     #---------------------------------------------------------------------------
 

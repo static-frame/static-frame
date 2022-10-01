@@ -24,7 +24,7 @@ from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeNoArgMapable
+from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -258,11 +258,11 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArgMapable['Yarn']:
+    def iter_element(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of elements.
         '''
-        return IterNodeNoArgMapable(
+        return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -271,11 +271,11 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArgMapable['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of label, element pairs.
         '''
-        return IterNodeNoArgMapable(
+        return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,

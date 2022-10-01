@@ -689,7 +689,6 @@ class TypeBlocks(ContainerOperand):
             # key: tp.Union[int, slice]
             row_dtype= self._row_dtype if self._row_dtype is not None else DTYPE_FLOAT_DEFAULT
             row_length = self._shape[0]
-            column_length = self._shape[1]
 
             if not reverse:
                 row_idx_iter = range(row_length)
@@ -708,7 +707,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[i]
             else:
                 # PERF: only creating and yielding one array at a time is shown to be slower; performance optimized: consolidate into a single array and then take slices
-                # NOTE: this might force unnecessary type coercion if going to a tuple
+                # NOTE: this might force unnecessary type coercion if going to a tuple, but if going to an array, the type consolidation is necessary
                 b = blocks_to_array_2d(
                         blocks=self._blocks,
                         shape=self._shape,
@@ -878,6 +877,24 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield cls._concatenate_blocks(group, group_dtype, group_columns)
 
+    @classmethod
+    def contiguous_columnar_blocks(cls,
+            raw_blocks: tp.Iterable[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Generator consumer, generator producer of np.ndarray, ensuring that blocks are contiguous in columnar access.
+
+        Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
+        '''
+
+        for b in raw_blocks:
+            # NOTE: 1D contiguous array sets both C_CONTIGUOUS and F_CONTIGUOUS; applying asfortranarray() to a 1D array is the same as ascontiguousarray(); columnar slices on F_CONTIGUOUS are contiguous;
+            if not b.flags['F_CONTIGUOUS']:
+                b = np.asfortranarray(b)
+                b.flags.writeable = False
+                yield b
+            else:
+                yield b
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
         '''Generator of new block that consolidate adjacent types that are the same.
@@ -888,6 +905,11 @@ class TypeBlocks(ContainerOperand):
         '''Return a new TypeBlocks that unifies all adjacent types.
         '''
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
+
+    def contiguous_columnar(self) -> 'TypeBlocks':
+        '''Return a new TypeBlocks that makes all columns or column slices contiguous.
+        '''
+        return self.from_blocks(self.contiguous_columnar_blocks(raw_blocks=self._blocks))
 
     #---------------------------------------------------------------------------
     def resize_blocks_by_element(self, *,
@@ -1485,6 +1507,7 @@ class TypeBlocks(ContainerOperand):
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
                 elif isinstance(key, KEY_ITERABLE_TYPES):
                     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
+                    # NOTE: we assume key is a list of integers: if key is a list of Booleans, we will not get the same elementwise selection as if we selected from an array
                     if retain_key_order:
                         indices = (self._index[x] for x in key)
                     else:
@@ -1829,12 +1852,18 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[np.ndarray]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
+
+        Args:
+            column_shift: a positive value moves column data to the right.
         '''
         row_count, column_count = self._shape
 
         # new start index is the opposite of the shift; if shifting by 2, the new start is the second from the end
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
+
+        block_head_iter: tp.Iterable[np.ndarray]
+        block_tail_iter: tp.Iterable[np.ndarray]
 
         # possibly be truthy
         # index is columns here
@@ -1843,15 +1872,18 @@ class TypeBlocks(ContainerOperand):
         elif not wrap and column_shift == 0 and row_shift == 0:
             yield from self._blocks
         else:
-            block_start_idx, block_start_column = self._index[index_start_pos]
+            block_start_idx, block_start_column = self._index[index_start_pos] # modulo adjusted
             block_start = self._blocks[block_start_idx]
 
-            if block_start_column == 0:
-                # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter: tp.Iterable[np.ndarray] = chain(
+            if not wrap and abs(column_shift) >= column_count: # no data will be retained
+                # blocks will be set below
+                block_head_iter = ()
+                block_tail_iter = ()
+            elif block_start_column == 0: # we are starting at the start of the block
+                block_head_iter = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+                block_tail_iter = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),
@@ -1862,8 +1894,12 @@ class TypeBlocks(ContainerOperand):
                         )
 
             if not wrap:
+                # provide a consolidated single block for missing values
                 shape = (row_count, min(column_count, abs(column_shift)))
                 empty = np.full(shape, fill_value)
+                empty.flags.writeable = False
+
+                # NOTE: this will overwrite values set above
                 if column_shift > 0:
                     block_head_iter = (empty,)
                 elif column_shift < 0:
@@ -1873,7 +1909,7 @@ class TypeBlocks(ContainerOperand):
             for b in chain(block_head_iter, block_tail_iter):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
-                else:
+                else: # do all row shifting here
                     array = array_shift(
                             array=b,
                             shift=row_shift,
@@ -1899,6 +1935,9 @@ class TypeBlocks(ContainerOperand):
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
 
+        block_head_iter: tp.Iterable[np.ndarray]
+        block_tail_iter: tp.Iterable[np.ndarray]
+
         # possibly be truthy
         # index is columns here
         if wrap and index_start_pos == 0 and row_start_pos == 0:
@@ -1909,12 +1948,16 @@ class TypeBlocks(ContainerOperand):
             block_start_idx, block_start_column = self._index[index_start_pos]
             block_start = self._blocks[block_start_idx]
 
-            if block_start_column == 0:
+            if not wrap and abs(column_shift) >= column_count: # no data will be retained
+                # blocks will be set below
+                block_head_iter = ()
+                block_tail_iter = ()
+            elif block_start_column == 0:
                 # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter: tp.Iterable[np.ndarray] = chain(
+                block_head_iter = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
+                block_tail_iter = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),

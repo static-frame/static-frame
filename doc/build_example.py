@@ -4,6 +4,7 @@ import sys
 DOC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
 
+import argparse
 from io import StringIO
 import typing as tp
 
@@ -211,13 +212,16 @@ IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517
 BUS_INIT_FROM_FRAMES_A = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), name='i')
 BUS_INIT_FROM_FRAMES_B = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')), name='j')
 
-BUS_INIT_FROM_FRAMES_C = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')))
+BUS_INIT_FROM_FRAMES_C = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')), name='k')
 
 BUS_INIT_FROM_DICT_A = dict(j=f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), k=f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'))
 
 BUS_INIT_FROM_ITEMS_A = dict(pairs=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'))))
 
 BUS_INIT_FROM_ITEMS_B = dict(pairs=((('i', 1024), f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), (('j', 4096), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), (('j', 2048), f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'))), index_constructor=b'sf.IndexHierarchy.from_labels')
+
+#-------------------------------------------------------------------------------
+YARN_INIT_FROM_BUSES_A = dict(buses=(f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'.encode('utf-8'), f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'.encode('utf-8')), retain_labels=True)
 
 #-------------------------------------------------------------------------------
 BATCH_INIT_A = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'))))
@@ -323,10 +327,13 @@ class ExGen:
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-        attr = row['signature_no_args'] # drop paren
-        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
-        yield f'{name} = {ctr}'
-        yield f'{name}.{attr}'
+        attr = row['signature_no_args']
+        if attr == 'mloc':
+            pass
+        else:
+            ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+            yield f'{name} = {ctr}'
+            yield f'{name}.{attr}'
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -1639,6 +1646,10 @@ class ExGenFrame(ExGen):
         elif attr == '__bool__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"bool(f)"
+        elif attr == '__dataframe__()':
+            yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield f'dfi = f.{attr}'
+            yield f"tuple(dfi.get_columns())"
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
@@ -3750,11 +3761,11 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == 'index_at_depth()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
             yield f"ih.{attr_func}(0)"
-            yield f"ih.{attr_func}((2, 0))"
+            yield f"ih.{attr_func}([2, 0])"
         elif attr == 'indexer_at_depth()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_B)})'
             yield f"ih.{attr_func}(0)"
-            yield f"ih.{attr_func}((2, 0))"
+            yield f"ih.{attr_func}([2, 0])"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4233,19 +4244,306 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    @classmethod
-    def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-        attr = row['signature_no_args']
 
-        # get __eq__ and few other methods even though they are not defined
-        if attr in cls.SIG_TO_OP_NUMERIC:
-            yield f'b1 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
-            yield f'b2 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
-            yield f'b1 {cls.SIG_TO_OP_NUMERIC[attr]} b2'
-            yield f'b1 {cls.SIG_TO_OP_NUMERIC[attr]} b1'
+class ExGenYarn(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+        iattr = f'{icls}.{attr}'
+
+        if attr == '__init__':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"{icls}((b1, b2), index=('2020-01', '2020-02', '2020-03', '2020-04'), index_constructor=sf.IndexYearMonth)"
+        elif attr == 'from_buses':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'{iattr}((b1, b2), retain_labels=True)'
+            yield f'{iattr}((b1, b2), retain_labels=False)'
+        elif attr == 'from_concat':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'b3 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield f'y2 = sf.Yarn.from_buses((b3,), retain_labels=True)'
+            yield f'{iattr}((y1, y2))'
         else:
             raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == 'to_series()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}()"
+        elif attr == 'to_hdf5()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y.hdf5')"
+        elif attr == 'to_sqlite()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y.sqlite')"
+        elif attr == 'to_xlsx()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y.xlsx')"
+        elif attr in (
+                'to_zip_csv()',
+                'to_zip_npz()',
+                'to_zip_npy()',
+                'to_zip_parquet()',
+                'to_zip_pickle()',
+                'to_zip_tsv()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))"
+        elif attr in (
+                'to_visidata()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._attribute(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == '__bool__()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"bool(y)"
+        elif attr == '__len__()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"len(y)"
+        elif attr == 'equals()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'b3 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield f'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1'
+            yield f'y2 = sf.Yarn.from_buses((b3,), retain_labels=False)'
+            yield 'y2'
+            yield f"y1.{attr_func}(y2)"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_func}(2)"
+        elif attr == 'rehierarch()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}((1, 0))"
+        elif attr == 'relabel()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}(('A', 'B', 'C', 'D'))"
+            yield f"y.{attr_func}({{('j', 'v'):('A', 'x')}})"
+        elif attr == 'relabel_flat()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}()"
+        elif attr == 'relabel_level_add()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}('A')"
+        elif attr == 'relabel_level_drop()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield 'y'
+            yield f"y.{attr_func}()"
+        elif attr == 'rename()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
+            yield f"y.{attr_func}('j')"
+        elif attr in 'unpersist()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f'tuple(y.values)'
+            yield f'y'
+            yield f'y.{attr_func}()'
+            yield 'y'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._dictionary_like(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._display(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
+
+        if attr == 'drop[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_sel}['x']"
+            yield f"y.{attr_sel}['v':]"
+            yield f"y.{attr_sel}[['w', 'y']]"
+        elif attr == 'drop.iloc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_sel}[1]"
+            yield f"y.{attr_sel}[1:]"
+            yield f"y.{attr_sel}[[0, 3]]"
+        elif attr == 'drop.loc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_sel}['w']"
+            yield f"y.{attr_sel}['v':]"
+            yield f"y.{attr_sel}[['v', 'x']]"
+        elif attr == '[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y['w']"
+            yield f"y['v':]"
+            yield f"y[['v', 'x']]"
+        elif attr == 'iloc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.iloc[1]"
+            yield f"y.iloc[1:]"
+            yield f"y.iloc[[0, 3]]"
+        elif attr == 'loc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.loc['w']"
+            yield f"y.loc['v':]"
+            yield f"y.loc[['v', 'x']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def iterator(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
+
+        if attr in (
+                'iter_element()',
+                'iter_element_items()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"tuple(y.{attr_func}())"
+        elif attr in (
+                'iter_element().apply()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_func}(lambda f: f.shape)"
+        elif attr in (
+                'iter_element_items().apply()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"y.{attr_func}(lambda l, f: f.size if l != 'v' else 0)"
+        elif attr in (
+                'iter_element().apply_iter()',
+                'iter_element().apply_iter_items()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"tuple(y.{attr_func}(lambda f: f.nbytes))"
+        elif attr in (
+                'iter_element().apply_pool()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'def func(f): return f.sum().sum()'
+            yield f"y.{attr_func}(func, use_threads=True)"
+
+        elif attr in (
+                'iter_element_items().apply_iter()',
+                'iter_element_items().apply_iter_items()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield f"tuple(y.{attr_func}(lambda l, f: f.shape if l != 'x' else 0))"
+        elif attr in (
+                'iter_element_items().apply_pool()',
+                ):
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield "def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1"
+            yield f"y.{attr_func}(func, use_threads=True)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+
+
 
 
 class ExGenBatch(ExGen):
@@ -5049,53 +5347,67 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             yield from calls_to_msg(calls, row)
 
 
-def gen_all_examples() -> tp.Iterator[str]:
-    yield from gen_examples(sf.Series, ExGenSeries)
-    yield from gen_examples(sf.SeriesHE, ExGenSeries)
+CLS_TO_EX_GEN = {
+        sf.Series: ExGenSeries,
+        sf.SeriesHE: ExGenSeries,
 
-    yield from gen_examples(sf.Frame, ExGenFrame)
-    yield from gen_examples(sf.FrameHE, ExGenFrame)
-    yield from gen_examples(sf.FrameGO, ExGenFrame)
+        sf.Frame: ExGenFrame,
+        sf.FrameHE: ExGenFrame,
+        sf.FrameGO: ExGenFrame,
 
-    yield from gen_examples(sf.Index, ExGenIndex)
-    yield from gen_examples(sf.IndexGO, ExGenIndex)
+        sf.Index: ExGenIndex,
+        sf.IndexGO: ExGenIndex,
 
-    yield from gen_examples(sf.IndexYear, ExGenIndexYear)
-    yield from gen_examples(sf.IndexYearGO, ExGenIndexYear)
+        sf.IndexYear: ExGenIndexYear,
+        sf.IndexYearGO: ExGenIndexYear,
 
-    yield from gen_examples(sf.IndexYearMonth, ExGenIndexYearMonth)
-    yield from gen_examples(sf.IndexYearMonthGO, ExGenIndexYearMonth)
+        sf.IndexYearMonth: ExGenIndexYearMonth,
+        sf.IndexYearMonthGO: ExGenIndexYearMonth,
 
-    yield from gen_examples(sf.IndexDate, ExGenIndexDate)
-    yield from gen_examples(sf.IndexDateGO, ExGenIndexDate)
+        sf.IndexDate: ExGenIndexDate,
+        sf.IndexDateGO: ExGenIndexDate,
 
-    yield from gen_examples(sf.IndexMinute, ExGenIndexMinute)
-    yield from gen_examples(sf.IndexMinuteGO, ExGenIndexMinute)
+        sf.IndexMinute: ExGenIndexMinute,
+        sf.IndexMinuteGO: ExGenIndexMinute,
 
-    yield from gen_examples(sf.IndexHour, ExGenIndexHour)
-    yield from gen_examples(sf.IndexHourGO, ExGenIndexHour)
+        sf.IndexHour: ExGenIndexHour,
+        sf.IndexHourGO: ExGenIndexHour,
 
-    yield from gen_examples(sf.IndexSecond, ExGenIndexSecond)
-    yield from gen_examples(sf.IndexSecondGO, ExGenIndexSecond)
+        sf.IndexSecond: ExGenIndexSecond,
+        sf.IndexSecondGO: ExGenIndexSecond,
 
-    yield from gen_examples(sf.IndexMillisecond, ExGenIndexMillisecond)
-    yield from gen_examples(sf.IndexMillisecondGO, ExGenIndexMillisecond)
+        sf.IndexMillisecond: ExGenIndexMillisecond,
+        sf.IndexMillisecondGO: ExGenIndexMillisecond,
 
-    yield from gen_examples(sf.IndexMicrosecond, ExGenIndexMicrosecond)
-    yield from gen_examples(sf.IndexMicrosecondGO, ExGenIndexMicrosecond)
+        sf.IndexMicrosecond: ExGenIndexMicrosecond,
+        sf.IndexMicrosecondGO: ExGenIndexMicrosecond,
 
-    yield from gen_examples(sf.IndexNanosecond, ExGenIndexNanosecond)
-    yield from gen_examples(sf.IndexNanosecondGO, ExGenIndexNanosecond)
+        sf.IndexNanosecond: ExGenIndexNanosecond,
+        sf.IndexNanosecondGO: ExGenIndexNanosecond,
 
-    yield from gen_examples(sf.IndexHierarchy, ExGenIndexHierarchy)
-    yield from gen_examples(sf.IndexHierarchyGO, ExGenIndexHierarchy)
+        sf.IndexHierarchy: ExGenIndexHierarchy,
+        sf.IndexHierarchyGO: ExGenIndexHierarchy,
 
-    yield from gen_examples(sf.Bus, ExGenBus)
-    yield from gen_examples(sf.Batch, ExGenBatch)
+        sf.Bus: ExGenBus,
+        sf.Yarn: ExGenYarn,
+        sf.Batch: ExGenBatch,
 
-    yield from gen_examples(sf.HLoc, ExGenHLoc)
-    yield from gen_examples(sf.ILoc, ExGenILoc)
-    yield from gen_examples(sf.FillValueAuto, ExGenFillValueAuto)
+        sf.HLoc: ExGenHLoc,
+        sf.ILoc: ExGenILoc,
+        sf.FillValueAuto: ExGenFillValueAuto,
+        }
+
+CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}
+
+def gen_all_examples(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> tp.Iterator[str]:
+
+    if component is None:
+        for component, ex_gen in CLS_TO_EX_GEN.items():
+            yield from gen_examples(component, ex_gen)
+    else:
+        yield from gen_examples(component, CLS_TO_EX_GEN[component])
 
 #-----------------------------------------------------------------------------
 # exporters
@@ -5104,29 +5416,37 @@ def get_examples_fp() -> str:
     return os.path.join(DOC_DIR, 'source', 'examples.txt')
 
 
-def to_file() -> str:
+def to_file(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> str:
     fp = get_examples_fp()
     with open(fp, 'w') as f:
-        for line in gen_all_examples():
+        for line in gen_all_examples(component):
             f.write(line)
             f.write('\n')
     return fp
 
 
-def to_string_io() -> StringIO:
+def to_string_io(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> StringIO:
     sio = StringIO()
-    for line in gen_all_examples():
+    for line in gen_all_examples(component):
         sio.write(line)
         sio.write('\n')
     sio.seek(0)
     return sio
 
 
-def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
+def to_json_bundle(
+        component: tp.Optional[tp.Type[ContainerBase]] = None,
+        ) -> tp.Dict[str, tp.List[str]]:
+
     post: tp.Dict[str, tp.List[str]] = {}
     lines: tp.List[str] = []
     sig = ''
-    for line in gen_all_examples():
+
+    for line in gen_all_examples(component):
         if line.startswith(TAG_START):
             prefix, method = line.split('-')
             cls_name = prefix.replace(TAG_START, '')
@@ -5141,8 +5461,37 @@ def to_json_bundle() -> tp.Dict[str, tp.List[str]]:
     return post
 
 
+def get_arg_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+            description='Build Example',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            )
+    p.add_argument('--print',
+            help='Print output.',
+            action='store_true',
+            )
+    p.add_argument('--write',
+            help=f'Write output to {get_examples_fp()}.',
+            action='store_true',
+            )
+    p.add_argument('--component',
+            help='Name of class to process, else all.',
+            )
+    return p
+
+
 if __name__ == '__main__':
-    # for line in gen_all_examples():
-    #     print(line)
-    # post = bundle()
-    print(to_file())
+
+    options = get_arg_parser().parse_args()
+    component = (None if not options.component else
+            CLS_NAME_TO_CLS[options.component])
+
+    if options.print:
+        for line in gen_all_examples(component):
+            print(line)
+    if options.write:
+        print(to_file(component))
+
+
+
+

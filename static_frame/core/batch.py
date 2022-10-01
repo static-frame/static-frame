@@ -469,7 +469,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             header = f'{self.__class__.__name__}: {self._name}'
         else:
             header = self.__class__.__name__
-        return f'<{header} at {hex(id(self))}>'
+        return f'<{header} max_workers={self._max_workers}>'
 
     #---------------------------------------------------------------------------
     # core function application routines

@@ -1,16 +1,34 @@
 What is New in StaticFrame
 ===============================
 
+0.9.16
+----------
+
+Added ``memory`` property to display memory usage.
+
+Implemented ``__repr__()`` for ``ILoc``.
+
+Updated ``Batch.__repr__()``.
+
+
 0.9.15
 ----------
 
-Added ``__repr()__`` for ``HLoc``.
+Added ``__repr__()`` for ``HLoc``.
 
 Added ``IndexHierarchy.index_at_depth()``
 
 Added ``IndexHierarchy.indexer_at_depth()``
 
-Added ``order_by_occurrence`` parameter to ``unique()`` on ``IndexBase`` subclasses.
+Added ``depth_level`` and ``order_by_occurrence`` parameters to ``unique()`` on ``IndexBase`` subclasses.
+
+Corrected issue calling ``Frame.to_pandas()`` with an empty ``Frame``.
+
+Implemented argument checking on all ``IndexHierarchy`` depth selection parameters.
+
+``IndexHierarchy.astype()`` now accepts a ``dtypes`` argument to assign dtypes by tuple or mapping.
+
+Corrected return type of ``via_str.contains()`` to return Booleans.
 
 
 0.9.14

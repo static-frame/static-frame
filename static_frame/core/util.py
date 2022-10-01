@@ -1,5 +1,6 @@
 import contextlib
 import datetime
+import math
 import operator
 import os
 import tempfile
@@ -296,6 +297,48 @@ def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
 
+def is_strict_int(value: tp.Any) -> bool:
+    '''Strict check that does not include bools as an int
+    '''
+    if value is None:
+        return False
+    if value.__class__ is bool or value.__class__ is np.bool_:
+        return False
+    return isinstance(value, INT_TYPES)
+
+def validate_depth_selection(
+        key: GetItemKeyType,
+        ) -> None:
+    '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
+
+    This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
+    '''
+    if key.__class__ is np.ndarray:
+        # let object dtype use iterable path
+        if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
+            return
+        elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
+            for e in key: # type: ignore
+                if not is_strict_int(e):
+                    raise KeyError(f'Cannot select depths by non integer: {e!r}')
+            return
+        raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
+    elif key.__class__ is slice:
+        if key.start is not None and not is_strict_int(key.start): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        if key.stop is not None and not is_strict_int(key.stop): # type: ignore
+            raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
+        return
+    elif isinstance(key, list):
+        # an iterable, or an object dtype array
+        for e in key:
+            if not is_strict_int(e):
+                raise KeyError(f'Cannot select depths by non integer: {e!r}')
+    else: # an element
+        if not is_strict_int(key):
+            raise KeyError(f'Cannot select depths by non integer: {key!r}')
+
+
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,
@@ -567,6 +610,20 @@ class PairRight(Pair):
 
 #-------------------------------------------------------------------------------
 
+def bytes_to_size_label(size_bytes: int) -> str:
+    if size_bytes == 0:
+        return '0 B'
+    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s: tp.Union[int, float]
+    if size_name[i] == 'B':
+        s = size_bytes
+    else:
+        s = round(size_bytes / p, 2)
+    return f'{s} ({size_name[i]})'
+
+#-------------------------------------------------------------------------------
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
@@ -651,7 +708,7 @@ class PairRight(Pair):
 #             yield v
 #         last = v
 
-def _gen_skip_middle(
+def gen_skip_middle(
         forward_iter: CallableToIterType,
         forward_count: int,
         reverse_iter: CallableToIterType,
@@ -1650,6 +1707,20 @@ def pos_loc_slice_to_iloc_slice(
     return slice(start, stop, key.step)
 
 
+def key_to_str(key: GetItemKeyType) -> str:
+    if key.__class__ is not slice:
+        return str(key)
+    if key == NULL_SLICE:
+        return ':'
+
+    result = ':' if key.start is None else f'{key.start}:' # type: ignore [union-attr]
+
+    if key.stop is not None: # type: ignore [union-attr]
+        result += str(key.stop) # type: ignore [union-attr]
+    if key.step is not None and key.step != 1: # type: ignore [union-attr]
+        result += f':{key.step}' # type: ignore [union-attr]
+
+    return result
 
 #-------------------------------------------------------------------------------
 # dates
@@ -3186,6 +3257,3 @@ def iloc_to_insertion_iloc(key: int, size: int) -> int:
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
-
-
-
