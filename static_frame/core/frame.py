@@ -7607,7 +7607,7 @@ class Frame(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
-        Return Frame version of this Frame, which (as the Frame is immutable) is self.
+        Return ``Frame`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
         return self._to_frame(Frame, name=name)
 
@@ -7616,7 +7616,7 @@ class Frame(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             ) -> 'FrameHE':
         '''
-        Return a ``FrameHE`` version of this Frame.
+        Return a ``FrameHE`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
         return self._to_frame(FrameHE, name=name) #type: ignore
 
@@ -7625,7 +7625,7 @@ class Frame(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             ) -> 'FrameGO':
         '''
-        Return a ``FrameGO`` version of this Frame.
+        Return a ``FrameGO`` instance from this ``Frame``.
         '''
         return self._to_frame(FrameGO, name=name) #type: ignore
 
@@ -8306,50 +8306,6 @@ class FrameGO(Frame):
                 fill_value=fill_value,
                 )
 
-    #---------------------------------------------------------------------------
-    # def _to_frame(self,
-    #         constructor: tp.Type[Frame],
-    #         *,
-    #         name: NameType = NAME_DEFAULT,
-    #         ) -> Frame:
-    #     return constructor(
-    #             self._blocks.copy(),
-    #             index=self.index,
-    #             columns=self._columns,
-    #             name=name if name is not NAME_DEFAULT else self._name,
-    #             own_data=True,
-    #             own_index=True,
-    #             own_columns=False, # all cases need new columns
-    #             )
-
-    def to_frame(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> Frame:
-        '''
-        Return :obj:`Frame` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(Frame, name=name)
-
-    def to_frame_he(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> 'FrameHE':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameHE, name=name) #type: ignore
-
-    def to_frame_go(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> 'FrameGO':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameGO, name=name) #type: ignore
-
-
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.
 
@@ -8678,30 +8634,3 @@ class FrameHE(Frame):
                     tuple(self.columns),
                     ))
         return self._hash
-
-    def to_frame_he(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> 'FrameHE':
-        '''
-        Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
-        '''
-        return self._to_frame(FrameHE, name=name)  #type: ignore [return-value]
-
-    def to_frame(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> Frame:
-        '''
-        Return obj:`Frame` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(Frame, name=name)
-
-    def to_frame_go(self,
-            *,
-            name: NameType = NAME_DEFAULT,
-            ) -> FrameGO:
-        '''
-        Return a obj:`FrameGO` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(FrameGO, name=name) #type: ignore [return-value]
