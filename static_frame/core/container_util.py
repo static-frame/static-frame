@@ -24,6 +24,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
@@ -905,7 +906,8 @@ def rehierarch_from_type_blocks(*,
     if set(range(depth)) != set(depth_map):
         raise RuntimeError('all depths must be specified')
 
-    depth_map = np.array(depth_map)
+    # dtype specified here will also ensure that all values in depth_map are int
+    depth_map = np.array(depth_map, dtype=DTYPE_INT_DEFAULT)
     indexers: tp.List[np.ndarray] = []
 
     for col_idx in range(depth):
