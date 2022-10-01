@@ -1707,6 +1707,20 @@ def pos_loc_slice_to_iloc_slice(
     return slice(start, stop, key.step)
 
 
+def key_to_str(key: GetItemKeyType) -> str:
+    if key.__class__ is not slice:
+        return str(key)
+    if key == NULL_SLICE:
+        return ':'
+
+    result = ':' if key.start is None else f'{key.start}:' # type: ignore [union-attr]
+
+    if key.stop is not None: # type: ignore [union-attr]
+        result += str(key.stop) # type: ignore [union-attr]
+    if key.step is not None and key.step != 1: # type: ignore [union-attr]
+        result += f':{key.step}' # type: ignore [union-attr]
+
+    return result
 
 #-------------------------------------------------------------------------------
 # dates
