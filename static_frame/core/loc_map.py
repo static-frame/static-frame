@@ -42,8 +42,6 @@ _ZERO_PAD_ARRAY.flags.writeable = False
 
 
 class FirstDuplicatePosition(KeyError):
-    __slots__ = ('first_dup',)
-
     def __init__(self, first_dup: int) -> None:
         self.first_dup = first_dup
 
