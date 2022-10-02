@@ -80,7 +80,7 @@ from static_frame.core.util import validate_depth_selection
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
-
+from static_frame.core.util import bytes_to_size_label
 
 class TestUnit(TestCase):
 
@@ -2782,6 +2782,15 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             validate_depth_selection(None)
+
+    #---------------------------------------------------------------------------
+    def test_bytes_to_size_label(self):
+        self.assertEqual(bytes_to_size_label(0), '0 (B)')
+        self.assertEqual(bytes_to_size_label(1), '1 (B)')
+        self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 (KB)')
+
+
 
 if __name__ == '__main__':
     unittest.main()
