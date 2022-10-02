@@ -2911,6 +2911,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
@@ -2978,6 +2979,7 @@ class Series(ContainerOperand):
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
+                name=name if name is not NAME_DEFAULT else None,
                 )
 
     def to_frame(self,
@@ -2987,6 +2989,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3007,6 +3010,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
     def to_frame_go(self,
@@ -3016,6 +3020,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'FrameGO':
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3035,6 +3040,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
     def to_frame_he(self,
@@ -3044,6 +3050,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'FrameHE':
         '''
         Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3063,6 +3070,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
 

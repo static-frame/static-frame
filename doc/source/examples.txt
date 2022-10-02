@@ -198,12 +198,12 @@ c
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
 <Frame: <Series>>
-<Index>           L       LM        LMD     R         RM        RMD     <<U3>
+<Index>           L       LM      LMD     R         RM       RMD     <<U3>
 <Index>
-Index             772 (B) 836 (B)   580 (B) 8.85 (KB) 860 (B)   604 (B)
-Values            120 (B) 152 (B)   24 (B)  120 (B)   152 (B)   24 (B)
-Total             964 (B) 1.04 (KB) 676 (B) 9.04 (KB) 1.06 (KB) 700 (B)
-<<U6>             <<U7>   <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Index             772 (B) 804 (B) 580 (B) 8.85 (KB) 828 (B)  604 (B)
+Values            120 (B) 136 (B) 24 (B)  120 (B)   136 (B)  24 (B)
+Total             948 (B) 996 (B) 660 (B) 9.02 (KB) 1020 (B) 684 (B)
+<<U6>             <<U7>   <<U7>   <<U7>   <<U9>     <<U8>    <<U7>
 #end_Series-memory
 
 #start_Series-name
@@ -346,7 +346,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_Series-corr()
 
 #start_Series-count()
@@ -5088,12 +5088,12 @@ c
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
 <Frame: <SeriesHE>>
-<Index>             L       LM        LMD     R         RM        RMD     <<U3>
+<Index>             L       LM       LMD     R         RM       RMD     <<U3>
 <Index>
-Index               772 (B) 836 (B)   580 (B) 8.85 (KB) 860 (B)   604 (B)
-Values              120 (B) 152 (B)   24 (B)  120 (B)   152 (B)   24 (B)
-Total               972 (B) 1.04 (KB) 684 (B) 9.04 (KB) 1.07 (KB) 708 (B)
-<<U6>               <<U7>   <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Index               772 (B) 804 (B)  580 (B) 8.85 (KB) 828 (B)  604 (B)
+Values              120 (B) 136 (B)  24 (B)  120 (B)   136 (B)  24 (B)
+Total               956 (B) 1004 (B) 668 (B) 9.03 (KB) 1.0 (KB) 692 (B)
+<<U6>               <<U7>   <<U8>    <<U7>   <<U9>     <<U8>    <<U7>
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -5236,7 +5236,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -10554,10 +10554,10 @@ c           datetime64[D]
 <Frame: <Frame: x>>
 <Index>             L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Index               224 (B)   256 (B)   128 (B)   8.31 (KB)  288 (B)   160 (B)
-Columns             772 (B)   836 (B)   580 (B)   8.85 (KB)  860 (B)   604 (B)
-Blocks              1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB)  1.62 (KB) 1.25 (KB)
-Total               2.6 (KB)  2.78 (KB) 2.03 (KB) 10.69 (KB) 2.84 (KB) 2.09 (KB)
+Index               208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
+Columns             772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
+Blocks              1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
+Total               2.44 (KB) 2.53 (KB) 1.88 (KB) 10.53 (KB) 2.59 (KB) 1.93 (KB)
 <<U7>               <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Frame-memory
 
@@ -17717,13 +17717,13 @@ c           datetime64[D]
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
 <Frame: <FrameHE: x>>
-<Index>               L         LM        LMD       R         RM        RMD       <<U3>
+<Index>               L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Index                 224 (B)   256 (B)   128 (B)   8.31 (KB) 288 (B)   160 (B)
-Columns               772 (B)   836 (B)   580 (B)   8.85 (KB) 860 (B)   604 (B)
-Blocks                1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB) 1.62 (KB) 1.25 (KB)
-Total                 2.6 (KB)  2.79 (KB) 2.04 (KB) 10.7 (KB) 2.85 (KB) 2.1 (KB)
-<<U7>                 <<U9>     <<U9>     <<U9>     <<U9>     <<U9>     <<U9>
+Index                 208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
+Columns               772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
+Blocks                1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
+Total                 2.45 (KB) 2.54 (KB) 1.88 (KB) 10.54 (KB) 2.6 (KB)  1.94 (KB)
+<<U7>                 <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -24856,10 +24856,10 @@ c           datetime64[D]
 <Frame: <FrameGO: x>>
 <Index>               L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Index                 224 (B)   256 (B)   128 (B)   8.31 (KB)  288 (B)   160 (B)
-Columns               1.14 (KB) 1.2 (KB)  974 (B)   9.23 (KB)  1.22 (KB) 998 (B)
-Blocks                1.53 (KB) 1.62 (KB) 1.25 (KB) 1.53 (KB)  1.62 (KB) 1.25 (KB)
-Total                 2.95 (KB) 3.14 (KB) 2.39 (KB) 11.05 (KB) 3.2 (KB)  2.45 (KB)
+Index                 208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
+Columns               1.12 (KB) 1.15 (KB) 958 (B)   9.22 (KB)  1.18 (KB) 982 (B)
+Blocks                1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
+Total                 2.78 (KB) 2.88 (KB) 2.22 (KB) 10.88 (KB) 2.93 (KB) 2.27 (KB)
 <<U7>                 <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_FrameGO-memory
 
@@ -31352,7 +31352,7 @@ x        <Index>
 <Frame: <Index: x>>
 <Index>             L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total               894 (B) 958 (B) 702 (B) 8.97 (KB) 998 (B) 742 (B)
+Total               878 (B) 910 (B) 686 (B) 8.95 (KB) 950 (B) 726 (B)
 <<U5>               <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_Index-memory
 
@@ -33171,7 +33171,7 @@ x        <IndexGO>
 <Frame: <IndexGO: x>>
 <Index>               L         LM        LMD       R         RM        RMD       <<U3>
 <Index>
-Total                 1.37 (KB) 1.43 (KB) 1.18 (KB) 9.46 (KB) 1.47 (KB) 1.22 (KB)
+Total                 1.34 (KB) 1.37 (KB) 1.15 (KB) 9.43 (KB) 1.41 (KB) 1.19 (KB)
 <<U5>                 <<U9>     <<U9>     <<U9>     <<U9>     <<U9>     <<U9>
 #end_IndexGO-memory
 
@@ -35035,7 +35035,7 @@ None     <IndexYear>
 <Frame: <IndexYear>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexYear-memory
 
@@ -36714,10 +36714,10 @@ None     <IndexYearGO>
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
 <Frame: <IndexYearGO>>
-<Index>                L        LM        LMD     R         RM        RMD     <<U3>
+<Index>                L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                  1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
-<<U5>                  <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                  1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
+<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -38446,7 +38446,7 @@ None     <IndexYearMonth>
 <Frame: <IndexYearMonth>>
 <Index>                   L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                     784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                     784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                     <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexYearMonth-memory
 
@@ -40147,10 +40147,10 @@ None     <IndexYearMonthGO>
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
 <Frame: <IndexYearMonthGO>>
-<Index>                     L        LM        LMD     R         RM        RMD     <<U3>
+<Index>                     L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                       1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
-<<U5>                       <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                       1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
+<<U5>                       <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -41925,7 +41925,7 @@ None     <IndexDate>
 <Frame: <IndexDate>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexDate-memory
 
@@ -43675,10 +43675,10 @@ None     <IndexDateGO>
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexDateGO>>
-<Index>                L        LM        LMD     R         RM        RMD     <<U3>
+<Index>                L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                  1.1 (KB) 1.16 (KB) 932 (B) 9.19 (KB) 1.18 (KB) 956 (B)
-<<U5>                  <<U8>    <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
+Total                  1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
+<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -45364,7 +45364,7 @@ None     <IndexMinute>
 <Frame: <IndexMinute>>
 <Index>                L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                  784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                  784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                  <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMinute-memory
 
@@ -47027,10 +47027,10 @@ None     <IndexMinuteGO>
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMinuteGO>>
-<Index>                  L         LM        LMD     R         RM        RMD      <<U3>
+<Index>                  L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                    1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
-<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
+Total                    1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
+<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -48721,7 +48721,7 @@ None     <IndexHour>
 <Frame: <IndexHour>>
 <Index>              L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexHour-memory
 
@@ -50387,10 +50387,10 @@ None     <IndexHourGO>
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexHourGO>>
-<Index>                L         LM        LMD     R         RM        RMD      <<U3>
+<Index>                L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                  1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
-<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
+Total                  1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
+<<U5>                  <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -52084,7 +52084,7 @@ None     <IndexSecond>
 <Frame: <IndexSecond>>
 <Index>                L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                  784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                  784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                  <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexSecond-memory
 
@@ -53755,10 +53755,10 @@ None     <IndexSecondGO>
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexSecondGO>>
-<Index>                  L         LM        LMD     R         RM        RMD      <<U3>
+<Index>                  L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                    1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
-<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
+Total                    1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
+<<U5>                    <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -55457,7 +55457,7 @@ None     <IndexMillisecond>
 <Frame: <IndexMillisecond>>
 <Index>                     L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                       784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                       784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                       <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMillisecond-memory
 
@@ -57147,10 +57147,10 @@ None     <IndexMillisecondGO>
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMillisecondGO>>
-<Index>                       L         LM        LMD     R         RM        RMD      <<U3>
+<Index>                       L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                         1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
-<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
+Total                         1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
+<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -58868,7 +58868,7 @@ None     <IndexMicrosecond>
 <Frame: <IndexMicrosecond>>
 <Index>                     L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                       784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                       784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                       <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexMicrosecond-memory
 
@@ -60560,10 +60560,10 @@ None     <IndexMicrosecondGO>
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
 <Frame: <IndexMicrosecondGO>>
-<Index>                       L         LM        LMD     R         RM        RMD      <<U3>
+<Index>                       L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                         1.14 (KB) 1.21 (KB) 980 (B) 9.24 (KB) 1.23 (KB) 1004 (B)
-<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U8>
+Total                         1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
+<<U5>                         <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -62283,7 +62283,7 @@ None     <IndexNanosecond>
 <Frame: <IndexNanosecond>>
 <Index>                    L       LM      LMD     R         RM      RMD     <<U3>
 <Index>
-Total                      784 (B) 848 (B) 592 (B) 8.86 (KB) 872 (B) 616 (B)
+Total                      784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 <<U5>                      <<U7>   <<U7>   <<U7>   <<U9>     <<U7>   <<U7>
 #end_IndexNanosecond-memory
 
@@ -63974,10 +63974,10 @@ None     <IndexNanosecondGO>
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
 <Frame: <IndexNanosecondGO>>
-<Index>                      L         LM        LMD     R        RM       RMD     <<U3>
+<Index>                      L         LM        LMD     R         RM        RMD     <<U3>
 <Index>
-Total                        1.11 (KB) 1.17 (KB) 944 (B) 9.2 (KB) 1.2 (KB) 968 (B)
-<<U5>                        <<U9>     <<U9>     <<U7>   <<U8>    <<U8>    <<U7>
+Total                        1.09 (KB) 1.12 (KB) 928 (B) 9.19 (KB) 1.15 (KB) 952 (B)
+<<U5>                        <<U9>     <<U9>     <<U7>   <<U9>     <<U9>     <<U7>
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -65805,11 +65805,11 @@ z        <IndexDate>
 <Frame: <IndexHierarchy: ('x', 'y...
 <Index>                              L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Indices                              2.3 (KB)  2.48 (KB) 1.73 (KB) 10.39 (KB) 2.55 (KB) 1.8 (KB)
-Indexers                             184 (B)   200 (B)   72 (B)    184 (B)    200 (B)   72 (B)
-Blocks                               1.49 (KB) 1.59 (KB) 1.21 (KB) 1.49 (KB)  1.59 (KB) 1.21 (KB)
+Indices                              2.29 (KB) 2.38 (KB) 1.73 (KB) 10.38 (KB) 2.45 (KB) 1.79 (KB)
+Indexers                             184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
+Blocks                               1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
 Values                               16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total                                4.95 (KB) 5.28 (KB) 3.91 (KB) 13.05 (KB) 5.34 (KB) 3.97 (KB)
+Total                                4.79 (KB) 4.94 (KB) 3.74 (KB) 12.88 (KB) 5.01 (KB) 3.8 (KB)
 <<U8>                                <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_IndexHierarchy-memory
 
@@ -65828,7 +65828,7 @@ Total                                4.95 (KB) 5.28 (KB) 3.91 (KB) 13.05 (KB) 5.
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -66241,13 +66241,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f76f99f1320> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7fcbf9bddca0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f76f94ea950> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7fcbf7ac89d0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66374,7 +66374,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f76f99f1560>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7fcbf9bdde50>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66436,7 +66436,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f76f99f17a0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7fcbf9beb040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -68192,11 +68192,11 @@ z        <IndexDateGO>
 <Frame: <IndexHierarchyGO: ('x', ...
 <Index>                              L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Indices                              3.25 (KB) 3.43 (KB) 2.68 (KB) 11.34 (KB) 3.5 (KB)  2.75 (KB)
-Indexers                             184 (B)   200 (B)   72 (B)    184 (B)    200 (B)   72 (B)
-Blocks                               1.49 (KB) 1.59 (KB) 1.21 (KB) 1.49 (KB)  1.59 (KB) 1.21 (KB)
+Indices                              3.19 (KB) 3.29 (KB) 2.63 (KB) 11.29 (KB) 3.35 (KB) 2.69 (KB)
+Indexers                             184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
+Blocks                               1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
 Values                               16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total                                5.56 (KB) 5.89 (KB) 4.51 (KB) 13.65 (KB) 5.95 (KB) 4.57 (KB)
+Total                                5.35 (KB) 5.5 (KB)  4.3 (KB)  13.44 (KB) 5.57 (KB) 4.36 (KB)
 <<U8>                                <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_IndexHierarchyGO-memory
 
@@ -68215,7 +68215,7 @@ Total                                5.56 (KB) 5.89 (KB) 4.51 (KB) 13.65 (KB) 5.
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -68649,13 +68649,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f76f99f1320> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7fcbf9bddca0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f76f94ea950> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7fcbf7ac89d0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -68782,7 +68782,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f76f99f1560>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7fcbf9bdde50>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -68844,7 +68844,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f76f99f17a0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7fcbf9beb040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -70718,10 +70718,10 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
 <Frame: <Bus: i>>
-<Index>           L         LM        LMD       R          RM       RMD      <<U3>
+<Index>           L         LM       LMD       R          RM        RMD       <<U3>
 <Index>
-Total             6.58 (KB) 1.88 (KB) 1.38 (KB) 14.67 (KB) 1.9 (KB) 1.4 (KB)
-<<U5>             <<U9>     <<U9>     <<U9>     <<U10>     <<U8>    <<U8>
+Total             6.12 (KB) 1.6 (KB) 1.16 (KB) 14.22 (KB) 1.61 (KB) 1.18 (KB)
+<<U5>             <<U9>     <<U8>    <<U9>     <<U10>     <<U9>     <<U9>
 #end_Bus-memory
 
 #start_Bus-name
@@ -71841,7 +71841,7 @@ j                w
 <Frame: <Yarn>>
 <Index>         L          LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Total           17.12 (KB) 5.03 (KB) 3.65 (KB) 25.21 (KB) 5.09 (KB) 3.72 (KB)
+Total           16.06 (KB) 4.68 (KB) 3.48 (KB) 24.15 (KB) 4.75 (KB) 3.54 (KB)
 <<U5>           <<U10>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Yarn-memory
 
@@ -72963,7 +72963,7 @@ True
 <Frame: <Batch>>
 <Index>          L         LM        LMD       R          RM        RMD       <<U3>
 <Index>
-Total            5.83 (KB) 6.11 (KB) 4.86 (KB) 13.92 (KB) 6.19 (KB) 4.94 (KB)
+Total            5.32 (KB) 5.45 (KB) 4.35 (KB) 13.41 (KB) 5.52 (KB) 4.43 (KB)
 <<U5>            <<U9>     <<U9>     <<U9>     <<U10>     <<U9>     <<U9>
 #end_Batch-memory
 
@@ -76937,7 +76937,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f7693376dd0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fcb517daa40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -76997,13 +76997,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f76933769e0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fcb44a6ed40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f76933769e0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fcb44a6e1c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
