@@ -7,10 +7,10 @@ from typing import NamedTuple
 
 import numpy as np
 
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
-from static_frame.core.display_config import DisplayConfig
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
