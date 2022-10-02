@@ -12,6 +12,8 @@ Implemented ``__repr__()`` for ``ILoc``.
 
 Updated ``Batch.__repr__()``.
 
+Added ``name`` parameter to ``Frame.to_frame()``, ``Series.to_frame()``, and related methods.
+
 Improved error reporting for invalid ``IndexHiearchy``.
 
 ``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
