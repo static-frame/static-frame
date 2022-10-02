@@ -9626,11 +9626,11 @@ class TestUnit(TestCase):
                 name='foo')
 
         f2 = f1.to_frame_go()
-        f3 = f2.to_frame()
+        f3 = f2.to_frame(name='bar')
 
         self.assertTrue(f1.name, 'foo')
         self.assertTrue(f2.name, 'foo')
-        self.assertTrue(f3.name, 'foo')
+        self.assertTrue(f3.name, 'bar')
 
     def test_frame_to_frame_go_c(self) -> None:
         records = (
@@ -9702,7 +9702,9 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_frame_to_frame_a(self) -> None:
-        pass
+        f1 = Frame(np.array(()), name='foo')
+        f2 = f1.to_frame(name='bar')
+        self.assertEqual(f2.name, 'bar')
 
     #---------------------------------------------------------------------------
 

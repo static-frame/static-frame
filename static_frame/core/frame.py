@@ -7585,6 +7585,7 @@ class Frame(ContainerOperand):
             *,
             name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
+
         if self.__class__ is constructor and constructor in (Frame, FrameHE):
             if name is not NAME_DEFAULT:
                 return self.rename(name)
