@@ -10,6 +10,7 @@ import numpy as np
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
+from static_frame.core.display_config import DisplayConfig
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -222,7 +223,7 @@ class MemoryDisplay:
                     sizes.append(memory_total(part, format=format))
                 yield label, sizes
 
-        if getattr(obj, 'name') and obj.name is not None:
+        if hasattr(obj, 'name') and obj.name is not None:
             name = f'<{obj.__class__.__name__}: {obj.name}>'
         else:
             name = f'<{obj.__class__.__name__}>'
@@ -236,16 +237,14 @@ class MemoryDisplay:
 
     def __init__(self, frame: 'Frame'):
         self._frame = frame
-        self._repr = ''
 
-    def __repr__(self) -> str:
-        from static_frame.core.display import DisplayConfig
         dc = DisplayConfig(type_show=False)
-        if not self._repr:
-            self._repr = self._frame.iter_element().apply(
+        self._repr: str = self._frame.iter_element().apply(
                 bytes_to_size_label,
                 name=self._frame._name,
                 ).display(config=dc).__repr__()
+
+    def __repr__(self) -> str:
         return self._repr
 
     def to_frame(self) -> 'Frame':
