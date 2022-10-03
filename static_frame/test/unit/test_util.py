@@ -2785,7 +2785,7 @@ class TestUnit(TestCase):
             validate_depth_selection(None)
 
     #---------------------------------------------------------------------------
-    def test_bytes_to_size_label(self):
+    def test_bytes_to_size_label(self) -> None:
         self.assertEqual(bytes_to_size_label(0), '0 (B)')
         self.assertEqual(bytes_to_size_label(1), '1 (B)')
         self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
