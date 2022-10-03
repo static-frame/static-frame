@@ -2668,10 +2668,8 @@ def ufunc_set_iter(
     for array in arrays:
         if array.ndim != ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        if array_id:
-            if id(array) == array_id:
-                continue
-            array_id = 0
+        if id(array) == array_id:
+            continue
         # to retain order on identity, assume_unique must be True
         result = ufunc(result, array, assume_unique=assume_unique)
 

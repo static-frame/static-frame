@@ -466,12 +466,6 @@ class TestUnit(TestCase):
         self.assertEqual(post1.name, 'foo')
         self.assertEqual(post1.__class__, Index)
 
-        # self.assertEqual(set(post1.values),
-        #         {'1997-01-02',
-        #         '1997-01-01',
-        #         np.datetime64('2020-01-01'),
-        #         np.datetime64('2020-01-02')})
-
         # the result of this operation is an unstable ordering
         values = set(post1.values)
         self.assertTrue('1997-01-01' in values)
@@ -588,6 +582,20 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2]],)
 
+
+    def test_index_many_set_l(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        # idx2 = IndexDate(('2020-01-02', '2020-01-03'))
+
+
+        post1 = index_many_set((idx0,  idx1), Index, union=True)
+        assert isinstance(post1, Index)
+
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, Index)
+        # import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------
