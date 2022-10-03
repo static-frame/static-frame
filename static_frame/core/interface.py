@@ -873,16 +873,16 @@ class InterfaceSummary(Features):
         return True
 
     @classmethod
-    def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
+    def get_instance(cls, target: tp.Any) -> ContainerBase:
         '''
         Get a sample instance from any ContainerBase; cache to only create one per life of process.
         '''
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
-                instance = target.from_blocks(np.array((0,))) #type: ignore
+                instance = target.from_blocks(np.array((0,)))
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
-                instance = target.from_frames((f,)) #type: ignore
+                instance = target.from_frames((f,))
             elif target is Yarn:
                 f = Frame.from_elements((0,), name='frame')
                 instance = Yarn.from_buses(
@@ -892,10 +892,10 @@ class InterfaceSummary(Features):
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
                 bus = Bus.from_frames((f,))
-                instance = target(bus, retain_labels=False) #type: ignore
+                instance = target(bus, retain_labels=False)
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target is NPY or target is NPZ: #type: ignore
+            elif target is NPY or target is NPZ:
                 instance = target
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
@@ -909,7 +909,7 @@ class InterfaceSummary(Features):
                 f = Frame(EMPTY_ARRAY)
                 instance = target.from_any(f)
             else:
-                instance = target((0,)) #type: ignore
+                instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
         return cls._CLS_TO_INSTANCE_CACHE[target]
 
