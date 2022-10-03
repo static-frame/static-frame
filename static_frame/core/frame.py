@@ -7580,40 +7580,60 @@ class Frame(ContainerOperand):
 
         return xarray.Dataset(data_vars, coords=coords) #type: ignore
 
-    def to_frame(self) -> 'Frame':
-        '''
-        Return Frame version of this Frame, which (as the Frame is immutable) is self.
-        '''
-        return self
-
     def _to_frame(self,
-            constructor: tp.Type['Frame']
+            constructor: tp.Type['Frame'],
+            *,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
+
+        if self.__class__ is constructor and constructor in (Frame, FrameHE):
+            if name is not NAME_DEFAULT:
+                return self.rename(name)
+            return self
+
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
+
         return constructor(
                 self._blocks.copy(),
                 index=self.index,
                 columns=self._columns,
-                name=self._name,
+                name=name if name is not NAME_DEFAULT else self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=constructor is FrameHE,
+                own_columns=own_columns,
                 )
 
-    def to_frame_he(self) -> 'FrameHE':
+    def to_frame(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'Frame':
         '''
-        Return a ``FrameHE`` version of this Frame.
+        Return ``Frame`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
-        return self._to_frame(FrameHE) #type: ignore
+        return self._to_frame(Frame, name=name)
 
-    def to_frame_go(self) -> 'FrameGO':
+    def to_frame_he(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'FrameHE':
         '''
-        Return a ``FrameGO`` version of this Frame.
+        Return a ``FrameHE`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
-        return self._to_frame(FrameGO) #type: ignore
+        return self._to_frame(FrameHE, name=name) #type: ignore
+
+    def to_frame_go(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'FrameGO':
+        '''
+        Return a ``FrameGO`` instance from this ``Frame``.
+        '''
+        return self._to_frame(FrameGO, name=name) #type: ignore
 
     def to_series(self,
             *,
             index_constructor: IndexConstructor = Index,
+            name: NameType = NAME_DEFAULT,
             ) -> Series:
         '''
         Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.
@@ -7633,7 +7653,7 @@ class Frame(ContainerOperand):
         else:
             columns_tuples = tuple((l,) for l in self._columns.values)
 
-        # immutability should be prserved
+        # immutability should be preserved
         array = self._blocks.values.reshape(self._blocks.size)
 
         def labels() -> tp.Iterator[tp.Hashable]:
@@ -7641,7 +7661,9 @@ class Frame(ContainerOperand):
                 yield index_tuples[row] + columns_tuples[col]
 
         index = index_constructor(labels())
-        return Series(array, index=index, own_index=True, name=self._name)
+        name = name if name is not NAME_DEFAULT else self._name
+
+        return Series(array, index=index, own_index=True, name=name)
 
     #---------------------------------------------------------------------------
     def _to_str_records(self,
@@ -8285,39 +8307,6 @@ class FrameGO(Frame):
                 fill_value=fill_value,
                 )
 
-    #---------------------------------------------------------------------------
-    def _to_frame(self,
-            constructor: tp.Type[Frame]
-            ) -> Frame:
-        return constructor(
-                self._blocks.copy(),
-                index=self.index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True,
-                own_index=True,
-                own_columns=False, # all cases need new columns
-                )
-
-    def to_frame(self) -> Frame:
-        '''
-        Return :obj:`Frame` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(Frame)
-
-    def to_frame_he(self) -> 'FrameHE':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameHE) #type: ignore
-
-    def to_frame_go(self) -> 'FrameGO':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameGO) #type: ignore
-
-
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.
 
@@ -8646,34 +8635,3 @@ class FrameHE(Frame):
                     tuple(self.columns),
                     ))
         return self._hash
-
-    def to_frame_he(self) -> 'FrameHE':
-        '''
-        Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
-        '''
-        return self
-
-    def _to_frame(self,
-            constructor: tp.Type[Frame]
-            ) -> Frame:
-        return constructor(
-                self._blocks.copy(),
-                index=self.index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True,
-                own_index=True,
-                own_columns=constructor is Frame,
-                )
-
-    def to_frame(self) -> Frame:
-        '''
-        Return obj:`Frame` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(Frame)
-
-    def to_frame_go(self) -> FrameGO:
-        '''
-        Return a obj:`FrameGO` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(FrameGO) #type: ignore [return-value]

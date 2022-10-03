@@ -612,7 +612,7 @@ class PairRight(Pair):
 
 def bytes_to_size_label(size_bytes: int) -> str:
     if size_bytes == 0:
-        return '0 B'
+        return '0 (B)'
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
     i = int(math.floor(math.log(size_bytes, 1024)))
     p = math.pow(1024, i)
