@@ -330,7 +330,7 @@ class Index(IndexBase):
                     labels_for_automap = labels
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
-                except ValueError: # Automap will raise ValueError of non-unique values are encountered
+                except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels_for_automap) from None
                 size = len(self._map)
             else:
