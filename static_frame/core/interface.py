@@ -24,6 +24,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
@@ -50,6 +51,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DT64_S
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.yarn import Yarn
 
@@ -871,16 +873,16 @@ class InterfaceSummary(Features):
         return True
 
     @classmethod
-    def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
+    def get_instance(cls, target: tp.Any) -> ContainerBase:
         '''
         Get a sample instance from any ContainerBase; cache to only create one per life of process.
         '''
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
-                instance = target.from_blocks(np.array((0,))) #type: ignore
+                instance = target.from_blocks(np.array((0,)))
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
-                instance = target.from_frames((f,)) #type: ignore
+                instance = target.from_frames((f,))
             elif target is Yarn:
                 f = Frame.from_elements((0,), name='frame')
                 instance = Yarn.from_buses(
@@ -890,10 +892,10 @@ class InterfaceSummary(Features):
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
                 bus = Bus.from_frames((f,))
-                instance = target(bus, retain_labels=False) #type: ignore
+                instance = target(bus, retain_labels=False)
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target is NPY or target is NPZ: #type: ignore
+            elif target is NPY or target is NPZ:
                 instance = target
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
@@ -903,8 +905,11 @@ class InterfaceSummary(Features):
                 instance = target.from_elements((0,))
             elif target in cls._CLS_INIT_SIMPLE:
                 instance = target()
+            elif target is MemoryDisplay:
+                f = Frame(EMPTY_ARRAY)
+                instance = target.from_any(f)
             else:
-                instance = target((0,)) #type: ignore
+                instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
         return cls._CLS_TO_INSTANCE_CACHE[target]
 

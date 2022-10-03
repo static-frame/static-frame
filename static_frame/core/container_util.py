@@ -111,6 +111,7 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexYearMonthGO
         from static_frame.core.index_hierarchy import IndexHierarchy
         from static_frame.core.index_hierarchy import IndexHierarchyGO
+        from static_frame.core.memory_measure import MemoryDisplay
         from static_frame.core.quilt import Quilt
         from static_frame.core.series import Series
         from static_frame.core.series import SeriesHE

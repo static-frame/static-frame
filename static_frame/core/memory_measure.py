@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import numpy as np
 
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
@@ -198,41 +199,63 @@ def memory_total(
 
     return sum(gen())
 
-
-def memory_display(
-        obj: tp.Any,
-        label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
-        *,
-        size_label: bool = True,
-        ) -> 'Frame':
+class MemoryDisplay:
+    '''A simple container for capturing and displaying memory usage in bytes for StaticFrame containers.
     '''
-    Args:
-        label_component_pairs: provide paris of label, attribute component
-    '''
-    from static_frame.core.frame import Frame
 
-    parts = chain(label_component_pairs, (('Total', obj),))
-
-    def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
-        for label, part in parts:
-            sizes = []
-            for format in MeasureFormat:
-                # NOTE: not sharing seen accross evaluations
-                sizes.append(memory_total(part, format=format))
-            yield label, sizes
-
-    if hasattr(obj, 'name') and obj.name is not None:
-        name = f'<{obj.__class__.__name__}: {obj.name}>'
-    else:
-        name = f'<{obj.__class__.__name__}>'
-
-    f = Frame.from_records_items(
-            gen(),
-            columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
-            name=name,
+    __slots__ = (
+            '_frame',
+            '_repr',
             )
-    if size_label:
-        f = f.iter_element().apply(bytes_to_size_label, name=name)
-    return f # type: ignore
 
+    @classmethod
+    def from_any(cls,
+            obj: tp.Any,
+            label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]] = (),
+            ) -> 'MemoryDisplay':
+        '''Given any slotted object, return a :obj:`MemoryDisplay` instance.
+
+        '''
+        from static_frame.core.frame import Frame
+
+        parts = chain(label_component_pairs, (('Total', obj),))
+
+        def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
+            for label, part in parts:
+                sizes = []
+                for format in MeasureFormat:
+                    # NOTE: not sharing seen accross evaluations
+                    sizes.append(memory_total(part, format=format))
+                yield label, sizes
+
+        if hasattr(obj, 'name') and obj.name is not None:
+            name = f'<{obj.__class__.__name__}: {obj.name}>'
+        else:
+            name = f'<{obj.__class__.__name__}>'
+
+        f = Frame.from_records_items(
+                gen(),
+                columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
+                name=name,
+                )
+        return cls(f)
+
+    def __init__(self, frame: 'Frame'):
+        '''Initialize an instance with a ``Frame`` of byte counts.
+        '''
+        self._frame = frame
+
+        dc = DisplayConfig(type_show=False)
+        self._repr: str = self._frame.iter_element().apply(
+                bytes_to_size_label,
+                name=self._frame._name,
+                ).display(config=dc).__repr__()
+
+    def __repr__(self) -> str:
+        return self._repr
+
+    def to_frame(self) -> 'Frame':
+        '''Return a Frame of byte counts.
+        '''
+        return self._frame
 
