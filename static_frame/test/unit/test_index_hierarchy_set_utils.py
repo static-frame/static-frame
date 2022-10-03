@@ -36,7 +36,7 @@ class TestUnit(TestCase):
         # Traditional approach: ~2.25 seconds
         expected = indices[0]
         for index in indices[1:]:
-            # TODO: This is a bug!
+            # TODO: Is this a bug?
             with pytest.raises((NotImplementedError, TypeError)):
                 expected |= index
 
@@ -46,6 +46,32 @@ class TestUnit(TestCase):
         result = index_hierarchy_union(*indices)
 
         assert result.sort().equals(expected)
+
+    def test_index_hierarchy_intersection(self) -> None:
+        '''
+        NOTE: This test will be unnecessary once `__and__` uses the new union function.
+
+        You can delete this test once the migration completes.
+        '''
+        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
+
+        indices = []
+        for i in range(100):
+            indices.append(ih.iloc[i:])
+
+        # # Traditional approach: ~2.25 seconds
+        # expected = indices[0]
+        # for index in indices[1:]:
+        #     # TODO: Is this a bug?
+        #     with pytest.raises((NotImplementedError, TypeError)):
+        #         expected &= index
+
+        #     expected = expected.intersection(index)
+
+        # New approach: 28.8 ms
+        result = index_hierarchy_intersection(*indices)
+
+        # assert result.sort().equals(expected)
 
 
 if __name__ == '__main__':
