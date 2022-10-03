@@ -211,7 +211,7 @@ class MemoryDisplay:
     @classmethod
     def from_any(cls,
             obj: tp.Any,
-            label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
+            label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]] = (),
             ) -> 'MemoryDisplay':
         '''Given any slotted object, return a ``MemoryDisplay`` instance.
 

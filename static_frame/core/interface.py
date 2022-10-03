@@ -24,6 +24,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
@@ -50,6 +51,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DT64_S
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.yarn import Yarn
 
@@ -903,6 +905,9 @@ class InterfaceSummary(Features):
                 instance = target.from_elements((0,))
             elif target in cls._CLS_INIT_SIMPLE:
                 instance = target()
+            elif target is MemoryDisplay:
+                f = Frame(EMPTY_ARRAY)
+                instance = target.from_any(f)
             else:
                 instance = target((0,)) #type: ignore
             cls._CLS_TO_INSTANCE_CACHE[target] = instance

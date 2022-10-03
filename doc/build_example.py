@@ -5260,6 +5260,52 @@ class ExGenFillValueAuto(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
+
+
+class ExGenMemoryDisplay(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__init__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'f.memory'
+        elif attr == 'from_any()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f"sf.MemoryDisplay.from_any(f.index)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == 'to_frame()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'f.memory.to_frame()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+
+        if attr == '__repr__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'md = f.memory'
+            yield f"repr(md)"
+        elif attr == '__str__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'md = f.memory'
+            yield f"str(md)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -5395,6 +5441,7 @@ CLS_TO_EX_GEN = {
         sf.HLoc: ExGenHLoc,
         sf.ILoc: ExGenILoc,
         sf.FillValueAuto: ExGenFillValueAuto,
+        sf.MemoryDisplay: ExGenMemoryDisplay,
         }
 
 CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}

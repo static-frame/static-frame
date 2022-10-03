@@ -12,11 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
 import datetime
-import io
-import inspect
 import typing as tp
 
 import static_frame as sf
@@ -24,7 +21,6 @@ import static_frame as sf
 from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import INTERFACE_GROUP_DOC
 from static_frame.core.interface import InterfaceSummary
-from static_frame.core.util import AnyCallable
 # from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
