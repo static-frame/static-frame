@@ -829,7 +829,7 @@ def concat_resolved(
         axis: int = 0,
         ) -> np.ndarray:
     '''
-    Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
+    Concatenation of 1D or 2D arrays that uses resolved dtypes to avoid truncation.
 
     Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
 
@@ -839,18 +839,27 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
-    # first pass to determine shape and resolved type
-    arrays_iter = iter(arrays)
-    first = next(arrays_iter)
+    if len(arrays) == 2:
+        a1, a2 = arrays
+        dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
+        size = a1.shape[axis] + a2.shape[axis]
+        if a1.ndim == 1:
+            shape = size
+        else:
+            shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
+    else:
+        # first pass to determine shape and resolved type
+        arrays_iter = iter(arrays)
+        first = next(arrays_iter)
 
-    # ndim = first.ndim
-    dt_resolve = first.dtype
-    shape = list(first.shape)
+        # ndim = first.ndim
+        dt_resolve = first.dtype
+        shape = list(first.shape)
 
-    for array in arrays_iter:
-        if dt_resolve != DTYPE_OBJECT:
-            dt_resolve = resolve_dtype(array.dtype, dt_resolve)
-        shape[axis] += array.shape[axis]
+        for array in arrays_iter:
+            if dt_resolve != DTYPE_OBJECT:
+                dt_resolve = resolve_dtype(array.dtype, dt_resolve)
+            shape[axis] += array.shape[axis]
 
     out = np.empty(shape=shape, dtype=dt_resolve)
     np.concatenate(arrays, out=out, axis=axis)

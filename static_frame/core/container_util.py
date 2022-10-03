@@ -1157,6 +1157,7 @@ class ManyToOneType(Enum):
     CONCAT = 0
     UNION = 1
     INTERSECT = 2
+    DIFFERENCE = 3
 
 
 def _index_many_to_one(
