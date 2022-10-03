@@ -115,4 +115,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.15'
+__version__ = '0.9.16'
