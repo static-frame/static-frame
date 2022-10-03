@@ -37,6 +37,7 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
@@ -2782,6 +2783,15 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             validate_depth_selection(None)
+
+    #---------------------------------------------------------------------------
+    def test_bytes_to_size_label(self) -> None:
+        self.assertEqual(bytes_to_size_label(0), '0 (B)')
+        self.assertEqual(bytes_to_size_label(1), '1 (B)')
+        self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 (KB)')
+
+
 
 if __name__ == '__main__':
     unittest.main()
