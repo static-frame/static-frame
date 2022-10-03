@@ -356,7 +356,7 @@ class HierarchicalLocMap:
             # nonzero returns arrays of indices per dimension. We are 1D, so we
             # will receive an array containing one other array. Of that inner
             # array, we only need the first occurrence
-            [[first_duplicate, *_]] = np.nonzero(encoded_indexers == e.args[0])
+            [first_duplicate, *_], _ = np.nonzero(encoded_indexers == e.args[0])
             raise FirstDuplicatePosition(first_duplicate) from None
 
     @staticmethod
