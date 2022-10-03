@@ -200,6 +200,8 @@ def memory_total(
     return sum(gen())
 
 class MemoryDisplay:
+    '''A simple container of capturing memory usage in bytes for StaticFrame container.
+    '''
 
     __slots__ = (
             '_frame',
@@ -211,6 +213,9 @@ class MemoryDisplay:
             obj: tp.Any,
             label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
             ) -> 'MemoryDisplay':
+        '''Given any slotted object, return a ``MemoryDisplay`` instance.
+
+        '''
         from static_frame.core.frame import Frame
 
         parts = chain(label_component_pairs, (('Total', obj),))
@@ -236,6 +241,8 @@ class MemoryDisplay:
         return cls(f)
 
     def __init__(self, frame: 'Frame'):
+        '''Initialize an instance with a ``Frame`` of byte counts.
+        '''
         self._frame = frame
 
         dc = DisplayConfig(type_show=False)
@@ -248,5 +255,7 @@ class MemoryDisplay:
         return self._repr
 
     def to_frame(self) -> 'Frame':
+        '''A return a Frame of bytes counts.
+        '''
         return self._frame
 

@@ -62,7 +62,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     @property
     def memory(self) -> MemoryDisplay:
-        '''Return size in memory of this object. For compound containers, component sizes will also be provioded. Size can be interpreted through six combinations of three configurations:
+        '''Return a :obj:`MemoryDisplay`, providing the size in memory of this object. For compound containers, component sizes will also be provided. Size can be interpreted through six combinations of three configurations:
 
         L: Local: memory ignoring referenced array data provided via views.
         LM: Local Materialized: memory where arrays that are locally owned report their byte payload

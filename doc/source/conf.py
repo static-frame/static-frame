@@ -104,6 +104,7 @@ DOCUMENTED_COMPONENTS = (
         sf.IndexAutoConstructorFactory,
         sf.NPZ,
         sf.NPY,
+        sf.MemoryDisplay,
         sf.Platform,
         )
 
