@@ -1,10 +1,13 @@
 import typing as tp
+from functools import partial
 from itertools import chain
 
 import numpy as np
 from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import imto_adapter_factory
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -27,9 +30,6 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.container_util import imto_adapter_factory
-from functools import partial
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

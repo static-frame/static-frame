@@ -60,11 +60,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexInitOrAutoType  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase # pylint: disable=W0611,C0412 #pragma: no cover
 
 
 ExplicitConstructor = tp.Union[

@@ -55,6 +55,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import UFunc
@@ -78,7 +79,6 @@ from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import union1d
-from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
