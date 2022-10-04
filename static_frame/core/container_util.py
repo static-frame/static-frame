@@ -40,6 +40,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
@@ -49,7 +50,6 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
-from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
