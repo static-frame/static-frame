@@ -1,4 +1,5 @@
 import typing as tp
+from itertools import chain
 
 import numpy as np
 from arraykit import resolve_dtype
@@ -26,6 +27,9 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.container_util import index_many_to_one
+from static_frame.core.container_util import imto_adapter_factory
+from functools import partial
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -423,46 +427,74 @@ class IndexBase(ContainerOperand):
     # set operations
 
     def _ufunc_set(self: I,
-            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
+            others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
+            many_to_one_type: ManyToOneType,
             ) -> I:
-        raise NotImplementedError() #pragma: no cover
+        # raise NotImplementedError() #pragma: no cover
+        if self._recache:
+            self._update_array_cache()
+
+        imtoaf = partial(imto_adapter_factory,
+                depth=self.depth,
+                name=self.name,
+                ndim=self.ndim,
+                )
+
+        if hasattr(others, '__len__') and len(others) == 1:
+            indices = (self, imtoaf(others[0]))
+        else:
+            indices = chain((self,), (imtoaf(other) for other in others))
+
+        return index_many_to_one(
+            indices,
+            cls_default=self.__class__,
+            many_to_one_type=many_to_one_type,
+            )
+
+
 
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        func = self.__class__._UFUNC_INTERSECTION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
+        return self._ufunc_set(others, ManyToOneType.INTERSECT)
 
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
+        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
+        # func = self.__class__._UFUNC_INTERSECTION
+        # if len(others) == 1:
+        #     return self._ufunc_set(func, others[0])
+
+        # post = self
+        # for other in others:
+        #     post = post._ufunc_set(func, other)
+        # return post
 
     def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        func = self.__class__._UFUNC_UNION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
-
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
+        return self._ufunc_set(others, ManyToOneType.UNION)
 
 
-    def difference(self: I, other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+        # func = self.__class__._UFUNC_UNION
+        # if len(others) == 1:
+        #     return self._ufunc_set(func, others[0])
+
+        # post = self
+        # for other in others:
+        #     post = post._ufunc_set(func, other)
+        # return post
+
+
+    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
-        return self._ufunc_set(
-                self.__class__._UFUNC_DIFFERENCE,
-                other)
+        return self._ufunc_set(others, ManyToOneType.DIFFERENCE)
+
+        # return self._ufunc_set(
+        #         self.__class__._UFUNC_DIFFERENCE,
+        #         other)
 
     #---------------------------------------------------------------------------
     # via interfaces
