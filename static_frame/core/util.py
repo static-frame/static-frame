@@ -2701,8 +2701,10 @@ def ufunc_set_iter(
             # to retain order on identity, assume_unique must be True
             result = ufunc(result, array, assume_unique=assume_unique)
 
-            if many_to_one_type is ManyToOneType.INTERSECT and len(result) == 0:
-                # short circuit intersection that results in no common values
+            if len(result) == 0 and (
+                    many_to_one_type is ManyToOneType.INTERSECT
+                    or many_to_one_type is ManyToOneType.DIFFERENCE):
+                # short circuit for ops with no common values
                 break
 
     result.flags.writeable = False
