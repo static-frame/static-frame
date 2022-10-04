@@ -1155,7 +1155,7 @@ def key_from_container_key(
 
 #---------------------------------------------------------------------------
 
-def _index_many_to_one(
+def index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
@@ -1309,27 +1309,11 @@ def index_many_concat(
         cls_default: tp.Type[IndexBase],
         explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> tp.Optional[IndexBase]:
-    return _index_many_to_one(indices,
+    return index_many_to_one(indices,
             cls_default,
             ManyToOneType.CONCAT,
             explicit_constructor,
             )
-
-# def _index_many_to_one(
-#         indices: tp.Iterable[IndexBase],
-#         cls_default: tp.Type[IndexBase],
-#         many_to_one_type: ManyToOneType,
-#         explicit_constructor: tp.Optional[IndexConstructor] = None,
-#         ) -> tp.Optional[IndexBase]:
-#     '''
-#     Given multiple Index objects, union them. Preserve name and index type if aligned.
-#     '''
-#     return _index_many_to_one(indices,
-#             cls_default,
-#             many_to_one_type,
-#             explicit_constructor,
-#             )
-
 
 #-------------------------------------------------------------------------------
 def apex_to_name(

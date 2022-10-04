@@ -15,7 +15,7 @@ import numpy as np
 
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import _index_many_to_one
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorNPYDecode
@@ -1121,7 +1121,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 columns = None
 
             if include_index:
-                index = _index_many_to_one(
+                index = index_many_to_one(
                         (f._index for f in frames),
                         Index,
                         many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
@@ -1146,7 +1146,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 index = None
 
             if include_columns:
-                columns = _index_many_to_one(
+                columns = index_many_to_one(
                         (f._columns for f in frames),
                         Index,
                         many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
