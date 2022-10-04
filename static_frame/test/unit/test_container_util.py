@@ -583,20 +583,40 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2]],)
 
-
     def test_index_many_set_l(self) -> None:
 
         idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
         idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
         # idx2 = IndexDate(('2020-01-02', '2020-01-03'))
 
-
         post1 = index_many_set((idx0,  idx1), Index, many_to_one_type=ManyToOneType.UNION)
         assert isinstance(post1, Index)
 
         self.assertEqual(post1.name, 'foo')
         self.assertEqual(post1.__class__, Index)
-        # import ipdb; ipdb.set_trace()
+
+    def test_index_many_set_m(self) -> None:
+
+        idx0 = Index((2, 5, 6, 8), name='foo')
+        idx1 = Index((2, 8), name='foo')
+
+        idx2 = index_many_set((idx0,  idx1), Index, many_to_one_type=ManyToOneType.DIFFERENCE)
+
+        self.assertEqual(list(idx2), [5, 6])
+        self.assertEqual(idx2.name, 'foo')
+
+    def test_index_many_set_n(self) -> None:
+
+        idx0 = IndexDate(('1997-01-01', '1997-01-02', '2020-01-02'), name='foo')
+        idx1 = IndexDate(('1997-01-01', '2020-01-02'), name='foo')
+
+        post1 = index_many_set((idx0,  idx1), Index, many_to_one_type=ManyToOneType.DIFFERENCE)
+
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, IndexDate)
+        self.assertEqual(list(post1), [np.datetime64('1997-01-02')])
+
+
 
 
     #---------------------------------------------------------------------------
