@@ -2,7 +2,7 @@ What is New in StaticFrame
 ===============================
 
 0.9.16
-----------``
+----------
 
 Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
 
