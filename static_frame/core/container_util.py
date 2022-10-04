@@ -1175,16 +1175,12 @@ def _index_many_to_one(
 
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
-    if many_to_one_type is ManyToOneType.UNION:
-        array_processor = partial(ufunc_set_iter,
-                many_to_one_type=ManyToOneType.UNION,
-                assume_unique=True)
-    elif many_to_one_type is ManyToOneType.INTERSECT:
-        array_processor = partial(ufunc_set_iter,
-                many_to_one_type=ManyToOneType.INTERSECT,
-                assume_unique=True)
-    elif mtot_is_concat:
+    if mtot_is_concat:
         array_processor = concat_resolved
+    else:
+        array_processor = partial(ufunc_set_iter,
+                many_to_one_type=many_to_one_type,
+                assume_unique=True)
 
     indices_iter = iter(indices)
     try:
