@@ -2312,6 +2312,13 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
+class ManyToOneType(Enum):
+    CONCAT = 0
+    UNION = 1
+    INTERSECT = 2
+    DIFFERENCE = 3
+
+
 def _ufunc_set_1d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,

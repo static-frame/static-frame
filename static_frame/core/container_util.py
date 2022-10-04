@@ -49,6 +49,7 @@ from static_frame.core.util import is_mapping
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -1153,12 +1154,6 @@ def key_from_container_key(
 
 
 #---------------------------------------------------------------------------
-class ManyToOneType(Enum):
-    CONCAT = 0
-    UNION = 1
-    INTERSECT = 2
-    DIFFERENCE = 3
-
 
 def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
