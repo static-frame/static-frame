@@ -6,7 +6,7 @@ What is New in StaticFrame
 
 Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
 
-Implemented the DataFrame Interchange Protocol export via the ``Frame.__datafrme__()`` interface.
+Implemented the DataFrame Interchange Protocol export via the ``Frame.__dataframe__()`` interface.
 
 Implemented ``__repr__()`` for ``ILoc``.
 
