@@ -146,6 +146,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
 from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
@@ -177,7 +178,6 @@ from static_frame.core.util import path_filter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

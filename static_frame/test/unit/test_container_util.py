@@ -30,8 +30,9 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
-from static_frame.test.test_case import TestCase
 from static_frame.core.util import ManyToOneType
+from static_frame.test.test_case import TestCase
+
 
 class TestUnit(TestCase):
 
