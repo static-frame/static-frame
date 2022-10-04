@@ -513,35 +513,35 @@ class TestUnit(TestCase):
 
         # empty iterable returns an empty index
         post2 = index_many_to_one((), Index, many_to_one_type=ManyToOneType.UNION)
-        self.assertEqual(len(post2), 0) #type: ignore
+        self.assertEqual(len(post2), 0)
 
     def test_index_many_set_d(self) -> None:
         idx1 = Index(range(3), loc_is_iloc=True)
         idx2 = Index(range(3), loc_is_iloc=True)
         idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2])
 
     def test_index_many_set_e(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
         idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3])
 
     def test_index_many_set_f(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
         idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1])
 
     def test_index_many_set_g(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index([3, 2, 1, 0])
         idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         self.assertTrue(idx3._map is not None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1])
 
     def test_index_many_set_h(self) -> None:
         post1 = index_many_to_one((), Index, many_to_one_type=ManyToOneType.UNION, explicit_constructor=IndexDate)

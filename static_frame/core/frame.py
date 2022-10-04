@@ -748,7 +748,7 @@ class Frame(ContainerOperand):
                     fill_value = get_col_fill_value(col_count, dtype_at_col) #type: ignore
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
-                        array = np.full(len(index), fill_value) # type: ignore
+                        array = np.full(len(index), fill_value)
                         array.flags.writeable = False
                         fill_arrays[fill_value] = array
                     array = fill_arrays[fill_value]

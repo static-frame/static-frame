@@ -1106,6 +1106,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
+        index: tp.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat
         if axis == 1: # stacks columns (extends rows horizontally)
