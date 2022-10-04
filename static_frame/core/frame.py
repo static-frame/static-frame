@@ -177,6 +177,7 @@ from static_frame.core.util import path_filter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -490,7 +491,7 @@ class Frame(ContainerOperand):
                 index = index_many_set(
                         (f._index for f in frame_seq),
                         Index,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         index_constructor,
                         )
                 own_index = True
@@ -525,7 +526,7 @@ class Frame(ContainerOperand):
                 columns = index_many_set(
                         (f._columns for f in frame_seq),
                         cls._COLUMNS_CONSTRUCTOR,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         columns_constructor,
                         )
                 own_columns = True
@@ -692,7 +693,7 @@ class Frame(ContainerOperand):
             index = index_many_set(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             index = index_from_optional_constructor(index,
@@ -702,7 +703,7 @@ class Frame(ContainerOperand):
             columns = index_many_set(
                     (c.columns for c in containers),
                     cls_default=cls._COLUMNS_CONSTRUCTOR,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             columns = index_from_optional_constructor(columns,

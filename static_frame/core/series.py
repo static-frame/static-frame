@@ -106,6 +106,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -380,7 +381,7 @@ class Series(ContainerOperand):
             index = index_many_set(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else: # construct an index if not an index
             if not isinstance(index, IndexBase):

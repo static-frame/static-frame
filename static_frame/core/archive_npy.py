@@ -30,6 +30,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import list_to_tuple
+from static_frame.core.util import ManyToOneType
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -1123,7 +1124,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 index = index_many_set(
                         (f._index for f in frames),
                         Index,
-                        union=union,
+                        many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         )
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
@@ -1148,7 +1149,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 columns = index_many_set(
                         (f._columns for f in frames),
                         Index,
-                        union=union,
+                        many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         )
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')

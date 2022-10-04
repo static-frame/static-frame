@@ -1318,7 +1318,7 @@ def index_many_concat(
 def index_many_set(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
-        union: bool,
+        many_to_one_type: ManyToOneType,
         explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> tp.Optional[IndexBase]:
     '''
@@ -1326,7 +1326,7 @@ def index_many_set(
     '''
     return _index_many_to_one(indices,
             cls_default,
-            ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
+            many_to_one_type,
             explicit_constructor,
             )
 
