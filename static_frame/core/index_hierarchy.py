@@ -81,7 +81,6 @@ from static_frame.core.util import isin
 from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import ufunc_is_statistical
