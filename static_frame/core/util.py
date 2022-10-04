@@ -2658,12 +2658,13 @@ def setdiff2d(
 
 
 MANY_TO_ONE_MAP = {
-    (1, ManyToOneType.UNION): union1d,
-    (1, ManyToOneType.INTERSECT): intersect1d,
-    (2, ManyToOneType.UNION): union2d,
-    (2, ManyToOneType.INTERSECT): intersect2d,
-
-}
+        (1, ManyToOneType.UNION): union1d,
+        (1, ManyToOneType.INTERSECT): intersect1d,
+        (1, ManyToOneType.DIFFERENCE): setdiff1d,
+        (2, ManyToOneType.UNION): union2d,
+        (2, ManyToOneType.INTERSECT): intersect2d,
+        (2, ManyToOneType.DIFFERENCE): setdiff2d,
+        }
 
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
@@ -2700,7 +2701,7 @@ def ufunc_set_iter(
             # to retain order on identity, assume_unique must be True
             result = ufunc(result, array, assume_unique=assume_unique)
 
-            if many_to_one_type == ManyToOneType.INTERSECT and len(result) == 0:
+            if many_to_one_type is ManyToOneType.INTERSECT and len(result) == 0:
                 # short circuit intersection that results in no common values
                 break
 
