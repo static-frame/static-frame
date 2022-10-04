@@ -78,6 +78,7 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
+from static_frame.core.util import ManyToOneType
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
@@ -447,10 +448,10 @@ class TestUnit(TestCase):
         a3 = np.array([3, 2, 1])
         a4 = np.array([3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
     def test_array_set_ufunc_many_b(self) -> None:
@@ -459,10 +460,10 @@ class TestUnit(TestCase):
         a3 = np.array([5, 3, 2, 1])
         a4 = np.array([2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
     def test_array_set_ufunc_many_c(self) -> None:
@@ -470,10 +471,10 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
         a3 = np.array([[10, 20, 30], [1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=False)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [[1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=True)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.UNION)
         self.assertEqual(post.tolist(),
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
@@ -482,13 +483,13 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
 
         with self.assertRaises(Exception):
-            post = ufunc_set_iter((a1, a2), union=False)
+            post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
 
     def test_array_set_ufunc_many_e(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([30, 20])
 
-        post = ufunc_set_iter((a1, a2), union=False)
+        post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [])
 
     def test_union1d_a(self) -> None:

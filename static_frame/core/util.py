@@ -2656,9 +2656,18 @@ def setdiff2d(
         other,
         assume_unique=assume_unique)
 
+
+MANY_TO_ONE_MAP = {
+    (1, ManyToOneType.UNION): union1d,
+    (1, ManyToOneType.INTERSECT): intersect1d,
+    (2, ManyToOneType.UNION): union2d,
+    (2, ManyToOneType.INTERSECT): intersect2d,
+
+}
+
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
-        union: bool = False,
+        many_to_one_type: ManyToOneType,
         assume_unique: bool = False
         ) -> np.ndarray:
     '''
@@ -2674,33 +2683,24 @@ def ufunc_set_iter(
         a1, a2 = arrays
         if a1.ndim != a2.ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        if a1.ndim == 1:
-            ufunc = union1d if union else intersect1d
-        else:
-            ufunc = union2d if union else intersect2d
+        ufunc = MANY_TO_ONE_MAP[(a1.ndim, many_to_one_type)]
         result = ufunc(a1, a2, assume_unique=assume_unique)
     else:
         arrays = iter(arrays)
         result = next(arrays)
-
-        if result.ndim == 1:
-            ufunc = union1d if union else intersect1d
-            ndim = 1
-        else: # ndim == 2
-            ufunc = union2d if union else intersect2d
-            ndim = 2
+        ufunc = MANY_TO_ONE_MAP[(result.ndim, many_to_one_type)]
 
         # skip processing for the same array instance
         array_id = id(result)
         for array in arrays:
-            if array.ndim != ndim:
+            if array.ndim != result.ndim:
                 raise RuntimeError('arrays do not all have the same ndim')
             if id(array) == array_id:
                 continue
             # to retain order on identity, assume_unique must be True
             result = ufunc(result, array, assume_unique=assume_unique)
 
-            if not union and len(result) == 0:
+            if many_to_one_type == ManyToOneType.INTERSECT and len(result) == 0:
                 # short circuit intersection that results in no common values
                 break
 
