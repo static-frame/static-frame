@@ -1315,20 +1315,20 @@ def index_many_concat(
             explicit_constructor,
             )
 
-def index_many_set(
-        indices: tp.Iterable[IndexBase],
-        cls_default: tp.Type[IndexBase],
-        many_to_one_type: ManyToOneType,
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
-        ) -> tp.Optional[IndexBase]:
-    '''
-    Given multiple Index objects, union them. Preserve name and index type if aligned.
-    '''
-    return _index_many_to_one(indices,
-            cls_default,
-            many_to_one_type,
-            explicit_constructor,
-            )
+# def _index_many_to_one(
+#         indices: tp.Iterable[IndexBase],
+#         cls_default: tp.Type[IndexBase],
+#         many_to_one_type: ManyToOneType,
+#         explicit_constructor: tp.Optional[IndexConstructor] = None,
+#         ) -> tp.Optional[IndexBase]:
+#     '''
+#     Given multiple Index objects, union them. Preserve name and index type if aligned.
+#     '''
+#     return _index_many_to_one(indices,
+#             cls_default,
+#             many_to_one_type,
+#             explicit_constructor,
+#             )
 
 
 #-------------------------------------------------------------------------------
