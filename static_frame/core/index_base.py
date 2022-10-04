@@ -6,6 +6,7 @@ import numpy as np
 from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import IMTOAdapter
 from static_frame.core.container_util import imto_adapter_factory
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.display import Display
@@ -440,12 +441,13 @@ class IndexBase(ContainerOperand):
                 ndim=self.ndim,
                 )
 
+        indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
         if hasattr(others, '__len__') and len(others) == 1:
-            indices = (self, imtoaf(others[0]))
+            indices = (self, imtoaf(others[0])) # type: ignore
         else:
             indices = chain((self,), (imtoaf(other) for other in others))
 
-        return index_many_to_one(
+        return index_many_to_one( # type: ignore
             indices,
             cls_default=self.__class__,
             many_to_one_type=many_to_one_type,

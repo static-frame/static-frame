@@ -46,6 +46,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
@@ -1259,9 +1260,9 @@ def index_many_to_one(
             # compare dtype as result should be resolved, even if values are the same
             if (many_to_one_type is ManyToOneType.UNION
                     or many_to_one_type is ManyToOneType.INTERSECT):
-                return this if this.STATIC else this.__deepcopy__({})
+                return this if this.STATIC else this.__deepcopy__({}) # type: ignore
             elif many_to_one_type is ManyToOneType.DIFFERENCE:
-                return this.iloc[:0]
+                return this.iloc[:0] # type: ignore
 
 
     indices_iter = iter(indices)
