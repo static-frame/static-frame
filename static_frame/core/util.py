@@ -2661,30 +2661,41 @@ def ufunc_set_iter(
         arrays: iterator of arrays; can be a Generator.
         union: if True, a union is taken, else, an intersection.
     '''
-    arrays = iter(arrays)
-    result = next(arrays)
-
     # will detect ndim by first value, but insure that all other arrays have the same ndim
-    if result.ndim == 1:
-        ufunc = union1d if union else intersect1d
-        ndim = 1
-    else: # ndim == 2
-        ufunc = union2d if union else intersect2d
-        ndim = 2
 
-    # skip processing for the same array instance
-    array_id = id(result)
-    for array in arrays:
-        if array.ndim != ndim:
+    if hasattr(arrays, '__len__') and len(arrays) == 2:
+        a1, a2 = arrays
+        if a1.ndim != a2.ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        if id(array) == array_id:
-            continue
-        # to retain order on identity, assume_unique must be True
-        result = ufunc(result, array, assume_unique=assume_unique)
+        if a1.ndim == 1:
+            ufunc = union1d if union else intersect1d
+        else:
+            ufunc = union2d if union else intersect2d
+        result = ufunc(a1, a2, assume_unique=assume_unique)
+    else:
+        arrays = iter(arrays)
+        result = next(arrays)
 
-        if not union and len(result) == 0:
-            # short circuit intersection that results in no common values
-            break
+        if result.ndim == 1:
+            ufunc = union1d if union else intersect1d
+            ndim = 1
+        else: # ndim == 2
+            ufunc = union2d if union else intersect2d
+            ndim = 2
+
+        # skip processing for the same array instance
+        array_id = id(result)
+        for array in arrays:
+            if array.ndim != ndim:
+                raise RuntimeError('arrays do not all have the same ndim')
+            if id(array) == array_id:
+                continue
+            # to retain order on identity, assume_unique must be True
+            result = ufunc(result, array, assume_unique=assume_unique)
+
+            if not union and len(result) == 0:
+                # short circuit intersection that results in no common values
+                break
 
     result.flags.writeable = False
     return result
