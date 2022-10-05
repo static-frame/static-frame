@@ -1283,6 +1283,7 @@ def index_many_to_one(
     index_auto_aligned = (not mtot_is_concat
             and index.ndim == 1
             and index._map is None #type: ignore
+            and many_to_one_type is not ManyToOneType.DIFFERENCE
             )
 
     # if IndexHierarchy, collect index_types generators
@@ -1328,7 +1329,7 @@ def index_many_to_one(
 
     name = name_first if name_aligned else None
 
-    # return an index auto if we can
+    # return an index auto if we can; already filtered out difference and concat
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
             size = max(a.size for a in arrays) #type: ignore
