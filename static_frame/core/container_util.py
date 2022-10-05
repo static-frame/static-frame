@@ -1200,6 +1200,9 @@ class IMTOAdapter:
                     dtype=DTYPE_OBJECT,
                     ))
 
+    def __len__(self) -> int:
+        return len(self.values)
+
 def imto_adapter_factory(
         source: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
         depth: int,
@@ -1212,6 +1215,7 @@ def imto_adapter_factory(
         name: provide name of root caller.
     '''
     from static_frame.core.index_base import IndexBase
+
     if isinstance(source, IndexBase):
         return source
 
@@ -1286,7 +1290,7 @@ def index_many_to_one(
     cls_aligned = True
     depth_first = index.depth
 
-    # if we are unioning we can give back an index_auto
+    # if union/intersect, can give back an index_auto
     index_auto_aligned = (not mtot_is_concat
             and index.ndim == 1
             and index._map is None #type: ignore
@@ -1296,9 +1300,13 @@ def index_many_to_one(
     # if IndexHierarchy, collect index_types generators
     if index.ndim == 2:
         is_ih = True
-        index_types_arrays = [index.index_types.values]
-        if not mtot_is_concat:
-            index_dtypes_arrays = [index.dtypes.values] #type: ignore
+        if len(index) > 0:
+            index_types_arrays = [index.index_types.values]
+            if not mtot_is_concat:
+                index_dtypes_arrays = [index.dtypes.values] #type: ignore
+        else:
+            index_types_arrays = []
+            index_dtypes_arrays = []
 
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
@@ -1306,6 +1314,7 @@ def index_many_to_one(
         else:
             # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
+
     else:
         is_ih = False
         arrays = [index.values]
@@ -1331,8 +1340,6 @@ def index_many_to_one(
             index_types_arrays.append(index.index_types.values)
             if not mtot_is_concat:
                 index_dtypes_arrays.append(index.dtypes.values) #type: ignore
-        else:
-            is_ih = False
 
     name = name_first if name_aligned else None
 

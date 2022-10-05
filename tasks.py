@@ -83,8 +83,8 @@ def test(context,
     else:
         fp = 'static_frame/test'
 
-    # cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
-    cmd = f'pytest -s --color no --tb=native {fp}'
+    # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
+    cmd = f'pytest -s --tb=native {fp}'
 
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
@@ -98,8 +98,7 @@ def coverage(context):
     '''
     Perform code coverage, and open report HTML.
     '''
-    # cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
-    cmd = 'pytest -s --color no --cov=static_frame/core --cov-report html'
+    cmd = 'pytest -s --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
     import webbrowser

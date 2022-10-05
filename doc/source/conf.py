@@ -106,7 +106,7 @@ DOCUMENTED_COMPONENTS = (
 
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
-
+    print('calling get_jinja_contexts')
     # NOTE: we build dictionaries here so that we can pre-select groups when setting up args into the jina tempalates in source_build.py
 
     post: tp.Dict[str, tp.Any] = {}
@@ -141,6 +141,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     return post
 
+# NOTE: this incurs significant processing on module load
 jinja_contexts = {'ctx': get_jinja_contexts()}
 
 
