@@ -1307,14 +1307,12 @@ def index_many_to_one(
         else:
             index_types_arrays = []
             index_dtypes_arrays = []
-
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
             arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
         else:
             # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
-
     else:
         is_ih = False
         arrays = [index.values]
@@ -1336,7 +1334,7 @@ def index_many_to_one(
             index_auto_aligned = False
 
         # is_ih can only be True if we have all IH of same depth
-        if is_ih:
+        if is_ih and len(index) > 0:
             index_types_arrays.append(index.index_types.values)
             if not mtot_is_concat:
                 index_dtypes_arrays.append(index.dtypes.values) #type: ignore
