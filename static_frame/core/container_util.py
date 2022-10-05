@@ -1159,6 +1159,11 @@ def key_from_container_key(
 
 
 #---------------------------------------------------------------------------
+class IMTOAdapterSeries:
+    __slots__ = ('values',)
+
+    def __init__(self, values=np.ndarray):
+        self.values = values
 
 class IMTOAdapter:
     '''Avoid creating a complete Index, and instead wrap an array and associated metadata into an adapter object that can be used in index_many_to_one
@@ -1186,12 +1191,14 @@ class IMTOAdapter:
         self.ndim = ndim
 
         if self.ndim > 1:
-            self.index_types = np.array([None for _ in range(depth)],
+            self.index_types = IMTOAdapterSeries(
+                    np.array([None for _ in range(depth)],
                     dtype=DTYPE_OBJECT,
-                    )
-            self.dtypes = np.array([self.values.dtype for _ in range(depth)],
+                    ))
+            self.dtypes = IMTOAdapterSeries(
+                    np.array([self.values.dtype for _ in range(depth)],
                     dtype=DTYPE_OBJECT,
-                    )
+                    ))
 
 def imto_adapter_factory(
         source: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
