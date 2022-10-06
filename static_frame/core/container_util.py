@@ -17,7 +17,6 @@ from numpy import char as npc
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
-
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -1257,8 +1256,8 @@ def index_many_to_one(
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
         explicit_constructor: Alternative constructor that will override normal evaluation.
     '''
-    from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index import Index
+    from static_frame.core.index_auto import IndexAutoFactory
 
     array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
