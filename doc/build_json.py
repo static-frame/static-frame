@@ -1,17 +1,16 @@
-from collections import defaultdict
 import json
+from collections import defaultdict
 from pathlib import Path
 from zipfile import ZipFile
+
+from doc.build_example import to_json_bundle
+from static_frame.core.interface import DOCUMENTED_COMPONENTS
+from static_frame.core.interface import InterfaceSummary
+
 # import os
 # import sys
 # import datetime
 
-from static_frame.core.interface import InterfaceSummary
-from doc.build_example import to_json_bundle
-# from static_frame.core.interface import InterfaceGroup
-# from static_frame.core.container_util import ContainerMap
-
-from doc.source.conf import DOCUMENTED_COMPONENTS
 
 def build(fp: Path) -> str:
     if fp.suffix != '.zip':

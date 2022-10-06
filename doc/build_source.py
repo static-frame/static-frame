@@ -3,7 +3,6 @@ import sys
 # import typing as tp
 from collections import deque
 
-
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
 def get_rst_import_api(macro_name: str, cls_name: str, ig_tag: str) -> str:

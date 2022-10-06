@@ -115,7 +115,7 @@ def mypy(context):
 def isort(context):
     '''Run isort as a check.
     '''
-    context.run('isort static_frame --check')
+    context.run('isort static_frame doc --check')
 
 @invoke.task
 def lint(context):
@@ -132,7 +132,7 @@ def quality(context):
 def format(context):
     '''Run mypy static analysis.
     '''
-    context.run('isort static_frame')
+    context.run('isort static_frame doc')
 
 
 #-------------------------------------------------------------------------------

@@ -8,6 +8,7 @@ from itertools import chain
 
 import numpy as np
 
+import static_frame as sf
 from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ
 from static_frame.core.batch import Batch
@@ -54,6 +55,57 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.yarn import Yarn
+
+#-------------------------------------------------------------------------------
+
+DOCUMENTED_COMPONENTS = (
+        sf.Series,
+        sf.SeriesHE,
+        sf.Frame,
+        sf.FrameGO,
+        sf.FrameHE,
+        sf.Bus,
+        sf.Batch,
+        sf.Yarn,
+        sf.Quilt,
+        sf.Index,
+        sf.IndexGO,
+        sf.IndexHierarchy,
+        sf.IndexHierarchyGO,
+        sf.IndexYear,
+        sf.IndexYearGO,
+        sf.IndexYearMonth,
+        sf.IndexYearMonthGO,
+        sf.IndexDate,
+        sf.IndexDateGO,
+        sf.IndexMinute,
+        sf.IndexMinuteGO,
+        sf.IndexHour,
+        sf.IndexHourGO,
+        sf.IndexSecond,
+        sf.IndexSecondGO,
+        sf.IndexMillisecond,
+        sf.IndexMillisecondGO,
+        sf.IndexMicrosecond,
+        sf.IndexMicrosecondGO,
+        sf.IndexNanosecond,
+        sf.IndexNanosecondGO,
+        sf.HLoc,
+        sf.ILoc,
+        sf.FillValueAuto,
+        sf.DisplayActive,
+        sf.DisplayConfig,
+        sf.StoreConfig,
+        sf.StoreFilter,
+        sf.IndexAutoFactory,
+        sf.IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        sf.IndexAutoConstructorFactory,
+        sf.NPZ,
+        sf.NPY,
+        sf.MemoryDisplay,
+        sf.Platform,
+        )
+
 
 #-------------------------------------------------------------------------------
 

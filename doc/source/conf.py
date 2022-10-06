@@ -12,16 +12,15 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
 import datetime
+import os
 import typing as tp
 
 import static_frame as sf
-
-from static_frame.core.interface import INTERFACE_GROUP_ORDER
+from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import INTERFACE_GROUP_DOC
+from static_frame.core.interface import INTERFACE_GROUP_ORDER
 from static_frame.core.interface import InterfaceSummary
-# from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'
 PREFIX_END = '#end_'
@@ -51,58 +50,6 @@ def get_defined() -> tp.Set[str]:
                 else:
                     raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
     return defined
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-
-DOCUMENTED_COMPONENTS = (
-        sf.Series,
-        sf.SeriesHE,
-        sf.Frame,
-        sf.FrameGO,
-        sf.FrameHE,
-        sf.Bus,
-        sf.Batch,
-        sf.Yarn,
-        sf.Quilt,
-        sf.Index,
-        sf.IndexGO,
-        sf.IndexHierarchy,
-        sf.IndexHierarchyGO,
-        sf.IndexYear,
-        sf.IndexYearGO,
-        sf.IndexYearMonth,
-        sf.IndexYearMonthGO,
-        sf.IndexDate,
-        sf.IndexDateGO,
-        sf.IndexMinute,
-        sf.IndexMinuteGO,
-        sf.IndexHour,
-        sf.IndexHourGO,
-        sf.IndexSecond,
-        sf.IndexSecondGO,
-        sf.IndexMillisecond,
-        sf.IndexMillisecondGO,
-        sf.IndexMicrosecond,
-        sf.IndexMicrosecondGO,
-        sf.IndexNanosecond,
-        sf.IndexNanosecondGO,
-        sf.HLoc,
-        sf.ILoc,
-        sf.FillValueAuto,
-        sf.DisplayActive,
-        sf.DisplayConfig,
-        sf.StoreConfig,
-        sf.StoreFilter,
-        sf.IndexAutoFactory,
-        sf.IndexDefaultFactory, # to be renamed IndexDefaultConstructor
-        sf.IndexAutoConstructorFactory,
-        sf.NPZ,
-        sf.NPY,
-        sf.MemoryDisplay,
-        sf.Platform,
-        )
 
 
 def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
@@ -141,8 +88,9 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     return post
 
-# NOTE: this incurs significant processing on module load
-# jinja_contexts = {'ctx': get_jinja_contexts()}
+1/0
+# NOTE: this incurs processing on module load
+jinja_contexts = {'ctx': get_jinja_contexts()}
 
 
 # -- General configuration -----------------------------------------------------
@@ -239,6 +187,7 @@ pygments_style = 'sphinx'
 #     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 import sphinx_rtd_theme
+
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
