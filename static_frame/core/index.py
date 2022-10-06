@@ -504,50 +504,6 @@ class Index(IndexBase):
         return self._labels.nbytes #type: ignore
 
     #---------------------------------------------------------------------------
-    # set operations
-
-    # def _ufunc_set(self: I,
-    #         others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
-    #         many_to_one_type: ManyToOneType,
-    #         ) -> I:
-    #     '''
-    #     Utility function for preparing and collecting values for Indices to produce a new Index.
-    #     '''
-
-        # if self.equals(other, compare_dtype=True):
-        #     # compare dtype as result should be resolved, even if values are the same
-        #     if (func is self.__class__._UFUNC_INTERSECTION or
-        #             func is self.__class__._UFUNC_UNION):
-        #         # NOTE: this will delegate name attr
-        #         return self if self.STATIC else self.copy()
-        #     elif func is self.__class__._UFUNC_DIFFERENCE:
-        #         if self._DTYPE is None: #type: ignore
-        #             # an index with a variable dtype accepts a dtype argument
-        #             return self.__class__((), dtype=self.dtype) #type: ignore
-        #         # if self._DTYPE is defined, the default constructor does not take a dtype argument
-        #         return self.__class__(())
-
-        # if other.__class__ is np.ndarray:
-        #     operand = other
-        #     assume_unique = False
-        # elif isinstance(other, IndexBase):
-        #     operand = other.values
-        #     assume_unique = True # can always assume unique
-        # else:
-        #     operand, assume_unique = iterable_to_array_1d(other)
-
-        # cls = self.__class__
-
-        # # using assume_unique will permit retaining order when operands are identical
-        # labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-        # if id(labels) == id(self.values):
-        #     # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-        #     return cls(self)
-
-        # return cls.from_labels(labels)
-
-
-    #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the iloc key.
         '''
