@@ -94,10 +94,6 @@ class IndexBase(ContainerOperand):
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
-    _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_DIFFERENCE: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
     #---------------------------------------------------------------------------
@@ -431,7 +427,9 @@ class IndexBase(ContainerOperand):
             others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
             many_to_one_type: ManyToOneType,
             ) -> I:
-        # raise NotImplementedError() #pragma: no cover
+        '''Normalize inputs and call `index_many_to_one`.
+        '''
+
         if self._recache:
             self._update_array_cache()
 
@@ -442,16 +440,18 @@ class IndexBase(ContainerOperand):
                 )
 
         indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
+
         if hasattr(others, '__len__') and len(others) == 1:
+            # NOTE: having only one `other` is far more common than many others; thus, optimzie for that case by not using an iterator
             indices = (self, imtoaf(others[0])) # type: ignore
         else:
             indices = chain((self,), (imtoaf(other) for other in others))
 
         return index_many_to_one( # type: ignore
-            indices,
-            cls_default=self.__class__,
-            many_to_one_type=many_to_one_type,
-            )
+                indices,
+                cls_default=self.__class__,
+                many_to_one_type=many_to_one_type,
+                )
 
 
 

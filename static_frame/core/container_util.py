@@ -1212,6 +1212,8 @@ def imto_adapter_factory(
         ndim: int,
         ) -> tp.Union['IndexBase', IMTOAdapter]:
     '''
+    Factory function to let `IndexBase` pass through while wrapping other iterables (after array conversion) into `IMTOAdapter`s, such that they can be evaluated with other `IndexBase` in `index_many_to_one`.
+
     Args:
         depth: provide depth of root caller.
         name: provide name of root caller.

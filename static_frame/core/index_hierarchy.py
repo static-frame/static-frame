@@ -252,10 +252,6 @@ class IndexHierarchy(IndexBase):
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
     _INDEX_CONSTRUCTOR: IndexConstructor = Index
-
-    _UFUNC_UNION = union2d
-    _UFUNC_INTERSECTION = intersect2d
-    _UFUNC_DIFFERENCE = setdiff2d
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------

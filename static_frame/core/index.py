@@ -150,10 +150,6 @@ class Index(IndexBase):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
-    _UFUNC_UNION = union1d
-    _UFUNC_INTERSECTION = intersect1d
-    _UFUNC_DIFFERENCE = setdiff1d
-
     _DTYPE: tp.Optional[np.dtype] = None # for specialized indices requiring a typed labels
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
