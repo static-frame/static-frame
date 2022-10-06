@@ -73,7 +73,6 @@ from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import intersect2d
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
@@ -82,13 +81,11 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import setdiff2d
 from static_frame.core.util import ufunc_is_statistical
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
 
