@@ -1271,6 +1271,7 @@ def index_many_to_one(
                 many_to_one_type=many_to_one_type,
                 assume_unique=True)
 
+    indices_iter: tp.Iterable['IndexBase']
     if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
