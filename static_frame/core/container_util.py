@@ -1164,7 +1164,7 @@ def key_from_container_key(
 class IMTOAdapterSeries:
     __slots__ = ('values',)
 
-    def __init__(self, values=np.ndarray):
+    def __init__(self, values: np.ndarray) -> None:
         self.values = values
 
 class IMTOAdapter:
@@ -1222,10 +1222,10 @@ def imto_adapter_factory(
     if isinstance(source, IndexBase):
         return source
 
-    if source.__class__ == np.ndarray:
-        if ndim != source.ndim:
+    if source.__class__ is np.ndarray:
+        if ndim != source.ndim: # type: ignore
             raise ErrorInitIndex(
-                f'Index must have ndim of {ndim}, not {source.ndim}'
+                f'Index must have ndim of {ndim}, not {source.ndim}' # type: ignore
                 )
         array = source
     elif depth == 1:
@@ -1371,12 +1371,12 @@ def index_many_to_one(
             constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
             constructor_cls = cls_first
-        constructor = (constructor_cls._from_arrays if is_ih
-                else constructor_cls.from_labels)
+        constructor = (constructor_cls._from_arrays if is_ih # type: ignore
+                else constructor_cls.from_labels) # type: ignore
     elif explicit_constructor is not None:
         constructor = explicit_constructor
     elif is_ih:
-        constructor = cls_default._from_arrays
+        constructor = cls_default._from_arrays # type: ignore
     else:
         constructor = cls_default.from_labels
 
