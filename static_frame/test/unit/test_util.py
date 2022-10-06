@@ -492,6 +492,19 @@ class TestUnit(TestCase):
         post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [])
 
+
+    def test_array_set_ufunc_many_f(self) -> None:
+
+        # this shows that identical arrays return the same ordering
+        a1 = np.array([3, 2, 1])
+        a2 = np.array([3, 2, 1])
+        a3 = np.array([3, 2, 1]).reshape(3, 1)
+
+        with self.assertRaises(RuntimeError):
+            _ = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
+
+    #---------------------------------------------------------------------------
+
     def test_union1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
