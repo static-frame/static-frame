@@ -286,8 +286,8 @@ class IndexHierarchy(IndexBase):
             index_constructors = tuple(index_constructors)
             if len(index_constructors) != depth:
                 raise ErrorInitIndex(
-                    'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-                )
+                    f'When providing multiple index constructors, their number ({len(index_constructors)}) must equal the depth of the IndexHierarchy ({depth}).'
+                    )
             for ctr in index_constructors:
                 yield constructor_from_optional_constructor(
                         default_constructor=cls._INDEX_CONSTRUCTOR,
@@ -511,7 +511,7 @@ class IndexHierarchy(IndexBase):
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
-            :obj:`static_frame.IndexHierarchy`
+            :obj:`IndexHierarchy`
         '''
         labels_iter = iter(labels)
 
@@ -526,7 +526,6 @@ class IndexHierarchy(IndexBase):
             return cls._from_empty(labels, name=name, depth_reference=depth_reference)
 
         depth = len(label_row)
-
         if depth == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 

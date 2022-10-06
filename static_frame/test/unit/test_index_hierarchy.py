@@ -2417,17 +2417,17 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels((), depth_reference=2)
         ih2 = IndexHierarchy.from_labels(labels)
 
-        # post1 = ih1.union(ih2)
-        # self.assertEqual(post1.values.tolist(),
-        #         [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+        post1 = ih1.union(ih2)
+        self.assertEqual(post1.values.tolist(),
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
         self.assertEqual(post2.values.tolist(),
                 [])
 
-        # post3 = ih1.difference(ih2)
-        # self.assertEqual(post3.values.tolist(),
-        #         [])
+        post3 = ih1.difference(ih2)
+        self.assertEqual(post3.values.tolist(),
+                [])
 
     def test_hierarchy_set_operators_d(self) -> None:
 

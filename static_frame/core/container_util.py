@@ -1191,6 +1191,7 @@ class IMTOAdapter:
         self.ndim = ndim
 
         if self.ndim > 1:
+            # simply provide None so as not to match in any comparison
             self.index_types = IMTOAdapterSeries(
                     np.array([None for _ in range(depth)],
                     dtype=DTYPE_OBJECT,
@@ -1249,6 +1250,7 @@ def index_many_to_one(
         explicit_constructor: Alternative constructor that will override normal evaluation.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
+    from static_frame.core.index import Index
 
     array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
@@ -1328,15 +1330,17 @@ def index_many_to_one(
 
         if name_aligned and index.name != name_first:
             name_aligned = False
+
         if cls_aligned and index.__class__ != cls_first:
             cls_aligned = False
+
         if index_auto_aligned and (index.ndim != 1 or index._map is not None): #type: ignore
             index_auto_aligned = False
 
         # is_ih can only be True if we have all IH of same depth
-        if is_ih and len(index) > 0:
+        if is_ih:
             index_types_arrays.append(index.index_types.values)
-            if not mtot_is_concat:
+            if not mtot_is_concat and len(index) > 0:
                 index_dtypes_arrays.append(index.dtypes.values) #type: ignore
 
     name = name_first if name_aligned else None
@@ -1359,7 +1363,8 @@ def index_many_to_one(
             if all(types[0] == t for t in types[1:]):
                 index_constructors.append(types[0])
             else: # assume this is always a 1D index
-                index_constructors.append(cls_default)
+                index_constructors.append(Index)
+        # import ipdb; ipdb.set_trace()
 
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
@@ -1368,14 +1373,12 @@ def index_many_to_one(
             constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
             constructor_cls = cls_first
-
-        if is_ih:
-            constructor = constructor_cls._from_arrays #type: ignore
-        else:
-            constructor = constructor_cls.from_labels #type: ignore
-
+        constructor = (constructor_cls._from_arrays if is_ih
+                else constructor_cls.from_labels)
     elif explicit_constructor is not None:
         constructor = explicit_constructor
+    elif is_ih:
+        constructor = cls_default._from_arrays
     else:
         constructor = cls_default.from_labels
 
