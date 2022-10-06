@@ -2459,6 +2459,10 @@ def _ufunc_set_2d(
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
 
+    if is_2d:
+        cols = array.shape[1]
+        assert cols == other.shape[1]
+
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
 
@@ -2467,14 +2471,14 @@ def _ufunc_set_2d(
         if len(array) == 0 or len(other) == 0:
             post = np.array((), dtype=dtype)
             if is_2d:
-                post = post.reshape(0, 0)
+                post = post.reshape(0, cols)
             post.flags.writeable = False
             return post
     elif is_difference:
         if len(array) == 0:
             post = np.array((), dtype=dtype)
             if is_2d:
-                post = post.reshape(0, 0)
+                post = post.reshape(0, cols)
             post.flags.writeable = False
             return post
 
@@ -2502,7 +2506,7 @@ def _ufunc_set_2d(
                 if is_difference:
                     post = np.array((), dtype=dtype)
                     if is_2d:
-                        post = post.reshape(0, 0)
+                        post = post.reshape(0, cols)
                     post.flags.writeable = False
                     return post
                 return array
@@ -2535,7 +2539,7 @@ def _ufunc_set_2d(
 
         if is_2d:
             if len(values) == 0:
-                post = np.array((), dtype=dtype).reshape(0, 0)
+                post = np.array((), dtype=dtype).reshape(0, cols)
             else:
                 post = np.array(values, dtype=object)
             post.flags.writeable = False
