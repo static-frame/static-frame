@@ -16,6 +16,8 @@ from numpy import char as npc
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitIndex
+
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -1220,7 +1222,13 @@ def imto_adapter_factory(
     if isinstance(source, IndexBase):
         return source
 
-    if depth == 1:
+    if source.__class__ == np.ndarray:
+        if ndim != source.ndim:
+            raise ErrorInitIndex(
+                f'Index must have ndim of {ndim}, not {source.ndim}'
+                )
+        array = source
+    elif depth == 1:
         array, assume_unique = iterable_to_array_1d(source)
         if not assume_unique:
             array = ufunc_unique1d(array)
@@ -1321,7 +1329,7 @@ def index_many_to_one(
 
     for index in indices_iter:
         if index.depth != depth_first:
-            raise RuntimeError('Indices must have aligned depths')
+            raise ErrorInitIndex(f'Indices must have aligned depths: {depth_first}, {index.depth}')
 
         if mtot_is_concat and depth_first > 1:
             arrays.append([index.values_at_depth(d) for d in range(depth_first)])
@@ -1356,16 +1364,6 @@ def index_many_to_one(
                 explicit_constructor=explicit_constructor,
                 )
 
-    if is_ih: # for IndexHierarchy
-        index_constructors = []
-        # get types for each depth level
-        for types in zip(*index_types_arrays):
-            if all(types[0] == t for t in types[1:]):
-                index_constructors.append(types[0])
-            else: # assume this is always a 1D index
-                index_constructors.append(Index)
-        # import ipdb; ipdb.set_trace()
-
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
             constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR
@@ -1383,6 +1381,14 @@ def index_many_to_one(
         constructor = cls_default.from_labels
 
     if is_ih: # IndexHierarchy
+        index_constructors = []
+        # get types for each depth level
+        for types in zip(*index_types_arrays):
+            if all(types[0] == t for t in types[1:]):
+                index_constructors.append(types[0])
+            else: # assume this is always a 1D index
+                index_constructors.append(Index)
+
         if mtot_is_concat:
             # align same-depth collections of arrays
             arrays_per_depth = [array_processor(d) for d in zip(*arrays)]

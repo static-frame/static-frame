@@ -8468,7 +8468,10 @@ class TestUnit(TestCase):
         f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
         f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
 
-        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
+        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes),
+                axis=1,
+                name='dtype_diffs',
+                )
         self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
     def test_frame_from_concat_bb(self) -> None:

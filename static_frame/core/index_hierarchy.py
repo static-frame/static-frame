@@ -457,6 +457,8 @@ class IndexHierarchy(IndexBase):
         if arrays.__class__ is np.ndarray:
             size, depth = arrays.shape # type: ignore
             column_iter = arrays.T # type: ignore
+        elif not len(arrays):
+            size = 0
         else:
             try:
                 [size] = set(map(len, arrays))
