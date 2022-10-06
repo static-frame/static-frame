@@ -454,22 +454,11 @@ class IndexBase(ContainerOperand):
                 )
 
 
-
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
         return self._ufunc_set(others, ManyToOneType.INTERSECT)
-
-        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        # func = self.__class__._UFUNC_INTERSECTION
-        # if len(others) == 1:
-        #     return self._ufunc_set(func, others[0])
-
-        # post = self
-        # for other in others:
-        #     post = post._ufunc_set(func, other)
-        # return post
 
     def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
@@ -477,26 +466,11 @@ class IndexBase(ContainerOperand):
         '''
         return self._ufunc_set(others, ManyToOneType.UNION)
 
-
-        # func = self.__class__._UFUNC_UNION
-        # if len(others) == 1:
-        #     return self._ufunc_set(func, others[0])
-
-        # post = self
-        # for other in others:
-        #     post = post._ufunc_set(func, other)
-        # return post
-
-
     def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
         return self._ufunc_set(others, ManyToOneType.DIFFERENCE)
-
-        # return self._ufunc_set(
-        #         self.__class__._UFUNC_DIFFERENCE,
-        #         other)
 
     #---------------------------------------------------------------------------
     # via interfaces

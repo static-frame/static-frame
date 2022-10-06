@@ -480,10 +480,14 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
+        blocks = TypeBlocks.from_blocks(arrays)
+
         return cls(
                 indices=indices,
                 indexers=indexers,
                 name=name,
+                blocks=blocks,
+                own_blocks=True,
                 )
 
     @classmethod
