@@ -1,19 +1,19 @@
 
-import zipfile
-import os
-import timeit
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import get_context as get_mp_context
-import shutil
-import typing as tp
 import gc
+import os
+import shutil
+import timeit
+import typing as tp
+import zipfile
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import get_context as get_mp_context
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
+
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-
 
 COUNT_ARRAY = 100
 CHUNK_SIZE = 20

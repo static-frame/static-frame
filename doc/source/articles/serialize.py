@@ -1,18 +1,16 @@
 
 
 import os
-import timeit
-import tempfile
-import typing as tp
 import pickle
 import shutil
 import sys
-import os
+import tempfile
+import timeit
+import typing as tp
 
-
+import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
-import frame_fixtures as ff
 import pandas as pd
 
 sys.path.append(os.getcwd())
@@ -263,6 +261,7 @@ FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,
 
 def get_versions() -> str:
     import platform
+
     import pyarrow
     return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
@@ -592,8 +591,9 @@ def get_format():
 
     return format
 
-from itertools import repeat
 from itertools import chain
+from itertools import repeat
+
 
 def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     # get a title

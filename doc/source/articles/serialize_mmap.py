@@ -1,12 +1,12 @@
 import argparse
-from pathlib import Path
+import enum
 import shutil
 import time
-import enum
 import typing as tp
+from pathlib import Path
 
-import psutil
 import numpy as np
+import psutil
 
 import static_frame as sf
 

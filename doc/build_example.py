@@ -5,17 +5,17 @@ DOC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
 
 import argparse
-from io import StringIO
 import typing as tp
+from io import StringIO
 
 import numpy as np
 import pandas as pd
 
 import static_frame as sf
-from static_frame.core.interface import InterfaceSummary
-from static_frame.core.interface import InterfaceGroup
-from static_frame.core.container_util import ContainerMap
 from static_frame.core.container import ContainerBase
+from static_frame.core.container_util import ContainerMap
+from static_frame.core.interface import InterfaceGroup
+from static_frame.core.interface import InterfaceSummary
 
 dt64 = np.datetime64
 

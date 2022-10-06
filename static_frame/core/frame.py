@@ -40,7 +40,7 @@ from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
@@ -146,6 +146,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
 from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
@@ -487,10 +488,10 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
-                index = index_many_set(
+                index = index_many_to_one(
                         (f._index for f in frame_seq),
                         Index,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         index_constructor,
                         )
                 own_index = True
@@ -522,10 +523,10 @@ class Frame(ContainerOperand):
             if columns is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
-                columns = index_many_set(
+                columns = index_many_to_one(
                         (f._columns for f in frame_seq),
                         cls._COLUMNS_CONSTRUCTOR,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         columns_constructor,
                         )
                 own_columns = True
@@ -689,20 +690,20 @@ class Frame(ContainerOperand):
             containers = tuple(containers) # exhaust a generator
 
         if index is None:
-            index = index_many_set(
+            index = index_many_to_one(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             index = index_from_optional_constructor(index,
                     default_constructor=Index
                     )
         if columns is None:
-            columns = index_many_set(
+            columns = index_many_to_one(
                     (c.columns for c in containers),
                     cls_default=cls._COLUMNS_CONSTRUCTOR,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             columns = index_from_optional_constructor(columns,
@@ -747,7 +748,7 @@ class Frame(ContainerOperand):
                     fill_value = get_col_fill_value(col_count, dtype_at_col) #type: ignore
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
-                        array = np.full(len(index), fill_value) # type: ignore
+                        array = np.full(len(index), fill_value)
                         array.flags.writeable = False
                         fill_arrays[fill_value] = array
                     array = fill_arrays[fill_value]

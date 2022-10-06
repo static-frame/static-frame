@@ -829,7 +829,7 @@ def concat_resolved(
         axis: int = 0,
         ) -> np.ndarray:
     '''
-    Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
+    Concatenation of 1D or 2D arrays that uses resolved dtypes to avoid truncation.
 
     Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
 
@@ -839,18 +839,27 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
-    # first pass to determine shape and resolved type
-    arrays_iter = iter(arrays)
-    first = next(arrays_iter)
+    if len(arrays) == 2:
+        a1, a2 = arrays
+        dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
+        size = a1.shape[axis] + a2.shape[axis]
+        if a1.ndim == 1:
+            shape = size
+        else:
+            shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
+    else:
+        # first pass to determine shape and resolved type
+        arrays_iter = iter(arrays)
+        first = next(arrays_iter)
 
-    # ndim = first.ndim
-    dt_resolve = first.dtype
-    shape = list(first.shape)
+        # ndim = first.ndim
+        dt_resolve = first.dtype
+        shape = list(first.shape)
 
-    for array in arrays_iter:
-        if dt_resolve != DTYPE_OBJECT:
-            dt_resolve = resolve_dtype(array.dtype, dt_resolve)
-        shape[axis] += array.shape[axis]
+        for array in arrays_iter:
+            if dt_resolve != DTYPE_OBJECT:
+                dt_resolve = resolve_dtype(array.dtype, dt_resolve)
+            shape[axis] += array.shape[axis]
 
     out = np.empty(shape=shape, dtype=dt_resolve)
     np.concatenate(arrays, out=out, axis=axis)
@@ -2303,6 +2312,13 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
+class ManyToOneType(Enum):
+    CONCAT = 0
+    UNION = 1
+    INTERSECT = 2
+    DIFFERENCE = 3
+
+
 def _ufunc_set_1d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
@@ -2443,6 +2459,10 @@ def _ufunc_set_2d(
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
 
+    if is_2d:
+        cols = array.shape[1]
+        assert cols == other.shape[1]
+
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
 
@@ -2451,14 +2471,14 @@ def _ufunc_set_2d(
         if len(array) == 0 or len(other) == 0:
             post = np.array((), dtype=dtype)
             if is_2d:
-                post = post.reshape(0, 0)
+                post = post.reshape(0, cols)
             post.flags.writeable = False
             return post
     elif is_difference:
         if len(array) == 0:
             post = np.array((), dtype=dtype)
             if is_2d:
-                post = post.reshape(0, 0)
+                post = post.reshape(0, cols)
             post.flags.writeable = False
             return post
 
@@ -2486,7 +2506,7 @@ def _ufunc_set_2d(
                 if is_difference:
                     post = np.array((), dtype=dtype)
                     if is_2d:
-                        post = post.reshape(0, 0)
+                        post = post.reshape(0, cols)
                     post.flags.writeable = False
                     return post
                 return array
@@ -2519,7 +2539,7 @@ def _ufunc_set_2d(
 
         if is_2d:
             if len(values) == 0:
-                post = np.array((), dtype=dtype).reshape(0, 0)
+                post = np.array((), dtype=dtype).reshape(0, cols)
             else:
                 post = np.array(values, dtype=object)
             post.flags.writeable = False
@@ -2640,9 +2660,19 @@ def setdiff2d(
         other,
         assume_unique=assume_unique)
 
+
+MANY_TO_ONE_MAP = {
+        (1, ManyToOneType.UNION): union1d,
+        (1, ManyToOneType.INTERSECT): intersect1d,
+        (1, ManyToOneType.DIFFERENCE): setdiff1d,
+        (2, ManyToOneType.UNION): union2d,
+        (2, ManyToOneType.INTERSECT): intersect2d,
+        (2, ManyToOneType.DIFFERENCE): setdiff2d,
+        }
+
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
-        union: bool = False,
+        many_to_one_type: ManyToOneType,
         assume_unique: bool = False
         ) -> np.ndarray:
     '''
@@ -2652,32 +2682,34 @@ def ufunc_set_iter(
         arrays: iterator of arrays; can be a Generator.
         union: if True, a union is taken, else, an intersection.
     '''
-    arrays = iter(arrays)
-    result = next(arrays)
-
     # will detect ndim by first value, but insure that all other arrays have the same ndim
-    if result.ndim == 1:
-        ufunc = union1d if union else intersect1d
-        ndim = 1
-    else: # ndim == 2
-        ufunc = union2d if union else intersect2d
-        ndim = 2
 
-    # skip processing for the same array instance
-    array_id = id(result)
-    for array in arrays:
-        if array.ndim != ndim:
+    if hasattr(arrays, '__len__') and len(arrays) == 2:
+        a1, a2 = arrays
+        if a1.ndim != a2.ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        if array_id:
+        ufunc = MANY_TO_ONE_MAP[(a1.ndim, many_to_one_type)]
+        result = ufunc(a1, a2, assume_unique=assume_unique)
+    else:
+        arrays = iter(arrays)
+        result = next(arrays)
+        ufunc = MANY_TO_ONE_MAP[(result.ndim, many_to_one_type)]
+
+        # skip processing for the same array instance
+        array_id = id(result)
+        for array in arrays:
+            if array.ndim != result.ndim:
+                raise RuntimeError('arrays do not all have the same ndim')
             if id(array) == array_id:
                 continue
-            array_id = 0
-        # to retain order on identity, assume_unique must be True
-        result = ufunc(result, array, assume_unique=assume_unique)
+            # to retain order on identity, assume_unique must be True
+            result = ufunc(result, array, assume_unique=assume_unique)
 
-        if not union and len(result) == 0:
-            # short circuit intersection that results in no common values
-            break
+            if len(result) == 0 and (
+                    many_to_one_type is ManyToOneType.INTERSECT
+                    or many_to_one_type is ManyToOneType.DIFFERENCE):
+                # short circuit for ops with no common values
+                break
 
     result.flags.writeable = False
     return result
