@@ -88,7 +88,6 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     return post
 
-1/0
 # NOTE: this incurs processing on module load
 jinja_contexts = {'ctx': get_jinja_contexts()}
 
