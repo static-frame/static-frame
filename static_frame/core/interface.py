@@ -8,7 +8,6 @@ from itertools import chain
 
 import numpy as np
 
-import static_frame as sf
 from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ
 from static_frame.core.batch import Batch
