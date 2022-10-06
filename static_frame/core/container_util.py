@@ -1272,9 +1272,9 @@ def index_many_to_one(
                 assume_unique=True)
 
     if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:
-        # optimized exit when there are only two indices
-        this, other = indices
-        if this.equals(other,
+        # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
+        index, other = indices
+        if index.equals(other,
                 compare_dtype=True,
                 compare_name=True,
                 compare_class=True,
@@ -1282,18 +1282,18 @@ def index_many_to_one(
             # compare dtype as result should be resolved, even if values are the same
             if (many_to_one_type is ManyToOneType.UNION
                     or many_to_one_type is ManyToOneType.INTERSECT):
-                return this if this.STATIC else this.__deepcopy__({}) # type: ignore
+                return index if index.STATIC else index.__deepcopy__({}) # type: ignore
             elif many_to_one_type is ManyToOneType.DIFFERENCE:
-                return this.iloc[:0] # type: ignore
-
-
-    indices_iter = iter(indices)
-    try:
-        index = next(indices_iter)
-    except StopIteration:
-        if explicit_constructor is not None:
-            return explicit_constructor(()) #type: ignore
-        return cls_default.from_labels(())
+                return index.iloc[:0] # type: ignore
+        indices_iter = (other,)
+    else:
+        indices_iter = iter(indices)
+        try:
+            index = next(indices_iter)
+        except StopIteration:
+            if explicit_constructor is not None:
+                return explicit_constructor(()) #type: ignore
+            return cls_default.from_labels(())
 
     name_first = index.name
     name_aligned = True
