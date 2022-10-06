@@ -1,14 +1,15 @@
 
+import calendar
 import timeit
+import typing as tp
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
-import calendar
-
-import typing as tp
-from static_frame.core.display_color import HexColor
 
 import numpy as np
+
+from static_frame.core.display_color import HexColor
+
 dt64 = np.datetime64
 
 import static_frame as sf

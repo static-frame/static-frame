@@ -1,8 +1,7 @@
+import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf
-import frame_fixtures as ff
-
 
 if __name__ == '__main__':
 

@@ -19,7 +19,7 @@ from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -78,6 +78,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
@@ -377,10 +378,10 @@ class Series(ContainerOperand):
             containers = tuple(containers) # exhaust a generator
 
         if index is None:
-            index = index_many_set(
+            index = index_many_to_one(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else: # construct an index if not an index
             if not isinstance(index, IndexBase):
