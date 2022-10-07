@@ -3555,6 +3555,9 @@ class ExGenIndexHierarchy(ExGen):
             yield f'{iattr}({kwa(IH_INIT_FROM_PRODUCT_A1, star_expand_first=True)})'
         elif attr == 'from_tree':
             yield f"{iattr}({{'a': {{1024: (False, True), 2048: (True,)}}}})"
+        elif attr == 'from_values_per_depth':
+            yield f"{iattr}((('a', 'a', 'b', 'b'), (0, 1, 0, 1)))"
+            yield f"{iattr}((range(0, 12, 2), range(6)))"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
