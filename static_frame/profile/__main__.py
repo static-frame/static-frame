@@ -1489,7 +1489,7 @@ class _IndexHierarchyConstructionMixin_N(_IndexHierarchyConstructionMixin):
         sf.IndexHierarchy.from_labels(self.labels_shuffled, reorder_for_hierarchy=True)
 
     def from_arrays(self) -> None:
-        sf.IndexHierarchy._from_arrays(self.arrays)
+        sf.IndexHierarchy.from_values_per_depth(self.arrays)
 
 
 class _IndexHierarchyConstructionMixin_R(_IndexHierarchyConstructionMixin):

@@ -22,6 +22,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
@@ -432,8 +433,8 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_arrays(cls: tp.Type[IH],
-            arrays: tp.Sequence[np.ndarray],
+    def from_values_per_depth(cls: tp.Type[IH],
+            values: tp.Sequence[np.ndarray],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -447,22 +448,32 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        if arrays.__class__ is np.ndarray:
-            size, depth = arrays.shape # type: ignore
-            column_iter = arrays.T # type: ignore
-        elif not len(arrays):
-            size = 0
+        if values.__class__ is np.ndarray:
+            size, depth = values.shape # type: ignore
+            column_iter = values.T # type: ignore
+            arrays = values
+        elif not len(values):
+            if depth_reference is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth_reference)
         else:
-            try:
-                [size] = set(map(len, arrays))
-            except ValueError:
-                raise ErrorInitIndex('All arrays must have the same length') from None
+            arrays = []
+            for column in values:
+                if column.__class__ is np.ndarray:
+                    arrays.append(column)
+                else:
+                    a, _ = iterable_to_array_1d(column)
+                    arrays.append(a)
+
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
-        if not size:
-            return cls._from_empty((), name=name, depth_reference=depth_reference)
+        # NOTE: this will raise if arrays are not of equal size
+        try:
+            blocks = TypeBlocks.from_blocks(arrays)
+        except ErrorInitTypeBlocks:
+            raise ErrorInitIndex('values are not of equal length') from None
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -477,7 +488,6 @@ class IndexHierarchy(IndexBase):
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        blocks = TypeBlocks.from_blocks(arrays)
 
         return cls(
                 indices=indices,

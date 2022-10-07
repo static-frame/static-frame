@@ -1505,7 +1505,7 @@ class TestUnit(TestCase):
                 ('I', 'A', '1'),
                 ))
 
-        ih1 = IndexHierarchy._from_arrays(arrays1)
+        ih1 = IndexHierarchy.from_values_per_depth(arrays1)
         self.assertTrue((np.array(tuple(ih1.iter_label())) == arrays1).all())
 
         arrays2 = [
@@ -1513,7 +1513,7 @@ class TestUnit(TestCase):
             np.array(['A', 'B', 'B', 'A', 'B', 'A', 'B', 'A']),
             np.array(['1', '1', '2', '2', '2', '2', '1', '1']),
         ]
-        ih2 = IndexHierarchy._from_arrays(arrays2)
+        ih2 = IndexHierarchy.from_values_per_depth(arrays2)
         self.assertTrue(ih1.equals(ih2))
 
     def test_hierarchy_from_arrays_b(self) -> None:
@@ -1521,13 +1521,13 @@ class TestUnit(TestCase):
         arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy._from_arrays(arrays)
+            _ = IndexHierarchy.from_values_per_depth(arrays)
 
 
     def test_hierarchy_from_arrays_c(self) -> None:
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=IndexAutoConstructorFactory)
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
                 ['datetime64[Y]', 'datetime64[D]'],
@@ -1539,7 +1539,7 @@ class TestUnit(TestCase):
         IACF = IndexAutoConstructorFactory
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=(IACF('a'), IACF('b')),
                 )
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
