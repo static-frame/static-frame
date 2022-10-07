@@ -8,22 +8,6 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 
-class IndexHierarchySetResult(tp.NamedTuple):
-    lhs_encodings: np.ndarray # 1-D
-    others_encodings: tp.List[np.ndarray] # 1-D
-    bit_offset_encoders: np.ndarray # 1-D
-    union_indices: tp.List[Index]
-
-
-class IndexHierarchySetResult_Old(tp.NamedTuple):
-    lhs_encodings: np.ndarray # 1-D
-    rhs_encodings: np.ndarray # 1-D
-    remapped_indexers_lhs: np.ndarray # 2-D
-    remapped_indexers_rhs: np.ndarray # 2-D
-    union_indices: tp.List[Index]
-    encoding_can_overflow: bool
-
-
 def _validate_and_drop_empty(indices: tp.Tuple[IndexHierarchy]) -> tp.Tuple[tp.Tuple[IndexHierarchy], int, bool]:
     starting_len = len(indices)
     # Drop empty indices
@@ -35,81 +19,6 @@ def _validate_and_drop_empty(indices: tp.Tuple[IndexHierarchy]) -> tp.Tuple[tp.T
         raise RuntimeError('All indices must have same depth')
 
     return indices, depth, starting_len != len(indices)
-
-
-def _index_hierarchy_set(
-        lhs: IndexHierarchy,
-        rhs: IndexHierarchy,
-    ) -> IndexHierarchySetResult_Old:
-    '''
-    Shared logic for all set operations (union, intersection, difference)
-
-    They all need each of these steps to be completed, but they require
-    different amounts of intermediate work to be returned
-    '''
-
-    if lhs._recache:
-        lhs._update_array_cache()
-
-    if rhs._recache:
-        rhs._update_array_cache()
-
-    remapped_indexers_lhs: tp.List[np.ndarray] = []
-    remapped_indexers_rhs: tp.List[np.ndarray] = []
-
-    union_indices: tp.List[Index] = []
-
-    for (
-        idx_lhs,
-        idx_rhs,
-        indexer_lhs,
-        indexer_rhs
-    ) in zip(
-        lhs.index_at_depth(list(range(lhs.depth))),
-        rhs.index_at_depth(list(range(rhs.depth))),
-        lhs.indexer_at_depth(list(range(lhs.depth))),
-        rhs.indexer_at_depth(list(range(rhs.depth)))
-    ):
-        # Determine the union of both indices, to ensure that both indexers can
-        # map to a shared base
-        union = idx_lhs.union(idx_rhs)
-        union_indices.append(union)
-
-        # Build up the mappings for both indices to the shared base
-        remapped_lhs = idx_lhs._index_iloc_map(union)
-        remapped_rhs = idx_rhs._index_iloc_map(union)
-
-        # Apply that mapping to the both indexers
-        remapped_indexers_lhs.append(remapped_lhs[indexer_lhs])
-        remapped_indexers_rhs.append(remapped_rhs[indexer_rhs])
-
-    # Our encoding scheme requires that we know the number of unique elements
-    # for each union depth
-    # `num_unique_elements_per_depth` is used as a bit union for the encodings
-    bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
-        num_unique_elements_per_depth=list(map(len, union_indices)),
-    )
-    encoding_dtype = object if encoding_can_overflow else np.uint64
-
-    remapped_indexers_lhs = np.array(remapped_indexers_lhs, dtype=encoding_dtype)
-    remapped_indexers_rhs = np.array(remapped_indexers_rhs, dtype=encoding_dtype)
-
-    # See HierarchicalLocMap docs for more details on the encoding scheme
-    lhs_encodings = np.bitwise_or.reduce(
-        remapped_indexers_lhs.T << bit_offset_encoders, axis=1
-    )
-    rhs_encodings = np.bitwise_or.reduce(
-        remapped_indexers_rhs.T << bit_offset_encoders, axis=1
-    )
-
-    return IndexHierarchySetResult_Old(
-        lhs_encodings=lhs_encodings,
-        rhs_encodings=rhs_encodings,
-        remapped_indexers_lhs=remapped_indexers_lhs,
-        remapped_indexers_rhs=remapped_indexers_rhs,
-        union_indices=union_indices,
-        encoding_can_overflow=encoding_can_overflow,
-    )
 
 
 def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
@@ -124,14 +33,15 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
     # This call will call recache
-    indices, depth, any_dropped = _validate_and_drop_empty(indices)
     result_name = indices[0].name
+    result_index_constructors = indices[0]._index_constructors
+    indices, depth, any_dropped = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
                 depth_reference=depth,
-                index_constructors=indices[0]._index_constructors,
+                index_constructors=result_index_constructors,
                 name=result_name,
                 )
 
@@ -236,10 +146,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     )
 
 
-def index_hierarchy_difference(
-        lhs: IndexHierarchy,
-        *rhs: IndexHierarchy,
-    ) -> IndexHierarchy:
+def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     Equivalent to:
 
@@ -249,35 +156,87 @@ def index_hierarchy_difference(
     Note:
         The result is not guaranteed to be sorted.
     '''
+    # This call will call recache
+    result_name = indices[0].name
+    result_index_constructors = indices[0]._index_constructors
+    indices, depth, _ = _validate_and_drop_empty(indices)
 
-    if len(rhs) != 1:
-        raise NotImplementedError('only one rhs supported')
-
-    [rhs] = rhs
-
-    if lhs.equals(rhs):
+    def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
-                depth_reference=lhs.depth,
-                index_constructors=lhs._index_constructors,
+                depth_reference=depth,
+                index_constructors=result_index_constructors,
+                name=result_name,
                 )
+
+    lhs, rhs = indices
+
+    if lhs.equals(rhs):
+        return return_empty()
+
     elif not lhs.size or not rhs.size:
         # If either are empty, the difference will be the same as lhs
         return lhs if lhs.STATIC else lhs.__deepcopy__({})
 
-    result = _index_hierarchy_set(lhs, rhs)
+    remapped_indexers_lhs: tp.List[np.ndarray] = []
+    remapped_indexers_rhs: tp.List[np.ndarray] = []
+
+    union_indices: tp.List[Index] = []
+
+    for (
+        idx_lhs,
+        idx_rhs,
+        indexer_lhs,
+        indexer_rhs
+    ) in zip(
+        lhs.index_at_depth(list(range(lhs.depth))),
+        rhs.index_at_depth(list(range(rhs.depth))),
+        lhs.indexer_at_depth(list(range(lhs.depth))),
+        rhs.indexer_at_depth(list(range(rhs.depth)))
+    ):
+        # Determine the union of both indices, to ensure that both indexers can
+        # map to a shared base
+        union = idx_lhs.union(idx_rhs)
+        union_indices.append(union)
+
+        # Build up the mappings for both indices to the shared base
+        remapped_lhs = idx_lhs._index_iloc_map(union)
+        remapped_rhs = idx_rhs._index_iloc_map(union)
+
+        # Apply that mapping to the both indexers
+        remapped_indexers_lhs.append(remapped_lhs[indexer_lhs])
+        remapped_indexers_rhs.append(remapped_rhs[indexer_rhs])
+
+    # Our encoding scheme requires that we know the number of unique elements
+    # for each union depth
+    # `num_unique_elements_per_depth` is used as a bit union for the encodings
+    bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
+        num_unique_elements_per_depth=list(map(len, union_indices)),
+    )
+    encoding_dtype = object if encoding_can_overflow else np.uint64
+
+    remapped_indexers_lhs = np.array(remapped_indexers_lhs, dtype=encoding_dtype)
+    remapped_indexers_rhs = np.array(remapped_indexers_rhs, dtype=encoding_dtype)
+
+    # See HierarchicalLocMap docs for more details on the encoding scheme
+    lhs_encodings = np.bitwise_or.reduce(
+        remapped_indexers_lhs.T << bit_offset_encoders, axis=1
+    )
+    rhs_encodings = np.bitwise_or.reduce(
+        remapped_indexers_rhs.T << bit_offset_encoders, axis=1
+    )
 
     # Now, simply filter by which encodings only appear in lhs
-    unique_to_lhs = np.in1d(result.lhs_encodings, result.rhs_encodings, invert=True)
+    unique_to_lhs = np.in1d(lhs_encodings, rhs_encodings, invert=True)
 
     # Now, extract the true union block.
     blocks = lhs._blocks._extract(unique_to_lhs)
 
     return IndexHierarchy._from_type_blocks(
         blocks,
-        name=lhs.name,
+        name=result_name,
         own_blocks=True,
-        index_constructors=lhs._index_constructors,
+        index_constructors=result_index_constructors,
     )
 
 
@@ -293,6 +252,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
     # This call will call recache
+    result_name = indices[0].name
     (lhs, *others), depth, _ = _validate_and_drop_empty(indices)
     del indices
 
@@ -358,5 +318,5 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=union_indices,
         indexers=union_indexers,
-        name=lhs.name,
+        name=result_name,
     )
