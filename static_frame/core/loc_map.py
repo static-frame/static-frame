@@ -412,16 +412,23 @@ class HierarchicalLocMap:
     def indexers_to_iloc(self: _HLMap,
             indexers: np.ndarray,
             ) -> tp.List[int]:
-        '''Modifies indexers in-place'''
+        '''
+        Encodes indexers, and then remaps them to ilocs using the encoded_indexer_map
+        '''
+        indexers = self.encode(indexers, self.bit_offset_encoders)
+        return list(map(self.encoded_indexer_map.__getitem__, indexers))
+
+    @staticmethod
+    def encode(indexers: np.ndarray, bit_offset_encoders: np.ndarray) -> np.ndarray:
+        '''
+        Encode indexers into a 1-dim array of uint64
+        '''
         # Validate input requirements
         assert indexers.ndim == 2
-        assert indexers.shape[1] == len(self.bit_offset_encoders)
+        assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        indexers <<= self.bit_offset_encoders
-
-        indexers = np.bitwise_or.reduce(indexers, axis=1)
-        return list(map(self.encoded_indexer_map.__getitem__, indexers))
+        return np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
 
     @staticmethod
     def unpack_encoding(

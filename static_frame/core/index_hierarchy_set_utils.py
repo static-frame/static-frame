@@ -8,15 +8,29 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 
-def _validate_and_drop_empty(indices: tp.Tuple[IndexHierarchy]) -> tp.Tuple[tp.Tuple[IndexHierarchy], int, bool]:
-    starting_len = len(indices)
-    # Drop empty indices
-    indices = tuple(idx for idx in indices if idx.size)
+def _validate_and_drop_empty(
+        indices: tp.Tuple[IndexHierarchy],
+        ) -> tp.Tuple[tp.List[IndexHierarchy], int, bool]:
+    '''
+    Common sanitization for IndexHierarchy operations.
 
-    try:
-        [depth] = set(index.depth  for index in indices)
-    except ValueError:
-        raise RuntimeError('All indices must have same depth')
+    This will also invoke recache on all indices due to the `.size` call
+    '''
+    starting_len = len(indices)
+
+    depth = None
+    filtered: tp.List[IndexHierarchy] = []
+    for idx in indices:
+        # Drop empty indices
+        if not idx.size:
+            continue
+
+        filtered.append(idx)
+
+        if depth is None:
+            depth = idx.depth
+        elif depth != idx.depth:
+            raise RuntimeError('All indices must have same depth')
 
     return indices, depth, starting_len != len(indices)
 
@@ -29,10 +43,20 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         >>> for index in indices[1:]:
         >>>     result = result.intersection(index)
 
+    Algorithm:
+
+        1. Determine the union of all indices at each depth.
+        2. For each depth, for each index, remap the indexers to the shared base.
+        3. Now, we can start working with encodings.
+        4. Start iterating through, building up the progressive intersection.
+        5. If the intersection is ever empty, we can stop.
+        6. If we finish with values left over, we now need to clean up.
+            This is because the encodings might be mapping to values from the union
+            index that have been dropped
+
     Note:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
-    # This call will call recache
     result_name = indices[0].name
     result_index_constructors = indices[0]._index_constructors
     indices, depth, any_dropped = _validate_and_drop_empty(indices)
@@ -47,19 +71,6 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if any_dropped:
         return return_empty()
-
-    """
-    Algorithm:
-
-    1. Determine the union of all indices at each depth.
-    2. For each depth, for each index, remap the indexers to the shared base.
-    3. Now, we can start working with encodings.
-    4. Start iterating through, building up the progressive intersection.
-    5. If the intersection is ever empty, we can stop.
-    6. If we finish with values left over, we now need to clean up.
-        This is because the encodings might be mapping to values from the union
-        index that have been dropped
-    """
 
     # 1. Determine the union of all indices at each depth.
     union_indices: tp.List[Index] = list(indices[0].index_at_depth(list(range(depth))))
@@ -85,7 +96,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     indices = sorted(indices, key=lambda x: x.size, reverse=True)
 
     def get_encodings(ih: IndexHierarchy) -> np.ndarray:
-        """Encode `ih` based on the union indices"""
+        '''Encode `ih` based on the union indices'''
         remapped_indexers: tp.List[np.ndarray] = []
 
         for (
@@ -97,13 +108,14 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
             ih.index_at_depth(list(range(depth))),
             ih.indexer_at_depth(list(range(depth)))
         ):
+            # 2. For each depth, for each index, remap the indexers to the shared base.
             remapped_rhs = idx._index_iloc_map(union_idx)
             remapped_indexers.append(remapped_rhs[indexer])
 
-        # See HierarchicalLocMap docs for more details on the encoding scheme
-        return np.bitwise_or.reduce(
-            np.array(remapped_indexers, dtype=encoding_dtype).T << bit_offset_encoders, axis=1
-        )
+        return HierarchicalLocMap.encode(
+                np.array(remapped_indexers, dtype=encoding_dtype).T,
+                bit_offset_encoders,
+                )
 
     # Choose the smallest
     first_ih = indices.pop()
@@ -218,13 +230,8 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     remapped_indexers_lhs = np.array(remapped_indexers_lhs, dtype=encoding_dtype)
     remapped_indexers_rhs = np.array(remapped_indexers_rhs, dtype=encoding_dtype)
 
-    # See HierarchicalLocMap docs for more details on the encoding scheme
-    lhs_encodings = np.bitwise_or.reduce(
-        remapped_indexers_lhs.T << bit_offset_encoders, axis=1
-    )
-    rhs_encodings = np.bitwise_or.reduce(
-        remapped_indexers_rhs.T << bit_offset_encoders, axis=1
-    )
+    lhs_encodings = HierarchicalLocMap.encode(remapped_indexers_lhs.T, bit_offset_encoders)
+    rhs_encodings = HierarchicalLocMap.encode(remapped_indexers_rhs.T, bit_offset_encoders)
 
     # Now, simply filter by which encodings only appear in lhs
     unique_to_lhs = np.in1d(lhs_encodings, rhs_encodings, invert=True)
@@ -296,13 +303,10 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         np.array(remapped_indexers_rhs, dtype=encoding_dtype) for remapped_indexers_rhs in remapped_indexers_others
     ]
 
-    def _encode_indexers(indexers: np.ndarray) -> np.ndarray:
-        # See HierarchicalLocMap docs for more details on the encoding scheme
-        return np.bitwise_or.reduce(indexers.T << bit_offset_encoders, axis=1)
-
-    lhs_encodings = _encode_indexers(remapped_indexers_lhs)
+    lhs_encodings = HierarchicalLocMap.encode(remapped_indexers_lhs.T, bit_offset_encoders)
     others_encodings = [
-        _encode_indexers(remapped_indexers_rhs) for remapped_indexers_rhs in remapped_indexers_others
+        HierarchicalLocMap.encode(remapped_indexers_rhs.T, bit_offset_encoders)
+        for remapped_indexers_rhs in remapped_indexers_others
     ]
 
     # Given all encodings, determine which are unique (i.e. the union!)
