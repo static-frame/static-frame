@@ -3119,6 +3119,21 @@ class TestUnit(TestCase):
             # RuntimeError: Attempting to create IndexDate from an IndexAutoFactory, which is generally not desired as the result will be an offset from the epoch.
             f1 = s1.to_frame(columns_constructor=IndexDate)
 
+    def test_series_to_frame_k(self) -> None:
+        from datetime import date
+        f = Frame.from_element(1, columns=IndexDate([date(2022, 9, 30)]), index=[1])
+        s = f[sf.ILoc[-1]]
+        f = s.to_frame(columns_constructor=sf.IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((np.datetime64('2022-09-30'), ((1, 1),)),)
+                )
+
+    def test_series_to_frame_l(self) -> None:
+        s1 = Series([1,2,3])
+        f1 = s1.rename('a').to_frame(name='b')
+        self.assertEqual(f1.name, 'b')
+        self.assertEqual(tuple(f1.columns), ('a',))
+
     #---------------------------------------------------------------------------
 
     def test_series_to_frame_go_a(self) -> None:

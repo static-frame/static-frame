@@ -5,7 +5,6 @@ This module us for utilty functions that take as input and / or return Container
 import datetime
 import typing as tp
 from collections import defaultdict
-from enum import Enum
 from fractions import Fraction
 from functools import partial
 from itertools import zip_longest
@@ -17,8 +16,8 @@ from numpy import char as npc
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame.core.index_base import IndexBase
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.util import BOOL_TYPES
@@ -40,6 +39,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
@@ -47,8 +47,11 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique2d
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -59,6 +62,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexInitOrAutoType  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -111,6 +115,7 @@ class ContainerMap:
         from static_frame.core.index_datetime import IndexYearMonthGO
         from static_frame.core.index_hierarchy import IndexHierarchy
         from static_frame.core.index_hierarchy import IndexHierarchyGO
+        from static_frame.core.memory_measure import MemoryDisplay
         from static_frame.core.quilt import Quilt
         from static_frame.core.series import Series
         from static_frame.core.series import SeriesHE
@@ -369,7 +374,7 @@ def index_from_optional_constructor(
         *,
         default_constructor: IndexConstructor,
         explicit_constructor: ExplicitConstructor = None,
-        ) -> IndexBase:
+        ) -> 'IndexBase':
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
@@ -378,6 +383,7 @@ def index_from_optional_constructor(
     from static_frame.core.index_auto import IndexAutoConstructorFactory
     from static_frame.core.index_auto import IndexAutoFactory
     from static_frame.core.index_auto import IndexConstructorFactoryBase
+    from static_frame.core.index_base import IndexBase
 
     if isinstance(value, IndexAutoFactory):
         return value.to_index(
@@ -424,7 +430,7 @@ def constructor_from_optional_constructor(
     '''
     def func(
             value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
-            ) -> IndexBase:
+            ) -> 'IndexBase':
         return index_from_optional_constructor(value,
                 default_constructor=default_constructor,
                 explicit_constructor=explicit_constructor,
@@ -437,7 +443,7 @@ def index_from_optional_constructors(
         depth: int,
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
-        ) -> tp.Tuple[tp.Optional[IndexBase], bool]:
+        ) -> tp.Tuple[tp.Optional['IndexBase'], bool]:
     '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed.
     '''
     if depth == 0:
@@ -478,13 +484,13 @@ def constructor_from_optional_constructors(
         explicit_constructors: IndexConstructors = None,
         ) -> tp.Callable[
                 [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
-                tp.Optional[IndexBase]]:
+                tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
             value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
-            ) -> tp.Optional[IndexBase]:
+            ) -> tp.Optional['IndexBase']:
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
                 depth=depth,
@@ -502,6 +508,8 @@ def index_constructor_empty(
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
+    from static_frame.core.index_base import IndexBase
+
     if index is None or index is IndexAutoFactory:
         return True
     elif (not isinstance(index, IndexBase)
@@ -1108,7 +1116,7 @@ def arrays_from_index_frame(
 
 
 def key_from_container_key(
-        index: IndexBase,
+        index: 'IndexBase',
         key: GetItemKeyType,
         expand_iloc: bool = False,
         ) -> GetItemKeyType:
@@ -1152,18 +1160,96 @@ def key_from_container_key(
 
 
 #---------------------------------------------------------------------------
-class ManyToOneType(Enum):
-    CONCAT = 0
-    UNION = 1
-    INTERSECT = 2
+class IMTOAdapterSeries:
+    __slots__ = ('values',)
+
+    def __init__(self, values: np.ndarray) -> None:
+        self.values = values
+
+class IMTOAdapter:
+    '''Avoid creating a complete Index, and instead wrap an array and associated metadata into an adapter object that can be used in index_many_to_one
+    '''
+    __slots__ = (
+        'values',
+        'name',
+        'depth',
+        'ndim',
+        'index_types',
+        'dtypes',
+        )
+
+    _map = object() # not None
+
+    def __init__(self,
+            values: np.ndarray,
+            name: NameType,
+            depth: int,
+            ndim: int,
+            ):
+        self.values = values
+        self.name = name
+        self.depth = depth
+        self.ndim = ndim
+
+        if self.ndim > 1:
+            # simply provide None so as not to match in any comparison
+            self.index_types = IMTOAdapterSeries(
+                    np.array([None for _ in range(depth)],
+                    dtype=DTYPE_OBJECT,
+                    ))
+            self.dtypes = IMTOAdapterSeries(
+                    np.array([self.values.dtype for _ in range(depth)],
+                    dtype=DTYPE_OBJECT,
+                    ))
+
+    def __len__(self) -> int:
+        return len(self.values)
+
+def imto_adapter_factory(
+        source: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
+        depth: int,
+        name: NameType,
+        ndim: int,
+        ) -> tp.Union['IndexBase', IMTOAdapter]:
+    '''
+    Factory function to let `IndexBase` pass through while wrapping other iterables (after array conversion) into `IMTOAdapter`s, such that they can be evaluated with other `IndexBase` in `index_many_to_one`.
+
+    Args:
+        depth: provide depth of root caller.
+        name: provide name of root caller.
+    '''
+    from static_frame.core.index_base import IndexBase
+
+    if isinstance(source, IndexBase):
+        return source
+
+    if source.__class__ is np.ndarray:
+        if ndim != source.ndim: # type: ignore
+            raise ErrorInitIndex(
+                f'Index must have ndim of {ndim}, not {source.ndim}' # type: ignore
+                )
+        array = source
+    elif depth == 1:
+        array, assume_unique = iterable_to_array_1d(source)
+        if not assume_unique:
+            array = ufunc_unique1d(array)
+    else:
+        array = iterable_to_array_2d(source)
+        array = ufunc_unique2d(array, axis=0) # TODO: check axis
+
+    return IMTOAdapter(array,
+            name=name,
+            depth=depth,
+            ndim=ndim,
+            )
 
 
-def _index_many_to_one(
-        indices: tp.Iterable[IndexBase],
-        cls_default: tp.Type[IndexBase],
+def index_many_to_one(
+        indices: tp.Iterable['IndexBase'],
+        cls_default: tp.Type['IndexBase'],
         many_to_one_type: ManyToOneType,
         explicit_constructor: tp.Optional[IndexInitializer] = None,
-        ) -> IndexBase:
+        ) -> 'IndexBase':
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
 
@@ -1172,30 +1258,43 @@ def _index_many_to_one(
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
         explicit_constructor: Alternative constructor that will override normal evaluation.
     '''
+    from static_frame.core.index import Index
     from static_frame.core.index_auto import IndexAutoFactory
 
     array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
-
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
-    if many_to_one_type is ManyToOneType.UNION:
-        array_processor = partial(ufunc_set_iter,
-                union=True,
-                assume_unique=True)
-    elif many_to_one_type is ManyToOneType.INTERSECT:
-        array_processor = partial(ufunc_set_iter,
-                union=False,
-                assume_unique=True)
-    elif mtot_is_concat:
+    if mtot_is_concat:
         array_processor = concat_resolved
+    else:
+        array_processor = partial(ufunc_set_iter,
+                many_to_one_type=many_to_one_type,
+                assume_unique=True)
 
-    indices_iter = iter(indices)
-    try:
-        index = next(indices_iter)
-    except StopIteration:
-        if explicit_constructor is not None:
-            return explicit_constructor(()) #type: ignore
-        return cls_default.from_labels(())
+    indices_iter: tp.Iterable['IndexBase']
+    if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:
+        # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
+        index, other = indices
+        if index.equals(other,
+                compare_dtype=True,
+                compare_name=True,
+                compare_class=True,
+                ):
+            # compare dtype as result should be resolved, even if values are the same
+            if (many_to_one_type is ManyToOneType.UNION
+                    or many_to_one_type is ManyToOneType.INTERSECT):
+                return index if index.STATIC else index.__deepcopy__({}) # type: ignore
+            elif many_to_one_type is ManyToOneType.DIFFERENCE:
+                return index.iloc[:0] # type: ignore
+        indices_iter = (other,)
+    else:
+        indices_iter = iter(indices)
+        try:
+            index = next(indices_iter)
+        except StopIteration:
+            if explicit_constructor is not None:
+                return explicit_constructor(()) #type: ignore
+            return cls_default.from_labels(())
 
     name_first = index.name
     name_aligned = True
@@ -1203,37 +1302,44 @@ def _index_many_to_one(
     cls_aligned = True
     depth_first = index.depth
 
-    # if we are unioning we can give back an index_auto
+    # if union/intersect, can give back an index_auto
     index_auto_aligned = (not mtot_is_concat
             and index.ndim == 1
             and index._map is None #type: ignore
+            and many_to_one_type is not ManyToOneType.DIFFERENCE
             )
 
-    # if IndexHierarchy, collect index_types generators
+    # collect initial values from `index`
     if index.ndim == 2:
         is_ih = True
         index_types_arrays = [index.index_types.values]
+
         if not mtot_is_concat:
-            index_dtypes_arrays = [index.dtypes.values] #type: ignore
+            if len(index) > 0: # only store these if the index has length
+                index_dtypes_arrays = [index.dtypes.values] #type: ignore
+            else:
+                index_dtypes_arrays = []
 
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
             arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
-        else:
-            # NOTE: we accept type consolidation for set operations for now
+        else: # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
     else:
         is_ih = False
         arrays = [index.values]
 
+    # iterate through all remaining indices
     for index in indices_iter:
         if index.depth != depth_first:
-            raise RuntimeError('Indices must have aligned depths')
+            raise ErrorInitIndex(f'Indices must have aligned depths: {depth_first}, {index.depth}')
+
         if mtot_is_concat and depth_first > 1:
             arrays.append([index.values_at_depth(d) for d in range(depth_first)])
         else:
             arrays.append(index.values)
 
+        # Boolean checks that all turn off as soon as they go to false
         if name_aligned and index.name != name_first:
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
@@ -1244,14 +1350,12 @@ def _index_many_to_one(
         # is_ih can only be True if we have all IH of same depth
         if is_ih:
             index_types_arrays.append(index.index_types.values)
-            if not mtot_is_concat:
+            if not mtot_is_concat and len(index) > 0:
                 index_dtypes_arrays.append(index.dtypes.values) #type: ignore
-        else:
-            is_ih = False
 
     name = name_first if name_aligned else None
 
-    # return an index auto if we can
+    # return an index auto if we can; already filtered out difference and concat
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
             size = max(a.size for a in arrays) #type: ignore
@@ -1262,15 +1366,6 @@ def _index_many_to_one(
                 explicit_constructor=explicit_constructor,
                 )
 
-    if is_ih: # for IndexHierarchy
-        index_constructors = []
-        # get types for each depth level
-        for types in zip(*index_types_arrays):
-            if all(types[0] == t for t in types[1:]):
-                index_constructors.append(types[0])
-            else: # assume this is always a 1D index
-                index_constructors.append(cls_default)
-
     if cls_aligned and explicit_constructor is None:
         if cls_default.STATIC and not cls_first.STATIC:
             constructor_cls = cls_first._IMMUTABLE_CONSTRUCTOR
@@ -1278,20 +1373,25 @@ def _index_many_to_one(
             constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
             constructor_cls = cls_first
-
-        if is_ih:
-            constructor = constructor_cls._from_arrays #type: ignore
-        else:
-            constructor = constructor_cls.from_labels #type: ignore
-
+        constructor = (constructor_cls._from_arrays if is_ih # type: ignore
+                else constructor_cls.from_labels) # type: ignore
     elif explicit_constructor is not None:
         constructor = explicit_constructor
+    elif is_ih:
+        constructor = cls_default._from_arrays # type: ignore
     else:
         constructor = cls_default.from_labels
 
-    if is_ih: # IndexHierarchy
-        if mtot_is_concat:
-            # align same-depth collections of arrays
+    if is_ih:
+        # collect corresponding index constructor per depth position if they match; else, supply a simple Index
+        index_constructors = []
+        for types in zip(*index_types_arrays):
+            if all(types[0] == t for t in types[1:]):
+                index_constructors.append(types[0])
+            else:
+                index_constructors.append(Index)
+
+        if mtot_is_concat: # concat same-depth collections of arrays
             arrays_per_depth = [array_processor(d) for d in zip(*arrays)]
         else:
             # NOTE: arrays is a list of 2D arrays, where rows are labels
@@ -1299,7 +1399,10 @@ def _index_many_to_one(
             arrays_per_depth = []
             for d, dtypes in enumerate(zip(*index_dtypes_arrays)):
                 dtype = resolve_dtype_iter(dtypes)
-                arrays_per_depth.append(array[NULL_SLICE, d].astype(dtype))
+                # we explicit retype after `array_processor` forced type consolidation
+                a = array[NULL_SLICE, d].astype(dtype)
+                a.flags.writeable = False
+                arrays_per_depth.append(a)
 
         return constructor(arrays_per_depth, #type: ignore
                 name=name,
@@ -1312,31 +1415,15 @@ def _index_many_to_one(
     return constructor(array, name=name) #type: ignore
 
 def index_many_concat(
-        indices: tp.Iterable[IndexBase],
-        cls_default: tp.Type[IndexBase],
+        indices: tp.Iterable['IndexBase'],
+        cls_default: tp.Type['IndexBase'],
         explicit_constructor: tp.Optional[IndexConstructor] = None,
-        ) -> tp.Optional[IndexBase]:
-    return _index_many_to_one(indices,
+        ) -> tp.Optional['IndexBase']:
+    return index_many_to_one(indices,
             cls_default,
             ManyToOneType.CONCAT,
             explicit_constructor,
             )
-
-def index_many_set(
-        indices: tp.Iterable[IndexBase],
-        cls_default: tp.Type[IndexBase],
-        union: bool,
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
-        ) -> tp.Optional[IndexBase]:
-    '''
-    Given multiple Index objects, union them. Preserve name and index type if aligned.
-    '''
-    return _index_many_to_one(indices,
-            cls_default,
-            ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
-            explicit_constructor,
-            )
-
 
 #-------------------------------------------------------------------------------
 def apex_to_name(
@@ -1431,10 +1518,10 @@ def prepare_values_for_lex(
     return asc_is_element, values_for_lex
 
 def sort_index_for_order(
-        index: IndexBase,
+        index: 'IndexBase',
         ascending: BoolOrBools,
         kind: str,
-        key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]],
+        key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[np.ndarray, 'IndexBase']]],
         ) -> np.ndarray:
     '''Return an integer array defing the new ordering.
     '''

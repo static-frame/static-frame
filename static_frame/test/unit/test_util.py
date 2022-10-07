@@ -16,6 +16,7 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _isin_1d
@@ -37,6 +38,7 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
@@ -446,10 +448,10 @@ class TestUnit(TestCase):
         a3 = np.array([3, 2, 1])
         a4 = np.array([3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
     def test_array_set_ufunc_many_b(self) -> None:
@@ -458,10 +460,10 @@ class TestUnit(TestCase):
         a3 = np.array([5, 3, 2, 1])
         a4 = np.array([2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
     def test_array_set_ufunc_many_c(self) -> None:
@@ -469,10 +471,10 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
         a3 = np.array([[10, 20, 30], [1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=False)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [[1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=True)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.UNION)
         self.assertEqual(post.tolist(),
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
@@ -481,14 +483,27 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
 
         with self.assertRaises(Exception):
-            post = ufunc_set_iter((a1, a2), union=False)
+            post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
 
     def test_array_set_ufunc_many_e(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([30, 20])
 
-        post = ufunc_set_iter((a1, a2), union=False)
+        post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [])
+
+
+    def test_array_set_ufunc_many_f(self) -> None:
+
+        # this shows that identical arrays return the same ordering
+        a1 = np.array([3, 2, 1])
+        a2 = np.array([3, 2, 1])
+        a3 = np.array([3, 2, 1]).reshape(3, 1)
+
+        with self.assertRaises(RuntimeError):
+            _ = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
+
+    #---------------------------------------------------------------------------
 
     def test_union1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
@@ -1230,6 +1245,13 @@ class TestUnit(TestCase):
         with self.assertRaises(Exception):
             concat_resolved((a1, a2), axis=None)  # type: ignore
 
+
+    def test_concat_resolved_c(self) -> None:
+        a1 = np.array([3,4,5])
+        a2 = np.array([1.1,2.5,3.1])
+        a3 = concat_resolved((a1, a2), axis=0).round(1)
+        self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
+
     def test_dtype_to_na_a(self) -> None:
 
         self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
@@ -1240,6 +1262,9 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = dtype_to_fill_value(np.dtype('V'))
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -2782,6 +2807,15 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             validate_depth_selection(None)
+
+    #---------------------------------------------------------------------------
+    def test_bytes_to_size_label(self) -> None:
+        self.assertEqual(bytes_to_size_label(0), '0 (B)')
+        self.assertEqual(bytes_to_size_label(1), '1 (B)')
+        self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 (KB)')
+
+
 
 if __name__ == '__main__':
     unittest.main()

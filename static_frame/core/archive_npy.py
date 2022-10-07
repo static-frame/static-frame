@@ -15,7 +15,7 @@ import numpy as np
 
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorNPYDecode
@@ -26,6 +26,7 @@ from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
@@ -1105,6 +1106,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
+        index: tp.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat
         if axis == 1: # stacks columns (extends rows horizontally)
@@ -1120,10 +1122,10 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 columns = None
 
             if include_index:
-                index = index_many_set(
+                index = index_many_to_one(
                         (f._index for f in frames),
                         Index,
-                        union=union,
+                        many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         )
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
@@ -1145,10 +1147,10 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 index = None
 
             if include_columns:
-                columns = index_many_set(
+                columns = index_many_to_one(
                         (f._columns for f in frames),
                         Index,
-                        union=union,
+                        many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         )
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')

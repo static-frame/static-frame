@@ -1,9 +1,14 @@
 import typing as tp
+from functools import partial
+from itertools import chain
 
 import numpy as np
 from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import IMTOAdapter
+from static_frame.core.container_util import imto_adapter_factory
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -20,6 +25,7 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
@@ -87,10 +93,6 @@ class IndexBase(ContainerOperand):
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
-
-    _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_DIFFERENCE: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
@@ -422,46 +424,53 @@ class IndexBase(ContainerOperand):
     # set operations
 
     def _ufunc_set(self: I,
-            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
+            others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
+            many_to_one_type: ManyToOneType,
             ) -> I:
-        raise NotImplementedError() #pragma: no cover
+        '''Normalize inputs and call `index_many_to_one`.
+        '''
+
+        if self._recache:
+            self._update_array_cache()
+
+        imtoaf = partial(imto_adapter_factory,
+                depth=self.depth,
+                name=self.name,
+                ndim=self.ndim,
+                )
+
+        indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
+
+        if hasattr(others, '__len__') and len(others) == 1:
+            # NOTE: having only one `other` is far more common than many others; thus, optimzie for that case by not using an iterator
+            indices = (self, imtoaf(others[0])) # type: ignore
+        else:
+            indices = chain((self,), (imtoaf(other) for other in others))
+
+        return index_many_to_one( # type: ignore
+                indices,
+                cls_default=self.__class__,
+                many_to_one_type=many_to_one_type,
+                )
+
 
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        func = self.__class__._UFUNC_INTERSECTION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
-
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
+        return self._ufunc_set(others, ManyToOneType.INTERSECT)
 
     def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        func = self.__class__._UFUNC_UNION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
+        return self._ufunc_set(others, ManyToOneType.UNION)
 
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
-
-
-    def difference(self: I, other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
-        return self._ufunc_set(
-                self.__class__._UFUNC_DIFFERENCE,
-                other)
+        return self._ufunc_set(others, ManyToOneType.DIFFERENCE)
 
     #---------------------------------------------------------------------------
     # via interfaces

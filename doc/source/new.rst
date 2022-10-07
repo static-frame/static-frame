@@ -4,11 +4,19 @@ What is New in StaticFrame
 0.9.16
 ----------
 
-Added ``memory`` property to display memory usage.
+Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
+
+Implemented the DataFrame Interchange Protocol export via the ``Frame.__dataframe__()`` interface.
 
 Implemented ``__repr__()`` for ``ILoc``.
 
 Updated ``Batch.__repr__()``.
+
+Added ``name`` parameter to ``Frame.to_frame()``, ``Series.to_frame()``, and related methods.
+
+Improved error reporting for invalid ``IndexHierarchy``.
+
+``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
 
 
 0.9.15

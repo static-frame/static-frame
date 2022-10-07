@@ -8468,7 +8468,10 @@ class TestUnit(TestCase):
         f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
         f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
 
-        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
+        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes),
+                axis=1,
+                name='dtype_diffs',
+                )
         self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
     def test_frame_from_concat_bb(self) -> None:
@@ -9626,11 +9629,11 @@ class TestUnit(TestCase):
                 name='foo')
 
         f2 = f1.to_frame_go()
-        f3 = f2.to_frame()
+        f3 = f2.to_frame(name='bar')
 
         self.assertTrue(f1.name, 'foo')
         self.assertTrue(f2.name, 'foo')
-        self.assertTrue(f3.name, 'foo')
+        self.assertTrue(f3.name, 'bar')
 
     def test_frame_to_frame_go_c(self) -> None:
         records = (
@@ -9698,6 +9701,13 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_to_frame_a(self) -> None:
+        f1 = Frame(np.array(()), name='foo')
+        f2 = f1.to_frame(name='bar')
+        self.assertEqual(f2.name, 'bar')
 
     #---------------------------------------------------------------------------
 

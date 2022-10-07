@@ -8,8 +8,6 @@ import numpy as np
 import static_frame as sf
 from static_frame.test.test_case import Timer
 
-
-
 # def func_b(frame: Frame) -> Frame:
 #     for row in frame.iter_series():
 #         pass
@@ -348,8 +346,9 @@ def bus_batch_demo() -> None:
 
 
 def bus_aggregate() -> None:
-    import frame_fixtures as ff
     from itertools import zip_longest
+
+    import frame_fixtures as ff
 
     # create the "total index"
     index = sf.IndexDate.from_date_range('2019-01-12', '2019-12-31')

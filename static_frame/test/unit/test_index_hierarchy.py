@@ -2468,10 +2468,26 @@ class TestUnit(TestCase):
                 ((0, Index), (1, IndexDate))
                 )
 
-    def test_hierarchy_set_operators_f(self) -> None:
+    def test_hierarchy_set_operators_f1(self) -> None:
         dd = datetime.date
 
-        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate], name='foo')
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate], name='foo')
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+        self.assertEqual(i3.name, 'foo')
+
+    def test_hierarchy_set_operators_f2(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate], name='foo')
 
         i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate])
 
@@ -2481,6 +2497,9 @@ class TestUnit(TestCase):
                 i3.index_types.to_pairs(),
                 ((0, Index), (1, IndexDate))
                 )
+        # we do not propagate name if not matched
+        self.assertEqual(i3.name, None)
+
 
     def test_hierarchy_set_operators_g(self) -> None:
         dd = datetime.date
@@ -2528,6 +2547,8 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
                 )
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_set_operators_j(self) -> None:
         labels = (

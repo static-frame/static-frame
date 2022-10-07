@@ -87,6 +87,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_auto_constructor_factory.rst
    api_overview/npz.rst
    api_overview/npy.rst
+   api_overview/memory_display.rst
    api_overview/platform.rst
 
 
@@ -137,6 +138,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_auto_constructor_factory.rst
    api_detail/npz.rst
    api_detail/npy.rst
+   api_detail/memory_display.rst
    api_detail/platform.rst
 
 .. toctree::
@@ -623,6 +625,9 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/npy-attribute.rst
    api_overview/npy-method.rst
    api_overview/npy-display.rst
+   api_overview/memory_display-constructor.rst
+   api_overview/memory_display-exporter.rst
+   api_overview/memory_display-display.rst
    api_overview/platform-constructor.rst
    api_overview/platform-exporter.rst
    api_overview/platform-display.rst
@@ -1108,6 +1113,9 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/npy-attribute.rst
    api_detail/npy-method.rst
    api_detail/npy-display.rst
+   api_detail/memory_display-constructor.rst
+   api_detail/memory_display-exporter.rst
+   api_detail/memory_display-display.rst
    api_detail/platform-constructor.rst
    api_detail/platform-exporter.rst
    api_detail/platform-display.rst
