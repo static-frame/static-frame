@@ -434,7 +434,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_values_per_depth(cls: tp.Type[IH],
-            values: tp.Sequence[np.ndarray],
+            values: tp.Union[np.ndarray, tp.Sequence[tp.Iterable[tp.Hashable    ]]],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -453,11 +453,11 @@ class IndexHierarchy(IndexBase):
             column_iter = values.T # type: ignore
             arrays = values
         elif not len(values):
-            if depth_reference is None:
-                raise RuntimeError('depth_reference must be specified for empty values')
-            return cls._from_empty((), name=name, depth_reference=depth_reference)
+            size = 0
+            depth = depth_reference
         else:
             arrays = []
+            size = -1
             for column in values:
                 if column.__class__ is np.ndarray:
                     arrays.append(column)
@@ -465,15 +465,19 @@ class IndexHierarchy(IndexBase):
                     a, _ = iterable_to_array_1d(column)
                     arrays.append(a)
 
+                if size == -1:
+                    size = len(arrays[-1])
+                elif size != len(arrays[-1]):
+                    raise ErrorInitIndex('per depth iterables must be the same length')
+
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
-        # NOTE: this will raise if arrays are not of equal size
-        try:
-            blocks = TypeBlocks.from_blocks(arrays)
-        except ErrorInitTypeBlocks:
-            raise ErrorInitIndex('values are not of equal length') from None
+        if not size:
+            if depth is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -485,6 +489,14 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
+        # NOTE: some index_constructors will change the dtype of the final array
+        if index_constructors is None:
+            blocks = TypeBlocks.from_blocks(arrays)
+            own_blocks = True
+        else:
+            blocks = None
+            own_blocks = True
+
         if name is None:
             name = cls._build_name_from_indices(indices)
 
@@ -494,7 +506,7 @@ class IndexHierarchy(IndexBase):
                 indexers=indexers,
                 name=name,
                 blocks=blocks,
-                own_blocks=True,
+                own_blocks=own_blocks,
                 )
 
     @classmethod
