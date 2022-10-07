@@ -144,7 +144,8 @@ class Index(IndexBase):
         '_labels',
         '_positions',
         '_recache',
-        '_name'
+        '_name',
+        '_unique_with_indexers_tup',
         )
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
@@ -165,6 +166,7 @@ class Index(IndexBase):
     _positions: np.ndarray
     _recache: bool
     _name: NameType
+    _unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]]
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
@@ -256,6 +258,7 @@ class Index(IndexBase):
         '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
+        self._unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]] = None
 
         positions = None
         is_typed = self._DTYPE is not None # only True for datetime64 indices
@@ -740,6 +743,15 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
+    @property
+    def _unique_with_indexers(self) -> tp.Tuple[np.ndarray, np.ndarray]:
+        '''
+        Return a tuple of (unique values, indexers, inverse indexers).
+        '''
+        if self._unique_with_indexers_tup is None:
+            self._unique_with_indexers_tup = ufunc_unique1d_indexer(self.values)
+        return self._unique_with_indexers_tup
+
     def _index_iloc_map(self: I, other: I) -> np.ndarray:
         '''
         Return an array of index locations to map from this array to another
@@ -749,10 +761,10 @@ class Index(IndexBase):
         if self.__len__() == 0:
             return EMPTY_ARRAY
 
-        ar1 = self.values
+        ar1: np.ndarray
+        ar1_indexer: np.ndarray
+        ar1, ar1_indexer = self._unique_with_indexers
         ar2 = other.values
-
-        ar1, ar1_indexer = ufunc_unique1d_indexer(ar1)
 
         aux = concat_resolved((ar1, ar2))
         aux_sort_indices = argsort_array(aux)

@@ -33,7 +33,7 @@ class TestUnit(TestCase):
 
             indices.append(ih.iloc[sl])
 
-        # Traditional approach: ~2.25 seconds
+        # Traditional approach: ~1.85 seconds
         expected = indices[0]
         for index in indices[1:]:
             # TODO: Is this a bug?
@@ -42,7 +42,7 @@ class TestUnit(TestCase):
 
             expected = expected.union(index)
 
-        # New approach: 28.8 ms
+        # New approach: 23.8 ms
         result = index_hierarchy_union(*indices)
 
         assert result.sort().equals(expected)
@@ -59,19 +59,19 @@ class TestUnit(TestCase):
         for i in range(100):
             indices.append(ih.iloc[i:])
 
-        # # Traditional approach: ~2.25 seconds
-        # expected = indices[0]
-        # for index in indices[1:]:
-        #     # TODO: Is this a bug?
-        #     with pytest.raises((NotImplementedError, TypeError)):
-        #         expected &= index
+        # Traditional approach: ~5.97 seconds
+        expected = indices[0]
+        for index in indices[1:]:
+            # TODO: Is this a bug?
+            with pytest.raises((NotImplementedError, TypeError)):
+                expected &= index
 
-        #     expected = expected.intersection(index)
+            expected = expected.intersection(index)
 
-        # New approach: 28.8 ms
+        # New approach: 189 ms
         result = index_hierarchy_intersection(*indices)
 
-        # assert result.sort().equals(expected)
+        assert result.sort().equals(expected)
 
 
 if __name__ == '__main__':
