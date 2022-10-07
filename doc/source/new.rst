@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+0.9.17
+----------
+
+Unified implementation of ``IndexBase`` set and concatenation operations.
+
+Added ``IndexHierarchy.from_values_per_depth()`` constructor.
+
+
 0.9.16
 ----------
 
