@@ -1054,8 +1054,6 @@ class IndexHierarchy(IndexBase):
                 ('Values', self._values),
                 )
 
-
-
     # --------------------------------------------------------------------------
     # name interface
 
@@ -2370,6 +2368,25 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 own_blocks=True,
                 )
+
+    # --------------------------------------------------------------------------
+    # utility functions
+
+    def union(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
+
+        if all(others.__class__ == self.__class__ for o in others):
+            return index_hierarchy_union(self, *others)
+
+        return super().union(*others)
+
+    def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
+
+        if all(others.__class__ == self.__class__ for o in others):
+            return index_hierarchy_intersection(self, *others)
+
+        return super().intersection(*others)
 
     #---------------------------------------------------------------------------
 

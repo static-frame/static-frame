@@ -453,7 +453,6 @@ class IndexBase(ContainerOperand):
                 many_to_one_type=many_to_one_type,
                 )
 
-
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
