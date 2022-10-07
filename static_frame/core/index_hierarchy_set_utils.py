@@ -59,6 +59,10 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     result_name = indices[0].name
     result_index_constructors = indices[0]._index_constructors
+
+    if not indices[0].size:
+        return indices[0] if indices[0].STATIC else indices[0].__deepcopy__({})
+
     indices, depth, any_dropped = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
@@ -169,8 +173,13 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is not guaranteed to be sorted.
     '''
     # This call will call recache
-    result_name = indices[0].name
-    result_index_constructors = indices[0]._index_constructors
+    first_ih = indices[0]
+    result_name = first_ih.name
+    result_index_constructors = first_ih._index_constructors
+
+    if not first_ih.size:
+        return first_ih if first_ih.STATIC else first_ih.__deepcopy__({})
+
     indices, depth, _ = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
@@ -181,43 +190,17 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
                 name=result_name,
                 )
 
-    lhs, rhs = indices
+    # 1. Determine the union of all indices at each depth.
+    union_indices: tp.List[Index] = list(first_ih.index_at_depth(list(range(depth))))
 
-    if lhs.equals(rhs):
-        return return_empty()
-
-    elif not lhs.size or not rhs.size:
-        # If either are empty, the difference will be the same as lhs
-        return lhs if lhs.STATIC else lhs.__deepcopy__({})
-
-    remapped_indexers_lhs: tp.List[np.ndarray] = []
-    remapped_indexers_rhs: tp.List[np.ndarray] = []
-
-    union_indices: tp.List[Index] = []
-
-    for (
-        idx_lhs,
-        idx_rhs,
-        indexer_lhs,
-        indexer_rhs
-    ) in zip(
-        lhs.index_at_depth(list(range(lhs.depth))),
-        rhs.index_at_depth(list(range(rhs.depth))),
-        lhs.indexer_at_depth(list(range(lhs.depth))),
-        rhs.indexer_at_depth(list(range(rhs.depth)))
-    ):
-        # Determine the union of both indices, to ensure that both indexers can
-        # map to a shared base
-        union = idx_lhs.union(idx_rhs)
-        union_indices.append(union)
-
-        # Build up the mappings for both indices to the shared base
-        remapped_lhs = idx_lhs._index_iloc_map(union)
-        remapped_rhs = idx_rhs._index_iloc_map(union)
-
-        # Apply that mapping to the both indexers
-        remapped_indexers_lhs.append(remapped_lhs[indexer_lhs])
-        remapped_indexers_rhs.append(remapped_rhs[indexer_rhs])
+    for i in range(1, len(indices)):
+        union_indices = [
+            union.union(idx)
+            for union, idx in zip(
+                    union_indices,
+                    indices[i].index_at_depth(list(range(depth)))
+                    )
+        ]
 
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
@@ -227,23 +210,66 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     )
     encoding_dtype = object if encoding_can_overflow else np.uint64
 
-    remapped_indexers_lhs = np.array(remapped_indexers_lhs, dtype=encoding_dtype)
-    remapped_indexers_rhs = np.array(remapped_indexers_rhs, dtype=encoding_dtype)
+    def get_encodings(ih: IndexHierarchy) -> np.ndarray:
+        '''Encode `ih` based on the union indices'''
+        remapped_indexers: tp.List[np.ndarray] = []
 
-    lhs_encodings = HierarchicalLocMap.encode(remapped_indexers_lhs.T, bit_offset_encoders)
-    rhs_encodings = HierarchicalLocMap.encode(remapped_indexers_rhs.T, bit_offset_encoders)
+        for (
+            union_idx,
+            idx,
+            indexer
+        ) in zip(
+            union_indices,
+            ih.index_at_depth(list(range(depth))),
+            ih.indexer_at_depth(list(range(depth)))
+        ):
+            # 2. For each depth, for each index, remap the indexers to the shared base.
+            remapped_rhs = idx._index_iloc_map(union_idx)
+            remapped_indexers.append(remapped_rhs[indexer])
 
-    # Now, simply filter by which encodings only appear in lhs
-    unique_to_lhs = np.in1d(lhs_encodings, rhs_encodings, invert=True)
+        return HierarchicalLocMap.encode(
+                np.array(remapped_indexers, dtype=encoding_dtype).T,
+                bit_offset_encoders,
+                )
 
-    # Now, extract the true union block.
-    blocks = lhs._blocks._extract(unique_to_lhs)
+    # Order the rest largest to smallest reversed (we will pop)
+    indices = sorted(indices[1:], key=lambda x: x.size)
 
-    return IndexHierarchy._from_type_blocks(
-        blocks,
+    difference_encodings = get_encodings(first_ih)
+
+    while indices:
+        next_encodings = get_encodings(indices.pop())
+
+        difference_encodings = np.setdiff1d(difference_encodings, next_encodings)
+        if not difference_encodings.size:
+            return return_empty()
+
+    # Now, unpack the union encodings into their corresponding indexers
+    difference_indexers = HierarchicalLocMap.unpack_encoding(
+            difference_encodings, bit_offset_encoders
+            )
+
+    # There is potentially a LOT of leftover bloat from all the unions. Clean up.
+    final_indices: tp.List[Index] = []
+    final_indexers: tp.List[np.ndarray] = []
+
+    for index, indexers in zip(union_indices, difference_indexers):
+        unique, new_indexers = ufunc_unique1d_indexer(indexers)
+
+        if len(unique) == len(index):
+            final_indices.append(index)
+            final_indexers.append(indexers)
+        else:
+            final_indices.append(index._extract_iloc(unique))
+            final_indexers.append(new_indexers)
+
+    final_indexers = np.array(final_indexers, dtype=np.uint64)
+    final_indexers.flags.writeable = False
+
+    return IndexHierarchy(
+        indices=final_indices,
+        indexers=final_indexers,
         name=result_name,
-        own_blocks=True,
-        index_constructors=result_index_constructors,
     )
 
 

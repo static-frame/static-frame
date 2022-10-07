@@ -2388,6 +2388,14 @@ class IndexHierarchy(IndexBase):
 
         return super().intersection(*others)
 
+    def difference(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
+
+        if all(others.__class__ == self.__class__ for o in others):
+            return index_hierarchy_difference(self, *others)
+
+        return super().difference(*others)
+
     #---------------------------------------------------------------------------
 
     def _drop_missing(self,
