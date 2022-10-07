@@ -494,7 +494,7 @@ class IndexHierarchy(IndexBase):
             own_blocks = True
         else:
             blocks = None
-            own_blocks = True
+            own_blocks = False
 
         if name is None:
             name = cls._build_name_from_indices(indices)
