@@ -5171,9 +5171,7 @@ class ExGenQuilt(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr in (
-                # 'to_bus()',
                 'to_frame()',
-                # 'to_series()',
                 ):
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
@@ -5214,14 +5212,14 @@ class ExGenQuilt(ExGen):
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._attribute(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
 
-    # @staticmethod
-    # def method(row: sf.Series) -> tp.Iterator[str]:
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
 
-    #     icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
-    #     attr = row['signature_no_args']
-    #     attr_func = row['signature_no_args'][:-2]
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
 
-    #     if attr in (
+        if attr in (
     #             'max()',
     #             'mean()',
     #             'median()',
@@ -5231,9 +5229,9 @@ class ExGenQuilt(ExGen):
     #             'std()',
     #             'var()',
     #             'transpose()',
-    #              ):
-    #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f"bt.{attr_func}().to_frame()"
+                 ):
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.{attr_func}().to_frame()"
 
     #     elif attr == '__array__()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
@@ -5241,9 +5239,10 @@ class ExGenQuilt(ExGen):
     #     elif attr == '__array_ufunc__()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
     #         yield f"(np.array((0.5, 0)) * bt).to_frame()"
-    #     elif attr == '__bool__()':
-    #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f"bool(bt)"
+        elif attr == '__bool__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"bool(b)"
     #     elif attr == '__round__()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
     #         yield f"round(bt, 2).to_frame()"
@@ -5291,10 +5290,11 @@ class ExGenQuilt(ExGen):
     #         yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
     #         yield f"bt.{attr_func}(condition=np.any, axis=0).to_frame()"
 
-    #     elif attr == 'equals()':
-    #         yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f'bt2 = {icls}({kwa(BATCH_INIT_B)})'
-    #         yield f"bt1.{attr_func}(bt2)"
+        elif attr == 'equals()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True, axis=0)'
+            yield f'q2 = {icls}(b, retain_labels=True, axis=1)'
+            yield f"q1.{attr_func}(q2)"
     #     elif attr == 'fillfalsy()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
     #         yield f"bt.{attr_func}([-1, '', np.nan]).to_frame()"
@@ -5335,12 +5335,13 @@ class ExGenQuilt(ExGen):
     #         yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
     #         yield f"bt.{attr_func}(-1).to_frame()"
 
-    #     elif attr in (
-    #             'head()',
-    #             'tail()',
-    #             ):
-    #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f"bt.{attr_func}(2).to_frame()"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}(2)"
     #     elif attr in (
     #             'iloc_max()',
     #             'iloc_min()',
@@ -5413,8 +5414,8 @@ class ExGenQuilt(ExGen):
     #     elif attr == 'unset_index()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
     #         yield f"bt.rename(index=('d', 'e')).{attr_func}().to_frame()"
-    #     else:
-    #         raise NotImplementedError(f'no handling for {attr}')
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
     # @staticmethod
