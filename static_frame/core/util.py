@@ -2988,6 +2988,7 @@ def array_from_element_method(*,
         dtype: dtype of array to be returned.
     '''
     # when we know the type of the element, pre-fetch the Python class
+    cls_element: tp.Optional[tp.Type[tp.Any]]
     if array.dtype.kind == 'U':
         cls_element = str
     elif array.dtype.kind == 'S':
@@ -2997,8 +2998,8 @@ def array_from_element_method(*,
 
     if dtype == DTYPE_STR:
         # if destination is a string, must build into a list first, then construct array to determine size
-        if cls_element: # if we can extract function from object first
-            func = getattr(cls_element, method_name)
+        if cls_element is not None: # if we can extract function from object first
+            func = getattr(cls_element, method_name) #type: ignore
             if array.ndim == 1:
                 if pre_insert:
                     proto = [pre_insert(func(d, *args)) for d in array]
@@ -3031,8 +3032,8 @@ def array_from_element_method(*,
         post = np.array(proto, dtype=dtype)
 
     else:
-        if cls_element: # if we can extract function from object first
-            func = getattr(cls_element, method_name)
+        if cls_element is not None: # if we can extract function from object first
+            func = getattr(cls_element, method_name) #type: ignore
             if array.ndim == 1 and dtype != DTYPE_OBJECT:
                 if pre_insert:
                     post = np.fromiter(
