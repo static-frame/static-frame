@@ -2375,7 +2375,7 @@ class IndexHierarchy(IndexBase):
     def union(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
-        if all(others.__class__ == self.__class__ for o in others):
+        if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_union(self, *others)
 
         return super().union(*others)
@@ -2383,7 +2383,7 @@ class IndexHierarchy(IndexBase):
     def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
 
-        if all(others.__class__ == self.__class__ for o in others):
+        if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_intersection(self, *others)
 
         return super().intersection(*others)
@@ -2391,7 +2391,7 @@ class IndexHierarchy(IndexBase):
     def difference(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
-        if all(others.__class__ == self.__class__ for o in others):
+        if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_difference(self, *others)
 
         return super().difference(*others)

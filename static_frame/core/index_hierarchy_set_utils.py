@@ -4,25 +4,32 @@ import numpy as np
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.index import Index
-from static_frame.core.util import ufunc_unique1d
+from static_frame.core.container_util import index_many_to_one
+from static_frame.core.util import DtypeSpecifier, ManyToOneType, ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 
 def _validate_and_drop_empty(
         indices: tp.Tuple[IndexHierarchy],
-        ) -> tp.Tuple[tp.List[IndexHierarchy], int, bool]:
+        ) -> tp.Tuple[tp.List[IndexHierarchy], int, bool, tp.Hashable]:
     '''
     Common sanitization for IndexHierarchy operations.
 
     This will also invoke recache on all indices due to the `.size` call
     '''
-    starting_len = len(indices)
+    any_dropped = False
+
+    name: tp.Hashable = indices[0].name
 
     depth = None
     filtered: tp.List[IndexHierarchy] = []
     for idx in indices:
+        if idx.name != name:
+            name = None
+
         # Drop empty indices
         if not idx.size:
+            any_dropped = True
             continue
 
         filtered.append(idx)
@@ -32,7 +39,22 @@ def _validate_and_drop_empty(
         elif depth != idx.depth:
             raise RuntimeError('All indices must have same depth')
 
-    return indices, depth, starting_len != len(indices)
+    return indices, depth, any_dropped, name
+
+
+def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, DtypeSpecifier]:
+    # Our encoding scheme requires that we know the number of unique elements
+    # for each union depth
+    # `num_unique_elements_per_depth` is used as a bit union for the encodings
+    bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
+        num_unique_elements_per_depth=list(map(len, indices)),
+    )
+    encoding_dtype = object if encoding_can_overflow else np.uint64
+    return bit_offset_encoders, encoding_dtype
+
+
+def return_specific(ih: IndexHierarchy) -> IndexHierarchy:
+    return ih if ih.STATIC else ih.__deepcopy__({})
 
 
 def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
@@ -57,44 +79,36 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     Note:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
-    result_name = indices[0].name
-    result_index_constructors = indices[0]._index_constructors
+    lhs = indices[0]
 
-    if not indices[0].size:
-        return indices[0] if indices[0].STATIC else indices[0].__deepcopy__({})
+    if not lhs.size:
+        return return_specific(lhs)
 
-    indices, depth, any_dropped = _validate_and_drop_empty(indices)
+    indices, depth, any_dropped, name = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
                 depth_reference=depth,
-                index_constructors=result_index_constructors,
-                name=result_name,
+                index_constructors=lhs._index_constructors,
+                name=name,
                 )
 
     if any_dropped:
         return return_empty()
 
     # 1. Determine the union of all indices at each depth.
-    union_indices: tp.List[Index] = list(indices[0].index_at_depth(list(range(depth))))
+    union_indices: tp.List[Index] = []
 
-    for i in range(1, len(indices)):
-        union_indices = [
-            union.union(idx)
-            for union, idx in zip(
-                    union_indices,
-                    indices[i].index_at_depth(list(range(depth)))
-                    )
-        ]
+    for i in range(depth):
+        union = index_many_to_one(
+                (idx.index_at_depth(i) for idx in indices),
+                cls_default=lhs.index_at_depth(i).__class__,
+                many_to_one_type=ManyToOneType.UNION,
+                )
+        union_indices.append(union)
 
-    # Our encoding scheme requires that we know the number of unique elements
-    # for each union depth
-    # `num_unique_elements_per_depth` is used as a bit union for the encodings
-    bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
-        num_unique_elements_per_depth=list(map(len, union_indices)),
-    )
-    encoding_dtype = object if encoding_can_overflow else np.uint64
+    bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
     # Start with the smallest index to minimize the number of remappings
     indices = sorted(indices, key=lambda x: x.size, reverse=True)
@@ -129,6 +143,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     while indices:
         next_encodings = get_encodings(indices.pop())
 
+        # TODO: Use util.intersect1d?
         intersection_encodings = np.intersect1d(intersection_encodings, next_encodings)
         if not intersection_encodings.size:
             return return_empty()
@@ -158,7 +173,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=final_indices,
         indexers=final_indexers,
-        name=result_name,
+        name=name,
     )
 
 
@@ -173,34 +188,31 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is not guaranteed to be sorted.
     '''
     # This call will call recache
-    first_ih = indices[0]
-    result_name = first_ih.name
-    result_index_constructors = first_ih._index_constructors
+    lhs = indices[0]
 
-    if not first_ih.size:
-        return first_ih if first_ih.STATIC else first_ih.__deepcopy__({})
+    if not lhs.size:
+        return return_specific(lhs)
 
-    indices, depth, _ = _validate_and_drop_empty(indices)
+    indices, depth, _, name = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
                 depth_reference=depth,
-                index_constructors=result_index_constructors,
-                name=result_name,
+                index_constructors=lhs._index_constructors,
+                name=name,
                 )
 
     # 1. Determine the union of all indices at each depth.
-    union_indices: tp.List[Index] = list(first_ih.index_at_depth(list(range(depth))))
+    union_indices: tp.List[Index] = []
 
-    for i in range(1, len(indices)):
-        union_indices = [
-            union.union(idx)
-            for union, idx in zip(
-                    union_indices,
-                    indices[i].index_at_depth(list(range(depth)))
-                    )
-        ]
+    for i in range(depth):
+        union = index_many_to_one(
+                (idx.index_at_depth(i) for idx in indices),
+                cls_default=lhs.index_at_depth(i).__class__,
+                many_to_one_type=ManyToOneType.UNION,
+                )
+        union_indices.append(union)
 
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
@@ -235,7 +247,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     # Order the rest largest to smallest reversed (we will pop)
     indices = sorted(indices[1:], key=lambda x: x.size)
 
-    difference_encodings = get_encodings(first_ih)
+    difference_encodings = get_encodings(lhs)
 
     while indices:
         next_encodings = get_encodings(indices.pop())
@@ -269,10 +281,10 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=final_indices,
         indexers=final_indexers,
-        name=result_name,
+        name=name,
     )
 
-
+# TODO: Is the general case too much overhead for the case of 2 indices?
 def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     Equivalent to:
@@ -285,8 +297,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
     # This call will call recache
-    result_name = indices[0].name
-    (lhs, *others), depth, _ = _validate_and_drop_empty(indices)
+    (lhs, *others), depth, _, name = _validate_and_drop_empty(indices)
     del indices
 
     remapped_indexers_lhs: tp.List[np.ndarray] = []
@@ -300,10 +311,15 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
 
         # Determine the union of both indices, to ensure that both indexers can
         # map to a shared base
-        union = idx_lhs.union(*(rhs.index_at_depth(i) for rhs in others))
+        union = index_many_to_one(
+                (idx_lhs, *(rhs.index_at_depth(i) for rhs in others)),
+                cls_default=idx_lhs.__class__,
+                many_to_one_type=ManyToOneType.UNION,
+                )
         union_indices.append(union)
 
         # Build up the mappings for both indices to the shared base
+        # TODO: Better name how-to-remap
         remapped_lhs = idx_lhs._index_iloc_map(union)
 
         # Apply that mapping to the both indexers
@@ -340,6 +356,9 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
             np.hstack((lhs_encodings, *others_encodings))
             )
 
+    if len(union_encodings) == len(lhs):
+        return return_specific(lhs)
+
     # Now, unpack the union encodings into their corresponding indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
             union_encodings, bit_offset_encoders
@@ -348,5 +367,5 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=union_indices,
         indexers=union_indexers,
-        name=result_name,
+        name=name,
     )

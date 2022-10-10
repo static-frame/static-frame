@@ -45,7 +45,7 @@ class TestUnit(TestCase):
         # New approach: 23.8 ms
         result = index_hierarchy_union(*indices).sort()
 
-        self.assertTrue(result.equals(expected), msg=(expected.rename("expected"), result.rename("result")))
+        self.assertTrue(result.equals(expected.sort()), msg=(expected.rename("expected"), result.rename("result")))
 
     def test_index_hierarchy_intersection(self) -> None:
         '''
@@ -71,7 +71,7 @@ class TestUnit(TestCase):
         # New approach: 189 ms
         result = index_hierarchy_intersection(*indices).sort()
 
-        self.assertTrue(result.equals(expected), msg=(expected.rename("expected"), result.rename("result")))
+        self.assertTrue(result.equals(expected.sort()), msg=(expected.rename("expected"), result.rename("result")))
 
     def test_index_hierarchy_difference(self) -> None:
         '''
@@ -103,7 +103,7 @@ class TestUnit(TestCase):
         # New approach: 21.5 ms
         result = index_hierarchy_difference(*indices).sort()
 
-        self.assertTrue(result.equals(expected), msg=(expected.rename("expected"), result.rename("result")))
+        self.assertTrue(result.equals(expected.sort()), msg=(expected.rename("expected"), result.rename("result")))
 
 
 if __name__ == '__main__':
