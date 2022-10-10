@@ -464,12 +464,12 @@ class SeriesViaStr(Perf):
         self.sfs = f1[0]
         self.pds = self.sfs.to_pandas()
 
-        # from static_frame.core.util import isna_array
-
         self.meta = {
             'index_auto_find': FunctionMetaData(
-                # line_target=isna_array,
-                # perf_status=PerfStatus.EXPLAINED_WIN,
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            'index_auto_contains': FunctionMetaData(
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
 
