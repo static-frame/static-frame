@@ -2996,6 +2996,7 @@ def array_from_element_method(*,
     else:
         cls_element = None
 
+
     if dtype == DTYPE_STR:
         # if destination is a string, must build into a list first, then construct array to determine size
         if cls_element is not None: # if we can extract function from object first

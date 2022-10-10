@@ -3778,7 +3778,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_str_capitalize_a(self) -> None:
+    def test_series_str_capitalize_a1(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
         s2 = s1.via_str.capitalize()
 
@@ -3791,6 +3791,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(s4.to_pairs(),
             (('x', '20'), ('y', '30'))
+            )
+
+    def test_series_str_capitalize_a2(self) -> None:
+        s1 = Series((b'foo', b'bar'), index=('x', 'y'))
+        s2 = s1.via_str.capitalize()
+        self.assertEqual(s2.dtype, np.dtype('S3'))
+        self.assertEqual(s2.to_pairs(),
+            (('x', b'Foo'), ('y', b'Bar'))
             )
 
     def test_series_str_center_a(self) -> None:
@@ -4067,9 +4075,16 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'c'), (2, 'd'))
                 )
 
-    def test_series_str_contains_a(self) -> None:
+    def test_series_str_contains_a1(self) -> None:
         s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
         s2 = s1.via_str.contains('cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, True), (1, True), (2, False))
+                )
+
+    def test_series_str_contains_a2(self) -> None:
+        s1 = Series([b'ab_cdldkj', b'cd_LKSJ', b'df_foooooo'])
+        s2 = s1.via_str.contains(b'cd')
         self.assertEqual(s2.to_pairs(),
                 ((0, True), (1, True), (2, False))
                 )
