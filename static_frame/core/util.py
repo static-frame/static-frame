@@ -2985,9 +2985,18 @@ def array_from_element_method(*,
 
     Args:
         pre_insert:
+        dtype: dtype of array to be returned.
     '''
+    # when we know the type of the element, pre-fetch the Python class
+    if array.dtype.kind == 'U':
+        cls_element = str
+    elif array.dtype.kind == 'S':
+        cls_element = bytes
+    else:
+        cls_element = None
+
     if dtype == DTYPE_STR:
-        # build into a list first, then construct array to determine size
+        # if destination is as a string, must build into a list first, then construct array to determine size
         if array.ndim == 1:
             if pre_insert:
                 proto = [pre_insert(getattr(d, method_name)(*args)) for d in array]
@@ -3005,28 +3014,52 @@ def array_from_element_method(*,
         post = np.array(proto, dtype=dtype)
 
     else:
-        if array.ndim == 1 and dtype != DTYPE_OBJECT:
-            # NOTE: can I get the method off the clas and pass self
-            if pre_insert:
-                post = np.fromiter(
-                        (pre_insert(getattr(d, method_name)(*args)) for d in array),
-                        count=len(array),
-                        dtype=dtype,
-                        )
-            else:
-                post = np.fromiter(
-                        (getattr(d, method_name)(*args) for d in array),
-                        count=len(array),
-                        dtype=dtype,
-                        )
+        if cls_element: # if we can extract function from object first
+            func = getattr(cls_element, method_name)
+            if array.ndim == 1 and dtype != DTYPE_OBJECT:
+                if pre_insert:
+                    post = np.fromiter(
+                            (pre_insert(func(d, *args)) for d in array),
+                            count=len(array),
+                            dtype=dtype,
+                            )
+                else:
+                    post = np.fromiter(
+                            (func(d, *args) for d in array),
+                            count=len(array),
+                            dtype=dtype,
+                            )
+            else: # PERF: slower to use ndenumerate
+                post = np.empty(shape=array.shape, dtype=dtype)
+                if pre_insert:
+                    for iloc, e in np.ndenumerate(array):
+                        post[iloc] = pre_insert(func(e, *args))
+                else:
+                    for iloc, e in np.ndenumerate(array):
+                        post[iloc] = func(e, *args)
+
         else:
-            post = np.empty(shape=array.shape, dtype=dtype)
-            if pre_insert:
-                for iloc, e in np.ndenumerate(array):
-                    post[iloc] = pre_insert(getattr(e, method_name)(*args))
+            if array.ndim == 1 and dtype != DTYPE_OBJECT:
+                if pre_insert:
+                    post = np.fromiter(
+                            (pre_insert(getattr(d, method_name)(*args)) for d in array),
+                            count=len(array),
+                            dtype=dtype,
+                            )
+                else:
+                    post = np.fromiter(
+                            (getattr(d, method_name)(*args) for d in array),
+                            count=len(array),
+                            dtype=dtype,
+                            )
             else:
-                for iloc, e in np.ndenumerate(array):
-                    post[iloc] = getattr(e, method_name)(*args)
+                post = np.empty(shape=array.shape, dtype=dtype)
+                if pre_insert:
+                    for iloc, e in np.ndenumerate(array):
+                        post[iloc] = pre_insert(getattr(e, method_name)(*args))
+                else:
+                    for iloc, e in np.ndenumerate(array):
+                        post[iloc] = getattr(e, method_name)(*args)
 
     post.flags.writeable = False
     return post
