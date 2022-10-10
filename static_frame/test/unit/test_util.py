@@ -2243,6 +2243,18 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(a2.tolist(), ['BLUE      ', 'BLACK     '])
 
+    def test_array_from_element_method_e(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(),
+                [['BLUE      ', 'BLACK     '],  ['RED       ', 'GREEN     ']])
 
 
     #---------------------------------------------------------------------------
