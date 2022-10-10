@@ -2219,6 +2219,32 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(a2.tolist(), [300, 0])
 
+    def test_array_from_element_method_c(self) -> None:
+
+        a1 = np.array(['bl,ue', 'bl,ack'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='split',
+                args=(),
+                dtype=object,
+                pre_insert=tuple
+                )
+        self.assertEqual(a2.tolist(), [('bl,ue',), ('bl,ack',)])
+
+    def test_array_from_element_method_d(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(), ['BLUE      ', 'BLACK     '])
+
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_logical_skipna_a1(self) -> None:
