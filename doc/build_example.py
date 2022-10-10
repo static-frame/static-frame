@@ -5396,12 +5396,14 @@ class ExGenQuilt(ExGen):
     #     elif attr == 'relabel_shift_in()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_G)})'
     #         yield f"tuple(bt.{attr_func}('a').values)"
-    #     elif attr == 'rename()':
-    #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f"bt.{attr_func}('y').to_bus()"
-    #     elif attr == 'sample()':
-    #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
-    #         yield f"bt.{attr_func}(2, 2, seed=0).to_frame()"
+        elif attr == 'rename()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}('y')"
+        elif attr == 'sample()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}(2, 2, seed=0).to_frame()"
     #     elif attr == 'sort_columns()':
     #         yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
     #         yield f"bt.{attr_func}(ascending=False).to_frame()"
