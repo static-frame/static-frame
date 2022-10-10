@@ -3046,7 +3046,7 @@ def array_from_element_method(*,
                             count=len(array),
                             dtype=dtype,
                             )
-            else: # PERF: slower to use ndenumerate
+            else: # PERF: slower to always use ndenumerate
                 post = np.empty(shape=array.shape, dtype=dtype)
                 if pre_insert:
                     for iloc, e in np.ndenumerate(array):
@@ -3080,32 +3080,6 @@ def array_from_element_method(*,
 
     post.flags.writeable = False
     return post
-
-
-# def array_from_iterator(iterator: tp.Iterator[tp.Any],
-#         count: int,
-#         dtype: DtypeSpecifier,
-#         ) -> np.ndarray:
-#     '''Given an iterator/generator of known size and dtype, load it into an array.
-#     '''
-#     dtype = np.dtype(dtype)
-#     if dtype.kind in DTYPE_STR_KINDS:
-#         # unless we know the size of the max size of the string, we have to go through the default construictor.
-#         array, _ = iterable_to_array_1d(iterator, dtype)
-#         return array
-#     elif dtype.kind != DTYPE_OBJECT_KIND:
-#         array = np.fromiter(iterator,
-#                 count=count,
-#                 dtype=dtype,
-#                 )
-#     else: # object types
-#         array = np.empty(count, dtype=dtype)
-#         for i, v in enumerate(iterator):
-#             array[i] = v
-
-#     array.flags.writeable = False
-#     return array
-
 
 #-------------------------------------------------------------------------------
 
