@@ -2996,21 +2996,38 @@ def array_from_element_method(*,
         cls_element = None
 
     if dtype == DTYPE_STR:
-        # if destination is as a string, must build into a list first, then construct array to determine size
-        if array.ndim == 1:
-            if pre_insert:
-                proto = [pre_insert(getattr(d, method_name)(*args)) for d in array]
+        # if destination is a string, must build into a list first, then construct array to determine size
+        if cls_element: # if we can extract function from object first
+            func = getattr(cls_element, method_name)
+            if array.ndim == 1:
+                if pre_insert:
+                    proto = [pre_insert(func(d, *args)) for d in array]
+                else:
+                    proto = [func(d, *args) for d in array]
             else:
-                proto = [getattr(d, method_name)(*args) for d in array]
+                proto = [[None for _ in range(array.shape[1])]
+                        for _ in range(array.shape[0])]
+                if pre_insert:
+                    for (y, x), e in np.ndenumerate(array):
+                        proto[y][x] = pre_insert(func(e, *args))
+                else:
+                    for (y, x), e in np.ndenumerate(array):
+                        proto[y][x] = func(e, *args)
         else:
-            proto = [[None for _ in range(array.shape[1])]
-                    for _ in range(array.shape[0])]
-            if pre_insert:
-                for (y, x), e in np.ndenumerate(array):
-                    proto[y][x] = pre_insert(getattr(e, method_name)(*args))
+            if array.ndim == 1:
+                if pre_insert:
+                    proto = [pre_insert(getattr(d, method_name)(*args)) for d in array]
+                else:
+                    proto = [getattr(d, method_name)(*args) for d in array]
             else:
-                for (y, x), e in np.ndenumerate(array):
-                    proto[y][x] = getattr(e, method_name)(*args)
+                proto = [[None for _ in range(array.shape[1])]
+                        for _ in range(array.shape[0])]
+                if pre_insert:
+                    for (y, x), e in np.ndenumerate(array):
+                        proto[y][x] = pre_insert(getattr(e, method_name)(*args))
+                else:
+                    for (y, x), e in np.ndenumerate(array):
+                        proto[y][x] = getattr(e, method_name)(*args)
         post = np.array(proto, dtype=dtype)
 
     else:
