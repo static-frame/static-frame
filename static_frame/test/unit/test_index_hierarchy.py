@@ -2419,7 +2419,7 @@ class TestUnit(TestCase):
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
-                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+                [['II', 'B'], ['I', 'B'], ['II', 'A'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
         self.assertEqual(post2.values.tolist(), [])
