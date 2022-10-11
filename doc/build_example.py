@@ -5393,12 +5393,11 @@ class ExGenQuilt(ExGen):
         elif attr == 'iter_tuple().apply()':
             yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.a + v.b)"
 
-        # elif attr in (
-        #         'iter_tuple().apply_iter()',
+        elif attr in (
+                'iter_tuple().apply_iter()',
         #         'iter_tuple().apply_iter_items()',
-        #         ):
-        #     yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
-        #     yield f"tuple(f.{attr_func}(lambda v: v.p + v.q))"
+                ):
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.a + v.b))"
 
         # elif attr == 'iter_tuple_items().apply()':
         #     yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
