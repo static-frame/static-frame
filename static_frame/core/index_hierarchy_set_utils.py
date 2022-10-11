@@ -1,3 +1,4 @@
+from functools import partial
 import typing as tp
 
 import numpy as np
@@ -100,6 +101,36 @@ def build_union_indices(
     return union_indices
 
 
+def _get_encodings(
+        ih: IndexHierarchy,
+        *,
+        union_indices: tp.List[Index],
+        depth: int,
+        bit_offset_encoders: np.ndarray,
+        encoding_dtype: DtypeSpecifier,
+        ) -> np.ndarray:
+    '''Encode `ih` based on the union indices'''
+    remapped_indexers: tp.List[np.ndarray] = []
+
+    for (
+        union_idx,
+        idx,
+        indexer
+    ) in zip(
+        union_indices,
+        ih.index_at_depth(list(range(depth))),
+        ih.indexer_at_depth(list(range(depth)))
+    ):
+        # 2. For each depth, for each index, remap the indexers to the shared base.
+        indexer_remap_key = idx._index_iloc_map(union_idx)
+        remapped_indexers.append(indexer_remap_key[indexer])
+
+    return HierarchicalLocMap.encode(
+            np.array(remapped_indexers, dtype=encoding_dtype).T,
+            bit_offset_encoders,
+            )
+
+
 def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     Equivalent to:
@@ -145,30 +176,16 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
+    get_encodings = partial(
+            _get_encodings,
+            union_indices=union_indices,
+            depth=depth,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_dtype=encoding_dtype,
+            )
+
     # Start with the smallest index to minimize the number of remappings
     indices = sorted(indices, key=lambda x: x.size, reverse=True)
-
-    def get_encodings(ih: IndexHierarchy) -> np.ndarray:
-        '''Encode `ih` based on the union indices'''
-        remapped_indexers: tp.List[np.ndarray] = []
-
-        for (
-            union_idx,
-            idx,
-            indexer
-        ) in zip(
-            union_indices,
-            ih.index_at_depth(list(range(depth))),
-            ih.indexer_at_depth(list(range(depth)))
-        ):
-            # 2. For each depth, for each index, remap the indexers to the shared base.
-            indexer_remap_key = idx._index_iloc_map(union_idx)
-            remapped_indexers.append(indexer_remap_key[indexer])
-
-        return HierarchicalLocMap.encode(
-                np.array(remapped_indexers, dtype=encoding_dtype).T,
-                bit_offset_encoders,
-                )
 
     # Choose the smallest
     first_ih = indices.pop()
@@ -249,27 +266,13 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
-    def get_encodings(ih: IndexHierarchy) -> np.ndarray:
-        '''Encode `ih` based on the union indices'''
-        remapped_indexers: tp.List[np.ndarray] = []
-
-        for (
-            union_idx,
-            idx,
-            indexer
-        ) in zip(
-            union_indices,
-            ih.index_at_depth(list(range(depth))),
-            ih.indexer_at_depth(list(range(depth)))
-        ):
-            # 2. For each depth, for each index, remap the indexers to the shared base.
-            indexer_remap_key = idx._index_iloc_map(union_idx)
-            remapped_indexers.append(indexer_remap_key[indexer])
-
-        return HierarchicalLocMap.encode(
-                np.array(remapped_indexers, dtype=encoding_dtype).T,
-                bit_offset_encoders,
-                )
+    get_encodings = partial(
+            _get_encodings,
+            union_indices=union_indices,
+            depth=depth,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_dtype=encoding_dtype,
+            )
 
     # Order the rest largest to smallest reversed (we will pop)
     indices = sorted(indices[1:], key=lambda x: x.size)
@@ -314,7 +317,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         name=name,
     )
 
-# TODO: Is the general case too much overhead for the case of 2 indices?
+
 def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     Equivalent to:
@@ -323,51 +326,49 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         >>> for index in indices[1:]:
         >>>     result = result.union(index)
 
+    Algorithm:
+
+        1. Determine the union of the depth-level indices for each index.
+        2. For each index, remap `indexers_at_depth` using the shared union base.
+        3. Convert the 2-D indexers to 1-D encodings.
+        4. Build up the union of the encodings.
+        5. Convert the union encodings back to 2-D indexers.
+        6. Return a new IndexHierarchy using the union_indices and union_indexers.
+
     Note:
-        The result is NOT guaranteed to be sorted. It most likely will not be.
+        The result is only guaranteed to be sorted if the union equals the first index.
+        In every other case, it will most likely NOT be sorted.
     '''
     # This call will call recache
     lhs = indices[0]
     indices, depth, _, name, index_constructors = _validate_and_process_indices(indices)
 
+    # 1. Find union_indices
     union_indices: tp.List[Index] = build_union_indices(indices, index_constructors, depth)
 
+    # 2-3. Remap indexers and convert to encodings
     bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
-    def get_encodings(ih: IndexHierarchy) -> np.ndarray:
-        '''Encode `ih` based on the union indices'''
-        remapped_indexers: tp.List[np.ndarray] = []
+    get_encodings = partial(
+            _get_encodings,
+            union_indices=union_indices,
+            depth=depth,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_dtype=encoding_dtype,
+            )
 
-        for (
-            union_idx,
-            idx,
-            indexer
-        ) in zip(
-            union_indices,
-            ih.index_at_depth(list(range(depth))),
-            ih.indexer_at_depth(list(range(depth)))
-        ):
-            # 2. For each depth, for each index, remap the indexers to the shared base.
-            indexer_remap_key = idx._index_iloc_map(union_idx)
-            remapped_indexers.append(indexer_remap_key[indexer])
+    union_encodings: tp.List[np.ndarray] = list(map(get_encodings, indices))
+    del indices
 
-        return HierarchicalLocMap.encode(
-                np.array(remapped_indexers, dtype=encoding_dtype).T,
-                bit_offset_encoders,
-                )
-
-    union_encodings: tp.List[np.ndarray] = []
-
-    while indices:
-        union_encodings.append(get_encodings(indices.pop()))
-
-    # Given all encodings, determine which are unique (i.e. the union!)
+    # 4. Build up the union of the encodings (i.e., whatever encodings are unique)
     union_encodings = ufunc_unique1d(np.hstack(union_encodings))
 
     if len(union_encodings) == len(lhs):
+        # Since nothing is dropped, if nothing was added, it means the union is
+        # the same as the first index
         return return_specific(lhs)
 
-    # Now, unpack the union encodings into their corresponding indexers
+    # 5. Convert the union encodings back to 2-D indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
             union_encodings, bit_offset_encoders
             )
