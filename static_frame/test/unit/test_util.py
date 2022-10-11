@@ -2286,6 +2286,23 @@ class TestUnit(TestCase):
         self.assertEqual(a2.tolist(), [False, True])
 
 
+
+    def test_array_from_element_method_h(self) -> None:
+        from datetime import date as d
+        a1 = np.array([[d(2022,1,1), d(1954,1,1)], [d(1985, 3, 1), d(1005, 8, 1)]], dtype=object)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='isoweekday',
+                args=(),
+                dtype=int,
+                pre_insert=lambda d: d*100
+                )
+        self.assertEqual(a2.tolist(),
+                [[600, 500],  [500, 400]])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_logical_skipna_a1(self) -> None:

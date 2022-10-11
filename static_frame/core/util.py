@@ -3031,7 +3031,7 @@ def array_from_element_method(*,
                         proto[y][x] = getattr(e, method_name)(*args)
         post = np.array(proto, dtype=dtype)
 
-    else:
+    else: # returned dtype is not a string
         if cls_element is not None: # if we can extract function from object first
             func = getattr(cls_element, method_name) #type: ignore
             if array.ndim == 1 and dtype != DTYPE_OBJECT:
