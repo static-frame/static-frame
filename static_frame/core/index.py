@@ -695,6 +695,9 @@ class Index(IndexBase):
         '''
         Return a tuple of (unique values, indexers, inverse indexers).
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if self._unique_with_indexers_tup is None:
             self._unique_with_indexers_tup = ufunc_unique1d_indexer(self.values)
         return self._unique_with_indexers_tup
@@ -1347,6 +1350,7 @@ class _IndexGOMixin:
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
+    _unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]]
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I: #type: ignore
@@ -1362,6 +1366,7 @@ class _IndexGOMixin:
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
+        obj._unique_with_indexers_tup = None #type: ignore
 
         memo[id(self)] = obj
         return obj

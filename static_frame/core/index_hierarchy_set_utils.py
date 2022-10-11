@@ -1,17 +1,26 @@
 import typing as tp
 
 import numpy as np
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.index import Index
 from static_frame.core.container_util import index_many_to_one
-from static_frame.core.util import DtypeSpecifier, ManyToOneType, ufunc_unique1d
+from static_frame.core.util import DtypeSpecifier, IndexConstructor, ManyToOneType, ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
+
+
+class ValidationResult(tp.NamedTuple):
+    indices: tp.List[IndexHierarchy]
+    depth: int
+    any_dropped: bool
+    name: tp.Hashable
+    index_constructors: tp.List[IndexConstructor]
 
 
 def _validate_and_drop_empty(
         indices: tp.Tuple[IndexHierarchy],
-        ) -> tp.Tuple[tp.List[IndexHierarchy], int, bool, tp.Hashable]:
+        ) -> ValidationResult:
     '''
     Common sanitization for IndexHierarchy operations.
 
@@ -20,12 +29,19 @@ def _validate_and_drop_empty(
     any_dropped = False
 
     name: tp.Hashable = indices[0].name
+    index_constructors = list(indices[0]._index_constructors)
 
     depth = None
     filtered: tp.List[IndexHierarchy] = []
     for idx in indices:
         if idx.name != name:
             name = None
+
+        if index_constructors:
+            for i, ctor in enumerate(idx._index_constructors):
+                if ctor != index_constructors[i]:
+                    index_constructors = []
+                    break
 
         # Drop empty indices
         if not idx.size:
@@ -37,9 +53,18 @@ def _validate_and_drop_empty(
         if depth is None:
             depth = idx.depth
         elif depth != idx.depth:
-            raise RuntimeError('All indices must have same depth')
+            raise ErrorInitIndex('All indices must have same depth')
 
-    return indices, depth, any_dropped, name
+    if not index_constructors:
+        index_constructors = [Index] * depth
+
+    return ValidationResult(
+            indices=filtered,
+            depth=depth,
+            any_dropped=any_dropped,
+            name=name,
+            index_constructors=index_constructors,
+            )
 
 
 def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, DtypeSpecifier]:
@@ -84,13 +109,13 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     if not lhs.size:
         return return_specific(lhs)
 
-    indices, depth, any_dropped, name = _validate_and_drop_empty(indices)
+    indices, depth, any_dropped, name, index_constructors = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
                 depth_reference=depth,
-                index_constructors=lhs._index_constructors,
+                index_constructors=index_constructors,
                 name=name,
                 )
 
@@ -103,7 +128,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     for i in range(depth):
         union = index_many_to_one(
                 (idx.index_at_depth(i) for idx in indices),
-                cls_default=lhs.index_at_depth(i).__class__,
+                cls_default=index_constructors[i],
                 many_to_one_type=ManyToOneType.UNION,
                 )
         union_indices.append(union)
@@ -147,6 +172,9 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         intersection_encodings = np.intersect1d(intersection_encodings, next_encodings)
         if not intersection_encodings.size:
             return return_empty()
+
+    if len(intersection_encodings) == len(lhs):
+        return return_specific(lhs)
 
     # Now, unpack the union encodings into their corresponding indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
@@ -193,15 +221,18 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     if not lhs.size:
         return return_specific(lhs)
 
-    indices, depth, _, name = _validate_and_drop_empty(indices)
+    indices, depth, _, name, index_constructors = _validate_and_drop_empty(indices)
 
     def return_empty() -> IndexHierarchy:
         return IndexHierarchy._from_empty(
                 (),
                 depth_reference=depth,
-                index_constructors=lhs._index_constructors,
+                index_constructors=index_constructors,
                 name=name,
                 )
+
+    if len(indices) == 1 and indices[0] is lhs:
+        return return_specific(lhs)
 
     # 1. Determine the union of all indices at each depth.
     union_indices: tp.List[Index] = []
@@ -209,7 +240,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     for i in range(depth):
         union = index_many_to_one(
                 (idx.index_at_depth(i) for idx in indices),
-                cls_default=lhs.index_at_depth(i).__class__,
+                cls_default=index_constructors[i],
                 many_to_one_type=ManyToOneType.UNION,
                 )
         union_indices.append(union)
@@ -256,6 +287,9 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         if not difference_encodings.size:
             return return_empty()
 
+    if len(difference_encodings) == len(lhs):
+        return return_specific(lhs)
+
     # Now, unpack the union encodings into their corresponding indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
             difference_encodings, bit_offset_encoders
@@ -297,7 +331,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is NOT guaranteed to be sorted. It most likely will not be.
     '''
     # This call will call recache
-    (lhs, *others), depth, _, name = _validate_and_drop_empty(indices)
+    (lhs, *others), depth, _, name, index_constructors = _validate_and_drop_empty(indices)
     del indices
 
     remapped_indexers_lhs: tp.List[np.ndarray] = []
@@ -313,7 +347,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         # map to a shared base
         union = index_many_to_one(
                 (idx_lhs, *(rhs.index_at_depth(i) for rhs in others)),
-                cls_default=idx_lhs.__class__,
+                cls_default=index_constructors[i],
                 many_to_one_type=ManyToOneType.UNION,
                 )
         union_indices.append(union)

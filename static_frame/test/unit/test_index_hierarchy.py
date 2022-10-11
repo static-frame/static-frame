@@ -2375,7 +2375,7 @@ class TestUnit(TestCase):
 
         post2 = ih1.union(ih2)
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B']])
 
         post3 = ih1.difference(ih2)
         self.assertEqual(post3.values.tolist(),
@@ -2422,12 +2422,10 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         post3 = ih1.difference(ih2)
-        self.assertEqual(post3.values.tolist(),
-                [])
+        self.assertEqual(post3.values.tolist(), [])
 
     def test_hierarchy_set_operators_d(self) -> None:
 
@@ -2446,8 +2444,7 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         ih1.append(('I', 'C'))
 
@@ -2525,6 +2522,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(i2)
+
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(np.arange(4))
 
@@ -2619,7 +2617,7 @@ class TestUnit(TestCase):
         post2 = ih1.union(ih2, ih3)
 
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['IV', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['IV', 'B']]
                 )
 
     def test_hierarchy_set_operators_l(self) -> None:
