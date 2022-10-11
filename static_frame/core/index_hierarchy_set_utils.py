@@ -187,7 +187,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         3. Convert the 2-D indexers to 1-D encodings.
         4. Find the iterative intersection for each encoding.
             a. If the intersection is ever empty, we can stop!
-        5. Convert the union encodings back to 2-D indexers.
+        5. Convert the intersection encodings back to 2-D indexers.
         6. Remove any bloat from the union indexers.
         7. Return a new IndexHierarchy using the union_indices and union_indexers.
 
@@ -238,11 +238,11 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
             return return_empty(index_constructors, name)
 
     if len(intersection_encodings) == len(lhs):
-        # Since nothing is added, if nothing was dropped, it means the
-        # difference is the same as the first index
+        # In intersections, nothing can be added. If the size didn't change, then it means
+        # nothing was removed, which means the union is the same as the first index
         return return_specific(lhs)
 
-    # 5. Convert the union encodings back to 2-D indexers
+    # 5. Convert the intersection encodings back to 2-D indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
             intersection_encodings, bit_offset_encoders
             )
@@ -272,7 +272,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         3. Convert the 2-D indexers to 1-D encodings.
         4. Find the iterative difference for each encoding.
             a. If the difference is ever empty, we can stop!
-        5. Convert the union encodings back to 2-D indexers.
+        5. Convert the difference encodings back to 2-D indexers.
         6. Remove any bloat from the union indexers.
         7. Return a new IndexHierarchy using the union_indices and union_indexers.
 
@@ -321,11 +321,11 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
             return return_empty(index_constructors, name)
 
     if len(difference_encodings) == len(lhs):
-        # Since nothing is added, if nothing was dropped, it means the
-        # difference is the same as the first index
+        # In differences, nothing can be added. If the size didn't change, then it means
+        # nothing was removed, which means the union is the same as the first index
         return return_specific(lhs)
 
-    # 5. Convert the union encodings back to 2-D indexers
+    # 5. Convert the difference encodings back to 2-D indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
             difference_encodings, bit_offset_encoders
             )
@@ -385,8 +385,8 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     union_encodings = ufunc_unique1d(np.hstack(union_encodings))
 
     if len(union_encodings) == len(lhs):
-        # Since nothing is dropped, if nothing was added, it means the union is
-        # the same as the first index
+        # In unions, nothing can be dropped. If the size didn't change, then it means
+        # nothing was added, which means the union is the same as the first index
         return return_specific(lhs)
 
     # 5. Convert the union encodings back to 2-D indexers
