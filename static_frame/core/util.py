@@ -3014,7 +3014,7 @@ def array_from_element_method(*,
                 else:
                     for (y, x), e in np.ndenumerate(array):
                         proto[y][x] = func(e, *args)
-        else:
+        else: # must call getattr for each element
             if array.ndim == 1:
                 if pre_insert:
                     proto = [pre_insert(getattr(d, method_name)(*args)) for d in array]
