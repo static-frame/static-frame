@@ -7,8 +7,13 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.index import Index
 from static_frame.core.container_util import index_many_to_one
-from static_frame.core.util import DtypeSpecifier, IndexConstructor, ManyToOneType, ufunc_unique1d
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import ManyToOneType
+from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import setdiff1d
+from static_frame.core.util import intersect1d
 
 
 class ValidationResult(tp.NamedTuple):
@@ -83,6 +88,18 @@ def return_specific(ih: IndexHierarchy) -> IndexHierarchy:
     return ih if ih.STATIC else ih.__deepcopy__({})
 
 
+def return_empty(
+        index_constructors: tp.List[IndexConstructor],
+        name: tp.Hashable,
+        ) -> IndexHierarchy:
+    return IndexHierarchy._from_empty(
+            (),
+            depth_reference=len(index_constructors),
+            index_constructors=index_constructors,
+            name=name,
+            )
+
+
 def build_union_indices(
         indices: tp.List[Index],
         index_constructors: tp.List[IndexConstructor],
@@ -129,6 +146,30 @@ def _get_encodings(
             np.array(remapped_indexers, dtype=encoding_dtype).T,
             bit_offset_encoders,
             )
+
+
+def _remove_union_bloat(
+        indices: tp.List[Index],
+        indexers: tp.List[np.ndarray],
+        ) -> tp.Tuple[tp.List[Index], np.ndarray]:
+    # There is potentially a LOT of leftover bloat from all the unions. Clean up.
+    final_indices: tp.List[Index] = []
+    final_indexers: tp.List[np.ndarray] = []
+
+    for index, indexers in zip(indices, indexers):
+        unique, new_indexers = ufunc_unique1d_indexer(indexers)
+
+        if len(unique) == len(index):
+            final_indices.append(index)
+            final_indexers.append(indexers)
+        else:
+            final_indices.append(index._extract_iloc(unique))
+            final_indexers.append(new_indexers)
+
+    final_indexers = np.array(final_indexers, dtype=np.uint64)
+    final_indexers.flags.writeable = False
+
+    return final_indices, final_indexers
 
 
 def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
@@ -195,8 +236,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     while indices:
         next_encodings = get_encodings(indices.pop())
 
-        # TODO: Use util.intersect1d?
-        intersection_encodings = np.intersect1d(intersection_encodings, next_encodings)
+        intersection_encodings = intersect1d(intersection_encodings, next_encodings)
         if not intersection_encodings.size:
             return return_empty()
 
@@ -236,13 +276,25 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     '''
     Equivalent to:
 
-        >>> for ih in rhs:
-        >>>     lhs -= ih
+        >>> result = indices[0]
+        >>> for index in indices[1:]:
+        >>>     result = result.differece(index)
+
+    Algorithm:
+
+        1. Determine the union of the depth-level indices for each index.
+        2. For each index, remap `indexers_at_depth` using the shared union base.
+        3. Convert the 2-D indexers to 1-D encodings.
+        4. Find the iterative difference for each encodings.
+            a. If the difference is ever empty, we can stop!
+        5. Convert the union encodings back to 2-D indexers.
+        6. Remove any bloat from the union indexers.
+        7. Return a new IndexHierarchy using the union_indices and union_indexers.
 
     Note:
-        The result is not guaranteed to be sorted.
+        The result is only guaranteed to be sorted if the union equals the first index.
+        In every other case, it will most likely NOT be sorted.
     '''
-    # This call will call recache
     lhs = indices[0]
 
     if not lhs.size:
@@ -250,20 +302,14 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     indices, depth, _, name, index_constructors = _validate_and_process_indices(indices)
 
-    def return_empty() -> IndexHierarchy:
-        return IndexHierarchy._from_empty(
-                (),
-                depth_reference=depth,
-                index_constructors=index_constructors,
-                name=name,
-                )
-
     if len(indices) == 1 and indices[0] is lhs:
+        # All the other indices were empty!
         return return_specific(lhs)
 
-    # 1. Determine the union of all indices at each depth.
+    # 1. Find union_indices
     union_indices: tp.List[Index] = build_union_indices(indices, index_constructors, depth)
 
+    # 2-3. Remap indexers and convert to encodings
     bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
     get_encodings = partial(
@@ -282,34 +328,25 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     while indices:
         next_encodings = get_encodings(indices.pop())
 
-        difference_encodings = np.setdiff1d(difference_encodings, next_encodings)
+        # 4. Find the iterative difference for each encodings.
+        difference_encodings = setdiff1d(difference_encodings, next_encodings)
+
         if not difference_encodings.size:
-            return return_empty()
+            # 4.a. If the difference is ever empty, we can stop!
+            return return_empty(index_constructors, name)
 
     if len(difference_encodings) == len(lhs):
+        # Since nothing is added, if nothing was dropped, it means the
+        # difference is the same as the first index
         return return_specific(lhs)
 
-    # Now, unpack the union encodings into their corresponding indexers
+    # 5. Convert the union encodings back to 2-D indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
             difference_encodings, bit_offset_encoders
             )
 
-    # There is potentially a LOT of leftover bloat from all the unions. Clean up.
-    final_indices: tp.List[Index] = []
-    final_indexers: tp.List[np.ndarray] = []
-
-    for index, indexers in zip(union_indices, difference_indexers):
-        unique, new_indexers = ufunc_unique1d_indexer(indexers)
-
-        if len(unique) == len(index):
-            final_indices.append(index)
-            final_indexers.append(indexers)
-        else:
-            final_indices.append(index._extract_iloc(unique))
-            final_indexers.append(new_indexers)
-
-    final_indexers = np.array(final_indexers, dtype=np.uint64)
-    final_indexers.flags.writeable = False
+    # 6. Remove any bloat from the union indexers.
+    final_indices, final_indexers = _remove_union_bloat(union_indices, difference_indexers)
 
     return IndexHierarchy(
         indices=final_indices,
@@ -339,7 +376,6 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         The result is only guaranteed to be sorted if the union equals the first index.
         In every other case, it will most likely NOT be sorted.
     '''
-    # This call will call recache
     lhs = indices[0]
     indices, depth, _, name, index_constructors = _validate_and_process_indices(indices)
 
