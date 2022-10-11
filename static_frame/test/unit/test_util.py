@@ -2257,6 +2257,35 @@ class TestUnit(TestCase):
                 [['BLUE      ', 'BLACK     '],  ['RED       ', 'GREEN     ']])
 
 
+
+    def test_array_from_element_method_f(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(),
+                [[False, True],  [False, False]])
+
+
+
+    def test_array_from_element_method_g(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(), [False, True])
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_logical_skipna_a1(self) -> None:
