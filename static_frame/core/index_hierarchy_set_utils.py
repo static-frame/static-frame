@@ -182,17 +182,18 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     Algorithm:
 
-        1. Determine the union of all indices at each depth.
-        2. For each depth, for each index, remap the indexers to the shared base.
-        3. Now, we can start working with encodings.
-        4. Start iterating through, building up the progressive intersection.
-        5. If the intersection is ever empty, we can stop.
-        6. If we finish with values left over, we now need to clean up.
-            This is because the encodings might be mapping to values from the union
-            index that have been dropped
+        1. Determine the union of the depth-level indices for each index.
+        2. For each index, remap `indexers_at_depth` using the shared union base.
+        3. Convert the 2-D indexers to 1-D encodings.
+        4. Find the iterative intersection for each encoding.
+            a. If the intersection is ever empty, we can stop!
+        5. Convert the union encodings back to 2-D indexers.
+        6. Remove any bloat from the union indexers.
+        7. Return a new IndexHierarchy using the union_indices and union_indexers.
 
     Note:
-        The result is NOT guaranteed to be sorted. It most likely will not be.
+        The result is only guaranteed to be sorted if the union equals the first index.
+        In every other case, it will most likely NOT be sorted.
     '''
     lhs = indices[0]
 
@@ -201,20 +202,13 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     indices, depth, any_dropped, name, index_constructors = _validate_and_process_indices(indices)
 
-    def return_empty() -> IndexHierarchy:
-        return IndexHierarchy._from_empty(
-                (),
-                depth_reference=depth,
-                index_constructors=index_constructors,
-                name=name,
-                )
-
     if any_dropped:
-        return return_empty()
+        return return_empty(index_constructors, name)
 
-    # 1. Determine the union of all indices at each depth.
+    # 1. Find union_indices
     union_indices: tp.List[Index] = build_union_indices(indices, index_constructors, depth)
 
+    # 2-3. Remap indexers and convert to encodings
     bit_offset_encoders, encoding_dtype = get_encoding_invariants(union_indices)
 
     get_encodings = partial(
@@ -236,34 +230,25 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     while indices:
         next_encodings = get_encodings(indices.pop())
 
+        # 4. Find the iterative intersection for each encodings.
         intersection_encodings = intersect1d(intersection_encodings, next_encodings)
+
         if not intersection_encodings.size:
-            return return_empty()
+            # 4.a. If the intersection is ever empty, we can stop!
+            return return_empty(index_constructors, name)
 
     if len(intersection_encodings) == len(lhs):
+        # Since nothing is added, if nothing was dropped, it means the
+        # difference is the same as the first index
         return return_specific(lhs)
 
-    # Now, unpack the union encodings into their corresponding indexers
+    # 5. Convert the union encodings back to 2-D indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
             intersection_encodings, bit_offset_encoders
             )
 
-    # There is potentially a LOT of leftover bloat from all the unions. Clean up.
-    final_indices: tp.List[Index] = []
-    final_indexers: tp.List[np.ndarray] = []
-
-    for index, indexers in zip(union_indices, intersection_indexers):
-        unique, new_indexers = ufunc_unique1d_indexer(indexers)
-
-        if len(unique) == len(index):
-            final_indices.append(index)
-            final_indexers.append(indexers)
-        else:
-            final_indices.append(index._extract_iloc(unique))
-            final_indexers.append(new_indexers)
-
-    final_indexers = np.array(final_indexers, dtype=np.uint64)
-    final_indexers.flags.writeable = False
+    # 6. Remove any bloat from the union indexers.
+    final_indices, final_indexers = _remove_union_bloat(union_indices, intersection_indexers)
 
     return IndexHierarchy(
         indices=final_indices,
@@ -285,7 +270,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         1. Determine the union of the depth-level indices for each index.
         2. For each index, remap `indexers_at_depth` using the shared union base.
         3. Convert the 2-D indexers to 1-D encodings.
-        4. Find the iterative difference for each encodings.
+        4. Find the iterative difference for each encoding.
             a. If the difference is ever empty, we can stop!
         5. Convert the union encodings back to 2-D indexers.
         6. Remove any bloat from the union indexers.
@@ -328,7 +313,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     while indices:
         next_encodings = get_encodings(indices.pop())
 
-        # 4. Find the iterative difference for each encodings.
+        # 4. Find the iterative difference for each encoding.
         difference_encodings = setdiff1d(difference_encodings, next_encodings)
 
         if not difference_encodings.size:
