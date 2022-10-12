@@ -11,6 +11,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
@@ -549,8 +550,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
 
-        drop_column_dtype = False
+        config = config or DisplayActive.get()
 
+        drop_column_dtype = False
         if self._axis == 0:
             if not self._retain_labels:
                 index = self.index.rename('Concatenated')
@@ -564,8 +566,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 columns = self._bus.index.rename('Frames')
                 drop_column_dtype = True
-
-        config = config or DisplayConfig()
 
         def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             assert config is not None
