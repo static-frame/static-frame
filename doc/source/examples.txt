@@ -198,9 +198,9 @@ c
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
        L       LM      LMD     R         RM       RMD
-Index  756 (B) 788 (B) 564 (B) 8.83 (KB) 812 (B)  588 (B)
+Index  772 (B) 804 (B) 580 (B) 8.85 (KB) 828 (B)  604 (B)
 Values 120 (B) 136 (B) 24 (B)  120 (B)   136 (B)  24 (B)
-Total  932 (B) 980 (B) 644 (B) 9.0 (KB)  1004 (B) 668 (B)
+Total  948 (B) 996 (B) 660 (B) 9.02 (KB) 1020 (B) 684 (B)
 #end_Series-memory
 
 #start_Series-name
@@ -343,7 +343,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_Series-corr()
 
 #start_Series-count()
@@ -5084,10 +5084,10 @@ c
 #start_SeriesHE-memory
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L       LM      LMD     R         RM       RMD
-Index  756 (B) 788 (B) 564 (B) 8.83 (KB) 812 (B)  588 (B)
-Values 120 (B) 136 (B) 24 (B)  120 (B)   136 (B)  24 (B)
-Total  940 (B) 988 (B) 652 (B) 9.01 (KB) 1012 (B) 676 (B)
+       L       LM       LMD     R         RM       RMD
+Index  772 (B) 804 (B)  580 (B) 8.85 (KB) 828 (B)  604 (B)
+Values 120 (B) 136 (B)  24 (B)  120 (B)   136 (B)  24 (B)
+Total  956 (B) 1004 (B) 668 (B) 9.03 (KB) 1.0 (KB) 692 (B)
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -5230,7 +5230,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -9760,6 +9760,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -10235,6 +10239,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -10539,9 +10547,9 @@ c           datetime64[D]
 >>> f.memory
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
+Columns 772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
+Total   2.44 (KB) 2.53 (KB) 1.88 (KB) 10.53 (KB) 2.59 (KB) 1.93 (KB)
 #end_Frame-memory
 
 #start_Frame-name
@@ -16914,6 +16922,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -17389,6 +17401,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -17693,9 +17709,9 @@ c           datetime64[D]
 >>> f.memory
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
+Columns 772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.43 (KB) 2.53 (KB) 1.87 (KB) 10.53 (KB) 2.58 (KB) 1.92 (KB)
+Total   2.45 (KB) 2.54 (KB) 1.88 (KB) 10.54 (KB) 2.6 (KB)  1.94 (KB)
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -24040,6 +24056,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -24515,6 +24535,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -24819,9 +24843,9 @@ c           datetime64[D]
 >>> f.memory
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 1.11 (KB) 1.14 (KB) 942 (B)   9.2 (KB)   1.16 (KB) 966 (B)
+Columns 1.12 (KB) 1.15 (KB) 958 (B)   9.22 (KB)  1.18 (KB) 982 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.77 (KB) 2.86 (KB) 2.2 (KB)  10.86 (KB) 2.91 (KB) 2.26 (KB)
+Total   2.78 (KB) 2.88 (KB) 2.22 (KB) 10.88 (KB) 2.93 (KB) 2.27 (KB)
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -34988,7 +35012,7 @@ None     <IndexYear>
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexYear-memory
 
 #start_IndexYear-name
@@ -36665,8 +36689,8 @@ None     <IndexYearGO>
 #start_IndexYearGO-memory
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
-      L         LM       LMD     R         RM        RMD
-Total 1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
+      L         LM        LMD     R         RM        RMD
+Total 1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -38393,7 +38417,7 @@ None     <IndexYearMonth>
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexYearMonth-memory
 
 #start_IndexYearMonth-name
@@ -40092,8 +40116,8 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-memory
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
-      L         LM       LMD     R         RM        RMD
-Total 1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
+      L         LM        LMD     R         RM        RMD
+Total 1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -41866,7 +41890,7 @@ None     <IndexDate>
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexDate-memory
 
 #start_IndexDate-name
@@ -43614,8 +43638,8 @@ None     <IndexDateGO>
 #start_IndexDateGO-memory
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-      L         LM       LMD     R         RM        RMD
-Total 1.07 (KB) 1.1 (KB) 900 (B) 9.16 (KB) 1.12 (KB) 924 (B)
+      L         LM        LMD     R         RM        RMD
+Total 1.08 (KB) 1.11 (KB) 916 (B) 9.18 (KB) 1.14 (KB) 940 (B)
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -45299,7 +45323,7 @@ None     <IndexMinute>
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexMinute-memory
 
 #start_IndexMinute-name
@@ -46961,7 +46985,7 @@ None     <IndexMinuteGO>
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
+Total 1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -48650,7 +48674,7 @@ None     <IndexHour>
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexHour-memory
 
 #start_IndexHour-name
@@ -50315,7 +50339,7 @@ None     <IndexHourGO>
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
+Total 1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -52007,7 +52031,7 @@ None     <IndexSecond>
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexSecond-memory
 
 #start_IndexSecond-name
@@ -53677,7 +53701,7 @@ None     <IndexSecondGO>
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
+Total 1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -55374,7 +55398,7 @@ None     <IndexMillisecond>
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexMillisecond-memory
 
 #start_IndexMillisecond-name
@@ -57063,7 +57087,7 @@ None     <IndexMillisecondGO>
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
+Total 1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -58779,7 +58803,7 @@ None     <IndexMicrosecond>
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexMicrosecond-memory
 
 #start_IndexMicrosecond-name
@@ -60470,7 +60494,7 @@ None     <IndexMicrosecondGO>
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.11 (KB) 1.14 (KB) 948 (B) 9.21 (KB) 1.17 (KB) 972 (B)
+Total 1.13 (KB) 1.16 (KB) 964 (B) 9.22 (KB) 1.18 (KB) 988 (B)
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -62188,7 +62212,7 @@ None     <IndexNanosecond>
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
       L       LM      LMD     R         RM      RMD
-Total 768 (B) 800 (B) 576 (B) 8.84 (KB) 824 (B) 600 (B)
+Total 784 (B) 816 (B) 592 (B) 8.86 (KB) 840 (B) 616 (B)
 #end_IndexNanosecond-memory
 
 #start_IndexNanosecond-name
@@ -63878,7 +63902,7 @@ None     <IndexNanosecondGO>
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
       L         LM        LMD     R         RM        RMD
-Total 1.08 (KB) 1.11 (KB) 912 (B) 9.17 (KB) 1.13 (KB) 936 (B)
+Total 1.09 (KB) 1.12 (KB) 928 (B) 9.19 (KB) 1.15 (KB) 952 (B)
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -65723,11 +65747,11 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L         LM        LMD       R          RM        RMD
-Indices  2.23 (KB) 2.33 (KB) 1.67 (KB) 10.33 (KB) 2.39 (KB) 1.73 (KB)
+Indices  2.29 (KB) 2.38 (KB) 1.73 (KB) 10.38 (KB) 2.45 (KB) 1.79 (KB)
 Indexers 184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
 Blocks   1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
 Values   16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total    4.72 (KB) 4.87 (KB) 3.67 (KB) 12.81 (KB) 4.94 (KB) 3.73 (KB)
+Total    4.79 (KB) 4.94 (KB) 3.74 (KB) 12.88 (KB) 5.01 (KB) 3.8 (KB)
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -65745,7 +65769,7 @@ Total    4.72 (KB) 4.87 (KB) 3.67 (KB) 12.81 (KB) 4.94 (KB) 3.73 (KB)
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -66158,13 +66182,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f6cdd52a700> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f537139f820> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f6c5abdf160> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f536f2e2c10> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66291,7 +66315,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f6cdd52a8b0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f537139f9d0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66353,7 +66377,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f6cdd52aa60>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f537139fb80>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -68126,11 +68150,11 @@ z        <IndexDateGO>
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L         LM        LMD       R          RM        RMD
-Indices  3.14 (KB) 3.23 (KB) 2.57 (KB) 11.23 (KB) 3.29 (KB) 2.64 (KB)
+Indices  3.19 (KB) 3.29 (KB) 2.63 (KB) 11.29 (KB) 3.35 (KB) 2.69 (KB)
 Indexers 184 (B)   184 (B)   72 (B)    184 (B)    184 (B)   72 (B)
 Blocks   1.37 (KB) 1.41 (KB) 1.09 (KB) 1.37 (KB)  1.41 (KB) 1.09 (KB)
 Values   16 (B)    16 (B)    16 (B)    16 (B)     16 (B)    16 (B)
-Total    5.28 (KB) 5.43 (KB) 4.23 (KB) 13.37 (KB) 5.5 (KB)  4.29 (KB)
+Total    5.35 (KB) 5.5 (KB)  4.3 (KB)  13.44 (KB) 5.57 (KB) 4.36 (KB)
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -68148,7 +68172,7 @@ Total    5.28 (KB) 5.43 (KB) 4.23 (KB) 13.37 (KB) 5.5 (KB)  4.29 (KB)
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-677
+693
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -68582,13 +68606,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f6cdd52a700> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f537139f820> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f6c5abdf160> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f536f2e2c10> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -68715,7 +68739,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f6cdd52a8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f537139f9d0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -68777,7 +68801,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f6cdd52aa60>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f537139fb80>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -70650,8 +70674,8 @@ y
 #start_Bus-memory
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
-      L         LM        LMD       R          RM        RMD
-Total 6.02 (KB) 1.58 (KB) 1.14 (KB) 14.12 (KB) 1.59 (KB) 1.15 (KB)
+      L         LM       LMD       R          RM        RMD
+Total 6.12 (KB) 1.6 (KB) 1.16 (KB) 14.22 (KB) 1.61 (KB) 1.18 (KB)
 #end_Bus-memory
 
 #start_Bus-name
@@ -71769,7 +71793,7 @@ j                w
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
       L          LM        LMD       R          RM        RMD
-Total 15.79 (KB) 4.62 (KB) 3.42 (KB) 23.88 (KB) 4.68 (KB) 3.48 (KB)
+Total 16.06 (KB) 4.68 (KB) 3.48 (KB) 24.15 (KB) 4.75 (KB) 3.54 (KB)
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -72888,7 +72912,7 @@ True
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
       L         LM        LMD       R          RM        RMD
-Total 5.24 (KB) 5.37 (KB) 4.27 (KB) 13.34 (KB) 5.45 (KB) 4.35 (KB)
+Total 5.32 (KB) 5.45 (KB) 4.35 (KB) 13.41 (KB) 5.52 (KB) 4.43 (KB)
 #end_Batch-memory
 
 #start_Batch-name
@@ -76705,12 +76729,12 @@ j                r     0.017701925105413577 0.8509035245341184
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q1 = sf.Quilt(b, retain_labels=True)
 >>> q1
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q1.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -76724,13 +76748,13 @@ v                r     44      45
 <<U1>            <<U1> <int64> <int64>
 >>> q2 = sf.Quilt(b, retain_labels=True, axis=1)
 >>> q2
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Frames>[0m  x v
-[38;5;243m<Index: Aligned>[0m
+<Quilt: j>
+<Index: Frames>  x v
+<Index: Aligned>
 p                . .
 q                . .
 r                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q2.to_frame()
 <Frame>
 <IndexHierarchy> x       x       v       v       <<U1>
@@ -76746,12 +76770,12 @@ r                4       5       44      45
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> q = sf.Quilt.from_frame(f, retain_labels=True, chunksize=2)
 >>> q
-[38;5;243m<Quilt: x>[0m
-[38;5;243m<Index: Aligned>[0m a b c [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: x>
+<Index: Aligned> a b c <<U1>
+<Index: Frames>
 0                . . .
 2                . . .
-[38;5;239m<int64>[0m
+<int64>
 >>> q.to_frame()
 <Frame>
 <Index>                  a       b      c               <<U1>
@@ -76768,12 +76792,12 @@ r                4       5       44      45
 >>> f2 = sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')
 >>> q = sf.Quilt.from_frames((f1, f2), retain_labels=True)
 >>> q
-[38;5;243m<Quilt>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -76810,12 +76834,12 @@ x                r     4       5
 >>> f2 = sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')
 >>> q = sf.Quilt.from_items((('A', f1), ('B', f2)), retain_labels=True)
 >>> q
-[38;5;243m<Quilt>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 A                . .
 B                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -77074,7 +77098,7 @@ c
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.memory
       L         LM        LMD       R          RM        RMD
-Total 9.24 (KB) 5.95 (KB) 4.42 (KB) 17.68 (KB) 6.03 (KB) 4.5 (KB)
+Total 9.37 (KB) 6.03 (KB) 4.49 (KB) 17.81 (KB) 6.11 (KB) 4.58 (KB)
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -77149,12 +77173,12 @@ x                q     2       3
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q.rename('y')
-[38;5;243m<Quilt: y>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: y>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 #end_Quilt-rename()
 
 #start_Quilt-sample()
@@ -77318,34 +77342,34 @@ iter_window_items(*, size, axis, ... Quilt    Iterator    Apply a function ...
 #start_Quilt-__repr__()
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> repr(q)
-[38;5;243m<Quilt: x>[0m
-[38;5;243m<Index: Aligned>[0m a b c [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: x>
+<Index: Aligned> a b c <<U1>
+<Index: Frames>
 0                . . .
 2                . . .
-[38;5;239m<int64>[0m
+<int64>
 #end_Quilt-__repr__()
 
 #start_Quilt-__str__()
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> str(q)
-[38;5;243m<Quilt: x>[0m
-[38;5;243m<Index: Aligned>[0m a b c [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: x>
+<Index: Aligned> a b c <<U1>
+<Index: Frames>
 0                . . .
 2                . . .
-[38;5;239m<int64>[0m
+<int64>
 #end_Quilt-__str__()
 
 #start_Quilt-display()
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.display()
-[38;5;243m<Quilt: x>[0m
-[38;5;243m<Index: Aligned>[0m a b c [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: x>
+<Index: Aligned> a b c <<U1>
+<Index: Frames>
 0                . . .
 2                . . .
-[38;5;239m<int64>[0m
+<int64>
 >>> q.display(sf.DisplayConfig(type_show=False))
   a b c
 0 . . .
@@ -77454,12 +77478,12 @@ v                r     44      45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array(axis=1))
 (array([0, 1]), array([2, 3]), array([4, 5]), array([40, 41]), array([42, 43]), array([44, 45]))
 #end_Quilt-iter_array()
@@ -77468,12 +77492,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_array(axis=1).apply(lambda v: v.sum())
 <Series>
 <IndexHierarchy>
@@ -77490,12 +77514,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array(axis=1).apply_iter(lambda v: v.sum()))
 (1, 5, 9, 81, 85, 89)
 #end_Quilt-iter_array().apply_iter()
@@ -77504,12 +77528,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array(axis=1).apply_iter_items(lambda v: v.sum()))
 ((('x', 'p'), 1), (('x', 'q'), 5), (('x', 'r'), 9), (('v', 'p'), 81), (('v', 'q'), 85), (('v', 'r'), 89))
 #end_Quilt-iter_array().apply_iter_items()
@@ -77518,12 +77542,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_array(axis=1).apply_pool(lambda v: v.sum(), use_threads=True)
 <Series>
 <IndexHierarchy>
@@ -77540,12 +77564,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array_items(axis=1))
 ((('x', 'p'), array([0, 1])), (('x', 'q'), array([2, 3])), (('x', 'r'), array([4, 5])), (('v', 'p'), array([40, 41])), (('v', 'q'), array([42, 43])), (('v', 'r'), array([44, 45])))
 #end_Quilt-iter_array_items()
@@ -77554,12 +77578,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_array_items(axis=1).apply(lambda k, v: v.sum() if 'q' in k else -1)
 <Series>
 <IndexHierarchy>
@@ -77576,12 +77600,12 @@ v                r     -1
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array_items(axis=1).apply_iter(lambda k, v: v.sum() if 'q' in k else -1))
 (-1, 5, -1, -1, 85, -1)
 #end_Quilt-iter_array_items().apply_iter()
@@ -77590,12 +77614,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_array_items(axis=1).apply_iter_items(lambda k, v: v.sum() if 'q' in k else -1))
 ((('x', 'p'), -1), (('x', 'q'), 5), (('x', 'r'), -1), (('v', 'p'), -1), (('v', 'q'), 85), (('v', 'r'), -1))
 #end_Quilt-iter_array_items().apply_iter_items()
@@ -77604,12 +77628,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_array_items(axis=1).apply_pool(lambda pair: pair[1].sum() if pair[0][1] != 'p' else -1, use_threads=True)
 <Series>
 <IndexHierarchy>
@@ -77626,12 +77650,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series(axis=1))
 (<Series: ('x', 'p')>
 <Index>
@@ -77664,12 +77688,12 @@ b                    45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_series(axis=1).apply(lambda v: v.sum())
 <Series>
 <IndexHierarchy>
@@ -77686,12 +77710,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series(axis=1).apply_iter(lambda v: v.sum()))
 (1, 5, 9, 81, 85, 89)
 #end_Quilt-iter_series().apply_iter()
@@ -77700,12 +77724,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series(axis=1).apply_iter_items(lambda v: v.sum()))
 ((('x', 'p'), 1), (('x', 'q'), 5), (('x', 'r'), 9), (('v', 'p'), 81), (('v', 'q'), 85), (('v', 'r'), 89))
 #end_Quilt-iter_series().apply_iter_items()
@@ -77714,12 +77738,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_series(axis=1).apply_pool(lambda v: v.sum(), use_threads=True)
 <Series>
 <IndexHierarchy>
@@ -77736,12 +77760,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series_items(axis=1))
 ((('x', 'p'), <Series: ('x', 'p')>
 <Index>
@@ -77774,12 +77798,12 @@ b                    45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_series_items(axis=1).apply(lambda k, v: v.sum() if 'q' in k else -1)
 <Series>
 <IndexHierarchy>
@@ -77796,12 +77820,12 @@ v                r     -1
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series_items(axis=1).apply_iter(lambda k, v: v.sum() if 'q' in k else -1))
 (-1, 5, -1, -1, 85, -1)
 #end_Quilt-iter_series_items().apply_iter()
@@ -77810,12 +77834,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_series_items(axis=1).apply_iter_items(lambda k, v: v.sum() if 'q' in k else -1))
 ((('x', 'p'), -1), (('x', 'q'), 5), (('x', 'r'), -1), (('v', 'p'), -1), (('v', 'q'), 85), (('v', 'r'), -1))
 #end_Quilt-iter_series_items().apply_iter_items()
@@ -77824,12 +77848,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_series_items(axis=1).apply_pool(lambda pair: pair[1].sum() if pair[0][1] != 'p' else -1, use_threads=True)
 <Series>
 <IndexHierarchy>
@@ -77846,12 +77870,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1))
 (Axis(a=0, b=1), Axis(a=2, b=3), Axis(a=4, b=5), Axis(a=40, b=41), Axis(a=42, b=43), Axis(a=44, b=45))
 #end_Quilt-iter_tuple()
@@ -77860,12 +77884,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple(axis=1).apply(lambda v: v.a + v.b)
 <Series>
 <IndexHierarchy>
@@ -77882,12 +77906,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).apply_iter(lambda v: v.a + v.b))
 (1, 5, 9, 81, 85, 89)
 #end_Quilt-iter_tuple().apply_iter()
@@ -77896,12 +77920,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).apply_iter_items(lambda v: v.a + v.b))
 ((('x', 'p'), 1), (('x', 'q'), 5), (('x', 'r'), 9), (('v', 'p'), 81), (('v', 'q'), 85), (('v', 'r'), 89))
 #end_Quilt-iter_tuple().apply_iter_items()
@@ -77910,12 +77934,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iloc[:2].iter_tuple(axis=1).map_all({(0, 1): -1, (2, 3): -2})
 <Series>
 <IndexHierarchy>
@@ -77928,12 +77952,12 @@ x                q     -2
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iloc[:2].iter_tuple(axis=1).map_all_iter({(0, 1): -1, (2, 3): -2}))
 (-1, -2)
 #end_Quilt-iter_tuple().map_all_iter()
@@ -77942,12 +77966,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iloc[:2].iter_tuple(axis=1).map_all_iter_items({(0, 1): -1, (2, 3): -2}))
 ((('x', 'p'), -1), (('x', 'q'), -2))
 #end_Quilt-iter_tuple().map_all_iter_items()
@@ -77956,12 +77980,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple(axis=1).map_any({(0, 1): -1, (42, 43): -2})
 <Series>
 <IndexHierarchy>
@@ -77978,12 +78002,12 @@ v                r     Axis(a=44, b=45)
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).map_any_iter({(0, 1): -1, (42, 43): -2}))
 (-1, Axis(a=2, b=3), Axis(a=4, b=5), Axis(a=40, b=41), -2, Axis(a=44, b=45))
 #end_Quilt-iter_tuple().map_any_iter()
@@ -77992,12 +78016,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).map_any_iter_items({(0, 1): -1, (42, 43): -2}))
 ((('x', 'p'), -1), (('x', 'q'), Axis(a=2, b=3)), (('x', 'r'), Axis(a=4, b=5)), (('v', 'p'), Axis(a=40, b=41)), (('v', 'q'), -2), (('v', 'r'), Axis(a=44, b=45)))
 #end_Quilt-iter_tuple().map_any_iter_items()
@@ -78006,12 +78030,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple(axis=1).map_fill({(0, 1): -1, (42, 43): -2}, fill_value=np.nan)
 <Series>
 <IndexHierarchy>
@@ -78028,12 +78052,12 @@ v                r     nan
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).map_fill_iter({(0, 1): -1, (42, 43): -2}, fill_value=np.nan))
 (-1, nan, nan, nan, -2, nan)
 #end_Quilt-iter_tuple().map_fill_iter()
@@ -78042,12 +78066,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple(axis=1).map_fill_iter_items({(0, 1): -1, (42, 43): -2}, fill_value=np.nan))
 ((('x', 'p'), -1), (('x', 'q'), nan), (('x', 'r'), nan), (('v', 'p'), nan), (('v', 'q'), -2), (('v', 'r'), nan))
 #end_Quilt-iter_tuple().map_fill_iter_items()
@@ -78056,12 +78080,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1))
 ((('x', 'p'), Axis(a=0, b=1)), (('x', 'q'), Axis(a=2, b=3)), (('x', 'r'), Axis(a=4, b=5)), (('v', 'p'), Axis(a=40, b=41)), (('v', 'q'), Axis(a=42, b=43)), (('v', 'r'), Axis(a=44, b=45)))
 #end_Quilt-iter_tuple_items()
@@ -78070,12 +78094,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple_items(axis=1).apply(lambda k, v: v.a + v.b if 'r' in k else -1)
 <Series>
 <IndexHierarchy>
@@ -78092,12 +78116,12 @@ v                r     89
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).apply_iter(lambda k, v: v.a + v.b if 'r' in k else -1))
 (-1, -1, 9, -1, -1, 89)
 #end_Quilt-iter_tuple_items().apply_iter()
@@ -78106,12 +78130,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).apply_iter_items(lambda k, v: v.a + v.b if 'r' in k else -1))
 ((('x', 'p'), -1), (('x', 'q'), -1), (('x', 'r'), 9), (('v', 'p'), -1), (('v', 'q'), -1), (('v', 'r'), 89))
 #end_Quilt-iter_tuple_items().apply_iter_items()
@@ -78120,12 +78144,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iloc[:2].iter_tuple_items(axis=1).map_all({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2})
 <Series>
 <IndexHierarchy>
@@ -78138,12 +78162,12 @@ x                q     -2
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iloc[:2].iter_tuple_items(axis=1).map_all_iter({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}))
 (-1, -2)
 #end_Quilt-iter_tuple_items().map_all_iter()
@@ -78152,12 +78176,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iloc[:2].iter_tuple_items(axis=1).map_all_iter_items({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}))
 ((('x', 'p'), -1), (('x', 'q'), -2))
 #end_Quilt-iter_tuple_items().map_all_iter_items()
@@ -78166,12 +78190,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple_items(axis=1).map_any({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2})
 <Series>
 <IndexHierarchy>
@@ -78188,12 +78212,12 @@ v                r     Axis(a=44, b=45)
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).map_any_iter({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}))
 (-1, -2, Axis(a=4, b=5), Axis(a=40, b=41), Axis(a=42, b=43), Axis(a=44, b=45))
 #end_Quilt-iter_tuple_items().map_any_iter()
@@ -78202,12 +78226,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).map_any_iter_items({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}))
 ((('x', 'p'), -1), (('x', 'q'), -2), (('x', 'r'), Axis(a=4, b=5)), (('v', 'p'), Axis(a=40, b=41)), (('v', 'q'), Axis(a=42, b=43)), (('v', 'r'), Axis(a=44, b=45)))
 #end_Quilt-iter_tuple_items().map_any_iter_items()
@@ -78216,12 +78240,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_tuple_items(axis=1).map_fill({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}, fill_value=np.nan)
 <Series>
 <IndexHierarchy>
@@ -78238,12 +78262,12 @@ v                r     nan
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).map_fill_iter({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}, fill_value=np.nan))
 (-1, -2, nan, nan, nan, nan)
 #end_Quilt-iter_tuple_items().map_fill_iter()
@@ -78252,12 +78276,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_tuple_items(axis=1).map_fill_iter_items({(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}, fill_value=np.nan))
 ((('x', 'p'), -1), (('x', 'q'), -2), (('x', 'r'), nan), (('v', 'p'), nan), (('v', 'q'), nan), (('v', 'r'), nan))
 #end_Quilt-iter_tuple_items().map_fill_iter_items()
@@ -78266,12 +78290,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window(size=2, step=2, axis=0))
 (<Frame: x>
 <Index>                a       b       <<U1>
@@ -78295,12 +78319,12 @@ v                r     44      45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_window(size=2, step=2, axis=0).apply(lambda f: f.max().max())
 <Series>
 <IndexHierarchy>
@@ -78314,12 +78338,12 @@ v                r     45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window(size=2, step=2, axis=0).apply_iter(lambda f: f.max().max()))
 (3, 41, 45)
 #end_Quilt-iter_window().apply_iter()
@@ -78328,12 +78352,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window(size=2, step=2, axis=0).apply_iter_items(lambda f: f.max().max()))
 ((('x', 'q'), 3), (('v', 'p'), 41), (('v', 'r'), 45))
 #end_Quilt-iter_window().apply_iter_items()
@@ -78342,12 +78366,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array(size=2, step=2, axis=0))
 (array([[0, 1],
        [2, 3]]), array([[ 4,  5],
@@ -78359,12 +78383,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_window_array(size=2, step=2, axis=0).apply(lambda a: np.max(a))
 <Series>
 <IndexHierarchy>
@@ -78378,12 +78402,12 @@ v                r     45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array(size=2, step=2, axis=0).apply_iter(lambda a: np.max(a)))
 (3, 41, 45)
 #end_Quilt-iter_window_array().apply_iter()
@@ -78392,12 +78416,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array(size=2, step=2, axis=0).apply_iter_items(lambda a: np.max(a)))
 ((('x', 'q'), 3), (('v', 'p'), 41), (('v', 'r'), 45))
 #end_Quilt-iter_window_array().apply_iter_items()
@@ -78406,12 +78430,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array_items(size=2, step=2, axis=0))
 ((('x', 'q'), array([[0, 1],
        [2, 3]])), (('v', 'p'), array([[ 4,  5],
@@ -78423,12 +78447,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_window_array_items(size=2, step=2, axis=0).apply(lambda k, v: np.max(v) if k == ('v', 'p') else np.min(v))
 <Series>
 <IndexHierarchy>
@@ -78442,12 +78466,12 @@ v                r     42
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array_items(size=2, step=2, axis=0).apply_iter(lambda k, v: np.max(v) if k == ('v', 'p') else np.min(v)))
 (0, 41, 42)
 #end_Quilt-iter_window_array_items().apply_iter()
@@ -78456,12 +78480,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_array_items(size=2, step=2, axis=0).apply_iter_items(lambda k, v: np.max(v) if k == ('v', 'p') else np.min(v)))
 ((('x', 'q'), 0), (('v', 'p'), 41), (('v', 'r'), 42))
 #end_Quilt-iter_window_array_items().apply_iter_items()
@@ -78470,12 +78494,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_items(size=2, step=2, axis=0))
 ((('x', 'q'), <Frame: x>
 <Index>                a       b       <<U1>
@@ -78499,12 +78523,12 @@ v                r     44      45
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> q.iter_window_items(size=2, step=2, axis=0).apply(lambda k, v: v.max().max() if k == ('v', 'p') else v.min().min())
 <Series>
 <IndexHierarchy>
@@ -78518,12 +78542,12 @@ v                r     42
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_items(size=2, step=2, axis=0).apply_iter(lambda k, v: v.max().max() if k == ('v', 'p') else v.min().min()))
 (0, 41, 42)
 #end_Quilt-iter_window_items().apply_iter()
@@ -78532,12 +78556,12 @@ v                . .
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True, axis=0)
 >>> q
-[38;5;243m<Quilt: j>[0m
-[38;5;243m<Index: Aligned>[0m a b [38;5;239m<<U1>[0m
-[38;5;243m<Index: Frames>[0m
+<Quilt: j>
+<Index: Aligned> a b <<U1>
+<Index: Frames>
 x                . .
 v                . .
-[38;5;239m<<U1>[0m
+<<U1>
 >>> tuple(q.iter_window_items(size=2, step=2, axis=0).apply_iter_items(lambda k, v: v.max().max() if k == ('v', 'p') else v.min().min()))
 ((('x', 'q'), 0), (('v', 'p'), 41), (('v', 'r'), 42))
 #end_Quilt-iter_window_items().apply_iter_items()
@@ -78702,7 +78726,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6c3db89240>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f52b31e6640>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -78762,13 +78786,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6c3db89940>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f52b31dbdc0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f6c3db89140>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f52b31db4c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -78786,9 +78810,9 @@ False
 >>> f.memory
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
+Columns 772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
+Total   2.44 (KB) 2.53 (KB) 1.88 (KB) 10.53 (KB) 2.59 (KB) 1.93 (KB)
 #end_MemoryDisplay-__init__()
 
 #start_MemoryDisplay-from_any()
@@ -78805,9 +78829,9 @@ Total 208 (B) 224 (B) 112 (B) 8.3 (KB) 256 (B) 144 (B)
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
 Index               208     224     112     8496    256     144
-Columns             756     788     564     9044    812     588
+Columns             772     804     580     9060    828     604
 Blocks              1436    1484    1148    1436    1484    1148
-Total               2482    2578    1906    10770   2634    1962
+Total               2498    2594    1922    10786   2650    1978
 <<U7>               <int64> <int64> <int64> <int64> <int64> <int64>
 #end_MemoryDisplay-to_frame()
 
@@ -78817,9 +78841,9 @@ Total               2482    2578    1906    10770   2634    1962
 >>> repr(md)
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
+Columns 772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
+Total   2.44 (KB) 2.53 (KB) 1.88 (KB) 10.53 (KB) 2.59 (KB) 1.93 (KB)
 #end_MemoryDisplay-__repr__()
 
 #start_MemoryDisplay-__str__()
@@ -78828,8 +78852,8 @@ Total   2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
 >>> str(md)
         L         LM        LMD       R          RM        RMD
 Index   208 (B)   224 (B)   112 (B)   8.3 (KB)   256 (B)   144 (B)
-Columns 756 (B)   788 (B)   564 (B)   8.83 (KB)  812 (B)   588 (B)
+Columns 772 (B)   804 (B)   580 (B)   8.85 (KB)  828 (B)   604 (B)
 Blocks  1.4 (KB)  1.45 (KB) 1.12 (KB) 1.4 (KB)   1.45 (KB) 1.12 (KB)
-Total   2.42 (KB) 2.52 (KB) 1.86 (KB) 10.52 (KB) 2.57 (KB) 1.92 (KB)
+Total   2.44 (KB) 2.53 (KB) 1.88 (KB) 10.53 (KB) 2.59 (KB) 1.93 (KB)
 #end_MemoryDisplay-__str__()
 
