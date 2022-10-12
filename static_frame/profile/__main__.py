@@ -330,9 +330,6 @@ class SeriesFillNa_R(SeriesFillNa, Reference):
         s = self.pds_object_str.fillna('')
         assert 'zDa2' in s
 
-
-
-
 #-------------------------------------------------------------------------------
 class SeriesDropDuplicated(Perf):
     NUMBER = 500
@@ -394,9 +391,6 @@ class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
     def bool_index_str(self) -> None:
         self.pds_bool.drop_duplicates(keep=False)
 
-
-
-
 #-------------------------------------------------------------------------------
 class SeriesIterElementApply(Perf):
     NUMBER = 500
@@ -457,6 +451,45 @@ class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
     def bool_index_str(self) -> None:
         self.pds_bool.apply(lambda x: str(x))
 
+
+#-------------------------------------------------------------------------------
+class SeriesViaStr(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        f1 = ff.parse('s(100_000,1)|v(str)')
+
+        self.sfs = f1[0]
+        self.pds = self.sfs.to_pandas()
+
+        self.meta = {
+            'index_auto_find': FunctionMetaData(
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            'index_auto_contains': FunctionMetaData(
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            }
+
+class SeriesViaStr_N(SeriesViaStr, Native):
+
+    def index_auto_find(self) -> None:
+        s = self.sfs.via_str.find('jh')
+        # assert s.sum() == -99884
+
+    def index_auto_contains(self) -> None:
+        s = self.sfs.via_str.contains('jh')
+
+class SeriesViaStr_R(SeriesViaStr, Reference):
+
+    def index_auto_find(self) -> None:
+        s = self.pds.str.find('jh')
+        # assert s.sum() == -99884
+
+    def index_auto_contains(self) -> None:
+        s = self.pds.str.contains('jh')
 
 
 
@@ -1753,6 +1786,11 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--one-shot',
+            help='Single execution',
+            action='store_true',
+            default=False,
+            )
     p.add_argument('--private',
             help='Enable selection from private tests',
             action='store_true',
@@ -1904,6 +1942,19 @@ def line(
         profiler.disable()
         profiler.print_stats()
 
+
+def one_shot(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        ) -> None:
+    '''A single execution, useful for debugging.
+    '''
+    runner = cls_runner()
+    for name in runner.iter_function_names(pattern_func):
+        f = getattr(runner, name)
+        f()
+
+
 #-------------------------------------------------------------------------------
 
 PerformanceRecord = tp.MutableMapping[str,
@@ -2023,7 +2074,8 @@ def main() -> None:
                 instrument(bundle[Native], pattern_func)
             if options.line:
                 line(bundle[Native], pattern_func)
-
+            if options.one_shot:
+                one_shot(bundle[Native], pattern_func)
     itemize = False # make CLI option maybe
 
     if records:

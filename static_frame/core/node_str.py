@@ -100,7 +100,7 @@ class InterfaceString(Interface[TContainer]):
         Block-wise processing of blocks after optional string conversion. Non-string conversion is necessary for ``decode``.
         '''
         for block in blocks:
-            if astype_str and block.dtype not in DTYPE_STR_KINDS:
+            if astype_str and block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
             array = func(block, *args)
             array.flags.writeable = False
@@ -117,7 +117,7 @@ class InterfaceString(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KINDS:
+            if block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable
@@ -141,7 +141,7 @@ class InterfaceString(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KINDS:
+            if block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable
