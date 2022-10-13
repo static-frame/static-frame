@@ -138,7 +138,7 @@ class TestUnit(TestCase):
                 ('I', 'B'),
                 )
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ErrorInitIndexNonUnique):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarchy_init_g(self) -> None:
