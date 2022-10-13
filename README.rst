@@ -58,7 +58,7 @@ While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in
 
 A wide variety of table formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. Full serialization is also available via custom NPZ and NPY encodings, the latter supporting memory mapping.
 
-StaticFrame features a family of multi-table containers: the Bus is a lazily-loaded container of tables, the Batch is a deferred processor of tables, the Yarn is virtual concatenation of many Buses, and the Quilt is a virtual concatenation of all tables within a single Bus or Yarn. All permit operating on large collections of tables with minimal memory overhead, as well as writing too and reading from zipped bundles of pickles, NPZ, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
+StaticFrame features a family of multi-table containers: the Bus is a lazily-loaded container of tables, the Batch is a deferred processor of tables, the Yarn is virtual concatenation of many Buses, and the Quilt is a virtual concatenation of all tables within a single Bus or Yarn. All permit operating on large collections of tables with minimal memory overhead, as well as writing to and reading from zipped bundles of pickles, NPZ, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
 
 
 Code: https://github.com/InvestmentSystems/static-frame

@@ -1,9 +1,9 @@
 import numpy as np
 
-from doc.source.conf import DOCUMENTED_COMPONENTS
 from static_frame import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures

@@ -1491,7 +1491,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_arrays_a(self) -> None:
+    def test_hierarchy_from_values_per_depth_a(self) -> None:
 
         # NOTE: This will consolidate dtypes
         arrays1 = np.array((
@@ -1505,7 +1505,7 @@ class TestUnit(TestCase):
                 ('I', 'A', '1'),
                 ))
 
-        ih1 = IndexHierarchy._from_arrays(arrays1)
+        ih1 = IndexHierarchy.from_values_per_depth(arrays1)
         self.assertTrue((np.array(tuple(ih1.iter_label())) == arrays1).all())
 
         arrays2 = [
@@ -1513,21 +1513,21 @@ class TestUnit(TestCase):
             np.array(['A', 'B', 'B', 'A', 'B', 'A', 'B', 'A']),
             np.array(['1', '1', '2', '2', '2', '2', '1', '1']),
         ]
-        ih2 = IndexHierarchy._from_arrays(arrays2)
+        ih2 = IndexHierarchy.from_values_per_depth(arrays2)
         self.assertTrue(ih1.equals(ih2))
 
-    def test_hierarchy_from_arrays_b(self) -> None:
+    def test_hierarchy_from_values_per_depth_b(self) -> None:
 
         arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy._from_arrays(arrays)
+            _ = IndexHierarchy.from_values_per_depth(arrays)
 
 
-    def test_hierarchy_from_arrays_c(self) -> None:
+    def test_hierarchy_from_values_per_depth_c(self) -> None:
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=IndexAutoConstructorFactory)
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
                 ['datetime64[Y]', 'datetime64[D]'],
@@ -1535,17 +1535,29 @@ class TestUnit(TestCase):
         self.assertEqual(ih.name, None)
 
 
-    def test_hierarchy_from_arrays_d(self) -> None:
+    def test_hierarchy_from_values_per_depth_d(self) -> None:
         IACF = IndexAutoConstructorFactory
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=(IACF('a'), IACF('b')),
                 )
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
                 ['datetime64[Y]', 'datetime64[D]'],
                 )
         self.assertEqual(ih.name, ('a', 'b'))
+
+    def test_hierarchy_from_values_per_depth_e(self) -> None:
+        ih = IndexHierarchy.from_values_per_depth((('a', 'a', None, None), ('2012', '2008', '1933', '2008')), index_constructors=(Index, IndexDate))
+        self.assertEqual(ih.dtypes.values.tolist(), [np.dtype('O'), np.dtype('<M8[D]')])
+        self.assertEqual(ih.shape, (4, 2))
+
+    def test_hierarchy_from_values_per_depth_f(self) -> None:
+        ih1 = IndexHierarchy.from_values_per_depth(((), ()))
+        self.assertEqual(ih1.shape, (0, 2))
+
+        ih2 = IndexHierarchy.from_values_per_depth(np.array(()).reshape(0, 2))
+        self.assertEqual(ih2.shape, (0, 2))
 
     #---------------------------------------------------------------------------
 
@@ -2468,10 +2480,26 @@ class TestUnit(TestCase):
                 ((0, Index), (1, IndexDate))
                 )
 
-    def test_hierarchy_set_operators_f(self) -> None:
+    def test_hierarchy_set_operators_f1(self) -> None:
         dd = datetime.date
 
-        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate], name='foo')
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate], name='foo')
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+        self.assertEqual(i3.name, 'foo')
+
+    def test_hierarchy_set_operators_f2(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate], name='foo')
 
         i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate])
 
@@ -2481,6 +2509,9 @@ class TestUnit(TestCase):
                 i3.index_types.to_pairs(),
                 ((0, Index), (1, IndexDate))
                 )
+        # we do not propagate name if not matched
+        self.assertEqual(i3.name, None)
+
 
     def test_hierarchy_set_operators_g(self) -> None:
         dd = datetime.date
@@ -2528,6 +2559,8 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
                 )
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_set_operators_j(self) -> None:
         labels = (

@@ -65,6 +65,7 @@ from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthG
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
+from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -114,4 +115,4 @@ from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFil
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.15'
+__version__ = '0.9.16'
