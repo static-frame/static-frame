@@ -6,6 +6,7 @@ from functools import reduce
 
 import numpy as np
 from automap import FrozenAutoMap  # pylint: disable = E0611
+from automap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
@@ -351,11 +352,11 @@ class HierarchicalLocMap:
         # len(encoded_indexers) == len(self)!
         try:
             return FrozenAutoMap(encoded_indexers.tolist()) # Automap is faster with Python lists :(
-        except ValueError as e:
+        except NonUniqueError as e:
             # nonzero returns arrays of indices per dimension. We are 1D, so we
             # will receive an array containing one other array. Of that inner
             # array, we only need the first occurrence
-            [[first_duplicate, *_]] = np.nonzero(encoded_indexers == e.args[0])
+            [first_duplicate, *_], *_ = np.nonzero(encoded_indexers == e.args[0])
             raise FirstDuplicatePosition(first_duplicate) from None
 
     @staticmethod
