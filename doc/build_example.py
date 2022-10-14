@@ -4716,6 +4716,9 @@ class ExGenBatch(ExGen):
         elif attr == 'astype()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(str).to_frame()"
+        elif attr == 'astype[]()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.astype['a'](str).to_frame()"
         elif attr == 'clip()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(lower=3, upper=41).to_frame()"
