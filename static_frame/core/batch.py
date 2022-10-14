@@ -863,7 +863,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # transformations resulting in the same dimensionality
 
     @property
-    def astype(self) -> InterfaceBatchAsType:
+    def astype(self) -> InterfaceBatchAsType['Batch']:
         '''
         Return a new Batch with astype transformed.
         '''
