@@ -19,6 +19,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceBatchString
@@ -57,7 +58,6 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.node_selector import InterfaceBatchAsType
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
