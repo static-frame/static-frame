@@ -57,6 +57,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
+from static_frame.core.node_selector import InterfaceBatchAsType
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -861,17 +862,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
-
-    def astype(self,
-            dtype: DtypesSpecifier,
-            ) -> 'Batch':
+    @property
+    def astype(self) -> InterfaceBatchAsType:
         '''
         Return a new Batch with astype transformed.
         '''
-        return self._apply_attr(
-                attr='astype',
-                dtype=dtype,
-                )
+        return InterfaceBatchAsType(self.apply)
 
     def rename(self,
             name: NameType = NAME_DEFAULT,

@@ -2878,6 +2878,8 @@ class IndexHierarchyAsType:
 
     def __call__(self: IHAsType,
             dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = False,
             ) -> IndexHierarchy:
         '''
         Entrypoint to `astype` the container
@@ -2895,6 +2897,9 @@ class IndexHierarchyAsType:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a depth selection other than the NULL slice')
             gen = self.container._blocks._astype_blocks(self.depth_key, dtypes)
+
+        if consolidate_blocks:
+            gen = TypeBlocks.consolidate_blocks(gen)
 
         blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 
