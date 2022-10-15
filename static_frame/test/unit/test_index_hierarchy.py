@@ -1574,6 +1574,12 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_values_per_depth(np.array(()).reshape(0, 2))
         self.assertEqual(ih2.shape, (0, 2))
 
+    def test_hierarchy_from_values_per_depth_g(self) -> None:
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_values_per_depth(())
+        ih2 = IndexHierarchy.from_values_per_depth((), depth_reference=4)
+        self.assertEqual(ih2.shape, (0, 4))
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_contains_a(self) -> None:
