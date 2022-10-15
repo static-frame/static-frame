@@ -48,7 +48,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
