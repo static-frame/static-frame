@@ -930,6 +930,21 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1._extract_getitem_astype(('A', 1))
 
+    def test_hierarchy_extract_getitem_astype_b(self) -> None:
+
+        labels = (
+                ('1', '3', 1),
+                ('1', '4', 1),
+                ('11', '3', 1),
+                ('11', '3', 2),
+                ('11', '4', 1),
+                ('11', '4', 2),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.astype[:2](int, consolidate_blocks=True)
+        self.assertTrue(ih2._blocks.unified)
+
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_product_a(self) -> None:
