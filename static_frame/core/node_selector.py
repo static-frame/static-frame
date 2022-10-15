@@ -5,6 +5,8 @@ import numpy as np
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 
 # from static_frame.core.util import AnyCallable
@@ -241,8 +243,69 @@ class InterfaceAsType(Interface[TContainer]):
         '''
         return self._func_getitem(key)
 
-    def __call__(self, dtype: np.dtype) -> 'Frame':
+    def __call__(self,
+            dtype: np.dtype,
+            *,
+            consolidate_blocks: bool = False,
+            ) -> 'Frame':
         '''
         Apply a single ``dtype`` to all columns.
         '''
-        return self._func_getitem(NULL_SLICE)(dtype)
+
+        return self._func_getitem(NULL_SLICE)(
+                dtype,
+                consolidate_blocks=consolidate_blocks,
+                )
+
+class BatchAsType:
+
+    __slots__ = ('_batch_apply', '_column_key')
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            column_key: GetItemKeyType
+            ) -> None:
+        self._batch_apply = batch_apply
+        self._column_key = column_key
+
+    def __call__(self,
+            dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = True,
+            ) -> 'Batch':
+        return self._batch_apply(
+                lambda c: c.astype[self._column_key](
+                    dtypes,
+                    consolidate_blocks=consolidate_blocks,
+                    )
+                )
+
+class InterfaceBatchAsType(Interface[TContainer]):
+    '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
+    '''
+
+    __slots__ = ('_batch_apply',)
+    INTERFACE = ('__getitem__', '__call__')
+
+    def __init__(self,
+            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            ) -> None:
+        self._batch_apply = batch_apply
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> BatchAsType:
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return BatchAsType(batch_apply=self._batch_apply, column_key=key)
+
+    def __call__(self, dtype: np.dtype) -> 'Batch':
+        '''
+        Apply a single ``dtype`` to all columns.
+        '''
+        return BatchAsType(
+                batch_apply=self._batch_apply,
+                column_key=NULL_SLICE,
+                )(dtype)

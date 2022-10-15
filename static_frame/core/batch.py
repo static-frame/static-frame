@@ -19,6 +19,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceBatchString
@@ -47,7 +48,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
@@ -861,17 +861,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
-
-    def astype(self,
-            dtype: DtypesSpecifier,
-            ) -> 'Batch':
+    @property
+    def astype(self) -> InterfaceBatchAsType['Batch']:
         '''
         Return a new Batch with astype transformed.
         '''
-        return self._apply_attr(
-                attr='astype',
-                dtype=dtype,
-                )
+        return InterfaceBatchAsType(self.apply)
 
     def rename(self,
             name: NameType = NAME_DEFAULT,
