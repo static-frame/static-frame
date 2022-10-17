@@ -1,13 +1,13 @@
+import argparse
 import json
+import tempfile
+import typing as tp
 from collections import defaultdict
 from pathlib import Path
 from zipfile import ZipFile
-import argparse
-import tempfile
-import typing as tp
 
-from static_frame import __version__ as VERSION
 from doc.build_example import to_json_bundle
+from static_frame import __version__ as VERSION
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
 
