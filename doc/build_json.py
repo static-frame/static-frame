@@ -6,6 +6,7 @@ import argparse
 import tempfile
 import typing as tp
 
+from static_frame import __version__ as VERSION
 from doc.build_example import to_json_bundle
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
@@ -15,13 +16,13 @@ from static_frame.core.interface import InterfaceSummary
 # import datetime
 
 
-def build(fp: Path,
+def build(output: Path,
         write: bool = False,
         display: bool = False,
         component: tp.Optional[str] = None,
-        ) -> str:
-    if fp.suffix != '.zip':
-        raise RuntimeError('suffix must be .zip')
+        ) -> tp.Optional[str]:
+    if not write and not display:
+        return
 
     sig_to_sig_full = {}
     sig_to_doc = {}
@@ -58,7 +59,7 @@ def build(fp: Path,
             ('sig_to_doc', sig_to_doc),
             ('method_to_sig', method_to_sig),
             ('sigs', sigs),
-            ('methods', tuple(methods)),
+            ('methods', tuple(sorted(methods))),
             ('sig_to_example', sig_to_example),
             )
 
@@ -67,15 +68,18 @@ def build(fp: Path,
 
     if display:
         for name, bundle in name_bundle:
-            print(json.dumps(json.loads(bundle), indent=4))
+            print(json.dumps(bundle, indent=4))
     if write:
+        fp = output / f'sf-api-{VERSION}.zip'
+        # if fp.suffix != '.zip':
+        #     raise RuntimeError('suffix must be .zip')
+        if fp.exists():
+            raise RuntimeError(f'output path exists: {fp}')
         with ZipFile(fp, mode='w', allowZip64=True) as archive:
             for name, bundle in name_bundle:
                 with archive.open(f'{name}.json', 'w', force_zip64=True) as f:
                     f.write(json.dumps(bundle).encode('utf-8'))
-
-
-
+        return str(fp)
 
 def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -87,12 +91,12 @@ def get_arg_parser() -> argparse.ArgumentParser:
             action='store_true',
             )
     p.add_argument('--write',
-            help=f'Write output to --fp.',
+            help=f'Write output to --output.',
             action='store_true',
             )
-    p.add_argument('--fp',
+    p.add_argument('--output',
             help=f'Directory to write output, or {tempfile.gettempdir()} by default.',
-            default=tempfile.gettempdir(),
+            default=Path(tempfile.gettempdir()),
             type=Path,
             )
     p.add_argument('--component',
@@ -105,12 +109,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
 if __name__ == '__main__':
 
     options = get_arg_parser().parse_args()
-    build(fp=options.fp,
+    post = build(output=options.output,
             display=options.print,
             write=options.write,
             component=options.component,
             )
-
+    if post:
+        print(post)
 
 
 
