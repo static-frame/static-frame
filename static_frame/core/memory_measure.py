@@ -134,7 +134,6 @@ class MemoryMeasure:
             *,
             format: MeasureFormat = MeasureFormat.REFERENCED,
             seen: tp.Set[int],
-            skip_parent: bool = False,
             ) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _iter_iterable) and the sizable
@@ -149,28 +148,24 @@ class MemoryMeasure:
         if obj.__class__ is np.ndarray:
             if format.value.materialized:
                 obj = MaterializedArray(obj, format=format)
-            else:
-                # non-object arrays report included elements
+            else: # non-object arrays report included elements
                 if obj.dtype.kind == DTYPE_OBJECT_KIND:
                     for el in cls._iter_iterable(obj):
                         yield from cls.nested_sizable_elements(el, seen=seen, format=format)
-
                 if not format.value.local_only and obj.base is not None:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
+            yield obj
 
-        if obj.__class__ is np.ndarray or obj.__class__ is MaterializedArray:
-            # classes that naturally report total size without introspection of iterables or slots
-            pass
+        elif obj.__class__ is MaterializedArray:
+            yield obj
+
         else:
-            # elif not format.value.data_only: # not array
             for el in cls._iter_iterable(obj): # will not yield if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
             # arrays do not have slots
             for el in cls._iter_slots(obj):
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
-
-        if not skip_parent:
             yield obj
 
 
@@ -179,7 +174,6 @@ def memory_total(
         *,
         format: MeasureFormat = MeasureFormat.REFERENCED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
-        skip_parent: bool = False,
         ) -> int:
     '''
     Returns the total size of the object and its references, including nested refrences
@@ -190,7 +184,6 @@ def memory_total(
         for component in MemoryMeasure.nested_sizable_elements(obj,
                 seen=seen,
                 format=format,
-                skip_parent=skip_parent,
                 ):
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
