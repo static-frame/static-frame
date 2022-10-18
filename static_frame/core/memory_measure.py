@@ -251,7 +251,7 @@ class MemoryDisplay:
         f = Frame.from_records(gen(), index=f_size.index)
         columns = [
                 f_size.columns[i//2] if i % 2 == 0
-                else f'{f_size.columns[i//2]}u:<4'
+                else f'{f_size.columns[i//2]}u'.ljust(5)
                 for i, label in enumerate(f.columns)
                 ]
         f = f.relabel(columns=columns)
