@@ -241,7 +241,7 @@ class MemoryDisplay:
 
         f_size = self._frame.iter_element().apply(bytes_to_size_label)
 
-        def gen():
+        def gen() -> tp.Iterator[tp.Sequence[str]]:
             for row_old in f_size.iter_tuple(axis=1):
                 row_new = []
                 for e in row_old:
@@ -252,7 +252,7 @@ class MemoryDisplay:
         columns = [
                 f_size.columns[i//2] if i % 2 == 0
                 else f'{f_size.columns[i//2]}u'.ljust(5)
-                for i, label in enumerate(f.columns)
+                for i in f.columns
                 ]
         f = f.relabel(columns=columns)
         dc = DisplayConfig(type_show=False)
