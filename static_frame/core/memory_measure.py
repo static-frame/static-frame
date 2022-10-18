@@ -236,11 +236,21 @@ class MemoryDisplay:
     def __init__(self, frame: 'Frame'):
         '''Initialize an instance with a ``Frame`` of byte counts.
         '''
+        from static_frame.core.frame import Frame
         self._frame = frame
 
-        f_size = self._frame.iter_element().apply(
-                lambda e: len(bytes_to_size_label(e, units=False)))
-        width_per_col = f_size.max()
+        f_size = self._frame.iter_element().apply(bytes_to_size_label)
+
+        def gen():
+            for row_old in f_size.iter_tuple(axis=1):
+                row_new = []
+                for e in row_old:
+                    row_new.extend(e.split(' '))
+                yield row_new
+
+        f = Frame.from_records(gen(), index=f_size.index)
+        columns = {i: (label if i % 2 == 1 else f_size.columns[i//2]) for i, label in enumerate(f.columns)}
+        import ipdb; ipdb.set_trace()
 
         dc = DisplayConfig(type_show=False)
         self._repr: str = self._frame.iter_element().apply(
