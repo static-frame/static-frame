@@ -216,8 +216,8 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
-            thousands: str = ',',
-            decimal: str = '.',
+            thousands_char: str = ',',
+            decimal_char: str = '.',
             own_index: bool = False,
             ) -> 'Series':
         '''Series construction from a delimited string.
@@ -230,8 +230,8 @@ class Series(ContainerOperand):
                 (delimited,), # make into iterable of one string
                 dtypes=get_col_dtype,
                 delimiter=delimiter,
-                thousandschar=thousands,
-                decimalchar=decimal,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
                 )
         if own_index:
             index_final = index

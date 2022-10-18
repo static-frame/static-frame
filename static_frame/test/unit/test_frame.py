@@ -6388,7 +6388,7 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
 
             with open(fp, 'w', encoding='utf-8') as file:
-                file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
+                file.write('\n'.join(('index|A|B', 'false|false|true', 'true|true|false')))
                 file.close()
 
             # dtypes are applied to all columns, even those that will become index
@@ -6403,27 +6403,29 @@ class TestUnit(TestCase):
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
     def test_frame_from_delimited_c(self) -> None:
+        dtypes = (int, str, int, int)
         msg = 'a|b|c|d\n1940|2021-04-03|3|5\n1492|1743-04-03|-4|9\n'
-        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|').to_pairs(),
+        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes).to_pairs(),
                 (('a', ((0, 1940), (1, 1492))),
                 ('b', ((0, '2021-04-03'), (1, '1743-04-03'))),
                 ('c', ((0, 3), (1, -4))),
                 ('d', ((0, 5), (1, 9))))
                 )
 
-        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=IndexYear, index_depth=1)
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=IndexYear, index_depth=1)
         self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]'))
 
-        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear,), index_depth=1)
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear,), index_depth=1)
         self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]'))
 
         with self.assertRaises(RuntimeError):
-            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=1)
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear, IndexDate), index_depth=1)
 
-        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2)
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2, dtypes=dtypes)
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
 
+    # TODO: known failure due to not mis-identifying integer
     def test_frame_from_delimited_d(self) -> None:
         msg = '1930|1931\n2021-01-01|2022-04-03\n3|5\n-4|9\n'
 
@@ -6455,7 +6457,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_delimited_f(self) -> None:
-        msg = 'a|b|c\n0|1|0\n23|1|4\n'
+        msg = 'a|b|c\n0|1|FALSE\n23|1|true\n'
 
         f1 = Frame.from_delimited(msg.split('\n'),
                 delimiter='|',
@@ -6482,7 +6484,7 @@ class TestUnit(TestCase):
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
-            f = Frame.from_tsv(fp, index_depth=1, dtypes={'a': bool})
+            f = Frame.from_tsv(fp, index_depth=1, dtypes={'A': bool})
             self.assertEqual(
                     f.to_pairs(0),
                     (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3))))
@@ -6578,7 +6580,7 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
             f2 = sf.Frame.from_tsv(fp, index_depth=1)
-            self.assertEqualFrames(f1, f2)
+            self.assertTrue(f1.equals(f2))
 
     def test_frame_from_tsv_h(self) -> None:
 
@@ -6591,11 +6593,10 @@ class TestUnit(TestCase):
             f1 = sf.Frame.from_tsv(fp,
                     index_depth=1,
                     columns_depth=1,
-                    dtypes=(None, int, str), # position dtypes include index
+                    dtypes=(None, bool, float), # position dtypes include index
                     )
-
-            self.assertEqual(f1.to_pairs(0),
-                    (('A', (('a', 1), ('b', 0))), ('B', (('a', '20.2'), ('b', '85.3'))))
+            self.assertEqual(f1.astype['B'](str).to_pairs(0),
+                    (('A', (('a', True), ('b', False))), ('B', (('a', '20.2'), ('b', '85.3'))))
                     )
 
     def test_frame_from_tsv_i(self) -> None:

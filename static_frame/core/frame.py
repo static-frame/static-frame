@@ -14,11 +14,13 @@ from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
 
+
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import delimited_to_arrays
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -1866,6 +1868,8 @@ class Frame(ContainerOperand):
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
+            thousands_char: str = ',',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -1897,95 +1901,56 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
-
         # TODO: add columns_select as usecols style selective loading
 
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
-        fp = path_filter(fp)
-        delimiter_native = '\t'
+        fp = path_filter(fp) # normalize Path to strings
 
-        if delimiter != delimiter_native:
-            # this is necessary if there are quoted cells that include the delimiter
-            def file_like() -> tp.Iterator[str]:
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
-                        for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
-                            yield delimiter_native.join(row)
-                else: # handling file like object works for stringio but not for bytesio
-                    for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
-                        yield delimiter_native.join(row)
-        else:
-            def file_like() -> tp.Iterator[str]: # = fp
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
-                        for row in f:
-                            yield row
-                else: # iterable of string lines, StringIO
-                    for row in fp: # type: ignore
+        def file_like() -> tp.Iterator[str]: # = fp
+            if isinstance(fp, str):
+                with open(fp, 'r', encoding=encoding) as f:
+                    for row in f:
                         yield row
+            else: # iterable of string lines, StringIO
+                for row in fp: # type: ignore
+                    yield row
 
-        # always accumulate columns rows, as np.genfromtxt will mutate the headers: adding enderscore, removing invalid characters, etc.
         apex_rows = []
-        columns_rows = []
 
-        def row_source() -> tp.Iterator[str]:
-            # set equal to skip header unless column depth is > 1
-            column_max = skip_header + columns_depth
-            for i, row in enumerate(file_like()):
-                if i < skip_header:
-                    continue
-                if i < column_max:
-                    columns_rows.append(row)
-                    continue
-                yield row
+        row_iter = file_like()
+        if skip_header:
+            for _ in range(skip_header):
+                next(row_iter)
 
-        # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
+        if columns_depth:
+            def columns_iter() -> tp.Iterator[str]:
+                for _ in range(columns_depth):
+                    yield next(row_iter)
 
-        with WarningsSilent():
-            # silence: UserWarning: genfromtxt: Empty input file
-
-            array = np.genfromtxt(
-                    row_source(),
-                    delimiter=delimiter_native,
-                    skip_header=0, # done in row_source
-                    skip_footer=skip_footer,
-                    comments=None,
-                    # strange NP convention for this parameter: False is not supported, must use None to not parase headers
-                    names= None,
-                    dtype=None,
-                    encoding=encoding,
-                    invalid_raise=False,
+            # NOTE: this will include the index_depth "apex" values in type evaluation, which is not desirable; might add a "skip leading fields" option to AK, or pre-process the row after splitting
+            columns_arrays = delimited_to_arrays(
+                    columns_iter(),
+                    axis=0, # process type per row
+                    delimiter=delimiter,
+                    quotechar=quote_char,
+                    thousandschar=thousands_char,
+                    decimalchar=decimal_char,
                     )
-        array.flags.writeable = False
+            if index_depth:
+                apex_rows = [a[:index_depth] for a in columns_arrays]
+                columns_arrays = [a[index_depth:] for a in columns_arrays]
+            else:
+                apex_rows = []
 
-        # construct columns prior to preparing data from structured array, as need columns to map dtypes
-        # columns_constructor = None
+        if skip_footer:
+            raise NotImplementedError()
+
         if columns_depth == 0:
             columns = None
             own_columns = False
         else:
-            # Process each row one at a time, as types align by row.
-            columns_arrays = []
-            for row in columns_rows:
-                columns_array = np.genfromtxt(
-                        (row,),
-                        delimiter=delimiter_native,
-                        comments=None,
-                        names=None,
-                        dtype=None,
-                        encoding=encoding,
-                        invalid_raise=False,
-                        )
-                # the array might be ndim=1, or ndim=0; must get a list before slicing
-                # using the array directly for a string type might not hold the rights size after slicing
-                columns_list = columns_array.tolist()
-                apex_rows.append(columns_list[:index_depth])
-                columns_arrays.append(columns_list[index_depth:])
-
             columns_name = None if index_depth == 0 else apex_to_name(
                     rows=apex_rows,
                     depth_level=columns_name_depth_level,
@@ -2006,6 +1971,7 @@ class Frame(ContainerOperand):
                             fillvalue=columns_continuation_token,
                             )
                 else:
+                    # NOTE: can use a IndexHierarchy.from_values_per_depth
                     labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # type: ignore
 
                 columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
@@ -2019,31 +1985,33 @@ class Frame(ContainerOperand):
                         explicit_constructors=columns_constructors,
                         )
 
-        if array.dtype.names is None: # not a structured array
-            # genfromtxt may, in some situations, not return a structured array
-            if array.ndim == 1:
-                # got a single row
-                array = array.reshape((1, len(array)))
-            # NOTE: genfromtxt will return a one column input file as a 2D array with the vertical data as a horizontal row. There does not appear to be a way to distinguish this from a single row file
+        get_col_dtype = (None if dtypes is None
+                else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
+        values_arrays = delimited_to_arrays(
+                row_iter,
+                axis=1, # process type per column
+                delimiter=delimiter,
+                quotechar=quote_char,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
+                dtypes=get_col_dtype,
+                )
 
-        if array.size > 0: # an empty, or column only table
-            data, index_arrays, _ = cls._structured_array_to_d_ia_cl(
-                    array=array,
-                    index_depth=index_depth,
-                    index_column_first=index_column_first,
-                    dtypes=dtypes,
-                    consolidate_blocks=consolidate_blocks,
-                    store_filter=store_filter,
-                    columns=columns
-                    )
-        else: # only column data in table
-            if index_depth > 0:
-                # no data is found an index depth was given; simulate empty index_arrays to create a empty index
-                index_arrays = [()] * index_depth
-            data = FRAME_INITIALIZER_DEFAULT # type: ignore
+        if index_depth:
+            index_arrays = values_arrays[:index_depth]
+            values_arrays = values_arrays[index_depth:]
+
+        if values_arrays:
+            if consolidate_blocks:
+                blocks = TypeBlocks.from_blocks(
+                        TypeBlocks.consolidate_blocks(values_arrays))
+            else:
+                blocks = TypeBlocks.from_blocks(values_arrays)
+        else:
+            blocks = FRAME_INITIALIZER_DEFAULT
 
         kwargs = dict(
-                data=data,
+                data=blocks,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -2060,7 +2028,11 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            index_values = index_arrays[0]
+            if not index_arrays:
+                index_values = () # assume an empty Frame
+                assert blocks is FRAME_INITIALIZER_DEFAULT
+            else:
+                index_values = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
             # might use _from_type_blocks, but would not be able to use continuation token
