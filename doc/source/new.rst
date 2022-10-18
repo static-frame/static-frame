@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+0.9.18
+----------
+
+Improved layout of default ``memory`` display.
+
+
 0.9.17
 ----------
 
