@@ -6,11 +6,11 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import delimited_to_arrays
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraykit import delimited_to_arrays
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.assign import Assign
@@ -212,7 +212,7 @@ class Series(ContainerOperand):
             delimited: str,
             *,
             delimiter: str,
-            index: tp.Union[IndexInitializer, IndexAutoFactory] = None,
+            index: tp.Optional[IndexInitOrAutoType] = None,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
@@ -226,7 +226,7 @@ class Series(ContainerOperand):
             dtype: if None, dtype will be inferred.
         '''
         get_col_dtype = None if dtype is None else lambda x: dtype
-        [array] = delimited_to_arrays(
+        [array] = delimited_to_arrays( # type: ignore
                 (delimited,), # make into iterable of one string
                 dtypes=get_col_dtype,
                 delimiter=delimiter,
