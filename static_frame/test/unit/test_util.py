@@ -2894,10 +2894,10 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_bytes_to_size_label(self) -> None:
-        self.assertEqual(bytes_to_size_label(0), '0 (B)')
-        self.assertEqual(bytes_to_size_label(1), '1 (B)')
-        self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
-        self.assertEqual(bytes_to_size_label(1024), '1.0 (KB)')
+        self.assertEqual(bytes_to_size_label(0), '0 B')
+        self.assertEqual(bytes_to_size_label(1), '1 B')
+        self.assertEqual(bytes_to_size_label(1023), '1023 B')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 KB')
 
 
 

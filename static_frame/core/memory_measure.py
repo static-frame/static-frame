@@ -249,14 +249,14 @@ class MemoryDisplay:
                 yield row_new
 
         f = Frame.from_records(gen(), index=f_size.index)
-        columns = {i: (label if i % 2 == 1 else f_size.columns[i//2]) for i, label in enumerate(f.columns)}
-        import ipdb; ipdb.set_trace()
-
+        columns = [
+                f_size.columns[i//2] if i % 2 == 0
+                else f'{f_size.columns[i//2]}u:<4'
+                for i, label in enumerate(f.columns)
+                ]
+        f = f.relabel(columns=columns)
         dc = DisplayConfig(type_show=False)
-        self._repr: str = self._frame.iter_element().apply(
-                bytes_to_size_label,
-                name=self._frame._name,
-                ).display(config=dc).__repr__()
+        self._repr: str = f.display(config=dc).__repr__()
 
     def __repr__(self) -> str:
         return self._repr
