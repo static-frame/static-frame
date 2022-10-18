@@ -5419,6 +5419,28 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('b', 30), ('c', 20)),
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_from_delimited_a(self) -> None:
+        s1 = Series.from_delimited('3|5|23|3', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, 3), (1, 5), (2, 23), (3, 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+
+    def test_series_from_delimited_b(self) -> None:
+        s1 = Series.from_delimited('true||false|true', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, True), (1, False), (2, False), (3, True)),
+                )
+        self.assertEqual(s1.dtype.kind, 'b')
+
+
+    def test_series_from_delimited_c(self) -> None:
+        s1 = Series.from_delimited('2021-01:1517-04:1620-12', delimiter=':', dtype=np.datetime64)
+        self.assertEqual(s1.to_pairs(),
+                ((0, np.datetime64('2021-01')), (1, np.datetime64('1517-04')), (2, np.datetime64('1620-12'))),
+                )
+        self.assertEqual(s1.dtype.kind, 'M')
 
 if __name__ == '__main__':
     import unittest
