@@ -1069,7 +1069,8 @@ class IndexHierarchy(IndexBase):
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
-        return (('Indices', self._indices),
+        return (('Name', self._name),
+                ('Indices', self._indices),
                 ('Indexers', self._indexers),
                 ('Blocks', self._blocks),
                 ('Values', self._values),

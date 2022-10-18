@@ -3012,7 +3012,8 @@ class Frame(ContainerOperand):
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
-        return (('Index', self._index),
+        return (('Name', self._name),
+                ('Index', self._index),
                 ('Columns', self._columns),
                 ('Blocks', self._blocks),
                 )
