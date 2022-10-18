@@ -238,6 +238,10 @@ class MemoryDisplay:
         '''
         self._frame = frame
 
+        f_size = self._frame.iter_element().apply(
+                lambda e: len(bytes_to_size_label(e, units=False)))
+        width_per_col = f_size.max()
+
         dc = DisplayConfig(type_show=False)
         self._repr: str = self._frame.iter_element().apply(
                 bytes_to_size_label,
