@@ -6580,7 +6580,7 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
             f2 = sf.Frame.from_tsv(fp, index_depth=1)
-            self.assertTrue(f1.equals(f2))
+            self.assertEqualFrames(f1, f2)
 
     def test_frame_from_tsv_h(self) -> None:
 

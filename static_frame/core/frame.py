@@ -1998,6 +1998,7 @@ class Frame(ContainerOperand):
                 )
 
         if index_depth:
+            # TODO: implement index_column_first
             index_arrays = values_arrays[:index_depth]
             values_arrays = values_arrays[index_depth:]
 
