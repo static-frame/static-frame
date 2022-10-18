@@ -54,7 +54,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     # def __sizeof__(self) -> int:
         # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).
-        # return memory_total(self, format=MeasureFormat.REFERENCED, skip_parent=True)
+        # return memory_total(self, format=MeasureFormat.REFERENCED)
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:

@@ -448,19 +448,5 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post.to_frame().loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
 
-        # import ipdb; ipdb.set_trace()
-
-# <Frame>
-# <Index> L       LM      LMD     R        RM      RMD     <<U3>
-# <Index>
-# Index   1.55 KB 1.59 KB 1.37 KB 9.65 KB  1.71 KB 1.49 KB
-# Columns 208.0 B 224.0 B 112.0 B 8.3 KB   288.0 B 176.0 B
-# Values  3.87 KB 4.0 KB  3.12 KB 3.87 KB  4.0 KB  3.12 KB
-# Total   5.66 KB 5.83 KB 4.63 KB 13.75 KB 6.02 KB 4.82 KB
-# <<U7>   <<U7>   <<U7>   <<U7>   <<U8>    <<U7>   <<U7>
-
-        # import ipdb; ipdb.set_trace()
-
-
 if __name__ == '__main__':
     unittest.main()

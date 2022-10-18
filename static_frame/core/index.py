@@ -368,6 +368,14 @@ class Index(IndexBase):
         memo[id(self)] = obj
         return obj
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Name', self._name),
+                ('Map', self._map),
+                ('Labels', self._labels),
+                ('Positions', self._positions),
+                )
+
     def __copy__(self: I) -> I:
         '''
         Return shallow copy of this Index.
