@@ -6121,7 +6121,6 @@ class TestUnit(TestCase):
         # header, mixed types, no index
 
         s1 = StringIO('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
-
         f1 = Frame.from_csv(s1)
 
         post = f1.iloc[:, :2].sum(axis=0)
@@ -6248,7 +6247,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_csv_k(self) -> None:
-        s1 = StringIO('1\t2\t3\t4\n')
+        s1 = StringIO('1,2,3,4\n')
         f1 = Frame.from_csv(s1, index_depth=0, columns_depth=0)
         self.assertEqual(f1.to_pairs(0),
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, 3),)), (3, ((0, 4),)))
@@ -6297,6 +6296,20 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
             (('a', ((('-', 1), 43), (('X', 2), 1), (('Y', 1), 8), (('Y', 2), 6))), ('b', ((('-', 1), 54), (('X', 2), 3), (('Y', 1), 10), (('Y', 2), 20))))
             )
+
+    def test_frame_from_csv_p(self) -> None:
+        s1 = ['junk', ',x,y', 'a,3,2', 'b,5,1', 'junk', 'junk']
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1,
+                skip_footer=2,
+                skip_header=1
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', 3), ('b', 5))), ('y', (('a', 2), ('b', 1))))
+                )
+
 
     #---------------------------------------------------------------------------
 

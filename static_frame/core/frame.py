@@ -1908,44 +1908,71 @@ class Frame(ContainerOperand):
 
         fp = path_filter(fp) # normalize Path to strings
 
-        def file_like() -> tp.Iterator[str]: # = fp
-            if isinstance(fp, str):
-                with open(fp, 'r', encoding=encoding) as f:
-                    for row in f:
+        if not skip_footer:
+            def file_like() -> tp.Iterator[str]: # = fp
+                if isinstance(fp, str):
+                    with open(fp, 'r', encoding=encoding) as f:
+                        for row in f:
+                            yield row
+                else: # iterable of string lines, StringIO
+                    for row in fp: # type: ignore
                         yield row
-            else: # iterable of string lines, StringIO
-                for row in fp: # type: ignore
-                    yield row
-
-        apex_rows = []
+        else:
+            def file_like() -> tp.Iterator[str]: # = fp
+                if isinstance(fp, str):
+                    raise NotImplementedError()
+                    # with open(fp, 'r', encoding=encoding) as f:
+                    #     for row in f:
+                    #         yield row
+                elif hasattr(fp, '__len__'): # iterable of string lines,
+                    row_last = len(fp) - 1 - skip_footer
+                    for count, row in enumerate(fp):
+                        if count <= row_last:
+                            yield row
+                else: # StringIO
+                    raise NotImplementedError()
+                    # for row in fp: # type: ignore
+                    #     yield row
 
         row_iter = file_like()
         if skip_header:
             for _ in range(skip_header):
                 next(row_iter)
 
+        apex_rows = []
         if columns_depth:
-            def columns_iter() -> tp.Iterator[str]:
-                for _ in range(columns_depth):
-                    yield next(row_iter)
+            columns_arrays = []
+            for _ in range(columns_depth):
+                row = next(row_iter)
+                if index_depth == 0:
+                    row_left = ''
+                    row_right = row
+                elif index_depth == 1:
+                    row_left, row_right = row.split(delimiter, maxsplit=index_depth)
+                elif index_depth > 1:
+                    *row_left_parts, row_right = row.split(delimiter, maxsplit=index_depth)
+                    row_left = delimiter.join(row_left_parts)
 
-            # NOTE: this will include the index_depth "apex" values in type evaluation, which is not desirable; might add a "skip leading fields" option to AK, or pre-process the row after splitting
-            columns_arrays = delimited_to_arrays(
-                    columns_iter(),
-                    axis=0, # process type per row
-                    delimiter=delimiter,
-                    quotechar=quote_char,
-                    thousandschar=thousands_char,
-                    decimalchar=decimal_char,
-                    )
-            if index_depth:
-                apex_rows = [a[:index_depth] for a in columns_arrays]
-                columns_arrays = [a[index_depth:] for a in columns_arrays]
-            else:
-                apex_rows = []
+                [array_right] = delimited_to_arrays(
+                        (row_right,),
+                        axis=0, # process type per row
+                        delimiter=delimiter,
+                        quotechar=quote_char,
+                        thousandschar=thousands_char,
+                        decimalchar=decimal_char,
+                        )
+                columns_arrays.append(array_right)
 
-        if skip_footer:
-            raise NotImplementedError()
+                if row_left:
+                    [array_left] = delimited_to_arrays(
+                            (row_left,),
+                            axis=0, # process type per row
+                            delimiter=delimiter,
+                            quotechar=quote_char,
+                            thousandschar=thousands_char,
+                            decimalchar=decimal_char,
+                            )
+                    apex_rows.append(array_left)
 
         if columns_depth == 0:
             columns = None
@@ -1996,7 +2023,6 @@ class Frame(ContainerOperand):
                 decimalchar=decimal_char,
                 dtypes=get_col_dtype,
                 )
-
         if index_depth:
             # TODO: implement index_column_first
             index_arrays = values_arrays[:index_depth]
