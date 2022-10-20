@@ -7064,9 +7064,6 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2)
-            print('set_frame_to_tsv_b')
-            print(f1)
-            print(f2)
             self.assertEqualFrames(f1, f2)
 
     def test_frame_to_tsv_c(self) -> None:
@@ -7079,9 +7076,6 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
-            print('set_frame_to_tsv_b')
-            print(f1)
-            print(f2)
             self.assertEqualFrames(f1, f2)
 
     def test_frame_to_tsv_d(self) -> None:
