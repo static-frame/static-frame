@@ -1954,11 +1954,12 @@ class Frame(ContainerOperand):
                 if index_depth == 0:
                     row_left = ''
                     row_right = row
-                elif index_depth == 1:
-                    row_left, row_right = row.split(delimiter, maxsplit=index_depth)
-                elif index_depth > 1:
-                    *row_left_parts, row_right = row.split(delimiter, maxsplit=index_depth)
-                    row_left = delimiter.join(row_left_parts)
+                else:
+                    row_left, row_right = split_after_count(
+                            row,
+                            delimiter,
+                            index_depth,
+                            )
 
                 [array_right] = delimited_to_arrays(
                         (row_right,),

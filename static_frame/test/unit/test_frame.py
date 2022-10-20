@@ -6184,7 +6184,7 @@ class TestUnit(TestCase):
                 (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
 
     def test_frame_from_csv_f(self) -> None:
-        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NAN,3.4,blue\nD,,9.0,black')
 
         f1 = sf.Frame.from_csv(
                 s1,
@@ -6213,7 +6213,7 @@ class TestUnit(TestCase):
                 dtypes=dict(score=np.float16))
 
         self.assertEqual(f1.dtypes.to_pairs(),
-                (('count', np.dtype('O')),
+                (('count', np.dtype('<U4')),
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
@@ -6227,9 +6227,8 @@ class TestUnit(TestCase):
                 columns_depth=0,
                 dtypes=[np.int64, str, np.int64]
                 )
-
         self.assertEqual(f1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64')]
+                [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64')]
                 )
 
     def test_frame_from_csv_j(self) -> None:
