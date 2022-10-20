@@ -226,7 +226,7 @@ class Series(ContainerOperand):
             dtype: if None, dtype will be inferred.
         '''
         get_col_dtype = None if dtype is None else lambda x: dtype
-        [array] = delimited_to_arrays( # type: ignore
+        [array] = delimited_to_arrays(
                 (delimited,), # make into iterable of one string
                 dtypes=get_col_dtype,
                 delimiter=delimiter,

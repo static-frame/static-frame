@@ -14,13 +14,14 @@ from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
 
-
 import numpy as np
 from arraykit import column_1d_filter
+from arraykit import count_iteration
+from arraykit import delimited_to_arrays
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-from arraykit import delimited_to_arrays
+from arraykit import split_after_count
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -1920,19 +1921,25 @@ class Frame(ContainerOperand):
         else:
             def file_like() -> tp.Iterator[str]: # = fp
                 if isinstance(fp, str):
-                    raise NotImplementedError()
-                    # with open(fp, 'r', encoding=encoding) as f:
-                    #     for row in f:
-                    #         yield row
-                elif hasattr(fp, '__len__'): # iterable of string lines,
-                    row_last = len(fp) - 1 - skip_footer
+                    with open(fp, 'r', encoding=encoding) as f:
+                        row_count = count_iteration(f)
+                        f.seek(0)
+                        row_last = row_count - 1 - skip_footer
+                        for count, row in enumerate(f):
+                            if count <= row_last:
+                                yield row
+                else:
+                    if hasattr(fp, '__len__'): # iterable of string lines,
+                        row_count = len(fp)
+                    else: # StringIO
+                        row_count = count_iteration(fp)
+                        if isinstance(fp, StringIO):
+                            fp.seek(0)
+                    row_last = row_count - 1 - skip_footer
                     for count, row in enumerate(fp):
                         if count <= row_last:
                             yield row
-                else: # StringIO
-                    raise NotImplementedError()
-                    # for row in fp: # type: ignore
-                    #     yield row
+
 
         row_iter = file_like()
         if skip_header:
@@ -2035,7 +2042,7 @@ class Frame(ContainerOperand):
             else:
                 blocks = TypeBlocks.from_blocks(values_arrays)
         else:
-            blocks = FRAME_INITIALIZER_DEFAULT
+            blocks = FRAME_INITIALIZER_DEFAULT # type: ignore
 
         kwargs = dict(
                 data=blocks,
@@ -2063,7 +2070,7 @@ class Frame(ContainerOperand):
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
             # might use _from_type_blocks, but would not be able to use continuation token
-            index_values = zip(*index_arrays)
+            index_values = zip(*index_arrays) # type: ignore
             index_default_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
