@@ -6309,6 +6309,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_csv_q(self) -> None:
+        s1 = StringIO('x,y,x,y\n1,2,3,10\n4,5,6,20\njunk')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=0,
+                skip_footer=1,
+                skip_header=1,
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((0, 1), (1, 4))), (1, ((0, 2), (1, 5))), (2, ((0, 3), (1, 6))), (3, ((0, 10), (1, 20))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     @skip_win
@@ -6436,7 +6451,6 @@ class TestUnit(TestCase):
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
 
-    # TODO: known failure due to not mis-identifying integer
     def test_frame_from_delimited_d(self) -> None:
         msg = '1930|1931\n2021-01-01|2022-04-03\n3|5\n-4|9\n'
 
@@ -6484,6 +6498,27 @@ class TestUnit(TestCase):
                  ('b', ((0, 1), (1, 1))),
                  ('c', ((0, False), (1, True))))
                  )
+
+    def test_frame_from_delimited_g(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w', encoding='utf-8') as file:
+                file.write('\n'.join(('index|A|B', 'false|false|true', 'true|true|false', 'junk')))
+                file.close()
+
+            # dtypes are applied to all columns, even those that will become index
+            f1 = Frame.from_delimited(fp,
+                    index_depth=0,
+                    columns_depth=0,
+                    delimiter='|',
+                    dtypes=bool,
+                    skip_header=1,
+                    skip_footer=1,
+                    )
+            self.assertEqual(f1.to_pairs(),
+                    ((0, ((0, False), (1, True))), (1, ((0, False), (1, True))), (2, ((0, True), (1, False))))
+                    )
 
     #---------------------------------------------------------------------------
 
