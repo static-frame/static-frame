@@ -7112,7 +7112,8 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=index
+                index=index,
+                dtypes={'p': np.int64, 'q': np.int64},
                 )
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp, include_index=True)
@@ -7126,9 +7127,9 @@ class TestUnit(TestCase):
                 index_constructors=(Index, partial(Index, dtype=np.int64)))
 
         f1 = sf.Frame(
-                np.arange(16).reshape((4,4)),
+                np.arange(16, dtype=np.int64).reshape((4,4)),
                 index=sf.IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                columns=columns
+                columns=columns,
                 )
 
         with temp_file('.txt', path=True) as fp:
