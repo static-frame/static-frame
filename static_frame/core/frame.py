@@ -13,6 +13,7 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
+from socket import IP_DEFAULT_MULTICAST_LOOP
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -2022,14 +2023,16 @@ class Frame(ContainerOperand):
         if columns_select:
             if index_depth:
                 raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
-            if columns:
-                columns_included = set(
-                    columns.loc_to_iloc(l) for l in columns_select
-                    )
+            if columns is not None:
+                columns_included = list(columns.loc_to_iloc(l) for l in columns_select)
+                columns = columns.iloc[columns_included]
             else: # assume columsn_select are integers
-                columns_included = set(columns_select)
+                columns_included = list(columns_select)
+            # order of columns_included maters
+            included_set = set(columns_included)
+
             def line_select(pos: int) -> bool:
-                return pos in columns_included
+                return pos in included_set
         else:
             line_select = None
 

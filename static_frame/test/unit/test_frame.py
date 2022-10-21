@@ -10,9 +10,9 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import namedtuple
+from functools import partial
 from io import StringIO
 from tempfile import TemporaryDirectory
-from functools import partial
 
 import frame_fixtures as ff
 import numpy as np
@@ -6559,6 +6559,59 @@ class TestUnit(TestCase):
                 f1.to_pairs(),
                 ((0, ((0, False), (5, True), (6, False))), (1, ((0, 1), (5, 4), (6, 9))), (2, ((0, 'q'), (5, 'z'), (6, 'w'))))
                 )
+
+    def test_frame_from_delimited_j(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                columns_select=('a', 'd'),
+                )
+        self.assertEqual(
+                f1.to_pairs(),
+                (('a', ((0, False), (1, True), (2, False))), ('d', ((0, 'q'), (1, 'z'), (2, 'w'))))
+                )
+
+    def test_frame_from_delimited_k(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                columns_select=('d',),
+                )
+        self.assertEqual(
+                f1.to_pairs(),
+                (('d', ((0, 'q'), (1, 'z'), (2, 'w'))),)
+                )
+
+    def test_frame_from_delimited_l(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                columns_select=(1, 2),
+                )
+        self.assertEqual( f1.to_pairs(),
+                ((0, ((0, 1), (1, 4), (2, 9))), (1, ((0, 0), (1, 5), (2, 6))))
+                )
+
+    def test_frame_from_delimited_m(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                columns_select=(1, 2),
+                )
+
 
     #---------------------------------------------------------------------------
 

@@ -1,8 +1,10 @@
+import numpy as np
+
 from static_frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_linux_no_display
 from static_frame.test.test_case import skip_mac_pyle38
-import numpy as np
+
 
 class TestUnit(TestCase):
 
