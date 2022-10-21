@@ -12,6 +12,7 @@ from collections import OrderedDict
 from collections import namedtuple
 from io import StringIO
 from tempfile import TemporaryDirectory
+from functools import partial
 
 import frame_fixtures as ff
 import numpy as np
@@ -7105,21 +7106,29 @@ class TestUnit(TestCase):
                 (2, 95, 'c', False, False),
                 (30, 73, 'd', True, True),
                 )
+
+        index = IndexHierarchy.from_product(('A', 'B'), (1, 2),
+                index_constructors=(Index, partial(Index, dtype=np.int64)))
+
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=IndexHierarchy.from_product(('A', 'B'), (1, 2))
+                index=index
                 )
-
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2)
             self.assertEqualFrames(f1, f2)
 
     def test_frame_to_tsv_c(self) -> None:
+
+        columns = IndexHierarchy.from_product(
+                ('III', 'IV'), (10, 20),
+                index_constructors=(Index, partial(Index, dtype=np.int64)))
+
         f1 = sf.Frame(
                 np.arange(16).reshape((4,4)),
                 index=sf.IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                columns=sf.IndexHierarchy.from_product(('III', 'IV'), (10, 20))
+                columns=columns
                 )
 
         with temp_file('.txt', path=True) as fp:

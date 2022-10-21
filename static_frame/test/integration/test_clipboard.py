@@ -2,7 +2,7 @@ from static_frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_linux_no_display
 from static_frame.test.test_case import skip_mac_pyle38
-
+import numpy as np
 
 class TestUnit(TestCase):
 
@@ -17,7 +17,8 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
-                index=('w', 'x'))
+                index=('w', 'x'),
+                dtypes={'r':np.int64})
 
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
