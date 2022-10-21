@@ -2031,9 +2031,16 @@ class Frame(ContainerOperand):
                 dtypes=get_col_dtype,
                 )
         if index_depth:
-            # TODO: implement index_column_first
-            index_arrays = values_arrays[:index_depth]
-            values_arrays = values_arrays[index_depth:]
+            if index_column_first:
+                index_end = index_column_first + index_depth
+                index_arrays = values_arrays[index_column_first: index_end]
+                values_arrays = chain(
+                        values_arrays[:index_column_first],
+                        values_arrays[index_end:],
+                        )
+            else:
+                index_arrays = values_arrays[:index_depth]
+                values_arrays = values_arrays[index_depth:]
 
         if values_arrays:
             if consolidate_blocks:
