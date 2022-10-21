@@ -1935,11 +1935,10 @@ class Frame(ContainerOperand):
                         row_count = count_iteration(fp)
                         if isinstance(fp, StringIO):
                             fp.seek(0)
-                    row_last = row_count - 1 - skip_footer
+                    row_limit = row_count - skip_footer
                     for count, row in enumerate(fp):
-                        if count <= row_last:
+                        if count < row_limit:
                             yield row
-
 
         row_iter = file_like()
         if skip_header:
