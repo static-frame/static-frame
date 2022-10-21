@@ -6535,6 +6535,31 @@ class TestUnit(TestCase):
                     ((0, ((0, False), (1, True))), (1, ((0, False), (1, True))), (2, ((0, True), (1, False))))
                     )
 
+    def test_frame_from_delimited_h(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                index_column_first='c',
+                )
+
+    def test_frame_from_delimited_i(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=1,
+            columns_depth=0,
+            index_column_first=2,
+            )
+        self.assertEqual(
+                f1.to_pairs(),
+                ((0, ((0, False), (5, True), (6, False))), (1, ((0, 1), (5, 4), (6, 9))), (2, ((0, 'q'), (5, 'z'), (6, 'w'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:

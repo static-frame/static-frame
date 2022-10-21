@@ -1858,7 +1858,7 @@ class Frame(ContainerOperand):
             *,
             delimiter: str,
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
@@ -1884,7 +1884,7 @@ class Frame(ContainerOperand):
             fp: A file path or a file-like object.
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
-            index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            index_column_first: Optionally specify a column, by position in the realized columns, to become the start of the index if index_depth is greater than 0 and columns_depth is 0.
             index_name_depth_level: If columns_depth is greater than 0, interpret values over index as the index name.
             index_constructors:
             index_continuation_token:
@@ -2032,15 +2032,25 @@ class Frame(ContainerOperand):
                 )
         if index_depth:
             if index_column_first:
-                index_end = index_column_first + index_depth
-                index_arrays = values_arrays[index_column_first: index_end]
+                # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created
+                if columns is not None:
+                    raise ErrorInitFrame('Cannot use index_column_first if columns_depth is greater than 0.')
+                elif isinstance(index_column_first, INT_TYPES):
+                    index_start = index_column_first
+                else:
+                    raise ErrorInitFrame('index_column_first must be an integer.')
+                index_end = index_start + index_depth
+                index_arrays = values_arrays[index_start: index_end]
                 values_arrays = chain(
-                        values_arrays[:index_column_first],
+                        values_arrays[:index_start],
                         values_arrays[index_end:],
                         )
             else:
                 index_arrays = values_arrays[:index_depth]
                 values_arrays = values_arrays[index_depth:]
+        else:
+            if index_column_first:
+                raise ErrorInitFrame('Cannot set index_column_first without setting nonzero index_depth.')
 
         if values_arrays:
             if consolidate_blocks:
