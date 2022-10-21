@@ -2019,6 +2019,7 @@ class Frame(ContainerOperand):
                         default_constructor=columns_constructor,
                         explicit_constructors=columns_constructors,
                         )
+        line_select: tp.Optional[tp.Callable[[int], bool]]
 
         if columns_select:
             if index_depth:
@@ -2038,7 +2039,7 @@ class Frame(ContainerOperand):
 
         get_col_dtype = (None if dtypes is None
                 else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
-        values_arrays = delimited_to_arrays(
+        values_arrays: tp.Sequence[np.ndarray] = delimited_to_arrays(
                 row_iter,
                 axis=1, # process type per column
                 line_select=line_select,
@@ -2059,7 +2060,7 @@ class Frame(ContainerOperand):
                     raise ErrorInitFrame('index_column_first must be an integer.')
                 index_end = index_start + index_depth
                 index_arrays = values_arrays[index_start: index_end]
-                values_arrays = chain(
+                values_arrays = chain( #type: ignore
                         values_arrays[:index_start],
                         values_arrays[index_end:],
                         )
