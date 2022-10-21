@@ -1866,6 +1866,7 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1892,6 +1893,7 @@ class Frame(ContainerOperand):
             columns_name_depth_level: If index_depth is greater than 0, interpret values over index as the columns name.
             columns_constructors:
             columns_continuation_token:
+            columns_select: an iterable of columns to select by label or position; can only be used if index_depth is 0.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
             store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
@@ -1902,8 +1904,6 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # TODO: add columns_select as usecols style selective loading
-
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
@@ -2019,11 +2019,26 @@ class Frame(ContainerOperand):
                         explicit_constructors=columns_constructors,
                         )
 
+        if columns_select:
+            if index_depth:
+                raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
+            if columns:
+                columns_included = set(
+                    columns.loc_to_iloc(l) for l in columns_select
+                    )
+            else: # assume columsn_select are integers
+                columns_included = set(columns_select)
+            def line_select(pos: int) -> bool:
+                return pos in columns_included
+        else:
+            line_select = None
+
         get_col_dtype = (None if dtypes is None
                 else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
         values_arrays = delimited_to_arrays(
                 row_iter,
                 axis=1, # process type per column
+                line_select=line_select,
                 delimiter=delimiter,
                 quotechar=quote_char,
                 thousandschar=thousands_char,
