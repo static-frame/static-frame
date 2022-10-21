@@ -3356,6 +3356,21 @@ class TestUnit(TestCase):
         idx = IndexHierarchy.from_pandas(pdidx)
         self.assertEqual([IndexNanosecond, Index], idx.index_types.values.tolist())
 
+    def test_hierarchy_from_pandas_unbloats(self) -> None:
+        import pandas
+
+        mi = pandas.MultiIndex([tuple("ABC"), tuple("DEF")], [[0, 0, 1], [1,2,2]])
+
+        ih1 = tp.cast(IndexHierarchy, IndexHierarchy.from_pandas(mi))
+        ih2 = IndexHierarchy.from_values_per_depth([tuple("AAB"), tuple("EFF")])
+
+        self.assertTrue(all(a.equals(b) for (a, b) in zip(ih1._indices, ih2._indices)))
+
+        self.assertTrue(ih1.equals(ih2))
+        self.assertTrue(ih2.equals(ih1))
+        self.assertTrue(ih1.loc[ih2].equals(ih2.loc[ih1]))
+        self.assertTrue(ih2.loc[ih1].equals(ih1.loc[ih2]))
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_copy_a(self) -> None:

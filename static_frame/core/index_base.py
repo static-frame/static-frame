@@ -125,6 +125,8 @@ class IndexBase(ContainerOperand):
             if value.has_duplicates:
                 raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
 
+            value = value.remove_unused_levels()
+
             # iterating over a hierarchical index will iterate over labels
             name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
 
