@@ -18,7 +18,7 @@ from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-
+from static_frame.core.util import WarningsSilent
 
 class TestUnit(TestCase):
 
@@ -45,8 +45,9 @@ class TestUnit(TestCase):
             func = getattr(operator, op)
             values = f1.values
             # must coerce all blocks to same type to compare to what NP does
-            a = func(f1.astype(values.dtype)).values
-            b = func(values)
+            with WarningsSilent():
+                a = func(f1.astype(values.dtype)).values
+                b = func(values)
             self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
@@ -78,8 +79,9 @@ class TestUnit(TestCase):
             values = f1.values
             # must coerce all blocks to same type to compare to what NP does
             f2 = f1.astype(values.dtype)
-            a = func(f2, f2).values
-            b = func(values, values)
+            with WarningsSilent():
+                a = func(f2, f2).values
+                b = func(values, values)
             self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
@@ -110,8 +112,9 @@ class TestUnit(TestCase):
             ) -> None:
 
         f2 = f1.relabel(columns=f1.index)
-        f3 = f2 @ f1
-        self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
+        with WarningsSilent():
+            f3 = f2 @ f1
+            self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
 
     # from hypothesis import reproduce_failure
     # NOTE: was able to improve many of these, but continued to get compliated type cases, and complications
@@ -130,9 +133,9 @@ class TestUnit(TestCase):
                 values = f1.values
                 # must coerce all blocks to same type to compare to what NP does
                 # f2 = f1.astype(values.dtype)
-
-                a = getattr(f1, attr)(axis=axis).values # call the method
-                b = attrs.ufunc_skipna(values, axis=axis)
+                with WarningsSilent():
+                    a = getattr(f1, attr)(axis=axis).values # call the method
+                    b = attrs.ufunc_skipna(values, axis=axis)
 
     @given(sfst.get_frame())
     def test_frame_isin(self, f1: Frame) -> None:
