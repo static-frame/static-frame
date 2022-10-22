@@ -94,7 +94,7 @@ Dependencies
 Core StaticFrame requires the following:
 
 - Python>=3.7
-- NumPy>=1.18.5
+- numpy>=1.18.5
 - automap==0.6.1
 - arraykit==0.1.13
 
