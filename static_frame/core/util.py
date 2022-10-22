@@ -157,17 +157,20 @@ ELEMENT_TUPLE = (None,)
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
+DTypeAny = np.dtype[tp.Any]
+ArrayTypeAny = np.ndarray[tp.Any, DTypeAny]
+
 # defaults to float64
-EMPTY_ARRAY = np.array((), dtype=None)
+EMPTY_ARRAY: ArrayTypeAny = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
-EMPTY_ARRAY_BOOL = np.array((), dtype=DTYPE_BOOL)
+EMPTY_ARRAY_BOOL: ArrayTypeAny = np.array((), dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
+EMPTY_ARRAY_INT: ArrayTypeAny = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
-EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
+EMPTY_ARRAY_OBJECT: ArrayTypeAny = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
 
 
@@ -217,7 +220,7 @@ INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
-KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
+KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], ArrayTypeAny]
 
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
@@ -232,7 +235,7 @@ GetItemKeyType = tp.Union[
         None,
         'Index',
         'Series',
-        np.ndarray
+        ArrayTypeAny,
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
@@ -245,23 +248,24 @@ GetItemKeyTypeCompound = tp.Union[
         None,
         'Index',
         'Series',
-        np.ndarray]
+        ArrayTypeAny,
+        ]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
 TupleConstructorType = tp.Callable[[tp.Iterator[tp.Any]], tp.Tuple[tp.Any, ...]]
 
-Bloc2DKeyType = tp.Union['Frame', np.ndarray]
-# Bloc1DKeyType = tp.Union['Series', np.ndarray]
+Bloc2DKeyType = tp.Union['Frame', ArrayTypeAny]
+# Bloc1DKeyType = tp.Union['Series', ArrayTypeAny]
 
-UFunc = tp.Callable[..., np.ndarray]
+UFunc = tp.Callable[..., ArrayTypeAny]
 AnyCallable = tp.Callable[..., tp.Any]
 
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
 ShapeType = tp.Union[int, tp.Tuple[int, int]]
-OptionalArrayList = tp.Optional[tp.List[np.ndarray]]
+OptionalArrayList = tp.Optional[tp.List[ArrayTypeAny]]
 
 
 def is_mapping(value: tp.Any) -> bool:
@@ -367,7 +371,7 @@ IndexConstructors = tp.Union[IndexConstructor, tp.Sequence[IndexConstructor], No
 
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
-        np.ndarray,
+        ArrayTypeAny,
         tp.Mapping[tp.Hashable, tp.Any],
         int, float, str, bool]
 
@@ -378,7 +382,7 @@ ZIP_LONGEST_DEFAULT = object()
 
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
-        np.ndarray,
+        ArrayTypeAny,
         ] # need to add FRAME_INITIALIZER_DEFAULT
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
@@ -491,8 +495,8 @@ class UFuncCategory(Enum):
     SUMMING = 4 # same except bool goes to max int
 
 UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
-    all: UFuncCategory.BOOL,
-    any: UFuncCategory.BOOL,
+    all: UFuncCategory.BOOL, #type: ignore
+    any: UFuncCategory.BOOL, #type: ignore
     np.all: UFuncCategory.BOOL,
     np.any: UFuncCategory.BOOL,
 
@@ -525,7 +529,7 @@ UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
 }
 
 def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
-    if func.__class__ is partial: #type: ignore
+    if func.__class__ is partial:
         # std, var partialed
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
@@ -599,7 +603,7 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
-class Pair(tuple): #type: ignore
+class Pair(tuple):
     pass
 
 class PairLeft(Pair):
@@ -736,7 +740,7 @@ def gen_skip_middle(
 
 def dtype_from_element(
         value: tp.Any,
-        ) -> np.dtype:
+        ) -> DTypeAny:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
@@ -746,7 +750,7 @@ def dtype_from_element(
         return DTYPE_OBJECT
     # we want to match np.array elements; they have __len__ but it raises when called
     if value.__class__ is np.ndarray and value.ndim == 0:
-        return value.dtype
+        return value.dtype #type: ignore
     # all arrays, or SF containers, should be treated as objects when elements
     # NOTE: might check for __iter__?
     if hasattr(value, '__len__') and not isinstance(value, str):
@@ -862,7 +866,7 @@ def concat_resolved(
             shape[axis] += array.shape[axis]
 
     out = np.empty(shape=shape, dtype=dt_resolve)
-    np.concatenate(arrays, out=out, axis=axis)
+    np.concatenate(arrays, out=out, axis=axis) #type: ignore
     out.flags.writeable = False
     return out
 
