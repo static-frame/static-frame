@@ -432,8 +432,8 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_arrays(cls: tp.Type[IH],
-            arrays: tp.Sequence[np.ndarray],
+    def from_values_per_depth(cls: tp.Type[IH],
+            values: tp.Union[np.ndarray, tp.Sequence[tp.Iterable[tp.Hashable    ]]],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -447,22 +447,36 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        if arrays.__class__ is np.ndarray:
-            size, depth = arrays.shape # type: ignore
-            column_iter = arrays.T # type: ignore
-        elif not len(arrays):
+        if values.__class__ is np.ndarray:
+            size, depth = values.shape # type: ignore
+            column_iter = values.T # type: ignore
+            arrays = values
+        elif not len(values):
             size = 0
+            depth = depth_reference
         else:
-            try:
-                [size] = set(map(len, arrays))
-            except ValueError:
-                raise ErrorInitIndex('All arrays must have the same length') from None
+            arrays = []
+            size = -1
+            for column in values:
+                if column.__class__ is np.ndarray:
+                    arrays.append(column)
+                else:
+                    a, _ = iterable_to_array_1d(column)
+                    arrays.append(a)
+
+                if size == -1:
+                    size = len(arrays[-1])
+                elif size != len(arrays[-1]):
+                    raise ErrorInitIndex('per depth iterables must be the same length')
+
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
         if not size:
-            return cls._from_empty((), name=name, depth_reference=depth_reference)
+            if depth is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -474,17 +488,24 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
+        # NOTE: some index_constructors will change the dtype of the final array
+        if index_constructors is None:
+            blocks = TypeBlocks.from_blocks(arrays)
+            own_blocks = True
+        else:
+            blocks = None
+            own_blocks = False
+
         if name is None:
             name = cls._build_name_from_indices(indices)
 
-        blocks = TypeBlocks.from_blocks(arrays)
 
         return cls(
                 indices=indices,
                 indexers=indexers,
                 name=name,
                 blocks=blocks,
-                own_blocks=True,
+                own_blocks=own_blocks,
                 )
 
     @classmethod
@@ -1048,7 +1069,8 @@ class IndexHierarchy(IndexBase):
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
-        return (('Indices', self._indices),
+        return (('Name', self._name),
+                ('Indices', self._indices),
                 ('Indexers', self._indexers),
                 ('Blocks', self._blocks),
                 ('Values', self._values),
@@ -2882,6 +2904,8 @@ class IndexHierarchyAsType:
 
     def __call__(self: IHAsType,
             dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = False,
             ) -> IndexHierarchy:
         '''
         Entrypoint to `astype` the container
@@ -2899,6 +2923,9 @@ class IndexHierarchyAsType:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a depth selection other than the NULL slice')
             gen = self.container._blocks._astype_blocks(self.depth_key, dtypes)
+
+        if consolidate_blocks:
+            gen = TypeBlocks.consolidate_blocks(gen)
 
         blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 

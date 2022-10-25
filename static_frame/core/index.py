@@ -10,6 +10,7 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from automap import AutoMap  # pylint: disable=E0611
 from automap import FrozenAutoMap  # pylint: disable=E0611
+from automap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -325,7 +326,7 @@ class Index(IndexBase):
                     labels_for_automap = labels
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
-                except ValueError: # Automap will raise ValueError of non-unique values are encountered
+                except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels_for_automap) from None
                 size = len(self._map)
             else:
@@ -369,6 +370,14 @@ class Index(IndexBase):
 
         memo[id(self)] = obj
         return obj
+
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Name', self._name),
+                ('Map', self._map),
+                ('Labels', self._labels),
+                ('Positions', self._positions),
+                )
 
     def __copy__(self: I) -> I:
         '''

@@ -65,7 +65,7 @@ class InterfaceRe(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KINDS:
+            if block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable

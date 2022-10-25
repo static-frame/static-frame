@@ -93,20 +93,20 @@ Dependencies
 
 Core StaticFrame requires the following:
 
-- Python >= 3.7
-- NumPy >= 1.18.5
-- automap >= 0.5.1
-- arraykit >= 0.1.13
+- Python>=3.7
+- NumPy>=1.18.5
+- automap==0.6.1
+- arraykit==0.1.13
 
 For extended input and output, the following packages are required:
 
-- pandas >= 0.24.2
-- xlsxwriter >= 1.1.2
-- openpyxl >= 3.0.9
-- xarray >= 0.13.0
-- tables >= 3.6.1
-- pyarrow >= 0.17.0
-- visidata >= 2.4
+- pandas>=0.24.2
+- xlsxwriter>=1.1.2
+- openpyxl>=3.0.9
+- xarray>=0.13.0
+- tables>=3.6.1
+- pyarrow>=0.17.0
+- visidata>=2.4
 
 
 Quick-Start Guide

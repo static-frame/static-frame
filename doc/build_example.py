@@ -211,8 +211,9 @@ IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517
 #-------------------------------------------------------------------------------
 BUS_INIT_FROM_FRAMES_A = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), name='i')
 BUS_INIT_FROM_FRAMES_B = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')), name='j')
-
 BUS_INIT_FROM_FRAMES_C = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_B2)})'.encode('utf-8')), name='k')
+BUS_INIT_FROM_FRAMES_D = dict(frames=(f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8')), name='j')
+
 
 BUS_INIT_FROM_DICT_A = dict(j=f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'), k=f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8'))
 
@@ -258,6 +259,9 @@ BATCH_INIT_L = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 
 # for from fill value
 BATCH_INIT_M = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'.encode('utf-8'))))
+
+QUILT_INIT_FROM_FRAME_A = dict(frame=f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'.encode('utf-8'), retain_labels=True, chunksize=2)
+
 
 
 #-------------------------------------------------------------------------------
@@ -3555,6 +3559,9 @@ class ExGenIndexHierarchy(ExGen):
             yield f'{iattr}({kwa(IH_INIT_FROM_PRODUCT_A1, star_expand_first=True)})'
         elif attr == 'from_tree':
             yield f"{iattr}({{'a': {{1024: (False, True), 2048: (True,)}}}})"
+        elif attr == 'from_values_per_depth':
+            yield f"{iattr}((('a', 'a', 'b', 'b'), (0, 1, 0, 1)))"
+            yield f"{iattr}((range(0, 12, 2), range(6)))"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -4709,6 +4716,9 @@ class ExGenBatch(ExGen):
         elif attr == 'astype()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(str).to_frame()"
+        elif attr == 'astype[]()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt.astype['a'](str).to_frame()"
         elif attr == 'clip()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(lower=3, upper=41).to_frame()"
@@ -5062,6 +5072,488 @@ class ExGenBatch(ExGen):
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
+
+
+
+
+class ExGenQuilt(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args'][:-2] # drop paren
+        iattr = f'{icls}.{attr}'
+        if attr == '__init__':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield 'q1'
+            yield 'q1.to_frame()'
+            yield f'q2 = {icls}(b, retain_labels=True, axis=1)'
+            yield 'q2'
+            yield 'q2.to_frame()'
+        elif attr == 'from_frame':
+            yield f'f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f'q = {iattr}(f, retain_labels=True, chunksize=2)'
+            yield 'q'
+            yield 'q.to_frame()'
+        elif attr == 'from_frames':
+            yield f'f1 = sf.Frame({kwa(FRAME_INIT_A1)})'
+            yield f'f2 = sf.Frame({kwa(FRAME_INIT_A2)})'
+            yield f'q = {iattr}((f1, f2), retain_labels=True)'
+            yield 'q'
+            yield 'q.to_frame()'
+        elif attr == 'from_hdf5':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_hdf5('/tmp/q.hdf5')"
+            yield f"q2 = {iattr}('/tmp/q.hdf5', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_items':
+            yield f'f1 = sf.Frame({kwa(FRAME_INIT_A1)})'
+            yield f'f2 = sf.Frame({kwa(FRAME_INIT_A2)})'
+            yield f"q = {iattr}((('A', f1), ('B', f2)), retain_labels=True)"
+            yield 'q'
+            yield 'q.to_frame()'
+        elif attr == 'from_sqlite':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_sqlite('/tmp/q.db')"
+            yield f"q2 = {iattr}('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_xlsx':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_xlsx('/tmp/q.xlsx')"
+            yield f"q2 = {iattr}('/tmp/q.xlsx', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_csv':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_csv('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_npy':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_npy('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_npz':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_npz('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_parquet':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_parquet('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_pickle':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_pickle('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        elif attr == 'from_zip_tsv':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield f"q1.to_zip_tsv('/tmp/q.zip')"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr in (
+                'to_frame()',
+                ):
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield 'q1.to_frame()'
+
+        elif attr == 'to_hdf5()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"q.{attr_func}('/tmp/q.h5')"
+        elif attr == 'to_sqlite()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"q.{attr_func}('/tmp/q.db')"
+        elif attr == 'to_xlsx()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"q.{attr_func}('/tmp/q.xlsx')"
+        elif attr in (
+                'to_zip_csv()',
+                'to_zip_npy()',
+                'to_zip_npz()',
+                'to_zip_parquet()',
+                'to_zip_pickle()',
+                'to_zip_tsv()',
+                ):
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"q.{attr_func}('/tmp/q.zip')"
+        elif attr in ('to_html()',
+                'to_html_datatables()',
+                'to_visidata()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._attribute(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        if attr == '__bool__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield f"bool(b)"
+        elif attr == 'equals()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True, axis=0)'
+            yield f'q2 = {icls}(b, retain_labels=True, axis=1)'
+            yield f"q1.{attr_func}(q2)"
+        elif attr in (
+                'head()',
+                'tail()',
+                ):
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}(2)"
+    #     elif attr in (
+    #             'iloc_max()',
+    #             'iloc_min()',
+    #             'loc_max()',
+    #             'loc_min()',
+    #             ):
+    #         yield f'bt = {icls}({kwa(BATCH_INIT_E)})'
+    #         yield f"bt.{attr_func}().to_frame()"
+        elif attr == 'rename()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}('y')"
+        elif attr == 'sample()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.{attr_func}(2, 2, seed=0).to_frame()"
+        elif attr == 'unpersist()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f"b1.to_zip_npz('/tmp/b.zip')"
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
+            yield f'q = {icls}(b2, retain_labels=True, axis=0)'
+            yield 'q.to_frame()'
+            yield 'q.status'
+            yield 'q.unpersist()'
+            yield 'q.status'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_func = row['signature_no_args'][:-2]
+
+        yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+        yield f'q = {icls}(b, retain_labels=True, axis=0)'
+
+        if attr == '__contains__()':
+            yield f"q.{attr_func}('a')"
+        elif attr == 'get()':
+            yield f"q.{attr_func}('a')"
+            yield f"q.{attr_func}('z', -1)"
+        elif attr == 'values':
+            yield f"q.{attr}"
+        elif attr in (
+                'keys()',
+                'items()',
+                '__reversed__()',
+                '__iter__()'
+                ):
+            yield f"tuple(q.{attr_func}())"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._display(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
+
+    @staticmethod
+    def selector(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_sel = row['signature_no_args'][:-2]
+
+        if attr == 'drop[]':
+            yield f'bt = {icls}({kwa(BATCH_INIT_F)})'
+            yield f"bt.{attr_sel}['b'].to_frame()"
+            yield f"bt.{attr_sel}['b':].to_frame()"
+            yield f"bt.{attr_sel}[['a', 'c']].to_frame()"
+        elif attr == '[]':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q['b']"
+            yield f"q['a':]"
+        elif attr == 'iloc[]':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.iloc[3, 0]"
+            yield f"q.iloc[2:, 1]"
+            yield f"q.iloc[[0, 3, 5]]"
+        elif attr == 'loc[]':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True, axis=0)'
+            yield f"q.loc[sf.HLoc['x', 'r']]"
+            yield f"q.loc[('x', 'r'):]"
+            yield f"q.loc[sf.HLoc[:, 'r']]"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def iterator(row: sf.Series) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        sig = row['signature_no_args']
+        attr = sig
+        attr_func = sig[:-2]
+
+        if sig.count('()') == 2:
+            # ['iter_element', 'apply']
+            attr_funcs = [x.strip('.') for x in sig.split('()') if x]
+
+        ctr = (
+            f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})',
+            f'q = {icls}(b, retain_labels=True, axis=0)',
+            'q',)
+
+        if attr in (
+                'iter_array()',
+                'iter_array_items()',
+                'iter_series()',
+                'iter_series_items()',
+                'iter_tuple()',
+                'iter_tuple_items()'
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_func}(axis=1))"
+        elif attr in (
+                'iter_array().apply()',
+                'iter_series().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.sum())"
+        elif attr in (
+                'iter_array().apply_iter()',
+                'iter_array().apply_iter_items()',
+                'iter_series().apply_iter()',
+                'iter_series().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.sum()))"
+        elif attr in (
+                'iter_array().apply_pool()'
+                'iter_series().apply_pool()'
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.sum(), use_threads=True)"
+        elif attr in (
+                'iter_array_items().apply()',
+                'iter_series_items().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda k, v: v.sum() if 'q' in k else -1)"
+        elif attr in (
+                'iter_array_items().apply_iter()',
+                'iter_array_items().apply_iter_items()',
+                'iter_series_items().apply_iter()',
+                'iter_series_items().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda k, v: v.sum() if 'q' in k else -1))"
+        elif attr in (
+                'iter_array_items().apply_pool()',
+                'iter_series_items().apply_pool()'
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda pair: pair[1].sum() if pair[0][1] != 'p' else -1, use_threads=True)"
+
+        elif attr == 'iter_tuple().apply()':
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.a + v.b)"
+
+        elif attr in (
+                'iter_tuple().apply_iter()',
+                'iter_tuple().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda v: v.a + v.b))"
+
+        elif attr == 'iter_tuple_items().apply()':
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda k, v: v.a + v.b if 'r' in k else -1)"
+        elif attr in (
+                'iter_tuple_items().apply_iter()',
+                'iter_tuple_items().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}(lambda k, v: v.a + v.b if 'r' in k else -1))"
+        elif attr in (
+                'iter_tuple().map_all()',
+                ):
+            yield from ctr
+            yield f"q.iloc[:2].{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (2, 3): -2}})"
+        elif attr in (
+                'iter_tuple().map_all_iter()',
+                'iter_tuple().map_all_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.iloc[:2].{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (2, 3): -2}}))"
+        elif attr in (
+                'iter_tuple().map_any()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (42, 43): -2}})"
+        elif attr in (
+                'iter_tuple().map_any_iter()',
+                'iter_tuple().map_any_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (42, 43): -2}}))"
+
+        elif attr in (
+                'iter_tuple().map_fill()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (42, 43): -2}}, fill_value=np.nan)"
+        elif attr in (
+                'iter_tuple().map_fill_iter()',
+                'iter_tuple().map_fill_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(0, 1): -1, (42, 43): -2}}, fill_value=np.nan))"
+        elif attr in (
+                'iter_tuple_items().map_all()',
+                ):
+            yield from ctr
+            yield f"q.iloc[:2].{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}})"
+        elif attr in (
+                'iter_tuple_items().map_all_iter()',
+                'iter_tuple_items().map_all_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.iloc[:2].{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}}))"
+        elif attr in (
+                'iter_tuple_items().map_any()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}})"
+        elif attr in (
+                'iter_tuple_items().map_any_iter()',
+                'iter_tuple_items().map_any_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}}))"
+
+        elif attr in (
+                'iter_tuple_items().map_fill()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}}, fill_value=np.nan)"
+        elif attr in (
+                'iter_tuple_items().map_fill_iter()',
+                'iter_tuple_items().map_fill_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(axis=1).{attr_funcs[1]}({{(('x', 'p'), (0, 1)): -1, (('x', 'q'), (2, 3)): -2}}, fill_value=np.nan))"
+        elif attr in (
+                'iter_tuple().apply_pool()',
+                'iter_tuple_items().apply_pool()',
+                ):
+            pass
+        elif attr in (
+                'iter_window()',
+                'iter_window_array()',
+                'iter_window_array_items()',
+                'iter_window_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_func}(size=2, step=2, axis=0))"
+        elif attr in (
+                'iter_window().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda f: f.max().max())"
+        elif attr in (
+                'iter_window_array().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda a: np.max(a))"
+        elif attr in (
+                'iter_window().apply_iter()',
+                'iter_window().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda f: f.max().max()))"
+
+        elif attr in (
+                'iter_window_array().apply_iter()',
+                'iter_window_array().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda a: np.max(a)))"
+        elif attr in (
+                'iter_window_array_items().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda k, v: np.max(v) if k == ('v', 'p') else np.min(v))"
+        elif attr in (
+                'iter_window_array_items().apply_iter()',
+                'iter_window_array_items().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda k, v: np.max(v) if k == ('v', 'p') else np.min(v)))"
+        elif attr in (
+                'iter_window_items().apply()',
+                ):
+            yield from ctr
+            yield f"q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda k, v: v.max().max() if k == ('v', 'p') else v.min().min())"
+        elif attr in (
+                'iter_window_items().apply_iter()',
+                'iter_window_items().apply_iter_items()',
+                ):
+            yield from ctr
+            yield f"tuple(q.{attr_funcs[0]}(size=2, step=2, axis=0).{attr_funcs[1]}(lambda k, v: v.max().max() if k == ('v', 'p') else v.min().min()))"
+        elif attr in (
+                'iter_window().apply_pool()',
+                'iter_window_array().apply_pool()',
+                'iter_window_array_items().apply_pool()',
+                'iter_window_items().apply_pool()',
+                ):
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 
 class ExGenHLoc(ExGen):
@@ -5437,6 +5929,7 @@ CLS_TO_EX_GEN = {
         sf.Bus: ExGenBus,
         sf.Yarn: ExGenYarn,
         sf.Batch: ExGenBatch,
+        sf.Quilt: ExGenQuilt,
 
         sf.HLoc: ExGenHLoc,
         sf.ILoc: ExGenILoc,

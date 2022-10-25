@@ -2219,6 +2219,90 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(a2.tolist(), [300, 0])
 
+    def test_array_from_element_method_c(self) -> None:
+
+        a1 = np.array(['bl,ue', 'bl,ack'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='split',
+                args=(),
+                dtype=object,
+                pre_insert=tuple
+                )
+        self.assertEqual(a2.tolist(), [('bl,ue',), ('bl,ack',)])
+
+    def test_array_from_element_method_d(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(), ['BLUE      ', 'BLACK     '])
+
+    def test_array_from_element_method_e(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(),
+                [['BLUE      ', 'BLACK     '],  ['RED       ', 'GREEN     ']])
+
+
+
+    def test_array_from_element_method_f(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(),
+                [[False, True],  [False, False]])
+
+
+
+    def test_array_from_element_method_g(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(), [False, True])
+
+
+
+    def test_array_from_element_method_h(self) -> None:
+        from datetime import date as d
+        a1 = np.array([[d(2022,1,1), d(1954,1,1)], [d(1985, 3, 1), d(1005, 8, 1)]], dtype=object)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='isoweekday',
+                args=(),
+                dtype=int,
+                pre_insert=lambda d: d*100
+                )
+        self.assertEqual(a2.tolist(),
+                [[600, 500],  [500, 400]])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_logical_skipna_a1(self) -> None:
@@ -2810,10 +2894,10 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_bytes_to_size_label(self) -> None:
-        self.assertEqual(bytes_to_size_label(0), '0 (B)')
-        self.assertEqual(bytes_to_size_label(1), '1 (B)')
-        self.assertEqual(bytes_to_size_label(1023), '1023 (B)')
-        self.assertEqual(bytes_to_size_label(1024), '1.0 (KB)')
+        self.assertEqual(bytes_to_size_label(0), '0 B')
+        self.assertEqual(bytes_to_size_label(1), '1 B')
+        self.assertEqual(bytes_to_size_label(1023), '1023 B')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 KB')
 
 
 

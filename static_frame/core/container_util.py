@@ -1373,12 +1373,12 @@ def index_many_to_one(
             constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
             constructor_cls = cls_first
-        constructor = (constructor_cls._from_arrays if is_ih # type: ignore
+        constructor = (constructor_cls.from_values_per_depth if is_ih # type: ignore
                 else constructor_cls.from_labels) # type: ignore
     elif explicit_constructor is not None:
         constructor = explicit_constructor
     elif is_ih:
-        constructor = cls_default._from_arrays # type: ignore
+        constructor = cls_default.from_values_per_depth # type: ignore
     else:
         constructor = cls_default.from_labels
 

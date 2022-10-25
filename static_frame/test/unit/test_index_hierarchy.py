@@ -138,7 +138,7 @@ class TestUnit(TestCase):
                 ('I', 'B'),
                 )
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ErrorInitIndexNonUnique):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarchy_init_g(self) -> None:
@@ -930,6 +930,21 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1._extract_getitem_astype(('A', 1))
 
+    def test_hierarchy_extract_getitem_astype_b(self) -> None:
+
+        labels = (
+                ('1', '3', 1),
+                ('1', '4', 1),
+                ('11', '3', 1),
+                ('11', '3', 2),
+                ('11', '4', 1),
+                ('11', '4', 2),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.astype[:2](int, consolidate_blocks=True)
+        self.assertTrue(ih2._blocks.unified)
+
     #--------------------------------------------------------------------------
 
     def test_hierarchy_from_product_a(self) -> None:
@@ -1491,7 +1506,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_arrays_a(self) -> None:
+    def test_hierarchy_from_values_per_depth_a(self) -> None:
 
         # NOTE: This will consolidate dtypes
         arrays1 = np.array((
@@ -1505,7 +1520,7 @@ class TestUnit(TestCase):
                 ('I', 'A', '1'),
                 ))
 
-        ih1 = IndexHierarchy._from_arrays(arrays1)
+        ih1 = IndexHierarchy.from_values_per_depth(arrays1)
         self.assertTrue((np.array(tuple(ih1.iter_label())) == arrays1).all())
 
         arrays2 = [
@@ -1513,21 +1528,21 @@ class TestUnit(TestCase):
             np.array(['A', 'B', 'B', 'A', 'B', 'A', 'B', 'A']),
             np.array(['1', '1', '2', '2', '2', '2', '1', '1']),
         ]
-        ih2 = IndexHierarchy._from_arrays(arrays2)
+        ih2 = IndexHierarchy.from_values_per_depth(arrays2)
         self.assertTrue(ih1.equals(ih2))
 
-    def test_hierarchy_from_arrays_b(self) -> None:
+    def test_hierarchy_from_values_per_depth_b(self) -> None:
 
         arrays = [(1, 2), (1,)]
 
         with self.assertRaises(ErrorInitIndex):
-            _ = IndexHierarchy._from_arrays(arrays)
+            _ = IndexHierarchy.from_values_per_depth(arrays)
 
 
-    def test_hierarchy_from_arrays_c(self) -> None:
+    def test_hierarchy_from_values_per_depth_c(self) -> None:
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=IndexAutoConstructorFactory)
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
                 ['datetime64[Y]', 'datetime64[D]'],
@@ -1535,17 +1550,35 @@ class TestUnit(TestCase):
         self.assertEqual(ih.name, None)
 
 
-    def test_hierarchy_from_arrays_d(self) -> None:
+    def test_hierarchy_from_values_per_depth_d(self) -> None:
         IACF = IndexAutoConstructorFactory
         a1 = np.array(('1954', '1954', '2020'), np.datetime64)
         a2 = np.array(('2018-01-01', '2018-01-04', '2018-01-04'), np.datetime64)
-        ih = IndexHierarchy._from_arrays((a1, a2),
+        ih = IndexHierarchy.from_values_per_depth((a1, a2),
                 index_constructors=(IACF('a'), IACF('b')),
                 )
         self.assertEqual([str(dt) for dt in ih.dtypes.values],
                 ['datetime64[Y]', 'datetime64[D]'],
                 )
         self.assertEqual(ih.name, ('a', 'b'))
+
+    def test_hierarchy_from_values_per_depth_e(self) -> None:
+        ih = IndexHierarchy.from_values_per_depth((('a', 'a', None, None), ('2012', '2008', '1933', '2008')), index_constructors=(Index, IndexDate))
+        self.assertEqual(ih.dtypes.values.tolist(), [np.dtype('O'), np.dtype('<M8[D]')])
+        self.assertEqual(ih.shape, (4, 2))
+
+    def test_hierarchy_from_values_per_depth_f(self) -> None:
+        ih1 = IndexHierarchy.from_values_per_depth(((), ()))
+        self.assertEqual(ih1.shape, (0, 2))
+
+        ih2 = IndexHierarchy.from_values_per_depth(np.array(()).reshape(0, 2))
+        self.assertEqual(ih2.shape, (0, 2))
+
+    def test_hierarchy_from_values_per_depth_g(self) -> None:
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_values_per_depth(())
+        ih2 = IndexHierarchy.from_values_per_depth((), depth_reference=4)
+        self.assertEqual(ih2.shape, (0, 4))
 
     #---------------------------------------------------------------------------
 

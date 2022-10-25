@@ -1,6 +1,24 @@
 What is New in StaticFrame
 ===============================
 
+0.9.18
+----------
+
+Improved layout of default ``memory`` display.
+
+
+0.9.17
+----------
+
+Unified implementation of ``IndexBase`` set and concatenation operations.
+
+Added ``IndexHierarchy.from_values_per_depth()`` constructor.
+
+Set ``automap`` version to 0.6.1.
+
+Extended ``Batch.astype`` interface to fully cover ``Frame.astype`` interface.
+
+
 0.9.16
 ----------
 
