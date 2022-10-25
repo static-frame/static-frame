@@ -30,6 +30,7 @@ class FileIOTest:
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fixture.to_csv(self.fp, include_index=False)
         self.dtypes = dict(self.fixture.dtypes)
+        self.format = list(self.dtypes.items())
 
     def __call__(self):
         raise NotImplementedError()
@@ -73,6 +74,20 @@ class PandasTypeGiven(FileIOTest):
         f = pd.read_csv(self.fp, dtype=self.dtypes)
         assert f.shape == self.fixture.shape
 
+
+class NumpyGenfromtxtTypeParse(FileIOTest):
+
+    def __call__(self):
+        f = np.genfromtxt(self.fp, dtype=None, delimiter=',', encoding=None, names=True)
+        assert len(f) == len(self.fixture)
+
+# class NumpyLoadtxtTypeParse(FileIOTest):
+
+#     def __call__(self):
+#         import pdb; pdb.set_trace()
+#         f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
+#         assert len(f) == len(self.fixture)
+
 #-------------------------------------------------------------------------------
 NUMBER = 2
 
@@ -110,6 +125,8 @@ def plot_performance(frame: sf.Frame):
         PandasTypeParse.__name__: 'Pandas\n(type parsing)',
         PandasStr.__name__: 'Pandas\n(as string)',
         PandasTypeGiven.__name__: 'Pandas\n(type given)',
+        NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
+        # NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
     }
 
     name_order = {
@@ -119,6 +136,8 @@ def plot_performance(frame: sf.Frame):
         PandasTypeParse.__name__: 1,
         PandasStr.__name__: 1,
         PandasTypeGiven.__name__: 1,
+        NumpyGenfromtxtTypeParse.__name__: 2,
+        # NumpyLoadtxtTypeParse.__name__: 2,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -189,9 +208,6 @@ def plot_performance(frame: sf.Frame):
         os.system(f'open {fp}')
 
 
-
-
-
 #-------------------------------------------------------------------------------
 
 def get_versions() -> str:
@@ -244,6 +260,8 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
+    NumpyGenfromtxtTypeParse,
+    # NumpyLoadtxtTypeParse,
     )
 
 
