@@ -260,8 +260,7 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-    NumpyGenfromtxtTypeParse,
-    # NumpyLoadtxtTypeParse,
+    # NumpyGenfromtxtTypeParse,
     )
 
 

@@ -2,7 +2,13 @@
 
 
 
-Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited Text to Numpy Array Converter
+Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-Text-to-Numpy-Array Converter
+
+
+CSV and related delimted text file formats remain a necessary evil. While such formats are comonly used to represent tabular data, they lack type definitions. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readabile and can be loaded in Excel and many other libraries.
+
+
+
 
 
 
