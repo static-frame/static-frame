@@ -12,6 +12,7 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from numpy.ma import MaskedArray  # type: ignore
 
+from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -945,7 +946,7 @@ class Series(ContainerOperand):
             iloc_key: GetItemKeyType,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
-        '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
+        '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
         return value.reindex( #type: ignore
                 self._index._extract_iloc(iloc_key),
@@ -983,6 +984,9 @@ class Series(ContainerOperand):
                     name=self._name)
 
         ic = IndexCorrespondence.from_correspondence(self._index, index) #type: ignore
+        if not ic.size:
+            # NOTE: take slice to ensure same type of index and array
+            return self._extract_iloc(EMPTY_SLICE)
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src]
@@ -3176,15 +3180,19 @@ class SeriesAssign(Assign):
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
-            # instead of using fill_value here, might be better to use dtype_to_fill_value, so as to not coerce the type of the value to be assigned
+            # import ipdb; ipdb.set_trace()
             value = self.container._reindex_other_like_iloc(value,
                     self.key,
                     fill_value=fill_value).values
 
         if value.__class__ is np.ndarray:
+            if len(value) == 0:
+                return self.container
             value_dtype = value.dtype
         elif hasattr(value, '__len__') and not isinstance(value, str):
-            value, _ = iterable_to_array_1d(value)
+            value, _ = iterable_to_array_1d(value, count=len(value))
+            if len(value) == 0:
+                return self.container
             value_dtype = value.dtype
         else:
             value_dtype = dtype_from_element(value)

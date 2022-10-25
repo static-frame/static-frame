@@ -1627,6 +1627,27 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
                 )
 
+    def test_series_assign_l(self) -> None:
+
+        p1 = Series(('a', 'b'))
+        q1 = Series(('c', 'd'))
+        post1 = p1.assign.loc[p1 == q1](q1) #type: ignore
+        self.assertEqual(post1.dtype, p1.dtype)
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 'b')))
+
+        p2 = Series(('a', 'b', 'c'))
+        q2 = Series(('c', 'd', 'e'))
+        post2 = p2.assign.loc[1:](q2) # type: ignore
+        self.assertEqual(post2.dtype, p2.dtype)
+        self.assertEqual(post2.to_pairs(), ((0, 'a'), (1, 'd'), (2, 'e')))
+
+        p3 = Series(('a', 'b', 'c'))
+        q3 = Series(('c',))
+        post3 = p3.assign.loc[1:](q3, fill_value='')
+        self.assertEqual(post3.dtype, p3.dtype)
+        self.assertEqual(post3.to_pairs(), ((0, 'a'), (1, ''), (2, '')))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iloc_extract_a(self) -> None:
