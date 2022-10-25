@@ -1643,7 +1643,7 @@ class TestUnit(TestCase):
 
         p3 = Series(('a', 'b', 'c'))
         q3 = Series(('c',))
-        post3 = p3.assign.loc[1:](q3, fill_value='')
+        post3 = p3.assign.loc[1:](q3, fill_value='') # type: ignore
         self.assertEqual(post3.dtype, p3.dtype)
         self.assertEqual(post3.to_pairs(), ((0, 'a'), (1, ''), (2, '')))
 
