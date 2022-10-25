@@ -12,7 +12,6 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from numpy.ma import MaskedArray  # type: ignore
 
-from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -67,6 +66,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
