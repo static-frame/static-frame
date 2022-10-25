@@ -28,39 +28,40 @@ class FileIOTest:
     def __init__(self, fixture: str):
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
+        self.fixture.to_csv(self.fp, include_index=False)
 
     def __call__(self):
         raise NotImplementedError()
 
 
 
-class SFRead(FileIOTest):
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.fixture.to_csv(self.fp, include_index=False)
+class SFParseType(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_csv(self.fp, index_depth=0)
-        # _ = f.loc[34715, 'zZbu']
+
+class SFStr(FileIOTest):
+
+    def __call__(self):
+        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=str)
 
 
-class PandasRead(FileIOTest):
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.fixture.to_csv(self.fp)
+class PandasParseType(FileIOTest):
 
     def __call__(self):
         f = pd.read_csv(self.fp)
-        # _ = f.loc[34715, 'zZbu']
+
+class PandasStr(FileIOTest):
+
+    def __call__(self):
+        f = pd.read_csv(self.fp, dtype=str)
 
 
 #-------------------------------------------------------------------------------
 NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * .1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -87,13 +88,17 @@ def plot_performance(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        SFRead.__name__: 'StaticFrame',
-        PandasRead.__name__: 'Pandas',
+        SFParseType.__name__: 'StaticFrame\nwith type parsing',
+        PandasParseType.__name__: 'Pandas\nwith type parsing',
+        SFStr.__name__: 'StaticFrame\nas string',
+        PandasStr.__name__: 'Pandas\nas string',
     }
 
     name_order = {
-        SFRead.__name__: 0,
-        PandasRead.__name__: 0,
+        SFParseType.__name__: 0,
+        PandasParseType.__name__: 0,
+        SFStr.__name__: 1,
+        PandasStr.__name__: 1,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -139,7 +144,7 @@ def plot_performance(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .97, f'Delimited Read Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
@@ -185,9 +190,6 @@ FIXTURE_SHAPE_MAP = {
     '1000x100000': 'Wide',
 }
 
-
-
-
 def get_format():
 
     name_root_last = None
@@ -210,17 +212,16 @@ def get_format():
 
     return format
 
-
-
-
 def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     # get a title
     f = ff.parse(fixture)
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
 CLS_READ = (
-    SFRead,
-    PandasRead,
+    SFParseType,
+    SFStr,
+    PandasParseType,
+    PandasStr,
     )
 
 
