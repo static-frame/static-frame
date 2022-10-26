@@ -9,7 +9,6 @@ import timeit
 import typing as tp
 from itertools import repeat
 
-
 import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
