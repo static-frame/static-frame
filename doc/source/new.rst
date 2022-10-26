@@ -8,6 +8,8 @@ Improved layout of default ``memory`` display.
 
 Corrected issue where a non matching ``Series`` assignment or reindex might use ``fill_value`` to determine the type of the returned values.
 
+Certain invalid ``Frame`` selections now properly raise ``KeyError``.
+
 
 0.9.17
 ----------
