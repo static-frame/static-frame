@@ -1513,7 +1513,7 @@ class TypeBlocks(ContainerOperand):
                     else:
                         indices = (self._index[x] for x in sorted(key))
                 else:
-                    raise NotImplementedError('Cannot handle key', key)
+                    raise KeyError(key)
                 yield from self._indices_to_contiguous_pairs(indices)
 
     #---------------------------------------------------------------------------
