@@ -1876,7 +1876,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -1896,7 +1896,7 @@ class Frame(ContainerOperand):
             columns_select: an iterable of columns to select by label or position; can only be used if index_depth is 0.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
+            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently only the ``to_nan`` attributes is used. By default it is disabled, and only empty fields or "NAN" are intepreted as NaN.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -2000,13 +2000,22 @@ class Frame(ContainerOperand):
                         )
             else:
                 if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
-                    labels = zip_longest(
-                            *(store_filter.to_type_filter_iterable(x) for x in columns_arrays), # type: ignore
-                            fillvalue=columns_continuation_token,
-                            )
+                    if store_filter is not None:
+                        labels = zip_longest(
+                                *(store_filter.to_type_filter_iterable(x) for x in columns_arrays), # type: ignore
+                                fillvalue=columns_continuation_token,
+                                )
+                    else:
+                        labels = zip_longest(
+                                *columns_arrays, # type: ignore
+                                fillvalue=columns_continuation_token,
+                                )
                 else:
                     # NOTE: can use a IndexHierarchy.from_values_per_depth
-                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # type: ignore
+                    if store_filter is not None:
+                        labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # type: ignore
+                    else:
+                        labels = zip(*columns_arrays) # type: ignore
 
                 columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
