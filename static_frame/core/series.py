@@ -682,7 +682,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def assign(self) -> InterfaceAssignTrio['Series']:
+    def assign(self) -> InterfaceAssignTrio['SeriesAssign']:
         '''
         Interface for doing assignment-like selection and replacement.
         '''
@@ -3188,7 +3188,8 @@ class SeriesAssign(Assign):
             if len(value) == 0:
                 return self.container
             value_dtype = value.dtype
-        elif hasattr(value, '__len__') and not isinstance(value, str):
+        elif hasattr(value, '__iter__') and not isinstance(value, str):
+            # NOTE: might exclude tuples, as the are generally treated as an element
             value, _ = iterable_to_array_1d(value, count=len(value))
             if len(value) == 0:
                 return self.container

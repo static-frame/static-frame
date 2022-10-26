@@ -1511,7 +1511,7 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(
-                s1.assign.loc[['b', 'd']](3000).values.tolist(), #type: ignore
+                s1.assign.loc[['b', 'd']](3000).values.tolist(),
                 [0, 3000, 2, 3000])
 
         self.assertEqual(
@@ -1613,7 +1613,7 @@ class TestUnit(TestCase):
     def test_series_assign_j(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--') #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '--3--'))
                 )
@@ -1621,7 +1621,7 @@ class TestUnit(TestCase):
     def test_series_assign_k(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element_items( #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element_items(
                 lambda k, e: f'--{e}--' if k == 'b' else f'*{e}*')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
@@ -1631,21 +1631,40 @@ class TestUnit(TestCase):
 
         p1 = Series(('a', 'b'))
         q1 = Series(('c', 'd'))
-        post1 = p1.assign.loc[p1 == q1](q1) #type: ignore
+        post1 = p1.assign.loc[p1 == q1](q1)
         self.assertEqual(post1.dtype, p1.dtype)
         self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 'b')))
 
         p2 = Series(('a', 'b', 'c'))
         q2 = Series(('c', 'd', 'e'))
-        post2 = p2.assign.loc[1:](q2) # type: ignore
+        post2 = p2.assign.loc[1:](q2)
         self.assertEqual(post2.dtype, p2.dtype)
         self.assertEqual(post2.to_pairs(), ((0, 'a'), (1, 'd'), (2, 'e')))
 
         p3 = Series(('a', 'b', 'c'))
         q3 = Series(('c',))
-        post3 = p3.assign.loc[1:](q3, fill_value='') # type: ignore
+        post3 = p3.assign.loc[1:](q3, fill_value='')
         self.assertEqual(post3.dtype, p3.dtype)
         self.assertEqual(post3.to_pairs(), ((0, 'a'), (1, ''), (2, '')))
+
+
+    def test_series_assign_m(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](range(3, 9, 3))
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 3), (2, 6)))
+
+
+    def test_series_assign_n(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](())
+        self.assertTrue(s1.equals(post1))
+
+        post2 = s1.assign.iloc[1:](np.array(()))
+        self.assertTrue(s1.equals(post2))
+
+
 
 
     #---------------------------------------------------------------------------
