@@ -2002,12 +2002,12 @@ class Frame(ContainerOperand):
                 if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
                     if store_filter is not None:
                         labels = zip_longest(
-                                *(store_filter.to_type_filter_iterable(x) for x in columns_arrays), # type: ignore
+                                *(store_filter.to_type_filter_iterable(x) for x in columns_arrays),
                                 fillvalue=columns_continuation_token,
                                 )
                     else:
                         labels = zip_longest(
-                                *columns_arrays, # type: ignore
+                                *columns_arrays,
                                 fillvalue=columns_continuation_token,
                                 )
                 else:
