@@ -1896,7 +1896,7 @@ class Frame(ContainerOperand):
             columns_select: an iterable of columns to select by label or position; can only be used if index_depth is 0.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently only the ``to_nan`` attributes is used. By default it is disabled, and only empty fields or "NAN" are intepreted as NaN.
+            store_filter: A StoreFilter instance, defining translation between unrepresentable strings and types. By default it is disabled, and only empty fields or "NAN" are intepreted as NaN. To force usage, set the type of the column to string.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -2059,6 +2059,9 @@ class Frame(ContainerOperand):
                 dtypes=get_col_dtype,
                 )
         # TODO: if store_filter, do less
+        if store_filter is not None:
+            values_arrays = [store_filter.to_type_filter_array(a)
+                    for a in values_arrays]
         if index_depth:
             if index_column_first:
                 # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created
@@ -2154,7 +2157,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
@@ -2203,7 +2206,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
@@ -2252,7 +2255,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: NameType = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
