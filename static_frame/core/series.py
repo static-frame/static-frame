@@ -3180,7 +3180,6 @@ class SeriesAssign(Assign):
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
-            # import ipdb; ipdb.set_trace()
             value = self.container._reindex_other_like_iloc(value,
                     self.key,
                     fill_value=fill_value).values
