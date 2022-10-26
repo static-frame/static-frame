@@ -718,7 +718,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_loc_to_iloc_s(self) -> None:
 
-        # https://github.com/InvestmentSystems/static-frame/issues/554
+        # https://github.com/static-frame/static-frame/issues/554
         ih = ff.parse('v(bool)|i((I,ID),(int,dtD))|s(4,4)').index.sort()
         start = ih.values_at_depth(1)[0]
         end = ih.values_at_depth(1)[-1]
@@ -1776,7 +1776,7 @@ class TestUnit(TestCase):
             ih1.loc[Series([(1, 'dd')])]
 
     def test_hierarchy_loc_d(self) -> None:
-        # https://github.com/InvestmentSystems/static-frame/issues/455
+        # https://github.com/static-frame/static-frame/issues/455
         ih1 = IndexHierarchy.from_labels([(0, 1), (0, 2), (1, 0), (1, 1)])
         ih2 = IndexHierarchy.from_labels([(1, 1), (0, 2), (0, 1)])
 

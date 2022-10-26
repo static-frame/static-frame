@@ -9,10 +9,10 @@ StaticFrame
 
 Immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes.
 
-- Code: https://github.com/InvestmentSystems/static-frame
+- Code: https://github.com/static-frame/static-frame
 - Packages: https://pypi.org/project/static-frame
-- Benchmarks: https://investmentsystems.github.io/static-frame-benchmark
-- Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/InvestmentSystems/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
+- Benchmarks: https://static-frame.github.io/static-frame-benchmark
+- Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-frame/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
 
 .. toctree::
    :maxdepth: 3

@@ -4588,7 +4588,7 @@ class TestUnit(TestCase):
                 )
 
     def test_series_enum_c(self) -> None:
-        # see: https://github.com/InvestmentSystems/static-frame/issues/239
+        # see: https://github.com/static-frame/static-frame/issues/239
 
         class Bar(str, Enum):
             a = 'a'
