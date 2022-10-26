@@ -2032,6 +2032,7 @@ class Frame(ContainerOperand):
         if columns_select:
             if index_depth:
                 raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
+                # NOTE: this is because the final columns labels might be different than those provided via input due to line_select and index_depth
             if columns is not None:
                 columns_included = list(columns.loc_to_iloc(l) for l in columns_select)
                 columns = columns.iloc[columns_included]
@@ -2057,6 +2058,7 @@ class Frame(ContainerOperand):
                 decimalchar=decimal_char,
                 dtypes=get_col_dtype,
                 )
+        # TODO: if store_filter, do less
         if index_depth:
             if index_column_first:
                 # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created

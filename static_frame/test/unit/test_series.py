@@ -5482,6 +5482,19 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(s1.dtype.kind, 'M')
 
+    def test_series_from_delimited_d(self) -> None:
+        index = Index(('a', 'b', 'c', 'd'))
+        s1 = Series.from_delimited('3|5|23|3',
+                delimiter='|',
+                index=index,
+                own_index=True,
+                )
+        self.assertEqual(s1.to_pairs(),
+                (('a', 3), ('b', 5), ('c', 23), ('d', 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+        self.assertIs(s1.index, index)
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
