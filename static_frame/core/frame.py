@@ -1354,7 +1354,7 @@ class Frame(ContainerOperand):
         index_arrays = []
         # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
         columns_labels = []
-        columns_by_col_idx = []
+        columns_by_col_idx: tp.List[tp.Hashable] = []
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
