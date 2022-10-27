@@ -4744,6 +4744,15 @@ class TestUnit(TestCase):
         self.assertEqual(f['name'].to_pairs(),
                 ((464, 'Venus'), (-200, 'Neptune')))
 
+    def test_frame_from_structured_array_c(self) -> None:
+        a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
+                dtype=[('name', 'U7'), ('mass', 'f4'), ('temperature', 'i4')])
+        f = sf.Frame.from_structured_array(a,
+                index_depth=1,
+                )
+        self.assertEqual(f.shape, (2, 2))
+        self.assertEqual(f.index.values.tolist(), ['Venus', 'Neptune'])
+
     #---------------------------------------------------------------------------
 
     def test_frame_sort_index_a(self) -> None:

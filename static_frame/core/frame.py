@@ -1316,7 +1316,6 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
@@ -1325,7 +1324,6 @@ class Frame(ContainerOperand):
 
         Args:
             index_column_first: optionally name the column that will start the block of index columns.
-            columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names # using names instead of fields, as this is NP convention
         is_structured_array = True
@@ -1356,22 +1354,7 @@ class Frame(ContainerOperand):
         index_arrays = []
         # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
         columns_labels = []
-
-        index_field_placeholder = object()
         columns_by_col_idx = []
-
-        if columns is None:
-            use_dtype_names = True
-        else:
-            use_dtype_names = False
-            columns_idx = 0 # relative position in index object
-            # construct columns_by_col_idx from columns, adding sentinal for index columns; this means we cannot get map dtypes from index names
-            for i in range(len(names)):
-                if i >= index_start_pos and i <= index_end_pos:
-                    columns_by_col_idx.append(index_field_placeholder)
-                    continue
-                columns_by_col_idx.append(columns[columns_idx])
-                columns_idx += 1
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
@@ -1380,9 +1363,8 @@ class Frame(ContainerOperand):
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
-                if use_dtype_names:
-                    # append here as we iterate for usage in get_col_dtype
-                    columns_by_col_idx.append(name)
+                # append here as we iterate for usage in get_col_dtype
+                columns_by_col_idx.append(name)
 
                 if is_structured_array:
                     # expect a 1D array with selection, not a copy
