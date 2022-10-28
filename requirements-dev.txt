@@ -1,4 +1,4 @@
-numpy==1.19.5 # 1.20 np.typing incompatibilities
+numpy==1.19.5
 automap==0.6.1
 arraykit==0.2.2
 
@@ -6,7 +6,20 @@ pytest==7.1.2
 pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.5.4
+mypy==0.971
 invoke==1.4.0
+
+pylint==2.15.0
+isort==5.10.1
+memray==1.3.1 # only linux
+pyinstrument==3.4.1
+Pygments==2.7.4
+gprof2dot==2021.2.21
+line-profiler==3.4.0
+sphinx==5.0.2
+sphinx-jinja==2.0.2
+sphinx_rtd_theme==1.0.0
+sphinxcontrib-napoleon==0.7.0
 
 ipython==7.16.3
 pandas==1.3.5 # could be any > 1.0

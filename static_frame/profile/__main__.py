@@ -2004,7 +2004,6 @@ def memory(
             os.unlink(fp)
         with memray.Tracker(fp, native_traces=True, trace_python_allocators=False):
             f()
-        print(fp)
         os.system(f'memray tree {fp}')
 
 
