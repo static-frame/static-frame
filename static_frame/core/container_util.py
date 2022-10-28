@@ -132,12 +132,14 @@ class ContainerMap:
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        index_depth: int = 0,
         ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
     Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
+        index_depth: if a mapping is provided, and if processing fields that include fields that will be interpreted as the index (and that are not included in the ``columns`` mapping), provide the index depth to "pad" the appropriate offset and always return None for those `col_idx`. NOTE: this is only enabled when using a mapping.
     '''
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
@@ -156,6 +158,11 @@ def get_col_dtype_factory(
         raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
+        if is_map:
+            col_idx = col_idx - index_depth
+            if col_idx < 0:
+                return None
+
         nonlocal dtypes # might mutate a generator into a tuple
         if is_element:
             return dtypes

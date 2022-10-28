@@ -16,9 +16,12 @@ from operator import itemgetter
 
 import numpy as np
 from arraykit import column_1d_filter
+from arraykit import count_iteration
+from arraykit import delimited_to_arrays
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import split_after_count
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -1313,7 +1316,6 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
@@ -1322,7 +1324,6 @@ class Frame(ContainerOperand):
 
         Args:
             index_column_first: optionally name the column that will start the block of index columns.
-            columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names # using names instead of fields, as this is NP convention
         is_structured_array = True
@@ -1353,22 +1354,7 @@ class Frame(ContainerOperand):
         index_arrays = []
         # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
         columns_labels = []
-
-        index_field_placeholder = object()
-        columns_by_col_idx = []
-
-        if columns is None:
-            use_dtype_names = True
-        else:
-            use_dtype_names = False
-            columns_idx = 0 # relative position in index object
-            # construct columns_by_col_idx from columns, adding sentinal for index columns; this means we cannot get map dtypes from index names
-            for i in range(len(names)):
-                if i >= index_start_pos and i <= index_end_pos:
-                    columns_by_col_idx.append(index_field_placeholder)
-                    continue
-                columns_by_col_idx.append(columns[columns_idx])
-                columns_idx += 1
+        columns_by_col_idx: tp.List[tp.Hashable] = []
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
@@ -1377,9 +1363,8 @@ class Frame(ContainerOperand):
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
-                if use_dtype_names:
-                    # append here as we iterate for usage in get_col_dtype
-                    columns_by_col_idx.append(name)
+                # append here as we iterate for usage in get_col_dtype
+                columns_by_col_idx.append(name)
 
                 if is_structured_array:
                     # expect a 1D array with selection, not a copy
@@ -1855,7 +1840,7 @@ class Frame(ContainerOperand):
             *,
             delimiter: str,
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
@@ -1863,14 +1848,17 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
+            thousands_char: str = ',',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -1879,7 +1867,7 @@ class Frame(ContainerOperand):
             fp: A file path or a file-like object.
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
-            index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            index_column_first: Optionally specify a column, by position in the realized columns, to become the start of the index if index_depth is greater than 0 and columns_depth is 0.
             index_name_depth_level: If columns_depth is greater than 0, interpret values over index as the index name.
             index_constructors:
             index_continuation_token:
@@ -1887,9 +1875,10 @@ class Frame(ContainerOperand):
             columns_name_depth_level: If index_depth is greater than 0, interpret values over index as the columns name.
             columns_constructors:
             columns_continuation_token:
+            columns_select: an iterable of columns to select by label or position; can only be used if index_depth is 0.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
+            store_filter: A StoreFilter instance, defining translation between unrepresentable strings and types. By default it is disabled, and only empty fields or "NAN" are intepreted as NaN. To force usage, set the type of the column to string.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -1897,95 +1886,87 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
-
-        # TODO: add columns_select as usecols style selective loading
-
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
-        fp = path_filter(fp)
-        delimiter_native = '\t'
+        fp = path_filter(fp) # normalize Path to strings
 
-        if delimiter != delimiter_native:
-            # this is necessary if there are quoted cells that include the delimiter
-            def file_like() -> tp.Iterator[str]:
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
-                        for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
-                            yield delimiter_native.join(row)
-                else: # handling file like object works for stringio but not for bytesio
-                    for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
-                        yield delimiter_native.join(row)
-        else:
+        if not skip_footer:
             def file_like() -> tp.Iterator[str]: # = fp
                 if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
+                    with open(fp, 'r', encoding=encoding) as f:
                         for row in f:
                             yield row
                 else: # iterable of string lines, StringIO
                     for row in fp: # type: ignore
                         yield row
+        else:
+            def file_like() -> tp.Iterator[str]: # = fp
+                if isinstance(fp, str):
+                    with open(fp, 'r', encoding=encoding) as f:
+                        row_count = count_iteration(f)
+                        f.seek(0)
+                        row_last = row_count - 1 - skip_footer
+                        for count, row in enumerate(f):
+                            if count <= row_last:
+                                yield row
+                else:
+                    if hasattr(fp, '__len__'): # iterable of string lines,
+                        row_count = len(fp)
+                    else: # StringIO
+                        row_count = count_iteration(fp)
+                        if isinstance(fp, StringIO):
+                            fp.seek(0)
+                    row_limit = row_count - skip_footer
+                    for count, row in enumerate(fp):
+                        if count < row_limit:
+                            yield row
 
-        # always accumulate columns rows, as np.genfromtxt will mutate the headers: adding enderscore, removing invalid characters, etc.
+        row_iter = file_like()
+        if skip_header:
+            for _ in range(skip_header):
+                next(row_iter)
+
         apex_rows = []
-        columns_rows = []
+        if columns_depth:
+            columns_arrays = []
+            for _ in range(columns_depth):
+                row = next(row_iter)
+                if index_depth == 0:
+                    row_left = ''
+                    row_right = row
+                else:
+                    row_left, row_right = split_after_count(
+                            row,
+                            delimiter,
+                            index_depth,
+                            )
 
-        def row_source() -> tp.Iterator[str]:
-            # set equal to skip header unless column depth is > 1
-            column_max = skip_header + columns_depth
-            for i, row in enumerate(file_like()):
-                if i < skip_header:
-                    continue
-                if i < column_max:
-                    columns_rows.append(row)
-                    continue
-                yield row
+                [array_right] = delimited_to_arrays(
+                        (row_right,),
+                        axis=0, # process type per row
+                        delimiter=delimiter,
+                        quotechar=quote_char,
+                        thousandschar=thousands_char,
+                        decimalchar=decimal_char,
+                        )
+                columns_arrays.append(array_right)
 
-        # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
+                if row_left:
+                    [array_left] = delimited_to_arrays(
+                            (row_left,),
+                            axis=0, # process type per row
+                            delimiter=delimiter,
+                            quotechar=quote_char,
+                            thousandschar=thousands_char,
+                            decimalchar=decimal_char,
+                            )
+                    apex_rows.append(array_left)
 
-        with WarningsSilent():
-            # silence: UserWarning: genfromtxt: Empty input file
-
-            array = np.genfromtxt(
-                    row_source(),
-                    delimiter=delimiter_native,
-                    skip_header=0, # done in row_source
-                    skip_footer=skip_footer,
-                    comments=None,
-                    # strange NP convention for this parameter: False is not supported, must use None to not parase headers
-                    names= None,
-                    dtype=None,
-                    encoding=encoding,
-                    invalid_raise=False,
-                    )
-        array.flags.writeable = False
-
-        # construct columns prior to preparing data from structured array, as need columns to map dtypes
-        # columns_constructor = None
         if columns_depth == 0:
             columns = None
             own_columns = False
         else:
-            # Process each row one at a time, as types align by row.
-            columns_arrays = []
-            for row in columns_rows:
-                columns_array = np.genfromtxt(
-                        (row,),
-                        delimiter=delimiter_native,
-                        comments=None,
-                        names=None,
-                        dtype=None,
-                        encoding=encoding,
-                        invalid_raise=False,
-                        )
-                # the array might be ndim=1, or ndim=0; must get a list before slicing
-                # using the array directly for a string type might not hold the rights size after slicing
-                columns_list = columns_array.tolist()
-                apex_rows.append(columns_list[:index_depth])
-                columns_arrays.append(columns_list[index_depth:])
-
             columns_name = None if index_depth == 0 else apex_to_name(
                     rows=apex_rows,
                     depth_level=columns_name_depth_level,
@@ -2001,49 +1982,108 @@ class Frame(ContainerOperand):
                         )
             else:
                 if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
-                    labels = zip_longest(
-                            *(store_filter.to_type_filter_iterable(x) for x in columns_arrays), # type: ignore
-                            fillvalue=columns_continuation_token,
+                    if store_filter is not None:
+                        labels = zip_longest(
+                                *(store_filter.to_type_filter_array(x) for x in columns_arrays),
+                                fillvalue=columns_continuation_token,
+                                )
+                    else:
+                        labels = zip_longest(
+                                *columns_arrays,
+                                fillvalue=columns_continuation_token,
+                                )
+                    columns_constructor = partial(
+                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                            name=columns_name,
+                            continuation_token=columns_continuation_token,
+                            )
+                    columns, own_columns = index_from_optional_constructors(
+                            labels,
+                            depth=columns_depth,
+                            default_constructor=columns_constructor,
+                            explicit_constructors=columns_constructors,
                             )
                 else:
-                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # type: ignore
+                    if store_filter is not None:
+                        columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
+                    columns_constructor = partial(
+                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
+                            name=columns_name,
+                            )
+                    columns, own_columns = index_from_optional_constructors(
+                            columns_arrays,
+                            depth=columns_depth,
+                            default_constructor=columns_constructor,
+                            explicit_constructors=columns_constructors,
+                            )
 
-                columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
-                        name=columns_name,
-                        continuation_token=columns_continuation_token,
+        line_select: tp.Optional[tp.Callable[[int], bool]]
+        if columns_select:
+            if index_depth:
+                raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
+                # NOTE: this is because the final columns labels might be different than those provided via input due to line_select and index_depth
+            if columns is not None:
+                columns_included = list(columns.loc_to_iloc(l) for l in columns_select)
+                columns = columns.iloc[columns_included]
+            else: # assume columsn_select are integers
+                columns_included = list(columns_select)
+            # order of columns_included maters
+            included_set = set(columns_included)
+
+            def line_select(pos: int) -> bool:
+                return pos in included_set
+        else:
+            line_select = None
+
+        get_col_dtype = (None if dtypes is None
+                else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
+        values_arrays: tp.Sequence[np.ndarray] = delimited_to_arrays(
+                row_iter,
+                axis=1, # process type per column
+                line_select=line_select,
+                delimiter=delimiter,
+                quotechar=quote_char,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
+                dtypes=get_col_dtype,
+                )
+        # TODO: if store_filter, do less
+        if store_filter is not None:
+            values_arrays = [store_filter.to_type_filter_array(a)
+                    for a in values_arrays]
+        if index_depth:
+            if index_column_first:
+                # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created
+                if columns is not None:
+                    raise ErrorInitFrame('Cannot use index_column_first if columns_depth is greater than 0.')
+                elif isinstance(index_column_first, INT_TYPES):
+                    index_start = index_column_first
+                else:
+                    raise ErrorInitFrame('index_column_first must be an integer.')
+                index_end = index_start + index_depth
+                index_arrays = values_arrays[index_start: index_end]
+                values_arrays = chain( #type: ignore
+                        values_arrays[:index_start],
+                        values_arrays[index_end:],
                         )
-                columns, own_columns = index_from_optional_constructors(
-                        labels,
-                        depth=columns_depth,
-                        default_constructor=columns_constructor,
-                        explicit_constructors=columns_constructors,
-                        )
+            else:
+                index_arrays = values_arrays[:index_depth]
+                values_arrays = values_arrays[index_depth:]
+        else:
+            if index_column_first:
+                raise ErrorInitFrame('Cannot set index_column_first without setting nonzero index_depth.')
 
-        if array.dtype.names is None: # not a structured array
-            # genfromtxt may, in some situations, not return a structured array
-            if array.ndim == 1:
-                # got a single row
-                array = array.reshape((1, len(array)))
-            # NOTE: genfromtxt will return a one column input file as a 2D array with the vertical data as a horizontal row. There does not appear to be a way to distinguish this from a single row file
-
-        if array.size > 0: # an empty, or column only table
-            data, index_arrays, _ = cls._structured_array_to_d_ia_cl(
-                    array=array,
-                    index_depth=index_depth,
-                    index_column_first=index_column_first,
-                    dtypes=dtypes,
-                    consolidate_blocks=consolidate_blocks,
-                    store_filter=store_filter,
-                    columns=columns
-                    )
-        else: # only column data in table
-            if index_depth > 0:
-                # no data is found an index depth was given; simulate empty index_arrays to create a empty index
-                index_arrays = [()] * index_depth
-            data = FRAME_INITIALIZER_DEFAULT # type: ignore
+        if values_arrays:
+            if consolidate_blocks:
+                blocks = TypeBlocks.from_blocks(
+                        TypeBlocks.consolidate_blocks(values_arrays))
+            else:
+                blocks = TypeBlocks.from_blocks(values_arrays)
+        else:
+            blocks = FRAME_INITIALIZER_DEFAULT # type: ignore
 
         kwargs = dict(
-                data=data,
+                data=blocks,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -2060,11 +2100,15 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            index_values = index_arrays[0]
+            if not index_arrays:
+                index_values = () # assume an empty Frame
+                assert blocks is FRAME_INITIALIZER_DEFAULT
+            else:
+                index_values = index_arrays[0]
             index_default_constructor = partial(Index, name=index_name)
         else: # > 1
             # might use _from_type_blocks, but would not be able to use continuation token
-            index_values = zip(*index_arrays)
+            index_values = zip(*index_arrays) # type: ignore
             index_default_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
@@ -2102,7 +2146,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
@@ -2151,7 +2195,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
@@ -2200,7 +2244,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: NameType = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
