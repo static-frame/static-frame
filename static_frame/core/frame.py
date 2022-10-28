@@ -2005,7 +2005,7 @@ class Frame(ContainerOperand):
                             )
                 else:
                     if store_filter is not None:
-                        columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays] # type: ignore
+                        columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
                     columns_constructor = partial(
                             cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
                             name=columns_name,
