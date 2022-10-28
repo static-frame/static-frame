@@ -1115,8 +1115,6 @@ class FrameToParquet_R(FrameToParquet, Reference):
     def write_tall_mixed_index_str(self) -> None:
         self.pdf2.to_parquet(self.fp)
 
-
-
 #-------------------------------------------------------------------------------
 class FrameToNPZ(PerfPrivate):
     NUMBER = 1
@@ -1185,6 +1183,38 @@ class FrameFromNPZ_R(FrameFromNPZ, Reference):
     # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_parquet(self.fp_parquet)
+
+
+
+class FrameFromCSV(Perf):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff1 = ff.parse('s(1000,1000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        _, self.fp = tempfile.mkstemp(suffix='.csv')
+        self.sff1.to_csv(self.fp)
+
+        self.meta = {
+            'square_mixed_index_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # line_target=NPYConverter._header_decode,
+                ),
+            }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+class FrameFromCSV_N(FrameFromCSV, Native):
+
+    def square_mixed_index_str(self) -> None:
+        sf.Frame.from_csv(self.fp)
+
+class FrameFromCSV_R(FrameFromCSV, Reference):
+
+    def square_mixed_index_str(self) -> None:
+        pd.read_csv(self.fp)
 
 
 #-------------------------------------------------------------------------------
@@ -1791,6 +1821,11 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             action='store_true',
             default=False,
             )
+    p.add_argument('--memory',
+            help='Memory profiling',
+            action='store_true',
+            default=False,
+            )
     p.add_argument('--private',
             help='Enable selection from private tests',
             action='store_true',
@@ -1876,7 +1911,6 @@ def graph(
         f = getattr(runner, name)
 
         suffix = f.__qualname__
-
         _, fp = tempfile.mkstemp(suffix=suffix, text=True)
         fp_pstat = fp + '.pstat'
         fp_dot = fp + '.dot'
@@ -1953,6 +1987,25 @@ def one_shot(
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
         f()
+
+
+def memory(
+        cls_runner: tp.Type[Perf],
+        pattern_func: str,
+        ) -> None:
+    import memray
+
+    runner = cls_runner()
+    for name in runner.iter_function_names(pattern_func):
+        f = getattr(runner, name)
+        suffix = f.__qualname__  + '.bin'
+        _, fp = tempfile.mkstemp(suffix=suffix, text=True)
+        if os.path.exists(fp):
+            os.unlink(fp)
+        with memray.Tracker(fp, native_traces=True, trace_python_allocators=False):
+            f()
+        print(fp)
+        os.system(f'memray tree {fp}')
 
 
 #-------------------------------------------------------------------------------
@@ -2076,6 +2129,8 @@ def main() -> None:
                 line(bundle[Native], pattern_func)
             if options.one_shot:
                 one_shot(bundle[Native], pattern_func)
+            if options.memory:
+                memory(bundle[Native], pattern_func)
     itemize = False # make CLI option maybe
 
     if records:
