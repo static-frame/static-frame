@@ -2824,6 +2824,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.assign.iloc[1,1](3000).iloc[1,1], 3000)
 
+
+    def test_frame_assign_iloc_b(self) -> None:
+
+        f1 = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')),
+                columns=('a', 'b', 'c'),
+                dtypes=dict(c=np.datetime64),
+                name='x')
+        f2 = f1.assign.iloc[2]((-1, False, '2022-01-10'))
+        import pdb; pdb.set_trace()
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_loc_a(self) -> None:
@@ -14361,12 +14373,10 @@ class TestUnit(TestCase):
         f2 = f1.drop[0]
         self.assertEqual(f2.shape, (3, 0))
         self.assertEqual(f2.index.values.tolist(), [0, 1, 2])
-
         # slicing by rows should return a Frame of shape (2, 0)
         f3 = f2.loc[1:]
         self.assertEqual(f3.shape, (2, 0))
         self.assertEqual(f3.index.values.tolist(), [1, 2])
-
         self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
 
     #---------------------------------------------------------------------------
