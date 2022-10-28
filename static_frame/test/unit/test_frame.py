@@ -6368,6 +6368,35 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_csv_s(self) -> None:
+        s1 = StringIO('A,A,B,B\nNone,x,None,y\n1,2,3,4\n4,5,6,5\n')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=2,
+                store_filter=StoreFilter()
+                )
+        self.assertEqual(f1.columns.depth, 2)
+        self.assertEqual(f1.columns.values.tolist(),
+                [['A', None], ['A', 'x'], ['B', None], ['B', 'y']])
+        self.assertEqual(f1.shape, (2, 4))
+
+    def test_frame_from_csv_t(self) -> None:
+        s1 = StringIO('A,-,B\nNone,x,None,y\n1,2,3,4\n4,5,6,5\n')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=2,
+                store_filter=StoreFilter(),
+                columns_continuation_token='-',
+                )
+        self.assertEqual(f1.columns.depth, 2)
+        self.assertEqual(f1.columns.values.tolist(),
+                [['A', None], ['A', 'x'], ['B', None], ['B', 'y']])
+        self.assertEqual(f1.shape, (2, 4))
+
     #---------------------------------------------------------------------------
 
     @skip_win
