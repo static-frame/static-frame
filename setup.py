@@ -71,7 +71,7 @@ setup(
     python_requires='>3.7.0',
     install_requires=list(get_install_requires()),
     extras_require=get_extras_require(),
-    url='https://github.com/InvestmentSystems/static-frame',
+    url='https://github.com/static-frame/static-frame',
     author='Christopher Ariza',
     license='MIT',
     package_data={'static_frame': ['py.typed']},

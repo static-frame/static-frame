@@ -44,8 +44,9 @@ jobs:
       run: inv test --cov
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
-        file: coverage.xml
+        token: 6de39346-7381-441d-80d3-a6c0c051be2d
+        files: coverage.xml
         fail_ci_if_error: false
         verbose: true

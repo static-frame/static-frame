@@ -184,7 +184,7 @@ class TestUnit(TestCase):
                 [(0, NULL_SLICE), (1, NULL_SLICE)]
                 )
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(KeyError):
             list(tb1._key_to_block_slices('a'))
 
     #---------------------------------------------------------------------------
@@ -4051,6 +4051,14 @@ class TestUnit(TestCase):
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
+
+    #---------------------------------------------------------------------------
+    def test_key_to_block_slices_exception(self) -> None:
+        # as this is an loc-is-iloc index, the key gets passed directly to type blocks
+        with self.assertRaises(KeyError):
+            ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
+
+
 
 if __name__ == '__main__':
     import unittest

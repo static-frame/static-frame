@@ -7344,8 +7344,8 @@ class TestUnit(TestCase):
 
     @unittest.skip('need to programatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
-        # https://github.com/InvestmentSystems/static-frame/issues/146
-        # https://github.com/InvestmentSystems/static-frame/issues/252
+        # https://github.com/static-frame/static-frame/issues/146
+        # https://github.com/static-frame/static-frame/issues/252
         fp = '/tmp/bad_sheet.xlsx'
         from static_frame.test.test_case import Timer
         t = Timer()

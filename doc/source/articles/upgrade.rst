@@ -158,7 +158,7 @@ As much time is spent visually exploring the contents of these containers, Stati
 While ``pd.set_option()`` can similarly be used to set Pandas display characteristics, StaticFrame provides more extensive options for making types discoverable. As shown in the following terminal animation, specific types can be colored or type annotations can be removed entirely.
 
 
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
+.. image:: https://raw.githubusercontent.com/static-frame/static-frame/master/doc/images/animate-display-config.svg
    :align: center
 
 
@@ -616,5 +616,5 @@ ____________________________________________________
 
 The concept of a "data frame" object came long before Pandas 0.1 release in 2009: the first implementation of a data frame may have been as early as 1991 in the S language, a predecessor of R. Today, the data frame finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative designed to be more consistent and reduce opportunities for error.
 
-For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/InvestmentSystems/static-frame).
+For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/static-frame/static-frame).
 

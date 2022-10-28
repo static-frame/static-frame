@@ -4,7 +4,7 @@ Contributing
 
 StaticFrame welcomes contributions to code and documentation via GitHub pull requests. For ideas on what to contribute, please see open issues on GitHub, particularly those marked "good first issue."
 
-https://github.com/InvestmentSystems/static-frame/issues
+https://github.com/static-frame/static-frame/issues
 
 If you have an idea for a new feature for which there is not already an issue, please create an issue first, before beginning development, so that it can be discussed.
 
@@ -16,7 +16,7 @@ To prepare a StaticFrame repository and environment, follow the following steps.
 
 Clone the git repository (or your fork)::
 
-    git clone https://github.com/InvestmentSystems/static-frame.git
+    git clone https://github.com/static-frame/static-frame.git
 
 Create a virtual environment with StaticFrame's requirements for testing::
 
@@ -57,7 +57,7 @@ Awknowledgements & Contributors
 
 Thanks to our many GitHub contributors:
 
-https://github.com/InvestmentSystems/static-frame/graphs/contributors
+https://github.com/static-frame/static-frame/graphs/contributors
 
 Thanks to former and current Research Affiliates staff who have contributed greatly to the design of StaticFrame:
 
