@@ -1992,25 +1992,32 @@ class Frame(ContainerOperand):
                                 *columns_arrays,
                                 fillvalue=columns_continuation_token,
                                 )
+                    columns_constructor = partial(
+                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                            name=columns_name,
+                            continuation_token=columns_continuation_token,
+                            )
+                    columns, own_columns = index_from_optional_constructors(
+                            labels,
+                            depth=columns_depth,
+                            default_constructor=columns_constructor,
+                            explicit_constructors=columns_constructors,
+                            )
                 else:
-                    # NOTE: can use a IndexHierarchy.from_values_per_depth
                     if store_filter is not None:
-                        labels = zip(*(store_filter.to_type_filter_array(x) for x in columns_arrays)) # type: ignore
-                    else:
-                        labels = zip(*columns_arrays) # type: ignore
+                        columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays] # type: ignore
+                    columns_constructor = partial(
+                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
+                            name=columns_name,
+                            )
+                    columns, own_columns = index_from_optional_constructors(
+                            columns_arrays,
+                            depth=columns_depth,
+                            default_constructor=columns_constructor,
+                            explicit_constructors=columns_constructors,
+                            )
 
-                columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
-                        name=columns_name,
-                        continuation_token=columns_continuation_token,
-                        )
-                columns, own_columns = index_from_optional_constructors(
-                        labels,
-                        depth=columns_depth,
-                        default_constructor=columns_constructor,
-                        explicit_constructors=columns_constructors,
-                        )
         line_select: tp.Optional[tp.Callable[[int], bool]]
-
         if columns_select:
             if index_depth:
                 raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
