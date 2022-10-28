@@ -6387,8 +6387,6 @@ class TestUnit(TestCase):
                     columns_depth=0,
                     )
 
-
-
     def test_frame_from_csv_s(self) -> None:
         s1 = StringIO('A,A,B,B\nNone,x,None,y\n1,2,3,4\n4,5,6,5\n')
 
@@ -6417,6 +6415,16 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(),
                 [['A', None], ['A', 'x'], ['B', None], ['B', 'y']])
         self.assertEqual(f1.shape, (2, 4))
+
+    def test_frame_from_csv_u(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                consolidate_blocks=True,
+                columns_depth=0,
+                )
+        self.assertTrue(f1._blocks.unified)
 
     #---------------------------------------------------------------------------
 
