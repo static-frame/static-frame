@@ -6353,7 +6353,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1), (1, 4))), (1, ((0, 2), (1, 5))), (2, ((0, 3), (1, 6))), (3, ((0, 10), (1, 20))))
                 )
 
-    def test_frame_from_csv_r(self) -> None:
+    def test_frame_from_csv_r1(self) -> None:
         s1 = StringIO('1,2,3,4\n4,5,6,5')
 
         f1 = sf.Frame.from_csv(
@@ -6365,6 +6365,27 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
             ((0, ((3, 1), (6, 4))), (1, ((3, 2), (6, 5))), (2, ((3, 4), (6, 5))))
             )
+
+
+    def test_frame_from_csv_r2(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        with self.assertRaises(ErrorInitFrame):
+            f1 = sf.Frame.from_csv(
+                    s1,
+                    index_depth=1,
+                    index_column_first=2,
+                    columns_depth=1,
+                    )
+
+    def test_frame_from_csv_r3(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        with self.assertRaises(ErrorInitFrame):
+            f1 = sf.Frame.from_csv(
+                    s1,
+                    index_depth=1,
+                    index_column_first='foo',
+                    columns_depth=0,
+                    )
 
 
 
