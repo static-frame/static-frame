@@ -2296,12 +2296,15 @@ class TypeBlocks(ContainerOperand):
                     # value is tuple, assume assigning into a horizontal position
                     value_piece = value[value_piece_column_key] #type: ignore
                     value = value[slice(v_width, None)] #type: ignore
-                    value_piece_array = iterable_to_array_1d(value)
-                    value_dtype = resolve_dtype(value_piece_array.dytpe, b.dtype)
+                    if hasattr(value_piece, '__len__') and not isinstance(value_piece, str):
+                        value_piece, _ = iterable_to_array_1d(value_piece)
+                        value_dtype = resolve_dtype(value_piece.dtype, b.dtype)
+                    else:
+                        value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
                 else:
                     value_piece = value[:1]
                     value = value[1:]
-                    value_dtype = resolve_dtype(dtype_from_element(value), b.dtype)
+                    value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
 
                 if row_key_is_null_slice: #will replace entire sub block, can be empty
                     assigned_target = np.empty(t_shape, dtype=value_dtype)
@@ -3027,6 +3030,19 @@ class TypeBlocks(ContainerOperand):
         '''
         row_key, column_key = key
         return TypeBlocks.from_blocks(self._assign_from_iloc_by_unit(
+                row_key=row_key,
+                column_key=column_key,
+                value=value))
+
+    def extract_iloc_assign_by_iterable(self,
+            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
+            value: object,
+            ) -> 'TypeBlocks':
+        '''
+        Assign with value via a unit: a single array or element.
+        '''
+        row_key, column_key = key
+        return TypeBlocks.from_blocks(self._assign_from_iloc_by_iterable(
                 row_key=row_key,
                 column_key=column_key,
                 value=value))

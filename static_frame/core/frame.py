@@ -8490,11 +8490,18 @@ class FrameAssignILoc(FrameAssign):
                     key,
                     assigned,
                     )
+        elif (not value.__class__ is np.ndarray
+                and hasattr(value, '__len__')
+                and not isinstance(value, str),
+                ):
+            blocks = self.container._blocks.extract_iloc_assign_by_iterable(
+                    key,
+                    value,
+                    )
         else: # could be array or single element
-            assigned = value
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
-                    assigned,
+                    value,
                     )
 
         return self.container.__class__(
