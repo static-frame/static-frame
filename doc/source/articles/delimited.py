@@ -88,7 +88,7 @@ class NumpyGenfromtxtTypeParse(FileIOTest):
 #         assert len(f) == len(self.fixture)
 
 #-------------------------------------------------------------------------------
-NUMBER = 1
+NUMBER = 2
 
 def scale(v):
     return int(v * 10)
