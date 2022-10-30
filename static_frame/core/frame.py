@@ -8498,7 +8498,7 @@ class FrameAssignILoc(FrameAssign):
                 and not column_only
                 ):
             # if column_only, we are expecting a "vertical" assignment, and use the by_unit interface
-            blocks = self.container._blocks.extract_iloc_assign_by_iterable(
+            blocks = self.container._blocks.extract_iloc_assign_by_sequence(
                     key,
                     value,
                     )

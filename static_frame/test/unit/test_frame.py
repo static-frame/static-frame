@@ -2837,6 +2837,59 @@ class TestUnit(TestCase):
                 (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, False), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
                 )
 
+
+    def test_frame_assign_iloc_c(self) -> None:
+
+        f1 = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')),
+                columns=('a', 'b', 'c'),
+                dtypes=dict(c=np.datetime64),
+                name='x')
+        f2 = f1.assign.iloc[2, [0, 2]]((-1, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, True), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
+
+    def test_frame_assign_iloc_d(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8, 3),
+                (10, 2, 8, 3),
+                (False, True, True, False),
+                (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                dtypes=dict(e=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[2, 2:]((False, False, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, False), (3, False))), ('d', ((0, False), (1, True), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
+
+    def test_frame_assign_iloc_e(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8, 3),
+                (10, 2, 8, 3),
+                (False, True, True, False),
+                (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                dtypes=dict(e=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[1:, 3:]((False, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, True), (3, False))), ('d', ((0, False), (1, False), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('2022-01-10')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('2022-01-10')))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_assign_loc_a(self) -> None:

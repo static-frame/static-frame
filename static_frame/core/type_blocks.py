@@ -2097,10 +2097,12 @@ class TypeBlocks(ContainerOperand):
         if value.__class__ is np.ndarray:
             value_dtype = value.dtype #type: ignore
         elif hasattr(value, '__len__') and not isinstance(value, str):
+            # this is assumed to be a column of values
             value, _ = iterable_to_array_1d(value)
             value_dtype = value.dtype #type: ignore
         else:
             value_dtype = dtype_from_element(value)
+
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
                 column_key,
@@ -2214,7 +2216,7 @@ class TypeBlocks(ContainerOperand):
 
 
 
-    def _assign_from_iloc_by_iterable(self,
+    def _assign_from_iloc_by_sequence(self,
             *,
             value: tp.Sequence[tp.Any],
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -3035,7 +3037,7 @@ class TypeBlocks(ContainerOperand):
                 column_key=column_key,
                 value=value))
 
-    def extract_iloc_assign_by_iterable(self,
+    def extract_iloc_assign_by_sequence(self,
             key: tp.Tuple[GetItemKeyType, GetItemKeyType],
             value: object,
             ) -> 'TypeBlocks':
@@ -3043,7 +3045,7 @@ class TypeBlocks(ContainerOperand):
         Assign with value via a unit: a single array or element.
         '''
         row_key, column_key = key
-        return TypeBlocks.from_blocks(self._assign_from_iloc_by_iterable(
+        return TypeBlocks.from_blocks(self._assign_from_iloc_by_sequence(
                 row_key=row_key,
                 column_key=column_key,
                 value=value))
