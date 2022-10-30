@@ -2216,7 +2216,7 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_iloc_by_iterable(self,
             *,
-            value: tp.Iterable[tp.Any],
+            value: tp.Sequence[tp.Any],
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             ) -> tp.Iterator[np.ndarray]:
@@ -2281,6 +2281,7 @@ class TypeBlocks(ContainerOperand):
                     t_shape = b.shape[0]
 
                 # match sliceable, when target_key is a slice (can be an element)
+                value_piece: tp.Sequence[tp.Any]
                 if target_is_slice:
                     if block_is_column:
                         v_width = 1
@@ -2294,11 +2295,11 @@ class TypeBlocks(ContainerOperand):
                     if value.__class__ is np.ndarray and value.ndim > 1: #type: ignore
                         raise NotImplementedError()
                     # value is tuple, assume assigning into a horizontal position
-                    value_piece = value[value_piece_column_key] #type: ignore
-                    value = value[slice(v_width, None)] #type: ignore
+                    value_piece = value[value_piece_column_key]
+                    value = value[slice(v_width, None)]
                     if hasattr(value_piece, '__len__') and not isinstance(value_piece, str):
                         value_piece, _ = iterable_to_array_1d(value_piece)
-                        value_dtype = resolve_dtype(value_piece.dtype, b.dtype)
+                        value_dtype = resolve_dtype(value_piece.dtype, b.dtype) #type: ignore
                     else:
                         value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
                 else:

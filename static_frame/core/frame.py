@@ -8470,6 +8470,8 @@ class FrameAssignILoc(FrameAssign):
         else:
             key = (self.key, None)
 
+        column_only = key[0] is None
+
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
@@ -8492,8 +8494,10 @@ class FrameAssignILoc(FrameAssign):
                     )
         elif (not value.__class__ is np.ndarray
                 and hasattr(value, '__len__')
-                and not isinstance(value, str),
+                and not isinstance(value, str)
+                and not column_only
                 ):
+            # if column_only, we are expecting a "vertical" assignment, and use the by_unit interface
             blocks = self.container._blocks.extract_iloc_assign_by_iterable(
                     key,
                     value,
