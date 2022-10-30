@@ -2832,9 +2832,11 @@ class TestUnit(TestCase):
                 columns=('a', 'b', 'c'),
                 dtypes=dict(c=np.datetime64),
                 name='x')
-        f2 = f1.assign.iloc[2]((-1, False, '2022-01-10'))
-        import pdb; pdb.set_trace()
+        f2 = f1.assign.iloc[2]((-1, False, np.datetime64('2022-01-10')))
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, False), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
 
     #---------------------------------------------------------------------------
 
