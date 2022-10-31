@@ -267,8 +267,6 @@ def group_sorted(
             yield group_source[start], slc, chunk
 
 
-TypeShape = tp.Union[int, tp.Tuple[int, int]]
-
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
@@ -929,7 +927,7 @@ class TypeBlocks(ContainerOperand):
                     # works for both 1d and 2s arrays
                     yield b[index_ic.iloc_src]
                 else:
-                    shape: TypeShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
+                    shape: ShapeType = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
