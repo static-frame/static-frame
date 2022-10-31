@@ -2084,13 +2084,21 @@ class TypeBlocks(ContainerOperand):
                 yield b[NULL_SLICE, assigned_stop:]
 
 
-
     def _assign_from_iloc_core(self,
             *,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             value: tp.Any = None,
-            assign_inner: tp.Callable,
+            assign_inner: tp.Callable[[
+                    tp.Any,
+                    np.ndarray,
+                    GetItemKeyType,
+                    GetItemKeyType,
+                    ShapeType,
+                    bool,
+                    bool,
+                    bool],
+                    tp.Tuple[tp.Any, np.ndarray]],
             ) -> tp.Iterator[np.ndarray]:
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
@@ -2103,6 +2111,7 @@ class TypeBlocks(ContainerOperand):
         target_is_slice: bool
         row_key_is_null_slice = row_key is None or (
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
+        row_target = NULL_SLICE if row_key_is_null_slice else row_key
 
         for block_idx, b in enumerate(self._blocks):
             assigned_stop = 0 # exclusive maximum
@@ -2147,10 +2156,10 @@ class TypeBlocks(ContainerOperand):
                     t_width = 1
                     t_shape = b.shape[0]
 
-                value, block = assign_inner(
+                value, block = assign_inner( # type: ignore
                         value=value,
                         block=b,
-                        row_key=row_key,
+                        row_target=row_target,
                         target_key=target_key,
                         t_shape=t_shape,
                         target_is_slice=target_is_slice,
@@ -2184,33 +2193,20 @@ class TypeBlocks(ContainerOperand):
 
         def assign_inner(
                 *,
-                value,
+                value: tp.Any,
                 block: np.ndarray,
-                row_key,
-                target_key,
-                t_shape: int,
+                row_target: GetItemKeyType,
+                target_key: GetItemKeyType,
+                t_shape: ShapeType,
                 target_is_slice: bool,
                 block_is_column: bool,
                 row_key_is_null_slice: bool,
-                ):
+                ) -> tp.Tuple[tp.Any, np.ndarray]:
 
             if value.__class__ is np.ndarray:
-                value_dtype = value.dtype #type: ignore
+                value_dtype = value.dtype
             else: # all other inputs are elements
                 value_dtype = dtype_from_element(value)
-
-            if row_key_is_null_slice: #will replace entire sub block, can be empty
-                assigned_target = np.empty(t_shape, dtype=value_dtype)
-            else: # will need to mix types
-                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
-                if block_is_column:
-                    assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
-                else:
-                    assigned_target_pre = block[NULL_SLICE, target_key]
-                if block.dtype == assigned_dtype:
-                    assigned_target = assigned_target_pre.copy()
-                else:
-                    assigned_target = assigned_target_pre.astype(assigned_dtype)
 
             # match sliceable, when target_key is a slice (can be an element)
             if (target_is_slice and
@@ -2225,18 +2221,29 @@ class TypeBlocks(ContainerOperand):
                     # if block id 2D, can take up to v_width from value
                     value_piece_column_key = slice(0, v_width)
 
-                if value.__class__ is np.ndarray and value.ndim > 1: #type: ignore
-                    value_piece = value[NULL_SLICE, value_piece_column_key] #type: ignore
+                if value.__class__ is np.ndarray and value.ndim > 1:
+                    value_piece = value[NULL_SLICE, value_piece_column_key]
                     # restore for next iter
-                    value = value[NULL_SLICE, slice(v_width, None)] #type: ignore
+                    value = value[NULL_SLICE, slice(v_width, None)]
                 else: # value is 1D array or tuple, assume assigning into a horizontal position
-                    value_piece = value[value_piece_column_key] #type: ignore
-                    value = value[slice(v_width, None)] #type: ignore
+                    value_piece = value[value_piece_column_key]
+                    value = value[slice(v_width, None)]
             else: # not sliceable; this can be a single column
                 value_piece = value
 
-            # write `value` into assigned
-            row_target = NULL_SLICE if row_key_is_null_slice else row_key
+            if row_key_is_null_slice: #will replace entire sub block, can be empty
+                assigned_target = np.empty(t_shape, dtype=value_dtype)
+            else: # will need to mix types
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+                if block_is_column:
+                    assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
+                else:
+                    assigned_target_pre = block[NULL_SLICE, target_key]
+                if block.dtype == assigned_dtype:
+                    assigned_target = assigned_target_pre.copy()
+                else:
+                    assigned_target = assigned_target_pre.astype(assigned_dtype)
+
 
             if assigned_target.ndim == 1:
                 assigned_target[row_target] = value_piece
@@ -2263,8 +2270,6 @@ class TypeBlocks(ContainerOperand):
                 )
 
 
-
-
     def _assign_from_iloc_by_sequence(self,
             *,
             value: tp.Sequence[tp.Any],
@@ -2279,15 +2284,15 @@ class TypeBlocks(ContainerOperand):
 
         def assign_inner(
                 *,
-                value,
+                value: tp.Any,
                 block: np.ndarray,
-                row_key,
-                target_key,
-                t_shape: int,
+                row_target: GetItemKeyType,
+                target_key: GetItemKeyType,
+                t_shape: ShapeType,
                 target_is_slice: bool,
                 block_is_column: bool,
                 row_key_is_null_slice: bool,
-                ):
+                ) -> tp.Tuple[tp.Any, np.ndarray]:
 
             # match sliceable, when target_key is a slice (can be an element)
             value_piece: tp.Sequence[tp.Any]
@@ -2301,7 +2306,7 @@ class TypeBlocks(ContainerOperand):
                     # if block id 2D, can take up to v_width from value
                     value_piece_column_key = slice(0, v_width)
 
-                if value.__class__ is np.ndarray and value.ndim > 1: #type: ignore
+                if value.__class__ is np.ndarray and value.ndim > 1:
                     raise NotImplementedError()
                 # value is tuple, assume assigning into a horizontal position
                 value_piece = value[value_piece_column_key]
@@ -2337,8 +2342,6 @@ class TypeBlocks(ContainerOperand):
                 else:
                     assigned_target = assigned_target_pre.astype(assigned_dtype)
 
-            # write `value` into assigned
-            row_target = NULL_SLICE if row_key_is_null_slice else row_key
             if assigned_target.ndim == 1:
                 assigned_target[row_target] = value_piece
             else: # we are editing the entire assigned target sub block
