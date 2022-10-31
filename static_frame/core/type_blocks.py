@@ -2324,7 +2324,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        if (not value.__class__ is np.ndarray
+        if (value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
                 and len(value) > 0
                 and not isinstance(value, str)):
