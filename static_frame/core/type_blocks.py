@@ -2096,7 +2096,7 @@ class TypeBlocks(ContainerOperand):
         '''
         if value.__class__ is np.ndarray:
             value_dtype = value.dtype #type: ignore
-        elif hasattr(value, '__len__') and not isinstance(value, str):
+        elif hasattr(value, '__len__') and len(value) > 0 and not isinstance(value, str):
             # this is assumed to be a column of values
             value, _ = iterable_to_array_1d(value)
             value_dtype = value.dtype #type: ignore
@@ -2304,11 +2304,17 @@ class TypeBlocks(ContainerOperand):
                         value_dtype = resolve_dtype(value_piece.dtype, b.dtype) #type: ignore
                     else:
                         value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
-                else:
+                elif len(value) > 1:
                     value_piece = value[:1]
                     value = value[1:]
                     value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
-
+                elif len(value) == 1:
+                    value_piece = value[0]
+                    value = ()
+                    value_dtype = resolve_dtype(dtype_from_element(value_piece), b.dtype)
+                else:
+                    # An empty iterable is not supported
+                    raise ValueError(f'no support for this value type in assignment: {value}')
                 if row_key_is_null_slice: #will replace entire sub block, can be empty
                     assigned_target = np.empty(t_shape, dtype=value_dtype)
                 else: # will need to mix types
