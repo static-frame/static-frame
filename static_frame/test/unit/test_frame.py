@@ -2907,25 +2907,6 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
             (('a', ((0, 100), (1, 2), (2, 8))), ('b', ((0, False), (1, False), (2, False))), ('c', ((0, False), (1, False), (2, False))), ('d', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('1517-12-31'))))))
 
-    def test_frame_assign_iloc_g(self) -> None:
-
-        f1 = Frame.from_fields((
-                (10, 2, 8),
-                (False, False, False),
-                (False, False, False),
-                ('1517-01-01', '1517-04-01', '1517-12-31'),
-                ),
-                columns=('a', 'b', 'c', 'd'),
-                dtypes=dict(d=np.datetime64),
-                consolidate_blocks=True,
-                )
-        with self.assertRaises(ValueError):
-            list(f1._blocks._assign_from_iloc_by_sequence(
-                    value=(),
-                    row_key=0,
-                    column_key=0))
-
-
     def test_frame_assign_iloc_h(self) -> None:
 
         f1 = Frame.from_fields((

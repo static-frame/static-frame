@@ -344,6 +344,10 @@ def assign_inner_from_iloc_by_sequence(
         row_key_is_null_slice: bool,
         ) -> tp.Tuple[tp.Any, np.ndarray]:
 
+    if value.__class__ is np.ndarray:
+        # NOTE: might support object arrays...
+        raise ValueError('an array cannot be used as a value')
+
     # match sliceable, when target_key is a slice (can be an element)
     value_piece: tp.Sequence[tp.Any]
     if target_is_slice:
@@ -356,8 +360,6 @@ def assign_inner_from_iloc_by_sequence(
             # if block id 2D, can take up to v_width from value
             value_piece_column_key = slice(0, v_width)
 
-        if value.__class__ is np.ndarray and value.ndim > 1:
-            raise NotImplementedError()
         # value is tuple, assume assigning into a horizontal position
         value_piece = value[value_piece_column_key]
         value = value[slice(v_width, None)]
