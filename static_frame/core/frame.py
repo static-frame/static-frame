@@ -1980,42 +1980,41 @@ class Frame(ContainerOperand):
                         default_constructor=partial(cls._COLUMNS_CONSTRUCTOR, name=columns_name),
                         explicit_constructors=columns_constructors, # cannot supply name
                         )
-            else:
-                if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
-                    if store_filter is not None:
-                        labels = zip_longest(
-                                *(store_filter.to_type_filter_array(x) for x in columns_arrays),
-                                fillvalue=columns_continuation_token,
-                                )
-                    else:
-                        labels = zip_longest(
-                                *columns_arrays,
-                                fillvalue=columns_continuation_token,
-                                )
-                    columns_constructor = partial(
-                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
-                            name=columns_name,
-                            continuation_token=columns_continuation_token,
-                            )
-                    columns, own_columns = index_from_optional_constructors(
-                            labels,
-                            depth=columns_depth,
-                            default_constructor=columns_constructor,
-                            explicit_constructors=columns_constructors,
+            elif columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+                if store_filter is not None:
+                    labels = zip_longest(
+                            *(store_filter.to_type_filter_array(x) for x in columns_arrays),
+                            fillvalue=columns_continuation_token,
                             )
                 else:
-                    if store_filter is not None:
-                        columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
-                    columns_constructor = partial(
-                            cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
-                            name=columns_name,
+                    labels = zip_longest(
+                            *columns_arrays,
+                            fillvalue=columns_continuation_token,
                             )
-                    columns, own_columns = index_from_optional_constructors(
-                            columns_arrays,
-                            depth=columns_depth,
-                            default_constructor=columns_constructor,
-                            explicit_constructors=columns_constructors,
-                            )
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                        name=columns_name,
+                        continuation_token=columns_continuation_token,
+                        )
+                columns, own_columns = index_from_optional_constructors(
+                        labels,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
+            else:
+                if store_filter is not None:
+                    columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
+                        name=columns_name,
+                        )
+                columns, own_columns = index_from_optional_constructors(
+                        columns_arrays,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
         line_select: tp.Optional[tp.Callable[[int], bool]]
         if columns_select:
@@ -2047,7 +2046,6 @@ class Frame(ContainerOperand):
                 decimalchar=decimal_char,
                 dtypes=get_col_dtype,
                 )
-        # TODO: if store_filter, do less
         if store_filter is not None:
             values_arrays = [store_filter.to_type_filter_array(a)
                     for a in values_arrays]
@@ -2105,20 +2103,37 @@ class Frame(ContainerOperand):
                 assert blocks is FRAME_INITIALIZER_DEFAULT
             else:
                 index_values = index_arrays[0]
-            index_default_constructor = partial(Index, name=index_name)
-        else: # > 1
-            # might use _from_type_blocks, but would not be able to use continuation token
+            index_constructor = partial(Index, name=index_name)
+            index, own_index = index_from_optional_constructors(
+                    index_values,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
+        elif index_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+            # expect all index_arrays to have the same length
             index_values = zip(*index_arrays) # type: ignore
-            index_default_constructor = partial(IndexHierarchy.from_labels,
+            index_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
                     )
-        index, own_index = index_from_optional_constructors(
-                index_values,
-                depth=index_depth,
-                default_constructor=index_default_constructor,
-                explicit_constructors=index_constructors, # cannot supply name
-                )
+            index, own_index = index_from_optional_constructors(
+                    index_values,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
+        else: # index_depth > 1, no continuation toke`n
+            index_constructor = partial(
+                    IndexHierarchy.from_values_per_depth,
+                    name=index_name,
+                    )
+            index, own_index = index_from_optional_constructors(
+                    index_arrays,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
 
         return cls(
                 index=index,
