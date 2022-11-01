@@ -882,8 +882,9 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 
     if key.__class__ is np.ndarray:
         # array first as not truthy
-        if key.dtype == bool: #type: ignore
+        if key.dtype == DTYPE_BOOL: #type: ignore
             return key
+        # NOTE: there should never be ties
         return np.sort(key, kind=DEFAULT_SORT_KIND)
 
     if not len(key): #type: ignore
