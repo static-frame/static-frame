@@ -2134,7 +2134,6 @@ class Frame(ContainerOperand):
                     default_constructor=index_constructor,
                     explicit_constructors=index_constructors, # cannot supply name
                     )
-
         return cls(
                 index=index,
                 own_index=own_index,

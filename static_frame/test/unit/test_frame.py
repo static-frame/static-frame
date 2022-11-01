@@ -6802,6 +6802,39 @@ class TestUnit(TestCase):
                 columns_select=(1, 2),
                 )
 
+    def test_frame_from_delimited_n(self) -> None:
+        msg = '2021-01-02|1|0|q\n2022-03-05|4|5|z\n1983-08-08|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=1,
+            columns_depth=0,
+            index_constructors=IndexDate,
+            )
+        self.assertIs(f1.index.__class__, IndexDate)
+        dt64 = np.datetime64
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((dt64('2021-01-02'), 1), (dt64('2022-03-05'), 4), (dt64('1983-08-08'), 9))), (1, ((dt64('2021-01-02'), 0), (dt64('2022-03-05'), 5), (dt64('1983-08-08'), 6))), (2, ((dt64('2021-01-02'), 'q'), (dt64('2022-03-05'), 'z'), (dt64('1983-08-08'), 'w'))))
+                )
+
+    def test_frame_from_delimited_o(self) -> None:
+        msg = '2021-01-02|a|0|q\n2022-01-02|b|5|z\n1983-08-08|a|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=2,
+            columns_depth=0,
+            index_constructors=(IndexDate, Index),
+            )
+        # import ipdb; ipdb.set_trace()
+
+        self.assertEqual(f1.index.index_types.values.tolist(), [IndexDate, Index])
+        dt64 = np.datetime64
+        self.assertEqual(f1.to_pairs(),
+            ((0, (((dt64('2021-01-02'), 'a'), 0), ((dt64('2022-01-02'), 'b'), 5), ((dt64('1983-08-08'), 'a'), 6))), (1, (((dt64('2021-01-02'), 'a'), 'q'), ((dt64('2022-01-02'), 'b'), 'z'), ((dt64('1983-08-08'), 'a'), 'w')))
+            ))
+
+
 
     #---------------------------------------------------------------------------
 
