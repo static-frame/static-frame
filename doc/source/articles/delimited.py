@@ -80,18 +80,27 @@ class NumpyGenfromtxtTypeParse(FileIOTest):
         f = np.genfromtxt(self.fp, dtype=None, delimiter=',', encoding=None, names=True)
         assert len(f) == len(self.fixture)
 
-# class NumpyLoadtxtTypeParse(FileIOTest):
+class NumpyLoadtxtTypeParse(FileIOTest):
 
-#     def __call__(self):
-#         import pdb; pdb.set_trace()
-#         f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
-#         assert len(f) == len(self.fixture)
+    # default type parsing does not support Booleans
+    # if given explicit types, cannot convert True / False to Bools,
+    # does not support missing values in floats
+
+    def __init__(self, fixture: str):
+        self.fixture = ff.parse(fixture)
+        _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
+        self.fixture.fillna(0).to_csv(self.fp, include_index=False)
+        self.dtypes = dict(self.fixture.dtypes)
+        self.format = list(self.dtypes.items())
+
+    def __call__(self):
+        f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 10
 
 def scale(v):
-    return int(v * 10)
+    return int(v * .1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -125,7 +134,7 @@ def plot_performance(frame: sf.Frame):
         PandasStr.__name__: 'Pandas\n(as string)',
         PandasTypeGiven.__name__: 'Pandas\n(type given)',
         NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
-        # NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
+        NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
     }
 
     name_order = {
@@ -136,7 +145,7 @@ def plot_performance(frame: sf.Frame):
         PandasStr.__name__: 1,
         PandasTypeGiven.__name__: 1,
         NumpyGenfromtxtTypeParse.__name__: 2,
-        # NumpyLoadtxtTypeParse.__name__: 2,
+        NumpyLoadtxtTypeParse.__name__: 2,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -160,7 +169,7 @@ def plot_performance(frame: sf.Frame):
 
             # ax.set_ylabel()
             cat_io, cat_dtype = cat_label.split(' ')
-            title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+            title = f'{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
             ax.set_title(title, fontsize=8)
             ax.set_box_aspect(0.75) # makes taller tan wide
             time_max = fixture['time'].max()
@@ -182,12 +191,12 @@ def plot_performance(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .97, f'Delimited Read Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
-    fig.text(.05, .91, get_versions(), fontsize=6)
+    fig.text(.05, .96, f'Delimited Read Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .90, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
-    fig.text(.05, .91, shape_msg, fontsize=6)
+    fig.text(.05, .90, shape_msg, fontsize=6)
 
     fp = '/tmp/serialize.png'
     plt.subplots_adjust(
@@ -259,7 +268,8 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-    # NumpyGenfromtxtTypeParse,
+    NumpyGenfromtxtTypeParse,
+    # NumpyLoadtxtTypeParse,
     )
 
 
