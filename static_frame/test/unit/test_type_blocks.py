@@ -1477,6 +1477,45 @@ class TestUnit(TestCase):
                 ]
                 )
 
+    def test_type_blocks_assign_from_iloc_d(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        with self.assertRaises(ValueError):
+            _ = list(f1._blocks._assign_from_iloc_by_sequence(
+                    value=[100, True, True, np.datetime64('2022-01-01')],
+                    row_key=1,
+                    column_key=1))
+
+    def test_type_blocks_assign_from_iloc_e(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2),
+                (False, False),
+                (False, False),
+                ('1517-01-01', '1517-04-01'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        post = list(f1._blocks._assign_from_iloc_by_sequence(
+                value=[100, True, True, np.datetime64('2022-01-01')],
+                row_key=None,
+                column_key=None))
+        from datetime import date
+        self.assertEqual([a.tolist() for a in post],
+                [[100, 100], [[True, True], [True, True]],
+                [date(2022, 1, 1), date(2022, 1, 1)]]
+                )
+        # import ipdb; ipdb.set_trace()
+
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 

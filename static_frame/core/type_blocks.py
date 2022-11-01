@@ -369,17 +369,16 @@ def assign_inner_from_iloc_by_sequence(
             value_dtype = resolve_dtype(value_piece.dtype, block.dtype) #type: ignore
         else:
             value_dtype = resolve_dtype(dtype_from_element(value_piece), block.dtype)
-    elif len(value) > 1:
-        value_piece = value[:1]
-        value = value[1:]
-        value_dtype = resolve_dtype(dtype_from_element(value_piece), block.dtype)
     elif len(value) == 1:
+        # target must be an integer if it is not a slice
         value_piece = value[0]
         value = ()
         value_dtype = resolve_dtype(dtype_from_element(value_piece), block.dtype)
+    elif len(value) > 1:
+        raise ValueError(f'Value has incorrect length for this assignment.')
     else:
         # An empty iterable is not supported
-        raise ValueError(f'no support for this value type in assignment: {value}')
+        raise ValueError(f'No support for this value type in assignment: {value}')
 
     if row_key_is_null_slice: #will replace entire sub block, can be empty
         assigned_target = np.empty(t_shape, dtype=value_dtype)
@@ -1618,13 +1617,13 @@ class TypeBlocks(ContainerOperand):
             retain_key_order: bool = True
             ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
-        For a column key (an integer, slice, iterable, Boolean array), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
+        For a column key (an integer, slice, iterable, Boolean array), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices. NOTE: integers are only returned when the input key is itself an integer.
 
         Args:
             retain_key_order: if False, returned slices will be in ascending order.
 
         Returns:
-            A generator iterable of pairs, where values are block index, slice or column index
+            A generator iterable of pairs, where values are pairs of either a block index and slice or, a block index and column index.
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
             yield from ((i, NULL_SLICE) for i in range(len(self._blocks)))
