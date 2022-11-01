@@ -375,7 +375,7 @@ def assign_inner_from_iloc_by_sequence(
         value = ()
         value_dtype = resolve_dtype(dtype_from_element(value_piece), block.dtype)
     elif len(value) > 1:
-        raise ValueError(f'Value has incorrect length for this assignment.')
+        raise ValueError('Value has incorrect length for this assignment.')
     else:
         # An empty iterable is not supported
         raise ValueError(f'No support for this value type in assignment: {value}')
