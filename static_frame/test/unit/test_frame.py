@@ -6826,14 +6826,11 @@ class TestUnit(TestCase):
             columns_depth=0,
             index_constructors=(IndexDate, Index),
             )
-        # import ipdb; ipdb.set_trace()
-
         self.assertEqual(f1.index.index_types.values.tolist(), [IndexDate, Index])
         dt64 = np.datetime64
         self.assertEqual(f1.to_pairs(),
             ((0, (((dt64('2021-01-02'), 'a'), 0), ((dt64('2022-01-02'), 'b'), 5), ((dt64('1983-08-08'), 'a'), 6))), (1, (((dt64('2021-01-02'), 'a'), 'q'), ((dt64('2022-01-02'), 'b'), 'z'), ((dt64('1983-08-08'), 'a'), 'w')))
             ))
-
 
 
     #---------------------------------------------------------------------------
