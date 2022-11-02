@@ -1901,15 +1901,16 @@ class Frame(ContainerOperand):
         else:
             def file_like() -> tp.Iterator[str]:
                 row_buffer: tp.Deque[str] = deque(maxlen=skip_footer)
+
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
-                        for row in f:
-                            if len(row_buffer) == skip_footer:
+                        for i, row in enumerate(f):
+                            if i >= skip_footer:
                                 yield row_buffer.popleft()
                             row_buffer.append(row)
                 else:
-                    for row in fp: # type: ignore
-                        if len(row_buffer) == skip_footer:
+                    for i, row in enumerate(fp): # type: ignore
+                        if i >= skip_footer:
                             yield row_buffer.popleft()
                         row_buffer.append(row)
 
