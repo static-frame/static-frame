@@ -4,6 +4,7 @@ import json
 import pickle
 import sqlite3
 import typing as tp
+from collections import deque
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
@@ -13,11 +14,9 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
-from collections import deque
 
 import numpy as np
 from arraykit import column_1d_filter
-from arraykit import count_iteration
 from arraykit import delimited_to_arrays
 from arraykit import name_filter
 from arraykit import resolve_dtype
