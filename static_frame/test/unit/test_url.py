@@ -1,0 +1,69 @@
+import io
+import unittest
+from pathlib import Path
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+from static_frame.core.frame import Frame
+from static_frame.core.url import URL
+from static_frame.test.test_case import TestCase
+
+url = 'http://foo'
+
+def prepare_mock(mock, content):
+    payload = io.BytesIO(bytes(content, encoding='utf-8'))
+    cm = MagicMock()
+    cm.__enter__.return_value.read = payload.read
+    mock.return_value = cm
+
+class TestUnit(TestCase):
+
+    def test_url_a(self) -> None:
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, 'foo')
+
+            post = URL(url, encoding='utf-8', in_memory=True)
+            self.assertTrue(isinstance(post, io.StringIO))
+            self.assertEqual(post.read(), 'foo')
+
+    def test_url_b(self) -> None:
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, 'bar')
+
+            post = URL(url, encoding='utf-8', in_memory=False)
+            self.assertTrue(isinstance(post, Path))
+
+            with open(post) as f:
+                post = f.read()
+
+            self.assertEqual('bar', post)
+
+    def test_url_c(self) -> None:
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, 'bar')
+
+            post = URL(url, encoding=None, in_memory=True)
+            self.assertTrue(isinstance(post, io.BytesIO))
+            self.assertEqual(post.read(), b'bar')
+
+    def test_url_d(self) -> None:
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, 'foo')
+
+            post = URL(url, encoding=None, in_memory=False)
+            self.assertTrue(isinstance(post, Path))
+            with open(post) as f:
+                post = f.read()
+
+            self.assertEqual('foo', post)
+
+    def test_url_from_delimited_a(self) -> None:
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, 'a,b,c\n1,True,x\n20,False,y\n')
+
+            post = Frame.from_csv(URL(url))
+            self.assertEqual(post.to_pairs(),
+                    (('a', ((0, 1), (1, 20))), ('b', ((0, True), (1, False))), ('c', ((0, 'x'), (1, 'y')))))
+
+if __name__ == '__main__':
+    unittest.main()
