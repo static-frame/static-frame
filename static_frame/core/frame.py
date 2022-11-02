@@ -1892,16 +1892,15 @@ class Frame(ContainerOperand):
         fp = path_filter(fp) # normalize Path to strings
 
         if not skip_footer:
-            def file_like() -> tp.Iterator[str]: # = fp
+            def file_like() -> tp.Iterator[str]:
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
                         yield from f
                 else: # iterable of string lines, StringIO
                     yield from fp
         else:
-            def file_like() -> tp.Iterator[str]: # = fp
-                row_buffer = deque(maxlen=skip_footer)
-
+            def file_like() -> tp.Iterator[str]:
+                row_buffer: tp.Deque[str] = deque(maxlen=skip_footer)
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
                         for row in f:
@@ -1909,7 +1908,7 @@ class Frame(ContainerOperand):
                                 yield row_buffer.popleft()
                             row_buffer.append(row)
                 else:
-                    for row in fp:
+                    for row in fp: # type: ignore
                         if len(row_buffer) == skip_footer:
                             yield row_buffer.popleft()
                         row_buffer.append(row)
@@ -1928,6 +1927,7 @@ class Frame(ContainerOperand):
                     row_left = ''
                     row_right = row
                 else:
+                    # NOTE: this is not presently handling quoted or escaped fields
                     row_left, row_right = split_after_count(
                             row,
                             delimiter,
@@ -2019,10 +2019,7 @@ class Frame(ContainerOperand):
             else: # assume columsn_select are integers
                 columns_included = list(columns_select)
             # order of columns_included maters
-            included_set = set(columns_included)
-
-            def line_select(pos: int) -> bool:
-                return pos in included_set
+            line_select = set(columns_included).__contains__
         else:
             line_select = None
 
