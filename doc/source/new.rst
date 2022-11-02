@@ -1,6 +1,16 @@
 What is New in StaticFrame
 ===============================
 
+0.9.19
+----------
+
+``Frame.from_delimited`` now powered by ``arraykit.delimited_to_arrays``, offering vastly improved performance for all delimited file reading.
+
+Added ``columns_select``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited``.
+
+Corrected issue in converting to ``IndexHierarchy`` from Pandas ``MultiIndex`` when the ``MultiIndex`` is bloated.
+
+
 0.9.18
 ----------
 

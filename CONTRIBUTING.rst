@@ -18,12 +18,12 @@ Clone the git repository (or your fork)::
 
     git clone https://github.com/static-frame/static-frame.git
 
-Create a virtual environment with StaticFrame's requirements for testing::
+Create a virtual environment with StaticFrame's requirements for development::
 
     cd static-frame
     python3 -m venv .env-sf
     source .env-sf/bin/activate
-    pip install -r requirements-test.txt
+    pip install -r requirements-dev.txt
 
 
 

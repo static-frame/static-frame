@@ -588,6 +588,9 @@ class ExGenSeries(ExGen):
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
             yield f"{iattr}((('x', s1), ('y', s2)))"
+        elif attr == 'from_delimited':
+            yield f"{iattr}('1.2|5.5|8.2|-3.0', delimiter='|')"
+            yield f"{iattr}('2021-01:1517-04:1620-12', delimiter=':', dtype=np.datetime64)"
         elif attr == 'from_dict':
             yield f'{iattr}(dict({kwa(SERIES_INIT_DICT_A, arg_first=False)}))'
         elif attr == 'from_element':

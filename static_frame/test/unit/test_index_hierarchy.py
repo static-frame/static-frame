@@ -3329,7 +3329,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
-        idx.append(('III', 'A')) #type: ignore
+        idx.append(('III', 'A'))
 
         self.assertEqual(idx.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
@@ -3348,11 +3348,33 @@ class TestUnit(TestCase):
         pdidx = pandas.MultiIndex.from_product(
             ((np.datetime64('2000-01-01'), np.datetime64('2000-01-02')), range(3)))
 
-        idx = IndexHierarchyGO.from_pandas(pdidx)
-        self.assertEqual([IndexNanosecondGO, IndexGO], idx.index_types.values.tolist())
+        idx1 = IndexHierarchyGO.from_pandas(pdidx)
+        self.assertEqual([IndexNanosecondGO, IndexGO], idx1.index_types.values.tolist())
 
-        idx = IndexHierarchy.from_pandas(pdidx)
-        self.assertEqual([IndexNanosecond, Index], idx.index_types.values.tolist())
+        idx2 = IndexHierarchy.from_pandas(pdidx)
+        self.assertEqual([IndexNanosecond, Index], idx2.index_types.values.tolist())
+
+    def test_hierarchy_from_pandas_unbloats(self) -> None:
+        import pandas
+
+        mi = pandas.MultiIndex([tuple("ABC"), tuple("DEF")], [[0, 0, 1], [1,2,2]])
+
+        ih1 = IndexHierarchy.from_pandas(mi)
+        ih2 = IndexHierarchy.from_values_per_depth([tuple("AAB"), tuple("EFF")])
+
+        self.assertTrue(all(a.equals(b) for (a, b) in zip(ih1._indices, ih2._indices)))
+
+        self.assertTrue(ih1.equals(ih2))
+        self.assertTrue(ih2.equals(ih1))
+        self.assertTrue(ih1.loc[ih2].equals(ih2.loc[ih1]))
+        self.assertTrue(ih2.loc[ih1].equals(ih1.loc[ih2]))
+
+    def test_hierarchy_from_pandas_fails_non_multiindex(self) -> None:
+        import pandas
+
+        i = pandas.Index(["ABC", "DEF"])
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_pandas(i)
 
     #---------------------------------------------------------------------------
 

@@ -96,7 +96,7 @@ Core StaticFrame requires the following:
 - Python>=3.7
 - NumPy>=1.18.5
 - automap==0.6.1
-- arraykit==0.1.13
+- arraykit==0.2.2
 
 For extended input and output, the following packages are required:
 
@@ -139,8 +139,6 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 
 
 .. note::
-
-    The Pandas CSV reader out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading large CSV files.
 
     For more information on Frame constructors, see `Frame: Constructor <https://static-frame.readthedocs.io/en/latest/api_detail/frame.html#frame-constructor>`_.
 

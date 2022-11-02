@@ -32,6 +32,7 @@ from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 # from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
+from static_frame.core.index_datetime import IndexNanosecond
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
@@ -90,6 +91,7 @@ from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
+    import pandas  # pragma: no cover
     from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover
@@ -298,6 +300,60 @@ class IndexHierarchy(IndexBase):
         if any(n is None for n in name):
             return None
         return name
+
+
+    @classmethod
+    def from_pandas(cls: tp.Type[IH],
+            value: 'pandas.MultiIndex',
+            ) -> IH:
+        '''
+        Given a Pandas index, return the appropriate IndexBase derived class.
+        '''
+        import pandas
+        if not isinstance(value, pandas.MultiIndex):
+            raise ErrorInitIndex(f'from_pandas must be called with a Pandas MultiIndex object, not: {type(value)}')
+
+
+        if value.has_duplicates:
+            raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
+
+        # Remove bloated labels
+        value = value.remove_unused_levels()
+
+        # iterating over a hierarchical index will iterate over labels
+        name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+
+        # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
+        if all(n is None for n in name): #type: ignore
+            name = None
+
+        def build_index(pd_idx: pandas.Index) -> Index:
+            # NOTE: Newer versions of pandas will not require Python date objects to live inside
+            # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
+            # Only numpy datetime objects are put into a DatetimeIndex.
+            if isinstance(pd_idx, pandas.DatetimeIndex):
+                constructor: tp.Type[Index] = IndexNanosecond
+            else:
+                constructor = Index
+
+            if cls.STATIC:
+                return constructor(pd_idx, name=pd_idx.name)
+            return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
+
+        indices: tp.List[Index] = []
+        indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+
+        for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
+            indexers[i] = codes
+            indices.append(build_index(levels))
+
+        indexers.flags.writeable = False
+
+        return cls(
+                indices=indices,
+                indexers=indexers,
+                name=name,
+                )
 
     @classmethod
     def from_product(cls: tp.Type[IH],

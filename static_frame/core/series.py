@@ -6,6 +6,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import delimited_to_arrays
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
@@ -159,18 +160,6 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-
-        # if hasattr(element, '__len__') and not isinstance(element, str):
-        #     array = np.empty(length, dtype=DTYPE_OBJECT)
-        #     # this is the only way to insert tuples
-        #     for i in range(length):
-        #         array[i] = element
-        # else:
-        #     array = np.full(
-        #             length,
-        #             fill_value=element,
-        #             dtype=dtype)
-
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -217,6 +206,48 @@ class Series(ContainerOperand):
                 name=name,
                 index_constructor=index_constructor,
                 )
+
+
+    @classmethod
+    def from_delimited(cls,
+            delimited: str,
+            *,
+            delimiter: str,
+            index: tp.Optional[IndexInitOrAutoType] = None,
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            thousands_char: str = ',',
+            decimal_char: str = '.',
+            own_index: bool = False,
+            ) -> 'Series':
+        '''Series construction from a delimited string.
+
+        Args:
+            dtype: if None, dtype will be inferred.
+        '''
+        get_col_dtype = None if dtype is None else lambda x: dtype
+        [array] = delimited_to_arrays(
+                (delimited,), # make into iterable of one string
+                dtypes=get_col_dtype,
+                delimiter=delimiter,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
+                )
+        if own_index:
+            index_final = index
+        else:
+            index = IndexAutoFactory(len(array)) if index is None else index
+            index_final = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        return cls(array,
+                index=index_final,
+                name=name,
+                own_index=True,
+                )
+
 
     @classmethod
     def from_dict(cls,
