@@ -4,6 +4,7 @@ import json
 import pickle
 import sqlite3
 import typing as tp
+from collections import deque
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
@@ -16,7 +17,6 @@ from operator import itemgetter
 
 import numpy as np
 from arraykit import column_1d_filter
-from arraykit import count_iteration
 from arraykit import delimited_to_arrays
 from arraykit import name_filter
 from arraykit import resolve_dtype
@@ -1892,35 +1892,26 @@ class Frame(ContainerOperand):
         fp = path_filter(fp) # normalize Path to strings
 
         if not skip_footer:
-            def file_like() -> tp.Iterator[str]: # = fp
+            def file_like() -> tp.Iterator[str]:
+                if isinstance(fp, str):
+                    with open(fp, 'r', encoding=encoding) as f:
+                        yield from f
+                else: # iterable of string lines, StringIO
+                    yield from fp
+        else:
+            def file_like() -> tp.Iterator[str]:
+                row_buffer: tp.Deque[str] = deque(maxlen=skip_footer)
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
                         for row in f:
-                            yield row
-                else: # iterable of string lines, StringIO
-                    for row in fp: # type: ignore
-                        yield row
-        else:
-            def file_like() -> tp.Iterator[str]: # = fp
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding=encoding) as f:
-                        row_count = count_iteration(f)
-                        f.seek(0)
-                        row_last = row_count - 1 - skip_footer
-                        for count, row in enumerate(f):
-                            if count <= row_last:
-                                yield row
+                            if len(row_buffer) == skip_footer:
+                                yield row_buffer.popleft()
+                            row_buffer.append(row)
                 else:
-                    if hasattr(fp, '__len__'): # iterable of string lines,
-                        row_count = len(fp)
-                    else: # StringIO
-                        row_count = count_iteration(fp)
-                        if isinstance(fp, StringIO):
-                            fp.seek(0)
-                    row_limit = row_count - skip_footer
-                    for count, row in enumerate(fp):
-                        if count < row_limit:
-                            yield row
+                    for row in fp: # type: ignore
+                        if len(row_buffer) == skip_footer:
+                            yield row_buffer.popleft()
+                        row_buffer.append(row)
 
         row_iter = file_like()
         if skip_header:
@@ -1936,6 +1927,7 @@ class Frame(ContainerOperand):
                     row_left = ''
                     row_right = row
                 else:
+                    # NOTE: this is not presently handling quoted or escaped fields
                     row_left, row_right = split_after_count(
                             row,
                             delimiter,
@@ -2027,10 +2019,7 @@ class Frame(ContainerOperand):
             else: # assume columsn_select are integers
                 columns_included = list(columns_select)
             # order of columns_included maters
-            included_set = set(columns_included)
-
-            def line_select(pos: int) -> bool:
-                return pos in included_set
+            line_select = set(columns_included).__contains__
         else:
             line_select = None
 
