@@ -3376,7 +3376,7 @@ class TestUnit(TestCase):
 
         i = pandas.Index(["ABC", "DEF"])
         with self.assertRaises(ErrorInitIndex):
-            IndexHierarchy.from_pandas(i)  # type: ignore
+            IndexHierarchy.from_pandas(i)
 
     #---------------------------------------------------------------------------
 
