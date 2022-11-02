@@ -91,7 +91,7 @@ from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
-    import pandas
+    import pandas  # pragma: no cover
     from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover

@@ -3371,6 +3371,13 @@ class TestUnit(TestCase):
         self.assertTrue(ih1.loc[ih2].equals(ih2.loc[ih1]))
         self.assertTrue(ih2.loc[ih1].equals(ih1.loc[ih2]))
 
+    def test_hierarchy_from_pandas_fails_non_multiindex(self) -> None:
+        import pandas
+
+        i = pandas.Index(["ABC", "DEF"])
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy.from_pandas(i)  # type: ignore
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_copy_a(self) -> None:
