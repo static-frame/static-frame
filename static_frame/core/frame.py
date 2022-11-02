@@ -13,6 +13,7 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
+from collections import deque
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -1895,32 +1896,24 @@ class Frame(ContainerOperand):
             def file_like() -> tp.Iterator[str]: # = fp
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
-                        for row in f:
-                            yield row
+                        yield from f
                 else: # iterable of string lines, StringIO
-                    for row in fp: # type: ignore
-                        yield row
+                    yield from fp
         else:
             def file_like() -> tp.Iterator[str]: # = fp
+                row_buffer = deque(maxlen=skip_footer)
+
                 if isinstance(fp, str):
                     with open(fp, 'r', encoding=encoding) as f:
-                        row_count = count_iteration(f)
-                        f.seek(0)
-                        row_last = row_count - 1 - skip_footer
-                        for count, row in enumerate(f):
-                            if count <= row_last:
-                                yield row
+                        for row in f:
+                            if len(row_buffer) == skip_footer:
+                                yield row_buffer.popleft()
+                            row_buffer.append(row)
                 else:
-                    if hasattr(fp, '__len__'): # iterable of string lines,
-                        row_count = len(fp)
-                    else: # StringIO
-                        row_count = count_iteration(fp)
-                        if isinstance(fp, StringIO):
-                            fp.seek(0)
-                    row_limit = row_count - skip_footer
-                    for count, row in enumerate(fp):
-                        if count < row_limit:
-                            yield row
+                    for row in fp:
+                        if len(row_buffer) == skip_footer:
+                            yield row_buffer.popleft()
+                        row_buffer.append(row)
 
         row_iter = file_like()
         if skip_header:
