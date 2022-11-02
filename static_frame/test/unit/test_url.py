@@ -65,5 +65,12 @@ class TestUnit(TestCase):
             self.assertEqual(post.to_pairs(),
                     (('a', ((0, 1), (1, 20))), ('b', ((0, True), (1, False))), ('c', ((0, 'x'), (1, 'y')))))
 
+    # def test_url_from_delimited_b(self) -> None:
+
+    #     url = 'https://stats.govt.nz/assets/Uploads/Business-financial-data/Business-financial-data-June-2022-quarter/Download-data/business-financial-data-june-2022-quarter-csv.zip'
+
+    #     post = URL(url)
+
+
 if __name__ == '__main__':
     unittest.main()

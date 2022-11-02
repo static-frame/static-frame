@@ -4,20 +4,17 @@ from io import BytesIO
 from io import StringIO
 from pathlib import Path
 from urllib import request
+from zipfile import ZipFile
 
 
-def URL(
+
+
+def url_adapter_file(
         url: str,
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
         ) -> tp.Union[Path, StringIO, BytesIO]:
-    '''
-    Args:
-        encoding: Defaults to UTF-8; if None, binary data is collected.
-        in_memory: if True, data is loaded into memory; if False, a temporary file is written.
-    '''
-    # TODO: support unzipping files
 
     with request.urlopen(url) as response:
         if in_memory:
@@ -31,7 +28,7 @@ def URL(
                 suffix=None,
                 delete=False,
                 ) as f:
-            fp = f.name
+            fp = Path(f.name)
 
             if encoding:
                 extract = lambda: response.read(buffer_size).decode(encoding)
@@ -44,7 +41,52 @@ def URL(
                     f.write(b)
                 else:
                     break
-            return Path(fp)
+
+            return fp
+
+
+def url_adapter_zip(
+        url: str,
+        encoding: tp.Optional[str] = 'utf-8',
+        in_memory: bool = True,
+        buffer_size: int = 8192,
+        ) -> tp.Union[Path, StringIO, BytesIO]:
+
+    with request.urlopen(url) as response:
+        if in_memory:
+            archive = BytesIO(response.read())
+        else:
+            with tempfile.NamedTemporaryFile(mode='wb',
+                    suffix='zip',
+                    delete=False,
+                    ) as f:
+                archive = Path(f.name)
+                while True:
+                    b = response.read(buffer_size)
+                    if b:
+                        f.write(b)
+                    else:
+                        break
+    with ZipFile(archive) as zf:
+        names = zf.namelist()
+        if len(names) > 1:
+            raise RuntimeError(f'more than one file found in zip archive: {names}')
+        print(names)
+
+def URL(url: str,
+        encoding: tp.Optional[str] = 'utf-8',
+        in_memory: bool = True,
+        buffer_size: int = 8192,
+        ) -> tp.Union[Path, StringIO, BytesIO]:
+    '''
+    Args:
+        encoding: Defaults to UTF-8; if None, binary data is collected.
+        in_memory: if True, data is loaded into memory; if False, a temporary file is written.
+    '''
+    if url.endswith('.zip'):
+        return url_adapter_zip(url, encoding, in_memory, buffer_size)
+
+    return url_adapter_file(url, encoding, in_memory, buffer_size)
 
 
 
