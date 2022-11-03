@@ -1783,7 +1783,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json(cls,
-            json_data: str,
+            json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
