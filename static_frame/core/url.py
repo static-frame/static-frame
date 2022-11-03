@@ -5,6 +5,60 @@ from io import StringIO
 from pathlib import Path
 from urllib import request
 from zipfile import ZipFile
+import os
+
+
+class StringIOTemporaryFile(StringIO):
+    '''Subclass of a StringIO that reads from a managed file that is deleted when this instance goes out of scope.
+    '''
+
+    def __init__(self, fp: Path) -> None:
+        self._fp = fp
+        self._file = open(fp, 'r')
+        super().__init__()
+
+    def __del__(self) -> None:
+        self._file.close()
+        os.unlink(self._fp)
+        super().__del__()
+
+    def seek(self, offset: int) -> int:
+        return self._file.seek(offset)
+
+    def read(self, size=-1) -> str:
+        return self._file.read(size)
+
+    def readline(self, size=-1) -> str:
+        return self._file.readline(size)
+
+    def __iter__(self) -> tp.Iterator[str]:
+        return self._file.__iter__()
+
+class BytesIOTemporaryFile(BytesIO):
+    '''Subclass of a BytesIO that reads from a managed file that is deleted when this instance goes out of scope.
+    '''
+
+    def __init__(self, fp: Path) -> None:
+        self._fp = fp
+        self._file = open(fp, 'rb')
+        super().__init__()
+
+    def __del__(self) -> None:
+        self._file.close()
+        os.unlink(self._fp)
+        super().__del__()
+
+    def seek(self, offset: int) -> int:
+        return self._file.seek(offset)
+
+    def read(self, size=-1) -> str:
+        return self._file.read(size)
+
+    def readline(self, size=-1) -> str:
+        return self._file.readline(size)
+
+    def __iter__(self) -> tp.Iterator[str]:
+        return self._file.__iter__()
 
 
 def url_adapter_file(
@@ -38,7 +92,9 @@ def url_adapter_file(
                     f.write(b)
                 else:
                     break
-            return fp
+            if encoding:
+                return StringIOTemporaryFile(fp)
+            return BytesIOTemporaryFile(fp)
 
 
 def url_adapter_zip(
@@ -71,23 +127,28 @@ def url_adapter_zip(
         name = names.pop()
         data = zf.read(name)
 
-        if in_memory:
-            if encoding:
-                return StringIO(data.decode(encoding))
-            else:
-                return BytesIO(data)
+    if in_memory:
+        if encoding:
+            return StringIO(data.decode(encoding))
+        else:
+            return BytesIO(data)
 
-        # not in-memory, write a file
-        with tempfile.NamedTemporaryFile(mode='w' if encoding else 'wb',
-                suffix=None,
-                delete=False,
-                ) as f:
-            fp = Path(f.name)
-            if encoding:
-                f.write(data.decode(encoding))
-            else:
-                f.write(data)
-            return fp
+    # not in-memory, write a file, delete archive
+    os.unlink(archive)
+
+    with tempfile.NamedTemporaryFile(mode='w' if encoding else 'wb',
+            suffix=None,
+            delete=False,
+            ) as f:
+        fp = Path(f.name)
+        if encoding:
+            f.write(data.decode(encoding))
+        else:
+            f.write(data)
+
+        if encoding:
+            return StringIOTemporaryFile(fp)
+        return BytesIOTemporaryFile(fp)
 
 
 def URL(url: str,

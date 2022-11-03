@@ -1,4 +1,5 @@
 import io
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -7,6 +8,10 @@ from unittest.mock import patch
 from static_frame.core.frame import Frame
 from static_frame.core.url import URL
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
+from static_frame.core.url import StringIOTemporaryFile
+from static_frame.core.url import BytesIOTemporaryFile
+
 
 url = 'http://foo'
 
@@ -31,12 +36,9 @@ class TestUnit(TestCase):
             prepare_mock(mock, 'bar')
 
             post = URL(url, encoding='utf-8', in_memory=False)
-            self.assertTrue(isinstance(post, Path))
+            self.assertTrue(isinstance(post, StringIOTemporaryFile))
 
-            with open(post) as f:
-                post = f.read()
-
-            self.assertEqual('bar', post)
+            self.assertEqual('bar', post.read())
 
     def test_url_c(self) -> None:
         with patch('urllib.request.urlopen') as mock:
@@ -51,11 +53,9 @@ class TestUnit(TestCase):
             prepare_mock(mock, 'foo')
 
             post = URL(url, encoding=None, in_memory=False)
-            self.assertTrue(isinstance(post, Path))
-            with open(post) as f:
-                post = f.read()
+            self.assertTrue(isinstance(post, BytesIOTemporaryFile))
+            self.assertEqual(b'foo', post.read())
 
-            self.assertEqual('foo', post)
 
     def test_url_from_delimited_a(self) -> None:
         with patch('urllib.request.urlopen') as mock:
@@ -71,6 +71,57 @@ class TestUnit(TestCase):
 
     #     post = URL(url)
     #     import ipdb; ipdb.set_trace()
+
+
+    def test_string_io_temp_file_a(self) -> None:
+        content = 'foo\nbar'
+        with temp_file('.txt') as fp:
+            with open(fp, 'w') as f:
+                f.write(content)
+
+            siotf = StringIOTemporaryFile(fp)
+
+            self.assertEqual(siotf.read(), content)
+            siotf.seek(0)
+
+            self.assertEqual(siotf.readline(), 'foo\n')
+            siotf.seek(0)
+
+            self.assertEqual(tuple(siotf), ('foo\n', 'bar'))
+
+            del siotf
+            self.assertFalse(os.path.exists(fp))
+
+            # restore file so context manager can clean up
+            with open(fp, 'w') as f:
+                f.write(content)
+
+    def test_bytes_io_temp_file_a(self) -> None:
+        content = b'foo\nbar'
+
+        with temp_file('.txt') as fp:
+            with open(fp, 'wb') as f:
+                f.write(content)
+
+            siotf = BytesIOTemporaryFile(fp)
+
+            self.assertEqual(siotf.read(), content)
+            siotf.seek(0)
+
+            self.assertEqual(siotf.readline(), b'foo\n')
+            siotf.seek(0)
+
+            self.assertEqual(tuple(siotf), (b'foo\n', b'bar'))
+
+            del siotf
+            self.assertFalse(os.path.exists(fp))
+
+            # restore file so context manager can clean up
+            with open(fp, 'wb') as f:
+                f.write(content)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
