@@ -7,7 +7,6 @@ from io import StringIO
 from pathlib import Path
 from types import TracebackType
 from urllib import request
-
 from zipfile import ZipFile
 
 
