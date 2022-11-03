@@ -199,7 +199,12 @@ def URL(url: tp.Union[str, request.Request],
         if isinstance(fp, str):
             fp = Path(fp)
 
-    if url.endswith('.zip') and unzip:
+    if isinstance(url, request.Request):
+        is_zip = url.get_full_url().endswith('.zip')
+    else:
+        is_zip = url.endswith('.zip')
+
+    if is_zip and unzip:
         return url_adapter_zip(url, encoding, in_memory, buffer_size, fp)
     return url_adapter_file(url, encoding, in_memory, buffer_size, fp)
 
