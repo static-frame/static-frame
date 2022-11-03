@@ -157,7 +157,6 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import _read_url
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array2d_to_tuples
@@ -1831,7 +1830,9 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), # type: ignore #pragma: no cover
+        from static_frame.core.url import URL
+        sio = URL(url, in_memory=True)
+        return cls.from_json(sio, # type: ignore #pragma: no cover
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks

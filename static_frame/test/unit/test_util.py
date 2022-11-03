@@ -968,11 +968,6 @@ class TestUnit(TestCase):
             _isin_2d(arr_1d, s3)
     #---------------------------------------------------------------------------
 
-    # @unittest.skip('requires network')
-    # def test_read_url(self) -> None:
-    #     url = 'https://jsonplaceholder.typicode.com/todos'
-    #     post = _read_url(url)
-
     def test_slice_to_ascending_slice_a(self) -> None:
 
         a1 = np.arange(10)

@@ -3218,15 +3218,6 @@ def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextI
         return str(fp)
     return fp #type: ignore [return-value]
 
-
-def _read_url(fp: str) -> str:
-    '''
-    Read a URL into memory, return a decoded string.
-    '''
-    with request.urlopen(fp) as response: #pragma: no cover
-        return tp.cast(str, response.read().decode('utf-8')) #pragma: no cover
-
-
 def write_optional_file(
         content: str,
         fp: tp.Optional[PathSpecifierOrFileLike] = None,
