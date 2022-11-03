@@ -7,8 +7,6 @@ from urllib import request
 from zipfile import ZipFile
 
 
-
-
 def url_adapter_file(
         url: str,
         encoding: tp.Optional[str] = 'utf-8',
@@ -29,7 +27,6 @@ def url_adapter_file(
                 delete=False,
                 ) as f:
             fp = Path(f.name)
-
             if encoding:
                 extract = lambda: response.read(buffer_size).decode(encoding)
             else:
@@ -41,7 +38,6 @@ def url_adapter_file(
                     f.write(b)
                 else:
                     break
-
             return fp
 
 
@@ -67,13 +63,35 @@ def url_adapter_zip(
                         f.write(b)
                     else:
                         break
+
     with ZipFile(archive) as zf:
         names = zf.namelist()
         if len(names) > 1:
             raise RuntimeError(f'more than one file found in zip archive: {names}')
-        print(names)
+        name = names.pop()
+        data = zf.read(name)
+
+        if in_memory:
+            if encoding:
+                return StringIO(data.decode(encoding))
+            else:
+                return BytesIO(data)
+
+        # not in-memory, write a file
+        with tempfile.NamedTemporaryFile(mode='w' if encoding else 'wb',
+                suffix=None,
+                delete=False,
+                ) as f:
+            fp = Path(f.name)
+            if encoding:
+                f.write(data.decode(encoding))
+            else:
+                f.write(data)
+            return fp
+
 
 def URL(url: str,
+        *,
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
@@ -85,10 +103,7 @@ def URL(url: str,
     '''
     if url.endswith('.zip'):
         return url_adapter_zip(url, encoding, in_memory, buffer_size)
-
     return url_adapter_file(url, encoding, in_memory, buffer_size)
 
 
 
-if __name__ == '__main__':
-    import ipdb; ipdb.set_trace()
