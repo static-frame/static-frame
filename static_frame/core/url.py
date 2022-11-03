@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 from types import TracebackType
 from urllib import request
+
 from zipfile import ZipFile
 
 
@@ -64,6 +65,8 @@ class BytesIOTemporaryFile(BytesIO):
 
 
 class MaybeTemporaryFile:
+    '''Provide one context manager that, if an `fp` is given, work as a normal file; if no `fp` is given, produce a temporary file.
+    '''
     def __init__(self, fp: tp.Optional[Path], mode: str):
 
         if fp:
@@ -86,7 +89,7 @@ class MaybeTemporaryFile:
 
 
 def url_adapter_file(
-        url: str,
+        url: tp.Union[str, request.Request],
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
@@ -122,7 +125,7 @@ def url_adapter_file(
 
 
 def url_adapter_zip(
-        url: str,
+        url: tp.Union[str, request.Request],
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
@@ -177,7 +180,7 @@ def url_adapter_zip(
         return BytesIOTemporaryFile(fp_written)
 
 
-def URL(url: str,
+def URL(url: tp.Union[str, request.Request],
         *,
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
