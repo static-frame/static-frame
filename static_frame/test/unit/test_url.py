@@ -1,7 +1,6 @@
 import io
 import os
 import unittest
-from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -75,10 +74,10 @@ class TestUnit(TestCase):
     def test_string_io_temp_file_a(self) -> None:
         content = 'foo\nbar'
         with temp_file('.txt') as fp:
-            with open(fp, 'w') as f:
+            with open(fp, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            siotf = StringIOTemporaryFile(fp)
+            siotf = StringIOTemporaryFile(fp, encoding='utf-8')
 
             self.assertEqual(siotf.read(), content)
             siotf.seek(0)
@@ -92,7 +91,7 @@ class TestUnit(TestCase):
             self.assertFalse(os.path.exists(fp))
 
             # restore file so context manager can clean up
-            with open(fp, 'w') as f:
+            with open(fp, 'w', encoding='utf-8') as f:
                 f.write(content)
 
     def test_bytes_io_temp_file_a(self) -> None:

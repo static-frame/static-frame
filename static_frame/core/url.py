@@ -2,7 +2,6 @@ import os
 import tempfile
 import typing as tp
 from io import BytesIO
-from io import IOBase
 from io import StringIO
 from pathlib import Path
 from types import TracebackType
@@ -14,9 +13,9 @@ class StringIOTemporaryFile(StringIO):
     '''Subclass of a StringIO that reads from a managed file that is deleted when this instance goes out of scope.
     '''
 
-    def __init__(self, fp: Path) -> None:
+    def __init__(self, fp: Path, encoding: str) -> None:
         self._fp = fp
-        self._file = open(fp, 'r')
+        self._file = open(fp, 'r', encoding=encoding) # pylint: disable=R1732
         super().__init__()
 
     def __del__(self) -> None:
@@ -42,7 +41,7 @@ class BytesIOTemporaryFile(BytesIO):
 
     def __init__(self, fp: Path) -> None:
         self._fp = fp
-        self._file = open(fp, 'rb')
+        self._file = open(fp, 'rb') # pylint: disable=R1732
         super().__init__()
 
     def __del__(self) -> None:
@@ -66,14 +65,15 @@ class BytesIOTemporaryFile(BytesIO):
 class MaybeTemporaryFile:
     '''Provide one context manager that, if an `fp` is given, work as a normal file; if no `fp` is given, produce a temporary file.
     '''
-    def __init__(self, fp: tp.Optional[Path], mode: str):
+    def __init__(self, fp: tp.Optional[Path], mode: str, encoding: str):
 
         if fp:
-            self._f = open(fp, mode=mode)
+            self._f = open(fp, mode=mode, encoding=encoding) # pylint: disable=R1732
         else:
-            self._f = tempfile.NamedTemporaryFile(mode=mode,
+            self._f = tempfile.NamedTemporaryFile(mode=mode, # pylint: disable=R1732
                 suffix=None,
                 delete=False,
+                encoding=encoding,
                 )
 
     def __enter__(self) -> tp.IO[tp.Any]:
@@ -103,7 +103,10 @@ def url_adapter_file(
                 return BytesIO(response.read())
 
         # not in-memory, write a file
-        with MaybeTemporaryFile(fp=fp, mode='w' if encoding else 'wb') as f:
+        with MaybeTemporaryFile(fp=fp,
+                mode='w' if encoding else 'wb',
+                encoding=encoding,
+                ) as f:
             fp_written = Path(f.name)
             if encoding:
                 extract = lambda: response.read(buffer_size).decode(encoding)
@@ -119,7 +122,7 @@ def url_adapter_file(
             if fp:
                 return fp_written
             if encoding:
-                return StringIOTemporaryFile(fp_written)
+                return StringIOTemporaryFile(fp_written, encoding=encoding)
             return BytesIOTemporaryFile(fp_written)
 
 
@@ -165,7 +168,10 @@ def url_adapter_zip(
     # not in-memory, write a file, delete archive
     os.unlink(archive)
 
-    with MaybeTemporaryFile(fp=fp, mode='w' if encoding else 'wb') as f:
+    with MaybeTemporaryFile(fp=fp,
+            mode='w' if encoding else 'wb',
+            encoding=encoding,
+            ) as f:
         fp_written = Path(f.name)
         if encoding:
             f.write(data.decode(encoding))
@@ -175,7 +181,7 @@ def url_adapter_zip(
         if fp:
             return fp_written
         if encoding:
-            return StringIOTemporaryFile(fp_written)
+            return StringIOTemporaryFile(fp_written, encoding=encoding)
         return BytesIOTemporaryFile(fp_written)
 
 

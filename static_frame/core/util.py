@@ -19,7 +19,6 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from types import TracebackType
-from urllib import request
 
 import numpy as np
 from arraykit import column_2d_filter
