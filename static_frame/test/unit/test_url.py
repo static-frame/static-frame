@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 from static_frame.core.frame import Frame
-from static_frame.core.url import URL
+from static_frame.core.url import WWW
 from static_frame.core.url import BytesIOTemporaryFile
 from static_frame.core.url import StringIOTemporaryFile
 from static_frame.test.test_case import TestCase
@@ -25,41 +25,41 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = URL(url, encoding='utf-8', in_memory=True)
+            post = WWW.from_file(url, encoding='utf-8', in_memory=True)
             self.assertTrue(isinstance(post, io.StringIO))
-            self.assertEqual(post.read(), 'foo') # type: ignore
+            self.assertEqual(post.read(), 'foo')
 
     def test_url_b(self) -> None:
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = URL(url, encoding='utf-8', in_memory=False)
+            post = WWW.from_file(url, encoding='utf-8', in_memory=False)
             self.assertTrue(isinstance(post, StringIOTemporaryFile))
-            self.assertEqual('bar', post.read()) # type: ignore
+            self.assertEqual('bar', post.read())
 
     def test_url_c(self) -> None:
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = URL(url, encoding=None, in_memory=True)
+            post = WWW.from_file(url, encoding=None, in_memory=True)
             self.assertTrue(isinstance(post, io.BytesIO))
-            self.assertEqual(post.read(), b'bar') # type: ignore
+            self.assertEqual(post.read(), b'bar')
 
     def test_url_d(self) -> None:
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = URL(url, encoding=None, in_memory=False)
+            post = WWW.from_file(url, encoding=None, in_memory=False)
 
             self.assertTrue(isinstance(post, BytesIOTemporaryFile))
-            self.assertEqual(b'foo', post.read()) # type: ignore
+            self.assertEqual(b'foo', post.read())
 
 
     def test_url_from_delimited_a(self) -> None:
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'a,b,c\n1,True,x\n20,False,y\n')
 
-            post = Frame.from_csv(URL(url))
+            post = Frame.from_csv(WWW.from_file(url))
             self.assertEqual(post.to_pairs(),
                     (('a', ((0, 1), (1, 20))), ('b', ((0, True), (1, False))), ('c', ((0, 'x'), (1, 'y')))))
 

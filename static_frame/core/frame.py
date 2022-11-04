@@ -1830,8 +1830,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        from static_frame.core.url import URL
-        sio = URL(url, in_memory=True)
+        from static_frame.core.url import WWW
+        sio = WWW.from_file(url, in_memory=True)
         return cls.from_json(sio, # type: ignore #pragma: no cover
                 name=name,
                 dtypes=dtypes,
@@ -2316,7 +2316,7 @@ class Frame(ContainerOperand):
         Load Frame from the contents of a sheet in an XLSX workbook.
 
         Args:
-            label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
+            label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         '''
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX

@@ -445,6 +445,18 @@ class DOC_TEMPLATE:
             '''
             )
 
+    www = dict(
+            doc='''Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
+            ''',
+            url="A URL string or a `Request` object from Python's standard library `urllib`.",
+            in_memory="Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.",
+            buffer_size="When `in_memory` is False, the number of bytes to be written per network read",
+            fp="Optionally specify a file path to write to; cannot be specified if `in_memory` is True. When reading from archives (zip, gzip), only the extracted component will be written to this file path.",
+            component="When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.",
+            encoding="Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary."
+            )
+
+
 # NOTE: F here should replace AnyCallable below
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 

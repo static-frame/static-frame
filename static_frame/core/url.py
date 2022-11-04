@@ -8,6 +8,8 @@ from types import TracebackType
 from urllib import request
 from zipfile import ZipFile
 
+from static_frame.core.doc_str import doc_inject
+
 
 class StringIOTemporaryFile(StringIO):
     '''Subclass of a StringIO that reads from a managed file that is deleted when this instance goes out of scope.
@@ -87,13 +89,16 @@ class MaybeTemporaryFile:
         self._f.__exit__(type, value, traceback)
 
 
-def url_adapter_file(
+WWWReturnType = tp.Union[Path, StringIO, BytesIO]
+
+
+def www_adapter_file(
         url: tp.Union[str, request.Request],
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
         fp: tp.Optional[Path] = None,
-        ) -> tp.Union[Path, StringIO, BytesIO]:
+        ) -> WWWReturnType:
 
     with request.urlopen(url) as response:
         if in_memory:
@@ -126,13 +131,14 @@ def url_adapter_file(
             return BytesIOTemporaryFile(fp_written)
 
 
-def url_adapter_zip(
+def www_adapter_zip(
         url: tp.Union[str, request.Request],
         encoding: tp.Optional[str] = 'utf-8',
         in_memory: bool = True,
         buffer_size: int = 8192,
         fp: tp.Optional[Path] = None,
-        ) -> tp.Union[Path, StringIO, BytesIO]:
+        component: tp.Optional[str] = None,
+        ) -> WWWReturnType:
 
     archive: tp.Union[Path, BytesIO]
 
@@ -185,33 +191,141 @@ def url_adapter_zip(
         return BytesIOTemporaryFile(fp_written)
 
 
-def URL(url: tp.Union[str, request.Request],
-        *,
-        encoding: tp.Optional[str] = 'utf-8',
-        in_memory: bool = True,
-        buffer_size: int = 8192,
-        unzip: bool = True,
-        fp: tp.Optional[tp.Union[Path, str]] = None,
-        ) -> tp.Union[Path, StringIO, BytesIO]:
-    '''
-    Args:
-        encoding: Defaults to UTF-8; if None, binary data is collected.
-        in_memory: if True, data is loaded into memory; if False, a temporary file is written.
-    '''
-    if fp is not None:
-        if in_memory:
-            raise RuntimeError('If supplying a fp set in_memory to False')
-        if isinstance(fp, str):
-            fp = Path(fp)
 
-    if isinstance(url, request.Request):
-        is_zip = url.get_full_url().endswith('.zip')
-    else:
-        is_zip = url.endswith('.zip')
+# def URL(url: tp.Union[str, request.Request],
+#         *,
+#         encoding: tp.Optional[str] = 'utf-8',
+#         in_memory: tp.Optional[bool] = None,
+#         buffer_size: int = 8192,
+#         unzip: bool = True,
+#         fp: tp.Optional[tp.Union[Path, str]] = None,
+#         ) -> tp.Union[Path, StringIO, BytesIO]:
+#     '''
+#     Args:
+#         encoding: Defaults to UTF-8; if None, binary data is collected.
+#         in_memory: if True, data is loaded into memory; if False, a temporary file is written.
+#     '''
+#     if fp is not None:
+#         if in_memory is True:
+#             raise RuntimeError('If supplying a fp set in_memory to False')
+#         in_memory = False
+#         if isinstance(fp, str):
+#             fp = Path(fp)
+#     else:
+#         in_memory = True if in_memory is None else in_memory
 
-    if is_zip and unzip:
-        return url_adapter_zip(url, encoding, in_memory, buffer_size, fp)
-    return url_adapter_file(url, encoding, in_memory, buffer_size, fp)
+#     if isinstance(url, request.Request):
+#         is_zip = url.get_full_url().endswith('.zip')
+#     else:
+#         is_zip = url.endswith('.zip')
+
+#     if is_zip and unzip:
+#         return www_adapter_zip(url, encoding, in_memory, buffer_size, fp)
+#     return www_adapter_file(url, encoding, in_memory, buffer_size, fp)
+
+
+class WWW:
+
+    @staticmethod
+    def _resolve_fp_and_in_memory(
+            in_memory: tp.Optional[bool],
+            fp: tp.Optional[tp.Union[Path, str]] = None,
+            ) -> tp.Tuple[bool, tp.Optional[Path]]:
+        '''
+        If an fp is given and in_memory is True, error; else, in_memory is set to False; if an fp is not given and in_memory is None, default to True, else use in_memory.
+        '''
+        if fp is not None:
+            if in_memory is True:
+                raise RuntimeError('If supplying a fp in_memory cannot be True')
+            in_memory = False
+            if isinstance(fp, str):
+                fp = Path(fp)
+        else:
+            in_memory = True if in_memory is None else in_memory
+        return in_memory, fp
+
+    @doc_inject(selector='www')
+    @classmethod
+    def from_file(cls,
+            url: tp.Union[str, request.Request],
+            *,
+            encoding: tp.Optional[str] = 'utf-8',
+            in_memory: tp.Optional[bool] = None,
+            buffer_size: int = 8192,
+            fp: tp.Optional[tp.Union[Path, str]] = None,
+            ) -> WWWReturnType:
+        '''
+        {doc}
+
+        Args:
+            {url}
+            {encoding}
+            {in_memory}
+            {buffer_size}
+            {fp}
+        '''
+        in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
+        return www_adapter_file(url, encoding, in_memory, buffer_size, fp)
+
+    @doc_inject(selector='www')
+    @classmethod
+    def from_zip(cls,
+            url: tp.Union[str, request.Request],
+            *,
+            encoding: tp.Optional[str] = 'utf-8',
+            in_memory: tp.Optional[bool] = None,
+            buffer_size: int = 8192,
+            fp: tp.Optional[tp.Union[Path, str]] = None,
+            component: tp.Optional[str] = None,
+            ) -> WWWReturnType:
+        '''
+        {doc}
+
+        Args:
+            {url}
+            {encoding}
+            {in_memory}
+            {buffer_size}
+            {fp}
+            {component}
+        '''
+        in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
+        return www_adapter_zip(url,
+                encoding=encoding,
+                in_memory=in_memory,
+                buffer_size=buffer_size,
+                fp=fp,
+                component=component,
+                )
+
+    @doc_inject(selector='www')
+    @classmethod
+    def from_gzip(cls,
+            url: tp.Union[str, request.Request],
+            *,
+            encoding: tp.Optional[str] = 'utf-8',
+            in_memory: tp.Optional[bool] = None,
+            buffer_size: int = 8192,
+            fp: tp.Optional[tp.Union[Path, str]] = None,
+            ) -> WWWReturnType:
+        '''
+        {doc}
+
+        Args:
+            {url}
+            {encoding}
+            {in_memory}
+            {buffer_size}
+            {fp}
+        '''
+        in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
+        # TODO: implement gzip handling
+        return www_adapter_zip(url,
+                encoding=encoding,
+                in_memory=in_memory,
+                buffer_size=buffer_size,
+                fp=fp,
+                )
 
 
 
