@@ -1,3 +1,4 @@
+import gzip
 import os
 import tempfile
 import typing as tp
@@ -63,6 +64,7 @@ class BytesIOTemporaryFile(BytesIO):
     def __iter__(self) -> tp.Iterator[bytes]:
         return self._file.__iter__()
 
+#-------------------------------------------------------------------------------
 
 class MaybeTemporaryFile:
     '''Provide one context manager that, if an `fp` is given, work as a normal file; if no `fp` is given, produce a temporary file.
@@ -89,142 +91,39 @@ class MaybeTemporaryFile:
         self._f.__exit__(type, value, traceback)
 
 
+#-------------------------------------------------------------------------------
+
 WWWReturnType = tp.Union[Path, StringIO, BytesIO]
 
-
-def www_adapter_file(
-        url: tp.Union[str, request.Request],
-        encoding: tp.Optional[str] = 'utf-8',
-        in_memory: bool = True,
-        buffer_size: int = 8192,
-        fp: tp.Optional[Path] = None,
-        ) -> WWWReturnType:
-
-    with request.urlopen(url) as response:
-        if in_memory:
-            if encoding:
-                return StringIO(response.read().decode(encoding))
-            else:
-                return BytesIO(response.read())
-
-        # not in-memory, write a file
-        with MaybeTemporaryFile(fp=fp,
-                mode='w' if encoding else 'wb',
-                encoding=encoding,
-                ) as f:
-            fp_written = Path(f.name)
-            if encoding:
-                extract = lambda: response.read(buffer_size).decode(encoding)
-            else:
-                extract = lambda: response.read(buffer_size)
-
-            while True:
-                b = extract() # type: ignore
-                if b:
-                    f.write(b)
-                else:
-                    break
-            if fp:
-                return fp_written
-            if encoding:
-                return StringIOTemporaryFile(fp_written, encoding=encoding)
-            return BytesIOTemporaryFile(fp_written)
-
-
-def www_adapter_zip(
-        url: tp.Union[str, request.Request],
-        encoding: tp.Optional[str] = 'utf-8',
-        in_memory: bool = True,
-        buffer_size: int = 8192,
-        fp: tp.Optional[Path] = None,
-        component: tp.Optional[str] = None,
-        ) -> WWWReturnType:
-
-    archive: tp.Union[Path, BytesIO]
-
-    with request.urlopen(url) as response:
-        if in_memory:
-            archive = BytesIO(response.read())
-        else:
-            with tempfile.NamedTemporaryFile(mode='wb',
-                    suffix='zip',
-                    delete=False,
-                    ) as f:
-                archive = Path(f.name)
-                while True:
-                    b = response.read(buffer_size)
-                    if b:
-                        f.write(b)
-                    else:
-                        break
-
-    with ZipFile(archive) as zf:
-        names = zf.namelist()
-        if len(names) > 1:
-            raise RuntimeError(f'more than one file found in zip archive: {names}')
-        name = names.pop()
-        data = zf.read(name)
-
-    if in_memory:
-        if encoding:
-            return StringIO(data.decode(encoding))
-        else:
-            return BytesIO(data)
-
-    # not in-memory, write a file, delete archive
-    os.unlink(archive)
-
-    with MaybeTemporaryFile(fp=fp,
-            mode='w' if encoding else 'wb',
-            encoding=encoding,
-            ) as f:
-        fp_written = Path(f.name)
-        if encoding:
-            f.write(data.decode(encoding))
-        else:
-            f.write(data)
-
-        if fp:
-            return fp_written
-        if encoding:
-            return StringIOTemporaryFile(fp_written, encoding=encoding)
-        return BytesIOTemporaryFile(fp_written)
-
-
-
-# def URL(url: tp.Union[str, request.Request],
-#         *,
-#         encoding: tp.Optional[str] = 'utf-8',
-#         in_memory: tp.Optional[bool] = None,
-#         buffer_size: int = 8192,
-#         unzip: bool = True,
-#         fp: tp.Optional[tp.Union[Path, str]] = None,
-#         ) -> tp.Union[Path, StringIO, BytesIO]:
-#     '''
-#     Args:
-#         encoding: Defaults to UTF-8; if None, binary data is collected.
-#         in_memory: if True, data is loaded into memory; if False, a temporary file is written.
-#     '''
-#     if fp is not None:
-#         if in_memory is True:
-#             raise RuntimeError('If supplying a fp set in_memory to False')
-#         in_memory = False
-#         if isinstance(fp, str):
-#             fp = Path(fp)
-#     else:
-#         in_memory = True if in_memory is None else in_memory
-
-#     if isinstance(url, request.Request):
-#         is_zip = url.get_full_url().endswith('.zip')
-#     else:
-#         is_zip = url.endswith('.zip')
-
-#     if is_zip and unzip:
-#         return www_adapter_zip(url, encoding, in_memory, buffer_size, fp)
-#     return www_adapter_file(url, encoding, in_memory, buffer_size, fp)
-
-
 class WWW:
+    '''Utilities for downloading resources from the world-wide-web.
+    '''
+
+    @staticmethod
+    def _download_archive(
+            url: tp.Union[str, request.Request],
+            in_memory: bool,
+            buffer_size: int,
+            extension: str,
+            ) -> tp.Union[Path, BytesIO]:
+        archive: tp.Union[Path, BytesIO]
+
+        with request.urlopen(url) as response:
+            if in_memory:
+                archive = BytesIO(response.read())
+            else:
+                with tempfile.NamedTemporaryFile(mode='wb',
+                        suffix='zip',
+                        delete=False,
+                        ) as f:
+                    archive = Path(f.name)
+                    while True:
+                        b = response.read(buffer_size)
+                        if b:
+                            f.write(b)
+                        else:
+                            break
+        return archive
 
     @staticmethod
     def _resolve_fp_and_in_memory(
@@ -244,6 +143,31 @@ class WWW:
             in_memory = True if in_memory is None else in_memory
         return in_memory, fp
 
+    @staticmethod
+    def _write_maybe_temporary(
+            fp: tp.Optional[Path],
+            encoding: tp.Optional[str],
+            extractor: tp.Callable[[], tp.Union[str, bytes]]
+            ) -> WWWReturnType:
+        with MaybeTemporaryFile(fp=fp,
+                mode='w' if encoding else 'wb',
+                encoding=encoding,
+                ) as f:
+            fp_written = Path(f.name)
+
+            while True:
+                b = extractor()
+                if b:
+                    f.write(b)
+                else:
+                    break
+            if fp:
+                return fp_written
+            if encoding:
+                return StringIOTemporaryFile(fp_written, encoding=encoding)
+            return BytesIOTemporaryFile(fp_written)
+
+    #---------------------------------------------------------------------------
     @doc_inject(selector='www')
     @classmethod
     def from_file(cls,
@@ -265,7 +189,25 @@ class WWW:
             {fp}
         '''
         in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
-        return www_adapter_file(url, encoding, in_memory, buffer_size, fp)
+
+        with request.urlopen(url) as response:
+            if in_memory:
+                if encoding:
+                    return StringIO(response.read().decode(encoding))
+                else:
+                    return BytesIO(response.read())
+
+            if encoding:
+                extractor = lambda: response.read(buffer_size).decode(encoding)
+            else:
+                extractor = lambda: response.read(buffer_size)
+
+            return cls._write_maybe_temporary(
+                    fp=fp,
+                    encoding=encoding,
+                    extractor=extractor,
+                    )
+
 
     @doc_inject(selector='www')
     @classmethod
@@ -290,13 +232,41 @@ class WWW:
             {component}
         '''
         in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
-        return www_adapter_zip(url,
-                encoding=encoding,
+
+        archive = cls._download_archive(url=url,
                 in_memory=in_memory,
                 buffer_size=buffer_size,
-                fp=fp,
-                component=component,
+                extension='zip',
                 )
+
+        with ZipFile(archive) as zf:
+            names = zf.namelist()
+            if component:
+                name = component
+            else:
+                if len(names) > 1:
+                    raise RuntimeError(f'more than one file found in zip archive: {names}')
+                name = names.pop()
+            data = zf.read(name)
+
+        data_io: tp.Union[StringIO, BytesIO]
+        if encoding:
+            data_io = StringIO(data.decode(encoding))
+        else:
+            data_io = BytesIO(data)
+
+        if in_memory:
+            return data_io
+
+        # not in-memory, write a file, delete archive
+        os.unlink(archive)
+
+        return cls._write_maybe_temporary(
+                fp=fp,
+                encoding=encoding,
+                extractor=data_io.read,
+                )
+
 
     @doc_inject(selector='www')
     @classmethod
@@ -319,13 +289,30 @@ class WWW:
             {fp}
         '''
         in_memory, fp = cls._resolve_fp_and_in_memory(in_memory, fp)
-        # TODO: implement gzip handling
-        return www_adapter_zip(url,
-                encoding=encoding,
+
+        archive = cls._download_archive(url=url,
                 in_memory=in_memory,
                 buffer_size=buffer_size,
-                fp=fp,
+                extension='gzip',
                 )
 
+        with gzip.open(archive) as gz:
+            data = gz.read()
 
+        data_io: tp.Union[StringIO, BytesIO]
+        if encoding:
+            data_io = StringIO(data.decode(encoding))
+        else:
+            data_io = BytesIO(data)
 
+        if in_memory:
+            return data_io
+
+        # not in-memory, write a file, delete archive
+        os.unlink(archive)
+
+        return cls._write_maybe_temporary(
+                fp=fp,
+                encoding=encoding,
+                extractor=data_io.read,
+                )
