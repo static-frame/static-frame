@@ -67,7 +67,7 @@ class BytesIOTemporaryFile(BytesIO):
 #-------------------------------------------------------------------------------
 
 class MaybeTemporaryFile:
-    '''Provide one context manager that, if an `fp` is given, work as a normal file; if no `fp` is given, produce a temporary file.
+    '''Provide one context manager that, if an `fp` is given, works as a normal file; if no `fp` is given, produce a temporary file.
     '''
     def __init__(self, fp: tp.Optional[Path], mode: str, encoding: str):
 
@@ -113,7 +113,7 @@ class WWW:
                 archive = BytesIO(response.read())
             else:
                 with tempfile.NamedTemporaryFile(mode='wb',
-                        suffix='zip',
+                        suffix=extension,
                         delete=False,
                         ) as f:
                     archive = Path(f.name)
@@ -236,7 +236,7 @@ class WWW:
         archive = cls._download_archive(url=url,
                 in_memory=in_memory,
                 buffer_size=buffer_size,
-                extension='zip',
+                extension='.zip',
                 )
 
         with ZipFile(archive) as zf:
@@ -293,7 +293,7 @@ class WWW:
         archive = cls._download_archive(url=url,
                 in_memory=in_memory,
                 buffer_size=buffer_size,
-                extension='gzip',
+                extension='.gzip',
                 )
 
         with gzip.open(archive) as gz:

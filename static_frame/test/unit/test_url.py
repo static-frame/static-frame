@@ -1,8 +1,11 @@
 import io
 import os
 import unittest
+import typing as tp
 from unittest.mock import MagicMock
 from unittest.mock import patch
+from zipfile import ZipFile
+from pathlib import Path
 
 from static_frame.core.frame import Frame
 from static_frame.core.url import WWW
@@ -11,10 +14,13 @@ from static_frame.core.url import StringIOTemporaryFile
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
-url = 'http://foo'
+URL = 'http://foo'
 
-def prepare_mock(mock: MagicMock, content: str) -> None:
-    payload = io.BytesIO(bytes(content, encoding='utf-8'))
+def prepare_mock(mock: MagicMock, content: tp.Union[str, bytes]) -> None:
+    if isinstance(content, str):
+        payload = io.BytesIO(bytes(content, encoding='utf-8'))
+    else:
+        payload = io.BytesIO(content)
     cm = MagicMock()
     cm.__enter__.return_value.read = payload.read
     mock.return_value = cm
@@ -25,7 +31,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = WWW.from_file(url, encoding='utf-8', in_memory=True)
+            post = WWW.from_file(URL, encoding='utf-8', in_memory=True)
             self.assertTrue(isinstance(post, io.StringIO))
             self.assertEqual(post.read(), 'foo')
 
@@ -33,7 +39,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = WWW.from_file(url, encoding='utf-8', in_memory=False)
+            post = WWW.from_file(URL, encoding='utf-8', in_memory=False)
             self.assertTrue(isinstance(post, StringIOTemporaryFile))
             self.assertEqual('bar', post.read())
 
@@ -41,7 +47,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = WWW.from_file(url, encoding=None, in_memory=True)
+            post = WWW.from_file(URL, encoding=None, in_memory=True)
             self.assertTrue(isinstance(post, io.BytesIO))
             self.assertEqual(post.read(), b'bar')
 
@@ -49,7 +55,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = WWW.from_file(url, encoding=None, in_memory=False)
+            post = WWW.from_file(URL, encoding=None, in_memory=False)
 
             self.assertTrue(isinstance(post, BytesIOTemporaryFile))
             self.assertEqual(b'foo', post.read())
@@ -59,11 +65,11 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'a,b,c\n1,True,x\n20,False,y\n')
 
-            post = Frame.from_csv(WWW.from_file(url))
+            post = Frame.from_csv(WWW.from_file(URL))
             self.assertEqual(post.to_pairs(),
                     (('a', ((0, 1), (1, 20))), ('b', ((0, True), (1, False))), ('c', ((0, 'x'), (1, 'y')))))
 
-    # def test_url_from_delimited_b(self) -> None:
+    # def test_url_from_delimited_b(self) -> None:1
 
     #     url = 'https://stats.govt.nz/assets/Uploads/Business-financial-data/Business-financial-data-June-2022-quarter/Download-data/business-financial-data-june-2022-quarter-csv.zip'
 
@@ -118,6 +124,43 @@ class TestUnit(TestCase):
             with open(fp, 'wb') as f:
                 f.write(content)
 
+
+    def test_download_archive_a(self) -> None:
+        archive = io.BytesIO()
+        with ZipFile(archive, mode='w') as zf:
+            zf.writestr('foo', b'a,b,c\n1,True,x\n2,False,y\n')
+        archive.seek(0)
+
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, archive.read())
+
+            post = WWW._download_archive('http://foo',
+                    in_memory=True,
+                    buffer_size=1024,
+                    extension='.zip')
+
+            archive.seek(0)
+            self.assertEqual(post.read(), archive.read())
+
+    def test_download_archive_b(self) -> None:
+        content = b'a,b,c\n1,True,x\n2,False,y\n'
+        archive = io.BytesIO()
+        with ZipFile(archive, mode='w') as zf:
+            zf.writestr('foo', content)
+        archive.seek(0)
+
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, archive.read())
+
+            post = WWW._download_archive(URL,
+                    in_memory=False,
+                    buffer_size=1024,
+                    extension='.zip')
+            self.assertIsInstance(post, Path)
+
+            with ZipFile(post) as zf:
+                contained = zf.read('foo')
+                self.assertEqual(contained, content)
 
 
 
