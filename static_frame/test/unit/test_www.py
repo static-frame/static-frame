@@ -9,9 +9,9 @@ from unittest.mock import patch
 from zipfile import ZipFile
 
 from static_frame.core.frame import Frame
-from static_frame.core.url import WWW
-from static_frame.core.url import BytesIOTemporaryFile
-from static_frame.core.url import StringIOTemporaryFile
+from static_frame.core.www import WWW
+from static_frame.core.www import BytesIOTemporaryFile
+from static_frame.core.www import StringIOTemporaryFile
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 

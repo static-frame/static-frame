@@ -103,7 +103,7 @@ from static_frame.core.store_config import StoreConfig as StoreConfig
 from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
-from static_frame.core.url import WWW
+from static_frame.core.www import WWW
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
 from static_frame.core.util import FrameInitializer as FrameInitializer
