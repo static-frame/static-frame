@@ -1,9 +1,9 @@
 import gzip
 import io
+import json
 import os
 import typing as tp
 import unittest
-import json
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -27,7 +27,7 @@ def prepare_mock(mock: MagicMock, content: tp.Union[str, bytes]) -> None:
     cm.__enter__.return_value.read = payload.read
     mock.return_value = cm
 
-def load_zip_in_bytes(content: tp.Dict[str, str]) -> io.BytesIO:
+def load_zip_in_bytes(content: tp.Dict[str, tp.Union[str, bytes]]) -> io.BytesIO:
     archive = io.BytesIO()
     with ZipFile(archive, mode='w') as zf:
         for label, value in content.items():
