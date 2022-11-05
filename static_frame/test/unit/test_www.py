@@ -3,6 +3,7 @@ import io
 import os
 import typing as tp
 import unittest
+import json
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -268,8 +269,27 @@ class TestUnit(TestCase):
                 with open(post) as postf:
                     self.assertEqual(postf.read(), content)
 
+    #---------------------------------------------------------------------------
+    def test_frame_from_json_a(self) -> None:
 
-
+        content = '''[
+        {
+        "userId": 1,
+        "id": 1,
+        "title": "delectus aut autem",
+        "completed": false
+        },
+        {
+        "userId": 1,
+        "id": 2,
+        "title": "quis ut nam facilis et officia qui",
+        "completed": false
+        }]'''
+        with patch('urllib.request.urlopen') as mock:
+            prepare_mock(mock, content)
+            post = Frame.from_json_url(url=URL)
+            self.assertEqual(post.shape, (2, 4))
+            self.assertEqual([dt.kind for dt in post.dtypes.values], ['i', 'i', 'U', 'b'])
 
 if __name__ == '__main__':
     unittest.main()
