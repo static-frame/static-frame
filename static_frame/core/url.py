@@ -245,7 +245,9 @@ class WWW:
                 name = component
             else:
                 if len(names) > 1:
-                    raise RuntimeError(f'more than one file found in zip archive: {names}')
+                    samples = ', '.join(names[:20])
+                    etc = '...' if len(samples) > 20 else ''
+                    raise RuntimeError(f'More than one file found in zip archive ({samples}{etc}); name a single file with the `component` argument.')
                 name = names.pop()
             data = zf.read(name)
 
@@ -260,7 +262,6 @@ class WWW:
 
         # not in-memory, write a file, delete archive
         os.unlink(archive)
-
         return cls._write_maybe_temporary(
                 fp=fp,
                 encoding=encoding,
@@ -310,7 +311,6 @@ class WWW:
 
         # not in-memory, write a file, delete archive
         os.unlink(archive)
-
         return cls._write_maybe_temporary(
                 fp=fp,
                 encoding=encoding,
