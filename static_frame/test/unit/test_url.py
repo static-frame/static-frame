@@ -1,11 +1,11 @@
 import io
 import os
-import unittest
 import typing as tp
+import unittest
+from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
 from zipfile import ZipFile
-from pathlib import Path
 
 from static_frame.core.frame import Frame
 from static_frame.core.url import WWW
@@ -140,6 +140,7 @@ class TestUnit(TestCase):
                     extension='.zip')
 
             archive.seek(0)
+            assert isinstance(post, io.BytesIO)
             self.assertEqual(post.read(), archive.read())
 
     def test_download_archive_b(self) -> None:
