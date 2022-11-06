@@ -230,6 +230,9 @@ class TestUnit(TestCase):
             prepare_mock(mock, archive.read())
 
             with temp_file('.txt') as fp:
+                with self.assertRaises(RuntimeError):
+                    _ = WWW.from_zip(URL, fp=fp, in_memory=True)
+
                 post = WWW.from_zip(URL, fp=fp)
                 self.assertEqual(str(post), fp)
 

@@ -135,7 +135,7 @@ class WWW:
         '''
         if fp is not None:
             if in_memory is True:
-                raise RuntimeError('If supplying a fp in_memory cannot be True')
+                raise RuntimeError('If supplying an `fp`, `in_memory` cannot be True.')
             in_memory = False
             if isinstance(fp, str):
                 fp = Path(fp)
