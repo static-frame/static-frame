@@ -124,7 +124,7 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 >>> import numpy as np
 >>> import static_frame as sf
 
->>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))
+>>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))
 
 >>> frame.head()
 <Frame>
