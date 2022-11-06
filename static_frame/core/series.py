@@ -1,10 +1,10 @@
+import csv
 import typing as tp
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import product
-import csv
 
 import numpy as np
 from arraykit import delimited_to_arrays
