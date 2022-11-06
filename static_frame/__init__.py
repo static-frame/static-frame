@@ -113,6 +113,7 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
 __version__ = '0.9.18'

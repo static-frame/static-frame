@@ -282,7 +282,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
         ''' + readme_str
 
         # inject content from local files
-        src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
+        src = ">>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))"
 
         # using a raw string to avoid unicode decoding issues on windows
         dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"

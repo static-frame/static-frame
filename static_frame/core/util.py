@@ -19,7 +19,6 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from types import TracebackType
-from urllib import request
 
 import numpy as np
 from arraykit import column_2d_filter
@@ -3217,15 +3216,6 @@ def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextI
     if isinstance(fp, PathLike):
         return str(fp)
     return fp #type: ignore [return-value]
-
-
-def _read_url(fp: str) -> str:
-    '''
-    Read a URL into memory, return a decoded string.
-    '''
-    with request.urlopen(fp) as response: #pragma: no cover
-        return tp.cast(str, response.read().decode('utf-8')) #pragma: no cover
-
 
 def write_optional_file(
         content: str,

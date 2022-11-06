@@ -157,7 +157,6 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import _read_url
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array2d_to_tuples
@@ -1783,7 +1782,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json(cls,
-            json_data: str,
+            json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -1800,7 +1799,11 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        data = json.loads(json_data)
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
         return cls.from_dict_records(data, # type: ignore
                 name=name,
                 dtypes=dtypes,
@@ -1827,7 +1830,10 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), # type: ignore #pragma: no cover
+        # NOTE: remove in 1.0
+        from static_frame.core.www import WWW
+        sio = WWW.from_file(url, in_memory=True)
+        return cls.from_json(sio, # type: ignore #pragma: no cover
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
@@ -2311,7 +2317,7 @@ class Frame(ContainerOperand):
         Load Frame from the contents of a sheet in an XLSX workbook.
 
         Args:
-            label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
+            label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         '''
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
