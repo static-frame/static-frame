@@ -1857,6 +1857,7 @@ class Frame(ContainerOperand):
             columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
             quote_double: bool = True,
@@ -1954,6 +1955,7 @@ class Frame(ContainerOperand):
                         escapechar=escape_char,
                         thousandschar=thousands_char,
                         decimalchar=decimal_char,
+                        skipinitialspace=skip_initial_space,
                         )
                 columns_arrays.append(array_right)
 
@@ -1962,9 +1964,13 @@ class Frame(ContainerOperand):
                             (row_left,),
                             axis=0, # process type per row
                             delimiter=delimiter,
+                            quoting=quoting,
                             quotechar=quote_char,
+                            doublequote=quote_double,
+                            escapechar=escape_char,
                             thousandschar=thousands_char,
                             decimalchar=decimal_char,
+                            skipinitialspace=skip_initial_space,
                             )
                     apex_rows.append(array_left)
 
@@ -2043,9 +2049,13 @@ class Frame(ContainerOperand):
                 axis=1, # process type per column
                 line_select=line_select,
                 delimiter=delimiter,
+                quoting=quoting,
                 quotechar=quote_char,
+                doublequote=quote_double,
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
+                skipinitialspace=skip_initial_space,
                 dtypes=get_col_dtype,
                 )
         if store_filter is not None:
@@ -2158,6 +2168,7 @@ class Frame(ContainerOperand):
             columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
             quote_double: bool = True,
@@ -2189,6 +2200,7 @@ class Frame(ContainerOperand):
                 columns_continuation_token=columns_continuation_token,columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
                 quoting=quoting,
                 quote_char=quote_char,
                 quote_double=quote_double,
@@ -2218,6 +2230,7 @@ class Frame(ContainerOperand):
             columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
             quote_double: bool = True,
@@ -2250,6 +2263,7 @@ class Frame(ContainerOperand):
                 columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
                 quoting=quoting,
                 quote_char=quote_char,
                 quote_double=quote_double,
@@ -2279,6 +2293,7 @@ class Frame(ContainerOperand):
             columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
             quote_double: bool = True,
@@ -2320,6 +2335,7 @@ class Frame(ContainerOperand):
                 columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
                 quoting=quoting,
                 quote_char=quote_char,
                 quote_double=quote_double,
