@@ -1862,7 +1862,7 @@ class Frame(ContainerOperand):
             quote_char: str = '"',
             quote_double: bool = True,
             escape_char: tp.Optional[str] = None,
-            thousands_char: str = ',',
+            thousands_char: str = '',
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
@@ -1871,7 +1871,7 @@ class Frame(ContainerOperand):
             store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
-        Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
+        Create a :obj:`Frame` from a file path or a file-like object defining a delimited (CSV, TSV) data file.
 
         Args:
             fp: A file path or a file-like object.
@@ -2173,7 +2173,7 @@ class Frame(ContainerOperand):
             quote_char: str = '"',
             quote_double: bool = True,
             escape_char: tp.Optional[str] = None,
-            thousands_char: str = ',',
+            thousands_char: str = '',
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
@@ -2235,7 +2235,7 @@ class Frame(ContainerOperand):
             quote_char: str = '"',
             quote_double: bool = True,
             escape_char: tp.Optional[str] = None,
-            thousands_char: str = ',',
+            thousands_char: str = '',
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
@@ -2298,7 +2298,7 @@ class Frame(ContainerOperand):
             quote_char: str = '"',
             quote_double: bool = True,
             escape_char: tp.Optional[str] = None,
-            thousands_char: str = ',',
+            thousands_char: str = '',
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
