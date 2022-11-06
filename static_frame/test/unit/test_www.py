@@ -1,6 +1,6 @@
 import gzip
 import io
-import json
+# import json
 import os
 import typing as tp
 import unittest
@@ -233,7 +233,7 @@ class TestUnit(TestCase):
                 post = WWW.from_zip(URL, fp=fp)
                 self.assertEqual(str(post), fp)
 
-                with open(post) as postf:
+                with open(post, encoding='utf-8') as postf:
                     self.assertEqual(postf.read(), content2)
 
     #---------------------------------------------------------------------------
@@ -266,7 +266,7 @@ class TestUnit(TestCase):
                 post = WWW.from_gzip(URL, fp=fp)
                 self.assertEqual(str(post), fp)
 
-                with open(post) as postf:
+                with open(post, encoding='utf-8') as postf:
                     self.assertEqual(postf.read(), content)
 
     #---------------------------------------------------------------------------
