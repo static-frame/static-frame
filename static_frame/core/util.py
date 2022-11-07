@@ -3136,19 +3136,6 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
         return value
     return tuple(list_to_tuple(v) for v in value)
 
-
-class NpDtypeMapper(json.JSONEncoder):
-    def default(self, obj: tp.Any) -> tp.Any:
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, np.bool_):
-            return obj.tolist()
-        raise NotImplementedError(f"{type(obj)} mappings are not yet supported.")
-
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(

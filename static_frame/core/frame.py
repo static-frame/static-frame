@@ -151,7 +151,6 @@ from static_frame.core.util import Join
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import NpDtypeMapper
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
