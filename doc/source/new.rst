@@ -6,7 +6,11 @@ What is New in StaticFrame
 
 ``Frame.from_delimited`` now powered by ``arraykit.delimited_to_arrays``, offering vastly improved performance for all delimited file reading.
 
-Added ``columns_select``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited``.
+Added ``Series.from_delimited``.
+
+Added ``WWW`` interface for downloading resources to provide to constructors.
+
+Added ``columns_select``, ``skip_initial_space``, ``quoting``, ``quote_double``, ``escape_char``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited`` and derived interfaces.
 
 Corrected issue in converting to ``IndexHierarchy`` from Pandas ``MultiIndex`` when the ``MultiIndex`` is bloated.
 
