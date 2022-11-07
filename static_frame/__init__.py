@@ -84,6 +84,7 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet

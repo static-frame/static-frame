@@ -77,6 +77,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_nanosecond_go.rst
    api_overview/hloc.rst
    api_overview/iloc.rst
+   api_overview/www.rst
    api_overview/fill_value_auto.rst
    api_overview/display_active.rst
    api_overview/display_config.rst
@@ -128,6 +129,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_nanosecond_go.rst
    api_detail/hloc.rst
    api_detail/iloc.rst
+   api_detail/www.rst
    api_detail/fill_value_auto.rst
    api_detail/display_active.rst
    api_detail/display_config.rst
@@ -584,6 +586,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/iloc-constructor.rst
    api_overview/iloc-attribute.rst
    api_overview/iloc-display.rst
+   api_overview/www-constructor.rst
+   api_overview/www-display.rst
    api_overview/fill_value_auto-constructor.rst
    api_overview/fill_value_auto-attribute.rst
    api_overview/fill_value_auto-display.rst
@@ -1072,6 +1076,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/iloc-constructor.rst
    api_detail/iloc-attribute.rst
    api_detail/iloc-display.rst
+   api_detail/www-constructor.rst
+   api_detail/www-display.rst
    api_detail/fill_value_auto-constructor.rst
    api_detail/fill_value_auto-attribute.rst
    api_detail/fill_value_auto-display.rst
