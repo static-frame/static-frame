@@ -8,7 +8,7 @@ What is New in StaticFrame
 
 Added ``Series.from_delimited``.
 
-Added ``WWW`` interface for downloading resources to provide to constructors.
+Added ``WWW`` interface for downloading network resources to provide to constructors.
 
 Added ``columns_select``, ``skip_initial_space``, ``quoting``, ``quote_double``, ``escape_char``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited`` and derived interfaces.
 
