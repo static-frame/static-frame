@@ -1,3 +1,4 @@
+import csv
 import typing as tp
 from collections.abc import Set
 from copy import deepcopy
@@ -217,7 +218,12 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
-            thousands_char: str = ',',
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
             decimal_char: str = '.',
             own_index: bool = False,
             ) -> 'Series':
@@ -231,8 +237,13 @@ class Series(ContainerOperand):
                 (delimited,), # make into iterable of one string
                 dtypes=get_col_dtype,
                 delimiter=delimiter,
+                quoting=quoting,
+                quotechar=quote_char,
+                doublequote=quote_double,
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
+                skipinitialspace=skip_initial_space,
                 )
         if own_index:
             index_final = index
