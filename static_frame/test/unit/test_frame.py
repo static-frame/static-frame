@@ -12884,6 +12884,19 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_frame_str_format_a(self) -> None:
+        f1 = Frame(np.array([[10, 20], [30, 40]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = (f1 / 3).via_str.format('{:.3}')
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', '3.33'), ('b', '10.0'))), ('y', (('a', '6.67'), ('b', '13.3'))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_via_dt_year_a(self) -> None:
 
