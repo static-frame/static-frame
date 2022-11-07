@@ -83,6 +83,7 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.yarn import Yarn
+from static_frame.core.www import WWW
 
 #-------------------------------------------------------------------------------
 
@@ -120,6 +121,7 @@ DOCUMENTED_COMPONENTS = (
         IndexNanosecondGO,
         HLoc,
         ILoc,
+        WWW,
         FillValueAuto,
         DisplayActive,
         DisplayConfig,
@@ -988,6 +990,8 @@ class InterfaceSummary(Features):
             elif target is MemoryDisplay:
                 f = Frame(EMPTY_ARRAY)
                 instance = target.from_any(f)
+            elif target is WWW:
+                instance = target()
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
