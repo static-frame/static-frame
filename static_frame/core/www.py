@@ -168,8 +168,8 @@ class WWW:
             return BytesIOTemporaryFile(fp_written)
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='www')
     @classmethod
+    @doc_inject(selector='www')
     def from_file(cls,
             url: tp.Union[str, request.Request],
             *,
@@ -209,8 +209,8 @@ class WWW:
                     )
 
 
-    @doc_inject(selector='www')
     @classmethod
+    @doc_inject(selector='www')
     def from_zip(cls,
             url: tp.Union[str, request.Request],
             *,
@@ -269,8 +269,8 @@ class WWW:
                 )
 
 
-    @doc_inject(selector='www')
     @classmethod
+    @doc_inject(selector='www')
     def from_gzip(cls,
             url: tp.Union[str, request.Request],
             *,
