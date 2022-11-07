@@ -273,7 +273,9 @@ class InterfaceString(Interface[TContainer]):
         return self._blocks_to_container(block_gen)
 
     def format(self, format: str) -> TContainer:
-        # if isinstance(format, str):
+        '''
+        For each element, return a string resulting from calling the `format` argument's `format` method with the values in this container.
+        '''
         func = format.format
 
         def block_gen() -> tp.Iterator[np.ndarray]:
@@ -286,7 +288,6 @@ class InterfaceString(Interface[TContainer]):
                     array.flags.writeable = False
                     yield array
                 else:
-                    count = block.shape[0]
                     for i in range(block.shape[1]):
                         array = np.array(
                             [func(e) for e in block[NULL_SLICE, i]],
@@ -678,6 +679,14 @@ class InterfaceBatchString(InterfaceBatch):
         For each element, return the lowest index in the string where substring ``sub`` is found.
         '''
         return self._batch_apply(lambda c: c.via_str.find(sub, start, end))
+
+    def format(self,
+            format: str,
+            ) -> 'Batch':
+        '''
+        For each element, return a string resulting from calling the `format` argument's `format` method with the values in this container.
+        '''
+        return self._batch_apply(lambda c: c.via_str.format(format))
 
     def index(self,
             sub: str,
