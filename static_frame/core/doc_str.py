@@ -446,7 +446,7 @@ class DOC_TEMPLATE:
             )
 
     www = dict(
-            doc='''doc: Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
+            doc='''Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
             ''',
             url="url: A URL string or a `Request` object from Python's standard library `urllib`.",
             in_memory="in_memory: Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.",
