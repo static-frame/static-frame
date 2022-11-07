@@ -402,7 +402,7 @@ class DOC_TEMPLATE:
             )
     sort = dict(
             ascending='ascending: If True, sort in ascending order; if False, sort in descending order.',
-            ascendings='''ascending: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
+            ascendings='''ascendings: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
             kind='kind: Name of the sort algorithm as passed to NumPy.',
             key='key: A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
             )
@@ -446,14 +446,14 @@ class DOC_TEMPLATE:
             )
 
     www = dict(
-            doc='''Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
+            doc='''doc: Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
             ''',
-            url="A URL string or a `Request` object from Python's standard library `urllib`.",
-            in_memory="Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.",
-            buffer_size="When `in_memory` is False, the number of bytes to be written per network read",
-            fp="Optionally specify a file path to write to; cannot be specified if `in_memory` is True. When reading from archives (zip, gzip), only the extracted component will be written to this file path.",
-            component="When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.",
-            encoding="Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary."
+            url="url: A URL string or a `Request` object from Python's standard library `urllib`.",
+            in_memory="in_memory: Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.",
+            buffer_size="buffer_size: When `in_memory` is False, the number of bytes to be written per network read",
+            fp="fp: Optionally specify a file path to write to; cannot be specified if `in_memory` is True. When reading from archives (zip, gzip), only the extracted component will be written to this file path.",
+            component="component: When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.",
+            encoding="encoding: Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary."
             )
 
 
