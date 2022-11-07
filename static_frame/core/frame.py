@@ -151,6 +151,7 @@ from static_frame.core.util import Join
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
+from static_frame.core.util import NpDtypeMapper
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -7485,6 +7486,9 @@ class Frame(ContainerOperand):
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
 
+    #---------------------------------------------------------------------------
+    # exporters: alternate libraries
+
     def to_pandas(self) -> 'pandas.DataFrame':
         '''
         Return a Pandas DataFrame.
@@ -7779,6 +7783,45 @@ class Frame(ContainerOperand):
         return Series(array, index=index, own_index=True, name=name)
 
     #---------------------------------------------------------------------------
+    # exporters: json
+
+    def to_json_index(self, indent: int = 4) -> str:
+        '''
+        Export the Frame as an index-formatted JSON string
+        '''
+        return json.dumps(
+            {key: dict(self[key].iter_element_items()) for key in self.keys()},
+            cls=NpDtypeMapper,
+        )
+
+    def to_json_split(self, indent: int = 4) -> str:
+        '''
+        Export the Frame as an split-formatted JSON string
+        '''
+        d = {}
+        d["columns"] = list(self.keys())
+        d["index"] = list(self.index)
+        d["data"] = [[*v] for v in self.iter_tuple()]
+        return json.dumps(d, cls=NpDtypeMapper)
+
+    def to_json_records(self, indent: int = 4) -> str:
+        '''
+        Export the Frame as an record-formatted JSON string
+        '''
+        return json.dumps(
+            [dict(zip(self.keys(), v)) for v in self.iter_tuple(axis=1)],
+            cls=NpDtypeMapper,
+        )
+
+    def to_json_values(self, indent: int = 4) -> str:
+        '''
+        Export the Frame as an record-formatted JSON string
+        '''
+        return json.dumps([[*v] for v in self.iter_tuple()], cls=NpDtypeMapper)
+
+    #---------------------------------------------------------------------------
+    # exporters: delimited
+
     def _to_str_records(self,
             *,
             include_index: bool = True,
