@@ -3148,6 +3148,8 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return {self._encode(k): self._encode(v) for k, v in obj.items()}
         if isinstance(obj, list):
             return [self._encode(v) for v in obj]
+        if isinstance(obj, datetime.date):
+            return obj.isoformat()
         return super().default(obj)
 
     def default(self, o: tp.Any) -> tp.Any:

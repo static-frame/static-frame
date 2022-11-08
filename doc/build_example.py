@@ -1545,6 +1545,7 @@ class ExGenFrame(ExGen):
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
+        # iattr = f'{icls}.{attr}'
 
         if attr in (
                 'to_arrow()',
@@ -1580,6 +1581,17 @@ class ExGenFrame(ExGen):
         elif attr == 'to_hdf5()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f"f1.to_hdf5('/tmp/f.h5')"
+
+        elif attr in (
+                'to_json_columns()',
+                'to_json_index()',
+                'to_json_split()',
+                'to_json_records()',
+                'to_json_values()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"f.{attr_func}(indent=4)"
+
         elif attr == 'to_npy()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f1.to_npy('/tmp/f.npy')"
