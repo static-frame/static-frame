@@ -261,12 +261,12 @@ def get_col_format_value_factory(
     def get_col_format_value(col_idx: int) -> str:
         nonlocal format # might mutate a generator into a tuple
         if is_element:
-            return format
+            return format # type: ignore
         if is_map:
             return format.get(fields[col_idx], '') #type: ignore
         if not hasattr(format, '__len__') or not hasattr(format, '__getitem__'):
             format = tuple(format)
-        return format[col_idx]
+        return format[col_idx] # type: ignore
 
     return get_col_format_value
 

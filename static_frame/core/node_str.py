@@ -4,6 +4,7 @@ from functools import reduce
 import numpy as np
 from numpy import char as npc
 
+from static_frame.core.container_util import get_col_format_value_factory
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
