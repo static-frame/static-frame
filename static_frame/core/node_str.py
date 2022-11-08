@@ -41,6 +41,7 @@ INTERFACE_STR = (
         'encode',
         'endswith',
         'find',
+        'format',
         'index',
         'isalnum',
         'isalpha',
@@ -312,7 +313,6 @@ class InterfaceString(Interface[TContainer]):
                                     DTYPE_STR,
                                     )
                             pos += 1
-
         return self._blocks_to_container(block_gen())
 
     def index(self,
