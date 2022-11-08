@@ -718,8 +718,6 @@ class TestUnit(TestCase):
         self.assertEqual(func(1), '{:1}')
         self.assertEqual(func(2), '{:2}')
 
-
-
     #---------------------------------------------------------------------------
 
     def test_apex_to_name_a(self) -> None:
