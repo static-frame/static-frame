@@ -3267,6 +3267,7 @@ class Frame(ContainerOperand):
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
                 ndim=self._NDIM,
+                label_to_pos=self._columns.loc_to_iloc,
                 )
 
     @property

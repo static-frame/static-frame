@@ -761,6 +761,7 @@ class Series(ContainerOperand):
                 blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
                 ndim=self._NDIM,
+                label_to_pos=range(1).__getitem__
                 )
 
     @property
