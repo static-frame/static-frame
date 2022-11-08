@@ -3266,6 +3266,7 @@ class Frame(ContainerOperand):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
                 )
 
     @property

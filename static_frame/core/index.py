@@ -589,6 +589,7 @@ class Index(IndexBase):
         return InterfaceString(
                 blocks=(self._labels,),
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
                 )
 
     @property

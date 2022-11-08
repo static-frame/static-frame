@@ -79,15 +79,21 @@ class InterfaceString(Interface[TContainer]):
     __slots__ = (
             '_blocks',
             '_blocks_to_container',
+            '_ndim',
+            '_label_to_pos',
             )
     INTERFACE = INTERFACE_STR
 
     def __init__(self,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer]
+            blocks_to_container: ToContainerType[TContainer],
+            ndim: int,
+            label_to_pos: tp.Callable[[tp.Hashable], int] = None,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._ndim = ndim
+        self._label_to_pos = label_to_pos
 
     #---------------------------------------------------------------------------
 

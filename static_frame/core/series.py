@@ -760,6 +760,7 @@ class Series(ContainerOperand):
         return InterfaceString(
                 blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
                 )
 
     @property
