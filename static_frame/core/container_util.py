@@ -233,7 +233,7 @@ def get_col_fill_value_factory(
     return get_col_fill_value
 
 
-def get_col_format_value_factory(
+def get_col_format_factory(
         format: tp.Any,
         fields: tp.Optional[tp.Sequence[tp.Hashable]],
         ) -> tp.Callable[[int], str]:

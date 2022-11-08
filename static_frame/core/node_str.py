@@ -4,7 +4,7 @@ from functools import reduce
 import numpy as np
 from numpy import char as npc
 
-from static_frame.core.container_util import get_col_format_value_factory
+from static_frame.core.container_util import get_col_format_factory
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
@@ -282,19 +282,36 @@ class InterfaceString(Interface[TContainer]):
         '''
         For each element, return a string resulting from calling the `format` argument's `format` method with the values in this container.
         '''
-        func = format.format
 
-        def block_gen() -> tp.Iterator[np.ndarray]:
-            for block in self._blocks:
-                if block.ndim == 1:
-                    yield array_from_element_apply(block, func, DTYPE_STR)
-                else:
-                    for i in range(block.shape[1]):
-                        yield array_from_element_apply(
-                                block[NULL_SLICE, i],
-                                func,
-                                DTYPE_STR,
-                                )
+        format_factory = get_col_format_factory(format, self._labels)
+
+        if self._ndim == 1:
+            # apply the format per label in series
+            def block_gen() -> tp.Iterator[np.ndarray]:
+                post = []
+                for i, v in enumerate(next(iter(self._blocks))):
+                    func = format_factory(i).format
+                    post.append(func(v))
+                array = np.array(post, dtype=DTYPE_STR)
+                array.flags.writeable = False
+                yield array
+        else:
+            def block_gen() -> tp.Iterator[np.ndarray]:
+                pos = 0
+                for block in self._blocks:
+                    if block.ndim == 1:
+                        func = format_factory(pos).format
+                        yield array_from_element_apply(block, func, DTYPE_STR)
+                        pos += 1
+                    else:
+                        for i in range(block.shape[1]):
+                            func = format_factory(pos).format
+                            yield array_from_element_apply(
+                                    block[NULL_SLICE, i],
+                                    func,
+                                    DTYPE_STR,
+                                    )
+                            pos += 1
 
         return self._blocks_to_container(block_gen())
 
