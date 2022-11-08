@@ -16,6 +16,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_from_element_method
+from static_frame.core.util import array_from_element_apply
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -279,20 +280,14 @@ class InterfaceString(Interface[TContainer]):
         def block_gen() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 if block.ndim == 1:
-                    array = np.array(
-                        [func(e) for e in block],
-                        dtype=DTYPE_STR,
-                        )
-                    array.flags.writeable = False
-                    yield array
+                    yield array_from_element_apply(block, func, DTYPE_STR)
                 else:
                     for i in range(block.shape[1]):
-                        array = np.array(
-                            [func(e) for e in block[NULL_SLICE, i]],
-                            dtype=DTYPE_STR,
-                            )
-                        array.flags.writeable = False
-                        yield array
+                        yield array_from_element_apply(
+                                block[NULL_SLICE, i],
+                                func,
+                                DTYPE_STR,
+                                )
 
         return self._blocks_to_container(block_gen())
 
