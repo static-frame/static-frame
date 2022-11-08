@@ -3150,8 +3150,8 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return [self._encode(v) for v in obj]
         return super().default(obj)
 
-    def default(self, obj: tp.Any) -> tp.Any:
-        return self._encode(obj)
+    def default(self, o: tp.Any) -> tp.Any:
+        return self._encode(o)
 
     def iterencode(self, obj: tp.Any, *args, **kwargs) -> tp.Any: # type: ignore
         # object keys are not handled by defa,ult()
