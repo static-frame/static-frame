@@ -88,12 +88,12 @@ class InterfaceString(Interface[TContainer]):
             blocks: BlocksType,
             blocks_to_container: ToContainerType[TContainer],
             ndim: int,
-            label_to_pos: tp.Callable[[tp.Hashable], int] = None,
+            label_to_pos: tp.Optional[tp.Callable[[tp.Hashable], int]] = None,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
-        self._ndim = ndim
-        self._label_to_pos = label_to_pos
+        self._ndim: int = ndim
+        self._label_to_pos: tp.Optional[tp.Callable[[tp.Hashable], int]] = label_to_pos
 
     #---------------------------------------------------------------------------
 
