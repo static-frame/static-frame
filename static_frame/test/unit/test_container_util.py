@@ -19,6 +19,7 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import get_col_format_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -684,6 +685,39 @@ class TestUnit(TestCase):
         func1 = get_col_fill_value_factory(FillValueAuto(O='', U='na'), columns=None)
         self.assertEqual(func1(0, np.dtype(object)), '')
         self.assertEqual(func1(1, np.dtype(str)), 'na')
+
+    #---------------------------------------------------------------------------
+
+    def test_get_col_format_a(self) -> None:
+        func = get_col_format_factory('{}', ('a', 'b', 'c'))
+        self.assertEqual(func(0), '{}')
+        self.assertEqual(func(1), '{}')
+        self.assertEqual(func(2), '{}')
+
+    def test_get_col_format_b(self) -> None:
+        func = get_col_format_factory(('a', 'b', 'c'), ('a', 'b', 'c'))
+        self.assertEqual(func(0), 'a')
+        self.assertEqual(func(1), 'b')
+        self.assertEqual(func(2), 'c')
+
+    def test_get_col_format_c(self) -> None:
+        func = get_col_format_factory(('a', 'b', 'c'), range(3))
+        self.assertEqual(func(0), 'a')
+        self.assertEqual(func(1), 'b')
+        self.assertEqual(func(2), 'c')
+
+    def test_get_col_format_d(self) -> None:
+        func = get_col_format_factory({'b':'x{}', 'c':'y{}'}, ('a', 'b', 'c'))
+        self.assertEqual(func(0), '')
+        self.assertEqual(func(1), 'x{}')
+        self.assertEqual(func(2), 'y{}')
+
+    def test_get_col_format_e(self) -> None:
+        func = get_col_format_factory((f'{{:{i}}}' for i in range(3)), ('a', 'b', 'c'))
+        self.assertEqual(func(0), '{:0}')
+        self.assertEqual(func(1), '{:1}')
+        self.assertEqual(func(2), '{:2}')
+
 
 
     #---------------------------------------------------------------------------
