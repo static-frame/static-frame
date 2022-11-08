@@ -3138,16 +3138,26 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
 
 
 class JSONEncoderNumPy(json.JSONEncoder):
+
+    def _encode(self, obj: tp.Any) -> tp.Any:
+        if hasattr(obj, 'dtype'):
+            return obj.item()
+        if isinstance(obj, dict):
+            return {self._encode(k): self._encode(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._encode(v) for v in obj]
+        if isinstance(obj, str):
+            return obj
+        # import ipdb; ipdb.set_trace()
+        return super().default(obj)
+
     def default(self, obj: tp.Any) -> tp.Any:
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, np.bool_):
-            return obj.tolist()
-        raise NotImplementedError(f"{type(obj)} mappings are not yet supported.")
+        return self._encode(obj)
+        # raise NotImplementedError(f"{type(obj)} mappings are not yet supported.")
+
+    def iterencode(self, obj, *args, **kwargs):
+        # object keys are not handled by defa,ult()
+        return super().iterencode(self._encode(obj), *args, **kwargs)
 
 #-------------------------------------------------------------------------------
 

@@ -14585,5 +14585,31 @@ class TestUnit(TestCase):
         self.assertEqual(dfi.num_rows(), 4)
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_to_json_index_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_index()
+        self.assertEqual(post, '{"34715": {"zZbu": false, "ztsv": 162197, "zUvW": 694.3, "zkuW": "z2Oo"}, "-3648": {"zZbu": false, "ztsv": -41157, "zUvW": -72.96, "zkuW": "z5l6"}}')
+
+    def test_frame_to_json_columns_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_columns()
+        self.assertEqual(post, '{"zZbu": {"34715": false, "-3648": false}, "ztsv": {"34715": 162197, "-3648": -41157}, "zUvW": {"34715": 694.3, "-3648": -72.96}, "zkuW": {"34715": "z2Oo", "-3648": "z5l6"}}')
+
+    def test_frame_to_json_split_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_split()
+        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]}')
+
+    def test_frame_to_json_records_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_records()
+        self.assertEqual(post, '[{"zZbu": false, "ztsv": 162197, "zUvW": 694.3, "zkuW": "z2Oo"}, {"zZbu": false, "ztsv": -41157, "zUvW": -72.96, "zkuW": "z5l6"}]')
+
+    def test_frame_to_json_values_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_values()
+        self.assertEqual(post, '[[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]')
+
 if __name__ == '__main__':
     unittest.main()

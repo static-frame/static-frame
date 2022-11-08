@@ -7785,48 +7785,46 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # exporters: json
 
-    def to_json_index(self, indent: int = 4) -> str:
+    def to_json_index(self, indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.
         '''
-        return json.dumps(
-            {key: dict(self[key].iter_element_items()) for key in self.keys()},
-            cls=JSONEncoderNumPy,
-        )
+        d = {k: dict(zip(self._columns, v))
+                for k, v in self.iter_tuple_items(constructor=tuple, axis=1)}
+        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
-    def to_json_columns(self, indent: int = 4) -> str:
+    def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.
         '''
-        return json.dumps(
-            {key: dict(self[key].iter_element_items()) for key in self.keys()},
-            cls=JSONEncoderNumPy,
-        )
+        d = {k: dict(zip(self._index, v)) for k, v in self.iter_array_items(axis=0)}
+        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
-    def to_json_split(self, indent: int = 4) -> str:
+    def to_json_split(self, indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON object with a key for "columns", "index", and "data"; each are arrays of values.
         '''
-        d = {}
-        d["columns"] = list(self.keys())
-        d["index"] = list(self.index)
-        d["data"] = [[*v] for v in self.iter_tuple()]
-        return json.dumps(d, cls=JSONEncoderNumPy)
+        # TODO: if columnd index are depth > 1, must make tuple labels into lists
+        d = dict(columns=list(self._columns),
+                index=list(self._index),
+                data=list(self.iter_tuple(constructor=list, axis=1))
+                )
+        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
-    def to_json_records(self, indent: int = 4) -> str:
+    def to_json_records(self, indent: tp.Optional[int] = None) -> str:
         '''
         Export the :obj:`Frame` as a JSON array of row objects, where column labels are repeated for each row, and no index labels are included.
         '''
-        return json.dumps(
-            [dict(zip(self.keys(), v)) for v in self.iter_tuple(axis=1)],
-            cls=JSONEncoderNumPy,
-        )
+        d = [dict(zip(self._columns, v))
+                for v in self.iter_tuple(constructor=tuple, axis=1)]
+        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
-    def to_json_values(self, indent: int = 4) -> str:
+    def to_json_values(self, indent: tp.Optional[int] = None) -> str:
         '''
         Export the :obj:`Frame` as a JSON array of arrays of row data; no index or columns labels are included.
         '''
-        return json.dumps([[*v] for v in self.iter_tuple()], cls=JSONEncoderNumPy)
+        d = list(self.iter_tuple(constructor=list, axis=1))
+        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
     #---------------------------------------------------------------------------
     # exporters: delimited
