@@ -3137,7 +3137,7 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
     return tuple(list_to_tuple(v) for v in value)
 
 
-class NpDtypeMapper(json.JSONEncoder):
+class JSONEncoderNumPy(json.JSONEncoder):
     def default(self, obj: tp.Any) -> tp.Any:
         if isinstance(obj, np.integer):
             return int(obj)

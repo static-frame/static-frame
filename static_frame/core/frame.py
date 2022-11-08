@@ -151,7 +151,7 @@ from static_frame.core.util import Join
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import NpDtypeMapper
+from static_frame.core.util import JSONEncoderNumPy
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -7787,37 +7787,46 @@ class Frame(ContainerOperand):
 
     def to_json_index(self, indent: int = 4) -> str:
         '''
-        Export the Frame as an index-formatted JSON string
+        Export a :obj:`Frame` as a JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.
         '''
         return json.dumps(
             {key: dict(self[key].iter_element_items()) for key in self.keys()},
-            cls=NpDtypeMapper,
+            cls=JSONEncoderNumPy,
+        )
+
+    def to_json_columns(self, indent: int = 4) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.
+        '''
+        return json.dumps(
+            {key: dict(self[key].iter_element_items()) for key in self.keys()},
+            cls=JSONEncoderNumPy,
         )
 
     def to_json_split(self, indent: int = 4) -> str:
         '''
-        Export the Frame as an split-formatted JSON string
+        Export a :obj:`Frame` as a JSON object with a key for "columns", "index", and "data"; each are arrays of values.
         '''
         d = {}
         d["columns"] = list(self.keys())
         d["index"] = list(self.index)
         d["data"] = [[*v] for v in self.iter_tuple()]
-        return json.dumps(d, cls=NpDtypeMapper)
+        return json.dumps(d, cls=JSONEncoderNumPy)
 
     def to_json_records(self, indent: int = 4) -> str:
         '''
-        Export the Frame as an record-formatted JSON string
+        Export the :obj:`Frame` as a JSON array of row objects, where column labels are repeated for each row, and no index labels are included.
         '''
         return json.dumps(
             [dict(zip(self.keys(), v)) for v in self.iter_tuple(axis=1)],
-            cls=NpDtypeMapper,
+            cls=JSONEncoderNumPy,
         )
 
     def to_json_values(self, indent: int = 4) -> str:
         '''
-        Export the Frame as an record-formatted JSON string
+        Export the :obj:`Frame` as a JSON array of arrays of row data; no index or columns labels are included.
         '''
-        return json.dumps([[*v] for v in self.iter_tuple()], cls=NpDtypeMapper)
+        return json.dumps([[*v] for v in self.iter_tuple()], cls=JSONEncoderNumPy)
 
     #---------------------------------------------------------------------------
     # exporters: delimited
