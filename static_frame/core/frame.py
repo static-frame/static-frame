@@ -1365,14 +1365,15 @@ class Frame(ContainerOperand):
                 if get_col_fill_value is not None and get_col_dtype is not None:
                     dts = get_col_dtype(col_idx)
                     dtype = None if dts is None else np.dtype(dts)
-                    fill_value = get_col_fill_value(col_idx, dtype) # might be dtype specifier
+                    fv = get_col_fill_value(col_idx, dtype) # might be dtype specifier
                 if get_col_fill_value is not None:
-                    fill_value = get_col_fill_value(col_idx, None)
-
+                    fv = get_col_fill_value(col_idx, None)
+                else:
+                    fv = fill_value
                 # for som e dtypes can use an np.fromiter constructor
                 values = []
                 for key in col_reference.keys():
-                    values.append(col_dict.get(key, fill_value))
+                    values.append(col_dict.get(key, fv))
 
                 if dtype is None:
                     array, _ = iterable_to_array_1d(values, count=len(values))

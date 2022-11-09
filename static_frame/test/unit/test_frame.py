@@ -14637,5 +14637,36 @@ class TestUnit(TestCase):
         post = f.to_json_values()
         self.assertEqual(post, '[[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]')
 
+    #---------------------------------------------------------------------------
+    def test_frame_from_dict_fields_a(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=20, c=22), dict(a=120, d=2000)),
+            columns=('x', 'y', 'z'),
+            fill_value=0,
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', 0), ('d', 0))), ('y', (('a', 0), ('c', 22), ('b', 20), ('d', 0))), ('z', (('a', 120), ('c', 0), ('b', 0), ('d', 2000)))))
+
+    def test_frame_from_dict_fields_b(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            columns=('x', 'y', 'z'),
+            fill_value=[-1, False, ''],
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', -1), ('d', -1))), ('y', (('a', False), ('c', False), ('b', True), ('d', False))), ('z', (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p'))))
+                )
+
+    def test_frame_from_dict_fields_c(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            columns=('x', 'y', 'z'),
+            fill_value=[-1, False, ''],
+            dtypes=[int, bool, str],
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', -1), ('d', -1))), ('y', (('a', False), ('c', False), ('b', True), ('d', False))), ('z', (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p'))))
+                )
+
 if __name__ == '__main__':
     unittest.main()
