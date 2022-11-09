@@ -14638,6 +14638,39 @@ class TestUnit(TestCase):
         self.assertEqual(post, '[[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]')
 
     #---------------------------------------------------------------------------
+    def test_frame_from_json_index_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_index()
+        f2 = Frame.from_json_index(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_columns_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_columns()
+        f2 = Frame.from_json_columns(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+
+    def test_frame_from_json_split_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_split()
+        f2 = Frame.from_json_split(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_records_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|c(I,str)')
+        post = f1.to_json_records()
+        f2 = Frame.from_json_records(post)
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_values_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)')
+        post = f1.to_json_values()
+        f2 = Frame.from_json_values(post)
+        self.assertTrue(f1.equals(f2))
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_dict_fields_a(self) -> None:
         f = Frame.from_dict_fields(
             (dict(a=3, c=4), dict(b=20, c=22), dict(a=120, d=2000)),
@@ -14667,6 +14700,15 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 (('x', (('a', 3), ('c', 4), ('b', -1), ('d', -1))), ('y', (('a', False), ('c', False), ('b', True), ('d', False))), ('z', (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p'))))
                 )
+
+    def test_frame_from_dict_fields_d(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            fill_value=[-1, False, ''],
+            dtypes=[int, bool, str],
+            )
+        self.assertEqual( f.to_pairs(),
+            ((0, (('a', 3), ('c', 4), ('b', -1), ('d', -1))), (1, (('a', False), ('c', False), ('b', True), ('d', False))), (2, (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p')))))
 
 if __name__ == '__main__':
     unittest.main()
