@@ -3867,6 +3867,26 @@ d        2
 <<U1>    <int64>
 #end_Series-via_str.find()
 
+#start_Series-via_str.format()
+>>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        qrs
+b        XYZ
+c        123
+d         wX
+<<U1>    <<U4>
+>>> s.via_str.format('{:-^10}')
+<Series>
+<Index>
+a        ---qrs ---
+b        ---XYZ----
+c        ---123----
+d        --- wX ---
+<<U1>    <<U10>
+#end_Series-via_str.format()
+
 #start_Series-via_str.index()
 >>> s = sf.Series(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
 >>> s
@@ -8752,6 +8772,26 @@ c          -1
 d          2
 <<U1>      <int64>
 #end_SeriesHE-via_str.find()
+
+#start_SeriesHE-via_str.format()
+>>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          qrs
+b          XYZ
+c          123
+d           wX
+<<U1>      <<U4>
+>>> s.via_str.format('{:-^10}')
+<SeriesHE>
+<Index>
+a          ---qrs ---
+b          ---XYZ----
+c          ---123----
+d          --- wX ---
+<<U1>      <<U10>
+#end_SeriesHE-via_str.format()
 
 #start_SeriesHE-via_str.index()
 >>> s = sf.SeriesHE(('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
@@ -15486,6 +15526,28 @@ r          -1      -1
 s          -1      2
 <<U1>      <int64> <int64>
 #end_Frame-via_str.find()
+
+#start_Frame-via_str.format()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b     <<U1>
+<Index>
+p          10      qrs
+q          2       XYZ
+r          8       123
+s          3        wX
+<<U1>      <int64> <<U4>
+>>> f.via_str.format('{:-^10}')
+<Frame: x>
+<Index>    a          b          <<U1>
+<Index>
+p          ----10---- ---qrs ---
+q          ----2----- ---XYZ----
+r          ----8----- ---123----
+s          ----3----- --- wX ---
+<<U1>      <<U10>     <<U10>
+#end_Frame-via_str.format()
 
 #start_Frame-via_str.index()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -22613,6 +22675,28 @@ r            -1      -1
 s            -1      2
 <<U1>        <int64> <int64>
 #end_FrameHE-via_str.find()
+
+#start_FrameHE-via_str.format()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b     <<U1>
+<Index>
+p            10      qrs
+q            2       XYZ
+r            8       123
+s            3        wX
+<<U1>        <int64> <<U4>
+>>> f.via_str.format('{:-^10}')
+<FrameHE: x>
+<Index>      a          b          <<U1>
+<Index>
+p            ----10---- ---qrs ---
+q            ----2----- ---XYZ----
+r            ----8----- ---123----
+s            ----3----- --- wX ---
+<<U1>        <<U10>     <<U10>
+#end_FrameHE-via_str.format()
 
 #start_FrameHE-via_str.index()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -29796,6 +29880,28 @@ s            -1      2
 <<U1>        <int64> <int64>
 #end_FrameGO-via_str.find()
 
+#start_FrameGO-via_str.format()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b     <<U1>
+<Index>
+p            10      qrs
+q            2       XYZ
+r            8       123
+s            3        wX
+<<U1>        <int64> <<U4>
+>>> f.via_str.format('{:-^10}')
+<FrameGO: x>
+<IndexGO>    a          b          <<U1>
+<Index>
+p            ----10---- ---qrs ---
+q            ----2----- ---XYZ----
+r            ----8----- ---123----
+s            ----3----- --- wX ---
+<<U1>        <<U10>     <<U10>
+#end_FrameGO-via_str.format()
+
 #start_FrameGO-via_str.index()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
 >>> f
@@ -32587,6 +32693,19 @@ XYZ
 [-1  0 -1  2]
 #end_Index-via_str.find()
 
+#start_Index-via_str.format()
+>>> ix = sf.Index(('qrs ', 'XYZ', '123', ' wX '))
+>>> ix
+<Index>
+qrs
+XYZ
+123
+ wX
+<<U4>
+>>> ix.via_str.format('{:-^10}')
+['---qrs ---' '---XYZ----' '---123----' '--- wX ---']
+#end_Index-via_str.format()
+
 #start_Index-via_str.index()
 >>> ix = sf.Index(('qrs ', 'XYZ', '123', ' wX '))
 >>> ix
@@ -34436,6 +34555,19 @@ XYZ
 [-1  0 -1  2]
 #end_IndexGO-via_str.find()
 
+#start_IndexGO-via_str.format()
+>>> ix = sf.IndexGO(('qrs ', 'XYZ', '123', ' wX '))
+>>> ix
+<IndexGO>
+qrs
+XYZ
+123
+ wX
+<<U4>
+>>> ix.via_str.format('{:-^10}')
+['---qrs ---' '---XYZ----' '---123----' '--- wX ---']
+#end_IndexGO-via_str.format()
+
 #start_IndexGO-via_str.index()
 >>> ix = sf.IndexGO(('qrs ', 'XYZ', '123', ' wX '))
 >>> ix
@@ -36169,6 +36301,18 @@ b'1518'
 [-1 -1 -1]
 #end_IndexYear-via_str.find()
 
+#start_IndexYear-via_str.format()
+>>> ix = sf.IndexYear(('1517', '1520', '1518'))
+>>> ix
+<IndexYear>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix.via_str.format('{:-^10}')
+['---1517---' '---1520---' '---1518---']
+#end_IndexYear-via_str.format()
+
 #start_IndexYear-via_str.index()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix
@@ -37878,6 +38022,18 @@ b'1518'
 [-1 -1 -1]
 #end_IndexYearGO-via_str.find()
 
+#start_IndexYearGO-via_str.format()
+>>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
+>>> ix
+<IndexYearGO>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix.via_str.format('{:-^10}')
+['---1517---' '---1520---' '---1518---']
+#end_IndexYearGO-via_str.format()
+
 #start_IndexYearGO-via_str.index()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix
@@ -39581,6 +39737,18 @@ b'1517-06'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexYearMonth-via_str.find()
+
+#start_IndexYearMonth-via_str.format()
+>>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
+>>> ix
+<IndexYearMonth>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix.via_str.format('{:-^10}')
+['-1517-04--' '-1517-12--' '-1517-06--']
+#end_IndexYearMonth-via_str.format()
 
 #start_IndexYearMonth-via_str.index()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
@@ -41312,6 +41480,18 @@ b'1517-06'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexYearMonthGO-via_str.find()
+
+#start_IndexYearMonthGO-via_str.format()
+>>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
+>>> ix
+<IndexYearMonthGO>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix.via_str.format('{:-^10}')
+['-1517-04--' '-1517-12--' '-1517-06--']
+#end_IndexYearMonthGO-via_str.format()
 
 #start_IndexYearMonthGO-via_str.index()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
@@ -43064,6 +43244,18 @@ b'1517-06-30'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexDate-via_str.find()
+
+#start_IndexDate-via_str.format()
+>>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix
+<IndexDate>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01' '1517-12-01' '1517-06-30']
+#end_IndexDate-via_str.format()
 
 #start_IndexDate-via_str.index()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
@@ -44845,6 +45037,18 @@ b'1517-06-30'
 [-1 -1 -1]
 #end_IndexDateGO-via_str.find()
 
+#start_IndexDateGO-via_str.format()
+>>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix
+<IndexDateGO>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01' '1517-12-01' '1517-06-30']
+#end_IndexDateGO-via_str.format()
+
 #start_IndexDateGO-via_str.index()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -46507,6 +46711,18 @@ b'1517-06-30T00:00'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexMinute-via_str.find()
+
+#start_IndexMinute-via_str.format()
+>>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix
+<IndexMinute>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
+#end_IndexMinute-via_str.format()
 
 #start_IndexMinute-via_str.index()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
@@ -48201,6 +48417,18 @@ b'1517-06-30T00:00'
 [-1 -1 -1]
 #end_IndexMinuteGO-via_str.find()
 
+#start_IndexMinuteGO-via_str.format()
+>>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
+#end_IndexMinuteGO-via_str.format()
+
 #start_IndexMinuteGO-via_str.index()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -49870,6 +50098,18 @@ b'1517-06-30T00'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexHour-via_str.find()
+
+#start_IndexHour-via_str.format()
+>>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexHour>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
+#end_IndexHour-via_str.format()
 
 #start_IndexHour-via_str.index()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -51567,6 +51807,18 @@ b'1517-06-30T00'
 [-1 -1 -1]
 #end_IndexHourGO-via_str.find()
 
+#start_IndexHourGO-via_str.format()
+>>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexHourGO>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
+#end_IndexHourGO-via_str.format()
+
 #start_IndexHourGO-via_str.index()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -53235,6 +53487,18 @@ b'1517-06-30T00:00:00'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexSecond-via_str.find()
+
+#start_IndexSecond-via_str.format()
+>>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexSecond>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
+#end_IndexSecond-via_str.format()
 
 #start_IndexSecond-via_str.index()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -54937,6 +55201,18 @@ b'1517-06-30T00:00:00'
 [-1 -1 -1]
 #end_IndexSecondGO-via_str.find()
 
+#start_IndexSecondGO-via_str.format()
+>>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
+#end_IndexSecondGO-via_str.format()
+
 #start_IndexSecondGO-via_str.index()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -56621,6 +56897,19 @@ b'1517-06-30T00:00:00.000'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexMillisecond-via_str.find()
+
+#start_IndexMillisecond-via_str.format()
+>>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00.000' '1517-12-31T00:00:00.000'
+ '1517-06-30T00:00:00.000']
+#end_IndexMillisecond-via_str.format()
 
 #start_IndexMillisecond-via_str.index()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -58342,6 +58631,19 @@ b'1517-06-30T00:00:00.000'
 [-1 -1 -1]
 #end_IndexMillisecondGO-via_str.find()
 
+#start_IndexMillisecondGO-via_str.format()
+>>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00.000' '1517-12-31T00:00:00.000'
+ '1517-06-30T00:00:00.000']
+#end_IndexMillisecondGO-via_str.format()
+
 #start_IndexMillisecondGO-via_str.index()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -60034,6 +60336,19 @@ b'1517-06-30T00:00:00.000000'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexMicrosecond-via_str.find()
+
+#start_IndexMicrosecond-via_str.format()
+>>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00.000000' '1517-12-31T00:00:00.000000'
+ '1517-06-30T00:00:00.000000']
+#end_IndexMicrosecond-via_str.format()
 
 #start_IndexMicrosecond-via_str.index()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -61757,6 +62072,19 @@ b'1517-06-30T00:00:00.000000'
 [-1 -1 -1]
 #end_IndexMicrosecondGO-via_str.find()
 
+#start_IndexMicrosecondGO-via_str.format()
+>>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix.via_str.format('{:-^10}')
+['1517-04-01T00:00:00.000000' '1517-12-31T00:00:00.000000'
+ '1517-06-30T00:00:00.000000']
+#end_IndexMicrosecondGO-via_str.format()
+
 #start_IndexMicrosecondGO-via_str.index()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -63449,6 +63777,19 @@ b'1799-11-09T00:00:00.000000000'
 >>> ix.via_str.find('X')
 [-1 -1 -1]
 #end_IndexNanosecond-via_str.find()
+
+#start_IndexNanosecond-via_str.format()
+>>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix.via_str.format('{:-^10}')
+['1789-05-05T00:00:00.000000000' '1789-12-31T00:00:00.000000000'
+ '1799-11-09T00:00:00.000000000']
+#end_IndexNanosecond-via_str.format()
 
 #start_IndexNanosecond-via_str.index()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -65171,6 +65512,19 @@ b'1799-11-09T00:00:00.000000000'
 [-1 -1 -1]
 #end_IndexNanosecondGO-via_str.find()
 
+#start_IndexNanosecondGO-via_str.format()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix.via_str.format('{:-^10}')
+['1789-05-05T00:00:00.000000000' '1789-12-31T00:00:00.000000000'
+ '1799-11-09T00:00:00.000000000']
+#end_IndexNanosecondGO-via_str.format()
+
 #start_IndexNanosecondGO-via_str.index()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
@@ -66280,13 +66634,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f511583f940> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f9b5257f700> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f5092ef43a0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f9acfc1f160> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66413,7 +66767,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f511583faf0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f9b5257f8b0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66475,7 +66829,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f511583fca0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f9b5257fa60>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -67239,6 +67593,22 @@ XYZ              12/31/1517
  [-1 -1]
  [ 2 -1]]
 #end_IndexHierarchy-via_str.find()
+
+#start_IndexHierarchy-via_str.format()
+>>> ih = sf.IndexHierarchy.from_labels((('qrs ', '4/1/1517'), ('XYZ', '12/31/1517'), ('123', '6/30/1517'), (' wX ', '12/31/2021')))
+>>> ih
+<IndexHierarchy>
+qrs              4/1/1517
+XYZ              12/31/1517
+123              6/30/1517
+ wX              12/31/2021
+<<U4>            <<U10>
+>>> ih.via_str.format('{:-^10}')
+[['---qrs ---' '-4/1/1517-']
+ ['---XYZ----' '12/31/1517']
+ ['---123----' '6/30/1517-']
+ ['--- wX ---' '12/31/2021']]
+#end_IndexHierarchy-via_str.format()
 
 #start_IndexHierarchy-via_str.index()
 >>> ih = sf.IndexHierarchy.from_labels((('qrs ', '4/1/1517'), ('XYZ', '12/31/1517'), ('123', '6/30/1517'), (' wX ', '12/31/2021')))
@@ -68705,13 +69075,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f511583f940> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f9b5257f700> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f5092ef43a0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f9acfc1f160> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -68838,7 +69208,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f511583faf0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f9b5257f8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -68900,7 +69270,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f511583fca0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f9b5257fa60>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -69664,6 +70034,22 @@ XYZ                12/31/1517
  [-1 -1]
  [ 2 -1]]
 #end_IndexHierarchyGO-via_str.find()
+
+#start_IndexHierarchyGO-via_str.format()
+>>> ih = sf.IndexHierarchyGO.from_labels((('qrs ', '4/1/1517'), ('XYZ', '12/31/1517'), ('123', '6/30/1517'), (' wX ', '12/31/2021')))
+>>> ih
+<IndexHierarchyGO>
+qrs                4/1/1517
+XYZ                12/31/1517
+123                6/30/1517
+ wX                12/31/2021
+<<U4>              <<U10>
+>>> ih.via_str.format('{:-^10}')
+[['---qrs ---' '-4/1/1517-']
+ ['---XYZ----' '12/31/1517']
+ ['---123----' '6/30/1517-']
+ ['--- wX ---' '12/31/2021']]
+#end_IndexHierarchyGO-via_str.format()
 
 #start_IndexHierarchyGO-via_str.index()
 >>> ih = sf.IndexHierarchyGO.from_labels((('qrs ', '4/1/1517'), ('XYZ', '12/31/1517'), ('123', '6/30/1517'), (' wX ', '12/31/2021')))
@@ -75319,6 +75705,25 @@ j                s        -1      2       nan
 <<U1>            <object> <int64> <int64> <float64>
 #end_Batch-via_str.find()
 
+#start_Batch-via_str.format()
+>>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
+>>> bt
+<Batch max_workers=None>
+>>> bt.via_str.format('{:-^10}').to_frame()
+<Frame>
+<Index>                   a          b          c          <<U1>
+<IndexHierarchy>
+i                0        ----10---- ---qrs --- 1517-01-01
+i                1        ----2----- ---XYZ---- 1517-04-01
+i                2        ----8----- ---123---- 1517-12-31
+i                3        ----3----- --- wX --- 1517-06-30
+j                p        ----10---- ---qrs --- nan
+j                q        ----2----- ---XYZ---- nan
+j                r        ----8----- ---123---- nan
+j                s        ----3----- --- wX --- nan
+<<U1>            <object> <<U10>     <<U10>     <object>
+#end_Batch-via_str.format()
+
 #start_Batch-via_str.index()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
@@ -78840,7 +79245,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f50deaa1740>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf76040>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -78900,13 +79305,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f50deaa1040>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf76340>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f5071506cc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf766c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
