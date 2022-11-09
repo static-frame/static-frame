@@ -281,7 +281,10 @@ class InterfaceString(Interface[TContainer]):
 
     def format(self, format: str) -> TContainer:
         '''
-        For each element, return a string resulting from calling the `format` argument's `format` method with the values in this container.
+        For each element, return a string resulting from calling the string ``format`` argument's ``format`` method with the the element. Format strings (given within curly braces) can use Python's format mini language: https://docs.python.org/3/library/string.html#formatspec
+
+        Args:
+            format: A string, an iterable of strings, or a mapping of labels to strings. For 1D containers, an iterable of strings must be of length equal to the container; a mapping can use Index labels (for a Series) or positions (for an Index). For 2D containers, an iterable of strings must be of length equal to the columns (for a Frame) or the depth (for an Index Hierarchy); a mapping can use column labels (for a Frame) or depths (for an IndexHierarchy).
         '''
 
         format_factory = get_col_format_factory(format, self._labels)
