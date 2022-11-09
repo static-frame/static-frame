@@ -706,11 +706,15 @@ class TestUnit(TestCase):
         self.assertEqual(func(1), 'b')
         self.assertEqual(func(2), 'c')
 
-    def test_get_col_format_d(self) -> None:
+    def test_get_col_format_d1(self) -> None:
         func = get_col_format_factory({'b':'x{}', 'c':'y{}'}, ('a', 'b', 'c'))
         self.assertEqual(func(0), '{}')
         self.assertEqual(func(1), 'x{}')
         self.assertEqual(func(2), 'y{}')
+
+    def test_get_col_format_d2(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _ = get_col_format_factory({'b':'x{}', 'c':'y{}'})
 
     def test_get_col_format_e(self) -> None:
         func = get_col_format_factory((f'{{:{i}}}' for i in range(3)), ('a', 'b', 'c'))
