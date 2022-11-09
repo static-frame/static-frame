@@ -938,7 +938,7 @@ class Frame(ContainerOperand):
         Args:
             records: Iterable of row values, where row values are dictionaries.
             index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
-            {index}
+            index:
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -1327,7 +1327,7 @@ class Frame(ContainerOperand):
         Args:
             fields: Iterable of column values, where column values are dictionaries.
             index: Optionally provide an iterable of index labels, equal in length to the number of fields. If a generator, this value will not be evaluated until after fields are loaded.
-            {columns}
+            columns:
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -1911,8 +1911,8 @@ class Frame(ContainerOperand):
 
         index = []
 
-        def gen():
-            for k, v in data.items() -> tp.Iterator[tp.Iterable[tp.Any]]:
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
                 index.append(k)
                 yield v
 
@@ -1954,8 +1954,8 @@ class Frame(ContainerOperand):
 
         columns = []
 
-        def gen():
-            for k, v in data.items() -> tp.Iterator[tp.Iterable[tp.Any]]:
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
                 columns.append(k)
                 yield v
 
