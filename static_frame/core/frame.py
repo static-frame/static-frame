@@ -1406,7 +1406,7 @@ class Frame(ContainerOperand):
         #         columns_constructor=columns_constructor,
         #         own_index=own_index,
         #         )
-
+        return Frame()
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
