@@ -708,7 +708,7 @@ class TestUnit(TestCase):
 
     def test_get_col_format_d(self) -> None:
         func = get_col_format_factory({'b':'x{}', 'c':'y{}'}, ('a', 'b', 'c'))
-        self.assertEqual(func(0), '')
+        self.assertEqual(func(0), '{}')
         self.assertEqual(func(1), 'x{}')
         self.assertEqual(func(2), 'y{}')
 
