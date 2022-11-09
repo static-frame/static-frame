@@ -1375,7 +1375,7 @@ class Frame(ContainerOperand):
                     values.append(col_dict.get(key, fill_value))
 
                 if dtype is None:
-                    array = iterable_to_array_1d(values, count=len(values))
+                    array, _ = iterable_to_array_1d(values, count=len(values))
                 else:
                     array = np.array(values, dtype=dtype)
 
