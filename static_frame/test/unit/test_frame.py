@@ -12884,6 +12884,32 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_frame_str_format_a(self) -> None:
+        f1 = Frame(np.array([[10, 20], [30, 40]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = (f1 / 3).via_str.format('{:.3}')
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', '3.33'), ('b', '10.0'))), ('y', (('a', '6.67'), ('b', '13.3'))))
+                )
+
+    def test_frame_str_format_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(float,float,bool,int)').relabel(
+                columns=list('abcd'))
+        f2 = f1.via_str.format(dict(a='{:.2%}', b='{:.2f}', c='b{:=>4}', d='{:b}'))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, '193040.00%'), (1, '-176034.00%'))), ('b', ((0, '-610.80'), (1, '3243.94'))), ('c', ((0, 'b===1'), (1, 'b===0'))), ('d', ((0, '11111011111111001'), (1, '1000100011001101'))))
+                )
+
+    def test_frame_str_format_c(self) -> None:
+        f1 = ff.parse('s(2,4)|v(str)').relabel(columns=list('abcd'))
+        f2 = f1.via_str.format(dict(c='{:=^12}', d=''))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 'zjZQ'), (1, 'zO5l'))), ('b', ((0, 'zaji'), (1, 'zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, ''), (1, ''))))
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_via_dt_year_a(self) -> None:
 

@@ -491,6 +491,10 @@ class ExGen:
             yield f'{name} = {ctr}.astype(bytes)'
             yield f'{name}'
             yield f"{name}.{attr_func}(){exporter}"
+        elif attr == 'via_str.format()':
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            yield f"{name}.{attr_func}('{{:-^10}}'){exporter}"
         elif attr == 'via_str.endswith()':
             yield f'{name} = {ctr}'
             yield f'{name}'

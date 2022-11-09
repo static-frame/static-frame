@@ -1225,6 +1225,8 @@ class IndexHierarchy(IndexBase):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
+                ndim=self._NDIM,
+                labels=range(self.depth)
                 )
 
     @property
