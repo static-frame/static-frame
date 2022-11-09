@@ -90,7 +90,7 @@ class ContainerMap:
         from static_frame.core.frame import Frame
         from static_frame.core.frame import FrameGO
         from static_frame.core.frame import FrameHE
-        # not containers but neede for build_example.py
+        # not containers but needed for build_example.py
         from static_frame.core.hloc import HLoc
         from static_frame.core.index import ILoc
         from static_frame.core.index import Index
@@ -231,6 +231,46 @@ def get_col_fill_value_factory(
         return fill_value[col_idx]
 
     return get_col_fill_value
+
+
+def get_col_format_factory(
+        format: tp.Any,
+        fields: tp.Optional[tp.Sequence[tp.Hashable]] = None,
+        ) -> tp.Callable[[int], str]:
+    '''
+    Return a function to get string format, used in InterfaceString.
+
+    Args:
+        fields: In common usage in Frame constructors, ``fields`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Can also be an ``Index``.
+    '''
+    # if all false it is an iterable
+    is_map = False
+    is_element = False
+
+    if is_mapping(format):
+        is_map = True
+    elif hasattr(format, '__iter__') and not isinstance(format, str):
+        # an iterable or iterator but not a string
+        pass
+    else: # can assume an element
+        is_element = True
+
+    if fields is None and is_map:
+        raise RuntimeError('cannot lookup format by name without supplied labels')
+
+    def get_col_format_value(col_idx: int) -> str:
+        nonlocal format # might mutate a generator into a tuple
+        if is_element:
+            return format # type: ignore
+        if is_map:
+            return format.get(fields[col_idx], '{}') #type: ignore
+        if not hasattr(format, '__len__') or not hasattr(format, '__getitem__'):
+            format = tuple(format)
+        return format[col_idx] # type: ignore
+
+    return get_col_format_value
+
+
 
 
 def is_element(value: tp.Any, container_is_element: bool = False) -> bool:

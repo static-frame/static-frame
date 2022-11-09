@@ -1740,6 +1740,14 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('ztsv', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('zUvW', ((('a', 34715), 3), (('a', -3648), 2), (('b', 34715), 3), (('b', -3648), 2)))))
 
+    def test_batch_via_str_format(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a') / 3
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b') / 3
+        post = Batch.from_frames((f1, f2)).via_str.format('{:.3}').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '-2.93e+04'), (('a', -3648), '3.1e+04'), (('b', 34715), '-2.93e+04'), (('b', -3648), '3.1e+04'))), ('ztsv', ((('a', 34715), '5.41e+04'), (('a', -3648), '-1.37e+04'), (('b', 34715), '5.41e+04'), (('b', -3648), '-1.37e+04'))), ('zUvW', ((('a', 34715), '-1.22e+03'), (('a', -3648), '3.04e+04'), (('b', 34715), '-1.22e+03'), (('b', -3648), '3.04e+04'))))
+                )
+
     def test_batch_via_str_index(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')

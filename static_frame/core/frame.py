@@ -3266,6 +3266,8 @@ class Frame(ContainerOperand):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
+                labels=self._columns,
                 )
 
     @property
@@ -7485,6 +7487,9 @@ class Frame(ContainerOperand):
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
 
+    #---------------------------------------------------------------------------
+    # exporters: alternate libraries
+
     def to_pandas(self) -> 'pandas.DataFrame':
         '''
         Return a Pandas DataFrame.
@@ -7779,6 +7784,8 @@ class Frame(ContainerOperand):
         return Series(array, index=index, own_index=True, name=name)
 
     #---------------------------------------------------------------------------
+    # exporters: delimited
+
     def _to_str_records(self,
             *,
             include_index: bool = True,

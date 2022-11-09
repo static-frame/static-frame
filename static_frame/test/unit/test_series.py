@@ -4130,6 +4130,20 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_series_str_format_a(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format('{:.0%}')
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '667%'), (2, '1333%'), (3, '1667%')))
+
+    def test_series_str_format_b(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format(['{:.0%}', '{:.4}', 'p{:.1}', 'q{:.4}'])
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '6.667'), (2, 'p1e+01'), (3, 'q16.67')))
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_via_dt_year_a(self) -> None:
         dt64 = np.datetime64

@@ -2947,7 +2947,7 @@ def array_from_element_attr(*,
     post.flags.writeable = False
     return post
 
-def array_from_element_apply(*,
+def array_from_element_apply(
         array: np.ndarray,
         func: AnyCallable,
         dtype: np.dtype
@@ -2980,7 +2980,7 @@ def array_from_element_method(*,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> np.array:
     '''
-    Handle element-wise method calling on arrays of Python objects.
+    Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
     Args:
         pre_insert:
@@ -3134,7 +3134,6 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
     if value.__class__ is not list:
         return value
     return tuple(list_to_tuple(v) for v in value)
-
 
 #-------------------------------------------------------------------------------
 
