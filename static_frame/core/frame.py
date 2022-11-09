@@ -967,6 +967,7 @@ class Frame(ContainerOperand):
         else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
 
+        # derive union columns
         row_reference = {}
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
@@ -1336,77 +1337,65 @@ class Frame(ContainerOperand):
             :obj:`Frame`
         '''
         index: tp.List[tp.Hashable] = []
-
-        if columns is None:
-            raise NotImplementedError()
-
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns))
 
-        # rows: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
-        # if not hasattr(records, '__len__'):
-        #     # might be a generator; must convert to sequence
-        #     rows = list(records)
-        # else: # could be a sequence, or something like a dict view
-        #     rows = records
-        # row_count = len(rows)
+        cols: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
+        if not hasattr(fields, '__len__'):
+            # might be a generator; must convert to sequence
+            cols = list(fields)
+        else: # could be a sequence, or something like a dict view
+            cols = fields
+        cols_count = len(cols)
 
-        # if not row_count:
-        #     raise ErrorInitFrame('no rows available in records.')
+        if not cols_count:
+            raise ErrorInitFrame('No columns available in `fields`.')
 
-        # if hasattr(rows, '__getitem__'):
-        #     rows_to_iter = False
-        # else: # dict view, or other sized iterable that does not support getitem
-        #     rows_to_iter = True
+        # derive union index
+        col_reference = {}
+        for col in cols: # produce a column that has a value for all observed keys
+            col_reference.update(col)
 
-        # row_reference = {}
-        # for row in rows: # produce a row that has a value for all observed keys
-        #     row_reference.update(row)
+        def blocks() -> tp.Iterator[np.ndarray]:
+            cols_iter = cols if hasattr(cols, '__getitem__') else iter(cols)
+            for col_idx, col_dict in enumerate(cols_iter):
 
-        # # get value for a column accross all rows
-        # def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
-        #     rows_iter = rows if not rows_to_iter else iter(rows)
+                dtype = None
+                if get_col_fill_value is not None and get_col_dtype is not None:
+                    dts = get_col_dtype(col_idx)
+                    dtype = None if dts is None else np.dtype(dts)
+                    fill_value = get_col_fill_value(col_idx, dtype) # might be dtype specifier
+                if get_col_fill_value is not None:
+                    fill_value = get_col_fill_value(col_idx, None)
 
-        #     if get_col_fill_value is not None and get_col_dtype is not None:
-        #         return (row.get(col_key, get_col_fill_value(
-        #                         col_idx,
-        #                         np.dtype(get_col_dtype(col_idx)))) # might be dtype specifier
-        #                 for row in rows_iter)
+                # for som e dtypes can use an np.fromiter constructor
+                values = []
+                for key in col_reference.keys():
+                    values.append(col_dict.get(key, fill_value))
 
-        #     if get_col_fill_value is not None:
-        #         return (row.get(col_key, get_col_fill_value(col_idx, None))
-        #                 for row in rows_iter)
+                if dtype is None:
+                    array = iterable_to_array_1d(values, count=len(values))
+                else:
+                    array = np.array(values, dtype=dtype)
 
-        #     return (row.get(col_key, fill_value) for row in rows_iter)
+                array.flags.writeable = False
+                yield array
 
-        # def blocks() -> tp.Iterator[np.ndarray]:
-        #     # iterate over final column order, yielding 1D arrays
-        #     for col_idx, col_key in enumerate(row_reference.keys()):
-        #         columns.append(col_key)
-        #         yield array_from_value_iter(
-        #                 key=col_key,
-        #                 idx=col_idx,
-        #                 get_value_iter=get_value_iter,
-        #                 get_col_dtype=get_col_dtype,
-        #                 row_count=row_count
-        #                 )
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
 
-        # if consolidate_blocks:
-        #     block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
-        # else:
-        #     block_gen = blocks
-
-        # return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
-        #         index=index,
-        #         columns=columns,
-        #         name=name,
-        #         own_data=True,
-        #         index_constructor=index_constructor,
-        #         columns_constructor=columns_constructor,
-        #         own_index=own_index,
-        #         )
-        return Frame()
+        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+                index=col_reference.keys(),
+                columns=columns,
+                name=name,
+                own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_index=own_index,
+                )
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
