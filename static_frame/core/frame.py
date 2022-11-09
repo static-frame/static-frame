@@ -1372,7 +1372,7 @@ class Frame(ContainerOperand):
                     fv = fill_value
                 # for som e dtypes can use an np.fromiter constructor
                 values = []
-                for key in col_reference.keys():
+                for key in col_reference:
                     values.append(col_dict.get(key, fv))
 
                 if dtype is None:
