@@ -3152,7 +3152,7 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return obj
         if isinstance(obj, datetime.date):
             return obj.isoformat()
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, obj) #pragma: no cover
 
     def default(self, o: tp.Any) -> tp.Any:
         return self._encode(o)
