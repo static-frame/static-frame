@@ -3140,7 +3140,7 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
 class JSONEncoderNumPy(json.JSONEncoder):
 
     def _encode(self, obj: tp.Any) -> tp.Any:
-        if isinstance(obj, str):
+        if isinstance(obj, (str, int, float)):
             return obj
         if hasattr(obj, 'dtype'):
             if obj.shape == ():
