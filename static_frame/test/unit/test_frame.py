@@ -14644,17 +14644,34 @@ class TestUnit(TestCase):
         f2 = Frame.from_json_index(post, index_constructor=partial(sf.Index, dtype=int))
         self.assertTrue(f1.equals(f2))
 
+    def test_frame_from_json_index_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_index()
+        f2 = Frame.from_json_index(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
     def test_frame_from_json_columns_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
         post = f1.to_json_columns()
         f2 = Frame.from_json_columns(post, index_constructor=partial(sf.Index, dtype=int))
         self.assertTrue(f1.equals(f2))
 
+    def test_frame_from_json_columns_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_columns()
+        f2 = Frame.from_json_columns(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
 
     def test_frame_from_json_split_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
         post = f1.to_json_split()
         f2 = Frame.from_json_split(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_split_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_split()
+        f2 = Frame.from_json_split(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
         self.assertTrue(f1.equals(f2))
 
     def test_frame_from_json_records_a(self) -> None:
@@ -14663,12 +14680,23 @@ class TestUnit(TestCase):
         f2 = Frame.from_json_records(post)
         self.assertTrue(f1.equals(f2))
 
+    def test_frame_from_json_records_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|c(I,str)')
+        post = f1.to_json_records()
+        f2 = Frame.from_json_records(StringIO(post))
+        self.assertTrue(f1.equals(f2))
+
     def test_frame_from_json_values_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(bool,int,float,str)')
         post = f1.to_json_values()
         f2 = Frame.from_json_values(post)
         self.assertTrue(f1.equals(f2))
 
+    def test_frame_from_json_values_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)')
+        post = f1.to_json_values()
+        f2 = Frame.from_json_values(StringIO(post))
+        self.assertTrue(f1.equals(f2))
 
     #---------------------------------------------------------------------------
     def test_frame_from_dict_fields_a(self) -> None:
