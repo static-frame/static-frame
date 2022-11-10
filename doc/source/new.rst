@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+0.9.20
+----------
+
+Added ``via_str.format()`` for applying Python formatting mini-language strings to elements.
+
+Added ``skip_initial_space``, ``quoting``, ``quote_double``, and ``escape_char`` parameters to ``Frame.from_delimited()`` and related interfaces.
+
+
 0.9.19
 ----------
 
