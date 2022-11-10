@@ -1,4 +1,5 @@
 import datetime
+import json
 import typing as tp
 import unittest
 import warnings
@@ -16,6 +17,7 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import JSONEncoderNumPy
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
@@ -2894,6 +2896,22 @@ class TestUnit(TestCase):
         self.assertEqual(bytes_to_size_label(1023), '1023 B')
         self.assertEqual(bytes_to_size_label(1024), '1.0 KB')
 
+    #---------------------------------------------------------------------------
+    def test_json_encoder_numpy_a(self) -> None:
+        post1 = json.dumps(dict(a=1, b=2), cls=JSONEncoderNumPy)
+        self.assertEqual(post1, '{"a": 1, "b": 2}')
+
+        post2 = json.dumps(dict(a=np.arange(3)), cls=JSONEncoderNumPy)
+        self.assertEqual(post2, '{"a": [0, 1, 2]}')
+
+        post3 = json.dumps(dict(a=datetime.date(2022,1,5)), cls=JSONEncoderNumPy)
+        self.assertEqual(post3, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(dict(a=np.datetime64('2022-01-05')), cls=JSONEncoderNumPy)
+        self.assertEqual(post4, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64)), cls=JSONEncoderNumPy)
+        self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
 
 
 if __name__ == '__main__':

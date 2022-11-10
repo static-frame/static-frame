@@ -3143,14 +3143,16 @@ class JSONEncoderNumPy(json.JSONEncoder):
         if isinstance(obj, str):
             return obj
         if hasattr(obj, 'dtype'):
-            return obj.item()
+            if obj.shape == ():
+                return obj.item()
+            return obj.tolist()
         if isinstance(obj, dict):
             return {self._encode(k): self._encode(v) for k, v in obj.items()}
         if isinstance(obj, list):
-            return [self._encode(v) for v in obj]
+            return obj
         if isinstance(obj, datetime.date):
             return obj.isoformat()
-        return super().default(obj)
+        return json.JSONEncoder.default(self, obj)
 
     def default(self, o: tp.Any) -> tp.Any:
         return self._encode(o)
