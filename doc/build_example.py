@@ -104,6 +104,7 @@ FRAME_INIT_FROM_ELEMENTS_A = dict(elements=(10, 2, 8, 3), index=(('p', 'q', 'r',
 FRAME_INIT_FROM_ELEMENT_ITEMS_A = dict(items=((('a',  0), -1), (('b',  0), 10), (('a',  1), 3), (('b', 'a'), 1)), columns=(0, 1), index= ('a', 'b'), name='x', axis=1)
 FRAME_INIT_FROM_DICT_A = dict(mapping=b"dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'))", dtypes=b"dict(b=np.datetime64)", name='x')
 FRAME_INIT_FROM_DICT_RECORDS_A = dict(records=b"(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01'))", index=('p', 'q'), dtypes=b"dict(c=np.datetime64)", name='x')
+FRAME_INIT_FROM_DICT_FIELDS_A = dict(records=b"(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01'))", columns=('p', 'q'), dtypes=b"dict(q=np.datetime64)", name='x')
 FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A = dict(items=b"(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01')))", dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_RECORDS_A = dict(records=b"((10, False, '1517-01-01'), (8, True,'1517-04-01'))", index=('p', 'q'), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_RECORDS_ITEMS_A = dict(items=b"(('p', (10, False, '1517-01-01')), ('q', (8, True,'1517-04-01')))", columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
@@ -1426,6 +1427,8 @@ class ExGenFrame(ExGen):
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
         elif attr == 'from_dict_records':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
+        elif attr == 'from_dict_fields':
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_FIELDS_A, arg_first=False)})'
         elif attr == 'from_dict_records_items':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
         elif attr == 'from_element':
@@ -1450,6 +1453,25 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_json_url':
             pass
+
+        elif attr in (
+                'from_json_columns',
+                'from_json_index',
+                'from_json_split',
+                'from_json_records',
+                ):
+            encoder = attr.replace('from_', 'to_')
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"msg = f.{encoder}(indent=4)"
+            yield 'msg'
+            yield f"sf.Frame.{attr}(msg, dtypes=dict(c=np.datetime64))"
+
+        elif attr == 'from_json_values':
+            encoder = attr.replace('from_', 'to_')
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield f"msg = f.{encoder}(indent=4)"
+            yield 'msg'
+            yield f"sf.Frame.{attr}(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))"
 
         elif attr == 'from_msgpack':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
