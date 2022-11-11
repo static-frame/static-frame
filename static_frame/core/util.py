@@ -3145,20 +3145,27 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return None
         if isinstance(obj, (str, int, float)):
             return obj
+        if isinstance(obj, np.timedelta64):
+            return str(obj)
         if hasattr(obj, 'dtype'):
+            if obj.dtype == complex:
+                if obj.shape == ():
+                    return str(obj)
+                return [str(e) for e in obj]
             if obj.shape == ():
                 return obj.item()
             return obj.tolist()
         if isinstance(obj, dict):
             return {self._encode(k): self._encode(v) for k, v in obj.items()}
         if isinstance(obj, list):
-            return obj
+            return [self._encode(e) for e in obj]
         if isinstance(obj, datetime.date):
             return obj.isoformat()
         if isinstance(obj, Fraction):
             return str(obj)
         if isinstance(obj, complex):
             return str(obj)
+
         return json.JSONEncoder.default(self, obj) #pragma: no cover
 
     def default(self, o: tp.Any) -> tp.Any:
