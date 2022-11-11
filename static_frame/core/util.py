@@ -13,6 +13,7 @@ from collections import defaultdict
 from collections import namedtuple
 from copy import deepcopy
 from enum import Enum
+from fractions import Fraction
 from functools import partial
 from functools import reduce
 from io import StringIO
@@ -20,7 +21,6 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from types import TracebackType
-from fractions import Fraction
 
 import numpy as np
 from arraykit import column_2d_filter
