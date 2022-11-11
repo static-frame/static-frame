@@ -345,6 +345,12 @@ class TestUnit(TestCase):
     def test_frame_blocks_dont_have_reference_cycles(self, f1: Frame) -> None:
         self.assertEqual([f1], gc.get_referrers(f1._blocks))
 
+    # @given(sfst.get_frame_or_frame_go())
+    # def test_frame_to_json_index(self, f1: Frame) -> None:
+    #     msg = f1.to_json_index()
+
+
+
 
 if __name__ == '__main__':
     import unittest

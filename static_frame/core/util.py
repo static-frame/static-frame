@@ -20,6 +20,7 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from types import TracebackType
+from fractions import Fraction
 
 import numpy as np
 from arraykit import column_2d_filter
@@ -3140,6 +3141,8 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
 class JSONEncoderNumPy(json.JSONEncoder):
 
     def _encode(self, obj: tp.Any) -> tp.Any:
+        if obj is None:
+            return None
         if isinstance(obj, (str, int, float)):
             return obj
         if hasattr(obj, 'dtype'):
@@ -3152,6 +3155,10 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return obj
         if isinstance(obj, datetime.date):
             return obj.isoformat()
+        if isinstance(obj, Fraction):
+            return str(obj)
+        if isinstance(obj, complex):
+            return str(obj)
         return json.JSONEncoder.default(self, obj) #pragma: no cover
 
     def default(self, o: tp.Any) -> tp.Any:
