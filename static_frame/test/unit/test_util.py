@@ -2913,6 +2913,10 @@ class TestUnit(TestCase):
         post4 = json.dumps(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64)), cls=JSONEncoderNumPy)
         self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
 
+    # def test_json_encoder_numpy_b(self) -> None:
+    #     post1 = json.dumps(dict(a=np.array((complex(1.2), complex(3.5))), cls=JSONEncoderNumPy))
+
+
 
 if __name__ == '__main__':
     unittest.main()
