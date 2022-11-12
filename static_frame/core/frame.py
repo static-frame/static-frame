@@ -2091,6 +2091,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        # DEPRECATE for 1.0
         return cls.from_json_records(json_data, # type: ignore
                 name=name,
                 dtypes=dtypes,
@@ -2117,7 +2118,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # NOTE: remove in 1.0
+        # DEPRECATE for 1.0
         from static_frame.core.www import WWW
         sio = WWW.from_file(url, in_memory=True)
         return cls.from_json(sio, # type: ignore #pragma: no cover
