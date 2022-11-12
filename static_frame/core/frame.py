@@ -147,7 +147,7 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
-from static_frame.core.util import json_filter
+from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -8082,9 +8082,9 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = {k: dict(zip(self._columns, v))
-                for k, v in self.iter_tuple_items(constructor=tuple, axis=1)}
-        return json.dumps(json_filter(d), indent=indent)
+        d = ((k, dict(zip(self._columns, v)))
+                for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
@@ -8094,8 +8094,8 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = {k: dict(zip(self._index, v)) for k, v in self.iter_array_items(axis=0)}
-        return json.dumps(json_filter(d), indent=indent)
+        d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
@@ -8105,12 +8105,11 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        # TODO: if columnd index are depth > 1, must make tuple labels into lists
-        d = dict(columns=list(self._columns),
-                index=list(self._index),
-                data=list(self.iter_tuple(constructor=list, axis=1))
+        d = dict(columns=JSONFilter.from_iterable(self._columns),
+                index=JSONFilter.from_iterable(self._index),
+                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
                 )
-        return json.dumps(json_filter(d), indent=indent)
+        return json.dumps(d, indent=indent)
 
     @doc_inject(selector='json')
     def to_json_records(self, indent: tp.Optional[int] = None) -> str:
@@ -8120,9 +8119,9 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = [dict(zip(self._columns, v))
-                for v in self.iter_tuple(constructor=tuple, axis=1)]
-        return json.dumps(json_filter(d), indent=indent)
+        d = (dict(zip(self._columns, v))
+                for v in self.iter_tuple(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
@@ -8132,8 +8131,8 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = list(self.iter_tuple(constructor=tuple, axis=1))
-        return json.dumps(json_filter(d), indent=indent)
+        d = self.iter_tuple(constructor=tuple, axis=1)
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited
