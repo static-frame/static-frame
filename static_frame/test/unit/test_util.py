@@ -2917,6 +2917,10 @@ class TestUnit(TestCase):
         post1 = json.dumps(JSONFilter.from_element(dict(a=np.array((complex(1.2), complex(3.5))))))
         self.assertEqual(post1, '{"a": ["(1.2+0j)", "(3.5+0j)"]}')
 
+        post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
+        self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
+
+
 
 
 if __name__ == '__main__':

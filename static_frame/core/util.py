@@ -3156,8 +3156,7 @@ class JSONFilter:
                     return str(obj)
                 if obj.ndim == 1:
                     return [str(e) for e in obj]
-                else:
-                    return [[str(e) for e in row] for row in obj]
+                return [[str(e) for e in row] for row in obj]
             if obj.ndim == 0:
                 return obj.item()
             return obj.tolist()
