@@ -1873,7 +1873,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @classmethod
-    @doc_inject(selector='constructor_frame')
+    @doc_inject(selector='json')
     def from_json_index(cls,
             json_data: tp.Union[str, StringIO],
             *,
@@ -1883,7 +1883,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
+        '''Frame constructor from an in-memory JSON document in the following format: {json_index}
 
         Args:
             json_data: a string or StringIO of JSON data
@@ -1916,7 +1916,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
-    @doc_inject(selector='constructor_frame')
+    @doc_inject(selector='json')
     def from_json_columns(cls,
             json_data: tp.Union[str, StringIO],
             *,
@@ -1926,7 +1926,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
+        '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
 
         Args:
             json_data: a string or StringIO of JSON data
@@ -1959,7 +1959,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
-    @doc_inject(selector='constructor_frame')
+    @doc_inject(selector='json')
     def from_json_split(cls,
             json_data: tp.Union[str, StringIO],
             *,
@@ -1969,7 +1969,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
+        '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
         Args:
             json_data: a string or StringIO of JSON data
@@ -1996,7 +1996,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
-    @doc_inject(selector='constructor_frame')
+    @doc_inject(selector='json')
     def from_json_records(cls,
             json_data: tp.Union[str, StringIO],
             *,
@@ -2007,7 +2007,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
+        '''Frame constructor from an in-memory JSON document in the following format: {json_records}
 
         Args:
             json_data: a string or StringIO of JSON data
@@ -2033,7 +2033,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
-    @doc_inject(selector='constructor_frame')
+    @doc_inject(selector='json')
     def from_json_values(cls,
             json_data: tp.Union[str, StringIO],
             *,
@@ -2045,7 +2045,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
+        '''Frame constructor from an in-memory JSON document in the following format: {json_values}
 
         Args:
             json_data: a string or StringIO of JSON data
@@ -8079,24 +8079,36 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # exporters: json
 
+    @doc_inject(selector='json')
     def to_json_index(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_index}
+
+        Args:
+            {indent}
         '''
         d = {k: dict(zip(self._columns, v))
                 for k, v in self.iter_tuple_items(constructor=tuple, axis=1)}
         return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
+    @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_columns}
+
+        Args:
+            {indent}
         '''
         d = {k: dict(zip(self._index, v)) for k, v in self.iter_array_items(axis=0)}
         return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
+    @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON object with a key for "columns", "index", and "data"; each are arrays of values.
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_split}
+
+        Args:
+            {indent}
         '''
         # TODO: if columnd index are depth > 1, must make tuple labels into lists
         d = dict(columns=list(self._columns),
@@ -8105,17 +8117,25 @@ class Frame(ContainerOperand):
                 )
         return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
+    @doc_inject(selector='json')
     def to_json_records(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export the :obj:`Frame` as a JSON array of row objects, where column labels are repeated for each row, and no index labels are included.
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_records}
+
+        Args:
+            {indent}
         '''
         d = [dict(zip(self._columns, v))
                 for v in self.iter_tuple(constructor=tuple, axis=1)]
         return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
 
+    @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export the :obj:`Frame` as a JSON array of arrays of row data; no index or columns labels are included.
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_values}
+
+        Args:
+            {indent}
         '''
         d = list(self.iter_tuple(constructor=list, axis=1))
         return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)

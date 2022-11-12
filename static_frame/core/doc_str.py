@@ -455,7 +455,17 @@ class DOC_TEMPLATE:
             component="component: When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.",
             encoding="encoding: Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary."
             )
-
+    json = dict(
+            json_index = 'A JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.',
+            json_columns = 'A JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.',
+            json_split = 'A JSON object with a key for "columns", "index", and "data"; each are arrays of values.',
+            json_records = 'A JSON array of row objects, where column labels are repeated for each row, and no index labels are included.',
+            json_values = 'A JSON array of arrays of row data; no index or columns labels are included.',
+            indent = 'indent: If indent is a non-negative integer or string, then JSON array elements and object members will be pretty-printed with that indent level.',
+            dtypes=DTYPES,
+            name=NAME,
+            consolidate_blocks=CONSOLIDATE_BLOCKS
+    )
 
 # NOTE: F here should replace AnyCallable below
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
