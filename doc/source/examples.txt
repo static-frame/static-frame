@@ -362,7 +362,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_Series-corr()
 
 #start_Series-count()
@@ -5288,7 +5288,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -9838,6 +9838,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -9962,6 +9966,11 @@ r       4       5
 <int64>    <int64> <datetime64[D]>
 #end_Frame-from_dict()
 
+#start_Frame-from_dict_fields()
+>>> sf.Frame.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+#end_Frame-from_dict_fields()
+
 #start_Frame-from_dict_records()
 >>> sf.Frame.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <Frame: x>
@@ -10057,6 +10066,202 @@ s          3        wX
 1          8       True   1517-04-01
 <int64>    <int64> <bool> <datetime64[D]>
 #end_Frame-from_json()
+
+#start_Frame-from_json_columns()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_columns(indent=4)
+>>> msg
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_columns(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c          <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <<U10>
+#end_Frame-from_json_columns()
+
+#start_Frame-from_json_index()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_index(indent=4)
+>>> msg
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_index(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <datetime64[D]>
+#end_Frame-from_json_index()
+
+#start_Frame-from_json_records()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_records(indent=4)
+>>> msg
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+>>> sf.Frame.from_json_records(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_Frame-from_json_records()
+
+#start_Frame-from_json_split()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_split(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+>>> sf.Frame.from_json_split(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_Frame-from_json_split()
+
+#start_Frame-from_json_values()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_values(indent=4)
+>>> msg
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+>>> sf.Frame.from_json_values(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_Frame-from_json_values()
 
 #start_Frame-from_msgpack()
 >>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -10313,6 +10518,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -10387,6 +10596,152 @@ s            3        wX
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1.to_hdf5('/tmp/f.h5')
 #end_Frame-to_hdf5()
+
+#start_Frame-to_json_columns()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_columns(indent=4)
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+#end_Frame-to_json_columns()
+
+#start_Frame-to_json_index()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_index(indent=4)
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+#end_Frame-to_json_index()
+
+#start_Frame-to_json_records()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_records(indent=4)
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+#end_Frame-to_json_records()
+
+#start_Frame-to_json_split()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_split(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+#end_Frame-to_json_split()
+
+#start_Frame-to_json_values()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_values(indent=4)
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+#end_Frame-to_json_values()
 
 #start_Frame-to_latex()
 >>> s = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -12340,6 +12695,7 @@ from_concat_items(items, *, axis,... Frame    Constructor          Produce a Fra
 from_csv(fp, *, index_depth, inde... Frame    Constructor          Specialized versi...
 from_delimited(fp, *, delimiter, ... Frame    Constructor          Create a Frame fr...
 from_dict(mapping, *, index, fill... Frame    Constructor          Create a Frame fr...
+from_dict_fields(fields, *, colum... Frame    Constructor          Frame constructor...
 from_dict_records(records, *, ind... Frame    Constructor          Frame constructor...
 from_dict_records_items(items, *,... Frame    Constructor          Frame constructor...
 from_element(element, *, index, c... Frame    Constructor          Create a Frame fr...
@@ -12348,7 +12704,6 @@ from_elements(elements, *, index,... Frame    Constructor          Create a Fram
 from_fields(fields, *, index, col... Frame    Constructor          Frame constructor...
 from_hdf5(fp, *, label, index_dep... Frame    Constructor          Load Frame from t...
 from_items(pairs, *, index, fill_... Frame    Constructor          Frame constructor...
-from_json(json_data, *, dtypes, n... Frame    Constructor          Frame constructor...
 ...                                  ...      ...                  ...
 via_fill_value(fill_value).__le__... Frame    Accessor Fill Value
 via_fill_value(fill_value).__eq__... Frame    Accessor Fill Value
@@ -17015,6 +17370,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -17139,6 +17498,11 @@ r         4       5
 <int64>      <int64> <datetime64[D]>
 #end_FrameHE-from_dict()
 
+#start_FrameHE-from_dict_fields()
+>>> sf.FrameHE.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+#end_FrameHE-from_dict_fields()
+
 #start_FrameHE-from_dict_records()
 >>> sf.FrameHE.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <FrameHE: x>
@@ -17234,6 +17598,202 @@ s            3        wX
 1            8       True   1517-04-01
 <int64>      <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_json()
+
+#start_FrameHE-from_json_columns()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_columns(indent=4)
+>>> msg
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_columns(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c          <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <<U10>
+#end_FrameHE-from_json_columns()
+
+#start_FrameHE-from_json_index()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_index(indent=4)
+>>> msg
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_index(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_json_index()
+
+#start_FrameHE-from_json_records()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_records(indent=4)
+>>> msg
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+>>> sf.Frame.from_json_records(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_json_records()
+
+#start_FrameHE-from_json_split()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_split(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+>>> sf.Frame.from_json_split(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_json_split()
+
+#start_FrameHE-from_json_values()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_values(indent=4)
+>>> msg
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+>>> sf.Frame.from_json_values(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_json_values()
 
 #start_FrameHE-from_msgpack()
 >>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -17490,6 +18050,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -17564,6 +18128,152 @@ s            3        wX
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1.to_hdf5('/tmp/f.h5')
 #end_FrameHE-to_hdf5()
+
+#start_FrameHE-to_json_columns()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_columns(indent=4)
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+#end_FrameHE-to_json_columns()
+
+#start_FrameHE-to_json_index()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_index(indent=4)
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+#end_FrameHE-to_json_index()
+
+#start_FrameHE-to_json_records()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_records(indent=4)
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+#end_FrameHE-to_json_records()
+
+#start_FrameHE-to_json_split()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_split(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+#end_FrameHE-to_json_split()
+
+#start_FrameHE-to_json_values()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_values(indent=4)
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+#end_FrameHE-to_json_values()
 
 #start_FrameHE-to_latex()
 >>> s = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -19517,6 +20227,7 @@ from_concat_items(items, *, axis,... FrameHE  Constructor          Produce a Fra
 from_csv(fp, *, index_depth, inde... FrameHE  Constructor          Specialized versi...
 from_delimited(fp, *, delimiter, ... FrameHE  Constructor          Create a Frame fr...
 from_dict(mapping, *, index, fill... FrameHE  Constructor          Create a Frame fr...
+from_dict_fields(fields, *, colum... FrameHE  Constructor          Frame constructor...
 from_dict_records(records, *, ind... FrameHE  Constructor          Frame constructor...
 from_dict_records_items(items, *,... FrameHE  Constructor          Frame constructor...
 from_element(element, *, index, c... FrameHE  Constructor          Create a Frame fr...
@@ -19525,7 +20236,6 @@ from_elements(elements, *, index,... FrameHE  Constructor          Create a Fram
 from_fields(fields, *, index, col... FrameHE  Constructor          Frame constructor...
 from_hdf5(fp, *, label, index_dep... FrameHE  Constructor          Load Frame from t...
 from_items(pairs, *, index, fill_... FrameHE  Constructor          Frame constructor...
-from_json(json_data, *, dtypes, n... FrameHE  Constructor          Frame constructor...
 ...                                  ...      ...                  ...
 via_fill_value(fill_value).__le__... FrameHE  Accessor Fill Value
 via_fill_value(fill_value).__eq__... FrameHE  Accessor Fill Value
@@ -24164,6 +24874,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -24288,6 +25002,11 @@ r         4       5
 <int64>      <int64> <datetime64[D]>
 #end_FrameGO-from_dict()
 
+#start_FrameGO-from_dict_fields()
+>>> sf.FrameGO.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+#end_FrameGO-from_dict_fields()
+
 #start_FrameGO-from_dict_records()
 >>> sf.FrameGO.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <FrameGO: x>
@@ -24383,6 +25102,202 @@ s            3        wX
 1            8       True   1517-04-01
 <int64>      <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_json()
+
+#start_FrameGO-from_json_columns()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_columns(indent=4)
+>>> msg
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_columns(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c          <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <<U10>
+#end_FrameGO-from_json_columns()
+
+#start_FrameGO-from_json_index()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_index(indent=4)
+>>> msg
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+>>> sf.Frame.from_json_index(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<<U1>   <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_json_index()
+
+#start_FrameGO-from_json_records()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_records(indent=4)
+>>> msg
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+>>> sf.Frame.from_json_records(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_json_records()
+
+#start_FrameGO-from_json_split()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_split(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+>>> sf.Frame.from_json_split(msg, dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_json_split()
+
+#start_FrameGO-from_json_values()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_values(indent=4)
+>>> msg
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+>>> sf.Frame.from_json_values(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))
+<Frame>
+<Index> a       b      c               <<U1>
+<Index>
+0       10      False  1517-01-01
+1       2       True   1517-04-01
+2       8       True   1517-12-31
+3       3       False  1517-06-30
+<int64> <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_json_values()
 
 #start_FrameGO-from_msgpack()
 >>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -24639,6 +25554,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -24713,6 +25632,152 @@ s            3        wX
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1.to_hdf5('/tmp/f.h5')
 #end_FrameGO-to_hdf5()
+
+#start_FrameGO-to_json_columns()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_columns(indent=4)
+{
+    "a": {
+        "0": 10,
+        "1": 2,
+        "2": 8,
+        "3": 3
+    },
+    "b": {
+        "0": false,
+        "1": true,
+        "2": true,
+        "3": false
+    },
+    "c": {
+        "0": "1517-01-01",
+        "1": "1517-04-01",
+        "2": "1517-12-31",
+        "3": "1517-06-30"
+    }
+}
+#end_FrameGO-to_json_columns()
+
+#start_FrameGO-to_json_index()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_index(indent=4)
+{
+    "0": {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    "1": {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    "2": {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    "3": {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+}
+#end_FrameGO-to_json_index()
+
+#start_FrameGO-to_json_records()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_records(indent=4)
+[
+    {
+        "a": 10,
+        "b": false,
+        "c": "1517-01-01"
+    },
+    {
+        "a": 2,
+        "b": true,
+        "c": "1517-04-01"
+    },
+    {
+        "a": 8,
+        "b": true,
+        "c": "1517-12-31"
+    },
+    {
+        "a": 3,
+        "b": false,
+        "c": "1517-06-30"
+    }
+]
+#end_FrameGO-to_json_records()
+
+#start_FrameGO-to_json_split()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_split(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            false,
+            "1517-01-01"
+        ],
+        [
+            2,
+            true,
+            "1517-04-01"
+        ],
+        [
+            8,
+            true,
+            "1517-12-31"
+        ],
+        [
+            3,
+            false,
+            "1517-06-30"
+        ]
+    ]
+}
+#end_FrameGO-to_json_split()
+
+#start_FrameGO-to_json_values()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_values(indent=4)
+[
+    [
+        10,
+        false,
+        "1517-01-01"
+    ],
+    [
+        2,
+        true,
+        "1517-04-01"
+    ],
+    [
+        8,
+        true,
+        "1517-12-31"
+    ],
+    [
+        3,
+        false,
+        "1517-06-30"
+    ]
+]
+#end_FrameGO-to_json_values()
 
 #start_FrameGO-to_latex()
 >>> s = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -26693,6 +27758,7 @@ from_concat_items(items, *, axis,... FrameGO  Constructor          Produce a Fra
 from_csv(fp, *, index_depth, inde... FrameGO  Constructor          Specialized versi...
 from_delimited(fp, *, delimiter, ... FrameGO  Constructor          Create a Frame fr...
 from_dict(mapping, *, index, fill... FrameGO  Constructor          Create a Frame fr...
+from_dict_fields(fields, *, colum... FrameGO  Constructor          Frame constructor...
 from_dict_records(records, *, ind... FrameGO  Constructor          Frame constructor...
 from_dict_records_items(items, *,... FrameGO  Constructor          Frame constructor...
 from_element(element, *, index, c... FrameGO  Constructor          Create a Frame fr...
@@ -26701,7 +27767,6 @@ from_elements(elements, *, index,... FrameGO  Constructor          Create a Fram
 from_fields(fields, *, index, col... FrameGO  Constructor          Frame constructor...
 from_hdf5(fp, *, label, index_dep... FrameGO  Constructor          Load Frame from t...
 from_items(pairs, *, index, fill_... FrameGO  Constructor          Frame constructor...
-from_json(json_data, *, dtypes, n... FrameGO  Constructor          Frame constructor...
 ...                                  ...      ...                  ...
 via_fill_value(fill_value).__le__... FrameGO  Accessor Fill Value
 via_fill_value(fill_value).__eq__... FrameGO  Accessor Fill Value
@@ -66634,13 +67699,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f9b5257f700> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f9acfc1f160> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -66767,7 +67832,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f9b5257f8b0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -66829,7 +67894,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f9b5257fa60>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -69075,13 +70140,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f9b5257f700> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f9acfc1f160> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -69208,7 +70273,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f9b5257f8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -69270,7 +70335,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f9b5257fa60>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -79245,7 +80310,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf76040>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88bf3f2840>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -79305,13 +80370,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf76340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88b5bc2340>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9aadf766c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88cc2e0f40>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]

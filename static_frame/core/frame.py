@@ -1,4 +1,3 @@
-
 import csv
 import json
 import pickle
@@ -148,6 +147,7 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
+from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -938,12 +938,13 @@ class Frame(ContainerOperand):
         Args:
             records: Iterable of row values, where row values are dictionaries.
             index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
+            index:
             {dtypes}
             {name}
             {consolidate_blocks}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         columns: tp.List[tp.Hashable] = []
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
@@ -966,6 +967,7 @@ class Frame(ContainerOperand):
         else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
 
+        # derive union columns
         row_reference = {}
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
@@ -1304,6 +1306,96 @@ class Frame(ContainerOperand):
                 own_index=own_index,
                 own_columns=own_columns,
                 columns_constructor=columns_constructor
+                )
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_dict_fields(cls,
+            fields: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]],
+            *,
+            columns: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            fill_value: tp.Any = np.nan,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            ) -> 'Frame':
+        '''Frame constructor from an iterable of dictionaries, where each dictionary represents a column; index labels will be derived from the union of all column dictionary keys.
+
+        Args:
+            fields: Iterable of column values, where column values are dictionaries.
+            index: Optionally provide an iterable of index labels, equal in length to the number of fields. If a generator, this value will not be evaluated until after fields are loaded.
+            columns:
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        index: tp.List[tp.Hashable] = []
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
+                else get_col_fill_value_factory(fill_value, columns))
+
+        cols: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
+        if not hasattr(fields, '__len__'):
+            # might be a generator; must convert to sequence
+            cols = list(fields)
+        else: # could be a sequence, or something like a dict view
+            cols = fields
+        cols_count = len(cols)
+
+        if not cols_count:
+            raise ErrorInitFrame('No columns available in `fields`.')
+
+        # derive union index
+        col_reference = {}
+        for col in cols: # produce a column that has a value for all observed keys
+            col_reference.update(col)
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            cols_iter = cols if hasattr(cols, '__getitem__') else iter(cols)
+            for col_idx, col_dict in enumerate(cols_iter):
+
+                dtype = None
+                if get_col_fill_value is not None and get_col_dtype is not None:
+                    dts = get_col_dtype(col_idx)
+                    dtype = None if dts is None else np.dtype(dts)
+                    fv = get_col_fill_value(col_idx, dtype) # might be dtype specifier
+                if get_col_fill_value is not None:
+                    fv = get_col_fill_value(col_idx, None)
+                else:
+                    fv = fill_value
+                # for som e dtypes can use an np.fromiter constructor
+                values = []
+                for key in col_reference:
+                    values.append(col_dict.get(key, fv))
+
+                if dtype is None:
+                    array, _ = iterable_to_array_1d(values, count=len(values))
+                else:
+                    array = np.array(values, dtype=dtype)
+
+                array.flags.writeable = False
+                yield array
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+                index=col_reference.keys(),
+                columns=columns,
+                name=name,
+                own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_index=own_index,
                 )
 
     @staticmethod
@@ -1779,6 +1871,206 @@ class Frame(ContainerOperand):
             if cursor:
                 cursor.close()
 
+    #---------------------------------------------------------------------------
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_index(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_index}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        index = []
+
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
+                index.append(k)
+                yield v
+
+        return cls.from_dict_records(gen(), # type: ignore
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_columns(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        columns = []
+
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
+                columns.append(k)
+                yield v
+
+        return cls.from_dict_fields(gen(), # type: ignore
+                columns=columns,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_split(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_split}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_records(data['data'], # type: ignore
+                index=data['index'],
+                columns=data['columns'],
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_records(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_records}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_dict_records(data, # type: ignore
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_values(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_values}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_records(data, # type: ignore
+                index=index,
+                columns=columns,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json(cls,
@@ -1799,12 +2091,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        if isinstance(json_data, str):
-            data = json.loads(json_data)
-        else: # StringIO or open file
-            data = json.load(json_data)
-
-        return cls.from_dict_records(data, # type: ignore
+        return cls.from_json_records(json_data, # type: ignore
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
@@ -1839,6 +2126,7 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
+    #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
@@ -7782,6 +8070,69 @@ class Frame(ContainerOperand):
         name = name if name is not NAME_DEFAULT else self._name
 
         return Series(array, index=index, own_index=True, name=name)
+
+    #---------------------------------------------------------------------------
+    # exporters: json
+
+    @doc_inject(selector='json')
+    def to_json_index(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_index}
+
+        Args:
+            {indent}
+        '''
+        d = ((k, dict(zip(self._columns, v)))
+                for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_columns}
+
+        Args:
+            {indent}
+        '''
+        d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_split(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_split}
+
+        Args:
+            {indent}
+        '''
+        d = dict(columns=JSONFilter.from_iterable(self._columns),
+                index=JSONFilter.from_iterable(self._index),
+                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
+                )
+        return json.dumps(d, indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_records(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_records}
+
+        Args:
+            {indent}
+        '''
+        d = (dict(zip(self._columns, v))
+                for v in self.iter_tuple(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_values(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_values}
+
+        Args:
+            {indent}
+        '''
+        d = self.iter_tuple(constructor=tuple, axis=1)
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited

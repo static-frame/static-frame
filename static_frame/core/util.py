@@ -12,6 +12,7 @@ from collections import defaultdict
 from collections import namedtuple
 from copy import deepcopy
 from enum import Enum
+from fractions import Fraction
 from functools import partial
 from functools import reduce
 from io import StringIO
@@ -3134,6 +3135,49 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
     if value.__class__ is not list:
         return value
     return tuple(list_to_tuple(v) for v in value)
+
+class JSONFilter:
+
+    @staticmethod
+    def from_element(obj: tp.Any) -> tp.Any:
+        '''Convert non-JSON compatible objects to JSON compatible objects or strings.
+        '''
+        if obj is None:
+            return None
+        if isinstance(obj, (str, int, float)):
+            return obj
+        if isinstance(obj, datetime.date):
+            return obj.isoformat()
+        if isinstance(obj, (Fraction, complex, np.timedelta64, np.datetime64)):
+            return str(obj)
+        if hasattr(obj, 'dtype'): #type: ignore
+            if obj.dtype.kind in ('c', 'M', 'm'):
+                if obj.ndim == 0:
+                    return str(obj)
+                if obj.ndim == 1:
+                    return [str(e) for e in obj]
+                return [[str(e) for e in row] for row in obj]
+            if obj.ndim == 0:
+                return obj.item()
+            return obj.tolist()
+
+        fe = JSONFilter.from_element
+        if isinstance(obj, dict):
+            return {fe(k): fe(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            return [fe(e) for e in obj]
+
+    @classmethod
+    def from_items(cls,
+            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
+            ) -> tp.Any:
+        return {cls.from_element(k): cls.from_element(v) for k, v in items}
+
+    @classmethod
+    def from_iterable(cls,
+            iterable: tp.Iterator[tp.Any],
+            ) -> tp.Any:
+        return [cls.from_element(v) for v in iterable]
 
 #-------------------------------------------------------------------------------
 
