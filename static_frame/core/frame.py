@@ -2091,12 +2091,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        if isinstance(json_data, str):
-            data = json.loads(json_data)
-        else: # StringIO or open file
-            data = json.load(json_data)
-
-        return cls.from_dict_records(data, # type: ignore
+        return cls.from_json_records(json_data, # type: ignore
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
