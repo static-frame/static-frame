@@ -2580,6 +2580,7 @@ class Series(ContainerOperand):
             skipna: bool = True,
             skipfalsy: bool = False,
             unique: bool = False,
+            axis: int = 0,
             ) -> int:
         '''
         Return the count of non-NA, non-falsy, and/or unique elements.
@@ -2589,6 +2590,7 @@ class Series(ContainerOperand):
             skipfalsy: skip falsu values (0, '', False, None, NaN)
             unique: Count unique items after optionally applying ``skipna`` or ``skipfalsy`` removals.
         '''
+        # NOTE: axis arg for compat with Frame, is not used
         if not skipna and skipfalsy:
             raise RuntimeError('Cannot skipfalsy and not skipna.')
 

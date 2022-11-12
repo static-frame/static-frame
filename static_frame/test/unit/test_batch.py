@@ -1343,6 +1343,14 @@ class TestUnit(TestCase):
             (('x', (('f1', 1), ('f2', 2))), ('y', (('f1', 2), ('f2', 2))), ('z', (('f1', 2), ('f2', 1))))
             )
 
+    def test_batch_count_b(self) -> None:
+        s = Series((1, 1, 1, 3, 3, 8, 8, 8, 8))
+        post = Batch(s.iter_group_items()).count().to_series()
+        self.assertEqual(post.to_pairs(), ((1, 3), (3, 2), (8, 4)))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_batch_to_zip_pickle_a(self) -> None:
