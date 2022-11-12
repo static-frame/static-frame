@@ -147,7 +147,7 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
-from static_frame.core.util import JSONEncoderNumPy
+from static_frame.core.util import json_filter
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -8084,7 +8084,7 @@ class Frame(ContainerOperand):
         '''
         d = {k: dict(zip(self._columns, v))
                 for k, v in self.iter_tuple_items(constructor=tuple, axis=1)}
-        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
+        return json.dumps(json_filter(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
@@ -8095,7 +8095,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = {k: dict(zip(self._index, v)) for k, v in self.iter_array_items(axis=0)}
-        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
+        return json.dumps(json_filter(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
@@ -8110,7 +8110,7 @@ class Frame(ContainerOperand):
                 index=list(self._index),
                 data=list(self.iter_tuple(constructor=list, axis=1))
                 )
-        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
+        return json.dumps(json_filter(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_records(self, indent: tp.Optional[int] = None) -> str:
@@ -8122,7 +8122,7 @@ class Frame(ContainerOperand):
         '''
         d = [dict(zip(self._columns, v))
                 for v in self.iter_tuple(constructor=tuple, axis=1)]
-        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
+        return json.dumps(json_filter(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
@@ -8132,8 +8132,8 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = list(self.iter_tuple(constructor=list, axis=1))
-        return json.dumps(d, indent=indent, cls=JSONEncoderNumPy)
+        d = list(self.iter_tuple(constructor=tuple, axis=1))
+        return json.dumps(json_filter(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited

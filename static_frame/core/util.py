@@ -3137,43 +3137,33 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
         return value
     return tuple(list_to_tuple(v) for v in value)
 
-
-class JSONEncoderNumPy(json.JSONEncoder):
-
-    def _encode(self, obj: tp.Any) -> tp.Any:
-        if obj is None:
-            return None
-        if isinstance(obj, (str, int, float)):
-            return obj
-        if isinstance(obj, np.timedelta64):
-            return str(obj)
-        if hasattr(obj, 'dtype'):
-            if obj.dtype == complex:
-                if obj.shape == ():
-                    return str(obj)
+def json_filter(obj: tp.Any) -> tp.Any:
+    '''Convert non-JSON compatible objects to JSON compatible objects or strings.
+    '''
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float)):
+        return obj
+    if isinstance(obj, datetime.date):
+        return obj.isoformat()
+    if isinstance(obj, (Fraction, complex, np.timedelta64, np.datetime64)):
+        return str(obj)
+    if hasattr(obj, 'dtype'):
+        if obj.dtype.kind in ('c', 'M', 'm'):
+            if obj.ndim == 0:
+                return str(obj)
+            if obj.ndim == 1:
                 return [str(e) for e in obj]
-            if obj.shape == ():
-                return obj.item()
-            return obj.tolist()
-        if isinstance(obj, dict):
-            return {self._encode(k): self._encode(v) for k, v in obj.items()}
-        if isinstance(obj, list):
-            return [self._encode(e) for e in obj]
-        if isinstance(obj, datetime.date):
-            return obj.isoformat()
-        if isinstance(obj, Fraction):
-            return str(obj)
-        if isinstance(obj, complex):
-            return str(obj)
+            else:
+                return [[str(e) for e in row] for row in obj]
+        if obj.ndim == 0:
+            return obj.item()
+        return obj.tolist()
 
-        return json.JSONEncoder.default(self, obj) #pragma: no cover
-
-    def default(self, o: tp.Any) -> tp.Any:
-        return self._encode(o)
-
-    def iterencode(self, obj: tp.Any, *args, **kwargs) -> tp.Any: # type: ignore
-        # object keys are not handled by defa,ult()
-        return super().iterencode(self._encode(obj), *args, **kwargs)
+    if isinstance(obj, dict):
+        return {json_filter(k): json_filter(v) for k, v in obj.items()}
+    if hasattr(obj, '__iter__'):
+        return [json_filter(e) for e in obj]
 
 #-------------------------------------------------------------------------------
 
