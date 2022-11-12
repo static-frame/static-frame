@@ -3151,7 +3151,6 @@ class JSONEncoderNumPy(json.JSONEncoder):
             if obj.dtype == complex:
                 if obj.shape == ():
                     return str(obj)
-                import ipdb; ipdb.set_trace()
                 return [str(e) for e in obj]
             if obj.shape == ():
                 return obj.item()
@@ -3166,10 +3165,9 @@ class JSONEncoderNumPy(json.JSONEncoder):
             return str(obj)
         if isinstance(obj, complex):
             return str(obj)
-        try:
-            return json.JSONEncoder.default(self, obj) #pragma: no cover
-        except:
-            import ipdb; ipdb.set_trace()
+
+        return json.JSONEncoder.default(self, obj) #pragma: no cover
+
     def default(self, o: tp.Any) -> tp.Any:
         return self._encode(o)
 
