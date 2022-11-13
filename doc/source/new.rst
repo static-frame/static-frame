@@ -8,9 +8,11 @@ Added ``via_str.format()`` for applying Python formatting mini-language strings 
 
 Added ``skip_initial_space``, ``quoting``, ``quote_double``, and ``escape_char`` parameters to ``Frame.from_delimited()`` and related interfaces.
 
-Added ``Frame.from_json_index()``, ``Frame.from_json_columns``, ``Frame.from_json_split()``, ``Frame.from_json_records()``, ``Frame.from_json_values``.
+Added ``Frame.from_json_index()``, ``Frame.from_json_columns``, ``Frame.from_json_split()``, ``Frame.from_json_records()``, ``Frame.from_json_values()``.
 
 Added ``Frame.to_json_index()``, ``Frame.to_json_columns``, ``Frame.to_json_split()``, ``Frame.to_json_records()``, ``Frame.to_json_values``.
+
+Added ``axis`` argument to ``Series.count()`` for compatibility with ``Frame`` interface.
 
 
 0.9.19
