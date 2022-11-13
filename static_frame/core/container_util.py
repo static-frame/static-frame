@@ -129,6 +129,10 @@ class ContainerMap:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
+# from static_frame.core.index import ILoc
+# from collections import defaultdict
+# ILocFactory = defaultdict(lambda k: ILoc[k])
+
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
@@ -168,6 +172,8 @@ def get_col_dtype_factory(
             return dtypes
         if is_map:
             # mappings can be incomplete
+            # if ILocFactory[col_idx] in dtypes:
+            #     return dtypes.get(ILocFactory[col_idx])
             return dtypes.get(columns[col_idx], None) #type: ignore
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
         if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
