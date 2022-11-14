@@ -6,14 +6,18 @@ Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-
 
 A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
 
+A Year-Long Project to Extend _csv.c to Build NumPy Arrays
+
+--
+
+CSV and related delimted text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and readable by countless applications and libraries.
 
 
+Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, columnar arrays are needed. Second, no type information is included; if not explicitly provided by the caller, types must be left as strings or inferred.
+
+While Pandas CSV readers has offered good performance, it does not support all NumPy array types: NumPy datetime64, as well as NumPy Unicode strings, are not supported.
 
 
-
-
-
-CSV and related delimted text file formats remain a necessary evil. While such formats are comonly used to represent tabular data, they lack type definitions. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readabile and can be loaded in Excel and many other libraries.
 
 
 

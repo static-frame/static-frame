@@ -35,7 +35,7 @@ class FileIOTest:
         raise NotImplementedError()
 
 
-
+#-------------------------------------------------------------------------------``
 class SFTypeParse(FileIOTest):
 
     def __call__(self):
@@ -54,26 +54,46 @@ class SFTypeGiven(FileIOTest):
         f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes)
         assert f.shape == self.fixture.shape
 
-
+#-------------------------------------------------------------------------------
 class PandasTypeParse(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp)
+        f = pd.read_csv(self.fp, engine='c')
         assert f.shape == self.fixture.shape
 
 class PandasStr(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, dtype=str)
+        f = pd.read_csv(self.fp, engine='c', dtype=str)
         assert f.shape == self.fixture.shape
 
 class PandasTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, dtype=self.dtypes)
+        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes)
+        assert f.shape == self.fixture.shape
+
+#-------------------------------------------------------------------------------
+class PandasPyArrowTypeParse(FileIOTest):
+
+    def __call__(self):
+        f = pd.read_csv(self.fp, engine='pyarrow')
+        assert f.shape == self.fixture.shape
+
+class PandasPyArrowStr(FileIOTest):
+
+    def __call__(self):
+        f = pd.read_csv(self.fp, engine='pyarrow', dtype=str)
+        assert f.shape == self.fixture.shape
+
+class PandasPyArrowTypeGiven(FileIOTest):
+
+    def __call__(self):
+        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes)
         assert f.shape == self.fixture.shape
 
 
+#-------------------------------------------------------------------------------
 class NumpyGenfromtxtTypeParse(FileIOTest):
 
     def __call__(self):
@@ -97,7 +117,7 @@ class NumpyLoadtxtTypeParse(FileIOTest):
         f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 1
 
 def scale(v):
     return int(v * 1)
@@ -130,9 +150,15 @@ def plot_performance(frame: sf.Frame):
         SFTypeParse.__name__: 'StaticFrame\n(type parsing)',
         SFStr.__name__: 'StaticFrame\n(as string)',
         SFTypeGiven.__name__: 'StaticFrame\n(type given)',
+
         PandasTypeParse.__name__: 'Pandas\n(type parsing)',
         PandasStr.__name__: 'Pandas\n(as string)',
         PandasTypeGiven.__name__: 'Pandas\n(type given)',
+
+        PandasPyArrowTypeParse.__name__: 'Pandas PyArrow\n(type parsing)',
+        PandasPyArrowStr.__name__: 'Pandas PyArrow\n(as string)',
+        PandasPyArrowTypeGiven.__name__: 'Pandas PyArrow\n(type given)',
+
         NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
         NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
     }
@@ -141,11 +167,17 @@ def plot_performance(frame: sf.Frame):
         SFTypeParse.__name__: 0,
         SFStr.__name__: 0,
         SFTypeGiven.__name__: 0,
+
         PandasTypeParse.__name__: 1,
         PandasStr.__name__: 1,
         PandasTypeGiven.__name__: 1,
-        NumpyGenfromtxtTypeParse.__name__: 2,
-        NumpyLoadtxtTypeParse.__name__: 2,
+
+        PandasPyArrowTypeParse.__name__: 2,
+        PandasPyArrowStr.__name__: 2,
+        PandasPyArrowTypeGiven.__name__: 2,
+
+        NumpyGenfromtxtTypeParse.__name__: 3,
+        NumpyLoadtxtTypeParse.__name__: 3,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -268,6 +300,10 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
+
+    # PandasPyArrowTypeParse,
+    # PandasPyArrowStr,
+    # PandasPyArrowTypeGiven,
     # NumpyGenfromtxtTypeParse,
     # NumpyLoadtxtTypeParse,
     )
