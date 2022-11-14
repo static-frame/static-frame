@@ -1,21 +1,26 @@
 
 
+Building a Faster-than-Pandas CSV-to-NumPy Reader in C
+
+A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
+
+Building a (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Dtypes in C
 
 
 Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-Text-to-Numpy-Array Converter
-
-A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
 
 A Year-Long Project to Extend _csv.c to Build NumPy Arrays
 
 --
 
-CSV and related delimted text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and readable by countless applications and libraries.
+CSV and related delimted text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and importable by countless applications and libraries.
+
+Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, columnar collections are needed. Second, no type information is included; if not explicitly provided by the caller, types must be left as strings or inferred.
+
+While the Pandas CSV reader offers good performance, it does not support all NumPy array dtypes: NumPy datetime64, as well as NumPy Unicode strings, are not supported. For NumPy users, as well as alternate DataFrame libraries like StaticFrame, support for all dtypes is critcal.
 
 
-Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, columnar arrays are needed. Second, no type information is included; if not explicitly provided by the caller, types must be left as strings or inferred.
 
-While Pandas CSV readers has offered good performance, it does not support all NumPy array types: NumPy datetime64, as well as NumPy Unicode strings, are not supported.
 
 
 

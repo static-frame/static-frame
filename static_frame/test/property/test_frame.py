@@ -8,6 +8,7 @@ import numpy as np
 from arraykit import isna_element
 from hypothesis import given
 
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
@@ -19,7 +20,7 @@ from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.core.exception import ErrorInitIndexNonUnique
+
 
 class TestUnit(TestCase):
 
