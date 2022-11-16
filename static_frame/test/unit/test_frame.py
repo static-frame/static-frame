@@ -6832,6 +6832,35 @@ class TestUnit(TestCase):
             ((0, (((dt64('2021-01-02'), 'a'), 0), ((dt64('2022-01-02'), 'b'), 5), ((dt64('1983-08-08'), 'a'), 6))), (1, (((dt64('2021-01-02'), 'a'), 'q'), ((dt64('2022-01-02'), 'b'), 'z'), ((dt64('1983-08-08'), 'a'), 'w')))
             ))
 
+    def test_frame_from_delimited_p(self) -> None:
+        msg = 'a\\||1|0|q\nb\\||4|5|z\nc\\||9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                escape_char='\\'
+                )
+        self.assertEqual(f1.shape, (3, 3))
+        self.assertEqual(f1.index.values.tolist(), ['a|', 'b|', 'c|'])
+        self.assertEqual(f1.to_pairs(),
+                ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
+                )
+
+
+    def test_frame_from_delimited_q(self) -> None:
+        msg = "'a|'|1|0|q\n'b|'|4|5|z\n'c|'|9|6|w"
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                quote_char="'"
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
+                )
+
 
     #---------------------------------------------------------------------------
 
