@@ -1,0 +1,53 @@
+
+
+
+No-Copy DataFrame Operations: Performance Advantages of an Immutable Data Model
+
+
+
+>>> f1 = ff.parse('s(10_000,1000)|v(int,int,str,float)')
+>>> df1 = f1.to_pandas()
+
+>>> f2 = ff.parse('s(10_000,1000)|v(int,bool,bool,float)')
+>>> df2 = f2.to_pandas()
+
+
+# Examples:
+
+renaming axis
+
+>>> %timeit f1.rename(index='foo')
+34.7 µs ± 99 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
+>>> %timeit df.rename_axis('foo')
+72 ms ± 775 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+# setting the index
+
+>>> %timeit f1.set_index(0)
+927 µs ± 2.94 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+>>> %timeit df.set_index(0, drop=False)
+71.3 ms ± 384 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+
+extraction of columns
+
+>>> %timeit f1[[3, 300, 828]]
+31.6 µs ± 225 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
+>>> %timeit df[[3, 300, 828]]
+332 µs ± 9.22 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+
+
+horizontal concatenation of same index.
+
+>>> %timeit sf.Frame.from_concat((f1, f2), axis=1, columns=sf.IndexAutoFactory)
+1.09 ms ± 18.9 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+>>> %timeit pd.concat((df1, df2), axis=1)
+112 ms ± 354 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+

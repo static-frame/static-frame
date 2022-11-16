@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+0.9.21
+----------
+
+Set ``arraykit`` version to 0.2.3.
+
+Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
+
+
 0.9.20
 ----------
 
