@@ -2227,11 +2227,14 @@ class Frame(ContainerOperand):
                     row_left = ''
                     row_right = row
                 else:
-                    # NOTE: this is not presently handling quoted or escaped fields
                     row_left, row_right = split_after_count(
                             row,
-                            delimiter,
-                            index_depth,
+                            delimiter=delimiter,
+                            count=index_depth,
+                            quoting=quoting,
+                            quotechar=quote_char,
+                            doublequote=quote_double,
+                            escapechar=escape_char,
                             )
 
                 [array_right] = delimited_to_arrays(
