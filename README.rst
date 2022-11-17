@@ -114,51 +114,73 @@ Quick-Start Guide
 
 To get startred quickly, lets download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
 
-While StaticFrame's API has over 7,000 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than having fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design makes for more maintainable code.
+While StaticFrame's API has over 7,000 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design makes for more maintainable code.
 
-Lets get the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use the ``from_csv()`` constructor. To download a resource and provide it to a constructor, we can use StaticFrame's ``WWW`` interface.
+Lets get the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use the ``from_csv()`` constructor. To download a resource and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface.
 
 >>> import static_frame as sf
->>> data = sf.FrameGO.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
+>>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
 
 
 We can use ``head()`` to view the first rows. Notice that StaticFrame's default display make it very clear what type of Frame, Index, and NumPy datatypes are present.
 
 >>> data.head()
-<FrameGO>
-<IndexGO> 0         1         2         3         4           <int64>
+<Frame>
+<Index> 0         1         2         3         4           <int64>
 <Index>
-0         5.1       3.5       1.4       0.2       Iris-setosa
-1         4.9       3.0       1.4       0.2       Iris-setosa
-2         4.7       3.2       1.3       0.2       Iris-setosa
-3         4.6       3.1       1.5       0.2       Iris-setosa
-4         5.0       3.6       1.4       0.2       Iris-setosa
-<int64>   <float64> <float64> <float64> <float64> <<U15>
+0       5.1       3.5       1.4       0.2       Iris-setosa
+1       4.9       3.0       1.4       0.2       Iris-setosa
+2       4.7       3.2       1.3       0.2       Iris-setosa
+3       4.6       3.1       1.5       0.2       Iris-setosa
+4       5.0       3.6       1.4       0.2       Iris-setosa
+<int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-StaticFrame supports reindexing (where axis labels are conformed to another axis's labels, potentially changing the size and ordering of labels) and relabeling (simply applying new labels without changing size). To ignore the integer labels and set new column labels, we will use the ``relabel()`` method. While we are creating a new ``Frame``, relabeling does not require us to copy the underlying NumPy data: as all data is immutable, we can reuse it in our new container.
+StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels, never changing size or ordering). To set new column labels, we will use the ``relabel()`` method. While we are creating a new ``Frame``, relabeling does not require us to copy the underlying NumPy data. As all data is immutable, we can reuse it in our new container.
 
 >>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
 >>> data.head()
-<FrameGO>
-<IndexGO> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
+<Frame>
+<Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
 <Index>
-0         5.1       3.5       1.4       0.2       Iris-setosa
-1         4.9       3.0       1.4       0.2       Iris-setosa
-2         4.7       3.2       1.3       0.2       Iris-setosa
-3         4.6       3.1       1.5       0.2       Iris-setosa
-4         5.0       3.6       1.4       0.2       Iris-setosa
-<int64>   <float64> <float64> <float64> <float64> <<U15>
+0       5.1       3.5       1.4       0.2       Iris-setosa
+1       4.9       3.0       1.4       0.2       Iris-setosa
+2       4.7       3.2       1.3       0.2       Iris-setosa
+3       4.6       3.1       1.5       0.2       Iris-setosa
+4       5.0       3.6       1.4       0.2       Iris-setosa
+<int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-We are going to use 80% of our data to train our classifier and then test the remaining 20%.
+We are going to use 80% of our data to train our classifier and then test the remaining 20%. To divide our data into these two groups, we will create a ``Series`` of contiguous integers and use thre ``sample()`` method to randomly select 80%. We will use the ``drop`` interface to remove the training group and give us a smaller ``Series`` of our testing group.
 
 >>> sel = sf.Series(np.arange(len(data)))
 >>> sel_train = sel.sample(round(len(data) * .8))
 >>> sel_test = sel.drop[sel_train]
+>>> sel_test.head()
+<Series>
+<Index>
+8        8
+15       15
+18       18
+23       23
+26       26
+<int64>  <int64>
+
+Next, we will use the this ``Series`` to select from our ``data`` ``Frame`` all training records.
+
+>>> data_train = data.loc[sel_train]
+>>> data_train.head()
+<Frame>
+<Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
+<Index>
+0       5.1       3.5       1.4       0.2       Iris-setosa
+1       4.9       3.0       1.4       0.2       Iris-setosa
+2       4.7       3.2       1.3       0.2       Iris-setosa
+3       4.6       3.1       1.5       0.2       Iris-setosa
+4       5.0       3.6       1.4       0.2       Iris-setosa
+<int64> <float64> <float64> <float64> <float64> <<U15>
 
 
->>> data_train = data.iloc[sel_train.values]
 >>> counts = sf.Batch(data_train['species'].iter_group_items()).count().to_series()
 >>> counts
 <Series>
