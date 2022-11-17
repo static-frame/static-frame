@@ -8,8 +8,8 @@ from collections import OrderedDict
 from enum import Enum
 from io import StringIO
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
 import static_frame as sf
 from static_frame import DisplayConfig
