@@ -10,7 +10,7 @@ Set ``automap`` version to 0.6.2.
 
 Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
 
-Corrected issue where Pandas ``MutliIndex`` were not converted to ``IndexHierarchy`` in ``Frame.from_pandas()``.
+Corrected issue where Pandas ``MutliIndex`` are not converted to ``IndexHierarchy`` in ``Frame.from_pandas()`` or ``Series.from_pandas()``.
 
 
 0.9.20
