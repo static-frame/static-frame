@@ -840,13 +840,13 @@ class TestUnit(TestCase):
     def test_frame_from_pandas_w(self) -> None:
         import pandas as pd
 
-        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(str,str))|v(bool)')
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
         df = f1.to_pandas()
         f2 = Frame.from_pandas(df)
         self.assertEqual(f2.columns.depth, 2)
         self.assertEqual(f2.index.depth, 2)
         self.assertEqual(f2.to_pairs(),
-                ((('zZbu', 'zOyq'), ((('zZbu', 'zOyq'), False), (('zZbu', 'zIA5'), False))), (('zZbu', 'zIA5'), ((('zZbu', 'zOyq'), False), (('zZbu', 'zIA5'), False))))
+                ((('zZbu', 'zOyq'), (((34715, 105269), False), ((34715, 119909), False))), (('zZbu', 'zIA5'), (((34715, 105269), False), ((34715, 119909), False))))
                 )
 
     #---------------------------------------------------------------------------
