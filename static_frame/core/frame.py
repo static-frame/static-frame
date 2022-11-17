@@ -2920,6 +2920,9 @@ class Frame(ContainerOperand):
             index = None
         elif index is not None:
             pass
+        elif isinstance(value.index, pandas.MultiIndex):
+            index = IndexHierarchy.from_pandas(value.index)
+            own_index = True
         else:
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
@@ -2929,6 +2932,9 @@ class Frame(ContainerOperand):
             columns = None
         elif columns is not None:
             pass
+        elif isinstance(value.columns, pandas.MultiIndex):
+            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_pandas(value.columns)
+            own_columns = True
         else:
             columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
             own_columns = columns_constructor is None

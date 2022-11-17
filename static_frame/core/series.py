@@ -487,6 +487,9 @@ class Series(ContainerOperand):
             index = None
         elif index is not None:
             pass # pass index into constructor
+        elif isinstance(value.index, pandas.MultiIndex):
+            index = IndexHierarchy.from_pandas(value.index)
+            own_index = True
         else: # if None
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None

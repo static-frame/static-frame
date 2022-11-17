@@ -8,6 +8,7 @@ from collections import OrderedDict
 from enum import Enum
 from io import StringIO
 
+import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf
@@ -2648,6 +2649,17 @@ class TestUnit(TestCase):
         s2 = Series.from_pandas(pds, index=IndexAutoFactory)
         self.assertEqual(s2.to_pairs(),
                 ((0, 10), (1, 20)))
+
+
+    def test_series_from_pandas_j(self) -> None:
+        import pandas as pd
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
+        pds = f1[ILoc[0]].to_pandas()
+        s1 = Series.from_pandas(pds)
+        self.assertEqual(s1.index.depth, 2)
+        self.assertEqual(s1.to_pairs(),
+                (((34715, 105269), False), ((34715, 119909), False)))
+
 
     #---------------------------------------------------------------------------
 
