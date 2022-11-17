@@ -732,7 +732,6 @@ class TestUnit(TestCase):
                 ((('a', 1), ((0, 0), (1, 4))), (('a', 2), ((0, 1), (1, 5))), (('b', 1), ((0, 2), (1, 6))), (('b', 2), ((0, 3), (1, 7))))
                 )
 
-
         # this index shows itself as having only one level
         pd_idx = pd.MultiIndex([[]], [[]])
         with self.assertRaises(ErrorInitIndex):
@@ -837,6 +836,18 @@ class TestUnit(TestCase):
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool')]
                 )
 
+
+    def test_frame_from_pandas_w(self) -> None:
+        import pandas as pd
+
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(str,str))|v(bool)')
+        df = f1.to_pandas()
+        f2 = Frame.from_pandas(df)
+        self.assertEqual(f2.columns.depth, 2)
+        self.assertEqual(f2.index.depth, 2)
+        self.assertEqual(f2.to_pairs(),
+                ((('zZbu', 'zOyq'), ((('zZbu', 'zOyq'), False), (('zZbu', 'zIA5'), False))), (('zZbu', 'zIA5'), ((('zZbu', 'zOyq'), False), (('zZbu', 'zIA5'), False))))
+                )
 
     #---------------------------------------------------------------------------
 
