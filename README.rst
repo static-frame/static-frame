@@ -112,16 +112,17 @@ For extended input and output, the following packages are required:
 Quick-Start Guide
 ---------------------
 
-To get startred quickly, lets download the classic "Iris" flower machine learning data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
+To get startred quickly, lets download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
 
-While StaticFrame's API has over 7,000 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than having fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design improves code maintenance.
+While StaticFrame's API has over 7,000 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than having fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design makes for more maintainable code.
 
-First, lets get some data from the UCI Machine Learning Repository of data sets and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use a ``FrameGO``, which permits grow-only columns addition. To download a resources and provdie it to a constructor, we can use the ``WWW`` interface.
+Lets get the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use a ``FrameGO``, which permits grow-only column addition, and the ``from_csv()`` constructor. To download a resource and provide it to a constructor, we can use StaticFrame's ``WWW`` interface.
 
 >>> import static_frame as sf
 >>> data = sf.FrameGO.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
 
-We can use ``head()`` to view the first rows. Notice that StaticFrame's deafult display make it very clear what type of Frame, Index, and NumPy datatypes are used.
+
+We can use ``head()`` to view the first rows. Notice that StaticFrame's default display make it very clear what type of Frame, Index, and NumPy datatypes are present.
 
 >>> data.head()
 <FrameGO>
@@ -134,7 +135,7 @@ We can use ``head()`` to view the first rows. Notice that StaticFrame's deafult 
 4         5.0       3.6       1.4       0.2       Iris-setosa
 <int64>   <float64> <float64> <float64> <float64> <<U15>
 
-StaticFrame supports reindexing (where axis labels are conformed to another axis's labels, potentially changing the size and ordering of labels) and relabeling (simply applying new labels without changing size). To ignore the integer labels and set the column labels, we will use the ``relabel()`` method. While we are creating a new ``Frame``, relabeling does not require us to copy the underlying NumPy data: as all data is immutable, we can reuse it in our new container.
+StaticFrame supports reindexing (where axis labels are conformed to another axis's labels, potentially changing the size and ordering of labels) and relabeling (simply applying new labels without changing size). To ignore the integer labels and set new column labels, we will use the ``relabel()`` method. While we are creating a new ``Frame``, relabeling does not require us to copy the underlying NumPy data: as all data is immutable, we can reuse it in our new container.
 
 >>> data = data.relabel(columns=('sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species'))
 
