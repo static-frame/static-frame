@@ -116,7 +116,7 @@ To get startred quickly, lets download the classic iris (flower) characteristics
 
 While StaticFrame's API has over 7,000 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than having fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design makes for more maintainable code.
 
-Lets get the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use a ``FrameGO``, which permits grow-only column addition, and the ``from_csv()`` constructor. To download a resource and provide it to a constructor, we can use StaticFrame's ``WWW`` interface.
+Lets get the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the ``Frame`` or derived class. Here, we will use the ``from_csv()`` constructor. To download a resource and provide it to a constructor, we can use StaticFrame's ``WWW`` interface.
 
 >>> import static_frame as sf
 >>> data = sf.FrameGO.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
@@ -135,46 +135,125 @@ We can use ``head()`` to view the first rows. Notice that StaticFrame's default 
 4         5.0       3.6       1.4       0.2       Iris-setosa
 <int64>   <float64> <float64> <float64> <float64> <<U15>
 
+
 StaticFrame supports reindexing (where axis labels are conformed to another axis's labels, potentially changing the size and ordering of labels) and relabeling (simply applying new labels without changing size). To ignore the integer labels and set new column labels, we will use the ``relabel()`` method. While we are creating a new ``Frame``, relabeling does not require us to copy the underlying NumPy data: as all data is immutable, we can reuse it in our new container.
 
->>> data = data.relabel(columns=('sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species'))
+>>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
+>>> data.head()
+<FrameGO>
+<IndexGO> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
+<Index>
+0         5.1       3.5       1.4       0.2       Iris-setosa
+1         4.9       3.0       1.4       0.2       Iris-setosa
+2         4.7       3.2       1.3       0.2       Iris-setosa
+3         4.6       3.1       1.5       0.2       Iris-setosa
+4         5.0       3.6       1.4       0.2       Iris-setosa
+<int64>   <float64> <float64> <float64> <float64> <<U15>
+
 
 We are going to use 80% of our data to train our classifier and then test the remaining 20%.
 
-    .. sel = sf.Series(np.arange(len(data)))
-    .. sel_train = sel.sample(round(len(data) * .8))
-    .. sel_test = sel.drop[sel_train]
+>>> sel = sf.Series(np.arange(len(data)))
+>>> sel_train = sel.sample(round(len(data) * .8))
+>>> sel_test = sel.drop[sel_train]
 
-    .. data_train = data.iloc[sel_train.values]
-    .. counts = sf.Batch(data_train['species'].iter_group_items()).apply(len).to_series()
-    .. prior = counts / len(data_train)
 
-    .. mu = sf.Batch(data_train[['sepal_length', 'sepal_width', 'species']].iter_group_items('species', drop=True)).mean().to_frame()
+>>> data_train = data.iloc[sel_train.values]
+>>> counts = sf.Batch(data_train['species'].iter_group_items()).count().to_series()
+>>> counts
+<Series>
+<Index>
+Iris-setosa     41
+Iris-versicolor 40
+Iris-virginica  39
+<<U15>          <int64>
 
-    .. sigma = sf.Batch(data_train[['sepal_length', 'sepal_width', 'species']].iter_group_items('species', drop=True)).std(ddof=1).to_frame()
 
-    .. # for display, and to show hierarchical columns
-    .. sf.Frame.from_concat((mu.relabel_level_add('mu'), sigma.relabel_level_add('sigma')))
+>>> prior = counts / len(data_train)
+>>> prior
+<Series>
+<Index>
+Iris-setosa     0.3416666666666667
+Iris-versicolor 0.3333333333333333
+Iris-virginica  0.325
+<<U15>          <float64>
 
-    .. data_test = data.loc[sel_test.values, ['sepal_length', 'sepal_width']].to_frame_go()
 
-    .. from scipy.stats import norm
 
-    .. def fields() -> tp.Iterator[np.ndarray]:
-    ..     for label in mu.index:
-    ..         pdf = norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])
-    ..         yield np.log(pdf).sum(axis=1)
+>>> mu = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).mean().to_frame()
+>>> mu
+<Frame>
+<Index>         sepal_l           sepal_w            <<U7>
+<Index>
+Iris-setosa     5.021951219512196 3.426829268292683
+Iris-versicolor 5.9               2.7924999999999995
+Iris-virginica  6.587179487179487 2.9794871794871796
+<<U15>          <float64>         <float64>
 
-    .. likelihood = sf.Frame.from_fields(fields(),
-    ..         columns=mu.index, index=data_test.index)
-    .. posterior = likelihood * prior
 
-    .. data_test['predict'] = posterior.loc_max(axis=1)
-    .. data_test['observed'] = data['species']
-    .. data_test['correct'] = data_test['predict'] == data_test['observed']
+>>> sigma = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).std(ddof=1).to_frame()
+>>> sigma
+<Frame>
+<Index>         sepal_l             sepal_w             <<U7>
+<Index>
+Iris-setosa     0.3588259990036614  0.3847235307619632
+Iris-versicolor 0.48145079893471127 0.30330445058322136
+Iris-virginica  0.6346070011305742  0.34654648596771576
+<<U15>          <float64>           <float64>
 
-    .. print(f'predicted {data_test["correct"].sum()} out of {len(data_test)}')
 
+>>> stats = sf.Frame.from_concat((mu.relabel_level_add('mu'), sigma.relabel_level_add('sigma')))
+>>> round(stats, 2)
+<Frame>
+<Index>                          sepal_l   sepal_w   <<U7>
+<IndexHierarchy>
+mu               Iris-setosa     5.02      3.43
+mu               Iris-versicolor 5.9       2.79
+mu               Iris-virginica  6.59      2.98
+sigma            Iris-setosa     0.36      0.38
+sigma            Iris-versicolor 0.48      0.3
+sigma            Iris-virginica  0.63      0.35
+<<U5>            <<U15>          <float64> <float64>
+
+
+>>> data_test = data.loc[sel_test.values, ['sepal_l', 'sepal_w']].to_frame_go()
+>>> from scipy.stats import norm
+>>> def fields():
+...     for label in mu.index:
+...             pdf = norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])
+...             yield np.log(pdf).sum(axis=1)
+
+
+>>> likelihood = sf.Frame.from_fields(fields(), columns=mu.index, index=data_test.index)
+>>> round(likelihood.head(), 2)
+<Frame>
+<Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
+<Index>
+1       -0.53       -2.31           -3.86
+6       -0.55       -5.57           -5.96
+12      -0.66       -2.76           -4.29
+13      -2.5        -5.67           -6.82
+17      0.1         -4.02           -4.2
+
+>>> posterior = likelihood * prior
+>>> data_test['predict'] = posterior.loc_max(axis=1)
+>>> data_test['observed'] = data['species']
+>>> data_test['correct'] = data_test['predict'] == data_test['observed']
+
+>>> data_test.tail()
+<FrameGO>
+<IndexGO> sepal_l   sepal_w   predict         observed       correct <<U8>
+<Index>
+136       6.3       3.4       Iris-virginica  Iris-virginica True
+137       6.4       3.1       Iris-virginica  Iris-virginica True
+139       6.9       3.1       Iris-virginica  Iris-virginica True
+146       6.3       2.5       Iris-versicolor Iris-virginica False
+147       6.5       3.0       Iris-virginica  Iris-virginica True
+<int64>   <float64> <float64> <<U15>          <<U15>         <bool>
+
+
+>>> data_test["correct"].sum(), len(data_test)
+(22, 30)
 
 
 .. note::
