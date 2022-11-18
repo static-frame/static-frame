@@ -192,6 +192,7 @@ Iris-versicolor 40
 Iris-virginica  39
 <<U15>          <int64>
 
+
 We can calculate the "prior" by dividing counts by the size of the training data.
 
 >>> prior = counts / len(data_train)
