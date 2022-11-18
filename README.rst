@@ -151,7 +151,7 @@ StaticFrame supports reindexing (conforming existing axis labels to new labels, 
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-We are going to use 80% of our data to train our classifier and then test the remaining 20%. To divide our data into these two groups, we will create a ``Series`` of contiguous integers and use thre ``sample()`` method to randomly select 80%. We will use the ``drop`` interface to remove the training group and give us a smaller ``Series`` of our testing group.
+We are going to use 80% of our data to train our classifier; the remaining 20% will be used to test the classifier. To divide our data into two groups, we will create a ``Series`` of contiguous integers and then extract a random selection of 80% of the values. The ``sample()`` method, given a count, samples that many values from the ``Series``. We can then use the ``drop`` interface to create a new ``Series`` that excludes the training group, leaving the testing group.
 
 >>> sel = sf.Series(np.arange(len(data)))
 >>> sel_train = sel.sample(round(len(data) * .8))
@@ -166,7 +166,7 @@ We are going to use 80% of our data to train our classifier and then test the re
 26       26
 <int64>  <int64>
 
-Next, we will use the this ``Series`` to select from our ``data`` ``Frame`` all training records.
+Next, we will use ``loc`` on the ``Frame`` to select the training subset of the data.
 
 >>> data_train = data.loc[sel_train]
 >>> data_train.head()
