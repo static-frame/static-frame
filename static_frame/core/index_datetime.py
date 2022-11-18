@@ -6,6 +6,8 @@ import numpy as np
 from automap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
 from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
@@ -20,6 +22,7 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import DT64_US
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
@@ -34,8 +37,6 @@ from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
-from static_frame.core.util import InvalidDatetime64Initializer
-from static_frame.core.util import INT_TYPES
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
@@ -286,13 +287,14 @@ class IndexYear(IndexDatetime):
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
-        if isinstance(key, INT_TYPES):
-            key = str(key)
-        return Index._loc_to_iloc(self,
-                key=key,
-                key_transform=partial(key_to_datetime_key, dtype=self._DTYPE),
-                partial_selection=partial_selection,
-                )
+        try:
+            return Index._loc_to_iloc(self,
+                    key=key,
+                    key_transform=partial(key_to_datetime_key, dtype=self._DTYPE),
+                    partial_selection=partial_selection,
+                    )
+        except InvalidDatetime64Initializer as e:
+            raise LocInvalid(e.args[0]) from None
 
     #---------------------------------------------------------------------------
     def to_pandas(self) -> None:
