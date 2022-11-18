@@ -22,7 +22,6 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import DT64_US
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH

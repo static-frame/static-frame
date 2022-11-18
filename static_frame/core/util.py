@@ -1785,7 +1785,8 @@ def to_datetime64(
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
-                if dtype == DT64_YEAR:
+                # permit NaNs to pass
+                if not np.isnan(dt) and dtype == DT64_YEAR:
                     dt_naive = np.datetime64(value)
                     if dt_naive.dtype != dt.dtype:
                         raise InvalidDatetime64Initializer(f'value ({value}) will not be converted to dtype ({dtype})')
