@@ -265,48 +265,45 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         raise RuntimeError('could not find target fn', target_fn)
 
-    @classmethod
-    def get_readme_str(cls) -> str:
-        # mutate the README
-        fp_alt = cls.get_test_input('jph_photos.txt')
+#     @classmethod
+#     def get_readme_str(cls) -> str:
+#         # mutate the README
+#         fp_alt = cls.get_test_input('jph_photos.txt')
 
-        readme_fp = cls.get_readme_fp()
-        with open(readme_fp, encoding='utf-8') as f:
-            readme_str = f.read()
+#         readme_fp = cls.get_readme_fp()
+#         with open(readme_fp, encoding='utf-8') as f:
+#             readme_str = f.read()
 
-        # update display config to remove colors
-        readme_str = '''
->>> _display_config = sf.DisplayActive.get()
->>> sf.DisplayActive.update(type_color=False)
->>>
-        ''' + readme_str
+#         # update display config to remove colors
+#         readme_str = '''
+# >>> _display_config = sf.DisplayActive.get()
+# >>> sf.DisplayActive.update(type_color=False)
+# >>>
+#         ''' + readme_str
 
-        # inject content from local files
-        src = ">>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))"
+#         # inject content from local files
+#         src = ">>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))"
 
-        # using a raw string to avoid unicode decoding issues on windows
-        dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"
+#         # using a raw string to avoid unicode decoding issues on windows
+#         dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"
 
-        if src not in readme_str:
-            raise RuntimeError('did not find expected string')
+#         if src not in readme_str:
+#             raise RuntimeError('did not find expected string')
 
-        readme_str = readme_str.replace(src, dst)
+#         readme_str = readme_str.replace(src, dst)
 
-        # restore active config
-        readme_str = readme_str + '''
->>> sf.DisplayActive.set(_display_config)
-        '''
+#         # restore active config
+#         readme_str = readme_str + '''
+# >>> sf.DisplayActive.set(_display_config)
+#         '''
 
-        return readme_str
-
-    @staticmethod
-    def update_readme(source: object) -> None:
-        target = "sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')"
+#         return readme_str
 
 
     def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
 
-        doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
+        # doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
+        doctest_str = api_example_str
 
         sample = doctest.DocTestParser().get_doctest(
                 doctest_str,

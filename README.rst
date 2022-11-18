@@ -180,6 +180,8 @@ Next, we will use ``loc`` on the ``Frame`` to select the training subset of the 
 4       5.0       3.6       1.4       0.2       Iris-setosa
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
+To get a ``Series`` of counts per species, I can select the species column and iterate over groups, based on the species name, and count the size of each group. In StaticFrame, this can be done by calling ``iter_group_items()`` to get an iterator of pairs of group label, group ``Series``.This iterator can be given to a ``Batch``, a chaining processor of ``Frame`` operations; once the ``Batch`` is created, we can call multiple methods on it. A container is only returned when a finalizer method is called such as ``to_series()``.
+
 
 >>> counts = sf.Batch(data_train['species'].iter_group_items()).count().to_series()
 >>> counts
@@ -190,6 +192,7 @@ Iris-versicolor 40
 Iris-virginica  39
 <<U15>          <int64>
 
+We can calculate the "prior" by dividing counts by the size of the training data.
 
 >>> prior = counts / len(data_train)
 >>> prior
@@ -212,7 +215,6 @@ Iris-versicolor 5.9               2.7924999999999995
 Iris-virginica  6.587179487179487 2.9794871794871796
 <<U15>          <float64>         <float64>
 
-
 >>> sigma = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).std(ddof=1).to_frame()
 >>> sigma
 <Frame>
@@ -222,6 +224,9 @@ Iris-setosa     0.3588259990036614  0.3847235307619632
 Iris-versicolor 0.48145079893471127 0.30330445058322136
 Iris-virginica  0.6346070011305742  0.34654648596771576
 <<U15>          <float64>           <float64>
+
+
+
 
 
 >>> stats = sf.Frame.from_concat((mu.relabel_level_add('mu'), sigma.relabel_level_add('sigma')))
