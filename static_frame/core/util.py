@@ -1757,7 +1757,7 @@ TD64_MS = np.timedelta64(1, 'ms')
 TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
+DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
@@ -1767,18 +1767,20 @@ def to_datetime64(
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
+
+    Args:
+        dtype: Provide the expected dtype of the returned value.
     '''
-    # for now, only support creating from a string, as creation from integers is based on offset from epoch
     if not isinstance(value, np.datetime64):
         if dtype is None:
-            # let constructor figure it out
+            # let constructor figure it out; if value is an integer it will raise
             dt = np.datetime64(value)
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
                 if dtype == DT64_YEAR: # convert to string as that is generally what is wanted
                     value = str(value)
-                elif dtype in _DT_NOT_FROM_INT:
+                elif dtype in DT_NOT_FROM_INT:
                     raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
@@ -1850,13 +1852,19 @@ def key_to_datetime_key(
     if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
+        if dtype == DT64_YEAR and key.dtype.kind in DTYPE_INT_KINDS:
+            key = key.astype(DTYPE_STR)
         return key.astype(dtype)
 
     if hasattr(key, '__len__'):
+        if dtype == DT64_YEAR:
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype)
         # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representation
         return np.array(key, dtype=dtype)
 
-    if hasattr(key, '__next__'): # a generator-like
+    if hasattr(key, '__iter__'): # a generator-like
+        if dtype == DT64_YEAR:
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype)
         return np.array(tuple(key), dtype=dtype) #type: ignore
 
     # for now, return key unaltered

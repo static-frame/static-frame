@@ -391,6 +391,65 @@ class TestUnit(TestCase):
                 [datetime.date(2010, 1, 1), datetime.date(2011, 1, 1), datetime.date(2012, 1, 1), datetime.date(2013, 1, 1), datetime.date(2014, 1, 1), datetime.date(2015, 1, 1), datetime.date(2016, 1, 1), datetime.date(2017, 1, 1), datetime.date(2018, 1, 1), datetime.date(2019, 1, 1), datetime.date(2020, 1, 1), datetime.date(2009, 1, 1), datetime.date(2021, 1, 1)]
                 )
 
+    def test_index_year_contains_a(self) -> None:
+
+        index = IndexYear.from_year_range(2010, 2012)
+        self.assertEqual(tuple(index.values),
+            (np.datetime64('2010'), np.datetime64('2011'), np.datetime64('2012')))
+
+        self.assertTrue(2011 in index)
+        self.assertTrue('2011' in index)
+        self.assertTrue(np.datetime64('2011') in index)
+
+        self.assertFalse(np.datetime64('2011-01') in index)
+        self.assertFalse(datetime.date(2021,1,1) in index)
+
+
+    def test_index_year_loc_a(self) -> None:
+
+        index = IndexYear.from_year_range(1998, 2008)
+        self.assertEqual(index.loc[2004], np.datetime64('2004'))
+        self.assertEqual(index.loc['2004'], np.datetime64('2004'))
+        self.assertEqual(index.loc[np.datetime64('2004')], np.datetime64('2004'))
+
+        with self.assertRaises(KeyError):
+            index.loc[np.datetime64('2004-01')]
+
+
+    def test_index_year_loc_b(self) -> None:
+
+        idx1 = IndexYear.from_year_range(1998, 2008)
+        idx2 = idx1.loc[2002:2004]
+        self.assertEqual(tuple(idx2.values),
+            (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
+
+        idx3 = idx1.loc['2002':'2004']
+        self.assertEqual(tuple(idx3.values),
+            (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
+
+    def test_index_year_loc_c(self) -> None:
+
+        idx1 = IndexYear.from_year_range(1998, 2008)
+        idx2 = idx1.loc[[2001, 2004, 2005]]
+        self.assertEqual(tuple(idx2.values),
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx3 = idx1.loc[[2001, 2004, 2005]]
+        self.assertEqual(tuple(idx3.values),
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx4 = idx1.loc[(v for v in [2001, 2004, 2005])]
+        self.assertEqual(tuple(idx4.values),
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx5 = idx1.loc[np.array([2001, 2004, 2005])]
+        self.assertEqual(tuple(idx5.values),
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        # import ipdb; ipdb.set_trace()
+
+
+
     #---------------------------------------------------------------------------
 
     def test_index_date_loc_to_iloc_a(self) -> None:
