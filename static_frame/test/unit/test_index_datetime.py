@@ -27,8 +27,8 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
 from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.test.test_case import TestCase
 
