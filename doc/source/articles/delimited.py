@@ -117,10 +117,10 @@ class NumpyLoadtxtTypeParse(FileIOTest):
         f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
 
 #-------------------------------------------------------------------------------
-NUMBER = 1
+NUMBER = 2
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
