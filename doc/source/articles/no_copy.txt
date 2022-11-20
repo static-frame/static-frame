@@ -1,5 +1,9 @@
 
 
+
+No-Copy DataFrame Operations: Performance Advantages of an Immutable NumPy Data Model
+
+
 No-Copy DataFrame Operations: How an Immutable NumPy Data Model Enables Extraordinary Performance
 
 No-Copy DataFrame Operations: Performance Advantages of an Immutable NumPy Data Model
@@ -12,17 +16,26 @@ No-Copy DataFrame Operations: How an Immutable NumPy Data Model Offers Orders-of
 
 
 
-A NumPy array is a Python object that stores C-type data in a contiguous buffer. The excellent performance of these arrays comes not only from this compact representation, but also from the ability of arrays to share "views" of that buffer. NumPy makes frequent use of "no-copy" array operations, producing derived arrays without copying underling data buffers. By taking full advantage of NumPy's efficiency, the StaticFrme DataFrame library offers orders-of-magnitude better performance than Pandas for some operations.
+A NumPy array is a Python object that stores data in a contiguous C-array buffer. The excellent performance of these arrays comes not only from this compact representation, but also from the ability of arrays to share "views" of that buffer. NumPy makes frequent use of "no-copy" array operations, producing derived arrays without copying underling data buffers. By taking full advantage of NumPy's efficiency, the StaticFrame DataFrame library offers orders-of-magnitude better performance than Pandas for many common operations.
 
 
 No-Copy Operations with NumPy Arrays
 -------------------------------------
 
-The phrase "no-copy" describes an operation on a container (an array or a DataFrame) where a new instance is created, but underlying data is referenced, not copied. While new memory is being allocated, the new instance is generally light weight, and potentially of insignificant size compared to a potentially very large amount of underlying data.
+The phrase "no-copy" describes an operation on a container (an array or a DataFrame) where a new instance is created, but underlying data is referenced, not copied. While some new memory is allocated, the new instance is generally small and of insignificant size compared to a potentially very large amount of underlying data.
 
 NumPy makes no-copy operations the primary way of working with arrays. When you slice a NumPy array, you get a new array that shares the data from which it was sliced. Slicing an array is a no-copy operation. Extraordinary performance is gained by not having to copy already-allocated contiguous byte data, but instead just storing offsets and strides into that data.
 
-We can explicitly see how this works by using two attributes of NumPy arrays. The ``flags`` attribute displays details of how the array's memory is being referenced. The ``base`` attribute, if set, provides a handle to the array that actually holds the buffer this array references.
+For example, the difference between slicing an array of 100,000 integers (~0.1 µs), and slicing and then copying the same array (~10 µs), is two orders of magnitude.
+
+>>> data = np.arange(100_000)
+>>> %timeit data[:50_000]
+123 ns ± 0.565 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+>>> %timeit data[:50_000].copy()
+13.1 µs ± 48.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+
+
+We can illustrate how this works by examining two attributes of NumPy arrays. The ``flags`` attribute displays details of how the array's memory is being referenced. The ``base`` attribute, if set, provides a handle to the array that actually holds the buffer this array references.
 
 In the example below, we create an array, take a slice, and look at the ``flags`` of the slice. We see that, for the slice, ``OWNDATA`` is ``False``, and that the ``base`` of the slice has the same object ``id()`` as the array it came from.
 
@@ -118,6 +131,7 @@ A NumPy array can easily be made immutable by setting the ``writeable`` flag to 
   WRITEBACKIFCOPY : False
   UPDATEIFCOPY : False
 
+
 Attempting to mutate this array will result in an exception.
 
 >>> a1[0] = -1
@@ -128,22 +142,10 @@ ValueError: assignment destination is read-only
 The best performance is possible, with no risk of side-effects, by using immutable NumPy views.
 
 
-Performance of Arrays
-----------------------------
-
-The performance cost of defensive copying is proportional to the size of the data, but will generally be orders of magnitude slower than sharing views.
-
-For example, the difference between slicing an array of 100,000 integers (~0.1 µs), and slicing and then copying the same array (~10 µs), is two orders of magnitude.
-
->>> data = np.arange(100_000)
->>> %timeit data[:50_000]
-123 ns ± 0.565 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
->>> %timeit data[:50_000].copy()
-13.1 µs ± 48.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 
-No-Copy DataFrame Operations
--------------------------------
+The Advantages of No-Copy DataFrame Operations
+------------------------------------------------
 
 This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without defensive copies) offers significant performance advantages. Without an immutable data model, Pandas has to make defensive copies. The performance cost is significant.
 
@@ -196,6 +198,11 @@ It is common to concatenate two or more DataFrames. If they have the same index,
 
 
 NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutability, it cannot make optimal use of NumPy views. As StaticFrame is built on an immutable data model, no-copy operations are embraced and provide extraordinary performance. While StaticFrame is not always faster than Pandas, it has this fundamental advantage while eliminating side-effect mutation risk.
+
+
+
+
+
 
 
 
