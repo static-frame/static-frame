@@ -1,15 +1,45 @@
 
 
 
+The Performance Advantage of No-Copy DataFrame Operations
+
+
 No-Copy DataFrame Operations: Performance Advantages of an Immutable NumPy Data Model
 
+No-Copy DataFrame Operations: Orders of Magnitude Better Performance with an Immutable NumPy Data Model
 
 
-We will use the term "no-copy" to describe an operation on a container (a DataFrame) where a new, light-weight instance is created, but underlying data is not copied (it is referenced). Sometimes the same notion is convayed by the term "shallow copy".
+======================
 
-NumPy makes no-copy operations the primary way of working with array data. When you slice a NumPy array you get a new array that shares the data from which it was sliced. This is a no-copy operation. The benefit is the extraordinary performance gains of not having to copy already-allocated contiguous byte data, but instead just storing offsets and strides into that data.
+As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. Adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas. This article demonstrates NumPy array memory usage and flags configurations, as well as a number of performance tests between StaticFrame and Pandas.
 
-We can look at an array's `flags` to see information about its memory usage, and we can look at the `base` attribute to get a reference to the array that actually holds the byte data. In the example below, we create an array, take a slice, and look at the flags of the slice. We see that, for the slice, OWNDATA is False, and that the ``base`` of the slice has the same object ``id()`` as the array it came from.
+
+======================
+
+
+
+A NumPy array is a Python object that stores data in a contiguous C-array buffer. The excellent performance of these arrays comes not only from this compact representation, but also from the ability of arrays to share "views" of that buffer. NumPy makes frequent use of "no-copy" array operations, producing derived arrays without copying underling data buffers. By taking full advantage of NumPy's efficiency, the StaticFrame DataFrame library offers orders-of-magnitude better performance than Pandas for many common operations.
+
+
+No-Copy Operations with NumPy Arrays
+-------------------------------------
+
+The phrase "no-copy" describes an operation on a container (an array or a DataFrame) where a new instance is created, but underlying data is referenced, not copied. While some new memory is allocated, the new instance is generally small and of insignificant size compared to a potentially very large amount of underlying data.
+
+NumPy makes no-copy operations the primary way of working with arrays. When you slice a NumPy array, you get a new array that shares the data from which it was sliced. Slicing an array is a no-copy operation. Extraordinary performance is gained by not having to copy already-allocated contiguous byte data, but instead just storing offsets and strides into that data.
+
+For example, the difference between slicing an array of 100,000 integers (~0.1 µs), and slicing and then copying the same array (~10 µs), is two orders of magnitude.
+
+>>> data = np.arange(100_000)
+>>> %timeit data[:50_000]
+123 ns ± 0.565 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
+>>> %timeit data[:50_000].copy()
+13.1 µs ± 48.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+
+
+We can illustrate how this works by examining two attributes of NumPy arrays. The ``flags`` attribute displays details of how the array's memory is being referenced. The ``base`` attribute, if set, provides a handle to the array that actually holds the buffer this array references.
+
+In the example below, we create an array, take a slice, and look at the ``flags`` of the slice. We see that, for the slice, ``OWNDATA`` is ``False``, and that the ``base`` of the slice has the same object ``id()`` as the array it came from.
 
 >>> a1 = np.arange(12)
 >>> a1
@@ -29,9 +59,9 @@ array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11])
 (140506320732848, 140506320732848)
 
 
-We might think of these derived arrays as "views" of the original array. We can take no-copy views of arrays under certain conditions: if we are re-shapping an array; if we are tranposing an array; and if we are slicing an array.
+These derived arrays are "views" of the original array. No-copy views can only be taken under certain conditions: re-shapping, transposing, or slicing.
 
-For example, we can reshape the initial array into a 2D array and observe that OWNDATA is False; it still references the original array's data.
+For example, after reshaping the initial 1D array into a 2D array, ``OWNDATA`` is ``False``, showing that it still references the original array's data.
 
 >>> a3 = a1.reshape(3,4)
 >>> a3
@@ -50,7 +80,8 @@ array([[ 0,  1,  2,  3],
 >>> id(a3.base), id(a1)
 (140506320732848, 140506320732848)
 
-Both horizontal and vertical slices of this 2D array similarly result in arrays that simply reference the original array's data. Again, OWNDATA is False.
+
+Both horizontal and vertical slices of this 2D array similarly result in arrays that simply reference the original array's data. Again, ``OWNDATA`` is ``False``.
 
 >>> a4 = a3[:, 2]
 >>> a4
@@ -68,7 +99,10 @@ array([ 2,  6, 10])
 >>> id(a1), id(a4.base)
 (140506320732848, 140506320732848)
 
-While the performance benefits of creating light-weight wrappers around shared memory buffers are clear, there is a risk: mutating any one of those arrays in-palce will mutate all of them. For example, assigning -1 into our most-derived array is reflected in every array, the original and every view.
+
+While creating light-weight views of shared memory buffers offers significant performance advantages, there is a risk: mutating any one of those arrays will mutate all of them.
+
+As shown below, the assignment of -1 into our most-derived array is reflected in every array.
 
 >>> a4[0] = -1
 >>> a4
@@ -83,11 +117,13 @@ array([ 0,  1, -1,  3,  4,  5])
 array([ 0,  1, -1,  3,  4,  5,  6,  7,  8,  9, 10, 11])
 
 
-It is likely a good intuition if side-effects like this concern you. There are countless ways passing around views of shared memory to clients that can mutate that data can lead to serious flaws. There are two solutions to this problem.
+Side-effects like this should concern you. Passing around views of shared memory to clients that can mutate that data can lead to serious flaws. There are two solutions to this problem.
 
-One option is for the caller to make explicit "defensive" copies every time a new array is created. This removes the performance advantage of shared memory but ensures that mutating an array does not lead to unexpected side effects.
+One option is for the caller to make explicit "defensive" copies every time a new array is created. This removes the performance advantage of sharing views but ensures that mutating an array does not lead to unexpected side effects.
 
-Another option, requiring no sacrifice in performance, is to make the array immutable. By doing so, you can freely share views of arrays without conern of a client mutating a derived array and causing unexpected side effects. NumPy makes this easy by setting the ``writeable`` flag on the ``flags`` interface. Note that now, when viewing ``flags``, we see WRITEABLE is False.
+Another option, requiring no sacrifice in performance, is to make the array immutable. By doing so, views of arrays can be shared without concern of mutation causing unexpected side effects.
+
+A NumPy array can easily be made immutable by setting the ``writeable`` flag to ``False`` on the ``flags`` interface. After setting this value, the ``flags`` display shows ``WRITEABLE`` as ``False``.
 
 >>> a1.flags.writeable = False
 >>> a1.flags
@@ -99,6 +135,7 @@ Another option, requiring no sacrifice in performance, is to make the array immu
   WRITEBACKIFCOPY : False
   UPDATEIFCOPY : False
 
+
 Attempting to mutate this array will result in an exception.
 
 >>> a1[0] = -1
@@ -106,63 +143,70 @@ Traceback (most recent call last):
   File "<console>", line 1, in <module>
 ValueError: assignment destination is read-only
 
-
-The best performance is possible, with no risk of side-effects, by embraching NumPy views with the protection of making those arrays immutable.
-
-The performance overhead of defensive copying is proportional to the size of the data but will generally be orders of mangntiude slower than sharing views. For example, the difference between slicing an array of 100,000 and slicing then copying the same array is two orders of magnitude.
-
->>> data = np.arange(100_000)
->>> %timeit data[:50_000]
-237 ns ± 6.22 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
-
->>> %timeit data[:50_000].copy()
-13.7 µs ± 198 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+The best performance is possible, with no risk of side-effects, by using immutable NumPy views.
 
 
-This insight, that an immutable-array-based data model offers the best peformance with the minmum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without defensive copies) offers significant performance advantages. Without an immutable data model, Pandas has to make defensive copies. The performance cost is orders of magnitude.
 
-StaticFrame is not always faster than Pandas: Pandas has very performant operations for joins and related transformations. Buy when leveraging array views, StaticFrame can be a lot faster. To demonstrate StaticFrame's performance advantage we will use the FrameFixtures library to create two DataFrames of 10,000 rows by 1,000 columns of heterogenous types. For both we can convert the StaticFrame ``Frame`` to a Pandas ``DataFraem``.
 
+The Advantages of No-Copy DataFrame Operations
+------------------------------------------------
+
+This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without defensive copies) offers significant performance advantages. Without an immutable data model, Pandas cannot make such use of array views.
+
+StaticFrame is not always faster than Pandas: Pandas has very performant operations for joins and other specialized transformations. Buy when leveraging no-copy array operations, StaticFrame can be a lot faster.
+
+To compare performance, we will use the FrameFixtures library to create two DataFrames of 10,000 rows by 1,000 columns of heterogenous types. For both we can convert the StaticFrame ``Frame`` to a Pandas ``DataFrame``.
+
+>>> import static_frame as sf
+>>> import pandas as pd
+>>> sf.__version__, pd.__version__
+('0.9.21', '1.5.1')
+
+>>> import frame_fixtures as ff
 >>> f1 = ff.parse('s(10_000,1000)|v(int,int,str,float)')
 >>> df1 = f1.to_pandas()
 >>> f2 = ff.parse('s(10_000,1000)|v(int,bool,bool,float)')
 >>> df2 = f2.to_pandas()
 
 
-Perhaps the simplest example is renaming an axis (or index). With Pandas, all underlying data is defensively copied. With StaticFrame, all underlying data is re-used, only lightweight outer containers have to be created. StaticFrame is three orders of magnitude faster.
+A simple example of the advantage of a no-copy operation is renaming an axis. With Pandas, all underlying data is defensively copied. With StaticFrame, all underlying data is re-used; only lightweight outer containers have to be created. StaticFrame (~0.01 ms) is almost four orders of magnitude faster than Pandas (100 ms).
 
->>> %timeit df.rename_axis('foo')
-72 ms ± 775 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 >>> %timeit f1.rename(index='foo')
-34.7 µs ± 99 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+35.8 µs ± 496 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+>>> %timeit df1.rename_axis('foo')
+167 ms ± 4.72 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
-Given a DataFrame, a common move is to make a column into the index. When Pandas does this, it has to copy the column data to the index, as well as copy all the underlying data. StaticFrame can re-use view of the column in the Index, as well as re-use all of the underlying data. StaticFrame is two orders of magnitude faster.
 
+Given a DataFrame, a common move is to make a column into the index. When Pandas does this, it has to copy the column data to the index, as well as copy all the underlying data. StaticFrame can re-use a view of the column in the Index, as well as re-use all of the underlying data. StaticFrame (1 ms) is two orders of magnitude faster than Pandas (100 ms).
 
->>> %timeit df.set_index(0, drop=False)
-71.3 ms ± 384 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 >>> %timeit f1.set_index(0)
-927 µs ± 2.94 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+1.25 ms ± 23.7 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+>>> %timeit df1.set_index(0, drop=False)
+166 ms ± 3.52 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
-Another comon move is extracting a subset of columns from a DataFrame. StaticFrame can do this an order of magnitude faster than Pandas. Again, the returned DataFrame simply has views to the columns in from the original DataFrame: this is a no-copy operation.
+Extracting a subset of columns from a DataFrame is another common operation. For StaticFrame, this is a no-copy operation: the returned DataFrame simply holds views to the column data in the original DataFrame. StaticFrame (10 µs) can do this an order of magnitude faster than Pandas (100 µs).
+
+>>> %timeit f1[[10, 50, 100, 500]]
+25.4 µs ± 471 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+>>> %timeit df1[[10, 50, 100, 500]]
+729 µs ± 4.14 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 
->>> %timeit df[[3, 300, 828]]
-332 µs ± 9.22 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
->>> %timeit f1[[3, 300, 828]]
-31.6 µs ± 225 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+It is common to concatenate two or more DataFrames. If they have the same index, and we concatenate them horizontally, StaticFrame can re-use all the underlying data of the inputs, making this form of concatenation a no-copy operation. StaticFrame (1 ms) can do this two orders of magnitude faster than Pandas (100 ms).
 
-
-It is common to combine two DataFrames. If they have the same index and we concatenate them horizontally, StaticFrame can re-use all the underlying data without copying. Pandas has to copy all underlying data, resulting in process that is two orders of magnitude slower.
-
->>> %timeit pd.concat((df1, df2), axis=1)
-112 ms ± 354 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 >>> %timeit sf.Frame.from_concat((f1, f2), axis=1, columns=sf.IndexAutoFactory)
-1.09 ms ± 18.9 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+1.16 ms ± 50.1 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+>>> %timeit pd.concat((df1, df2), axis=1)
+102 ms ± 14.4 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
-NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutability, it cannot make optimal use of these views, and cannot offer as many no-copy operations as StaticFrame. While StaticFrame is not always faster, it as this fundamental advantage while illeminating side-effect risk.
+NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutability, it cannot make optimal use of NumPy views. As StaticFrame is built on an immutable data model, side-effect mutation risk is eliminated and no-copy operations are embraced, providing a significant performance advantage. While StaticFrame is not always faster than Pandas, it has this fundamental advantage.
+
+
+
+
+
 
 
 
