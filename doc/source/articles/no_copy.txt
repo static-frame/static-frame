@@ -11,7 +11,7 @@ No-Copy DataFrame Operations: Orders of Magnitude Better Performance with an Imm
 
 ======================
 
-As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. Adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas. This article demonstrates NumPy array memory usage and flags confgiurations, as well as a number of performance tests between StaticFrame and Pandas.
+As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. Adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas. This article demonstrates NumPy array memory usage and flags configurations, as well as a number of performance tests between StaticFrame and Pandas.
 
 
 ======================
@@ -187,10 +187,10 @@ Given a DataFrame, a common move is to make a column into the index. When Pandas
 
 Extracting a subset of columns from a DataFrame is another common operation. For StaticFrame, this is a no-copy operation: the returned DataFrame simply holds views to the column data in the original DataFrame. StaticFrame (10 µs) can do this an order of magnitude faster than Pandas (100 µs).
 
->>> %timeit df1[[10, 50, 100, 500]]
-729 µs ± 4.14 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 >>> %timeit f1[[10, 50, 100, 500]]
 25.4 µs ± 471 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+>>> %timeit df1[[10, 50, 100, 500]]
+729 µs ± 4.14 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 
 It is common to concatenate two or more DataFrames. If they have the same index, and we concatenate them horizontally, StaticFrame can re-use all the underlying data of the inputs, making this form of concatenation a no-copy operation. StaticFrame (1 ms) can do this two orders of magnitude faster than Pandas (100 ms).
