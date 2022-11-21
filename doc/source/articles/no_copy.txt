@@ -1,18 +1,20 @@
 
 
 
-No-Copy DataFrame Operations: Performance Advantages of an Immutable NumPy Data Model
+The Performance Advantage of No-Copy DataFrame Operations
 
-
-No-Copy DataFrame Operations: How an Immutable NumPy Data Model Enables Extraordinary Performance
 
 No-Copy DataFrame Operations: Performance Advantages of an Immutable NumPy Data Model
 
 No-Copy DataFrame Operations: Orders of Magnitude Better Performance with an Immutable NumPy Data Model
-arrays
 
-No-Copy DataFrame Operations: How an Immutable NumPy Data Model Offers Orders-of-Magnitude Better Performance
 
+======================
+
+As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. Adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas. This article demonstrates NumPy array memory usage and flags confgiurations, as well as a number of performance tests between StaticFrame and Pandas.
+
+
+======================
 
 
 
@@ -78,6 +80,7 @@ array([[ 0,  1,  2,  3],
 >>> id(a3.base), id(a1)
 (140506320732848, 140506320732848)
 
+
 Both horizontal and vertical slices of this 2D array similarly result in arrays that simply reference the original array's data. Again, ``OWNDATA`` is ``False``.
 
 >>> a4 = a3[:, 2]
@@ -95,6 +98,7 @@ array([ 2,  6, 10])
 
 >>> id(a1), id(a4.base)
 (140506320732848, 140506320732848)
+
 
 While creating light-weight views of shared memory buffers offers significant performance advantages, there is a risk: mutating any one of those arrays will mutate all of them.
 
@@ -147,11 +151,11 @@ The best performance is possible, with no risk of side-effects, by using immutab
 The Advantages of No-Copy DataFrame Operations
 ------------------------------------------------
 
-This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without defensive copies) offers significant performance advantages. Without an immutable data model, Pandas has to make defensive copies. The performance cost is significant.
+This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without defensive copies) offers significant performance advantages. Without an immutable data model, Pandas cannot make such use of array views.
 
-StaticFrame is not always faster than Pandas: Pandas has very performant operations for joins and related transformations. Buy when leveraging array views, StaticFrame can be a lot faster.
+StaticFrame is not always faster than Pandas: Pandas has very performant operations for joins and other specialized transformations. Buy when leveraging no-copy array operations, StaticFrame can be a lot faster.
 
-To demonstrate StaticFrame's performance advantage, we will use the FrameFixtures library to create two DataFrames of 10,000 rows by 1,000 columns of heterogenous types. For both we can convert the StaticFrame ``Frame`` to a Pandas ``DataFrame``.
+To compare performance, we will use the FrameFixtures library to create two DataFrames of 10,000 rows by 1,000 columns of heterogenous types. For both we can convert the StaticFrame ``Frame`` to a Pandas ``DataFrame``.
 
 >>> import static_frame as sf
 >>> import pandas as pd
@@ -165,7 +169,7 @@ To demonstrate StaticFrame's performance advantage, we will use the FrameFixture
 >>> df2 = f2.to_pandas()
 
 
-A simple example of the advantage of no-copy operations is renaming an axis. With Pandas, all underlying data is defensively copied. With StaticFrame, all underlying data is re-used; only lightweight outer containers have to be created. StaticFrame (~0.01 ms) is almost four orders of magnitude faster than Pandas (100 ms).
+A simple example of the advantage of a no-copy operation is renaming an axis. With Pandas, all underlying data is defensively copied. With StaticFrame, all underlying data is re-used; only lightweight outer containers have to be created. StaticFrame (~0.01 ms) is almost four orders of magnitude faster than Pandas (100 ms).
 
 >>> %timeit f1.rename(index='foo')
 35.8 µs ± 496 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
@@ -181,14 +185,15 @@ Given a DataFrame, a common move is to make a column into the index. When Pandas
 166 ms ± 3.52 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
-Another common move is extracting a subset of columns from a DataFrame, returning a new DataFrame. For StaticFrame, this is a no-copy operation: the rturned DataFrame simply has views to the columns in from the original DataFrame. StaticFrame (10 µs) can do this an order of magnitude faster than Pandas (100 µs).
+Extracting a subset of columns from a DataFrame is another common operation. For StaticFrame, this is a no-copy operation: the returned DataFrame simply holds views to the column data in the original DataFrame. StaticFrame (10 µs) can do this an order of magnitude faster than Pandas (100 µs).
 
 >>> %timeit df1[[10, 50, 100, 500]]
 729 µs ± 4.14 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 >>> %timeit f1[[10, 50, 100, 500]]
 25.4 µs ± 471 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
-It is common to concatenate two or more DataFrames. If they have the same index, and we concatenate them horizontally, StaticFrame can re-use all the underlying data of the inputs making this form of concatenation a no-copy operation. StaticFrame (1 ms) can do this two orders of magnitude faster than Pandas (100 ms).
+
+It is common to concatenate two or more DataFrames. If they have the same index, and we concatenate them horizontally, StaticFrame can re-use all the underlying data of the inputs, making this form of concatenation a no-copy operation. StaticFrame (1 ms) can do this two orders of magnitude faster than Pandas (100 ms).
 
 >>> %timeit sf.Frame.from_concat((f1, f2), axis=1, columns=sf.IndexAutoFactory)
 1.16 ms ± 50.1 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
@@ -196,8 +201,7 @@ It is common to concatenate two or more DataFrames. If they have the same index,
 102 ms ± 14.4 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
-
-NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutability, it cannot make optimal use of NumPy views. As StaticFrame is built on an immutable data model, no-copy operations are embraced and provide extraordinary performance. While StaticFrame is not always faster than Pandas, it has this fundamental advantage while eliminating side-effect mutation risk.
+NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutability, it cannot make optimal use of NumPy views. As StaticFrame is built on an immutable data model, side-effect mutation risk is eliminated and no-copy operations are embraced, providing a significant performance advantage. While StaticFrame is not always faster than Pandas, it has this fundamental advantage.
 
 
 
