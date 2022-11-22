@@ -8,6 +8,7 @@ from collections import OrderedDict
 from enum import Enum
 from io import StringIO
 
+import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf
@@ -1763,6 +1764,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
             ((0, 'a'), (1, 'b'), (2, 'c')))
 
+    def test_series_loc_extract_k(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'), index=IndexYear((1542, 1834, 2022)))
+        self.assertEqual(s1[1542, 2022].to_pairs(),
+                ((np.datetime64('1542'), 'a'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[1834:].to_pairs(),
+                ((np.datetime64('1834'), 'b'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[2022], 'c')
+
     #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:
@@ -2648,6 +2660,17 @@ class TestUnit(TestCase):
         s2 = Series.from_pandas(pds, index=IndexAutoFactory)
         self.assertEqual(s2.to_pairs(),
                 ((0, 10), (1, 20)))
+
+
+    def test_series_from_pandas_j(self) -> None:
+        import pandas as pd
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
+        pds = f1[ILoc[0]].to_pandas()
+        s1 = Series.from_pandas(pds)
+        self.assertEqual(s1.index.depth, 2)
+        self.assertEqual(s1.to_pairs(),
+                (((34715, 105269), False), ((34715, 119909), False)))
+
 
     #---------------------------------------------------------------------------
 

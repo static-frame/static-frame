@@ -1,12 +1,22 @@
 What is New in StaticFrame
 ===============================
 
+0.9.22
+----------
+
+``IndexYear`` no accepts selection by integers for years.
+
+
 0.9.21
 ----------
 
 Set ``arraykit`` version to 0.2.3.
 
+Set ``automap`` version to 0.6.2.
+
 Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
+
+Corrected issue where Pandas ``MutliIndex`` are not converted to ``IndexHierarchy`` in ``Frame.from_pandas()`` or ``Series.from_pandas()``.
 
 
 0.9.20
