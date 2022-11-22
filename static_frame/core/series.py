@@ -2705,13 +2705,15 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    # @doc_inject(selector='argminmax')
-    def loc_notna_first(self,
+    def _label_not_missing(self,
             *,
+            return_label: bool,
+            pos: int,
             fill_value: tp.Any = np.nan,
+            func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> tp.Hashable:
         '''
-        Return the label corresponding to the minimum value found.
+        Return the label corresponding to the first not NA (None or nan) value found.
 
         Args:
             {skipna}
@@ -2720,11 +2722,178 @@ class Series(ContainerOperand):
             tp.Hashable
         '''
         # if skipna is False and a NaN is returned, this will raise
-        values = ~isna_array(self.values)
-        post = np.nonzero(values)[0]
+        if not len(self.values):
+            return fill_value
+        target = ~func(self.values)
+        post = np.nonzero(target)[pos]
         if len(post) == 0:
             return fill_value # type: ignore
-        return self.index[post[0]]
+        if return_label:
+            return self.index[post[pos]]
+        return post[pos]
+
+    # @doc_inject(selector='argminmax')
+    def loc_notna_first(self,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=0,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+    def iloc_notna_first(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=0,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_last(self,
+            *,
+            fill_value: tp.Any = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the last not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=-1,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the last not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=-1,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    #---------------------------------------------------------------------------
+    def loc_notfalsy_first(self,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=0,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_first(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the first non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=0,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+
+    def loc_notfalsy_last(self,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the last non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=-1,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_last(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the last non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=-1,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
 
 
     #---------------------------------------------------------------------------

@@ -5521,12 +5521,11 @@ class TestUnit(TestCase):
         self.assertEqual(s1.dtype.kind, 'i')
         self.assertIs(s1.index, index)
 
-
+    #---------------------------------------------------------------------------
     def test_series_loc_notna_first_a(self) -> None:
         s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
         post = s1.loc_notna_first()
         self.assertEqual(post, 'c')
-
 
     def test_series_loc_notna_first_b(self) -> None:
         s1 = Series((1, 2, 'x', 'y'), index=('a', 'b', 'c', 'd'))
@@ -5537,6 +5536,119 @@ class TestUnit(TestCase):
         s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
         post = s1.loc_notna_first(fill_value=None)
         self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notna_first_a(self) -> None:
+        s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, 2)
+
+    def test_series_iloc_notna_first_b(self) -> None:
+        s1 = Series((1, 2, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, 0)
+
+    def test_series_iloc_notna_first_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notna_last_a(self) -> None:
+        s1 = Series(('x', 'y', None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last()
+        self.assertEqual(post, 'b')
+
+    def test_series_loc_notna_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last()
+        self.assertEqual(post, 'd')
+
+    def test_series_loc_notna_last_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notna_last_a(self) -> None:
+        s1 = Series(('x', 'y', None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, 1)
+
+    def test_series_iloc_notna_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, 3)
+
+    def test_series_iloc_notna_last_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, -1)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notfalsy_first_a(self) -> None:
+        s1 = Series(('', '', 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first()
+        self.assertEqual(post, 'c')
+
+    def test_series_loc_notfalsy_first_b(self) -> None:
+        s1 = Series((1, 2, 0, 4), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first()
+        self.assertEqual(post, 'a')
+
+    def test_series_loc_notfalsy_first_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notfalsy_first_a(self) -> None:
+        s1 = Series(('', '', 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, 2)
+
+    def test_series_iloc_notfalsy_first_b(self) -> None:
+        s1 = Series((1, 2, 0, 4), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, 0)
+
+    def test_series_iloc_notfalsy_first_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notfalsy_last_a(self) -> None:
+        s1 = Series(('x', 'y', '', ''), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last()
+        self.assertEqual(post, 'b')
+
+    def test_series_loc_notfalsy_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last()
+        self.assertEqual(post, 'd')
+
+    def test_series_loc_notfalsy_last_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notfalsy_last_a(self) -> None:
+        s1 = Series(('x', 'y', '', ''), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, 1)
+
+    def test_series_iloc_notfalsy_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, 3)
+
+    def test_series_iloc_notfalsy_last_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, -1)
 
 
 
