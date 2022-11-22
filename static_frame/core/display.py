@@ -21,7 +21,7 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import CallableToIterType
-from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
@@ -459,7 +459,7 @@ class Display:
             count_max = config.display_rows
             if len(values) > config.display_rows:
                 data_half_count = Display.truncate_half_count(count_max)
-                value_gen = partial(_gen_skip_middle,
+                value_gen = partial(gen_skip_middle,
                         forward_iter=values.__iter__,
                         forward_count=data_half_count,
                         reverse_iter=partial(reversed, values),
@@ -532,7 +532,7 @@ class Display:
             # columns as they will look after application of truncation and insertion of ellipsis
             data_half_count = cls.truncate_half_count(config.display_columns)
 
-            column_gen = partial(_gen_skip_middle,
+            column_gen = partial(gen_skip_middle,
                     forward_iter=column_forward_iter,
                     forward_count=data_half_count,
                     reverse_iter=column_reverse_iter,
@@ -847,7 +847,7 @@ class Display:
 
         if len(iterable) > count_max:
             data_half_count = self.truncate_half_count(count_max)
-            value_gen: tp.Callable[[], tp.Iterator[tp.Any]] = partial(_gen_skip_middle,
+            value_gen: tp.Callable[[], tp.Iterator[tp.Any]] = partial(gen_skip_middle,
                     forward_iter=iterable.__iter__,
                     forward_count=data_half_count,
                     reverse_iter=partial(reversed, iterable),

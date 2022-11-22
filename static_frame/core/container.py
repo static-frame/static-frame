@@ -10,6 +10,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.style_config import StyleConfig
@@ -50,6 +51,31 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(self.__class__)
+
+    # def __sizeof__(self) -> int:
+        # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).
+        # return memory_total(self, format=MeasureFormat.REFERENCED)
+
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return ()
+
+    @property
+    def memory(self) -> MemoryDisplay:
+        '''Return a :obj:`MemoryDisplay`, providing the size in memory of this object. For compound containers, component sizes will also be provided. Size can be interpreted through six combinations of three configurations:
+
+        L: Local: memory ignoring referenced array data provided via views.
+        LM: Local Materialized: memory where arrays that are locally owned report their byte payload
+        LMD: Local Materialized Data: locally owned memory of arrays byte payloads, excluding all other components
+
+        R: Referenced: memory including referenced array data provided via views
+        RM: Referenced Materialized: memory where arrays that are locally owned or referenced report their byte payload
+        RMD: Referenced Materialized Data: localy owned and referenced array byte payloads, excluding all other components
+        '''
+        label_component_pairs = self._memory_label_component_pairs()
+        return MemoryDisplay.from_any(self,
+                label_component_pairs=label_component_pairs,
+                )
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
@@ -96,7 +122,6 @@ class ContainerBase(metaclass=InterfaceMeta):
                 cell_max_width_leftmost=np.inf,
                 ))
         return self.display(config=DisplayConfig(**args))
-
 
 
     #---------------------------------------------------------------------------

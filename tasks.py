@@ -23,7 +23,6 @@ def clean(context):
     context.run('rm -rf .ipynb_checkpoints')
 
 
-
 @invoke.task()
 def doc(context):
     '''Build docs
@@ -83,8 +82,8 @@ def test(context,
     else:
         fp = 'static_frame/test'
 
-    # cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
-    cmd = f'pytest -s --color no --tb=native {fp}'
+    # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
+    cmd = f'pytest -s --tb=native {fp}'
 
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
@@ -98,8 +97,7 @@ def coverage(context):
     '''
     Perform code coverage, and open report HTML.
     '''
-    # cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
-    cmd = 'pytest -s --color no --cov=static_frame/core --cov-report html'
+    cmd = 'pytest -s --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
     import webbrowser
@@ -116,7 +114,7 @@ def mypy(context):
 def isort(context):
     '''Run isort as a check.
     '''
-    context.run('isort static_frame --check')
+    context.run('isort static_frame doc --check')
 
 @invoke.task
 def lint(context):
@@ -133,7 +131,7 @@ def quality(context):
 def format(context):
     '''Run mypy static analysis.
     '''
-    context.run('isort static_frame')
+    context.run('isort static_frame doc')
 
 
 #-------------------------------------------------------------------------------

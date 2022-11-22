@@ -1,10 +1,120 @@
 What is New in StaticFrame
 ===============================
 
+0.9.22
+----------
+
+``IndexYear`` no accepts selection by integers for years.
+
+
+0.9.21
+----------
+
+Set ``arraykit`` version to 0.2.3.
+
+Set ``automap`` version to 0.6.2.
+
+Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
+
+Corrected issue where Pandas ``MutliIndex`` are not converted to ``IndexHierarchy`` in ``Frame.from_pandas()`` or ``Series.from_pandas()``.
+
+
+0.9.20
+----------
+
+Added ``via_str.format()`` for applying Python formatting mini-language strings to elements.
+
+Added ``skip_initial_space``, ``quoting``, ``quote_double``, and ``escape_char`` parameters to ``Frame.from_delimited()`` and related interfaces.
+
+Added ``Frame.from_json_index()``, ``Frame.from_json_columns``, ``Frame.from_json_split()``, ``Frame.from_json_records()``, ``Frame.from_json_values()``.
+
+Added ``Frame.to_json_index()``, ``Frame.to_json_columns``, ``Frame.to_json_split()``, ``Frame.to_json_records()``, ``Frame.to_json_values``.
+
+Added ``axis`` argument to ``Series.count()`` for compatibility with ``Frame`` interface.
+
+
+0.9.19
+----------
+
+``Frame.from_delimited`` now powered by ``arraykit.delimited_to_arrays``, offering vastly improved performance for all delimited file reading.
+
+Added ``Series.from_delimited``.
+
+Added ``WWW`` interface for downloading network resources to provide to constructors.
+
+Added ``columns_select``, ``skip_initial_space``, ``quoting``, ``quote_double``, ``escape_char``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited`` and derived interfaces.
+
+Corrected issue in converting to ``IndexHierarchy`` from Pandas ``MultiIndex`` when the ``MultiIndex`` is bloated.
+
+
+0.9.18
+----------
+
+Improved layout of default ``memory`` display.
+
+Corrected issue where a non matching ``Series`` assignment or reindex might use ``fill_value`` to determine the type of the returned values.
+
+Certain invalid ``Frame`` selections now properly raise ``KeyError``.
+
+
+0.9.17
+----------
+
+Unified implementation of ``IndexBase`` set and concatenation operations.
+
+Added ``IndexHierarchy.from_values_per_depth()`` constructor.
+
+Set ``automap`` version to 0.6.1.
+
+Extended ``Batch.astype`` interface to fully cover ``Frame.astype`` interface.
+
+
+0.9.16
+----------
+
+Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
+
+Implemented the DataFrame Interchange Protocol export via the ``Frame.__dataframe__()`` interface.
+
+Implemented ``__repr__()`` for ``ILoc``.
+
+Updated ``Batch.__repr__()``.
+
+Added ``name`` parameter to ``Frame.to_frame()``, ``Series.to_frame()``, and related methods.
+
+Improved error reporting for invalid ``IndexHierarchy``.
+
+``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
+
+
+0.9.15
+----------
+
+Added ``__repr__()`` for ``HLoc``.
+
+Added ``IndexHierarchy.index_at_depth()``
+
+Added ``IndexHierarchy.indexer_at_depth()``
+
+Added ``depth_level`` and ``order_by_occurrence`` parameters to ``unique()`` on ``IndexBase`` subclasses.
+
+Corrected issue calling ``Frame.to_pandas()`` with an empty ``Frame``.
+
+Implemented argument checking on all ``IndexHierarchy`` depth selection parameters.
+
+``IndexHierarchy.astype()`` now accepts a ``dtypes`` argument to assign dtypes by tuple or mapping.
+
+Corrected return type of ``via_str.contains()`` to return Booleans.
+
+
 0.9.14
 ----------
 
-Corrected issues with selection on zero-sized ``IndexHierarchy``.
+Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr()``.
+
+Added ``compression`` argument to ``StoreClientMixin`` exporters that write ZIPs.
+
+Corrected issue with selection on zero-sized ``IndexHierarchy``.
 
 
 0.9.13

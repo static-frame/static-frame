@@ -7,8 +7,8 @@ from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameHE
 from static_frame.core.index_datetime import IndexDate
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ

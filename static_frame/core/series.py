@@ -1,3 +1,4 @@
+import csv
 import typing as tp
 from collections.abc import Set
 from copy import deepcopy
@@ -6,6 +7,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import delimited_to_arrays
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
@@ -19,7 +21,7 @@ from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -66,6 +68,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
@@ -78,6 +81,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
@@ -157,18 +161,6 @@ class Series(ContainerOperand):
                     )
 
         length = len(index_final) #type: ignore
-
-        # if hasattr(element, '__len__') and not isinstance(element, str):
-        #     array = np.empty(length, dtype=DTYPE_OBJECT)
-        #     # this is the only way to insert tuples
-        #     for i in range(length):
-        #         array[i] = element
-        # else:
-        #     array = np.full(
-        #             length,
-        #             fill_value=element,
-        #             dtype=dtype)
-
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -215,6 +207,58 @@ class Series(ContainerOperand):
                 name=name,
                 index_constructor=index_constructor,
                 )
+
+
+    @classmethod
+    def from_delimited(cls,
+            delimited: str,
+            *,
+            delimiter: str,
+            index: tp.Optional[IndexInitOrAutoType] = None,
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
+            decimal_char: str = '.',
+            own_index: bool = False,
+            ) -> 'Series':
+        '''Series construction from a delimited string.
+
+        Args:
+            dtype: if None, dtype will be inferred.
+        '''
+        get_col_dtype = None if dtype is None else lambda x: dtype
+        [array] = delimited_to_arrays(
+                (delimited,), # make into iterable of one string
+                dtypes=get_col_dtype,
+                delimiter=delimiter,
+                quoting=quoting,
+                quotechar=quote_char,
+                doublequote=quote_double,
+                escapechar=escape_char,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
+                skipinitialspace=skip_initial_space,
+                )
+        if own_index:
+            index_final = index
+        else:
+            index = IndexAutoFactory(len(array)) if index is None else index
+            index_final = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        return cls(array,
+                index=index_final,
+                name=name,
+                own_index=True,
+                )
+
 
     @classmethod
     def from_dict(cls,
@@ -377,10 +421,10 @@ class Series(ContainerOperand):
             containers = tuple(containers) # exhaust a generator
 
         if index is None:
-            index = index_many_set(
+            index = index_many_to_one(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else: # construct an index if not an index
             if not isinstance(index, IndexBase):
@@ -443,6 +487,9 @@ class Series(ContainerOperand):
             index = None
         elif index is not None:
             pass # pass index into constructor
+        elif isinstance(value.index, pandas.MultiIndex):
+            index = IndexHierarchy.from_pandas(value.index)
+            own_index = True
         else: # if None
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
@@ -587,6 +634,13 @@ class Series(ContainerOperand):
     #             own_index=True,
     #             )
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Name', self._name),
+                ('Index', self._index),
+                ('Values', self.values)
+                )
+
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
@@ -673,7 +727,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def assign(self) -> InterfaceAssignTrio['Series']:
+    def assign(self) -> InterfaceAssignTrio['SeriesAssign']:
         '''
         Interface for doing assignment-like selection and replacement.
         '''
@@ -709,6 +763,8 @@ class Series(ContainerOperand):
         return InterfaceString(
                 blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
+                labels=range(1)
                 )
 
     @property
@@ -937,7 +993,7 @@ class Series(ContainerOperand):
             iloc_key: GetItemKeyType,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
-        '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
+        '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
         return value.reindex( #type: ignore
                 self._index._extract_iloc(iloc_key),
@@ -975,6 +1031,9 @@ class Series(ContainerOperand):
                     name=self._name)
 
         ic = IndexCorrespondence.from_correspondence(self._index, index) #type: ignore
+        if not ic.size:
+            # NOTE: take slice to ensure same type of index and array
+            return self._extract_iloc(EMPTY_SLICE)
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src]
@@ -2524,6 +2583,7 @@ class Series(ContainerOperand):
             skipna: bool = True,
             skipfalsy: bool = False,
             unique: bool = False,
+            axis: int = 0,
             ) -> int:
         '''
         Return the count of non-NA, non-falsy, and/or unique elements.
@@ -2533,6 +2593,7 @@ class Series(ContainerOperand):
             skipfalsy: skip falsu values (0, '', False, None, NaN)
             unique: Count unique items after optionally applying ``skipna`` or ``skipfalsy`` removals.
         '''
+        # NOTE: axis arg for compat with Frame, is not used
         if not skipna and skipfalsy:
             raise RuntimeError('Cannot skipfalsy and not skipna.')
 
@@ -2655,9 +2716,22 @@ class Series(ContainerOperand):
         '''
         if isinstance(other, Series):
             other = other.loc[self._index].values
-
         # by convention, we return just the corner
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
+
+    def corr(self,
+            other: tp.Union['Series', np.ndarray],
+            ) -> float:
+        '''
+        Return the index-aligned correlation to the supplied :obj:`Series`.
+
+        Args:
+            other: Series to be correlated with by selection on corresponding labels.
+        '''
+        if isinstance(other, Series):
+            other = other.loc[self._index].values
+        # by convention, we return just the corner
+        return np.corrcoef(self.values, other)[0, -1] #type: ignore [no-any-return]
 
     #---------------------------------------------------------------------------
 
@@ -2894,6 +2968,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
@@ -2961,6 +3036,7 @@ class Series(ContainerOperand):
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
+                name=name if name is not NAME_DEFAULT else None,
                 )
 
     def to_frame(self,
@@ -2970,6 +3046,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -2990,6 +3067,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
     def to_frame_go(self,
@@ -2999,6 +3077,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'FrameGO':
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3018,6 +3097,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
     def to_frame_he(self,
@@ -3027,6 +3107,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             ) -> 'FrameHE':
         '''
         Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3046,6 +3127,7 @@ class Series(ContainerOperand):
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
+                name=name,
                 )
 
 
@@ -3147,15 +3229,19 @@ class SeriesAssign(Assign):
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
-            # instead of using fill_value here, might be better to use dtype_to_fill_value, so as to not coerce the type of the value to be assigned
             value = self.container._reindex_other_like_iloc(value,
                     self.key,
                     fill_value=fill_value).values
 
         if value.__class__ is np.ndarray:
+            if len(value) == 0:
+                return self.container
             value_dtype = value.dtype
-        elif hasattr(value, '__len__') and not isinstance(value, str):
-            value, _ = iterable_to_array_1d(value)
+        elif hasattr(value, '__iter__') and not isinstance(value, str):
+            # NOTE: might exclude tuples, as the are generally treated as an element
+            value, _ = iterable_to_array_1d(value, count=len(value))
+            if len(value) == 0:
+                return self.container
             value_dtype = value.dtype
         else:
             value_dtype = dtype_from_element(value)

@@ -20,8 +20,8 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -100,11 +100,13 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
-                name='foo')
+                name='foo',
+                dtypes=np.int64)
         f2 = Frame.from_dict(
                 dict(a=(1,2,3), b=(4,5,6)),
                 index=('x', 'y', 'z'),
-                name='bar')
+                name='bar',
+                dtypes=np.int64)
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
         b1 = Bus.from_frames((f1, f2), config=config)

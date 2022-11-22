@@ -1,3 +1,3 @@
 numpy>=1.18.5
-automap>=0.5.1
-arraykit==0.1.13
+automap==0.6.2
+arraykit==0.2.3

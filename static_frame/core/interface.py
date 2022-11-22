@@ -17,13 +17,40 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
+from static_frame.core.frame import FrameGO
+from static_frame.core.frame import FrameHE
+from static_frame.core.hloc import HLoc
+from static_frame.core.index import ILoc
+from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexDefaultFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexDateGO
+from static_frame.core.index_datetime import IndexHour
+from static_frame.core.index_datetime import IndexHourGO
+from static_frame.core.index_datetime import IndexMicrosecond
+from static_frame.core.index_datetime import IndexMicrosecondGO
+from static_frame.core.index_datetime import IndexMillisecond
+from static_frame.core.index_datetime import IndexMillisecondGO
+from static_frame.core.index_datetime import IndexMinute
+from static_frame.core.index_datetime import IndexMinuteGO
+from static_frame.core.index_datetime import IndexNanosecond
+from static_frame.core.index_datetime import IndexNanosecondGO
+from static_frame.core.index_datetime import IndexSecond
+from static_frame.core.index_datetime import IndexSecondGO
 from static_frame.core.index_datetime import IndexYear
+from static_frame.core.index_datetime import IndexYearGO
 from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_datetime import IndexYearMonthGO
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
@@ -34,6 +61,7 @@ from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -46,12 +74,68 @@ from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
-from static_frame.core.store import StoreConfig
+from static_frame.core.series import Series
+from static_frame.core.series import SeriesHE
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DT64_S
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
+from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
+
+#-------------------------------------------------------------------------------
+
+DOCUMENTED_COMPONENTS = (
+        Series,
+        SeriesHE,
+        Frame,
+        FrameGO,
+        FrameHE,
+        Bus,
+        Batch,
+        Yarn,
+        Quilt,
+        Index,
+        IndexGO,
+        IndexHierarchy,
+        IndexHierarchyGO,
+        IndexYear,
+        IndexYearGO,
+        IndexYearMonth,
+        IndexYearMonthGO,
+        IndexDate,
+        IndexDateGO,
+        IndexMinute,
+        IndexMinuteGO,
+        IndexHour,
+        IndexHourGO,
+        IndexSecond,
+        IndexSecondGO,
+        IndexMillisecond,
+        IndexMillisecondGO,
+        IndexMicrosecond,
+        IndexMicrosecondGO,
+        IndexNanosecond,
+        IndexNanosecondGO,
+        HLoc,
+        ILoc,
+        WWW,
+        FillValueAuto,
+        DisplayActive,
+        DisplayConfig,
+        StoreConfig,
+        StoreFilter,
+        IndexAutoFactory,
+        IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        IndexAutoConstructorFactory,
+        NPZ,
+        NPY,
+        MemoryDisplay,
+        Platform,
+        )
+
 
 #-------------------------------------------------------------------------------
 
@@ -432,7 +516,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
         # InterfaceAsType found on Frame, IndexHierarchy
-        if isinstance(obj, InterfaceAsType):
+        if isinstance(obj, (InterfaceAsType, InterfaceBatchAsType)):
             for field in obj.INTERFACE:
 
                 delegate_obj = getattr(obj, field)
@@ -454,7 +538,7 @@ class InterfaceRecord(tp.NamedTuple):
                             is_getitem=False,
                             max_args=max_args,
                             )
-                doc = Features.scrub_doc(getattr(InterfaceAsType, field).__doc__)
+                doc = Features.scrub_doc(getattr(obj.__class__, field).__doc__)
                 yield cls(cls_name,
                         InterfaceGroup.Method,
                         signature,
@@ -871,16 +955,16 @@ class InterfaceSummary(Features):
         return True
 
     @classmethod
-    def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
+    def get_instance(cls, target: tp.Any) -> ContainerBase:
         '''
         Get a sample instance from any ContainerBase; cache to only create one per life of process.
         '''
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
-                instance = target.from_blocks(np.array((0,))) #type: ignore
+                instance = target.from_blocks(np.array((0,)))
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
-                instance = target.from_frames((f,)) #type: ignore
+                instance = target.from_frames((f,))
             elif target is Yarn:
                 f = Frame.from_elements((0,), name='frame')
                 instance = Yarn.from_buses(
@@ -890,10 +974,10 @@ class InterfaceSummary(Features):
             elif target is Quilt:
                 f = Frame.from_elements((0,), name='frame')
                 bus = Bus.from_frames((f,))
-                instance = target(bus, retain_labels=False) #type: ignore
+                instance = target(bus, retain_labels=False)
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target is NPY or target is NPZ: #type: ignore
+            elif target is NPY or target is NPZ:
                 instance = target
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
@@ -903,8 +987,13 @@ class InterfaceSummary(Features):
                 instance = target.from_elements((0,))
             elif target in cls._CLS_INIT_SIMPLE:
                 instance = target()
+            elif target is MemoryDisplay:
+                f = Frame(EMPTY_ARRAY)
+                instance = target.from_any(f)
+            elif target is WWW:
+                instance = target()
             else:
-                instance = target((0,)) #type: ignore
+                instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
         return cls._CLS_TO_INSTANCE_CACHE[target]
 

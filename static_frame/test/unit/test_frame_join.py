@@ -213,8 +213,8 @@ class TestUnit(TestCase):
                 index=index2)
 
         f3 = f1.join_left(f2,
-                left_depth_level=(0, 1),
-                right_depth_level=(0, 1),
+                left_depth_level=[0, 1],
+                right_depth_level=[0, 1],
                 fill_value=None,
                 composite_index=False,
                 )
@@ -224,8 +224,8 @@ class TestUnit(TestCase):
                 )
 
         f4 = f1.join_left(f2,
-                left_depth_level=(0, 1),
-                right_depth_level=(0, 1),
+                left_depth_level=[0, 1],
+                right_depth_level=[0, 1],
                 fill_value=None,
                 composite_index=False,
                 )

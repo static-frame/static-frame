@@ -1,9 +1,9 @@
 import numpy as np
 
-from doc.source.conf import DOCUMENTED_COMPONENTS
 from static_frame import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
@@ -26,7 +26,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 38), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 11), ('Constructor', 34), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 26), ('Iterator', 136), ('Method', 88), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 40), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 136), ('Method', 90), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:

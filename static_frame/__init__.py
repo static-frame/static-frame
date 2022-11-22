@@ -65,6 +65,7 @@ from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthG
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
+from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -83,6 +84,7 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
@@ -98,8 +100,8 @@ from static_frame.core.quilt import Quilt as Quilt
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
-from static_frame.core.store import StoreConfig as StoreConfig
-from static_frame.core.store import StoreConfigMap as StoreConfigMap
+from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
@@ -112,6 +114,7 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.13'
+__version__ = '0.9.21'

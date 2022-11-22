@@ -19,6 +19,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceBatchString
@@ -26,9 +27,9 @@ from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.series import Series
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -47,7 +48,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
@@ -469,7 +469,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             header = f'{self.__class__.__name__}: {self._name}'
         else:
             header = self.__class__.__name__
-        return f'<{header} at {hex(id(self))}>'
+        return f'<{header} max_workers={self._max_workers}>'
 
     #---------------------------------------------------------------------------
     # core function application routines
@@ -861,17 +861,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
-
-    def astype(self,
-            dtype: DtypesSpecifier,
-            ) -> 'Batch':
+    @property
+    def astype(self) -> InterfaceBatchAsType['Batch']:
         '''
         Return a new Batch with astype transformed.
         '''
-        return self._apply_attr(
-                attr='astype',
-                dtype=dtype,
-                )
+        return InterfaceBatchAsType(self.apply)
 
     def rename(self,
             name: NameType = NAME_DEFAULT,
@@ -1656,6 +1651,19 @@ class Batch(ContainerOperand, StoreClientMixin):
                 ddof=ddof,
                 )
 
+    def corr(self, *,
+            axis: int = 1,
+            ) -> 'Batch':
+        '''
+        Compute a correlation matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+        '''
+        return self._apply_attr(
+                attr='corr',
+                axis=axis,
+                )
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

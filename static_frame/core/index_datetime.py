@@ -1,10 +1,13 @@
 import datetime
 import typing as tp
+from functools import partial
 
 import numpy as np
 from automap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
 from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
@@ -97,7 +100,7 @@ class IndexDatetime(Index):
             other = other.values # operate on labels to labels
             other_is_array = True
         elif isinstance(other, str):
-            # do not pass dtype, as want to coerce to this parsed type, not the type of sled
+            # do not pass dtype, as want to coerce to this parsed type, not the type of self
             other = to_datetime64(other)
             other_is_array = False
         elif other.__class__ is np.ndarray:
@@ -263,10 +266,41 @@ class IndexYear(IndexDatetime):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
+    # specializations to permit integers as years
+
+    def __contains__(self, value: tp.Any) -> bool:
+        '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
+        '''
+        try:
+            return self._map.__contains__(to_datetime64(value, self._DTYPE)) #type: ignore
+        except InvalidDatetime64Initializer:
+            # if value is a dt64 and not of a the same unit as self._DTYPE, the initializations exception is raised, which means False
+            return False
+
+
+    def _loc_to_iloc(self,  # type: ignore
+            key: GetItemKeyType,
+            *,
+            partial_selection: bool = False,
+            ) -> GetItemKeyType:
+        '''
+        Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
+        '''
+        try:
+            return Index._loc_to_iloc(self,
+                    key=key,
+                    key_transform=partial(key_to_datetime_key, dtype=self._DTYPE),
+                    partial_selection=partial_selection,
+                    )
+        except InvalidDatetime64Initializer as e:
+            raise LocInvalid(e.args[0]) from None
+
+    #---------------------------------------------------------------------------
     def to_pandas(self) -> None:
         '''Return a Pandas Index.
         '''
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
+
 
 
 class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):

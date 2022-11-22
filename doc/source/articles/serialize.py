@@ -1,24 +1,23 @@
 
 
 import os
-import timeit
-import tempfile
-import typing as tp
 import pickle
 import shutil
 import sys
-import os
+import tempfile
+import timeit
+import typing as tp
 
-
+import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
-import frame_fixtures as ff
 import pandas as pd
 
 sys.path.append(os.getcwd())
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor
+from static_frame.core.util import bytes_to_size_label
 
 
 class FileIOTest:
@@ -262,6 +261,7 @@ FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,
 
 def get_versions() -> str:
     import platform
+
     import pyarrow
     return f'OS: {platform.system()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
@@ -394,15 +394,6 @@ def plot_performance(frame: sf.Frame):
 
 
 #-------------------------------------------------------------------------------
-def convert_size(size_bytes):
-    import math
-    if size_bytes == 0:
-        return '0B'
-    size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
-    i = int(math.floor(math.log(size_bytes, 1024)))
-    p = math.pow(1024, i)
-    s = round(size_bytes / p, 2)
-    return '%s %s' % (s, size_name[i])
 
 
 def plot_size(frame: sf.Frame):
@@ -450,8 +441,8 @@ def plot_size(frame: sf.Frame):
         size_max = results.max()
         ax.set_yticks([0, size_max * 0.5, size_max])
         ax.set_yticklabels(['',
-                convert_size(size_max * 0.5),
-                convert_size(size_max),
+                bytes_to_size_label(size_max * 0.5),
+                bytes_to_size_label(size_max),
                 ], fontsize=6)
         ax.tick_params(
                 axis='x',
@@ -514,21 +505,21 @@ def get_sizes():
         size_parquet = os.path.getsize(fp)
         os.unlink(fp)
         record.append(size_parquet)
-        record.append(convert_size(size_parquet))
+        record.append(bytes_to_size_label(size_parquet))
 
         _, fp = tempfile.mkstemp(suffix='.parquet')
         df.to_parquet(fp, compression=None)
         size_parquet_noc = os.path.getsize(fp)
         os.unlink(fp)
         record.append(size_parquet_noc)
-        record.append(convert_size(size_parquet_noc))
+        record.append(bytes_to_size_label(size_parquet_noc))
 
         _, fp = tempfile.mkstemp(suffix='.npz')
         f.to_npz(fp, include_columns=True)
         size_npz = os.path.getsize(fp)
         os.unlink(fp)
         record.append(size_npz)
-        record.append(convert_size(size_npz))
+        record.append(bytes_to_size_label(size_npz))
 
         _, fp = tempfile.mkstemp(suffix='.pickle')
         file = open(fp, 'wb')
@@ -537,7 +528,7 @@ def get_sizes():
         size_pickle = os.path.getsize(fp)
         os.unlink(fp)
         record.append(size_pickle)
-        record.append(convert_size(size_pickle))
+        record.append(bytes_to_size_label(size_pickle))
 
         record.append(round(size_npz / size_parquet, 3))
         record.append(round(size_npz / size_parquet_noc, 3))
@@ -600,8 +591,9 @@ def get_format():
 
     return format
 
-from itertools import repeat
 from itertools import chain
+from itertools import repeat
+
 
 def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     # get a title

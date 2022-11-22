@@ -19,9 +19,10 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import get_col_format_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_static
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
@@ -30,6 +31,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
+from static_frame.core.util import ManyToOneType
 from static_frame.test.test_case import TestCase
 
 
@@ -460,17 +462,11 @@ class TestUnit(TestCase):
         idx2 = IndexDate(('2020-01-02', '2020-01-03'))
 
 
-        post1 = index_many_set((idx0,  idx1), Index, union=True)
+        post1 = index_many_to_one((idx0,  idx1), Index, many_to_one_type=ManyToOneType.UNION)
         assert isinstance(post1, Index)
 
         self.assertEqual(post1.name, 'foo')
         self.assertEqual(post1.__class__, Index)
-
-        # self.assertEqual(set(post1.values),
-        #         {'1997-01-02',
-        #         '1997-01-01',
-        #         np.datetime64('2020-01-01'),
-        #         np.datetime64('2020-01-02')})
 
         # the result of this operation is an unstable ordering
         values = set(post1.values)
@@ -479,7 +475,7 @@ class TestUnit(TestCase):
         self.assertTrue(datetime.date(2020, 1, 1) in values)
         self.assertTrue(datetime.date(2020, 1, 2) in values)
 
-        post2 = index_many_set((idx1,  idx2), Index, union=True)
+        post2 = index_many_to_one((idx1,  idx2), Index, many_to_one_type=ManyToOneType.UNION)
         assert isinstance(post2, Index)
 
         self.assertEqual(post2.name, None)
@@ -489,7 +485,7 @@ class TestUnit(TestCase):
                 datetime.date(2020, 1, 2),
                 datetime.date(2020, 1, 3)])
 
-        post3 = index_many_set((idx1,  idx2), Index, union=False)
+        post3 = index_many_to_one((idx1,  idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         assert isinstance(post3, Index)
 
         self.assertEqual(post3.name, None)
@@ -503,53 +499,53 @@ class TestUnit(TestCase):
         idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
         idx2 = IndexDate(('2020-02-01', '2020-02-02'))
 
-        post1 = index_many_set((idx0,  idx1), IndexGO, union=True)
+        post1 = index_many_to_one((idx0,  idx1), IndexGO, many_to_one_type=ManyToOneType.UNION)
         self.assertEqual(post1.__class__, IndexGO)
 
-        post2 = index_many_set((idx1,  idx2), IndexGO, union=False)
+        post2 = index_many_to_one((idx1,  idx2), IndexGO, many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post2.__class__, IndexDateGO)
 
     def test_index_many_set_c(self) -> None:
         idx1 = IndexDate(('2020-02-01', '2020-02-02'))
 
-        post1 = index_many_set((idx1,), Index, union=True)
+        post1 = index_many_to_one((idx1,), Index, many_to_one_type=ManyToOneType.UNION)
         self.assertEqual(post1.__class__, IndexDate)
         self.assertTrue(idx1.equals(post1))
 
         # empty iterable returns an empty index
-        post2 = index_many_set((), Index, union=True)
-        self.assertEqual(len(post2), 0) #type: ignore
+        post2 = index_many_to_one((), Index, many_to_one_type=ManyToOneType.UNION)
+        self.assertEqual(len(post2), 0)
 
     def test_index_many_set_d(self) -> None:
         idx1 = Index(range(3), loc_is_iloc=True)
         idx2 = Index(range(3), loc_is_iloc=True)
-        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2])
 
     def test_index_many_set_e(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
-        idx3 = index_many_set((idx1, idx2), Index, union=True)
+        idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1, 2, 3])
 
     def test_index_many_set_f(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index(range(4), loc_is_iloc=True)
-        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         self.assertTrue(idx3._map is None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1])
 
     def test_index_many_set_g(self) -> None:
         idx1 = Index(range(2), loc_is_iloc=True)
         idx2 = Index([3, 2, 1, 0])
-        idx3 = index_many_set((idx1, idx2), Index, union=False)
+        idx3 = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         self.assertTrue(idx3._map is not None) #type: ignore
-        self.assertEqual(idx3.values.tolist(), [0, 1]) #type: ignore
+        self.assertEqual(idx3.values.tolist(), [0, 1])
 
     def test_index_many_set_h(self) -> None:
-        post1 = index_many_set((), Index, union=True, explicit_constructor=IndexDate)
+        post1 = index_many_to_one((), Index, many_to_one_type=ManyToOneType.UNION, explicit_constructor=IndexDate)
         self.assertIs(post1.__class__, IndexDate)
 
     def test_index_many_set_i(self) -> None:
@@ -557,7 +553,7 @@ class TestUnit(TestCase):
         idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
         idx2 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
 
-        post = index_many_set((idx1, idx2), Index, union=True)
+        post = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         post = tp.cast(IndexHierarchy, post)
 
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
@@ -569,7 +565,7 @@ class TestUnit(TestCase):
         idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
         idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
 
-        post = index_many_set((idx1, idx2), Index, union=True)
+        post = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.UNION)
         post = tp.cast(IndexHierarchy, post)
 
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
@@ -581,12 +577,46 @@ class TestUnit(TestCase):
         idx1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
         idx2 = IndexHierarchy.from_product(('a', 'c'), (1, 2))
 
-        post = index_many_set((idx1, idx2), Index, union=False)
+        post = index_many_to_one((idx1, idx2), Index, many_to_one_type=ManyToOneType.INTERSECT)
         post = tp.cast(IndexHierarchy, post)
 
         self.assertEqual([d.kind for d in post.dtypes.values], ['U', 'i'])
         self.assertEqual(post.values.tolist(),
             [['a', 1], ['a', 2]],)
+
+    def test_index_many_set_l(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        # idx2 = IndexDate(('2020-01-02', '2020-01-03'))
+
+        post1 = index_many_to_one((idx0,  idx1), Index, many_to_one_type=ManyToOneType.UNION)
+        assert isinstance(post1, Index)
+
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, Index)
+
+    def test_index_many_set_m(self) -> None:
+
+        idx0 = Index((2, 5, 6, 8), name='foo')
+        idx1 = Index((2, 8), name='foo')
+
+        idx2 = index_many_to_one((idx0,  idx1), Index, many_to_one_type=ManyToOneType.DIFFERENCE)
+
+        self.assertEqual(list(idx2), [5, 6])
+        self.assertEqual(idx2.name, 'foo')
+
+    def test_index_many_set_n(self) -> None:
+
+        idx0 = IndexDate(('1997-01-01', '1997-01-02', '2020-01-02'), name='foo')
+        idx1 = IndexDate(('1997-01-01', '2020-01-02'), name='foo')
+
+        post1 = index_many_to_one((idx0,  idx1), Index, many_to_one_type=ManyToOneType.DIFFERENCE)
+
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, IndexDate)
+        self.assertEqual(list(post1), [np.datetime64('1997-01-02')])
+
 
 
 
@@ -656,6 +686,41 @@ class TestUnit(TestCase):
         self.assertEqual(func1(0, np.dtype(object)), '')
         self.assertEqual(func1(1, np.dtype(str)), 'na')
 
+    #---------------------------------------------------------------------------
+
+    def test_get_col_format_a(self) -> None:
+        func = get_col_format_factory('{}', ('a', 'b', 'c'))
+        self.assertEqual(func(0), '{}')
+        self.assertEqual(func(1), '{}')
+        self.assertEqual(func(2), '{}')
+
+    def test_get_col_format_b(self) -> None:
+        func = get_col_format_factory(('a', 'b', 'c'), ('a', 'b', 'c'))
+        self.assertEqual(func(0), 'a')
+        self.assertEqual(func(1), 'b')
+        self.assertEqual(func(2), 'c')
+
+    def test_get_col_format_c(self) -> None:
+        func = get_col_format_factory(('a', 'b', 'c'), range(3))
+        self.assertEqual(func(0), 'a')
+        self.assertEqual(func(1), 'b')
+        self.assertEqual(func(2), 'c')
+
+    def test_get_col_format_d1(self) -> None:
+        func = get_col_format_factory({'b':'x{}', 'c':'y{}'}, ('a', 'b', 'c'))
+        self.assertEqual(func(0), '{}')
+        self.assertEqual(func(1), 'x{}')
+        self.assertEqual(func(2), 'y{}')
+
+    def test_get_col_format_d2(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _ = get_col_format_factory({'b':'x{}', 'c':'y{}'})
+
+    def test_get_col_format_e(self) -> None:
+        func = get_col_format_factory((f'{{:{i}}}' for i in range(3)), ('a', 'b', 'c'))
+        self.assertEqual(func(0), '{:0}')
+        self.assertEqual(func(1), '{:1}')
+        self.assertEqual(func(2), '{:2}')
 
     #---------------------------------------------------------------------------
 

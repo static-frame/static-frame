@@ -1,9 +1,9 @@
-
 import csv
 import json
 import pickle
 import sqlite3
 import typing as tp
+from collections import deque
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
@@ -16,9 +16,11 @@ from operator import itemgetter
 
 import numpy as np
 from arraykit import column_1d_filter
+from arraykit import delimited_to_arrays
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
+from arraykit import split_after_count
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -40,7 +42,7 @@ from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
@@ -95,6 +97,7 @@ from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
+from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.series import Series
@@ -144,7 +147,9 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
+from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import OptionalArrayList
 from static_frame.core.util import PathSpecifier
@@ -152,7 +157,6 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import _read_url
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array2d_to_tuples
@@ -486,10 +490,10 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
-                index = index_many_set(
+                index = index_many_to_one(
                         (f._index for f in frame_seq),
                         Index,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         index_constructor,
                         )
                 own_index = True
@@ -521,10 +525,10 @@ class Frame(ContainerOperand):
             if columns is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
-                columns = index_many_set(
+                columns = index_many_to_one(
                         (f._columns for f in frame_seq),
                         cls._COLUMNS_CONSTRUCTOR,
-                        union,
+                        ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                         columns_constructor,
                         )
                 own_columns = True
@@ -688,20 +692,20 @@ class Frame(ContainerOperand):
             containers = tuple(containers) # exhaust a generator
 
         if index is None:
-            index = index_many_set(
+            index = index_many_to_one(
                     (c.index for c in containers),
                     cls_default=Index,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             index = index_from_optional_constructor(index,
                     default_constructor=Index
                     )
         if columns is None:
-            columns = index_many_set(
+            columns = index_many_to_one(
                     (c.columns for c in containers),
                     cls_default=cls._COLUMNS_CONSTRUCTOR,
-                    union=union,
+                    many_to_one_type=ManyToOneType.UNION if union else ManyToOneType.INTERSECT,
                     )
         else:
             columns = index_from_optional_constructor(columns,
@@ -746,7 +750,7 @@ class Frame(ContainerOperand):
                     fill_value = get_col_fill_value(col_count, dtype_at_col) #type: ignore
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
-                        array = np.full(len(index), fill_value) # type: ignore
+                        array = np.full(len(index), fill_value)
                         array.flags.writeable = False
                         fill_arrays[fill_value] = array
                     array = fill_arrays[fill_value]
@@ -934,12 +938,13 @@ class Frame(ContainerOperand):
         Args:
             records: Iterable of row values, where row values are dictionaries.
             index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
+            index:
             {dtypes}
             {name}
             {consolidate_blocks}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         columns: tp.List[tp.Hashable] = []
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
@@ -962,6 +967,7 @@ class Frame(ContainerOperand):
         else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
 
+        # derive union columns
         row_reference = {}
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
@@ -1302,6 +1308,96 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor
                 )
 
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_dict_fields(cls,
+            fields: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]],
+            *,
+            columns: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            fill_value: tp.Any = np.nan,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            ) -> 'Frame':
+        '''Frame constructor from an iterable of dictionaries, where each dictionary represents a column; index labels will be derived from the union of all column dictionary keys.
+
+        Args:
+            fields: Iterable of column values, where column values are dictionaries.
+            index: Optionally provide an iterable of index labels, equal in length to the number of fields. If a generator, this value will not be evaluated until after fields are loaded.
+            columns:
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        index: tp.List[tp.Hashable] = []
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
+                else get_col_fill_value_factory(fill_value, columns))
+
+        cols: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
+        if not hasattr(fields, '__len__'):
+            # might be a generator; must convert to sequence
+            cols = list(fields)
+        else: # could be a sequence, or something like a dict view
+            cols = fields
+        cols_count = len(cols)
+
+        if not cols_count:
+            raise ErrorInitFrame('No columns available in `fields`.')
+
+        # derive union index
+        col_reference = {}
+        for col in cols: # produce a column that has a value for all observed keys
+            col_reference.update(col)
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            cols_iter = cols if hasattr(cols, '__getitem__') else iter(cols)
+            for col_idx, col_dict in enumerate(cols_iter):
+
+                dtype = None
+                if get_col_fill_value is not None and get_col_dtype is not None:
+                    dts = get_col_dtype(col_idx)
+                    dtype = None if dts is None else np.dtype(dts)
+                    fv = get_col_fill_value(col_idx, dtype) # might be dtype specifier
+                if get_col_fill_value is not None:
+                    fv = get_col_fill_value(col_idx, None)
+                else:
+                    fv = fill_value
+                # for som e dtypes can use an np.fromiter constructor
+                values = []
+                for key in col_reference:
+                    values.append(col_dict.get(key, fv))
+
+                if dtype is None:
+                    array, _ = iterable_to_array_1d(values, count=len(values))
+                else:
+                    array = np.array(values, dtype=dtype)
+
+                array.flags.writeable = False
+                yield array
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+                index=col_reference.keys(),
+                columns=columns,
+                name=name,
+                own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_index=own_index,
+                )
+
     @staticmethod
     def _structured_array_to_d_ia_cl(
             array: np.ndarray,
@@ -1311,7 +1407,6 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
@@ -1320,7 +1415,6 @@ class Frame(ContainerOperand):
 
         Args:
             index_column_first: optionally name the column that will start the block of index columns.
-            columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names # using names instead of fields, as this is NP convention
         is_structured_array = True
@@ -1351,22 +1445,7 @@ class Frame(ContainerOperand):
         index_arrays = []
         # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
         columns_labels = []
-
-        index_field_placeholder = object()
-        columns_by_col_idx = []
-
-        if columns is None:
-            use_dtype_names = True
-        else:
-            use_dtype_names = False
-            columns_idx = 0 # relative position in index object
-            # construct columns_by_col_idx from columns, adding sentinal for index columns; this means we cannot get map dtypes from index names
-            for i in range(len(names)):
-                if i >= index_start_pos and i <= index_end_pos:
-                    columns_by_col_idx.append(index_field_placeholder)
-                    continue
-                columns_by_col_idx.append(columns[columns_idx])
-                columns_idx += 1
+        columns_by_col_idx: tp.List[tp.Hashable] = []
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
@@ -1375,9 +1454,8 @@ class Frame(ContainerOperand):
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
-                if use_dtype_names:
-                    # append here as we iterate for usage in get_col_dtype
-                    columns_by_col_idx.append(name)
+                # append here as we iterate for usage in get_col_dtype
+                columns_by_col_idx.append(name)
 
                 if is_structured_array:
                     # expect a 1D array with selection, not a copy
@@ -1793,10 +1871,210 @@ class Frame(ContainerOperand):
             if cursor:
                 cursor.close()
 
+    #---------------------------------------------------------------------------
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_index(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_index}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        index = []
+
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
+                index.append(k)
+                yield v
+
+        return cls.from_dict_records(gen(), # type: ignore
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_columns(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        columns = []
+
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
+            for k, v in data.items():
+                columns.append(k)
+                yield v
+
+        return cls.from_dict_fields(gen(), # type: ignore
+                columns=columns,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_split(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_split}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_records(data['data'], # type: ignore
+                index=data['index'],
+                columns=data['columns'],
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_records(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_records}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_dict_records(data, # type: ignore
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_values(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document in the following format: {json_values}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        return cls.from_records(data, # type: ignore
+                index=index,
+                columns=columns,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json(cls,
-            json_data: str,
+            json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -1813,8 +2091,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        data = json.loads(json_data)
-        return cls.from_dict_records(data, # type: ignore
+        # DEPRECATE for 1.0
+        return cls.from_json_records(json_data, # type: ignore
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
@@ -1840,12 +2118,16 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), # type: ignore #pragma: no cover
+        # DEPRECATE for 1.0
+        from static_frame.core.www import WWW
+        sio = WWW.from_file(url, in_memory=True)
+        return cls.from_json(sio, # type: ignore #pragma: no cover
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
                 )
 
+    #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
@@ -1853,7 +2135,7 @@ class Frame(ContainerOperand):
             *,
             delimiter: str,
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
@@ -1861,23 +2143,30 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
-        Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
+        Create a :obj:`Frame` from a file path or a file-like object defining a delimited (CSV, TSV) data file.
 
         Args:
             fp: A file path or a file-like object.
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
-            index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            index_column_first: Optionally specify a column, by position in the realized columns, to become the start of the index if index_depth is greater than 0 and columns_depth is 0.
             index_name_depth_level: If columns_depth is greater than 0, interpret values over index as the index name.
             index_constructors:
             index_continuation_token:
@@ -1885,9 +2174,10 @@ class Frame(ContainerOperand):
             columns_name_depth_level: If index_depth is greater than 0, interpret values over index as the columns name.
             columns_constructors:
             columns_continuation_token:
+            columns_select: an iterable of columns to select by label or position; can only be used if index_depth is 0.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
+            store_filter: A StoreFilter instance, defining translation between unrepresentable strings and types. By default it is disabled, and only empty fields or "NAN" are intepreted as NaN. To force usage, set the type of the column to string.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -1895,95 +2185,91 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
-        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
-
-        # TODO: add columns_select as usecols style selective loading
-
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
-        fp = path_filter(fp)
-        delimiter_native = '\t'
+        fp = path_filter(fp) # normalize Path to strings
 
-        if delimiter != delimiter_native:
-            # this is necessary if there are quoted cells that include the delimiter
+        if not skip_footer:
             def file_like() -> tp.Iterator[str]:
                 if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
-                        for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
-                            yield delimiter_native.join(row)
-                else: # handling file like object works for stringio but not for bytesio
-                    for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
-                        yield delimiter_native.join(row)
-        else:
-            def file_like() -> tp.Iterator[str]: # = fp
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding='utf-8') as f:
-                        for row in f:
-                            yield row
+                    with open(fp, 'r', encoding=encoding) as f:
+                        yield from f
                 else: # iterable of string lines, StringIO
-                    for row in fp: # type: ignore
-                        yield row
+                    yield from fp
+        else:
+            def file_like() -> tp.Iterator[str]:
+                row_buffer: tp.Deque[str] = deque(maxlen=skip_footer)
 
-        # always accumulate columns rows, as np.genfromtxt will mutate the headers: adding enderscore, removing invalid characters, etc.
+                if isinstance(fp, str):
+                    with open(fp, 'r', encoding=encoding) as f:
+                        for i, row in enumerate(f):
+                            if i >= skip_footer:
+                                yield row_buffer.popleft()
+                            row_buffer.append(row)
+                else:
+                    for i, row in enumerate(fp): # type: ignore
+                        if i >= skip_footer:
+                            yield row_buffer.popleft()
+                        row_buffer.append(row)
+
+        row_iter = file_like()
+        if skip_header:
+            for _ in range(skip_header):
+                next(row_iter)
+
         apex_rows = []
-        columns_rows = []
+        if columns_depth:
+            columns_arrays = []
+            for _ in range(columns_depth):
+                row = next(row_iter)
+                if index_depth == 0:
+                    row_left = ''
+                    row_right = row
+                else:
+                    row_left, row_right = split_after_count(
+                            row,
+                            delimiter=delimiter,
+                            count=index_depth,
+                            quoting=quoting,
+                            quotechar=quote_char,
+                            doublequote=quote_double,
+                            escapechar=escape_char,
+                            )
 
-        def row_source() -> tp.Iterator[str]:
-            # set equal to skip header unless column depth is > 1
-            column_max = skip_header + columns_depth
-            for i, row in enumerate(file_like()):
-                if i < skip_header:
-                    continue
-                if i < column_max:
-                    columns_rows.append(row)
-                    continue
-                yield row
+                [array_right] = delimited_to_arrays(
+                        (row_right,),
+                        axis=0, # process type per row
+                        delimiter=delimiter,
+                        quoting=quoting,
+                        quotechar=quote_char,
+                        doublequote=quote_double,
+                        escapechar=escape_char,
+                        thousandschar=thousands_char,
+                        decimalchar=decimal_char,
+                        skipinitialspace=skip_initial_space,
+                        )
+                columns_arrays.append(array_right)
 
-        # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
+                if row_left:
+                    [array_left] = delimited_to_arrays(
+                            (row_left,),
+                            axis=0, # process type per row
+                            delimiter=delimiter,
+                            quoting=quoting,
+                            quotechar=quote_char,
+                            doublequote=quote_double,
+                            escapechar=escape_char,
+                            thousandschar=thousands_char,
+                            decimalchar=decimal_char,
+                            skipinitialspace=skip_initial_space,
+                            )
+                    apex_rows.append(array_left)
 
-        with WarningsSilent():
-            # silence: UserWarning: genfromtxt: Empty input file
-
-            array = np.genfromtxt(
-                    row_source(),
-                    delimiter=delimiter_native,
-                    skip_header=0, # done in row_source
-                    skip_footer=skip_footer,
-                    comments=None,
-                    # strange NP convention for this parameter: False is not supported, must use None to not parase headers
-                    names= None,
-                    dtype=None,
-                    encoding=encoding,
-                    invalid_raise=False,
-                    )
-        array.flags.writeable = False
-
-        # construct columns prior to preparing data from structured array, as need columns to map dtypes
-        # columns_constructor = None
         if columns_depth == 0:
             columns = None
             own_columns = False
         else:
-            # Process each row one at a time, as types align by row.
-            columns_arrays = []
-            for row in columns_rows:
-                columns_array = np.genfromtxt(
-                        (row,),
-                        delimiter=delimiter_native,
-                        comments=None,
-                        names=None,
-                        dtype=None,
-                        encoding=encoding,
-                        invalid_raise=False,
-                        )
-                # the array might be ndim=1, or ndim=0; must get a list before slicing
-                # using the array directly for a string type might not hold the rights size after slicing
-                columns_list = columns_array.tolist()
-                apex_rows.append(columns_list[:index_depth])
-                columns_arrays.append(columns_list[index_depth:])
-
             columns_name = None if index_depth == 0 else apex_to_name(
                     rows=apex_rows,
                     depth_level=columns_name_depth_level,
@@ -1997,16 +2283,19 @@ class Frame(ContainerOperand):
                         default_constructor=partial(cls._COLUMNS_CONSTRUCTOR, name=columns_name),
                         explicit_constructors=columns_constructors, # cannot supply name
                         )
-            else:
-                if columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+            elif columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+                if store_filter is not None:
                     labels = zip_longest(
-                            *(store_filter.to_type_filter_iterable(x) for x in columns_arrays), # type: ignore
+                            *(store_filter.to_type_filter_array(x) for x in columns_arrays),
                             fillvalue=columns_continuation_token,
                             )
                 else:
-                    labels = zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)) # type: ignore
-
-                columns_constructor = partial(cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                    labels = zip_longest(
+                            *columns_arrays,
+                            fillvalue=columns_continuation_token,
+                            )
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
                         continuation_token=columns_continuation_token,
                         )
@@ -2016,32 +2305,87 @@ class Frame(ContainerOperand):
                         default_constructor=columns_constructor,
                         explicit_constructors=columns_constructors,
                         )
+            else:
+                if store_filter is not None:
+                    columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
+                columns_constructor = partial(
+                        cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
+                        name=columns_name,
+                        )
+                columns, own_columns = index_from_optional_constructors(
+                        columns_arrays,
+                        depth=columns_depth,
+                        default_constructor=columns_constructor,
+                        explicit_constructors=columns_constructors,
+                        )
 
-        if array.dtype.names is None: # not a structured array
-            # genfromtxt may, in some situations, not return a structured array
-            if array.ndim == 1:
-                # got a single row
-                array = array.reshape((1, len(array)))
-            # NOTE: genfromtxt will return a one column input file as a 2D array with the vertical data as a horizontal row. There does not appear to be a way to distinguish this from a single row file
+        line_select: tp.Optional[tp.Callable[[int], bool]]
+        if columns_select:
+            if index_depth:
+                raise ErrorInitFrame('Cannot use columns_select if index_depth is greater than zero.')
+                # NOTE: this is because the final columns labels might be different than those provided via input due to line_select and index_depth
+            if columns is not None:
+                columns_included = list(columns.loc_to_iloc(l) for l in columns_select)
+                columns = columns.iloc[columns_included]
+            else: # assume columsn_select are integers
+                columns_included = list(columns_select)
+            # order of columns_included maters
+            line_select = set(columns_included).__contains__
+        else:
+            line_select = None
 
-        if array.size > 0: # an empty, or column only table
-            data, index_arrays, _ = cls._structured_array_to_d_ia_cl(
-                    array=array,
-                    index_depth=index_depth,
-                    index_column_first=index_column_first,
-                    dtypes=dtypes,
-                    consolidate_blocks=consolidate_blocks,
-                    store_filter=store_filter,
-                    columns=columns
-                    )
-        else: # only column data in table
-            if index_depth > 0:
-                # no data is found an index depth was given; simulate empty index_arrays to create a empty index
-                index_arrays = [()] * index_depth
-            data = FRAME_INITIALIZER_DEFAULT # type: ignore
+        get_col_dtype = (None if dtypes is None
+                else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
+        values_arrays: tp.Sequence[np.ndarray] = delimited_to_arrays(
+                row_iter,
+                axis=1, # process type per column
+                line_select=line_select,
+                delimiter=delimiter,
+                quoting=quoting,
+                quotechar=quote_char,
+                doublequote=quote_double,
+                escapechar=escape_char,
+                thousandschar=thousands_char,
+                decimalchar=decimal_char,
+                skipinitialspace=skip_initial_space,
+                dtypes=get_col_dtype,
+                )
+        if store_filter is not None:
+            values_arrays = [store_filter.to_type_filter_array(a)
+                    for a in values_arrays]
+        if index_depth:
+            if index_column_first:
+                # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created
+                if columns is not None:
+                    raise ErrorInitFrame('Cannot use index_column_first if columns_depth is greater than 0.')
+                elif isinstance(index_column_first, INT_TYPES):
+                    index_start = index_column_first
+                else:
+                    raise ErrorInitFrame('index_column_first must be an integer.')
+                index_end = index_start + index_depth
+                index_arrays = values_arrays[index_start: index_end]
+                values_arrays = chain( #type: ignore
+                        values_arrays[:index_start],
+                        values_arrays[index_end:],
+                        )
+            else:
+                index_arrays = values_arrays[:index_depth]
+                values_arrays = values_arrays[index_depth:]
+        else:
+            if index_column_first:
+                raise ErrorInitFrame('Cannot set index_column_first without setting nonzero index_depth.')
+
+        if values_arrays:
+            if consolidate_blocks:
+                blocks = TypeBlocks.from_blocks(
+                        TypeBlocks.consolidate_blocks(values_arrays))
+            else:
+                blocks = TypeBlocks.from_blocks(values_arrays)
+        else:
+            blocks = FRAME_INITIALIZER_DEFAULT # type: ignore
 
         kwargs = dict(
-                data=data,
+                data=blocks,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -2058,22 +2402,42 @@ class Frame(ContainerOperand):
                 axis_depth=index_depth)
 
         if index_depth == 1:
-            index_values = index_arrays[0]
-            index_default_constructor = partial(Index, name=index_name)
-        else: # > 1
-            # might use _from_type_blocks, but would not be able to use continuation token
-            index_values = zip(*index_arrays)
-            index_default_constructor = partial(IndexHierarchy.from_labels,
+            if not index_arrays:
+                index_values = () # assume an empty Frame
+                assert blocks is FRAME_INITIALIZER_DEFAULT
+            else:
+                index_values = index_arrays[0]
+            index_constructor = partial(Index, name=index_name)
+            index, own_index = index_from_optional_constructors(
+                    index_values,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
+        elif index_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+            # expect all index_arrays to have the same length
+            index_values = zip(*index_arrays) # type: ignore
+            index_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
                     )
-        index, own_index = index_from_optional_constructors(
-                index_values,
-                depth=index_depth,
-                default_constructor=index_default_constructor,
-                explicit_constructors=index_constructors, # cannot supply name
-                )
-
+            index, own_index = index_from_optional_constructors(
+                    index_values,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
+        else: # index_depth > 1, no continuation toke`n
+            index_constructor = partial(
+                    IndexHierarchy.from_values_per_depth,
+                    name=index_name,
+                    )
+            index, own_index = index_from_optional_constructors(
+                    index_arrays,
+                    depth=index_depth,
+                    default_constructor=index_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
         return cls(
                 index=index,
                 own_index=own_index,
@@ -2093,14 +2457,21 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
@@ -2118,10 +2489,16 @@ class Frame(ContainerOperand):
                 columns_depth=columns_depth,
                 columns_name_depth_level=columns_name_depth_level,
                 columns_constructors=columns_constructors,
-                columns_continuation_token=columns_continuation_token,
+                columns_continuation_token=columns_continuation_token,columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
+                quoting=quoting,
                 quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                thousands_char=thousands_char,
+                decimal_char=decimal_char,
                 encoding=encoding,
                 dtypes=dtypes,
                 name=name,
@@ -2142,14 +2519,21 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
@@ -2168,9 +2552,16 @@ class Frame(ContainerOperand):
                 columns_name_depth_level=columns_name_depth_level,
                 columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
+                columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
+                quoting=quoting,
                 quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                thousands_char=thousands_char,
+                decimal_char=decimal_char,
                 encoding=encoding,
                 dtypes=dtypes,
                 name=name,
@@ -2191,14 +2582,21 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
+            decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: NameType = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = None,
             ) -> 'Frame':
         '''
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
@@ -2226,9 +2624,16 @@ class Frame(ContainerOperand):
                 columns_name_depth_level=columns_name_depth_level,
                 columns_constructors=columns_constructors,
                 columns_continuation_token=columns_continuation_token,
+                columns_select=columns_select,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                skip_initial_space=skip_initial_space,
+                quoting=quoting,
                 quote_char=quote_char,
+                quote_double=quote_double,
+                escape_char=escape_char,
+                thousands_char=thousands_char,
+                decimal_char=decimal_char,
                 encoding=encoding,
                 dtypes=dtypes,
                 name=name,
@@ -2261,9 +2666,9 @@ class Frame(ContainerOperand):
         Load Frame from the contents of a sheet in an XLSX workbook.
 
         Args:
-            label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
+            label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(fp)
@@ -2302,7 +2707,7 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an SQLite database file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(fp)
@@ -2335,7 +2740,7 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an HDF5 file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_hdf5 import StoreHDF5
 
         st = StoreHDF5(fp)
@@ -2515,6 +2920,9 @@ class Frame(ContainerOperand):
             index = None
         elif index is not None:
             pass
+        elif isinstance(value.index, pandas.MultiIndex):
+            index = IndexHierarchy.from_pandas(value.index)
+            own_index = True
         else:
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
@@ -2524,6 +2932,9 @@ class Frame(ContainerOperand):
             columns = None
         elif columns is not None:
             pass
+        elif isinstance(value.columns, pandas.MultiIndex):
+            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_pandas(value.columns)
+            own_columns = True
         else:
             columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
             own_columns = columns_constructor is None
@@ -3008,6 +3419,29 @@ class Frame(ContainerOperand):
     #     '''
     #     return self.__copy__() #type: ignore
 
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Name', self._name),
+                ('Index', self._index),
+                ('Columns', self._columns),
+                ('Blocks', self._blocks),
+                )
+
+    #---------------------------------------------------------------------------
+    # external protocols
+
+    def __dataframe__(self,
+            nan_as_null: bool = False,
+            allow_copy: bool = True,
+            ) -> DFIDataFrame:
+        '''Return a data-frame interchange protocol compliant object. See https://data-apis.org/dataframe-protocol/latest for more information.
+        '''
+        return DFIDataFrame(self,
+                nan_as_null=nan_as_null,
+                allow_copy=allow_copy,
+                recast_blocks=True,
+                )
+
     #---------------------------------------------------------------------------
     # name interface
 
@@ -3130,6 +3564,8 @@ class Frame(ContainerOperand):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
+                labels=self._columns,
                 )
 
     @property
@@ -6667,7 +7103,8 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
-    def cov(self, *,
+    def cov(self,
+            *,
             axis: int = 1,
             ddof: int = 1,
             ) -> 'Frame':
@@ -6700,7 +7137,36 @@ class Frame(ContainerOperand):
                 name=self._name,
                 )
 
+    def corr(self,
+            *,
+            axis: int = 1,
+            ) -> 'Frame':
+        '''Compute a correlation matrix.
 
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+        '''
+        if axis == 0:
+            rowvar = True
+            labels = self._index
+            own_index = True
+            own_columns = self.STATIC
+        else:
+            rowvar = False
+            labels = self._columns
+            own_index = self.STATIC
+            own_columns = self.STATIC
+
+        values = np.corrcoef(self.values, rowvar=rowvar)
+        values.flags.writeable = False
+
+        return self.__class__(values,
+                index=labels,
+                columns=labels,
+                own_index=own_index,
+                own_columns=own_columns,
+                name=self._name,
+                )
 
     #---------------------------------------------------------------------------
     # pivot family
@@ -7319,13 +7785,16 @@ class Frame(ContainerOperand):
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
 
+    #---------------------------------------------------------------------------
+    # exporters: alternate libraries
+
     def to_pandas(self) -> 'pandas.DataFrame':
         '''
         Return a Pandas DataFrame.
         '''
         import pandas
 
-        if self._blocks.unified:
+        if self._blocks.unified and self._blocks._blocks:
             # make copy to get writeable
             array = self._blocks._blocks[0].copy()
             df = pandas.DataFrame(array,
@@ -7527,40 +7996,60 @@ class Frame(ContainerOperand):
 
         return xarray.Dataset(data_vars, coords=coords) #type: ignore
 
-    def to_frame(self) -> 'Frame':
-        '''
-        Return Frame version of this Frame, which (as the Frame is immutable) is self.
-        '''
-        return self
-
     def _to_frame(self,
-            constructor: tp.Type['Frame']
+            constructor: tp.Type['Frame'],
+            *,
+            name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
+
+        if self.__class__ is constructor and constructor in (Frame, FrameHE):
+            if name is not NAME_DEFAULT:
+                return self.rename(name)
+            return self
+
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
+
         return constructor(
                 self._blocks.copy(),
                 index=self.index,
                 columns=self._columns,
-                name=self._name,
+                name=name if name is not NAME_DEFAULT else self._name,
                 own_data=True,
                 own_index=True,
-                own_columns=constructor is FrameHE,
+                own_columns=own_columns,
                 )
 
-    def to_frame_he(self) -> 'FrameHE':
+    def to_frame(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'Frame':
         '''
-        Return a ``FrameHE`` version of this Frame.
+        Return ``Frame`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
-        return self._to_frame(FrameHE) #type: ignore
+        return self._to_frame(Frame, name=name)
 
-    def to_frame_go(self) -> 'FrameGO':
+    def to_frame_he(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'FrameHE':
         '''
-        Return a ``FrameGO`` version of this Frame.
+        Return a ``FrameHE`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
-        return self._to_frame(FrameGO) #type: ignore
+        return self._to_frame(FrameHE, name=name) #type: ignore
+
+    def to_frame_go(self,
+            *,
+            name: NameType = NAME_DEFAULT,
+            ) -> 'FrameGO':
+        '''
+        Return a ``FrameGO`` instance from this ``Frame``.
+        '''
+        return self._to_frame(FrameGO, name=name) #type: ignore
 
     def to_series(self,
             *,
             index_constructor: IndexConstructor = Index,
+            name: NameType = NAME_DEFAULT,
             ) -> Series:
         '''
         Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.
@@ -7580,7 +8069,7 @@ class Frame(ContainerOperand):
         else:
             columns_tuples = tuple((l,) for l in self._columns.values)
 
-        # immutability should be prserved
+        # immutability should be preserved
         array = self._blocks.values.reshape(self._blocks.size)
 
         def labels() -> tp.Iterator[tp.Hashable]:
@@ -7588,9 +8077,76 @@ class Frame(ContainerOperand):
                 yield index_tuples[row] + columns_tuples[col]
 
         index = index_constructor(labels())
-        return Series(array, index=index, own_index=True, name=self._name)
+        name = name if name is not NAME_DEFAULT else self._name
+
+        return Series(array, index=index, own_index=True, name=name)
 
     #---------------------------------------------------------------------------
+    # exporters: json
+
+    @doc_inject(selector='json')
+    def to_json_index(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_index}
+
+        Args:
+            {indent}
+        '''
+        d = ((k, dict(zip(self._columns, v)))
+                for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_columns}
+
+        Args:
+            {indent}
+        '''
+        d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
+        return json.dumps(JSONFilter.from_items(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_split(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_split}
+
+        Args:
+            {indent}
+        '''
+        d = dict(columns=JSONFilter.from_iterable(self._columns),
+                index=JSONFilter.from_iterable(self._index),
+                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
+                )
+        return json.dumps(d, indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_records(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_records}
+
+        Args:
+            {indent}
+        '''
+        d = (dict(zip(self._columns, v))
+                for v in self.iter_tuple(constructor=tuple, axis=1))
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_values(self, indent: tp.Optional[int] = None) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructored as follows: {json_values}
+
+        Args:
+            {indent}
+        '''
+        d = self.iter_tuple(constructor=tuple, axis=1)
+        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+
+    #---------------------------------------------------------------------------
+    # exporters: delimited
+
     def _to_str_records(self,
             *,
             include_index: bool = True,
@@ -7742,10 +8298,10 @@ class Frame(ContainerOperand):
             include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
+            quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
             quote_double: bool = True,
             escape_char: tp.Optional[str] = None,
-            quoting: int = csv.QUOTE_MINIMAL,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
@@ -7905,7 +8461,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-sheet XLSX file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
         config = StoreConfig(
@@ -7932,7 +8488,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-table SQLite file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
         config = StoreConfig(
@@ -7962,7 +8518,7 @@ class Frame(ContainerOperand):
         '''
         Write the Frame as single-table SQLite file.
         '''
-        from static_frame.core.store import StoreConfig
+        from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_hdf5 import StoreHDF5
 
         config = StoreConfig(
@@ -8232,39 +8788,6 @@ class FrameGO(Frame):
                 fill_value=fill_value,
                 )
 
-    #---------------------------------------------------------------------------
-    def _to_frame(self,
-            constructor: tp.Type[Frame]
-            ) -> Frame:
-        return constructor(
-                self._blocks.copy(),
-                index=self.index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True,
-                own_index=True,
-                own_columns=False, # all cases need new columns
-                )
-
-    def to_frame(self) -> Frame:
-        '''
-        Return :obj:`Frame` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(Frame)
-
-    def to_frame_he(self) -> 'FrameHE':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameHE) #type: ignore
-
-    def to_frame_go(self) -> 'FrameGO':
-        '''
-        Return a :obj:`FrameGO` version of this :obj:`FrameGO`.
-        '''
-        return self._to_frame(FrameGO) #type: ignore
-
-
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.
 
@@ -8382,6 +8905,9 @@ class FrameAssignILoc(FrameAssign):
         else:
             key = (self.key, None)
 
+        column_only = key[0] is None
+        column_is_multiple = key[1] is None or isinstance(key[1], KEY_MULTIPLE_TYPES)
+
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
                     key,
@@ -8402,11 +8928,21 @@ class FrameAssignILoc(FrameAssign):
                     key,
                     assigned,
                     )
-        else: # could be array or single element
-            assigned = value
+        elif (column_is_multiple
+                and not column_only
+                and not value.__class__ is np.ndarray
+                and hasattr(value, '__len__')
+                and not isinstance(value, str)
+                ):
+            # if column_only, we are expecting a "vertical" assignment, and use the by_unit interface
+            blocks = self.container._blocks.extract_iloc_assign_by_sequence(
+                    key,
+                    value,
+                    )
+        else: # could be array or single element, or an NP array, or an iterable to be used for a column
             blocks = self.container._blocks.extract_iloc_assign_by_unit(
                     key,
-                    assigned,
+                    value,
                     )
 
         return self.container.__class__(
@@ -8551,7 +9087,6 @@ class FrameAsType:
                 own_data=True,
                 )
 
-
 #-------------------------------------------------------------------------------
 class FrameHE(Frame):
     '''
@@ -8593,34 +9128,3 @@ class FrameHE(Frame):
                     tuple(self.columns),
                     ))
         return self._hash
-
-    def to_frame_he(self) -> 'FrameHE':
-        '''
-        Return :obj:`FrameHE` version of this :obj:`FrameHE`, which (as the :obj:`FrameHE` is immutable) is self.
-        '''
-        return self
-
-    def _to_frame(self,
-            constructor: tp.Type[Frame]
-            ) -> Frame:
-        return constructor(
-                self._blocks.copy(),
-                index=self.index,
-                columns=self._columns,
-                name=self._name,
-                own_data=True,
-                own_index=True,
-                own_columns=constructor is Frame,
-                )
-
-    def to_frame(self) -> Frame:
-        '''
-        Return obj:`Frame` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(Frame)
-
-    def to_frame_go(self) -> FrameGO:
-        '''
-        Return a obj:`FrameGO` version of this obj:`FrameHE`.
-        '''
-        return self._to_frame(FrameGO) #type: ignore [return-value]

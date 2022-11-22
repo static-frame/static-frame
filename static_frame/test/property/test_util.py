@@ -391,11 +391,13 @@ class TestUnit(TestCase):
 
     @given(get_arrays_2d_aligned_columns(min_size=2))
     def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        from static_frame.core.util import ManyToOneType
+
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
 
-        for union in (True, False):
-            post = util.ufunc_set_iter(arrays, union=union)
+        for mtot in (ManyToOneType.INTERSECT, ManyToOneType.UNION):
+            post = util.ufunc_set_iter(arrays, many_to_one_type=mtot)
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------

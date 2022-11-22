@@ -8,6 +8,7 @@ from collections import OrderedDict
 from enum import Enum
 from io import StringIO
 
+import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf
@@ -1511,7 +1512,7 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(
-                s1.assign.loc[['b', 'd']](3000).values.tolist(), #type: ignore
+                s1.assign.loc[['b', 'd']](3000).values.tolist(),
                 [0, 3000, 2, 3000])
 
         self.assertEqual(
@@ -1613,7 +1614,7 @@ class TestUnit(TestCase):
     def test_series_assign_j(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--') #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '--3--'))
                 )
@@ -1621,11 +1622,51 @@ class TestUnit(TestCase):
     def test_series_assign_k(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element_items( #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element_items(
                 lambda k, e: f'--{e}--' if k == 'b' else f'*{e}*')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
                 )
+
+    def test_series_assign_l(self) -> None:
+
+        p1 = Series(('a', 'b'))
+        q1 = Series(('c', 'd'))
+        post1 = p1.assign.loc[p1 == q1](q1)
+        self.assertEqual(post1.dtype, p1.dtype)
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 'b')))
+
+        p2 = Series(('a', 'b', 'c'))
+        q2 = Series(('c', 'd', 'e'))
+        post2 = p2.assign.loc[1:](q2)
+        self.assertEqual(post2.dtype, p2.dtype)
+        self.assertEqual(post2.to_pairs(), ((0, 'a'), (1, 'd'), (2, 'e')))
+
+        p3 = Series(('a', 'b', 'c'))
+        q3 = Series(('c',))
+        post3 = p3.assign.loc[1:](q3, fill_value='')
+        self.assertEqual(post3.dtype, p3.dtype)
+        self.assertEqual(post3.to_pairs(), ((0, 'a'), (1, ''), (2, '')))
+
+
+    def test_series_assign_m(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](range(3, 9, 3))
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 3), (2, 6)))
+
+
+    def test_series_assign_n(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](())
+        self.assertTrue(s1.equals(post1))
+
+        post2 = s1.assign.iloc[1:](np.array(()))
+        self.assertTrue(s1.equals(post2))
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -1722,6 +1763,17 @@ class TestUnit(TestCase):
         s2 = s1.loc[:]
         self.assertEqual(s2.to_pairs(),
             ((0, 'a'), (1, 'b'), (2, 'c')))
+
+    def test_series_loc_extract_k(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'), index=IndexYear((1542, 1834, 2022)))
+        self.assertEqual(s1[1542, 2022].to_pairs(),
+                ((np.datetime64('1542'), 'a'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[1834:].to_pairs(),
+                ((np.datetime64('1834'), 'b'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[2022], 'c')
 
     #---------------------------------------------------------------------------
 
@@ -2609,6 +2661,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((0, 10), (1, 20)))
 
+
+    def test_series_from_pandas_j(self) -> None:
+        import pandas as pd
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
+        pds = f1[ILoc[0]].to_pandas()
+        s1 = Series.from_pandas(pds)
+        self.assertEqual(s1.index.depth, 2)
+        self.assertEqual(s1.to_pairs(),
+                (((34715, 105269), False), ((34715, 119909), False)))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_to_pandas_a(self) -> None:
@@ -3119,6 +3182,21 @@ class TestUnit(TestCase):
             # RuntimeError: Attempting to create IndexDate from an IndexAutoFactory, which is generally not desired as the result will be an offset from the epoch.
             f1 = s1.to_frame(columns_constructor=IndexDate)
 
+    def test_series_to_frame_k(self) -> None:
+        from datetime import date
+        f = Frame.from_element(1, columns=IndexDate([date(2022, 9, 30)]), index=[1])
+        s = f[sf.ILoc[-1]]
+        f = s.to_frame(columns_constructor=sf.IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((np.datetime64('2022-09-30'), ((1, 1),)),)
+                )
+
+    def test_series_to_frame_l(self) -> None:
+        s1 = Series([1,2,3])
+        f1 = s1.rename('a').to_frame(name='b')
+        self.assertEqual(f1.name, 'b')
+        self.assertEqual(tuple(f1.columns), ('a',))
+
     #---------------------------------------------------------------------------
 
     def test_series_to_frame_go_a(self) -> None:
@@ -3382,6 +3460,15 @@ class TestUnit(TestCase):
         s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
         s2 = np.array([3, 34, 87, 145, 234, 543, 8234])
         self.assertAlmostEqualArray(s1.cov(s2), 9312581.904761903)
+
+    #---------------------------------------------------------------------------
+
+    def test_series_corr_a(self) -> None:
+
+        s1 = Series((3, 34, 87, 145, 234, 543, 8234), index=tuple('abcdefg'))
+        s2 = Series((145, 234, 3, 8234, 87, 543, 3), index=tuple('abcdefg'))
+        self.assertAlmostEqualArray(round(s1.corr(s2), 6), -0.191699)
+
 
     #---------------------------------------------------------------------------
 
@@ -3754,7 +3841,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_str_capitalize_a(self) -> None:
+    def test_series_str_capitalize_a1(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
         s2 = s1.via_str.capitalize()
 
@@ -3767,6 +3854,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(s4.to_pairs(),
             (('x', '20'), ('y', '30'))
+            )
+
+    def test_series_str_capitalize_a2(self) -> None:
+        s1 = Series((b'foo', b'bar'), index=('x', 'y'))
+        s2 = s1.via_str.capitalize()
+        self.assertEqual(s2.dtype, np.dtype('S3'))
+        self.assertEqual(s2.to_pairs(),
+            (('x', b'Foo'), ('y', b'Bar'))
             )
 
     def test_series_str_center_a(self) -> None:
@@ -4043,12 +4138,33 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'c'), (2, 'd'))
                 )
 
-    def test_series_str_contains_a(self) -> None:
+    def test_series_str_contains_a1(self) -> None:
         s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
         s2 = s1.via_str.contains('cd')
         self.assertEqual(s2.to_pairs(),
-                ((0, 'True'), (1, 'True'), (2, 'False'))
+                ((0, True), (1, True), (2, False))
                 )
+
+    def test_series_str_contains_a2(self) -> None:
+        s1 = Series([b'ab_cdldkj', b'cd_LKSJ', b'df_foooooo'])
+        s2 = s1.via_str.contains(b'cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, True), (1, True), (2, False))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_series_str_format_a(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format('{:.0%}')
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '667%'), (2, '1333%'), (3, '1667%')))
+
+    def test_series_str_format_b(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format(['{:.0%}', '{:.4}', 'p{:.1}', 'q{:.4}'])
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '6.667'), (2, 'p1e+01'), (3, 'q16.67')))
+
 
     #---------------------------------------------------------------------------
 
@@ -4509,7 +4625,7 @@ class TestUnit(TestCase):
                 )
 
     def test_series_enum_c(self) -> None:
-        # see: https://github.com/InvestmentSystems/static-frame/issues/239
+        # see: https://github.com/static-frame/static-frame/issues/239
 
         class Bar(str, Enum):
             a = 'a'
@@ -5380,6 +5496,41 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('b', 30), ('c', 20)),
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_from_delimited_a(self) -> None:
+        s1 = Series.from_delimited('3|5|23|3', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, 3), (1, 5), (2, 23), (3, 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+
+    def test_series_from_delimited_b(self) -> None:
+        s1 = Series.from_delimited('true||false|true', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, True), (1, False), (2, False), (3, True)),
+                )
+        self.assertEqual(s1.dtype.kind, 'b')
+
+
+    def test_series_from_delimited_c(self) -> None:
+        s1 = Series.from_delimited('2021-01:1517-04:1620-12', delimiter=':', dtype=np.datetime64)
+        self.assertEqual(s1.to_pairs(),
+                ((0, np.datetime64('2021-01')), (1, np.datetime64('1517-04')), (2, np.datetime64('1620-12'))),
+                )
+        self.assertEqual(s1.dtype.kind, 'M')
+
+    def test_series_from_delimited_d(self) -> None:
+        index = Index(('a', 'b', 'c', 'd'))
+        s1 = Series.from_delimited('3|5|23|3',
+                delimiter='|',
+                index=index,
+                own_index=True,
+                )
+        self.assertEqual(s1.to_pairs(),
+                (('a', 3), ('b', 5), ('c', 23), ('d', 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+        self.assertIs(s1.index, index)
 
 if __name__ == '__main__':
     import unittest
