@@ -1764,6 +1764,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
             ((0, 'a'), (1, 'b'), (2, 'c')))
 
+    def test_series_loc_extract_k(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'), index=IndexYear((1542, 1834, 2022)))
+        self.assertEqual(s1[1542, 2022].to_pairs(),
+                ((np.datetime64('1542'), 'a'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[1834:].to_pairs(),
+                ((np.datetime64('1834'), 'b'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[2022], 'c')
+
     #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:
