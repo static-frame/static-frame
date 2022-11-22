@@ -4,7 +4,7 @@ What is New in StaticFrame
 0.9.22
 ----------
 
-``IndexYear`` no accepts selection by integers for years.
+``IndexYear`` now accepts selection by integers for years.
 
 
 0.9.21
