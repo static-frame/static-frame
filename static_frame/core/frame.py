@@ -7103,6 +7103,9 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
+
+    #---------------------------------------------------------------------------
+
     def cov(self,
             *,
             axis: int = 1,
