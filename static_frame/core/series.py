@@ -2723,8 +2723,8 @@ class Series(ContainerOperand):
         values = ~isna_array(self.values)
         post = np.nonzero(values)[0]
         if len(post) == 0:
-            return fill_value
-        return self.index[post[0]] #type: ignore [unreachable]
+            return fill_value # type: ignore
+        return self.index[post[0]]
 
 
     #---------------------------------------------------------------------------
