@@ -867,9 +867,6 @@ class Index(IndexBase):
                     if is_array and key.dtype == DTYPE_BOOL: #type: ignore
                         raise # loc selection on Boolean array selection returns IndexError
                     raise KeyError(key) from e
-                # NOTE: not certain as to when a TypeError is raised here; might no longer be necessary
-                # except TypeError:
-                #     raise LocInvalid(f'Invalid loc: {key}')
 
                 return result # return position as array
 

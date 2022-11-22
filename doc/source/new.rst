@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+0.9.22
+----------
+
+``IndexYear`` now accepts selection by integers for years.
+
+
 0.9.21
 ----------
 
