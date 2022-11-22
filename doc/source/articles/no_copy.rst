@@ -2,6 +2,7 @@
 
 
 The Performance Advantage of No-Copy DataFrame Operations
+=================================================================
 
 
     As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. By adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas.

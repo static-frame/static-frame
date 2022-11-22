@@ -34,6 +34,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :maxdepth: 1
    :caption: Articles
 
+   articles/no_copy
    articles/uhoc
    articles/fill_value
    articles/upgrade
