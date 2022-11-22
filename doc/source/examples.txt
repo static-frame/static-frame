@@ -744,6 +744,66 @@ e        nan
 1
 #end_Series-iloc_min()
 
+#start_Series-iloc_notfalsy_first()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.iloc_notfalsy_first()
+2
+#end_Series-iloc_notfalsy_first()
+
+#start_Series-iloc_notfalsy_last()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.iloc_notfalsy_last()
+3
+#end_Series-iloc_notfalsy_last()
+
+#start_Series-iloc_notna_first()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.iloc_notna_first()
+1
+#end_Series-iloc_notna_first()
+
+#start_Series-iloc_notna_last()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.iloc_notna_last()
+2
+#end_Series-iloc_notna_last()
+
 #start_Series-iloc_searchsorted()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s
@@ -875,6 +935,66 @@ e        nan
 >>> s.loc_min()
 b
 #end_Series-loc_min()
+
+#start_Series-loc_notfalsy_first()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.loc_notfalsy_first()
+c
+#end_Series-loc_notfalsy_first()
+
+#start_Series-loc_notfalsy_last()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.loc_notfalsy_last()
+d
+#end_Series-loc_notfalsy_last()
+
+#start_Series-loc_notna_first()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.loc_notna_first()
+b
+#end_Series-loc_notna_first()
+
+#start_Series-loc_notna_last()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.loc_notna_last()
+c
+#end_Series-loc_notna_last()
 
 #start_Series-loc_searchsorted()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -5670,6 +5790,66 @@ e          nan
 1
 #end_SeriesHE-iloc_min()
 
+#start_SeriesHE-iloc_notfalsy_first()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.iloc_notfalsy_first()
+2
+#end_SeriesHE-iloc_notfalsy_first()
+
+#start_SeriesHE-iloc_notfalsy_last()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.iloc_notfalsy_last()
+3
+#end_SeriesHE-iloc_notfalsy_last()
+
+#start_SeriesHE-iloc_notna_first()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.iloc_notna_first()
+1
+#end_SeriesHE-iloc_notna_first()
+
+#start_SeriesHE-iloc_notna_last()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.iloc_notna_last()
+2
+#end_SeriesHE-iloc_notna_last()
+
 #start_SeriesHE-iloc_searchsorted()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s
@@ -5801,6 +5981,66 @@ e          nan
 >>> s.loc_min()
 b
 #end_SeriesHE-loc_min()
+
+#start_SeriesHE-loc_notfalsy_first()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.loc_notfalsy_first()
+c
+#end_SeriesHE-loc_notfalsy_first()
+
+#start_SeriesHE-loc_notfalsy_last()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.loc_notfalsy_last()
+d
+#end_SeriesHE-loc_notfalsy_last()
+
+#start_SeriesHE-loc_notna_first()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.loc_notna_first()
+b
+#end_SeriesHE-loc_notna_first()
+
+#start_SeriesHE-loc_notna_last()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.loc_notna_last()
+c
+#end_SeriesHE-loc_notna_last()
 
 #start_SeriesHE-loc_searchsorted()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -67699,13 +67939,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f999a8e8e50> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f999a7815e0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -67832,7 +68072,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f999a8ec040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -67894,7 +68134,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f999a8ec1f0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -70140,13 +70380,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f999a8e8e50> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f999a7815e0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -70273,7 +70513,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f999a8ec040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -70335,7 +70575,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f999a8ec1f0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -80310,7 +80550,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88bf3f2840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f98dc332140>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -80370,13 +80610,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88b5bc2340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f98f26fd8c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88cc2e0f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f98f26fd440>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
