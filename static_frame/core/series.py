@@ -2709,7 +2709,7 @@ class Series(ContainerOperand):
             *,
             return_label: bool,
             pos: int,
-            fill_value: tp.Any = np.nan,
+            fill_value: tp.Hashable = np.nan,
             func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> tp.Hashable:
         '''
@@ -2727,15 +2727,15 @@ class Series(ContainerOperand):
         target = ~func(self.values)
         post = np.nonzero(target)[pos]
         if len(post) == 0:
-            return fill_value # type: ignore
+            return fill_value
         if return_label:
             return self.index[post[pos]]
-        return post[pos]
+        return post[pos] #type: ignore
 
     # @doc_inject(selector='argminmax')
     def loc_notna_first(self,
             *,
-            fill_value: tp.Any = np.nan,
+            fill_value: tp.Hashable = np.nan,
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the first not NA (None or nan) value found.
@@ -2774,7 +2774,7 @@ class Series(ContainerOperand):
 
     def loc_notna_last(self,
             *,
-            fill_value: tp.Any = -1,
+            fill_value: tp.Hashable = -1,
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the last not NA (None or nan) value found.
@@ -2815,7 +2815,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     def loc_notfalsy_first(self,
             *,
-            fill_value: tp.Any = np.nan,
+            fill_value: tp.Hashable = np.nan,
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the first non-falsy (including nan) value found.
@@ -2856,7 +2856,7 @@ class Series(ContainerOperand):
 
     def loc_notfalsy_last(self,
             *,
-            fill_value: tp.Any = np.nan,
+            fill_value: tp.Hashable = np.nan,
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the last non-falsy (including nan) value found.
