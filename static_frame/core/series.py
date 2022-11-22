@@ -2703,6 +2703,32 @@ class Series(ContainerOperand):
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
 
+    #---------------------------------------------------------------------------
+
+    # @doc_inject(selector='argminmax')
+    def loc_notna_first(self,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the minimum value found.
+
+        Args:
+            {skipna}
+
+        Returns:
+            tp.Hashable
+        '''
+        # if skipna is False and a NaN is returned, this will raise
+        values = ~isna_array(self.values)
+        post = np.nonzero(values)[0]
+        if len(post) == 0:
+            return fill_value
+        return self.index[post[0]] #type: ignore [unreachable]
+
+
+    #---------------------------------------------------------------------------
+
     def cov(self,
             other: tp.Union['Series', np.ndarray],
             *,

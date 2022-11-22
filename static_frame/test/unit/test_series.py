@@ -5521,6 +5521,25 @@ class TestUnit(TestCase):
         self.assertEqual(s1.dtype.kind, 'i')
         self.assertIs(s1.index, index)
 
+
+    def test_series_loc_notna_first_a(self) -> None:
+        s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first()
+        self.assertEqual(post, 'c')
+
+
+    def test_series_loc_notna_first_b(self) -> None:
+        s1 = Series((1, 2, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first()
+        self.assertEqual(post, 'a')
+
+    def test_series_loc_notna_first_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first(fill_value=None)
+        self.assertEqual(post, None)
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
