@@ -11811,6 +11811,25 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_loc_notna_first_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        # self.assertEqual(f1.loc_notna_first().to_pairs(),
+        #         (('a', 'x'), ('b', 'z')))
+
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_cov_a(self) -> None:
         f1= Frame.from_dict(
                 dict(a=(3,2,1), b=(4,5,6)),

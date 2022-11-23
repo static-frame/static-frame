@@ -7014,6 +7014,8 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 )
 
+    #---------------------------------------------------------------------------
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
@@ -7103,6 +7105,49 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
+
+    #---------------------------------------------------------------------------
+    def loc_notna_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the minimum value found.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks._blocks:
+                bool_block = ~isna_array(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        target = blocks_to_array_2d(blocks(), shape=self.shape, dtype=DTYPE_BOOL)
+        iloc_row, iloc_col = np.nonzero(target)
+        # for axis 0, first: find the first entry for each row
+        # for axis 1, first: find the fitst entry for each col
+
+        # ipdb> target
+        # array([[False,  True,  True,  True],
+        #        [ True, False, False, False],
+        #        [ True, False,  True, False]])
+        # ipdb> np.nonzero(target)
+        # (array([0, 0, 0, 1, 2, 2]), array([1, 2, 3, 0, 0, 2]))
+        # ipdb> np.nonzero(target.T)
+        # (array([0, 0, 1, 2, 2, 3]), array([1, 2, 0, 0, 2, 0]))
+
+        import ipdb; ipdb.set_trace()
+        # post has been made immutable so Series will own
+        post = argmax_2d(target, axis=axis)
+        if axis == 0:
+            return Series(
+                    self.index.values[post],
+                    index=immutable_index_filter(self._columns)
+                    )
+
+        return Series(self.columns.values[post], index=self._index)
 
     #---------------------------------------------------------------------------
 

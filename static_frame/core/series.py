@@ -2725,7 +2725,7 @@ class Series(ContainerOperand):
         if not len(self.values):
             return fill_value
         target = ~func(self.values)
-        post = np.nonzero(target)[pos]
+        post = np.nonzero(target)[0]
         if len(post) == 0:
             return fill_value
         if return_label:
