@@ -1,5 +1,7 @@
 
 
+Combining PyObjects, Structs, and NumPy Arrays to Build a (Mostly) Faster-than-Pandas CSV Reader
+
 Building a Faster-than-Pandas CSV-to-NumPy Reader in C
 
 A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
