@@ -4,10 +4,11 @@
 The Performance Advantage of No-Copy DataFrame Operations
 =================================================================
 
+  How StaticFrame Can Outperform Pandas by Embracing NumPy Array Views
 
-    As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. By adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas.
 
-.. How StaticFrame Can Outperform Pandas by Embracing NumPy Array Views
+.. As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. By adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas.
+
 
 
 A NumPy array is a Python object that stores data in a contiguous C-array buffer. The excellent performance of these arrays comes not only from this compact representation, but also from the ability of arrays to share "views" of that buffer among many arrays. NumPy makes frequent use of "no-copy" array operations, producing derived arrays without copying underling data buffers. By taking full advantage of NumPy's efficiency, the StaticFrame DataFrame library offers orders-of-magnitude better performance than Pandas for many common operations.
@@ -186,6 +187,11 @@ It is common to concatenate two or more DataFrames. If they have the same index,
 1.16 ms ± 50.1 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 >>> %timeit pd.concat((df1, df2), axis=1)
 102 ms ± 14.4 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+
+Conclusion
+------------------------------------------------
 
 
 NumPy is designed to take advantage of sharing views of data. Because Pandas permits in-place mutation, it cannot make optimal use of NumPy array views. As StaticFrame is built on an immutable data model, side-effect mutation risk is eliminated and no-copy operations are embraced, providing a significant performance advantage.
