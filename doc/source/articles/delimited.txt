@@ -1,6 +1,9 @@
 
 
+
 Building a Faster-than-Pandas CSV-to-NumPy Reader in C
+
+Combining PyObjects, Structs, and NumPy Arrays to Build a (Mostly) Faster-than-Pandas CSV Reader
 
 A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
 
@@ -9,15 +12,67 @@ Building a (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Dty
 
 Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-Text-to-Numpy-Array Converter
 
-A Year-Long Project to Extend _csv.c to Build NumPy Arrays
 
 --
 
 CSV and related delimted text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and importable by countless applications and libraries.
 
-Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, columnar collections are needed. Second, no type information is included; if not explicitly provided by the caller, types must be left as strings or inferred.
+Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, types as grouped by column. Second, no type information is declared within the CSV; if not explicitly provided to the reader, types must be left as strings or inferred.
 
-While the Pandas CSV reader offers good performance, it does not support all NumPy array dtypes: NumPy datetime64, as well as NumPy Unicode strings, are not supported. For NumPy users, as well as alternate DataFrame libraries like StaticFrame, support for all dtypes is critcal.
+While NumPy's built-in ``genfromtxt`` and ``loadtxt`` partially meet this need, they both are insufficient for use with the full diversity of CSV files commonly encountered. While the Pandas CSV reader offers good performance, it is specialized for Pandas and does not support all NumPy array dtypes.
+
+This article will describe the implementation of a Python C-extension that extends the Python standard library's CSV reader to store Unicode code points in dynamic C-arrays per column. After the file is read, these C-arrays are read and converted to C-types that can be directly inserted into a new NumPy arrays buffer.
+
+
+Alternatives
+----------------
+
+Since XXX Python has shipped with a performant CSV parser, written as a C-extension. Python provides both a CSV reader and a CSV writer, with a broad host of configuration options to support the diversity of delimited file encodings. The reader is an iterator of lists of strings, representing the content parsed from each row. While very efficient for returning Python strings, converting these strings into Python types or NumPy arrays (by column) is very expensive.
+
+
+For many years Pandas ``read_csv()`` has offered excellent performance converting text formats to Pandas DataFrames. With over 50 parameters, it is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated.
+
+For general-purpose use with NumPy, however, it is insufficient: not all NumPy dtypes are supported. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
+
+>>> pd.read_csv(StringIO('a,b\nfoo,bar')).dtypes
+a    object
+b    object
+dtype: object
+>>> df = pd.read_csv(StringIO('a,b\nfoo,bar'), dtype=np.dtype('U3'))
+TypeError: the dtype <U3 is not supported for parsing
+
+
+Similarly, NumPy datetime64 dtypes cannot be provided; dates are interpreted, they are always interepreted in nanosecond units, even if that input string is clearly a date.
+
+>>> pd.read_csv(StringIO('a,b\n2022-01-02,1984-05-22'), dtype=np.datetime64)
+TypeError: the dtype datetime64 is not supported for parsing, pass this column using parse_dates instead
+>>> pd.read_csv(StringIO('a,b\n2022-01-02,1984-05-22'), parse_dates=[0, 1]).dtypes
+a    datetime64[ns]
+b    datetime64[ns]
+
+
+NumPy offers two resources for converting text to arrays: ``gnefromtxt()`` and ``loadtxt()``. As both are native to NumPy, both support all NumPy dtypes. The ``loadtxt()`` function, while recently reimplemented in C to offer good performance, does not support missing values. While the ``genfromtxt()`` function does support missing values, it is written in pure Python; its performance scales poorly with large CSV files.
+
+
+Implementation
+----------------
+
+
+
+
+
+Performance
+----------------
+
+
+
+
+
+
+
+
+
+
 
 
 

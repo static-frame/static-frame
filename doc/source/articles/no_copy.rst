@@ -4,8 +4,11 @@
 The Performance Advantage of No-Copy DataFrame Operations
 =================================================================
 
+  How StaticFrame Can Outperform Pandas by Embracing NumPy Array Views
 
-    As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. By adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas.
+
+.. As a significant performance optimization, NumPy arrays share memory among instances that are derived by reshaping, transposing, or slicing an array. By adding an immutable data model, StaticFrame makes full use of NumPy's memory sharing to offer no-copy DataFrame operations at significant performance advantage to Pandas.
+
 
 
 A NumPy array is a Python object that stores data in a contiguous C-array buffer. The excellent performance of these arrays comes not only from this compact representation, but also from the ability of arrays to share "views" of that buffer among many arrays. NumPy makes frequent use of "no-copy" array operations, producing derived arrays without copying underling data buffers. By taking full advantage of NumPy's efficiency, the StaticFrame DataFrame library offers orders-of-magnitude better performance than Pandas for many common operations.
@@ -20,6 +23,7 @@ NumPy makes no-copy operations the primary way of working with arrays. When you 
 
 For example, the difference between slicing an array of 100,000 integers (~0.1 µs), and slicing and then copying the same array (~10 µs), is two orders of magnitude.
 
+>>> import numpy as np
 >>> data = np.arange(100_000)
 >>> %timeit data[:50_000]
 123 ns ± 0.565 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
@@ -49,7 +53,7 @@ array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11])
 (140506320732848, 140506320732848)
 
 
-These derived arrays are "views" of the original array. Views can only be taken under certain conditions: re-shapping, transposing, or slicing.
+These derived arrays are "views" of the original array. Views can only be taken under certain conditions: reshaping, transposing, or slicing.
 
 For example, after reshaping the initial 1D array into a 2D array, ``OWNDATA`` is ``False``, showing that it still references the original array's data.
 
@@ -111,7 +115,7 @@ One option is for the caller to make explicit "defensive" copies every time a ne
 
 Another option, requiring no sacrifice in performance, is to make the array immutable. By doing so, views of arrays can be shared without concern of mutation causing unexpected side effects.
 
-A NumPy array can easily be made immutable by setting the ``writeable`` flag to ``False`` on the ``flags`` interface. After setting this value, the ``flags`` display shows ``WRITEABLE`` as ``False``, and attempting to mutate this array results in an exception.
+A NumPy array can easily be made immutable by setting the ``writeable`` flag to ``False`` on the ``flags`` interface. After setting this value, the ``flags`` display shows ``WRITEABLE`` as ``False`` and attempting to mutate this array results in an exception.
 
 >>> a1.flags.writeable = False
 >>> a1.flags
@@ -135,7 +139,7 @@ The best performance is possible, with no risk of side-effects, by embracing imm
 The Advantages of No-Copy DataFrame Operations
 ------------------------------------------------
 
-This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of data views (without having to make defensive copies) offers significant performance advantages. Without an immutable data model, Pandas cannot make such use of array views.
+This insight, that an immutable-array-based data model offers the best performance with the minimum risk, was foundational to the creation of the StaticFrame DataFrame library. As StaticFrame (like Pandas) manages data stored in NumPy arrays, embracing the usage of array views (without having to make defensive copies) offers significant performance advantages. Without an immutable data model, Pandas cannot make such use of array views.
 
 StaticFrame is not yet always faster than Pandas: Pandas has very performant operations for joins and other specialized transformations. But when leveraging no-copy array operations, StaticFrame can be a lot faster.
 
@@ -185,7 +189,12 @@ It is common to concatenate two or more DataFrames. If they have the same index,
 102 ms ± 14.4 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
-NumPy was designed to take advantage of sharing views of data. Because Pandas permits in-place mutation, it cannot make optimal use of NumPy views. As StaticFrame is built on an immutable data model, side-effect mutation risk is eliminated and no-copy operations are embraced, providing a significant performance advantage.
+
+Conclusion
+------------------------------------------------
+
+
+NumPy is designed to take advantage of sharing views of data. Because Pandas permits in-place mutation, it cannot make optimal use of NumPy array views. As StaticFrame is built on an immutable data model, side-effect mutation risk is eliminated and no-copy operations are embraced, providing a significant performance advantage.
 
 
 
