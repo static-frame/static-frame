@@ -7107,6 +7107,70 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
+    def _label_not_missing(self,
+            *,
+            axis: int,
+            return_label: bool,
+            shift: int,
+            fill_value: tp.Hashable = np.nan,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> Series:
+        '''
+        Args:
+            func: Array processor such as `isna_array`.
+            pos: 0 or -1
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks._blocks:
+                # func returns True for missing, invert for not missing
+                bool_block = ~func(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        target = blocks_to_array_2d(blocks(),
+                shape=self.shape,
+                dtype=DTYPE_BOOL,
+                )
+
+        if axis == 1:
+            primary, secondary = np.nonzero(target)
+        else:
+            primary, secondary = np.nonzero(target.T)
+
+        if not len(primary):
+            if axis == 0:
+                return Series.from_element(
+                        fill_value,
+                        index=immutable_index_filter(self._columns)
+                        )
+            return Series.from_element(fill_value, index=self._index)
+
+        pos = np.nonzero(primary != np.roll(primary, shift))[0]
+        unique_primary = np.unique(primary)
+        primary_covered = len(pos) == len(unique_primary)
+
+        # assert len(pos) == len(np.unique(primary))
+        if axis == 0:
+            labels_returned = self._columns
+            labels_opposite = self._index
+        else:
+            labels_returned = self._index
+            labels_opposite = self._columns
+
+        if primary_covered:
+            post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
+        else:
+            dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
+            post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
+
+        # import ipdb; ipdb.set_trace()
+        for p, s in zip(primary[pos], secondary[pos]):
+            post[p] = labels_opposite[s]
+
+        return Series(post, index=immutable_index_filter(labels_returned))
+
+
     def loc_notna_first(self, *,
             fill_value: tp.Hashable = np.nan,
             axis: int = 0
@@ -7118,36 +7182,32 @@ class Frame(ContainerOperand):
             {skipna}
             {axis}
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
-            for b in self._blocks._blocks:
-                bool_block = ~isna_array(b)
-                bool_block.flags.writeable = False
-                yield bool_block
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
 
-        target = blocks_to_array_2d(blocks(), shape=self.shape, dtype=DTYPE_BOOL)
-        iloc_row, iloc_col = np.nonzero(target)
-        # for axis 0, first: find the first entry for each row
-        # for axis 1, first: find the fitst entry for each col
+    def loc_notna_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the minimum value found.
 
-        # ipdb> target
-        # array([[False,  True,  True,  True],
-        #        [ True, False, False, False],
-        #        [ True, False,  True, False]])
-        # ipdb> np.nonzero(target)
-        # (array([0, 0, 0, 1, 2, 2]), array([1, 2, 3, 0, 0, 2]))
-        # ipdb> np.nonzero(target.T)
-        # (array([0, 0, 1, 2, 2, 3]), array([1, 2, 0, 0, 2, 0]))
-
-        import ipdb; ipdb.set_trace()
-        # post has been made immutable so Series will own
-        post = argmax_2d(target, axis=axis)
-        if axis == 0:
-            return Series(
-                    self.index.values[post],
-                    index=immutable_index_filter(self._columns)
-                    )
-
-        return Series(self.columns.values[post], index=self._index)
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
 
     #---------------------------------------------------------------------------
 

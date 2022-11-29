@@ -11823,8 +11823,25 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-        # self.assertEqual(f1.loc_notna_first().to_pairs(),
-        #         (('a', 'x'), ('b', 'z')))
+        self.assertEqual(f1.loc_notna_first().to_pairs(),
+                (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notna_last_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
 
 
 

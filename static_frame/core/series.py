@@ -2717,6 +2717,7 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
+            pos: 0 or -1
 
         Returns:
             tp.Hashable
