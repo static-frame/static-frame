@@ -163,6 +163,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
@@ -7164,7 +7165,6 @@ class Frame(ContainerOperand):
             dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
             post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
 
-        # import ipdb; ipdb.set_trace()
         for p, s in zip(primary[pos], secondary[pos]):
             post[p] = labels_opposite[s]
 
