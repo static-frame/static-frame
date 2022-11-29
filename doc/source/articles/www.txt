@@ -1,0 +1,4 @@
+
+
+
+While StaticFrame offers a variety of constructors to read CSV, XLSX, and a variety of other formats, all such interfaces take either a file path or a StringIO / BytesIO instasnce. While it is common to download resources from the internet, these interfaces do not accept a URL, as there are a number of options as to how a resource should be downloaded (i.e., to disk or in-memory). Static 0.9.19 introduces the `WWW` interface as drop-in replacement for file specifiers to StaticFrame constructors. With this interface, users can select if a download is just stored in memory, written to temporary files (that clean themselves up), or written to an arbitrary file path and persisted. In addition, resources for extracting single files from ZIP or GZIP archives are provided.
