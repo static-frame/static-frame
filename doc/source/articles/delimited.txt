@@ -27,17 +27,22 @@ This article will describe the implementation of a Python C-extension that exten
 Alternatives
 ----------------
 
-After first proposed in PEP 305 in 2003, Python 2.3 and later shipped with a performant CSV parser, written as a C-extension. One of the PEPs authors, Dave Cole, had since 2000 released a stand-alone C-extension CSV parser. The current Python implementation still bares similarity to the Cole implementation from over 20 years ago.
+Based on PEP 305 in 2003, a CSV parser, implemented as a C-extension, was first included with Python 2.3. Both reader and writer expose a variety of configuration options to support the diversity of delimited file formats.
 
-Python provides both a CSV reader and a CSV writer, with a broad host of configuration options to support the diversity of delimited file encodings. The reader is an iterator of lists of strings, representing the content parsed from each row. While very efficient for returning Python strings, converting these strings into Python types or NumPy arrays (by column) is very expensive.
+The reader returns an iterator of lists of strings, representing the content parsed from each row. While very efficient for returning Python strings, converting these strings into Python types or NumPy arrays (by column) is not addressed.
 
 >>> list(csv.reader(StringIO('a,b\nx,y')))
 [['a', 'b'], ['x', 'y']]
 
+The C-implementation of the reader implements a character by character state machine. The basic approach of this state machine, including some of the same naming, is found in many subsequent implementations.
 
-For many years Pandas ``read_csv()`` has offered excellent performance converting text formats to Pandas DataFrames. With over 50 parameters, it is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated.
+As CSV files commonly contain columnar-typed data, extending ``csv.reader`` to build arrays per column is a natural extension. Both NumPy and Pandas have offered resources to meet this need.
 
-For general-purpose use with NumPy, however, it is insufficient: not all NumPy dtypes are supported. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
+Pandas ``pd.read_csv()`` extended ``csv.reader`` to build array data suitable for returning a DataFrame, optionally automatically determining a type per column.
+
+With over 50 parameters, ``pd.read_csv()`` is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated, and other parameters, such as ``storage_options`` are only there to support network based input file retrieval.
+
+Pands ``pd.read_csv()`` is narrowly implemented for Pandas DataFrames. As not all NumPy dtypes are supported, it is not suitable for general-purpose use with NumPy. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
 
 >>> pd.read_csv(StringIO('a,b\nx,y')).dtypes
 a    object
@@ -47,7 +52,7 @@ dtype: object
 TypeError: the dtype <U3 is not supported for parsing
 
 
-Similarly, NumPy datetime64 dtypes cannot be provided; dates are interpreted, they are always interepreted in nanosecond units, even if that input string is clearly a date.
+Similarly, the full range of NumPy datetime64 units is not supported; if dates are interpreted, they are always interepreted in nanosecond units, even if the input string is clearly a date.
 
 >>> pd.read_csv(StringIO('a,b\n2022-01-02,1984-05-22'), dtype=np.datetime64)
 TypeError: the dtype datetime64 is not supported for parsing, pass this column using parse_dates instead
@@ -56,11 +61,33 @@ a    datetime64[ns]
 b    datetime64[ns]
 
 
-NumPy offers two resources for converting text to arrays: ``gnefromtxt()`` and ``loadtxt()``. As both are native to NumPy, both support all NumPy dtypes. The ``loadtxt()`` function, while recently reimplemented in C to offer good performance, does not support missing values. While the ``genfromtxt()`` function does support missing values, it is written in pure Python; its performance scales poorly with large CSV files.
+NumPy offers two functions for converting text to arrays: ``genfromtxt()`` and ``loadtxt()``. While both support all NumPy dtypes, neither is robust enough to handle the diversity and scale of delimited files widely used.
+
+The ``loadtxt()`` function, while recently reimplemented in C, does not support headers and requires types per column to be specified as structured arrays. It is designed more as a loader of output from the corresponding ``savetxt()`` than general purpose CSV reader. There is not support for automatic type discovery.
+
+>>> np.loadtxt((StringIO('a,b\nx,1.2\ny,nan')), dtype=[('a',str), ('b',float)], delimiter=',', skiprows=1, unpack=True)
+[array(['', ''], dtype='<U0'), array([1.2, nan])]
+
+While the ``genfromtxt()`` function offers broad flexibility for a range of delimited files and does support automatic type discovery, it is written in pure Python: its performance scales poorly with large CSV files.
+
+>>> np.genfromtxt((StringIO('a,b\nx,1.2\ny,nan')), dtype=None, delimiter=',', skip_header=1)
+array([(b'x', 1.2), (b'y', nan)], dtype=[('f0', 'S1'), ('f1', '<f8')])
 
 
 Implementation
 ----------------
+
+The core CSV file parsing and NumPy array creation is implemented in the C-extension function ``delimited_to_arrays``, part of the ArrayKit Python package. StaticFrame calls ``delimited_to_arrays`` to independently parse column labels and column data, and uses the returned NumPy arrays to build a complete ``Frame``.
+
+The key to achieving excellent performance in a Python CSV reader C-extension is avoiding ``PyObject`` creation and memory management as much as possible. This is achieved in the new ``delimited_to_arrays`` by using a family of C struct-based containers and C arrays of simple types. Then, when creating new NumPy arrays, values from those arrays are directly written to the underlying C-buffer (via ``PyArray_DATA``).
+
+In the tradition of Pandas and NumPy, ``delimited_to_arrays`` extends the state machine and supports the full configuration options of Pythons ``csv.reader()``.
+
+The key data flow of ``delimited_to_arrays`` is outlined in the figure 1, below.
+
+Fig 1
+
+
 
 
 
@@ -69,6 +96,13 @@ Implementation
 Performance
 ----------------
 
+
+
+
+
+==
+
+One of the PEPs authors, Dave Cole, had since 2000 released a stand-alone C-extension CSV parser. The current Python implementation still bares similarity to the Cole implementation from over 20 years ago.
 
 
 
