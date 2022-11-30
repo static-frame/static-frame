@@ -27,18 +27,23 @@ This article will describe the implementation of a Python C-extension that exten
 Alternatives
 ----------------
 
-Since XXX Python has shipped with a performant CSV parser, written as a C-extension. Python provides both a CSV reader and a CSV writer, with a broad host of configuration options to support the diversity of delimited file encodings. The reader is an iterator of lists of strings, representing the content parsed from each row. While very efficient for returning Python strings, converting these strings into Python types or NumPy arrays (by column) is very expensive.
+After first proposed in PEP 305 in 2003, Python 2.3 and later shipped with a performant CSV parser, written as a C-extension. One of the PEPs authors, Dave Cole, had since 2000 released a stand-alone C-extension CSV parser. The current Python implementation still bares similarity to the Cole implementation from over 20 years ago.
+
+Python provides both a CSV reader and a CSV writer, with a broad host of configuration options to support the diversity of delimited file encodings. The reader is an iterator of lists of strings, representing the content parsed from each row. While very efficient for returning Python strings, converting these strings into Python types or NumPy arrays (by column) is very expensive.
+
+>>> list(csv.reader(StringIO('a,b\nx,y')))
+[['a', 'b'], ['x', 'y']]
 
 
 For many years Pandas ``read_csv()`` has offered excellent performance converting text formats to Pandas DataFrames. With over 50 parameters, it is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated.
 
 For general-purpose use with NumPy, however, it is insufficient: not all NumPy dtypes are supported. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
 
->>> pd.read_csv(StringIO('a,b\nfoo,bar')).dtypes
+>>> pd.read_csv(StringIO('a,b\nx,y')).dtypes
 a    object
 b    object
 dtype: object
->>> df = pd.read_csv(StringIO('a,b\nfoo,bar'), dtype=np.dtype('U3'))
+>>> df = pd.read_csv(StringIO('a,b\nx,y'), dtype=np.dtype('U3'))
 TypeError: the dtype <U3 is not supported for parsing
 
 
