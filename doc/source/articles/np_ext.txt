@@ -1,0 +1,21 @@
+
+
+Writing C-Extensions to Extend Numpy
+
+Extending NumPy with C-Extensions
+
+Out-Performing NumPy is Hard: When a C-Extension Might Deliver Better Performance
+
+Out-Performing NumPy is Hard: Approaches to Writing C-Extensions
+
+
+While it is well-known that C-extensions can augment Python programs with compiled, high-performance routines, writing C-extensions that extend NumPy are different. Most NumPy functions fall-back on highly optimized C routines. Writing C-extensions that can out-perform NumPy is challenging. This presentation will cover the basic of writing C-extensions that process or create NumPy arrays.
+
+
+
+
+
+
+
+
+
