@@ -1841,6 +1841,26 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
             yield 'f'
             yield f"f.{attr_func}()"
+        elif attr in (
+                'iloc_notna_first()',
+                'iloc_notna_last()',
+                'loc_notna_first()',
+                'loc_notna_last()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
+            yield 'f'
+            yield f"f.{attr_func}(axis=0)"
+            yield f"f.{attr_func}(axis=1)"
+        elif attr in (
+                'iloc_notfalsy_first()',
+                'iloc_notfalsy_last()',
+                'loc_notfalsy_first()',
+                'loc_notfalsy_last()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_func}(axis=0)"
+            yield f"f.{attr_func}(axis=1)"
         elif attr in ('insert_before()', 'insert_after()'):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
