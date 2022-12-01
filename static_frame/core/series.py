@@ -2733,7 +2733,6 @@ class Series(ContainerOperand):
             return self.index[post[pos]]
         return post[pos] #type: ignore
 
-    # @doc_inject(selector='argminmax')
     def iloc_notna_first(self,
             *,
             fill_value: int = -1,

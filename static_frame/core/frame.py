@@ -7172,7 +7172,6 @@ class Frame(ContainerOperand):
         return Series(post, index=index)
 
 
-
     def iloc_notna_first(self, *,
             fill_value: int = -1,
             axis: int = 0
@@ -7249,6 +7248,82 @@ class Frame(ContainerOperand):
                 func=isna_array,
                 )
 
+    #---------------------------------------------------------------------------
+    def iloc_notfalsy_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
 
     #---------------------------------------------------------------------------
 
