@@ -3,6 +3,7 @@
 
 Building a Faster-than-Pandas CSV-to-NumPy Reader in C
 
+
 Combining PyObjects, Structs, and NumPy Arrays to Build a (Mostly) Faster-than-Pandas CSV Reader
 
 A (Mostly) Faster-than-Pandas CSV Reader with Support for All NumPy Array Types
@@ -15,13 +16,13 @@ Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-
 
 --
 
-CSV and related delimted text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and importable by countless applications and libraries.
+CSV and related delimited text file formats remain a necessary evil. While numerous high-performance binary alternatives exist (such as Parquet or NPZ), CSV is still popular: it is human readable, widely available, and importable by countless applications and libraries. While numerous CSV parses exist, none meet the needs of StaticFrame, a DataFrame library built on an immutable data model. This presentation details the implementation of Python C-extension that provides better-than-pandas performance while supporting all types of NumPy arrays.
 
-Using such text formats in DataFrame libraries is challenging. First, the data has to be read row by row, while ultimately, types as grouped by column. Second, no type information is declared within the CSV; if not explicitly provided to the reader, types must be left as strings or inferred.
+Importing such text formats in a DataFrame library raise two immediate challenges. First, the data has to be read row by row, while ultimately, data is organized and typed by column. Second, no type information is declared within the CSV; if not explicitly provided to the reader, types must be left as strings or inferred.
 
-While NumPy's built-in ``genfromtxt`` and ``loadtxt`` partially meet this need, they both are insufficient for use with the full diversity of CSV files commonly encountered. While the Pandas CSV reader offers good performance, it is specialized for Pandas and does not support all NumPy array dtypes.
+There have been many attempts to address this challenge. For nearly twenty years, the ``csv.reader`` within the Python standard library has provided high-performance parsing of delimited files, but does not infer or convert types, let alone build NumPy arrays. NumPy's built-in ``genfromtxt()`` and ``loadtxt()`` do not support the full diversity of CSV files commonly encountered. While the Pandas CSV reader offers good performance, it does not support all NumPy array dtypes.
 
-This article will describe the implementation of a Python C-extension that extends the Python standard library's CSV reader to store Unicode code points in dynamic C-arrays per column. After the file is read, these C-arrays are read and converted to C-types that can be directly inserted into a new NumPy arrays buffer.
+This new implementation extends the Python standard library's CSV reader to store Unicode code points in dynamic C-arrays per column. After the file is read, these C-arrays are read and converted to C-types that can be directly inserted into a new NumPy array buffers. I wide range of performance tests show significant out-performance compared to Pandas.
 
 
 Alternatives
@@ -77,25 +78,47 @@ array([(b'x', 1.2), (b'y', nan)], dtype=[('f0', 'S1'), ('f1', '<f8')])
 Implementation
 ----------------
 
-The core CSV file parsing and NumPy array creation is implemented in the C-extension function ``delimited_to_arrays``, part of the ArrayKit Python package. StaticFrame calls ``delimited_to_arrays`` to independently parse column labels and column data, and uses the returned NumPy arrays to build a complete ``Frame``.
-
-The key to achieving excellent performance in a Python CSV reader C-extension is avoiding ``PyObject`` creation and memory management as much as possible. This is achieved in the new ``delimited_to_arrays`` by using a family of C struct-based containers and C arrays of simple types. Then, when creating new NumPy arrays, values from those arrays are directly written to the underlying C-buffer (via ``PyArray_DATA``).
+The core CSV file parsing and NumPy array creation is implemented in the C-extension function ``delimited_to_arrays``, part of the ArrayKit Python package. StaticFrame calls ``delimited_to_arrays`` to independently parse column labels and column data, and uses the returned immutable NumPy arrays to build a complete ``Frame``.
 
 In the tradition of Pandas and NumPy, ``delimited_to_arrays`` extends the state machine and supports the full configuration options of Pythons ``csv.reader()``.
 
-The key data flow of ``delimited_to_arrays`` is outlined in the figure 1, below.
+The key to achieving excellent performance in a Python CSV reader C-extension is avoiding, as much as possible, ``PyObject`` creation and memory management. This is achieved in ``delimited_to_arrays`` by using a family of C struct containers and dynamic C arrays of simple types. Then, when creating new NumPy arrays, values from those C arrays are directly written to the NumPy array's underlying C-buffer (accessed via ``PyArray_DATA``).
 
-Fig 1
+The core C-struct containers are the dynamically-allocated CodePointGrid (CPG) and CodePointLine (CPL). The CPL is a struct containing two dynamically-allocated C-arrays: ``buffer``, or an array of Unicode code points (Py_UCS4), and ``offsets``, an array of ``Py_ssize_t``. Optionally, if type parsing is active, an additional struct is included in the CPL. Code points read from the delimited file, per column, are written to ``buffer``. At the end of each field, the number of code points in that field is written to ``offsets``. This approach permits rapid sequential access to field data without using null-terminators to partition fields. A CPG stores one or more CPLs, allocating new CPLs on demand. Figure 1 illustrates the contents of these containers.
 
+The processing stages of ``delimited_to_arrays`` is outlined in Figure 2. The input is an iterator of string "records". At initialization, a DelimitedReader is given that iterator, as well as access to a CodePointGrid. The first iteration stage parses the delimited file, calling into the CPG to append code points and offsets to the appropriate CPLs. After record iteration is complete, the second iteration stage converts CPL field data to C-types and writes them in the buffer of a NumPy array. The final output is a list of NumPy arrays.
 
+Figure 3 details the processing of each record in the DelimitedReader. For each code point in the record, a state is determined and the appropiate action taken. A simplified control flow is illustrated: if the code point is not the delimiter, CPG Append Point is called; else, CPG Append Offset is called. The full state machine implementation is far more complicated, handling configurable escaped and quoted values.
 
+Figure 4 details the CPG Append Point process. For the current field number, the CPG is evaluated to determine if a new CPL needs to be dynamically allocated. For the additional code point, the CPL is evaluated to determine if it needs to be resized. Next, if type parsing is activate, the code point is passed to the type parser's Process Char function. The type parsing routine is a simple heuristic approach based on the count of distinguishing characters, determining if a field is a string, float, complex, integer, or Boolean. Finally, the code point is appended to the CPL.
 
+Figure 5 details the CPG Append Offset process. Just as when appending code points, both the CPG and the CPL are evaluated to determine if they need to grow. If type parsing is active, a field type is determined; this field type is evaluated in the context of the line type to resolve a new line type. The offset is appended to the offsets buffer, and the maximum observed offsets is updated if necessary.
 
+The second iteration is bound within the CPG To Array List process. As shown in Figure 6, for each CPL, a dtype is determined. With the dtype and the number of offsets (equivalent to the number of elements in the array), an empty NumPy array of the appropriate dtype and size is created. Using the NumPy C-API's ``PyArray_DATA`` function, raw C array is accessed from the NumPy array. Iterating over offsets in the CPL, code points are converted to C-types with a family of custom functions, and then those C-types are written into the array data array. This loop happens without any creation or memory management of intermediary PyObjects.
+
+After CPL data is converted and written to the NumPy array, the array is appended to Python list. After all CPLs are processed, the Python list is returned to the user.
 
 
 Performance
 ----------------
 
+Too often cross-library performance studies use a single table for performance tests. Variation in table shape, as well as variation in columnar type heterogeneity, greatly alter performance, depending on underlying implementation details in DataFrame libraries.
+
+To evaluate the performance of ``delimited_to_arrays()``, and by extension StaticFrame's ``sf.Frame.from_delimited()``, comparison is made to Pandas ``pd.read_csv()``, with the C-engine enabled, across three different shapes of 100 million (1e8) elements: tall (1e5 x 1e3), square (1e4 x 1e4), and wide (1e3 x 1e5). For each of those three shapes, three types of type heterogeneity are evaluated: columnar (mixtures of floats, ints, strings, and Booleans per column), mixed (mixtures of types with some adjacent type similarity), and uniform (all float).
+
+For each DataFrame configuration under test, three approaches to handling type discovery are compared: automatic type detection (type parsing), no type detection (simply loading data as strings), and creation from explicitly provided dtypes.
+
+StaticFrame out-performs Pandas for all square and wide formations, for all approches to type discovery. For tall formations, StaticFrame type parsing is shown to be slightly slower than Pandas, but for all other type discvery approachs, StaticFrame is shown to be faster.
+
+Pandas is shown to be significantly slower in all cases where all data is returned as strings. This is likely due to Pandas returning object arrays of Python string objects, whereas StaticFrame returns NumPy Unicode arrays. The creation of Python objects creates creates significant overhead compared to just writing Unicode code points directly into a Unicode array.
+
+In the current implementation of ``delimited_to_arrays``, the second stage of iteration is done sequentially in one thread. As there is a CPL for each column, there might be thousands or hundreds of thousands of columns: converting them to NumPy arrays is a embarrassingly parallel problem. Future work to make this second iteration parallel will further improve performance.
+
+
+Conclusion
+-----------------------
+
+While NumPy's arrays provide high-performance processing, NumPy has not provided a robust, high-performance solution to creating arrays from delimited text files. The ArrayKit ``delimited_to_arrays`` process achieves this, with same level of configuribility as found in Python's ``csv.reader``. Employed in StaticFrame, delimited files can be realized as DataFrames significantly faster than Pandas default C-engine.
 
 
 
@@ -103,6 +126,29 @@ Performance
 ==
 
 One of the PEPs authors, Dave Cole, had since 2000 released a stand-alone C-extension CSV parser. The current Python implementation still bares similarity to the Cole implementation from over 20 years ago.
+
+
+
+==
+
+
+Past Experience
+
+    Please summarize your teaching or public speaking experience, as well as your experience with the subject. Provide links to one (or two!) previous presentations by each speaker. If you have any additional notes, they can be placed here as well.
+
+
+I have presented at numerous national and international conferences in many domains over the last twenty years, and taught as a university professor of music technology for six years, frequently teaching technical topics. I have presented at numerous PyData conferences and at one PyCon.
+
+I have been programming in Python since the year 2000, I have been writing production Python for financial systems for over ten years, and I am expert in NumPy, Pandas, StaticFrame, and DataFrame libraries in general.
+
+Examples of recent presentations:
+
+PyCon US 2022: "Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization": https://youtu.be/HLH5AwF-jx4
+
+PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://www.youtube.com/watch?v=jdnr7sgxCQI
+
+
+
 
 
 

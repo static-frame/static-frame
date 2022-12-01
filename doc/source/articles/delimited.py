@@ -28,8 +28,9 @@ class FileIOTest:
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fixture.to_csv(self.fp, include_index=False)
-        self.dtypes = dict(self.fixture.dtypes)
-        self.format = list(self.dtypes.items())
+        self.dtypes_sf = dict(self.fixture.dtypes)
+        self.dtypes_pd = {k: (v if v.kind != 'U' else str) for k, v in self.dtypes_sf.items()}
+        # self.format = list(self.dtypes.items())
 
     def __call__(self):
         raise NotImplementedError()
@@ -51,7 +52,7 @@ class SFStr(FileIOTest):
 class SFTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes)
+        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes_sf)
         assert f.shape == self.fixture.shape
 
 #-------------------------------------------------------------------------------
@@ -70,7 +71,7 @@ class PandasStr(FileIOTest):
 class PandasTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes)
+        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes_pd)
         assert f.shape == self.fixture.shape
 
 #-------------------------------------------------------------------------------
@@ -89,7 +90,7 @@ class PandasPyArrowStr(FileIOTest):
 class PandasPyArrowTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes)
+        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes_pd)
         assert f.shape == self.fixture.shape
 
 
@@ -110,30 +111,34 @@ class NumpyLoadtxtTypeParse(FileIOTest):
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fixture.fillna(0).to_csv(self.fp, include_index=False)
-        self.dtypes = dict(self.fixture.dtypes)
-        self.format = list(self.dtypes.items())
+        # self.dtypes = dict(self.fixture.dtypes)
+        # self.format = list(self.dtypes.items())
 
-    def __call__(self):
-        f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
+    # def __call__(self):
+    #     f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
 
 #-------------------------------------------------------------------------------
 NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
-FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
-FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_wide_columnar = f's({scale(100)},{scale(10_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+VALUES_UNIFORM = 'float'
+VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
+VALUES_COLUMNAR = 'int,bool,float,str'
+
+FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
+FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_wide_columnar = f's({scale(100)},{scale(10_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 
-FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v(float)|i(I,int)|c(I,str)'
-FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
+FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
-FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 #-------------------------------------------------------------------------------
 
