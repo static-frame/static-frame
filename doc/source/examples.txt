@@ -744,6 +744,66 @@ e        nan
 1
 #end_Series-iloc_min()
 
+#start_Series-iloc_notfalsy_first()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.iloc_notfalsy_first()
+2
+#end_Series-iloc_notfalsy_first()
+
+#start_Series-iloc_notfalsy_last()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.iloc_notfalsy_last()
+3
+#end_Series-iloc_notfalsy_last()
+
+#start_Series-iloc_notna_first()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.iloc_notna_first()
+1
+#end_Series-iloc_notna_first()
+
+#start_Series-iloc_notna_last()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.iloc_notna_last()
+2
+#end_Series-iloc_notna_last()
+
 #start_Series-iloc_searchsorted()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s
@@ -875,6 +935,66 @@ e        nan
 >>> s.loc_min()
 b
 #end_Series-loc_min()
+
+#start_Series-loc_notfalsy_first()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.loc_notfalsy_first()
+c
+#end_Series-loc_notfalsy_first()
+
+#start_Series-loc_notfalsy_last()
+>>> s = sf.Series(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a
+b
+c        19
+d        34
+e        None
+<<U1>    <object>
+>>> s.loc_notfalsy_last()
+d
+#end_Series-loc_notfalsy_last()
+
+#start_Series-loc_notna_first()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.loc_notna_first()
+b
+#end_Series-loc_notna_first()
+
+#start_Series-loc_notna_last()
+>>> s = sf.Series((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<Series>
+<Index>
+a        nan
+b        2.124
+c        8.734
+d        nan
+e        nan
+<<U1>    <float64>
+>>> s.loc_notna_last()
+c
+#end_Series-loc_notna_last()
 
 #start_Series-loc_searchsorted()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -5670,6 +5790,66 @@ e          nan
 1
 #end_SeriesHE-iloc_min()
 
+#start_SeriesHE-iloc_notfalsy_first()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.iloc_notfalsy_first()
+2
+#end_SeriesHE-iloc_notfalsy_first()
+
+#start_SeriesHE-iloc_notfalsy_last()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.iloc_notfalsy_last()
+3
+#end_SeriesHE-iloc_notfalsy_last()
+
+#start_SeriesHE-iloc_notna_first()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.iloc_notna_first()
+1
+#end_SeriesHE-iloc_notna_first()
+
+#start_SeriesHE-iloc_notna_last()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.iloc_notna_last()
+2
+#end_SeriesHE-iloc_notna_last()
+
 #start_SeriesHE-iloc_searchsorted()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
 >>> s
@@ -5801,6 +5981,66 @@ e          nan
 >>> s.loc_min()
 b
 #end_SeriesHE-loc_min()
+
+#start_SeriesHE-loc_notfalsy_first()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.loc_notfalsy_first()
+c
+#end_SeriesHE-loc_notfalsy_first()
+
+#start_SeriesHE-loc_notfalsy_last()
+>>> s = sf.SeriesHE(('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a
+b
+c          19
+d          34
+e          None
+<<U1>      <object>
+>>> s.loc_notfalsy_last()
+d
+#end_SeriesHE-loc_notfalsy_last()
+
+#start_SeriesHE-loc_notna_first()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.loc_notna_first()
+b
+#end_SeriesHE-loc_notna_first()
+
+#start_SeriesHE-loc_notna_last()
+>>> s = sf.SeriesHE((np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+>>> s
+<SeriesHE>
+<Index>
+a          nan
+b          2.124
+c          8.734
+d          nan
+e          nan
+<<U1>      <float64>
+>>> s.loc_notna_last()
+c
+#end_SeriesHE-loc_notna_last()
 
 #start_SeriesHE-loc_searchsorted()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -11607,6 +11847,118 @@ c        0
 <<U1>    <int64>
 #end_Frame-iloc_min()
 
+#start_Frame-iloc_notfalsy_first()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.iloc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        0
+q        0
+r        1
+s        2
+<<U1>    <int64>
+#end_Frame-iloc_notfalsy_first()
+
+#start_Frame-iloc_notfalsy_last()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.iloc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        3
+<<U1>    <int64>
+>>> f.iloc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        2
+q        1
+r        2
+s        2
+<<U1>    <int64>
+#end_Frame-iloc_notfalsy_last()
+
+#start_Frame-iloc_notna_first()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+0          10.0      8.0       1.0
+1          2.0       3.0       nan
+2          nan       8.0       nan
+3          nan       nan       nan
+<int64>    <float64> <float64> <float64>
+>>> f.iloc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_first(axis=1)
+<Series>
+<Index>
+0        0
+1        0
+2        1
+3        -1
+<int64>  <int64>
+#end_Frame-iloc_notna_first()
+
+#start_Frame-iloc_notna_last()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+0          10.0      8.0       1.0
+1          2.0       3.0       nan
+2          nan       8.0       nan
+3          nan       nan       nan
+<int64>    <float64> <float64> <float64>
+>>> f.iloc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_last(axis=1)
+<Series>
+<Index>
+0        2
+1        1
+2        1
+3        -1
+<int64>  <int64>
+#end_Frame-iloc_notna_last()
+
 #start_Frame-insert_after()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f2 = sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
@@ -11785,6 +12137,118 @@ b        1
 c        0
 <<U1>    <int64>
 #end_Frame-loc_min()
+
+#start_Frame-loc_notfalsy_first()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.loc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        p
+b        p
+c        p
+<<U1>    <<U1>
+>>> f.loc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        a
+q        a
+r        b
+s        c
+<<U1>    <<U1>
+#end_Frame-loc_notfalsy_first()
+
+#start_Frame-loc_notfalsy_last()
+>>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+p          10      8       1
+q          -2      -3      0
+r          0       8       9
+s          0       0       12
+<<U1>      <int64> <int64> <int64>
+>>> f.loc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        q
+b        r
+c        s
+<<U1>    <<U1>
+>>> f.loc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        c
+q        b
+r        c
+s        c
+<<U1>    <<U1>
+#end_Frame-loc_notfalsy_last()
+
+#start_Frame-loc_notna_first()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+0          10.0      8.0       1.0
+1          2.0       3.0       nan
+2          nan       8.0       nan
+3          nan       nan       nan
+<int64>    <float64> <float64> <float64>
+>>> f.loc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_first(axis=1)
+<Series>
+<Index>
+0        a
+1        a
+2        b
+3        nan
+<int64>  <object>
+#end_Frame-loc_notna_first()
+
+#start_Frame-loc_notna_last()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+0          10.0      8.0       1.0
+1          2.0       3.0       nan
+2          nan       8.0       nan
+3          nan       nan       nan
+<int64>    <float64> <float64> <float64>
+>>> f.loc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_last(axis=1)
+<Series>
+<Index>
+0        c
+1        b
+2        b
+3        nan
+<int64>  <object>
+#end_Frame-loc_notna_last()
 
 #start_Frame-max()
 >>> f = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -19139,6 +19603,118 @@ c        0
 <<U1>    <int64>
 #end_FrameHE-iloc_min()
 
+#start_FrameHE-iloc_notfalsy_first()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.iloc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        0
+q        0
+r        1
+s        2
+<<U1>    <int64>
+#end_FrameHE-iloc_notfalsy_first()
+
+#start_FrameHE-iloc_notfalsy_last()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.iloc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        3
+<<U1>    <int64>
+>>> f.iloc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        2
+q        1
+r        2
+s        2
+<<U1>    <int64>
+#end_FrameHE-iloc_notfalsy_last()
+
+#start_FrameHE-iloc_notna_first()
+>>> f = sf.FrameHE.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.iloc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_first(axis=1)
+<Series>
+<Index>
+0        0
+1        0
+2        1
+3        -1
+<int64>  <int64>
+#end_FrameHE-iloc_notna_first()
+
+#start_FrameHE-iloc_notna_last()
+>>> f = sf.FrameHE.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.iloc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_last(axis=1)
+<Series>
+<Index>
+0        2
+1        1
+2        1
+3        -1
+<int64>  <int64>
+#end_FrameHE-iloc_notna_last()
+
 #start_FrameHE-insert_after()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f2 = sf.FrameHE((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
@@ -19317,6 +19893,118 @@ b        1
 c        0
 <<U1>    <int64>
 #end_FrameHE-loc_min()
+
+#start_FrameHE-loc_notfalsy_first()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.loc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        p
+b        p
+c        p
+<<U1>    <<U1>
+>>> f.loc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        a
+q        a
+r        b
+s        c
+<<U1>    <<U1>
+#end_FrameHE-loc_notfalsy_first()
+
+#start_FrameHE-loc_notfalsy_last()
+>>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.loc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        q
+b        r
+c        s
+<<U1>    <<U1>
+>>> f.loc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        c
+q        b
+r        c
+s        c
+<<U1>    <<U1>
+#end_FrameHE-loc_notfalsy_last()
+
+#start_FrameHE-loc_notna_first()
+>>> f = sf.FrameHE.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.loc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_first(axis=1)
+<Series>
+<Index>
+0        a
+1        a
+2        b
+3        nan
+<int64>  <object>
+#end_FrameHE-loc_notna_first()
+
+#start_FrameHE-loc_notna_last()
+>>> f = sf.FrameHE.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.loc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_last(axis=1)
+<Series>
+<Index>
+0        c
+1        b
+2        b
+3        nan
+<int64>  <object>
+#end_FrameHE-loc_notna_last()
 
 #start_FrameHE-max()
 >>> f = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -26670,6 +27358,118 @@ c        0
 <<U1>    <int64>
 #end_FrameGO-iloc_min()
 
+#start_FrameGO-iloc_notfalsy_first()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.iloc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        0
+q        0
+r        1
+s        2
+<<U1>    <int64>
+#end_FrameGO-iloc_notfalsy_first()
+
+#start_FrameGO-iloc_notfalsy_last()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.iloc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        3
+<<U1>    <int64>
+>>> f.iloc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        2
+q        1
+r        2
+s        2
+<<U1>    <int64>
+#end_FrameGO-iloc_notfalsy_last()
+
+#start_FrameGO-iloc_notna_first()
+>>> f = sf.FrameGO.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.iloc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_first(axis=1)
+<Series>
+<Index>
+0        0
+1        0
+2        1
+3        -1
+<int64>  <int64>
+#end_FrameGO-iloc_notna_first()
+
+#start_FrameGO-iloc_notna_last()
+>>> f = sf.FrameGO.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.iloc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.iloc_notna_last(axis=1)
+<Series>
+<Index>
+0        2
+1        1
+2        1
+3        -1
+<int64>  <int64>
+#end_FrameGO-iloc_notna_last()
+
 #start_FrameGO-insert_after()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f2 = sf.FrameGO((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
@@ -26848,6 +27648,118 @@ b        1
 c        0
 <<U1>    <int64>
 #end_FrameGO-loc_min()
+
+#start_FrameGO-loc_notfalsy_first()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.loc_notfalsy_first(axis=0)
+<Series>
+<Index>
+a        p
+b        p
+c        p
+<<U1>    <<U1>
+>>> f.loc_notfalsy_first(axis=1)
+<Series>
+<Index>
+p        a
+q        a
+r        b
+s        c
+<<U1>    <<U1>
+#end_FrameGO-loc_notfalsy_first()
+
+#start_FrameGO-loc_notfalsy_last()
+>>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+p            10      8       1
+q            -2      -3      0
+r            0       8       9
+s            0       0       12
+<<U1>        <int64> <int64> <int64>
+>>> f.loc_notfalsy_last(axis=0)
+<Series>
+<Index>
+a        q
+b        r
+c        s
+<<U1>    <<U1>
+>>> f.loc_notfalsy_last(axis=1)
+<Series>
+<Index>
+p        c
+q        b
+r        c
+s        c
+<<U1>    <<U1>
+#end_FrameGO-loc_notfalsy_last()
+
+#start_FrameGO-loc_notna_first()
+>>> f = sf.FrameGO.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.loc_notna_first(axis=0)
+<Series>
+<Index>
+a        0
+b        0
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_first(axis=1)
+<Series>
+<Index>
+0        a
+1        a
+2        b
+3        nan
+<int64>  <object>
+#end_FrameGO-loc_notna_first()
+
+#start_FrameGO-loc_notna_last()
+>>> f = sf.FrameGO.from_fields(((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+0            10.0      8.0       1.0
+1            2.0       3.0       nan
+2            nan       8.0       nan
+3            nan       nan       nan
+<int64>      <float64> <float64> <float64>
+>>> f.loc_notna_last(axis=0)
+<Series>
+<Index>
+a        1
+b        2
+c        0
+<<U1>    <int64>
+>>> f.loc_notna_last(axis=1)
+<Series>
+<Index>
+0        c
+1        b
+2        b
+3        nan
+<int64>  <object>
+#end_FrameGO-loc_notna_last()
 
 #start_FrameGO-max()
 >>> f = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -36552,7 +37464,7 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.loc_to_iloc('d')
 ValueError('Error parsing datetime string "d" at position 0')
 >>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
+ValueError('Error parsing datetime string "a" at position 0')
 >>> ix.loc_to_iloc(slice('c', None))
 ValueError('Error parsing datetime string "c" at position 0')
 #end_IndexYear-loc_to_iloc()
@@ -38273,7 +39185,7 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.loc_to_iloc('d')
 ValueError('Error parsing datetime string "d" at position 0')
 >>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
+ValueError('Error parsing datetime string "a" at position 0')
 >>> ix.loc_to_iloc(slice('c', None))
 ValueError('Error parsing datetime string "c" at position 0')
 #end_IndexYearGO-loc_to_iloc()
@@ -67699,13 +68611,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f144be96e50> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f144bd2f5e0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -67832,7 +68744,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f144be9a040>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -67894,7 +68806,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f144be9a1f0>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -70140,13 +71052,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f89741a9e50> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7f144be96e50> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f89740465e0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7f144bd2f5e0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -70273,7 +71185,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f89741b1040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7f144be9a040>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -70335,7 +71247,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f89741b11f0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7f144be9a1f0>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -80310,7 +81222,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88bf3f2840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f138e957bc0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -80370,13 +81282,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88b5bc2340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f1397021b40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f88cc2e0f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f13a3d07cc0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]

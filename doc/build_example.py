@@ -64,11 +64,14 @@ SERIES_INIT_G = dict(values=(8, 5, None, 8), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_H = dict(values=('q', 'r', '', 's'), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_I = dict(values=('', '', 'r', 's'), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_J = dict(values=('p', 'q', '', ''), index=('a', 'b', 'c', 'd'))
-SERIES_INIT_K = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_L = dict(values=(np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_M = dict(values=(10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_K1 = dict(values=(10.235, 2.124, np.nan, 8.734, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_K2 = dict(values=(np.nan, np.nan, 10.235, 2.124, 8.734), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_K3 = dict(values=(10.235, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_K4 = dict(values=(np.nan, 2.124, 8.734, np.nan, np.nan), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_N = dict(values=(2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_O = dict(values=(2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_O1 = dict(values=(2, '', 19, 0, None), index=('a', 'b', 'c', 'd', 'e'))
+SERIES_INIT_O2 = dict(values=('', '', 19, 34, None), index=('a', 'b', 'c', 'd', 'e'))
+
 SERIES_INIT_P = dict(values=(8, 5, 0, 8), index=('a', 'b', 'c', 'd'))
 SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
 SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
@@ -749,30 +752,30 @@ class ExGenSeries(ExGen):
             yield 's'
             yield f"s.{attr_func}('missing')"
         elif attr == 'fillna()':
-            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K1)})'
             yield 's'
             yield f"s.{attr_func}(0.0)"
         elif attr == 'fillna_backward()':
-            yield f's = {icls}({kwa(SERIES_INIT_L)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K2)})'
             yield 's'
             yield f"s.{attr_func}()"
         elif attr == 'fillna_forward()':
-            yield f's = {icls}({kwa(SERIES_INIT_M)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K3)})'
             yield 's'
             yield f"s.{attr_func}()"
         elif attr == 'fillna_leading()':
-            yield f's = {icls}({kwa(SERIES_INIT_L)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K2)})'
             yield 's'
             yield f"s.{attr_func}(0.0)"
         elif attr == 'fillna_trailing()':
-            yield f's = {icls}({kwa(SERIES_INIT_M)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K3)})'
             yield 's'
             yield f"s.{attr_func}(0.0)"
         elif attr in (
                 'head()',
                 'tail()',
                 ):
-            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K1)})'
             yield 's'
             yield f"s.{attr_func}(2)"
         elif attr in (
@@ -783,7 +786,25 @@ class ExGenSeries(ExGen):
                 'isna()',
                 'notna()',
                 ):
-            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K1)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr in (
+                'iloc_notna_first()',
+                'iloc_notna_last()',
+                'loc_notna_first()',
+                'loc_notna_last()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_K4)})'
+            yield 's'
+            yield f"s.{attr_func}()"
+        elif attr in (
+                'iloc_notfalsy_first()',
+                'iloc_notfalsy_last()',
+                'loc_notfalsy_first()',
+                'loc_notfalsy_last()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_O2)})'
             yield 's'
             yield f"s.{attr_func}()"
         elif attr in (
@@ -801,11 +822,11 @@ class ExGenSeries(ExGen):
                 'isfalsy()',
                 'notfalsy()',
                 ):
-            yield f's = {icls}({kwa(SERIES_INIT_O)})'
+            yield f's = {icls}({kwa(SERIES_INIT_O1)})'
             yield 's'
             yield f"s.{attr_func}()"
         elif attr == 'isin()':
-            yield f's = {icls}({kwa(SERIES_INIT_O)})'
+            yield f's = {icls}({kwa(SERIES_INIT_O1)})'
             yield f"s.{attr_func}((2, 19))"
         elif attr in (
                 'rank_dense()',
@@ -863,7 +884,7 @@ class ExGenSeries(ExGen):
             yield 's'
             yield f"s.{attr_func}('y')"
         elif attr == 'sample()':
-            yield f's = {icls}({kwa(SERIES_INIT_K)})'
+            yield f's = {icls}({kwa(SERIES_INIT_K1)})'
             yield 's'
             yield f"s.{attr_func}(2, seed=0)"
         else:
@@ -1820,6 +1841,26 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
             yield 'f'
             yield f"f.{attr_func}()"
+        elif attr in (
+                'iloc_notna_first()',
+                'iloc_notna_last()',
+                'loc_notna_first()',
+                'loc_notna_last()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'
+            yield 'f'
+            yield f"f.{attr_func}(axis=0)"
+            yield f"f.{attr_func}(axis=1)"
+        elif attr in (
+                'iloc_notfalsy_first()',
+                'iloc_notfalsy_last()',
+                'loc_notfalsy_first()',
+                'loc_notfalsy_last()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f"f.{attr_func}(axis=0)"
+            yield f"f.{attr_func}(axis=1)"
         elif attr in ('insert_before()', 'insert_after()'):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'

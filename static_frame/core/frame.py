@@ -163,6 +163,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
@@ -7014,6 +7015,8 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 )
 
+    #---------------------------------------------------------------------------
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
@@ -7102,6 +7105,229 @@ class Frame(ContainerOperand):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+
+    #---------------------------------------------------------------------------
+    def _label_not_missing(self,
+            *,
+            axis: int,
+            return_label: bool,
+            shift: int,
+            fill_value: tp.Hashable = np.nan,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> Series:
+        '''
+        Args:
+            func: Array processor such as `isna_array`.
+            pos: 0 or -1
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks._blocks:
+                # func returns True for missing, invert for not missing
+                bool_block = ~func(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        target = blocks_to_array_2d(blocks(),
+                shape=self.shape,
+                dtype=DTYPE_BOOL,
+                )
+        # assert len(pos) == len(np.unique(primary))
+        if axis == 0:
+            labels_returned = self._columns
+            labels_opposite = self._index
+            primary, secondary = np.nonzero(target.T)
+        else:
+            labels_returned = self._index
+            labels_opposite = self._columns
+            primary, secondary = np.nonzero(target)
+
+        index = immutable_index_filter(labels_returned)
+
+        if not len(primary):
+            return Series.from_element(fill_value,
+                    index=index,
+                    own_index=True,
+                    )
+        pos = np.nonzero(primary != np.roll(primary, shift))[0]
+        if not return_label:
+            post = np.full(shape=len(labels_returned),
+                    fill_value=fill_value,
+                    dtype=DTYPE_INT_DEFAULT,
+                    )
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = s
+        else:
+            primary_covered = len(labels_returned) == len(np.unique(primary))
+
+            if primary_covered:
+                post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
+            else:
+                dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
+                post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
+
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = labels_opposite[s]
+
+        post.flags.writeable = False
+        return Series(post, index=index, own_index=True)
+
+
+    def iloc_notna_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the first non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the last non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    #---------------------------------------------------------------------------
+    def iloc_notfalsy_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    #---------------------------------------------------------------------------
 
     def cov(self,
             *,
