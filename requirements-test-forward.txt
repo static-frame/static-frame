@@ -14,7 +14,7 @@ openpyxl==3.0.9
 xarray==0.21.1
 # tables==3.7.0 # NOTE: does not yet work for Python 3.11
 git+https://github.com/PyTables/PyTables.git@v3.7.0
-pyarrow==10.0.0
+pyarrow==10.0.1
 msgpack==1.0.3
 msgpack-numpy==0.4.7.1
 frame-fixtures==0.2.1
