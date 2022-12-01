@@ -7157,7 +7157,7 @@ class Frame(ContainerOperand):
             for p, s in zip(primary[pos], secondary[pos]):
                 post[p] = s
         else:
-            primary_covered = len(pos) == len(np.unique(primary))
+            primary_covered = len(labels_returned) == len(np.unique(primary))
 
             if primary_covered:
                 post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
