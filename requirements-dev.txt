@@ -7,7 +7,7 @@ pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.5.4
 mypy==0.971
-invoke==1.4.0
+invoke==1.7.3
 
 pylint==2.15.0
 isort==5.10.1
