@@ -7146,8 +7146,10 @@ class Frame(ContainerOperand):
         index = immutable_index_filter(labels_returned)
 
         if not len(primary):
-            return Series.from_element(fill_value, index=index)
-
+            return Series.from_element(fill_value,
+                    index=index,
+                    own_index=True,
+                    )
         pos = np.nonzero(primary != np.roll(primary, shift))[0]
         if not return_label:
             post = np.full(shape=len(labels_returned),
@@ -7169,7 +7171,7 @@ class Frame(ContainerOperand):
                 post[p] = labels_opposite[s]
 
         post.flags.writeable = False
-        return Series(post, index=index)
+        return Series(post, index=index, own_index=True)
 
 
     def iloc_notna_first(self, *,

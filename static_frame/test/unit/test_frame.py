@@ -11865,6 +11865,24 @@ class TestUnit(TestCase):
                 (('a', None), ('b', 'x'), ('c', 'x'), ('d', 'x'))
                 )
 
+    def test_frame_loc_notna_d(self) -> None:
+
+        records = (
+                (None, None, None, None),
+                (None, None, None, None),
+                (None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=0).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None)))
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=1).to_pairs(),
+                (('x', None), ('y', None), ('z', None)))
+
     def test_frame_iloc_notna_a(self) -> None:
 
         records = (

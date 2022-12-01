@@ -5548,6 +5548,10 @@ class TestUnit(TestCase):
         post = s1.loc_notna_first(fill_value=None)
         self.assertEqual(post, None)
 
+    def test_series_loc_notna_first_d(self) -> None:
+        s1 = Series(())
+        self.assertEqual(s1.loc_notna_first(fill_value=None), None)
+
     #---------------------------------------------------------------------------
     def test_series_iloc_notna_first_a(self) -> None:
         s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
