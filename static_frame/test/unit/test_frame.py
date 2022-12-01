@@ -11811,7 +11811,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_loc_notna_first_a(self) -> None:
+    def test_frame_loc_notna_a(self) -> None:
 
         records = (
                 (np.nan, 2, 5, 4),
@@ -11826,8 +11826,30 @@ class TestUnit(TestCase):
         self.assertEqual(f1.loc_notna_first().to_pairs(),
                 (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
                 )
+        self.assertEqual(f1.loc_notna_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
 
-    def test_frame_loc_notna_last_a(self) -> None:
+    def test_frame_loc_notna_b(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_first(axis=1).to_pairs(),
+                (('x', 'b'), ('y', 'a'), ('z', 'a'))
+                )
+        self.assertEqual(f1.loc_notna_last(axis=1).to_pairs(),
+                (('x', 'd'), ('y', 'b'), ('z', 'd'))
+                )
+
+    def test_frame_iloc_notna_a(self) -> None:
 
         records = (
                 (np.nan, 2, 5, 4),
@@ -11839,11 +11861,31 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-        self.assertEqual(f1.loc_notna_last().to_pairs(),
-                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+        self.assertEqual(f1.iloc_notna_first().to_pairs(),
+                (('a', 1), ('b', 0), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last().to_pairs(),
+                (('a', 2), ('b', 0), ('c', 2), ('d', 0))
                 )
 
+    def test_frame_iloc_notna_b(self) -> None:
 
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notna_first(axis=1).to_pairs(),
+                (('x', 1), ('y', 0), ('z', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last(axis=1).to_pairs(),
+                (('x', 3), ('y', 1), ('z', 3))
+                )
 
     #---------------------------------------------------------------------------
 

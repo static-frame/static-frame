@@ -2734,25 +2734,6 @@ class Series(ContainerOperand):
         return post[pos] #type: ignore
 
     # @doc_inject(selector='argminmax')
-    def loc_notna_first(self,
-            *,
-            fill_value: tp.Hashable = np.nan,
-            ) -> tp.Hashable:
-        '''
-        Return the label corresponding to the first not NA (None or nan) value found.
-
-        Args:
-            {fill_value}
-
-        Returns:
-            tp.Hashable
-        '''
-        return self._label_not_missing(
-                return_label=True,
-                pos=0,
-                fill_value=fill_value,
-                func=isna_array,
-                )
     def iloc_notna_first(self,
             *,
             fill_value: int = -1,
@@ -2768,6 +2749,46 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=False,
+                pos=0,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the last not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=-1,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_first(self,
+            *,
+            fill_value: tp.Hashable = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
                 pos=0,
                 fill_value=fill_value,
                 func=isna_array,
@@ -2793,25 +2814,6 @@ class Series(ContainerOperand):
                 func=isna_array,
                 )
 
-    def iloc_notna_last(self,
-            *,
-            fill_value: int = -1,
-            ) -> tp.Hashable:
-        '''
-        Return the position corresponding to the last not NA (None or nan) value found.
-
-        Args:
-            {fill_value}
-
-        Returns:
-            tp.Hashable
-        '''
-        return self._label_not_missing(
-                return_label=False,
-                pos=-1,
-                fill_value=fill_value,
-                func=isna_array,
-                )
 
     #---------------------------------------------------------------------------
     def loc_notfalsy_first(self,

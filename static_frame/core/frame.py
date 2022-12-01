@@ -7143,31 +7143,80 @@ class Frame(ContainerOperand):
             labels_opposite = self._columns
             primary, secondary = np.nonzero(target)
 
+        index = immutable_index_filter(labels_returned)
+
         if not len(primary):
-            return Series.from_element(fill_value, index=immutable_index_filter(labels_returned))
+            return Series.from_element(fill_value, index=index)
 
         pos = np.nonzero(primary != np.roll(primary, shift))[0]
-        unique_primary = np.unique(primary)
-        primary_covered = len(pos) == len(unique_primary)
-
-        if primary_covered:
-            post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
+        if not return_label:
+            post = np.full(shape=len(labels_returned),
+                    fill_value=fill_value,
+                    dtype=DTYPE_INT_DEFAULT,
+                    )
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = s
         else:
-            dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
-            post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
+            primary_covered = len(pos) == len(np.unique(primary))
 
-        for p, s in zip(primary[pos], secondary[pos]):
-            post[p] = labels_opposite[s]
+            if primary_covered:
+                post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
+            else:
+                dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
+                post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
 
-        return Series(post, index=immutable_index_filter(labels_returned))
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = labels_opposite[s]
 
+        post.flags.writeable = False
+        return Series(post, index=index)
+
+
+
+    def iloc_notna_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
 
     def loc_notna_first(self, *,
             fill_value: tp.Hashable = np.nan,
             axis: int = 0
             ) -> Series:
         '''
-        Return the labels corresponding to the minimum value found.
+        Return the labels corresponding to the first non-missing values along the selected axis.
 
         Args:
             {skipna}
@@ -7186,7 +7235,7 @@ class Frame(ContainerOperand):
             axis: int = 0
             ) -> Series:
         '''
-        Return the labels corresponding to the minimum value found.
+        Return the labels corresponding to the last non-missing values along the selected axis.
 
         Args:
             {skipna}
@@ -7199,6 +7248,7 @@ class Frame(ContainerOperand):
                 fill_value=fill_value,
                 func=isna_array,
                 )
+
 
     #---------------------------------------------------------------------------
 
