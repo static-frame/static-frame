@@ -6,6 +6,12 @@ What is New in StaticFrame
 
 ``IndexYear`` now accepts selection by integers for years.
 
+Added ``Series.loc_notna_first()``, ``Series.loc_notna_last()``, ``Series.loc_notfalsy_first()``, ``Series.loc_notfalsy_last()``.
+
+Added ``Frame.loc_notna_first()``, ``Frame.loc_notna_last()``, ``Frame.loc_notfalsy_first()``, ``Frame.loc_notfalsy_last()``.
+
+Set ``arraykit`` version to 0.2.4.
+
 
 0.9.21
 ----------
