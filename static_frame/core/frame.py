@@ -7133,31 +7133,22 @@ class Frame(ContainerOperand):
                 shape=self.shape,
                 dtype=DTYPE_BOOL,
                 )
-
-        if axis == 1:
-            primary, secondary = np.nonzero(target)
-        else:
-            primary, secondary = np.nonzero(target.T)
-
-        if not len(primary):
-            if axis == 0:
-                return Series.from_element(
-                        fill_value,
-                        index=immutable_index_filter(self._columns)
-                        )
-            return Series.from_element(fill_value, index=self._index)
-
-        pos = np.nonzero(primary != np.roll(primary, shift))[0]
-        unique_primary = np.unique(primary)
-        primary_covered = len(pos) == len(unique_primary)
-
         # assert len(pos) == len(np.unique(primary))
         if axis == 0:
             labels_returned = self._columns
             labels_opposite = self._index
+            primary, secondary = np.nonzero(target.T)
         else:
             labels_returned = self._index
             labels_opposite = self._columns
+            primary, secondary = np.nonzero(target)
+
+        if not len(primary):
+            return Series.from_element(fill_value, index=immutable_index_filter(labels_returned))
+
+        pos = np.nonzero(primary != np.roll(primary, shift))[0]
+        unique_primary = np.unique(primary)
+        primary_covered = len(pos) == len(unique_primary)
 
         if primary_covered:
             post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
