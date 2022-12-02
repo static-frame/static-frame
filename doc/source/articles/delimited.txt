@@ -1,12 +1,11 @@
 
 
 
-Going from CSV to NumPy Arrays Faster than Pandas
+Going from CSV to NumPy Arrays, Faster than Pandas
 
 Building a Faster-than-Pandas CSV-to-NumPy Arrays Reader in C
 
 Twenty-Years of CSV Parsing
-
 
 Combining PyObjects, Structs, and NumPy Arrays to Build a (Mostly) Faster-than-Pandas CSV Reader
 
