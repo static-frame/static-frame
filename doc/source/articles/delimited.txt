@@ -96,7 +96,7 @@ Figure 4 details the CPG Append Point process. For the current field number, the
 
 Figure 5 details the CPG Append Offset process. Just as when appending code points, both the CPG and the CPL are evaluated to determine if they need to grow. If type parsing is active, a field type is determined; this field type is evaluated in the context of the line type to resolve a new line type. The offset is appended to the offsets buffer, and the maximum observed offsets is updated if necessary.
 
-The second iteration is bound within the CPG To Array List process. As shown in Figure 6, for each CPL, a dtype is determined. With the dtype and the number of offsets (equivalent to the number of elements in the array), an empty NumPy array of the appropriate dtype and size is created. Using the NumPy C-API's ``PyArray_DATA`` function, raw C array is accessed from the NumPy array. Iterating over offsets in the CPL, code points are converted to C-types with a family of custom functions, and then those C-types are written into the array data array. This loop happens without any creation or memory management of intermediary PyObjects.
+The second iteration is bound within the CPG To Array List process. As shown in Figure 6, for each CPL, a dtype is determined. With the dtype and the number of offsets (equivalent to the number of elements in the array), an empty NumPy array of the appropriate dtype and size is created. Using the NumPy C-API's ``PyArray_DATA()`` function, raw C array is accessed from the NumPy array. Iterating over offsets in the CPL, code points are converted to C-types with a family of custom functions, and then those C-types are written into the array data array. This loop happens without any creation or memory management of intermediary PyObjects.
 
 After CPL data is converted and written to the NumPy array, the array is appended to Python list. After all CPLs are processed, the Python list is returned to the user.
 
@@ -104,13 +104,15 @@ After CPL data is converted and written to the NumPy array, the array is appende
 Performance
 ----------------
 
+As illustrated above, the usage of C-types for CPL storage, and the conversion of those values to C-types for insertion in a pre-alliocated NumPy buffer, happens entirely without PyObject creation or reference counting. This is critical to the performance of these routines.
+
 Too often cross-library performance studies use a single table for performance tests. Variation in table shape, as well as variation in columnar type heterogeneity, greatly alter performance, depending on underlying implementation details in DataFrame libraries.
 
-To evaluate the performance of ``delimited_to_arrays()``, and by extension StaticFrame's ``sf.Frame.from_delimited()``, comparison is made to Pandas ``pd.read_csv()``, with the C-engine enabled, across three different shapes of 100 million (1e8) elements: tall (1e5 x 1e3), square (1e4 x 1e4), and wide (1e3 x 1e5). For each of those three shapes, three types of type heterogeneity are evaluated: columnar (mixtures of floats, ints, strings, and Booleans per column), mixed (mixtures of types with some adjacent type similarity), and uniform (all float).
+To evaluate the performance of ``delimited_to_arrays()``, and by extension StaticFrame's ``sf.Frame.from_delimited()``, comparison is made to Pandas ``pd.read_csv()`` (using the C-engine) across three different shapes of 100 million (1e8) elements: tall (1e5 x 1e3), square (1e4 x 1e4), and wide (1e3 x 1e5). For each of those three shapes, three types of type heterogeneity are evaluated: columnar (mixtures of floats, ints, strings, and Booleans, with no adjacent types the same), mixed (mixtures of types, with four-column type adjacency), and uniform (all float).
 
-For each DataFrame configuration under test, three approaches to handling type discovery are compared: automatic type detection (type parsing), no type detection (simply loading data as strings), and creation from explicitly provided dtypes.
+For each DataFrame configuration under test, three approaches to handling type discovery are compared: automatic type discovery (type parsing), no type discovery (simply loading data as strings), and creation from explicitly provided dtypes.
 
-StaticFrame out-performs Pandas for all square and wide formations, for all approches to type discovery. For tall formations, StaticFrame type parsing is shown to be slightly slower than Pandas, but for all other type discvery approachs, StaticFrame is shown to be faster.
+StaticFrame out-performs Pandas for all square and wide formations, for all approaches to type discovery. For tall formations, StaticFrame type discovery is shown to be slightly slower than Pandas, but for all other type discovery approaches, StaticFrame is shown to be faster.
 
 Pandas is shown to be significantly slower in all cases where all data is returned as strings. This is likely due to Pandas returning object arrays of Python string objects, whereas StaticFrame returns NumPy Unicode arrays. The creation of Python objects creates creates significant overhead compared to just writing Unicode code points directly into a Unicode array.
 
@@ -126,7 +128,7 @@ Additionally, the ``buffer`` used in each CPL is four-byte Py_UCS4, regardless i
 Conclusion
 -----------------------
 
-While NumPy's arrays provide high-performance processing, NumPy has not provided a robust, high-performance solution to creating arrays from delimited text files. The ArrayKit ``delimited_to_arrays`` process achieves this, with same level of configuribility as found in Python's ``csv.reader``. Employed in StaticFrame, delimited files can be realized as DataFrames significantly faster than Pandas default C-engine.
+The ArrayKit ``delimited_to_arrays()`` function offers high performance CSV to array conversion, with the same level of configuribility as found in Python's ``csv.reader``. Employed in StaticFrame, delimited files can be realized as DataFrames significantly faster than Pandas default C-engine, and opportunities for further performance enhancements remain.
 
 
 
@@ -187,7 +189,7 @@ Twenty Years of CSV Parsing in Python
     The Pandas ``pd.read_csv()``
         No support for NumPy Unicode arrays
         No support NumPy datetime64 units other than nanonsecond
-    NumPy's ``np.loadtxt()``: not automatic type discovery
+    NumPy's ``np.loadtxt()``: no automatic type discovery
     NumPy's ``np.genfromtxt()``: insufficient performance at scale
 
 Implementation of ``delimited_to_arrays()``
@@ -201,14 +203,74 @@ Implementation of ``delimited_to_arrays()``
             Optional struct to store type discovery metrics
         CodePointGrid (CPG)
             Public interface to CPLs
-            Dynamically create CPLs as needed
+            Dynamically create CPLs on demand
+    Processing Stages
+        Input: iterator of string records
+        Initialization
+            DelimitedReader
+            CodePointGrid
+        First iteration
+            Iterate record, tokenize fields
+            CPG Append Point
+            CPG Append Offset
+        Second iteration
+            Iterate CPLs, convert values, write arrays
+            CPG To Array List
+        Output: A list of NumPy arrays
+    Flowchart of DelimitedReader processing
+        If code-point is not delimiter, call CPG Append Point
+        If code-point is delimiter, call CPG Append Offset
+    Flowchart of CPG Append Point
+    Flowchart of CPG Append Offset
+    Flowchart of CPG To Array List
 
+Performance
+    Avoiding PyObject creation and reference counting
+        Numerous processes do not involve PyOjbects
+            Tokenization and CPL creation, appending
+            CPL value conversion and writing to array
+        Source of significant performance advantage
+    Performance test cases
+        Variation on table shape of 100 million elements
+            Tall (1e5 x 1e3)
+            Square (1e4 x 1e4)
+            Wide (1e3 x 1e5)
+        Variation in column type heterogeneity
+            Columnar: mixtures of types, no same-type adjacency
+            Mixed: mixtures of types, four-column type adjacency
+            Uniform: all float
+        Variation in type discovery method
+            Automatic type discovery
+            No type discovery (returning strings)
+            Creation from provided types
+    Results
+        Square cases
+            StaticFrame out-performs Pandas for all variations
+        Wide cases
+            StaticFrame out-performs Pandas for all variations
+        Tall cases
+            Pandas type discovery shown to be faster
+            StaticFrame out-performs all other variations
+        Pandas conversion to object arrays of strings
+            StaticFrame uses of NumPy unicode array types
+            Pandas uses object arrays of Python string objects
+            Object array creation shown to be much slower
+Future Enhancements
+    Parallelization of CPL Array creation and loading
+    Exclusive use of of ``Py_UCS4`` in CPL buffers
+        Variable usage of ``Py_UCS2`` and ``Py_UCS1``
+        Reduce memory overhead, increase performance
 
+Conclusion
+    High-performance CSV to array processing
+    Full support of ``csv.reader()`` dialects
+    Automatic type discovery
+    Support for all NumPy array types
 
 
 Notes:
 
-Presenting on the architecture of C code in a Python C-extensions is difficult. I will support my presentation by using a number of diagrams and flow-charts. Little, if any, C code will be displayed.
+I am aware that presenting on  on the architecture of a Python C-extensions is difficult. I will support my presentation by using a number of diagrams and flowcharts. Little, if any, C code will be displayed.
 
 
 Past Experience
