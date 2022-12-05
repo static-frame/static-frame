@@ -177,19 +177,19 @@ I am aware that presenting on the architecture of a large Python C-extension is 
 Outline:
 
 
-Goals for a New Implementation (2.5 min)
+Goals for a New Implementation (1 min)
     Support the full configuration of ``csv.reader`` dialects
     Permit optionally parsing (discovering) types per column
     Support all NumPy dtypes
 
-The Challange of Building Columnar Arrays from CSV (2.5 min)
+The Challange of Building Columnar Arrays from CSV (2 min)
     CSV as a necessary evil
     Cannot know number of columns or rows in advance
     Two full iterations required
         Dyanamic C arrays per column collect Unicode code points
         Values per field converted to C-types and inserted in new NumPy array buffers
 
-Twenty Years of CSV Parsing in Python (2.5 min)
+Twenty Years of CSV Parsing in Python (4 min)
     Python 2.3's ``csv.reader`` in 2003
     The ``csv.reader`` state machine tokenizer
     The Pandas ``pd.read_csv()``
@@ -262,13 +262,13 @@ Performance (5 min)
             Pandas uses object arrays of Python string objects
             Object array creation shown to be much slower
 
-Future Enhancements (2.5 min)
+Future Enhancements (5 min)
     Parallelization of CPL Array creation and loading
     Exclusive use of of ``Py_UCS4`` in CPL buffers
         Variable usage of ``Py_UCS2`` and ``Py_UCS1``
         Reduce memory overhead, increase performance
 
-Conclusion (2.5 min)
+Conclusion (3 min)
     High-performance CSV to array processing
     Full support of ``csv.reader()`` dialects
     Automatic type discovery
