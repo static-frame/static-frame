@@ -33,9 +33,10 @@ The Python C API and the NumPy C API
     Reference stealing of PyArray_Descr arguments
 
 Common Operations with NumPy C API
-    Creating a PyArray_Descr
-    Creating a PyArrayObject
-    Iterating through an Array
+    Creating ``PyArray_Descr``
+    Creating ``PyArrayObject``
+    Iterating through an array
+    Writing to an array
 
 Anti-Patterns for NumPy C-Extensions
     Ignoring early performance comparisons
@@ -46,17 +47,21 @@ Anti-Patterns for NumPy C-Extensions
 Opportunities for Performance Advantage
     Bulk of operations happen in C
     Operations on C arrays
+    Opportunities to simplify what NumPy is doing
 
 Bridging C arrays and NumPy arrays
-    PyArray_DATA
+    ``PyArray_DATA``
     Expectations of Contiguous Data
 
 Example: finding the the first or last True Boolean
-    Problems with `np.nonzero` and `np.argmax`
-    Enforcing dtype contiguity requirements
+    Built-in NumPy alternatives
+        Full-array comparison
+        `np.nonzero`
+        `np.argmax`
+    Enforcing dimensionality, dtype, and contiguity requirements
     Implementing a 1D solution
     Implementing a 2D solution
-    performance comparisons
+    Performance comparisons
 
 
 
