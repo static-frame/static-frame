@@ -13,18 +13,22 @@ Out-Performing NumPy is Hard: Approaches to Writing C-Extensions
 
 
 
-While it is well-known that C-extensions can augment Python programs with compiled, high-performance routines, writing C-extensions that extend NumPy are different. Most NumPy functions already fall-back on highly optimized C routines.
+While it is well-known that C-extensions can augment Python programs with compiled, high-performance routines, writing C-extensions that extend NumPy are different. Most NumPy functions already fall-back on highly optimized C routines, some of which take advantage of esoteric, low-level processor optimizations.
 
-Writing C-extensions that can out-perform NumPy is challenging. This presentation will cover the basics of writing C-extensions that process or create NumPy arrays. Project setup to compile and link against NumPy will be reviewed, key functions of the NumPy C-API will be introduced, and an example implementation of a simple array utility will be demonstrated.
+Writing C-extensions that can out-perform NumPy is challenging. This presentation will provide guidelines to help determine if a routine, implemented as a C-extension, might outperform NumPy.
+
+The basics of writing C-extensions that process or create NumPy arrays will be prestented; project setup to compile and link against NumPy will be reviewed; key functions of the NumPy C-API will be introduced; and an example implementation of a simple array utility that (mostly) out-performs NumPy will be demonstrated.
 
 
 
 Outline
 
-Compiling, Linking to NumPy in setup.py, pyproject.toml
+Python Projects that Compile and Linking to NumPy
+    setup.py
+    pyproject.toml
 
 The Python C API and the NumPy C API
-    Similar Naming conventions
+    Common naming conventions
     PyObject v. PyArrayObject pointers
     Reference stealing of PyArray_Descr arguments
 
@@ -60,3 +64,56 @@ Example: finding the the first or last True Boolean
 
 
 
+
+
+From numpy, item_selection.c
+For counting, we see usage of NPY_SIMD
+        if (is_bool) {
+            /*
+             * use fast memchr variant for sparse data, see gh-4370
+             * the fast bool count is followed by this sparse path is faster
+             * than combining the two loops, even for larger arrays
+             */
+            if (((double)nonzero_count / count) <= 0.1) {
+                npy_intp subsize;
+                npy_intp j = 0;
+                while (1) {
+                    npy_memchr(data + j * stride, 0, stride, count - j,
+                               &subsize, 1);
+                    j += subsize;
+                    if (j >= count) {
+                        break;
+                    }
+                    *multi_index++ = j++;
+                }
+            }
+            /*
+             * Fallback to a branchless strategy to avoid branch misprediction
+             * stalls that are very expensive on most modern processors.
+             */
+            else {
+                npy_intp *multi_index_end = multi_index + nonzero_count;
+                npy_intp j = 0;
+
+                /* Manually unroll for GCC and maybe other compilers */
+                while (multi_index + 4 < multi_index_end) {
+                    *multi_index = j;
+                    multi_index += data[0] != 0;
+                    *multi_index = j + 1;
+                    multi_index += data[stride] != 0;
+                    *multi_index = j + 2;
+                    multi_index += data[stride * 2] != 0;
+                    *multi_index = j + 3;
+                    multi_index += data[stride * 3] != 0;
+                    data += stride * 4;
+                    j += 4;
+                }
+
+                while (multi_index < multi_index_end) {
+                    *multi_index = j;
+                    multi_index += *data != 0;
+                    data += stride;
+                    ++j;
+                }
+            }
+        }
