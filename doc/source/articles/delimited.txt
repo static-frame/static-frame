@@ -63,7 +63,7 @@ dtype: object
 TypeError: the dtype <U3 is not supported for parsing
 
 
-Additionally, the full range of NumPy datetime64 units is not supported; if dates are interpreted, they are always interepreted in NumPy ``datetetime64`` nanosecond units, even if the input string is clearly just a date.
+Additionally, the full range of NumPy ``datetime64`` units is not supported; if dates are interpreted, they are always interepreted in NumPy ``datetetime64`` nanosecond units, even if the input string is clearly just a date.
 
 >>> pd.read_csv(StringIO('a,b\n2022-01-02,1984-05-22'), dtype=np.datetime64)
 TypeError: the dtype datetime64 is not supported for parsing, pass this column using parse_dates instead
