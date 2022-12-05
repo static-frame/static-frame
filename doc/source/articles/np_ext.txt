@@ -17,58 +17,89 @@ While it is well-known that C-extensions can augment Python programs with compil
 
 Writing C-extensions that can out-perform NumPy is challenging. This presentation will provide guidelines to help determine if a routine, implemented as a C-extension, might outperform NumPy.
 
-The basics of writing C-extensions that process or create NumPy arrays will be prestented; project setup to compile and link against NumPy will be reviewed; key functions of the NumPy C-API will be introduced; and an example implementation of a simple array utility that (mostly) out-performs NumPy will be demonstrated.
+The basics of writing C-extensions that process or create NumPy arrays will be presented; project setup to compile and link against NumPy will be reviewed; key functions of the NumPy C-API will be introduced; and an example implementation of a simple array utility that (mostly) out-performs NumPy will be demonstrated.
 
 
 
 Outline
 
-Python Projects that Compile and Linking to NumPy
+A Python Project that Compiles C-extensions and Links to NumPy
     setup.py
     pyproject.toml
 
 The Python C API and the NumPy C API
     Common naming conventions
     PyObject v. PyArrayObject pointers
+    Reference counting
     Reference stealing of PyArray_Descr arguments
 
-Common Operations with NumPy C API
+Common Operations with the NumPy C API
     Creating ``PyArray_Descr``
     Creating ``PyArrayObject``
-    Iterating through an array
-    Writing to an array
+        PyArray_Empty
+        PyArray_Zeros
+    Getting basic array characteristics
+        dtype
+        Shape
+        Dimensionality
+        Data flags
+            C / Fortran ordering
+            Contiguity
+    Reading / writing values from / to an array
+        PyArray_GETITEM
+        PyArray_GetPtr
+    Array data as a C array
+        When you can use PyArray_DATA
+        When you need NpyIter
+
 
 Anti-Patterns for NumPy C-Extensions
     Ignoring early performance comparisons
     Reimplementing what NumPy has already done
-    Calling on Vector operations
-    Interactions with Python objects
+    Calling on vector operations
+    Creating arrays with Python objects
 
 Opportunities for Performance Advantage
     Bulk of operations happen in C
-    Operations on C arrays
-    Opportunities to simplify what NumPy is doing
+    NumPy arrays as C arrays
+        Using PyArray_DATA for reading and writing
+    Can simplify what NumPy is doing
+        Limited dimensionality
+        Supporting on a few types
+        Requiring contiguity
 
-Bridging C arrays and NumPy arrays
-    ``PyArray_DATA``
-    Expectations of Contiguous Data
 
-Example: finding the the first or last True Boolean
-    Built-in NumPy alternatives
-        Full-array comparison
-        `np.nonzero`
-        `np.argmax`
-    Enforcing dimensionality, dtype, and contiguity requirements
+Example C-extension Implementation: first_true_1d()
+    Finding the first or last True Boolean
+    Built-in NumPy alternatives do not have a quick exit
+        Full-array comparison to True
+        `np.nonzero()`
+    Built-in `np.argmax()` does not distinguish case of no True found
+
+    Opportunity to simplify what NumPy is Doing
+        Can limit supported dimensions
+        Can limit dtypes
+        Can require contiguity
+    Opportunity to opperate on C array
+        Can quickly scan C array of Booleans
+        No Python objects or reference counting needed
+
     Implementing a 1D solution
     Implementing a 2D solution
-    Performance comparisons
+
+Performance Comparisons of first_true_1d
+    Can outperform `np.nonzero()` when there are many Trues
+    When few Trues exist, ``np.nonzero()`` still outperforms
+        Usage of loop unrolling
+        Usage of Single Instruction Multiple Data (SIMD) routines
+
+Conclusion
+    Outperforming NumPy, even in pure C, is hard
+    There exist opportunities by finding narrow cases
+    Performance test early and often
 
 
-
-
-
-
-
+----------------------
 
 
 From numpy, item_selection.c
