@@ -3,10 +3,11 @@
 
 Building NumPy Arrays from CSV Files, Faster than Pandas
 
+Building a Faster-than-Pandas CSV-to-NumPy Arrays Reader in C
 
 Going from CSV to NumPy Arrays, Faster than Pandas
 
-Building a Faster-than-Pandas CSV-to-NumPy Arrays Reader in C
+After Twenty-Years of CSV Parsing, a Better Conversion to Arrays
 
 Twenty-Years of CSV Parsing
 
@@ -23,7 +24,7 @@ Twenty years ago, in 2003, Python 2.3 was released with ``csv.reader()``, a func
 
 To support reading delimited files in StaticFrame (a DataFrame library built on an immutable data model), I needed something different: the full configuration options of Python's ``csv.reader()``; optional type discovery for one or more columns; and support for all NumPy dtypes.
 
-Following the twenty-year tradition of extending ``csv.reader()``, I implemented ``delimited_to_arrays()`` to meet all of these needs. Using a family of C functions and structs, Unicode code points are collected per column (with optional type discovery), converted to C-types, and written into NumPy arrays, all with minimal PyObject creation or reference counting. Incorporated in StaticFrame, performance tests across a range of DataFrame shapes and type heterogeneity show significant performance advantages over Pandas. Independent of usage in StaticFrame, ``delimited_to_arrays()`` provides a powerful new resource for converting CSV files to NumPy arrays. This presentation will review the background, architecture, and performance characteristics of this new implementation.
+Following the twenty-year tradition of extending ``csv.reader()``, I implemented ``delimited_to_arrays()`` to meet these needs. Using a family of C functions and structs, Unicode code points are collected per column (with optional type discovery), converted to C-types, and written into NumPy arrays, all with minimal PyObject creation or reference counting. Incorporated in StaticFrame, performance tests across a range of DataFrame shapes and type heterogeneity show significant performance advantages over Pandas. Independent of usage in StaticFrame, ``delimited_to_arrays()`` provides a powerful new resource for converting CSV files to NumPy arrays. This presentation will review the background, architecture, and performance characteristics of this new implementation.
 
 
 The Challenge of Building Columnar Arrays from CSV
@@ -128,7 +129,7 @@ Additionally, the ``buffer`` used in each CPL is four-byte Py_UCS4, regardless i
 Conclusion
 -----------------------
 
-The ArrayKit ``delimited_to_arrays()`` function offers high performance CSV to array conversion, with the same level of dialect configurbility as found in Python's ``csv.reader``. Employed in StaticFrame, delimited files can be realized as DataFrames significantly faster than Pandas default C-engine, and opportunities for further performance enhancements remain.
+The ArrayKit ``delimited_to_arrays()`` function offers high-performance CSV-to-array conversion, with the same level of dialect support configurability as found in Python's ``csv.reader()``. Employed in StaticFrame, delimited files can be realized as DataFrames significantly faster than Pandas default C-engine, and opportunities for further performance enhancements remain.
 
 
 
