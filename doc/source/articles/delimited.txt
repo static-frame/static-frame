@@ -200,7 +200,7 @@ The Challenge of Building Columnar Arrays from CSV (2 min)
         Importable by many applications and libraries
         Always slower then binary formats
     Cannot know number of columns or rows in advance
-    Type per column is not defined in file
+    Type per column is not encoded in file
     Two full iterations are required
         Dynamic C arrays per column collect Unicode code points, optionally discovering type
         Values per field are converted to C-types and written  into NumPy array buffers
@@ -238,16 +238,16 @@ Implementation of ``delimited_to_arrays()`` (10 min)
     CPG To Array List (Figure 6)
 
 Performance (6 min)
-    Avoiding PyObject creation and reference counting
+    The importance of avoiding PyObject creation and reference counting
         Numerous processes do not involve PyObjects
             Tokenization and CPL creation
             Appending to CPLs, type discovery
             CPL value conversion
             Writing to NumPy array buffers
-        Avoiding PyObjects critical to performance
+        Critical to performance
     Performance test cases
-        Test nine table compositions, three type-discovery methods
-        Variation on table shape of 100 million elements
+        Test nine table compositions with three type-discovery methods for both StaticFrame and Pandas
+        Variation in table shape of 100 million elements
             Wide (1e3 x 1e5)
             Square (1e4 x 1e4)
             Tall (1e5 x 1e3)
@@ -259,7 +259,7 @@ Performance (6 min)
             Automatic type discovery
             No type discovery (returning strings)
             Array creation from user-provided types
-    Results
+    Results by shape
         Wide cases
             StaticFrame out-performs Pandas for all variations
         Square cases
@@ -275,15 +275,15 @@ Future Enhancements (4 min)
     Parallelization of CPL array creation and loading
         Converting CPLs to arrays an embarrassingly parallel problem
     Exclusive use of ``Py_UCS4`` in CPL buffers
-        Many situations require only ``Py_UCS2`` or ``Py_UCS1``
+        Often only ``Py_UCS2`` or ``Py_UCS1`` is needed
         Usage will reduce memory overhead, increase performance
 
 Conclusion (2 min)
-    ``delimited_to_arrays`` offers high-performance creation of arrays from CSV files
+    ``delimited_to_arrays()`` offers high-performance creation of arrays from CSV files
         Full support of ``csv.reader()`` dialect configuration
-        Per column automatic type discovery
+        Optional automatic type discovery per column
         Support for all NumPy array dtypes
-    As employed in StaticFrame, offers signficant performance advantages to Pandas
+    As employed in StaticFrame, offers significant performance advantages to Pandas
     Additional opportunities for performance enhancements remain
 
 
