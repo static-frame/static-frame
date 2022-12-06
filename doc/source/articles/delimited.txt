@@ -1,7 +1,7 @@
 
 
 
-Building NumPy Arrays from CSV Files, Faster than Pandas
+Building NumPy Arrays from CSV Files (Faster than Pandas)
 
 Building a Faster-than-Pandas CSV-to-NumPy Arrays Reader in C
 
@@ -20,11 +20,11 @@ Extending Python's CSV-Reader C-Extension to Make A High-Performance, Delimited-
 
 --
 
-Twenty years ago, in 2003, Python 2.3 was released with ``csv.reader()``, a function that provided support for parsing CSV files. The C implementation, proposed in PEP 305, defines a core tokenizer that has been a reference for many subsequent projects. Two commonly needed features, however, were not addressed in ``csv.reader()``: determining type per column, and converting strings to those types (or columns to arrays). Pandas ``pd.read_csv()`` implements automatic type conversion and realization of columns as NumPy arrays (delivered in a DataFrame) with generally good performance, though not all NumPy dtypes are supported. While NumPy offers ``loadtxt()`` and ``genfromtxt()`` for similar purposes, the former (recently re-implemented in C) does not implement automatic type discovery, while the later (implemented in Python) does not sufficiently scale.
+Twenty years ago, in 2003, Python 2.3 was released with ``csv.reader()``, a function that provided support for parsing CSV files. The C implementation, proposed in PEP 305, defines a core tokenizer that has been a reference for many subsequent projects. Two commonly needed features, however, were not addressed in ``csv.reader()``: determining type per column, and converting strings to those types (or columns to arrays). Pandas ``read_csv()`` implements automatic type conversion and realization of columns as NumPy arrays (delivered in a DataFrame), with performance good enough to be widely regarded as a benchmark. Pandas implementation, however, does not support all NumPy dtypes. While NumPy offers ``loadtxt()`` and ``genfromtxt()`` for similar purposes, the former (recently re-implemented in C) does not implement automatic type discovery, while the latter (implemented in Python) suffers poor performance at scale.
 
-To support reading delimited files in StaticFrame (a DataFrame library built on an immutable data model), I needed something different: the full configuration options of Python's ``csv.reader()``; optional type discovery for one or more columns; and support for all NumPy dtypes.
+To support reading delimited files in StaticFrame (a DataFrame library built on an immutable data model), I needed something different: the full configuration options of Python's ``csv.reader()``; optional type discovery for one or more columns; support for all NumPy dtypes; and performance competitive with Pandas ``read_csv()``.
 
-Following the twenty-year tradition of extending ``csv.reader()``, I implemented ``delimited_to_arrays()`` to meet these needs. Using a family of C functions and structs, Unicode code points are collected per column (with optional type discovery), converted to C-types, and written into NumPy arrays, all with minimal PyObject creation or reference counting. Incorporated in StaticFrame, performance tests across a range of DataFrame shapes and type heterogeneity show significant performance advantages over Pandas. Independent of usage in StaticFrame, ``delimited_to_arrays()`` provides a powerful new resource for converting CSV files to NumPy arrays. This presentation will review the background, architecture, and performance characteristics of this new implementation.
+Following the twenty-year tradition of extending ``csv.reader()``, I implemented ``delimited_to_arrays()`` as a C extension to meet these needs. Using a family of C functions and structs, Unicode code points are collected per column (with optional type discovery), converted to C-types, and written into NumPy arrays, all with minimal ``PyObject`` creation or reference counting. Incorporated in StaticFrame, performance tests across a range of DataFrame shapes and type heterogeneity show significant performance advantages over Pandas. Independent of usage in StaticFrame, ``delimited_to_arrays()`` provides a powerful new resource for converting CSV files to NumPy arrays. This presentation will review the background, architecture, and performance characteristics of this new implementation.
 
 
 The Challenge of Building Columnar Arrays from CSV
@@ -52,9 +52,9 @@ The C-implementation of the reader implements a character by character state mac
 
 As CSV files commonly contain columnar-typed data, extending ``csv.reader()`` to build arrays per column is a natural extension. Both Pandas and NumPy have offered resources to meet this need.
 
-Pandas ``pd.read_csv()`` extended ``csv.reader()`` to build array data suitable for returning a DataFrame. An important feature added by Pandas is the ability to automatically discovery a type per column.
+Pandas ``read_csv()`` extended ``csv.reader()`` to build array data suitable for returning a DataFrame. An important feature added by Pandas is the ability to automatically discovery a type per column.
 
-Pandas ``pd.read_csv()`` is narrowly implemented for Pandas DataFrames. As such, not all NumPy dtypes are supported. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
+Pandas ``read_csv()`` is narrowly implemented for Pandas DataFrames. As such, not all NumPy dtypes are supported. For example, Pandas returns all string data as NumPy object arrays with Python strings, even if a NumPy Unicode array is explicitly requested.
 
 >>> pd.read_csv(StringIO('a,b\nx,y')).dtypes
 a    object
@@ -73,7 +73,7 @@ a    datetime64[ns]
 b    datetime64[ns]
 
 
-NumPy offers two functions for converting text to arrays: ``loadtxt()`` and ``genfromtxt()``. Unlike ``pd.read_csv()``, both support all NumPy dtypes; the former, however, does not perform automatic type discovery, and the later, implemented in Python, does not sufficiently scale. Additional, neither interface implements the full range of CSV dialects and configurability supported by ``csv.reader()``.
+NumPy offers two functions for converting text to arrays: ``loadtxt()`` and ``genfromtxt()``. Unlike ``read_csv()``, both support all NumPy dtypes; the former, however, does not perform automatic type discovery, and the later, implemented in Python, does not sufficiently scale. Additional, neither interface implements the full range of CSV dialects and configurability supported by ``csv.reader()``.
 
 
 Implementation of ``delimited_to_arrays()``
@@ -109,7 +109,7 @@ As illustrated above, the usage of C-types for CPL storage, and the conversion o
 
 Too often cross-library performance studies use a single table for performance tests. Variation in table shape, as well as variation in columnar type heterogeneity, greatly alter performance, depending on underlying implementation details in DataFrame libraries.
 
-To evaluate the performance of ``delimited_to_arrays()``, and by extension StaticFrame's ``sf.Frame.from_delimited()``, comparison is made to Pandas ``pd.read_csv()`` (using the C-engine) across three different shapes of 100 million (1e8) elements: tall (1e5 x 1e3), square (1e4 x 1e4), and wide (1e3 x 1e5). For each of those three shapes, three types of type heterogeneity are evaluated: columnar (mixtures of floats, ints, strings, and Booleans, with no adjacent types the same), mixed (mixtures of types, with four-column type adjacency), and uniform (all float).
+To evaluate the performance of ``delimited_to_arrays()``, and by extension StaticFrame's ``sf.Frame.from_delimited()``, comparison is made to Pandas ``read_csv()`` (using the C-engine) across three different shapes of 100 million (1e8) elements: tall (1e5 x 1e3), square (1e4 x 1e4), and wide (1e3 x 1e5). For each of those three shapes, three types of type heterogeneity are evaluated: columnar (mixtures of floats, ints, strings, and Booleans, with no adjacent types the same), mixed (mixtures of types, with four-column type adjacency), and uniform (all float).
 
 For each DataFrame configuration under test, three approaches to handling type discovery are compared: automatic type discovery (type parsing), no type discovery (simply loading data as strings), and creation from explicitly provided dtypes.
 
@@ -142,7 +142,7 @@ One of the PEPs authors, Dave Cole, had since 2000 released a stand-alone C-exte
 
 There have been many attempts to address this challenge. For nearly twenty years, the ``csv.reader`` within the Python standard library has provided high-performance parsing of delimited files, but does not infer or convert types, let alone build NumPy arrays. NumPy's built-in ``genfromtxt()`` and ``loadtxt()`` do not support the full diversity of CSV files commonly encountered. While the Pandas CSV reader offers good performance, it does not support all NumPy array dtypes.
 
-With over 50 parameters, ``pd.read_csv()`` is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated, and other parameters, such as ``storage_options`` are only there to support network based input file retrieval.
+With over 50 parameters, ``read_csv()`` is highly configurable, though some parameters, such as ``keep_default_na`` and ``na_values`` and ``na_filter`` are confusingly interrelated, and other parameters, such as ``storage_options`` are only there to support network based input file retrieval.
 
 
 The ``loadtxt()`` function, while recently reimplemented in C, does not support headers and requires types per column to be specified as structured arrays. It is designed more as a loader of output from the corresponding ``savetxt()`` than general purpose CSV reader. There is not support for automatic type discovery.
@@ -168,7 +168,7 @@ Conversion routines: https://github.com/numpy/numpy/blob/main/numpy/core/src/mul
 
 Notes:
 
-I am aware that presenting the architecture of a large Python C-extension is difficult. I will support my presentation by using a number of diagrams and flowcharts. Little, if any, C code will be displayed.
+I am aware that presenting on the architecture of a large Python C-extension is difficult. I will support my presentation by using a number of diagrams and flowcharts. Little, if any, C code will be displayed.
 
 
 Outline:
@@ -176,11 +176,13 @@ Outline:
 Twenty Years of CSV Parsing in Python (4 min)
     Python 2.3's ``csv.reader()`` in 2003
         C implementation of state machine tokenizer
+        Configuration for a wide range of CSV dialects
         Returns lists of strings per rows
-    The Pandas ``pd.read_csv()``
+    The Pandas ``read_csv()``
         Featured automatic type discovery per column
         No support for NumPy Unicode arrays
         No support for NumPy datetime64 units other than nanonsecond
+        Widely regarded as a performance benchmark
     NumPy's ``np.loadtxt()``
         No automatic type discovery
         Missing full support of ``csv.reader()`` dialects
@@ -192,6 +194,7 @@ Goals for a New Implementation (2 min)
     Support the full configuration of ``csv.reader()`` dialects
     Permit optionally discovering types per column
     Support all NumPy dtypes
+    Performance competitive to Pandas ``read_csv()``
 
 The Challenge of Building Columnar Arrays from CSV (2 min)
     CSV is a necessary evil
@@ -283,7 +286,7 @@ Conclusion (2 min)
         Full support of ``csv.reader()`` dialect configuration
         Optional automatic type discovery per column
         Support for all NumPy array dtypes
-    As employed in StaticFrame, offers significant performance advantages to Pandas
+        Significant performance advantages over Pandas ``read_csv()``.
     Additional opportunities for performance enhancements remain
 
 
