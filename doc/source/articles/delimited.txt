@@ -168,8 +168,7 @@ Conversion routines: https://github.com/numpy/numpy/blob/main/numpy/core/src/mul
 
 Notes:
 
-I am aware that presenting on the architecture of a large Python C-extension is difficult. I will support my presentation by using a number of diagrams and flowcharts. Little, if any, C code will be displayed.
-
+I am aware that presenting the architecture of a large Python C-extension is difficult. I will support my presentation by using a number of diagrams and flowcharts. Little, if any, C code will be displayed.
 
 
 Outline:
@@ -181,7 +180,7 @@ Twenty Years of CSV Parsing in Python (4 min)
     The Pandas ``pd.read_csv()``
         Featured automatic type discovery per column
         No support for NumPy Unicode arrays
-        No support NumPy datetime64 units other than nanonsecond
+        No support for NumPy datetime64 units other than nanonsecond
     NumPy's ``np.loadtxt()``
         No automatic type discovery
         Missing full support of ``csv.reader()`` dialects
@@ -189,7 +188,7 @@ Twenty Years of CSV Parsing in Python (4 min)
         Insufficient performance at scale
         Missing full support of ``csv.reader()`` dialects
 
-Goals for a New Implementation (1 min)
+Goals for a New Implementation (2 min)
     Support the full configuration of ``csv.reader()`` dialects
     Permit optionally discovering types per column
     Support all NumPy dtypes
@@ -201,7 +200,7 @@ The Challenge of Building Columnar Arrays from CSV (2 min)
         Importable by many applications and libraries
         Always slower then binary formats
     Cannot know number of columns or rows in advance
-    Type per column is not defined
+    Type per column is not defined in file
     Two full iterations are required
         Dynamic C arrays per column collect Unicode code points, optionally discovering type
         Values per field are converted to C-types and written  into NumPy array buffers
@@ -238,7 +237,7 @@ Implementation of ``delimited_to_arrays()`` (10 min)
     CPG Append Offset (Figure 5)
     CPG To Array List (Figure 6)
 
-Performance (5 min)
+Performance (6 min)
     Avoiding PyObject creation and reference counting
         Numerous processes do not involve PyObjects
             Tokenization and CPL creation
@@ -272,14 +271,14 @@ Performance (5 min)
             StaticFrame uses NumPy unicode arrays
             Pandas uses object arrays of Python string objects
 
-Future Enhancements (5 min)
+Future Enhancements (4 min)
     Parallelization of CPL array creation and loading
         Converting CPLs to arrays an embarrassingly parallel problem
     Exclusive use of ``Py_UCS4`` in CPL buffers
         Many situations require only ``Py_UCS2`` or ``Py_UCS1``
         Usage will reduce memory overhead, increase performance
 
-Conclusion (3 min)
+Conclusion (2 min)
     ``delimited_to_arrays`` offers high-performance creation of arrays from CSV files
         Full support of ``csv.reader()`` dialect configuration
         Per column automatic type discovery
