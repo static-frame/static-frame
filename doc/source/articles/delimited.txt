@@ -1,7 +1,7 @@
 
 
 
-Building NumPy Arrays from CSV Files (Faster than Pandas)
+Building NumPy Arrays from CSV Files, Faster than Pandas
 
 Building a Faster-than-Pandas CSV-to-NumPy Arrays Reader in C
 
