@@ -12,13 +12,11 @@ Out-Performing NumPy is Hard: When a C-Extension Might Deliver Better Performanc
 Out-Performing NumPy is Hard: Approaches to Writing C-Extensions
 
 
-While it is well known that C-extensions can improve the performance of Python programs, writing C-extensions that improve the performance of array-based operations in NumPy are different. Most NumPy functions already call highly optimized C routines, some of which take advantage of low-level processor optimizations.
+While it is well known that C-extensions can improve the performance of Python programs, writing C-extensions that improve the performance of NumPy array operations are different. Most NumPy functions already call highly optimized C routines, some of which take advantage of low-level processor optimizations. Writing C-extensions that out-perform NumPy is challenging: in most cases, just writing Python that calls NumPy is optimal. However, for routines that are of sufficiently narrow scope, there are opportunities.
 
-Writing C-extensions that out-perform NumPy is challenging: in most cases, just writing Python that calls NumPy is optimal. But for routines that are of sufficiently narrow scope, there are opportunities. This presentation will offer principles to help determine if a routine, implemented as a C-extension, might outperform NumPy routines simply called from Python.
+This presentation offers principles to help determine if a routine, implemented as a C-extension, might outperform NumPy routines called from Python. Along the way, how to create a Python project that compiles C-extensions linking to NumPy will be demonstrated, and the basics of the NumPy C API will be introduced.
 
-To get started, the basics of writing C-extensions that process or create NumPy arrays will be presented, project setup will be reviewed, and key functions of the NumPy C-API will be introduced.
-
-A narrow use-case of the ``np.nonzero()`` function will be implemented in C as an example: rather than returning all indices of all non-zero values (for all dtypes and dimensionalities), this function, ``first_true_1d()`` will return only the index of the first-encountered non-zero value (for one-dimensional Boolean arrays). The performance of this routine, and why it sometimes cannot out-perform ``np.nonzero()``, will be discussed.
+A narrow use-case of the ``np.nonzero()`` function will be implemented in C as an example: rather than returning all indices of all non-zero values (for all dtypes and dimensionalities), this function, ``first_true_1d()``, will return only the index of the first-encountered non-zero value (for one-dimensional Boolean arrays). The performance of this routine, and why it sometimes cannot out-perform ``np.nonzero()``, will be discussed.
 
 
 
@@ -26,15 +24,13 @@ A narrow use-case of the ``np.nonzero()`` function will be implemented in C as a
 Outline
 
 The Challenge of Outperforming NumPy
-    Core NumPy operations already implemented in C
+    Core NumPy operations are implemented in C
     Some NumPy operations take advantages of low-level processor optimizations
-    Just using NumPy in Python is often sufficient
+    Just using NumPy in Python is often optimal
     A sufficiently narrow process might offer performance advantages
-        If the bulk of the process can be conducted in C
-        If a NumPy routine can be greatly simplified
 
 Creating a Python Project that Compiles C-extensions with NumPy
-    Project setup in setup.py or pyproject.toml
+    Project setup with setup.py or pyproject.toml
     Including NumPy headers
     Calling ``import_array()``
 
@@ -42,7 +38,7 @@ The Python C API and the NumPy C API
     Common naming conventions
     Casting between ``PyObject`` v. ``PyArrayObject`` pointers
     Reference counting ``PyArrayObject``
-    Reference stealing of ``PyArray_Descr`` arguments
+    Reference stealing of ``PyArray_Descr``
 
 Common Operations with the NumPy C API
     Creating a ``PyArray_Descr``
@@ -60,14 +56,13 @@ Common Operations with the NumPy C API
         ``PyArray_GETITEM()``
         ``PyArray_GetPtr()``
     Array data as a C array
-        When you can use ``PyArray_DATA()``
-        When you need ``NpyIter``
+        ``PyArray_DATA()``
+        ``NpyIter``
 
-Anti-Patterns for NumPy C-Extensions
+Anti-Patterns when Creating NumPy C-Extensions
     Ignoring early performance comparisons
     Reimplementing what NumPy has already done
-    Calling vector operations
-    Creating arrays with Python objects
+    Creating arrays from Python objects
 
 Opportunities for Performance Advantage
     Bulk of operations happen in C
@@ -79,20 +74,24 @@ Opportunities for Performance Advantage
         Requiring contiguity
 
 Example C-Extension Implementation: ``first_true_1d()``
-    Finding the first or last True Boolean
-    Some built-in NumPy alternatives do not short-circuit
-        Full-array comparison to True
-        ``np.nonzero()``
-    Built-in ``np.argmax()`` does not distinguish case of no True found
+    Finding the first or last True in a Boolean array
+    NumPy ``np.nonzero()`` does not short-circuit, returns an array
+    NumPy ``np.argmax()`` does not distinguish case of no True
 
     Opportunity to simplify what NumPy is doing
         Can limit supported dimensions and dtypes
         Can require contiguity
+        Can return just an integer
     Opportunity to operate on data as a C array
         Can quickly scan C array of Booleans
         No Python objects or reference counting needed
 
-    Details of implementing ``first_true_1d()``
+    Details of ``first_true_1d()`` implementation
+        Parsing arguments
+        Validating array requirements, raising exceptions
+        Using ``PyArray_DATA`` to get a pointer
+        Using pointer arithmetic to scan the array
+        Returning a ``PyObject`` integer
 
 Performance Evaluation of ``first_true_1d()``
     Can outperform ``np.nonzero()`` when there are many Trues
