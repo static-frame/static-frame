@@ -1679,7 +1679,10 @@ def iter_component_hash_bytes(
         include_name: bool,
         include_class: bool,
         ) -> tp.Iterator[bytes]:
-    '''Convert class and name to byte components. Handle encoding error and provide a useful exception.
+    '''Convert class and name to byte components. Handle encding error and provide a useful exception.
+
+    Args:
+        include_class: if class is not included, a Series and an Index might evaluate to the same hash.
     '''
     if include_name:
         try:
