@@ -1332,7 +1332,7 @@ class Index(IndexBase):
     def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,
-            encoding='utf-8',
+            encoding: str = 'utf-8',
             ) -> bytes:
 
         return b''.join(chain(

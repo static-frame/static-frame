@@ -59,7 +59,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     @property
     def name(self) -> NameType:
-        raise NotImplementedError() #pragma: no cover
+        return None
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
