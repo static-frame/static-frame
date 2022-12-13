@@ -15,7 +15,7 @@ from automap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import iter_component_hash_bytes
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
@@ -1329,16 +1329,18 @@ class Index(IndexBase):
         return pandas.Index(self.values.copy(),
                 name=self._name)
 
-    def to_hash_bytes(self,
+    def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,
+            encoding='utf-8',
             ) -> bytes:
 
         return b''.join(chain(
-                iter_component_hash_bytes(self,
+                iter_component_signature_bytes(self,
                         include_name=include_name,
-                        include_class=include_class),
-                (self.values,),
+                        include_class=include_class,
+                        encoding=encoding),
+                (self.values.tobytes(),),
                 ))
 
 #-------------------------------------------------------------------------------
