@@ -19,6 +19,7 @@ from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
+from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
@@ -55,6 +56,10 @@ class ContainerBase(metaclass=InterfaceMeta):
     # def __sizeof__(self) -> int:
         # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).
         # return memory_total(self, format=MeasureFormat.REFERENCED)
+
+    @property
+    def name(self) -> NameType:
+        raise NotImplementedError() #pragma: no cover
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:

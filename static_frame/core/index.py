@@ -1,8 +1,8 @@
 import typing as tp
 from collections import Counter
 from copy import deepcopy
-from itertools import zip_longest
 from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 from arraykit import immutable_filter
@@ -15,10 +15,10 @@ from automap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
+from static_frame.core.container_util import iter_component_hash_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.container_util import iter_component_hash_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader

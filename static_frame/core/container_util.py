@@ -1686,7 +1686,7 @@ def iter_component_hash_bytes(
     '''
     if include_name:
         try:
-            yield bytes(container.name, encoding='utf8')
+            yield bytes(container.name, encoding='utf8') #type: ignore
         except TypeError:
             raise TypeError('The name attribute must be byte-encodable to produce a hash digest. Rename or set include_name to False.')
     if include_class:
