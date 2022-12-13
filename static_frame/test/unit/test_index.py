@@ -3,6 +3,7 @@ import datetime
 import pickle
 import typing as tp
 import unittest
+from hashlib import sha256
 from io import StringIO
 
 import numpy as np
@@ -1666,6 +1667,52 @@ class TestUnit(TestCase):
         idx.append('e')
         post = idx.display(DisplayConfig(type_show=False, type_color=False))
         self.assertEqual(str(post), 'a\nb\nc\nd\ne')
+
+    #---------------------------------------------------------------------------
+    def test_index_hash_bytes_a(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1.to_hash_bytes()
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+        idx2 = Index(('a', 'b', 'c', 'd'), name='')
+        bytes2 = idx2.to_hash_bytes()
+        self.assertEqual(sha256(bytes2).hexdigest(),
+            '108f99787a5b8c8acc45ebfcc934ad1a1eaedda394679c192d3b4be385590d93')
+
+    def test_index_hash_bytes_b(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1.to_hash_bytes(include_class=False)
+
+        idx2 = Index(('a', 'b', 'c', 'd'), name='')
+        bytes2 = idx2.to_hash_bytes(include_class=False)
+
+        self.assertEqual(
+                sha256(bytes1).hexdigest(),
+                sha256(bytes2).hexdigest(),
+                )
+
+    def test_index_hash_bytes_c(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name=None)
+        with self.assertRaises(TypeError):
+            _ = idx1.to_hash_bytes()
+
+        bytes1 = idx1.to_hash_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+    def test_index_hash_bytes_d(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1.to_hash_bytes(include_class=False)
+
+        idx2 = Index(('a', 'b', 'c', 'd', 'e'), name='')
+        bytes2 = idx2.to_hash_bytes(include_class=False)
+
+        self.assertNotEqual(
+                sha256(bytes1).hexdigest(),
+                sha256(bytes2).hexdigest(),
+                )
+
 
 if __name__ == '__main__':
     unittest.main()

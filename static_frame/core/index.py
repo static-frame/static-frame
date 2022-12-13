@@ -2,6 +2,7 @@ import typing as tp
 from collections import Counter
 from copy import deepcopy
 from itertools import zip_longest
+from itertools import chain
 
 import numpy as np
 from arraykit import immutable_filter
@@ -17,6 +18,7 @@ from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import iter_component_hash_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -1266,18 +1268,6 @@ class Index(IndexBase):
         values.flags.writeable = False
         return self.__class__(values, name=self._name), key
 
-
-    #---------------------------------------------------------------------------
-    # export
-
-    def to_series(self) -> 'Series':
-        '''Return a Series with values from this Index's labels.
-        '''
-        # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate
-        from static_frame import Series
-        return Series(self.values, name=self._name)
-
-
     def level_add(self,
             level: tp.Hashable,
             *,
@@ -1318,6 +1308,16 @@ class Index(IndexBase):
                 name=self._name,
                 )
 
+    #---------------------------------------------------------------------------
+    # export
+
+    def to_series(self) -> 'Series':
+        '''Return a Series with values from this Index's labels.
+        '''
+        # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate
+        from static_frame import Series
+        return Series(self.values, name=self._name)
+
     def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.
         '''
@@ -1328,6 +1328,18 @@ class Index(IndexBase):
             return pandas.RangeIndex(self.__len__(), name=self._name)
         return pandas.Index(self.values.copy(),
                 name=self._name)
+
+    def to_hash_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            ) -> bytes:
+
+        return b''.join(chain(
+                iter_component_hash_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class),
+                (self.values,),
+                ))
 
 #-------------------------------------------------------------------------------
 

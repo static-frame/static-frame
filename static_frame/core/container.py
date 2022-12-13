@@ -610,7 +610,6 @@ class ContainerOperand(ContainerBase):
         # modify the active display to be for HTML
         return repr(self.display(config))
 
-
 #-------------------------------------------------------------------------------
 # TODO: replace usage with ContainerMap; use this in a test to validate
 

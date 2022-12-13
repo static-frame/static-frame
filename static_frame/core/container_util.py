@@ -14,6 +14,7 @@ from arraykit import column_2d_filter
 from arraykit import resolve_dtype_iter
 from numpy import char as npc
 
+from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
@@ -1670,6 +1671,23 @@ class MessagePackElement:
         elif typ == 'A': #recursion not covered by msgpack-numpy
             return unpackb(d) #recurse unpackb
         return d
+
+#-------------------------------------------------------------------------------
+
+def iter_component_hash_bytes(
+        container: ContainerBase,
+        include_name: bool,
+        include_class: bool,
+        ) -> tp.Iterator[bytes]:
+    '''Convert class and name to byte components. Handle encoding error and provide a useful exception.
+    '''
+    if include_name:
+        try:
+            yield bytes(container.name, encoding='utf8')
+        except TypeError:
+            raise TypeError('The name attribute must be byte-encodable to produce a hash digest. Rename or set include_name to False.')
+    if include_class:
+        yield bytes(container.__class__.__name__, encoding='utf8')
 
 
 
