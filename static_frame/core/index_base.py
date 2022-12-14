@@ -491,4 +491,10 @@ class IndexBase(ContainerOperand):
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+        raise NotImplementedError() #pragma: no cover
 
