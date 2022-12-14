@@ -31,6 +31,7 @@ from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearMonth
 from static_frame import Series
+from static_frame import SeriesHE
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
@@ -5702,6 +5703,23 @@ class TestUnit(TestCase):
             sha256(s1.index._to_signature_bytes(include_name=False)).hexdigest(),
             sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
             )
+
+    def test_series_to_signature_bytes_e(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = SeriesHE((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            )
+
 
 
 
