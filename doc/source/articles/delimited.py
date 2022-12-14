@@ -130,7 +130,7 @@ class NumpyLoadtxtTypeParse(FileIOTest):
 NUMBER = 2
 
 def scale(v):
-    return int(v * 1)
+    return int(v * .1)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -150,6 +150,14 @@ FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v({VALUES_MIXED})|i(I,int
 FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 #-------------------------------------------------------------------------------
+
+def seconds_to_display(seconds: float) -> str:
+    seconds /= NUMBER
+    if seconds < 1e-4:
+        return f'{seconds * 1e6: .1f} (µs)'
+    if seconds < 1e-1:
+        return f'{seconds * 1e3: .1f} (ms)'
+    return f'{seconds: .1f} (s)'
 
 
 def plot_performance(frame: sf.Frame):
@@ -226,8 +234,8 @@ def plot_performance(frame: sf.Frame):
             time_max = fixture['time'].max()
             ax.set_yticks([0, time_max * 0.5, time_max])
             ax.set_yticklabels(['',
-                    f'{time_max * 0.5:.3f} (s)',
-                    f'{time_max:.3f} (s)',
+                    seconds_to_display(time_max * 0.5),
+                    seconds_to_display(time_max),
                     ], fontsize=6)
             # ax.set_xticks(x, names_display, rotation='vertical')
             ax.tick_params(
