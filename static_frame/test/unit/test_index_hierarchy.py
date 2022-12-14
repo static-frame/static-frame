@@ -5,6 +5,7 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from functools import wraps
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -4566,6 +4567,46 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat((f1, f2)) # RuntimeError
         self.assertTrue(f.index.equals(f3.index, compare_dtype=True, compare_class=True))
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_to_signature_bytes_a(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        post = hidx1._to_signature_bytes()
+
+        self.assertEqual(sha256(post).hexdigest(), 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
+
+    def test_hierarchy_to_signature_bytes_b(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        hidx2 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-06', '2019-01-09'), name='')
+
+        post1 = hidx1._to_signature_bytes()
+        post2 = hidx2._to_signature_bytes()
+
+        self.assertNotEqual(sha256(post1).hexdigest(), sha256(post2).hexdigest())
+
+    def test_hierarchy_to_signature_bytes_c(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        hidx2 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='foo')
+
+        post1 = hidx1._to_signature_bytes(include_name=False)
+        post2 = hidx2._to_signature_bytes(include_name=False)
+
+        self.assertEqual(sha256(post1).hexdigest(), sha256(post2).hexdigest())
+
+
+
+
+        # import ipdb; ipdb.set_trace()
+
+
+
 
 
 
