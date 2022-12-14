@@ -3340,19 +3340,6 @@ class Series(ContainerOperand):
                 )
 
 
-    def to_pandas(self) -> 'pandas.Series':
-        '''
-        Return a Pandas Series.
-
-        Returns:
-            :obj:`pandas.Series`
-        '''
-        import pandas
-        return pandas.Series(self.values.copy(),
-                index=self._index.to_pandas(),
-                name=self._name)
-
-
     def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,
@@ -3370,6 +3357,20 @@ class Series(ContainerOperand):
                         encoding=encoding),
                 self.values.tobytes(),)
                 ))
+
+    #---------------------------------------------------------------------------
+
+    def to_pandas(self) -> 'pandas.Series':
+        '''
+        Return a Pandas Series.
+
+        Returns:
+            :obj:`pandas.Series`
+        '''
+        import pandas
+        return pandas.Series(self.values.copy(),
+                index=self._index.to_pandas(),
+                name=self._name)
 
 
     @doc_inject(class_name='Series')

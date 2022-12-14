@@ -2687,6 +2687,22 @@ class IndexHierarchy(IndexBase):
         from static_frame import FrameGO
         return tp.cast(FrameGO, self._to_frame(FrameGO))
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                v,
+                ))
+
+    # --------------------------------------------------------------------------
     def to_pandas(self: IH) -> 'DataFrame':
         '''
         Return a Pandas MultiIndex.
@@ -2705,20 +2721,7 @@ class IndexHierarchy(IndexBase):
         mi.names = self.names
         return mi
 
-    def _to_signature_bytes(self,
-            include_name: bool = True,
-            include_class: bool = True,
-            encoding: str = 'utf-8',
-            ) -> bytes:
-
-        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
-        return b''.join(chain(
-                iter_component_signature_bytes(self,
-                        include_name=include_name,
-                        include_class=include_class,
-                        encoding=encoding),
-                v,
-                ))
+    # --------------------------------------------------------------------------
 
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,

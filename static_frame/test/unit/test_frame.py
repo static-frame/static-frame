@@ -13,6 +13,7 @@ from collections import namedtuple
 from functools import partial
 from io import StringIO
 from tempfile import TemporaryDirectory
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -14981,6 +14982,66 @@ class TestUnit(TestCase):
     def test_frame_from_dict_fields_e(self) -> None:
         with self.assertRaises(ErrorInitFrame):
             _  = Frame.from_dict_fields((),)
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_signature_bytes_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(),
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+
+    def test_frame_to_signature_bytes_b(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False, include_class=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False, include_class=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_c(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_d(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(3,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_e(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,int)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_f(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)|i(I,int)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
 
 
 

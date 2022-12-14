@@ -52,6 +52,7 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -8010,6 +8011,32 @@ class Frame(ContainerOperand):
         return tuple(
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
+
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
+        v = (a.tobytes('F') for a in self._blocks._blocks)
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._columns._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding)),
+                v))
+
 
     #---------------------------------------------------------------------------
     # exporters: alternate libraries
