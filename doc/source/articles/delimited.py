@@ -13,6 +13,7 @@ import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import polars as pl
 
 sys.path.append(os.getcwd())
 
@@ -95,6 +96,14 @@ class PandasPyArrowTypeGiven(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
+class PolarsTypeParse(FileIOTest):
+
+    def __call__(self):
+        f = pl.read_csv(self.fp)
+        assert f.shape == self.fixture.shape
+
+
+#-------------------------------------------------------------------------------
 class NumpyGenfromtxtTypeParse(FileIOTest):
 
     def __call__(self):
@@ -121,7 +130,7 @@ class NumpyLoadtxtTypeParse(FileIOTest):
 NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -166,6 +175,9 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
         NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
+
+        PolarsTypeParse.__name__: 'Polars\n(type parsing)',
+
     }
 
     name_order = {
@@ -183,6 +195,8 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 3,
         NumpyLoadtxtTypeParse.__name__: 3,
+
+        PolarsTypeParse.__name__: 4,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -235,7 +249,7 @@ def plot_performance(frame: sf.Frame):
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
     fig.text(.05, .90, shape_msg, fontsize=6)
 
-    fp = '/tmp/serialize.png'
+    fp = '/tmp/delimited.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
@@ -305,7 +319,7 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-
+    # PolarsTypeParse,
     # PandasPyArrowTypeParse,
     # PandasPyArrowStr,
     # PandasPyArrowTypeGiven,
