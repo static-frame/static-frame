@@ -6,8 +6,8 @@ import string
 import typing as tp
 from collections import OrderedDict
 from enum import Enum
-from io import StringIO
 from hashlib import sha256
+from io import StringIO
 
 import frame_fixtures as ff
 import numpy as np

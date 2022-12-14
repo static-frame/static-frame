@@ -11,9 +11,9 @@ import unittest
 from collections import OrderedDict
 from collections import namedtuple
 from functools import partial
+from hashlib import sha256
 from io import StringIO
 from tempfile import TemporaryDirectory
-from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np

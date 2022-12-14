@@ -23,12 +23,12 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader

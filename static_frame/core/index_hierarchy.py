@@ -13,11 +13,11 @@ from arraykit import name_filter
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
