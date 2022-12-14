@@ -1329,6 +1329,7 @@ class Index(IndexBase):
         return pandas.Index(self.values.copy(),
                 name=self._name)
 
+
     def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,

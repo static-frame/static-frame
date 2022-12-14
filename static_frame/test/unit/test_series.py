@@ -7,6 +7,7 @@ import typing as tp
 from collections import OrderedDict
 from enum import Enum
 from io import StringIO
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -5664,6 +5665,46 @@ class TestUnit(TestCase):
         s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
         post = s1.iloc_notfalsy_last()
         self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_to_signature_bytes_a(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'e'), name='')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_b(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 1), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_d(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1.index._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+
+
 
 
 
