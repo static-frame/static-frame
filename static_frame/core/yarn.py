@@ -1,5 +1,6 @@
 import typing as tp
 from collections.abc import Set
+from itertools import chain
 
 import numpy as np
 
@@ -9,6 +10,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -673,6 +675,36 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         # NOTE: this should load all deferred Frame
         return Series(self.values, index=self._index, own_index=True)
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (f._to_signature_bytes(
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
+                ) for f in self._axis_element())
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._hierarchy._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),),
+                v))
+
+
+
 
     #---------------------------------------------------------------------------
     # index manipulation

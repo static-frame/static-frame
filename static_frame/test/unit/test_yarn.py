@@ -1,4 +1,5 @@
 import datetime
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -1121,6 +1122,68 @@ class TestUnit(TestCase):
         y1 = Yarn((b1,))
         with self.assertRaises(RuntimeError):
             y1.rehierarch((1,0))
+
+    #---------------------------------------------------------------------------
+
+    def test_yarn_to_signature_bytes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        bytes1 = y1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            '0a6978231ec671903449e39ae465747a68a0da8492e9b5b5fcf4dc98afb8143e')
+
+    def test_yarn_to_signature_bytes_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+        bytes1 = y1._to_signature_bytes(include_name=False)
+
+        y2 = Yarn((b1, b2, b3))
+        bytes2 = y2._to_signature_bytes(include_name=False)
+
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+    def test_yarn_to_signature_bytes_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+        b4 = Bus.from_frames((f5,))
+
+        y1 = Yarn((b1, b2, b3))
+        bytes1 = y1._to_signature_bytes(include_name=False)
+
+        y2 = Yarn((b1, b2, b4))
+        bytes2 = y2._to_signature_bytes(include_name=False)
+
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
 
 
 if __name__ == '__main__':
