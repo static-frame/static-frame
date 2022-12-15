@@ -61,6 +61,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
@@ -817,6 +818,21 @@ class Series(ContainerOperand):
                 blocks_to_container=blocks_to_container,
                 pattern=pattern,
                 flags=flags,
+                )
+
+    def via_hashlib(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> InterfaceHashlib['Series']:
+        '''
+        Interface for applying regular expressions to elements in this container.
+        '''
+        return InterfaceHashlib(
+                to_bytes=self._to_signature_bytes,
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
                 )
 
 

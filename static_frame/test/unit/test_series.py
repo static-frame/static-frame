@@ -5720,9 +5720,19 @@ class TestUnit(TestCase):
                 include_name=False, include_class=False)).hexdigest(),
             )
 
+    #---------------------------------------------------------------------------
+    def test_series_via_hashlib_a(self) -> None:
+        s1 = Series((1.2, 3.5), index=('a', 'b')).rename('', index='')
 
+        self.assertEqual(s1.via_hashlib().bytes, b'SeriesIndexa\x00\x00\x00b\x00\x00\x00333333\xf3?\x00\x00\x00\x00\x00\x00\x0c@'
+        )
 
+    def test_series_via_hashlib_b(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
 
+        self.assertEqual(s1.via_hashlib().sha256().hexdigest(), 'd2a6671bc702878497762d7af4e762e54224055f939fe326660a6073dc7644d0')
+
+        # import ipdb; ipdb.set_trace()
 
 
 
