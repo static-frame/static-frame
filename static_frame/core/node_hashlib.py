@@ -16,6 +16,7 @@ from static_frame.core.node_selector import TContainer
 # from static_frame.core.util import array_from_element_apply
 
 if tp.TYPE_CHECKING:
+    from hashlib import _Hash
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
@@ -35,7 +36,11 @@ class InterfaceHashlib(Interface[TContainer]):
             )
 
     INTERFACE = (
+            'md5',
             'sha256',
+            'sha512',
+            'blake2b',
+            'blake2s',
             )
 
     def __init__(self,
@@ -58,10 +63,32 @@ class InterfaceHashlib(Interface[TContainer]):
                 encoding=self._encoding,
                 )
 
-    def sha256(self) -> bytes:
+    def md5(self) -> '_Hash':
+        return hashlib.md5(self.bytes)
+
+    def sha256(self) -> '_Hash':
         return hashlib.sha256(self.bytes)
 
+    def sha512(self) -> '_Hash':
+        return hashlib.sha512(self.bytes)
 
+    def sha3_256(self) -> '_Hash':
+        return hashlib.sha3_256(self.bytes)
+
+    def sha3_512(self) -> '_Hash':
+        return hashlib.sha3_512(self.bytes)
+
+    def shake_128(self) -> '_Hash':
+        return hashlib.shake_128(self.bytes)
+
+    def shake_256(self) -> '_Hash':
+        return hashlib.shake_256(self.bytes)
+
+    def blake2b(self) -> '_Hash':
+        return hashlib.blake2b(self.bytes)
+
+    def blake2s(self) -> '_Hash':
+        return hashlib.blake2s(self.bytes)
 
 
 

@@ -5732,6 +5732,51 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.via_hashlib().sha256().hexdigest(), 'd2a6671bc702878497762d7af4e762e54224055f939fe326660a6073dc7644d0')
 
+    def test_series_via_hashlib_c(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().md5().hexdigest(), '321c866c3bf132ee72260076ebc46154')
+
+    def test_series_via_hashlib_d(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha512().hexdigest(), '5e44db5208ba1baf8cdf8627e1c41cfe3dcb8381aa4f09cef89450d75095891f654b44a4534047ce4a9f7a574ab2af1d8b1a6d91844f060cbe99e8c722441326')
+
+    def test_series_via_hashlib_e(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_256().hexdigest(), 'faa94e04975a03275ec0e7e74ede25b0dc27472147fb2801f4177372ce1ea51c')
+
+    def test_series_via_hashlib_f(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_512().hexdigest(), '07eb7dc979908432a856fd385754d4888456a59d96f6c58f5d4ead7fb941b806e8317b26a116037c512a9550a3a296ac3acfe332cf5fc3b3ff3f2859f017f56f')
+
+    def test_series_via_hashlib_g(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_128().hexdigest(8), '1e7840cc7dd526f6')
+
+    def test_series_via_hashlib_h(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_256().hexdigest(8), 'e106705c5b4b13b5')
+
+    def test_series_via_hashlib_i(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2b().hexdigest(), '837ffac5491f029a6c9292d1e961cb1ea596c345f3d3dd1ca2f203eba61a89109d7dfc9267b846b8a0439f2b29a5ec4e3dad48c775f11429cccaf52e307d3ad2')
+
+    def test_series_via_hashlib_j(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2s().hexdigest(), '0ded3bafd8125aeab9d48c9c2df106425b52bd660b1172972b892dd8a49aebef')
+
+
+
+
+
+
         # import ipdb; ipdb.set_trace()
 
 
