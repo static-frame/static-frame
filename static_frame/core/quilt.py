@@ -1435,11 +1435,11 @@ class Quilt(ContainerBase, StoreClientMixin):
                         include_name=include_name,
                         include_class=include_class,
                         encoding=encoding),
-                (self._axis_hierarchy._to_signature_bytes(
+                (self._axis_hierarchy._to_signature_bytes( #type: ignore
                         include_name=include_name,
                         include_class=include_class,
                         encoding=encoding),
-                self._axis_opposite._to_signature_bytes(
+                self._axis_opposite._to_signature_bytes( #type: ignore
                         include_name=include_name,
                         include_class=include_class,
                         encoding=encoding),
