@@ -5773,11 +5773,10 @@ class TestUnit(TestCase):
         self.assertEqual(s1.via_hashlib().blake2s().hexdigest(), '0ded3bafd8125aeab9d48c9c2df106425b52bd660b1172972b892dd8a49aebef')
 
 
+    def test_series_via_hashlib_k(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
 
-
-
-
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(s1.via_hashlib().blake2s(digest_size=8).hexdigest(), 'ab4163989a151825')
 
 
 

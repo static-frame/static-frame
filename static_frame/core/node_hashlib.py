@@ -84,13 +84,64 @@ class InterfaceHashlib(Interface[TContainer]):
     def shake_256(self) -> '_Hash':
         return hashlib.shake_256(self.bytes)
 
-    def blake2b(self) -> '_Hash':
-        return hashlib.blake2b(self.bytes)
+    def blake2b(self, *,
+            digest_size: int = 64,
+            key: bytes = b'',
+            salt: bytes = b'',
+            person: bytes = b'',
+            fanout: int = 1,
+            depth: int = 1,
+            leaf_size: int = 0,
+            node_offset: int = 0,
+            node_depth: int = 0,
+            inner_size: int = 0,
+            last_node: bool = False,
+            # usedforsecurity: bool = True,
+            ) -> '_Hash':
+        return hashlib.blake2b(
+                self.bytes,
+                digest_size=digest_size,
+                key=key,
+                salt=salt,
+                person=person,
+                fanout=fanout,
+                depth=depth,
+                leaf_size=leaf_size,
+                node_offset=node_offset,
+                node_depth=node_depth,
+                inner_size=inner_size,
+                last_node=last_node,
+                # usedforsecurity=usedforsecurity,
+                )
 
-    def blake2s(self) -> '_Hash':
-        return hashlib.blake2s(self.bytes)
-
-
-
+    def blake2s(self, *,
+            digest_size: int = 32,
+            key: bytes = b'',
+            salt: bytes = b'',
+            person: bytes = b'',
+            fanout: int = 1,
+            depth: int = 1,
+            leaf_size: int = 0,
+            node_offset: int = 0,
+            node_depth: int = 0,
+            inner_size: int = 0,
+            last_node: bool = False,
+            # usedforsecurity: bool = True,
+            ) -> '_Hash':
+        return hashlib.blake2s(
+                self.bytes,
+                digest_size=digest_size,
+                key=key,
+                salt=salt,
+                person=person,
+                fanout=fanout,
+                depth=depth,
+                leaf_size=leaf_size,
+                node_offset=node_offset,
+                node_depth=node_depth,
+                inner_size=inner_size,
+                last_node=last_node,
+                # usedforsecurity=usedforsecurity,
+                )
 
 
