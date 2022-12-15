@@ -2,6 +2,7 @@ import os
 import typing as tp
 from datetime import date
 from datetime import datetime
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -2304,6 +2305,36 @@ class TestUnit(TestCase):
             with self.assertRaises(ErrorNPYEncode):
                 b1.to_zip_npy(fp)
             self.assertFalse(os.path.exists(fp))
+
+    #---------------------------------------------------------------------------
+
+    def test_bus_to_signature_bytes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
+
+        b2 = Bus.from_frames((f1, f2))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+    def test_bus_to_signature_bytes_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+
+        b2 = Bus.from_frames((f1, f2, f4))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
 
 
 
