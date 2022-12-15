@@ -96,7 +96,7 @@ class InterfaceHashlib(Interface[TContainer]):
             node_depth: int = 0,
             inner_size: int = 0,
             last_node: bool = False,
-            # usedforsecurity: bool = True,
+            # usedforsecurity: bool = True, # py 3.9
             ) -> '_Hash':
         return hashlib.blake2b(
                 self.bytes,
