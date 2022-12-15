@@ -1676,17 +1676,6 @@ class TestUnit(TestCase):
         self.assertNotEqual(sha256(bytes1).hexdigest(),
             '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
 
-    def test_quilt_to_signature_bytes_c(self) -> None:
-
-        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
-
-        b1 = Bus.from_frames((f1, f2))
-        q1 = Quilt(b1, retain_labels=False)
-        bytes1 = q1._to_signature_bytes(include_name=False)
-        self.assertNotEqual(sha256(bytes1).hexdigest(),
-            '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
-
 
 
 
