@@ -1713,6 +1713,14 @@ class TestUnit(TestCase):
                 sha256(bytes2).hexdigest(),
                 )
 
+    def test_index_via_hashlib_a(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        self.assertEqual(idx1.via_hashlib().sha256().hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
