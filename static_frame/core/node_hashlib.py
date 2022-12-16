@@ -1,24 +1,10 @@
 import hashlib
-import re
 import typing as tp
-
-import numpy as np
-
-# from static_frame.core.node_selector import Interface
-# from static_frame.core.node_selector import TContainer
 
 if tp.TYPE_CHECKING:
     from hashlib import _Hash
     from hashlib import _VarLenHash
 
-    # from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
-    # from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-
-
-# BlocksType = tp.Iterable[np.ndarray]
-# ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 class InterfaceHashlib:
 
