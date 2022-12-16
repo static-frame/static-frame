@@ -910,6 +910,13 @@ class Series(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+    # naming...
+    # def iter_group_input
+    # def iter_group_input_items
+    # def iter_group_input_array
+    # def iter_group_input_array_items
+
+    #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArgMapable['Series']:
         '''
