@@ -15042,6 +15042,13 @@ class TestUnit(TestCase):
         b2 = f2._to_signature_bytes(include_name=False)
         self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
 
+    def test_frame_via_hashlib_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        hd = f1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(hd,
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
 
 
 
