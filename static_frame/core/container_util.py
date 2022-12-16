@@ -1689,7 +1689,7 @@ def iter_component_signature_bytes(
         try:
             yield bytes(container.name, encoding=encoding) #type: ignore
         except TypeError:
-            raise TypeError('The name attribute must be byte-encodable to produce a hash digest. Rename or set include_name to False.')
+            raise TypeError('The name attribute must be byte-encodable to produce a hash digest. Rename or set `include_name` to False.')
     if include_class:
         yield bytes(container.__class__.__name__, encoding=encoding)
 
