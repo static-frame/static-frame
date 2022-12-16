@@ -164,6 +164,11 @@ Conversion routines: https://github.com/numpy/numpy/blob/main/numpy/core/src/mul
 
 
 
+On arrow string encoding
+https://pola-rs.github.io/polars/polars/docs/performance/index.html
+
+
+
 ==
 
 Notes:
