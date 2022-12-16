@@ -1184,6 +1184,23 @@ class TestUnit(TestCase):
 
         self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
+    def test_yarn_via_hashlib_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4,))
+        b3 = Bus.from_frames((f5, f6))
+
+        y1 = Yarn((b1, b2, b3))
+        digest = y1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(digest, '694e92cccad9bc2ae2f6bf9e0cb212bfd4b0677f79c155c89ece4dcaf7311324')
+
+
 
 
 if __name__ == '__main__':
