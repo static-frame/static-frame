@@ -2336,6 +2336,15 @@ class TestUnit(TestCase):
         self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
 
+    def test_bus_via_hashlib_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        d = b1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(d,
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
 
 
 
