@@ -1216,13 +1216,9 @@ def group_from_container_1d(
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
-    # PERF: do not do comparisons if key is not a Container or SF object
-    if not hasattr(key, 'STATIC'):
-        return key
-
     from static_frame.core.index import Index
     from static_frame.core.series import Series
-    from static_frame.core.series import Frame
+    from static_frame.core.frame import Frame
 
     key: np.ndarray
 
@@ -1244,7 +1240,7 @@ def group_from_container_1d(
     elif isinstance(group_source, Frame):
         raise ValueError('Two-dimensional conatainers not supported.')
     elif hasattr(group_source, '__iter__') and not isinstance(group_source, str):
-        key = iterable_to_array_1d(group_source)
+        key, _ = iterable_to_array_1d(group_source)
     else:
         raise ValueError(f'Group source not supported {type(group_source)}')
 

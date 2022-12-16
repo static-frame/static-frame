@@ -3421,6 +3421,17 @@ class TestUnit(TestCase):
         self.assertEqual([p[1].__class__ for p in post], [np.ndarray, np.ndarray])
 
     #---------------------------------------------------------------------------
+
+    # def test_series_iter_group_other_a(self) -> None:
+
+    #     s1 = Series((10, 4, 10, 4, 10),
+    #             index=('a', 'b', 'c', 'd', 'e'),
+    #             dtype=object)
+    #     post = [s.values.tolist() for s in s1.iter_group_other((0, 0, 0, 1, 1))]
+    #     import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
     def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
         self.assertEqual(s1.loc_min(), 'c')
