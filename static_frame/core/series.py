@@ -927,17 +927,11 @@ class Series(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # naming...
-    # def iter_group_other
-    # def iter_group_other_items
-    # def iter_group_other_array
-    # def iter_group_other_array_items
-
     @property
     def iter_group_other(self,
             ) -> IterNodeGroupOther['Series']:
         '''
-        Iterator of :obj:`Series`, groped by unique values foudn in the passed container.
+        Iterator of :obj:`Series`, groped by unique values found in the passed container.
         '''
         return IterNodeGroupOther(
                 container=self,

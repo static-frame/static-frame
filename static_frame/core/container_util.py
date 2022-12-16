@@ -1227,6 +1227,7 @@ def group_from_container_1d(
             raise ValueError(f'{group_source.ndim}-dimensional containers are not supported.')
         key = group_source
     elif isinstance(group_source, Index):
+        # not that useful as value are unique
         key = group_source.values
     elif isinstance(group_source, Series):
         if not group_source.index.equals(index):

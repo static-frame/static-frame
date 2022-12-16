@@ -3440,7 +3440,22 @@ class TestUnit(TestCase):
         dt64 = np.datetime64
         self.assertEqual(post, [(('a', dt64('2010-01-01')), ('b', dt64('2010-01-02'))), (('c', dt64('2012-01-03')),), (('d', dt64('2013-04-01')), ('e', dt64('2013-04-02')))])
 
+    def test_series_iter_group_other_c(self) -> None:
 
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(np.array((0, 0, 0, 1, 1)))]
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+
+    def test_series_iter_group_other_d(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(s1.index)]
+        self.assertEqual(post, [[10], [4], [10], [4], [10]])
 
 
     #---------------------------------------------------------------------------
