@@ -168,19 +168,28 @@ class ContainerBase(metaclass=InterfaceMeta):
         return NotImplemented #pragma: no cover
 
     #---------------------------------------------------------------------------
-    def via_hashlib(self,
+
+    def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,
             encoding: str = 'utf-8',
-            ) -> InterfaceHashlib['Series']:
+            ) -> bytes:
+        raise NotImplementedError() #pragma: no cover
+
+    @property
+    def via_hashlib(self,
+            # include_name: bool = True,
+            # include_class: bool = True,
+            # encoding: str = 'utf-8',
+            ) -> InterfaceHashlib:
         '''
         Interface for deriving cryptographic hashes from this container.
         '''
         return InterfaceHashlib(
                 to_bytes=self._to_signature_bytes,
-                include_name=include_name,
-                include_class=include_class,
-                encoding=encoding,
+                include_name=True,
+                include_class=True,
+                encoding='utf-8',
                 )
 
     def to_visidata(self) -> None:

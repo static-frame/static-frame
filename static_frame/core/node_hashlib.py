@@ -4,30 +4,23 @@ import typing as tp
 
 import numpy as np
 
-# from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import TContainer
-
-# from static_frame.core.util import DTYPE_BOOL
-# from static_frame.core.util import DTYPE_OBJECT
-# from static_frame.core.util import DTYPE_STR
-# from static_frame.core.util import DTYPE_STR_KINDS
-# from static_frame.core.util import AnyCallable
-# from static_frame.core.util import array_from_element_apply
+# from static_frame.core.node_selector import Interface
+# from static_frame.core.node_selector import TContainer
 
 if tp.TYPE_CHECKING:
     from hashlib import _Hash
+    from hashlib import _VarLenHash
 
-    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    # from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    # from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    # from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    # from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
 
 
 # BlocksType = tp.Iterable[np.ndarray]
-ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
+# ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
-class InterfaceHashlib(Interface[TContainer]):
+class InterfaceHashlib:
 
     __slots__ = (
             '_to_bytes',
@@ -49,45 +42,70 @@ class InterfaceHashlib(Interface[TContainer]):
             )
 
     def __init__(self,
-            to_bytes: tp.Callable[[], bytes],
+            to_bytes: tp.Callable[[bool, bool, str], bytes],
+            *,
             include_name: bool,
             include_class: bool,
             encoding: str,
             ) -> None:
+        '''Interfacefor deriving cryptographic hashes from this container, pre-loaded with byte signatures from the calling container.
+
+        Args:
+            include_name: Whether container name is included in the bytes signature.
+            include_class: Whether class name is included in the byte signature.
+            encoding: Encoding to use for converting strings to bytes.
+        '''
         self._to_bytes = to_bytes
         self._include_name = include_name
         self._include_class = include_class
         self._encoding = encoding
 
+    def __call__(self,
+            include_name: tp.Optional[bool] = None,
+            include_class: tp.Optional[bool] = None,
+            encoding: tp.Optional[str] = None,
+            ) -> 'InterfaceHashlib':
+        '''Interfacefor deriving cryptographic hashes from this container, pre-loaded with byte signatures from the calling container.
 
-    @property
-    def bytes(self) -> bytes:
-        return self._to_bytes(
+        Args:
+            include_name: Whether container name is included in the bytes signature.
+            include_class: Whether class name is included in the byte signature.
+            encoding: Encoding to use for converting strings to bytes.
+        '''
+        return self.__class__(
+                to_bytes=self._to_bytes,
+                include_name=include_name if include_name is not None else self._include_name,
+                include_class=include_class if include_class is not None else self._include_class,
+                encoding=encoding if encoding is not None else self._encoding,
+                )
+
+    def to_bytes(self) -> bytes:
+        return self._to_bytes( # type: ignore  # (need Protocol with __call__)
                 include_name=self._include_name,
                 include_class=self._include_class,
                 encoding=self._encoding,
                 )
 
     def md5(self) -> '_Hash':
-        return hashlib.md5(self.bytes)
+        return hashlib.md5(self.to_bytes())
 
     def sha256(self) -> '_Hash':
-        return hashlib.sha256(self.bytes)
+        return hashlib.sha256(self.to_bytes())
 
     def sha512(self) -> '_Hash':
-        return hashlib.sha512(self.bytes)
+        return hashlib.sha512(self.to_bytes())
 
     def sha3_256(self) -> '_Hash':
-        return hashlib.sha3_256(self.bytes)
+        return hashlib.sha3_256(self.to_bytes())
 
     def sha3_512(self) -> '_Hash':
-        return hashlib.sha3_512(self.bytes)
+        return hashlib.sha3_512(self.to_bytes())
 
-    def shake_128(self) -> '_Hash':
-        return hashlib.shake_128(self.bytes)
+    def shake_128(self) -> '_VarLenHash':
+        return hashlib.shake_128(self.to_bytes())
 
-    def shake_256(self) -> '_Hash':
-        return hashlib.shake_256(self.bytes)
+    def shake_256(self) -> '_VarLenHash':
+        return hashlib.shake_256(self.to_bytes())
 
     def blake2b(self, *,
             digest_size: int = 64,
@@ -104,7 +122,7 @@ class InterfaceHashlib(Interface[TContainer]):
             # usedforsecurity: bool = True, # py 3.9
             ) -> '_Hash':
         return hashlib.blake2b(
-                self.bytes,
+                self.to_bytes(),
                 digest_size=digest_size,
                 key=key,
                 salt=salt,
@@ -134,7 +152,7 @@ class InterfaceHashlib(Interface[TContainer]):
             # usedforsecurity: bool = True,
             ) -> '_Hash':
         return hashlib.blake2s(
-                self.bytes,
+                self.to_bytes(),
                 digest_size=digest_size,
                 key=key,
                 salt=salt,

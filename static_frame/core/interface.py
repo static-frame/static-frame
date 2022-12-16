@@ -55,6 +55,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
@@ -72,7 +73,6 @@ from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
@@ -207,6 +207,7 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
         InterfaceString,
         InterfaceDatetime,
         InterfaceTranspose,
+        InterfaceHashlib,
 
         InterfaceBatchValues,
         InterfaceBatchString,
@@ -1099,7 +1100,7 @@ class InterfaceSummary(Features):
                         cls_interface=obj.__class__,
                         **kwargs,
                         )
-            # InterfaceFillValue, InterfaceRe are methods, must match name
+            # as InterfaceFillValue, InterfaceRe are methods, must match on name, not INTERFACE_ATTRIBUTE_CLS
             elif name == 'via_fill_value':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceFillValue,
@@ -1110,11 +1111,7 @@ class InterfaceSummary(Features):
                         cls_interface=InterfaceRe,
                         **kwargs,
                         )
-            elif name == 'via_hashlib':
-                yield from InterfaceRecord.gen_from_accessor(
-                        cls_interface=InterfaceHashlib,
-                        **kwargs,
-                        )
+
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
             else: #

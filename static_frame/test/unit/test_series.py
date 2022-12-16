@@ -5724,7 +5724,7 @@ class TestUnit(TestCase):
     def test_series_via_hashlib_a(self) -> None:
         s1 = Series((1.2, 3.5), index=('a', 'b')).rename('', index='')
 
-        self.assertEqual(s1.via_hashlib().bytes, b'SeriesIndexa\x00\x00\x00b\x00\x00\x00333333\xf3?\x00\x00\x00\x00\x00\x00\x0c@'
+        self.assertEqual(s1.via_hashlib.to_bytes(), b'SeriesIndexa\x00\x00\x00b\x00\x00\x00333333\xf3?\x00\x00\x00\x00\x00\x00\x0c@'
         )
 
     def test_series_via_hashlib_b(self) -> None:
@@ -5775,9 +5775,12 @@ class TestUnit(TestCase):
 
     def test_series_via_hashlib_k(self) -> None:
         s1 = Series((False, True), index=('a', 'b')).rename('', index='')
-
         self.assertEqual(s1.via_hashlib().blake2s(digest_size=8).hexdigest(), 'ab4163989a151825')
 
+
+    def test_series_via_hashlib_l(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+        self.assertEqual(s1.via_hashlib.blake2s(digest_size=4).hexdigest(), '9d621eb2')
 
 
 if __name__ == '__main__':
