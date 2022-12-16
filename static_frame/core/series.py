@@ -827,8 +827,10 @@ class Series(ContainerOperand):
         '''
         return IterNodeGroup(
                 container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        group_source=self.values),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -837,8 +839,10 @@ class Series(ContainerOperand):
     def iter_group_items(self) -> IterNodeGroup['Series']:
         return IterNodeGroup(
                 container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        group_source=self.values),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -851,8 +855,12 @@ class Series(ContainerOperand):
         '''
         return IterNodeGroup(
                 container=self,
-                function_items=partial(self._axis_group_items, as_array=True),
-                function_values=partial(self._axis_group, as_array=True),
+                function_items=partial(self._axis_group_items,
+                        as_array=True,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        as_array=True,
+                        group_source=self.values),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -861,8 +869,12 @@ class Series(ContainerOperand):
     def iter_group_array_items(self) -> IterNodeGroup['Series']:
         return IterNodeGroup(
                 container=self,
-                function_items=partial(self._axis_group_items, as_array=True),
-                function_values=partial(self._axis_group, as_array=True),
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        group_source=self.values,
+                        as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -893,8 +905,10 @@ class Series(ContainerOperand):
     def iter_group_labels_array(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=partial(self._axis_group_labels_items, as_array=True),
-                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items,
+                        as_array=True),
+                function_values=partial(self._axis_group_labels,
+                        as_array=True),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
@@ -903,8 +917,10 @@ class Series(ContainerOperand):
     def iter_group_labels_array_items(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=partial(self._axis_group_labels_items, as_array=True),
-                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items,
+                        as_array=True),
+                function_values=partial(self._axis_group_labels,
+                        as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
@@ -915,6 +931,22 @@ class Series(ContainerOperand):
     # def iter_group_input_items
     # def iter_group_input_array
     # def iter_group_input_array_items
+
+    @property
+    def iter_other_group(self,
+
+            ) -> IterNodeGroup['Series']:
+        '''
+        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
+        '''
+        return IterNodeGroup(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
 
     #---------------------------------------------------------------------------
     @property
@@ -1915,11 +1947,16 @@ class Series(ContainerOperand):
     def _axis_group_items(self, *,
             axis: int = 0,
             as_array: bool = False,
+            group_source: np.ndarray,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
-
-        groups, locations = array_to_groups_and_locations(self.values)
+        '''
+        Args:
+            group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
+        '''
+        # NOTE: this could be optimized with a sorting-based apporach when possible
+        groups, locations = array_to_groups_and_locations(group_source)
 
         func = self.values.__getitem__ if as_array else self._extract_iloc
 
@@ -1927,11 +1964,17 @@ class Series(ContainerOperand):
             selection = locations == idx
             yield g, func(selection)
 
+
     def _axis_group(self, *,
             axis: int = 0,
             as_array: bool = False,
+            group_source: np.ndarray,
             ) -> tp.Iterator['Series']:
-        yield from (x for _, x in self._axis_group_items(axis=axis, as_array=as_array))
+        yield from (x for _, x in self._axis_group_items(
+                axis=axis,
+                as_array=as_array,
+                group_source=group_source,
+                ))
 
 
     def _axis_element_items(self,
