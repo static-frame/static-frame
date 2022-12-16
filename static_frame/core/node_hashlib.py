@@ -2,8 +2,8 @@ import hashlib
 import typing as tp
 
 if tp.TYPE_CHECKING:
-    from hashlib import _Hash
-    from hashlib import _VarLenHash
+    from hashlib import _Hash # pylint: disable = W0611 #pragma: no cover
+    from hashlib import _VarLenHash # pylint: disable = W0611 #pragma: no cover
 
 
 class InterfaceHashlib:
