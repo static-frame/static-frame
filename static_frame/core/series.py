@@ -932,17 +932,21 @@ class Series(ContainerOperand):
     # def iter_group_input_array
     # def iter_group_input_array_items
 
-    @property
-    def iter_other_group(self,
-
+    def iter_group_other(self,
+            other: tp.Union[np.ndarray, Index, 'Series', tp.Iterable[tp.Any]]
             ) -> IterNodeGroup['Series']:
         '''
-        Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
+        Iterator of :obj:`Series`, groped by unique values foudn in the passed container.
         '''
+        from static_frame.core.container_util import group_from_container_1d
+        group_source = group_from_container_1d(other)
+
         return IterNodeGroup(
                 container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
+                function_items=partial(self._axis_group_items,
+                        group_source=group_source),
+                function_values=partial(self._axis_group,
+                        group_source=group_source),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )

@@ -1207,6 +1207,54 @@ def key_from_container_key(
     return key
 
 
+
+def group_from_container_1d(
+        index: 'IndexBase',
+        group_source: tp.Any,
+        fill_value: tp.Any,
+        ) -> GetItemKeyType:
+    '''
+    Unpack selection values from another Index, Series, or ILoc selection.
+    '''
+    # PERF: do not do comparisons if key is not a Container or SF object
+    if not hasattr(key, 'STATIC'):
+        return key
+
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+    from static_frame.core.series import Frame
+
+    key: np.ndarray
+
+    if isinstance(group_source, np.ndarray):
+        if group_source.ndim != 1:
+            raise ValueError(f'{group_source.ndim}-dimensional containers are not supported.')
+        key = group_source
+    elif isinstance(group_source, Index):
+        key = group_source.values
+    elif isinstance(group_source, Series):
+        if not key.index.equals(index):
+            key = group_source.reindex(index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else: # the index is equal
+            key = group_source.values
+
+    elif isinstance(group_source, Frame):
+        raise ValueError('Two-dimensional conatainers not supported.')
+    elif hasattr(group_source, '__iter__') and not isinstance(group_source, str):
+        key = iterable_to_array_1d(group_source)
+    else:
+        raise ValueError(f'Group source not supported {type(group_source)}')
+
+    if len(key) != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container ({len(index)}).')
+
+    return key
+
+
+
 #---------------------------------------------------------------------------
 class IMTOAdapterSeries:
     __slots__ = ('values',)
