@@ -69,6 +69,7 @@ from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate
