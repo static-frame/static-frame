@@ -1216,9 +1216,9 @@ def group_from_container_1d(
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
+    from static_frame.core.frame import Frame
     from static_frame.core.index import Index
     from static_frame.core.series import Series
-    from static_frame.core.frame import Frame
 
     key: np.ndarray
 
@@ -1229,7 +1229,7 @@ def group_from_container_1d(
     elif isinstance(group_source, Index):
         key = group_source.values
     elif isinstance(group_source, Series):
-        if not key.index.equals(index):
+        if not group_source.index.equals(index):
             key = group_source.reindex(index,
                     fill_value=fill_value,
                     check_equals=False,

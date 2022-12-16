@@ -51,6 +51,7 @@ from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
@@ -927,31 +928,21 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # naming...
-    # def iter_group_input
-    # def iter_group_input_items
-    # def iter_group_input_array
-    # def iter_group_input_array_items
+    # def iter_group_other
+    # def iter_group_other_items
+    # def iter_group_other_array
+    # def iter_group_other_array_items
 
+    @property
     def iter_group_other(self,
-            other: tp.Union[np.ndarray, Index, 'Series', tp.Iterable[tp.Any]],
-            *,
-            fill_value: tp.Any = np.nan,
-            ) -> IterNodeGroup['Series']:
+            ) -> IterNodeGroupOther['Series']:
         '''
         Iterator of :obj:`Series`, groped by unique values foudn in the passed container.
         '''
-        from static_frame.core.container_util import group_from_container_1d
-        group_source = group_from_container_1d(index=self._index,
-                group_source=other,
-                fill_value=fill_value,
-                )
-
-        return IterNodeGroup(
+        return IterNodeGroupOther(
                 container=self,
-                function_items=partial(self._axis_group_items,
-                        group_source=group_source),
-                function_values=partial(self._axis_group,
-                        group_source=group_source),
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
