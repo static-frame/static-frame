@@ -3327,7 +3327,6 @@ class Series(ContainerOperand):
                 name=name,
                 )
 
-
     def to_series_he(self) -> 'SeriesHE':
         '''
         Return a :obj:`SeriesHE` from this :obj:`Series`.
@@ -3337,7 +3336,6 @@ class Series(ContainerOperand):
                 name=self._name,
                 own_index=True,
                 )
-
 
     def _to_signature_bytes(self,
             include_name: bool = True,
