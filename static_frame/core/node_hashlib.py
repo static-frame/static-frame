@@ -40,6 +40,10 @@ class InterfaceHashlib(Interface[TContainer]):
             'md5',
             'sha256',
             'sha512',
+            'sha3_256',
+            'sha3_512',
+            'shake_128',
+            'shake_256',
             'blake2b',
             'blake2s',
             )
