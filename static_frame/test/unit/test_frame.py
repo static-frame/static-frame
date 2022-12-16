@@ -14986,13 +14986,13 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_frame_to_signature_bytes_a(self) -> None:
 
-        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
         b1 = f1._to_signature_bytes(include_name=False)
         self.assertEqual(sha256(b1).hexdigest(),
             'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
             )
 
-        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        f2 = ff.parse('f(F)|v(int64,bool,str)|c(I,str)|s(4,8)')
         b2 = f2._to_signature_bytes(include_name=False)
         self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
 
@@ -15044,7 +15044,7 @@ class TestUnit(TestCase):
 
     def test_frame_via_hashlib_a(self) -> None:
 
-        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
         hd = f1.via_hashlib(include_name=False).sha256().hexdigest()
         self.assertEqual(hd,
             'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'

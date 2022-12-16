@@ -1656,7 +1656,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_quilt_to_signature_bytes_a(self) -> None:
 
-        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
 
         b1 = Bus.from_frames((f1, f2))
@@ -1667,7 +1667,7 @@ class TestUnit(TestCase):
 
     def test_quilt_to_signature_bytes_b(self) -> None:
 
-        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2))
@@ -1678,7 +1678,7 @@ class TestUnit(TestCase):
 
     def test_quilt_via_hashlib_a(self) -> None:
 
-        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2))

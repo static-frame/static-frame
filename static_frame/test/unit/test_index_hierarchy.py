@@ -4572,7 +4572,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_to_signature_bytes_a(self) -> None:
 
-        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+        hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=np.int64), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
 
         post = hidx1._to_signature_bytes()
 
@@ -4602,7 +4602,7 @@ class TestUnit(TestCase):
 
 
     def test_hierarchy_via_hashlib_a(self) -> None:
-        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+        hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=np.int64), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
         hd = hidx1.via_hashlib().sha256().hexdigest()
         self.assertEqual(hd, 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
 
