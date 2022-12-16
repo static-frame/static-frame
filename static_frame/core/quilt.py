@@ -1,8 +1,8 @@
 import typing as tp
 from functools import partial
+from itertools import chain
 from itertools import repeat
 from itertools import zip_longest
-from itertools import chain
 
 import numpy as np
 

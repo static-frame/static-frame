@@ -12,6 +12,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -167,6 +168,21 @@ class ContainerBase(metaclass=InterfaceMeta):
         return NotImplemented #pragma: no cover
 
     #---------------------------------------------------------------------------
+    def via_hashlib(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> InterfaceHashlib['Series']:
+        '''
+        Interface for deriving cryptographic hashes from this container.
+        '''
+        return InterfaceHashlib(
+                to_bytes=self._to_signature_bytes,
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
+                )
+
     def to_visidata(self) -> None:
         '''Open an interactive VisiData session.
         '''

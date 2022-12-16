@@ -1,13 +1,13 @@
+import hashlib
 import re
 import typing as tp
 
-import hashlib
-
 import numpy as np
 
-from static_frame.core.node_selector import Interface
 # from static_frame.core.node_selector import InterfaceBatch
+from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
+
 # from static_frame.core.util import DTYPE_BOOL
 # from static_frame.core.util import DTYPE_OBJECT
 # from static_frame.core.util import DTYPE_STR
@@ -17,6 +17,7 @@ from static_frame.core.node_selector import TContainer
 
 if tp.TYPE_CHECKING:
     from hashlib import _Hash
+
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover

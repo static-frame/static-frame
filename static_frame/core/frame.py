@@ -3639,7 +3639,6 @@ class Frame(ContainerOperand):
                 flags=flags,
                 )
 
-
     #---------------------------------------------------------------------------
     # iterators
 

@@ -1,6 +1,6 @@
 import typing as tp
-from itertools import zip_longest
 from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 
