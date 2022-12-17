@@ -3844,6 +3844,49 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
+    @property
+    def iter_group_other_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=self._axis_group_other,
+                function_items=self._axis_group_other_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other_array(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_array_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
 
     #---------------------------------------------------------------------------
     @property # type: ignore

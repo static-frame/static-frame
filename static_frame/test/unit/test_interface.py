@@ -26,7 +26,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 40), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 141), ('Method', 98), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 20), ('Accessor Fill Value', 26), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 40), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 156), ('Method', 98), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
         )
 
     def test_interface_summary_c(self) -> None:

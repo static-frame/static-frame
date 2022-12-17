@@ -963,7 +963,105 @@ class TestUnit(TestCase):
                 (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_items_a(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items(
+                axis=0, other=(0, 0, 0, 1))
+                )
 
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'))), ('q', (('z', 1), ('x', 2), ('w', 1))), ('r', (('z', False), ('x', True), ('w', False))))
+                )
+        self.assertEqual(g1, 0)
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('y', 'B'),)), ('q', (('y', 2),)), ('r', (('y', True),)))
+                )
+        self.assertEqual(g2, 1)
+
+        (g3, post3), (g4, post4) = list(f.iter_group_other_items(
+                axis=1, other=(1, 0, 1))
+                )
+        self.assertEqual(post3.to_pairs(),
+                (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
+                )
+        self.assertEqual(g3, 0)
+
+        self.assertEqual(post4.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
+                )
+        self.assertEqual(g4, 1)
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_array_a(self) -> None:
+        columns = tuple('pq')
+        index = tuple('zxwy')
+        records = ((1, 10),
+                   (2, 15),
+                   (1, 20),
+                   (2, 25))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other_array(
+                axis=0, other=(1, 0, 0, 1))
+                )
+        self.assertEqual(post1.tolist(),
+                [[2, 15], [1, 20]]
+                )
+        self.assertEqual(post2.tolist(),
+                [[1, 10], [2, 25]]
+                )
+
+        post3, post4 = list(f.iter_group_other_array(
+                axis=1, other=(0, 1))
+                )
+        self.assertEqual(post3.tolist(),
+                [[1], [2], [1], [2]]
+                )
+        self.assertEqual(post4.tolist(),
+                [[10], [15], [20], [25]]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_array_items_a(self) -> None:
+        columns = tuple('pq')
+        index = tuple('zxwy')
+        records = ((1, 10),
+                   (2, 15),
+                   (1, 20),
+                   (2, 25))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_array_items(
+                axis=0, other=(1, 0, 0, 1))
+                )
+        self.assertEqual(g1, 0)
+        self.assertEqual(post1.tolist(),
+                [[2, 15], [1, 20]]
+                )
+        self.assertEqual(g2, 1)
+        self.assertEqual(post2.tolist(),
+                [[1, 10], [2, 25]]
+                )
+
+        (g3, post3), (g4, post4) = list(f.iter_group_other_array_items(
+                axis=1, other=(0, 1))
+                )
+        self.assertEqual(g3, 0)
+        self.assertEqual(post3.tolist(),
+                [[1], [2], [1], [2]]
+                )
+        self.assertEqual(g4, 1)
+        self.assertEqual(post4.tolist(),
+                [[10], [15], [20], [25]]
+                )
 
     #---------------------------------------------------------------------------
 
