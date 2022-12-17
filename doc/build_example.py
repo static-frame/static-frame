@@ -589,7 +589,6 @@ class ExGen:
         elif attr == 'via_hashlib().blake2s()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
 
-
         else:
             raise NotImplementedError(attr)
 
@@ -1206,6 +1205,14 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"tuple(s.{attr_func}())"
         elif attr in (
+                'iter_group_other()',
+                'iter_group_other_array()',
+                'iter_group_other_array_items()',
+                'iter_group_other_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"tuple(s.{attr_func}(np.arange(len(s)) % 2))"
+        elif attr in (
                 'iter_group().apply()',
                 'iter_group_labels().apply()',
                 'iter_group_array().apply()',
@@ -1213,6 +1220,14 @@ class ExGenSeries(ExGen):
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"s.{attr_func}(lambda s: s.sum())"
+        elif attr in (
+                'iter_group_other().apply()',
+                'iter_group_other_array().apply()',
+                'iter_group_other_array_items().apply()',
+                'iter_group_other_items().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
         elif attr in (
                 'iter_group().apply_iter()',
                 'iter_group().apply_iter_items()',
@@ -1226,6 +1241,18 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"tuple(s.{attr_func}(lambda s: s.sum()))"
         elif attr in (
+                'iter_group_other().apply_iter()',
+                'iter_group_other().apply_iter_items()',
+                'iter_group_other_array().apply_iter()',
+                'iter_group_other_array().apply_iter_items()',
+                'iter_group_other_array_items().apply_iter()',
+                'iter_group_other_array_items().apply_iter_items()',
+                'iter_group_other_items().apply_iter()',
+                'iter_group_other_items().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
+        elif attr in (
                 'iter_group().apply_pool()',
                 'iter_group_array().apply_pool()',
                 'iter_group_labels().apply_pool()',
@@ -1234,6 +1261,20 @@ class ExGenSeries(ExGen):
             yield "def func(s): return s.sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield f"s.{attr_func}(func, use_threads=True)"
+        elif attr in (
+                'iter_group_other().apply_pool()',
+                'iter_group_other_array().apply_pool()',
+                ):
+            yield "def func(s): return s.sum()"
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(func, use_threads=True)"
+        elif attr in (
+                'iter_group_other_array_items().apply_pool()',
+                'iter_group_other_items().apply_pool()',
+                ):
+            yield "def func(pair): return pair[1].sum()"
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(func, use_threads=True)"
         elif attr in (
                 'iter_group_items().apply_pool()',
                 'iter_group_array_items().apply_pool()',
