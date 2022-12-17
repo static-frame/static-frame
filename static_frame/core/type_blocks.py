@@ -817,6 +817,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
+        # NOTE: might be renamed iter_arrays_by_axis
 
         if axis == 1: # iterate over rows
             zero_size = not bool(self._blocks)

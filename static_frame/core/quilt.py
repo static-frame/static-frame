@@ -1,5 +1,6 @@
 import typing as tp
 from functools import partial
+from itertools import chain
 from itertools import repeat
 from itertools import zip_longest
 
@@ -10,6 +11,7 @@ from static_frame.core.axis_map import get_extractor
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -1418,3 +1420,32 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
         return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        if self._assign_axis:
+            self._update_axis_labels()
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._axis_hierarchy._to_signature_bytes( #type: ignore
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._axis_opposite._to_signature_bytes( #type: ignore
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._bus._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),)
+                ))
+

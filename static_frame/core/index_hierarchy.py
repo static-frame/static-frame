@@ -4,6 +4,7 @@ import typing as tp
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
+from itertools import chain
 
 import numpy as np
 from arraykit import get_new_indexers_and_screen
@@ -12,6 +13,7 @@ from arraykit import name_filter
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -2249,7 +2251,6 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         # Don't use .values, as that can coerce types
         yield from self._blocks.iter_row_tuples(None)
-        # yield from zip(*map(self.values_at_depth, range(self.depth)))
 
     def __reversed__(self: IH) -> tp.Iterator[SingleLabelType]:
         '''
@@ -2686,6 +2687,22 @@ class IndexHierarchy(IndexBase):
         from static_frame import FrameGO
         return tp.cast(FrameGO, self._to_frame(FrameGO))
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                v,
+                ))
+
+    # --------------------------------------------------------------------------
     def to_pandas(self: IH) -> 'DataFrame':
         '''
         Return a Pandas MultiIndex.
@@ -2703,6 +2720,8 @@ class IndexHierarchy(IndexBase):
         mi.name = self._name
         mi.names = self.names
         return mi
+
+    # --------------------------------------------------------------------------
 
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,
