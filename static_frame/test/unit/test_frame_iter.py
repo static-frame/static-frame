@@ -938,6 +938,35 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_iter_group_other_a(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other(axis=0, other=(0, 0, 0, 1)))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'))), ('q', (('z', 1), ('x', 2), ('w', 1))), ('r', (('z', False), ('x', True), ('w', False))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('y', 'B'),)), ('q', (('y', 2),)), ('r', (('y', True),)))
+                )
+
+        post3, post4 = list(f.iter_group_other(axis=1, other=(1, 0, 1)))
+        self.assertEqual(post3.to_pairs(),
+                (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
+                )
+        self.assertEqual(post4.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_reversed(self) -> None:
         columns = tuple('pqrst')
         index = tuple('zxwy')
