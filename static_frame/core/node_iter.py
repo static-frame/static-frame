@@ -11,7 +11,7 @@ from functools import partial
 import numpy as np
 from arraykit import name_filter
 
-from static_frame.core.container_util import group_from_container_1d
+from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
@@ -836,10 +836,11 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
         index_ref = (self._container._index if axis == 0
                 else self._container._columns)
 
-        group_source = group_from_container_1d(
+        group_source = group_from_container(
                 index=index_ref,
                 group_source=other,
                 fill_value=fill_value,
+                axis=axis,
                 )
 
         # kwargs are partialed into finc_values, func_items
@@ -847,8 +848,6 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
                 axis=axis,
                 group_source=group_source,
                 )
-
-
 
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
 

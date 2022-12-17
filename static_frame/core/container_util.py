@@ -1206,12 +1206,11 @@ def key_from_container_key(
     # detect and fail on Frame?
     return key
 
-
-
-def group_from_container_1d(
+def group_from_container(
         index: 'IndexBase',
         group_source: tp.Any,
         fill_value: tp.Any,
+        axis: int,
         ) -> GetItemKeyType:
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
@@ -1223,7 +1222,7 @@ def group_from_container_1d(
     key: np.ndarray
 
     if isinstance(group_source, np.ndarray):
-        if group_source.ndim != 1:
+        if group_source.ndim > 2:
             raise ValueError(f'{group_source.ndim}-dimensional containers are not supported.')
         key = group_source
     elif isinstance(group_source, Index):
@@ -1239,14 +1238,28 @@ def group_from_container_1d(
             key = group_source.values
 
     elif isinstance(group_source, Frame):
-        raise ValueError('Two-dimensional conatainers not supported.')
+        # we do not "rotate" the group_source here depending on axis; the ref index passed in is the index if axis 0, columns if axis 1; we compare to the corresponding axis in the group_source
+        if axis == 0 and not group_source.index.equals(index):
+            key = group_source.reindex(index=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        elif axis == 1 and not group_source.columns.equals(index):
+            key = group_source.reindex(columns=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else:
+            key = group_source.values
     elif hasattr(group_source, '__iter__') and not isinstance(group_source, str):
         key, _ = iterable_to_array_1d(group_source)
     else:
         raise ValueError(f'Group source not supported {type(group_source)}')
 
-    if len(key) != len(index):
-        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container ({len(index)}).')
+    if key.ndim == 1 and len(key) != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({len(index)}).')
+    elif key.ndim == 2 and key.shape[axis] != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({key.shape[axis]}).')
 
     return key
 

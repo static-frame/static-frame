@@ -963,6 +963,45 @@ class TestUnit(TestCase):
                 (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
                 )
 
+    def test_frame_iter_group_other_b(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # axis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other(axis=0, other=f[['q', 'r']]))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', False), ('w', False))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('x', 'A'), ('y', 'B'))), ('q', (('x', 2), ('y', 2))), ('r', (('x', True), ('y', True))))
+                )
+
+    def test_frame_iter_group_other_c(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = ((1, 1, False),
+                   (1, 1, False),
+                   (5, 1, False),
+                   (8, 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # axis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items(axis=1,
+                other=f.iloc[:2, :2],
+                fill_value = None
+                ))
+        self.assertEqual(g1, (1, 1))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 1), ('x', 1), ('w', 5), ('y', 8))), ('q', (('z', 1), ('x', 1), ('w', 1), ('y', 2))))
+                )
+        self.assertEqual(g2, (None, None))
+        self.assertEqual(post2.to_pairs(),
+                (('r', (('z', False), ('x', False), ('w', False), ('y', True))),)
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_iter_group_other_items_a(self) -> None:
         columns = tuple('pqr')
