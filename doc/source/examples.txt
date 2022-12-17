@@ -362,7 +362,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_Series-corr()
 
 #start_Series-count()
@@ -1603,7 +1603,7 @@ via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
-<<U90>                               <<U6>    <<U27>               <<U83>
+<<U94>                               <<U6>    <<U27>               <<U83>
 #end_Series-interface
 
 #start_Series-__repr__()
@@ -2948,6 +2948,178 @@ d        -2
 e        8
 <<U1>    <int64>
 #end_Series-iter_group_labels_items().apply_pool()
+
+#start_Series-iter_group_other()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 2))
+(<Series>
+<Index>
+a        -2
+c        19
+e        8
+<<U1>    <int64>, <Series>
+<Index>
+b        8
+d        -2
+<<U1>    <int64>)
+#end_Series-iter_group_other()
+
+#start_Series-iter_group_other().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other().apply()
+
+#start_Series-iter_group_other().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_Series-iter_group_other().apply_iter()
+
+#start_Series-iter_group_other().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+((0, -4), (1, 16), (2, 19))
+#end_Series-iter_group_other().apply_iter_items()
+
+#start_Series-iter_group_other().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other().apply_pool()
+
+#start_Series-iter_group_other_array()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 2))
+(array([-2, 19,  8]), array([ 8, -2]))
+#end_Series-iter_group_other_array()
+
+#start_Series-iter_group_other_array().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other_array().apply()
+
+#start_Series-iter_group_other_array().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_Series-iter_group_other_array().apply_iter()
+
+#start_Series-iter_group_other_array().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+((0, -4), (1, 16), (2, 19))
+#end_Series-iter_group_other_array().apply_iter_items()
+
+#start_Series-iter_group_other_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other_array().apply_pool()
+
+#start_Series-iter_group_other_array_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 2))
+((0, array([-2, 19,  8])), (1, array([ 8, -2])))
+#end_Series-iter_group_other_array_items()
+
+#start_Series-iter_group_other_array_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_array_items().apply()
+
+#start_Series-iter_group_other_array_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_array_items().apply_iter()
+
+#start_Series-iter_group_other_array_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_array_items().apply_iter_items()
+
+#start_Series-iter_group_other_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other_array_items().apply_pool()
+
+#start_Series-iter_group_other_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 2))
+((0, <Series>
+<Index>
+a        -2
+c        19
+e        8
+<<U1>    <int64>), (1, <Series>
+<Index>
+b        8
+d        -2
+<<U1>    <int64>))
+#end_Series-iter_group_other_items()
+
+#start_Series-iter_group_other_items().apply()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_items().apply()
+
+#start_Series-iter_group_other_items().apply_iter()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_items().apply_iter()
+
+#start_Series-iter_group_other_items().apply_iter_items()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_Series-iter_group_other_items().apply_iter_items()
+
+#start_Series-iter_group_other_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.Series((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_Series-iter_group_other_items().apply_pool()
 
 #start_Series-iter_window()
 >>> s = sf.Series((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -5462,7 +5634,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985492
+0.9977051066985494
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -6703,7 +6875,7 @@ via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-<<U90>                               <<U8>    <<U27>               <<U83>
+<<U94>                               <<U8>    <<U27>               <<U83>
 #end_SeriesHE-interface
 
 #start_SeriesHE-__repr__()
@@ -8048,6 +8220,178 @@ d        -2
 e        8
 <<U1>    <int64>
 #end_SeriesHE-iter_group_labels_items().apply_pool()
+
+#start_SeriesHE-iter_group_other()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 2))
+(<SeriesHE>
+<Index>
+a          -2
+c          19
+e          8
+<<U1>      <int64>, <SeriesHE>
+<Index>
+b          8
+d          -2
+<<U1>      <int64>)
+#end_SeriesHE-iter_group_other()
+
+#start_SeriesHE-iter_group_other().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other().apply()
+
+#start_SeriesHE-iter_group_other().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_SeriesHE-iter_group_other().apply_iter()
+
+#start_SeriesHE-iter_group_other().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+((0, -4), (1, 16), (2, 19))
+#end_SeriesHE-iter_group_other().apply_iter_items()
+
+#start_SeriesHE-iter_group_other().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other().apply_pool()
+
+#start_SeriesHE-iter_group_other_array()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 2))
+(array([-2, 19,  8]), array([ 8, -2]))
+#end_SeriesHE-iter_group_other_array()
+
+#start_SeriesHE-iter_group_other_array().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other_array().apply()
+
+#start_SeriesHE-iter_group_other_array().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+(-4, 16, 19)
+#end_SeriesHE-iter_group_other_array().apply_iter()
+
+#start_SeriesHE-iter_group_other_array().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+((0, -4), (1, 16), (2, 19))
+#end_SeriesHE-iter_group_other_array().apply_iter_items()
+
+#start_SeriesHE-iter_group_other_array().apply_pool()
+>>> def func(s): return s.sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other_array().apply_pool()
+
+#start_SeriesHE-iter_group_other_array_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 2))
+((0, array([-2, 19,  8])), (1, array([ 8, -2])))
+#end_SeriesHE-iter_group_other_array_items()
+
+#start_SeriesHE-iter_group_other_array_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_array_items().apply()
+
+#start_SeriesHE-iter_group_other_array_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_array_items().apply_iter()
+
+#start_SeriesHE-iter_group_other_array_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_array_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_other_array_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other_array_items().apply_pool()
+
+#start_SeriesHE-iter_group_other_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 2))
+((0, <SeriesHE>
+<Index>
+a          -2
+c          19
+e          8
+<<U1>      <int64>), (1, <SeriesHE>
+<Index>
+b          8
+d          -2
+<<U1>      <int64>))
+#end_SeriesHE-iter_group_other_items()
+
+#start_SeriesHE-iter_group_other_items().apply()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_items().apply()
+
+#start_SeriesHE-iter_group_other_items().apply_iter()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_items().apply_iter()
+
+#start_SeriesHE-iter_group_other_items().apply_iter_items()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
+TypeError('<lambda>() takes 1 positional argument but 2 were given')
+#end_SeriesHE-iter_group_other_items().apply_iter_items()
+
+#start_SeriesHE-iter_group_other_items().apply_pool()
+>>> def func(pair): return pair[1].sum()
+>>> s = sf.SeriesHE((-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply_pool(func, use_threads=True)
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
+#end_SeriesHE-iter_group_other_items().apply_pool()
 
 #start_SeriesHE-iter_window()
 >>> s = sf.SeriesHE((2, 8, 19, 34, 54), index=('a', 'b', 'c', 'd', 'e'))
@@ -10186,6 +10530,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -10862,6 +11210,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -13286,7 +13638,7 @@ via_hashlib(include_name, include... Frame    Accessor Hashlib
 via_hashlib(include_name, include... Frame    Accessor Hashlib
 via_hashlib(include_name, include... Frame    Accessor Hashlib
 via_hashlib(include_name, include... Frame    Accessor Hashlib
-<<U90>                               <<U5>    <<U27>               <<U83>
+<<U94>                               <<U5>    <<U27>               <<U83>
 #end_Frame-interface
 
 #start_Frame-__repr__()
@@ -14762,6 +15114,196 @@ q        -1
 >>> tuple(f.iter_group_labels_items(1).apply_iter_items(lambda k, v: v['b'].sum() if k == 'p' else -1))
 (('p', 1), ('q', -1))
 #end_Frame-iter_group_labels_items().apply_iter_items()
+
+#start_Frame-iter_group_other()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2))
+(<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+0       11      0       0
+2       10      3       0
+<int64> <int64> <int64> <int64>, <Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+3       2       8       1
+<int64> <int64> <int64> <int64>)
+#end_Frame-iter_group_other()
+
+#start_Frame-iter_group_other().apply()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other(np.arange(len(f)) % 2).apply(lambda f: f['b'].sum())
+<Series>
+<Index>
+0        3
+1        16
+<int64>  <int64>
+#end_Frame-iter_group_other().apply()
+
+#start_Frame-iter_group_other().apply_iter()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter(lambda f: f['b'].sum()))
+(3, 16)
+#end_Frame-iter_group_other().apply_iter()
+
+#start_Frame-iter_group_other().apply_iter_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter_items(lambda f: f['b'].sum()))
+((0, 3), (1, 16))
+#end_Frame-iter_group_other().apply_iter_items()
+
+#start_Frame-iter_group_other_array()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2))
+(array([[11,  0,  0],
+       [10,  3,  0]]), array([[4, 8, 1],
+       [2, 8, 1]]))
+#end_Frame-iter_group_other_array()
+
+#start_Frame-iter_group_other_array().apply()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array(np.arange(len(f)) % 2).apply(lambda a: np.sum(a))
+<Series>
+<Index>
+0        24
+1        24
+<int64>  <int64>
+#end_Frame-iter_group_other_array().apply()
+
+#start_Frame-iter_group_other_array().apply_iter()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter(lambda a: np.sum(a)))
+(24, 24)
+#end_Frame-iter_group_other_array().apply_iter()
+
+#start_Frame-iter_group_other_array().apply_iter_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter_items(lambda a: np.sum(a)))
+((0, 24), (1, 24))
+#end_Frame-iter_group_other_array().apply_iter_items()
+
+#start_Frame-iter_group_other_array_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2))
+((0, array([[11,  0,  0],
+       [10,  3,  0]])), (1, array([[4, 8, 1],
+       [2, 8, 1]])))
+#end_Frame-iter_group_other_array_items()
+
+#start_Frame-iter_group_other_array_items().apply()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 2).apply(lambda k, v: np.sum(v) if k == 0 else v.shape)
+<Series>
+<Index>
+0        24
+1        (2, 3)
+<int64>  <object>
+#end_Frame-iter_group_other_array_items().apply()
+
+#start_Frame-iter_group_other_array_items().apply_iter()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: np.sum(v) if k == 0 else v.shape))
+(24, (2, 3))
+#end_Frame-iter_group_other_array_items().apply_iter()
+
+#start_Frame-iter_group_other_array_items().apply_iter_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: np.sum(v) if k == 0 else v.shape))
+((0, 24), (1, (2, 3)))
+#end_Frame-iter_group_other_array_items().apply_iter_items()
+
+#start_Frame-iter_group_other_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2))
+((0, <Frame>
+<Index> a       b       c       <<U1>
+<Index>
+0       11      0       0
+2       10      3       0
+<int64> <int64> <int64> <int64>), (1, <Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+3       2       8       1
+<int64> <int64> <int64> <int64>))
+#end_Frame-iter_group_other_items()
+
+#start_Frame-iter_group_other_items().apply()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_items(np.arange(len(f)) % 2).apply(lambda k, v: v['b'].sum() if k == 0 else v.shape)
+<Series>
+<Index>
+0        3
+1        (2, 3)
+<int64>  <object>
+#end_Frame-iter_group_other_items().apply()
+
+#start_Frame-iter_group_other_items().apply_iter()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+(3, (2, 3))
+#end_Frame-iter_group_other_items().apply_iter()
+
+#start_Frame-iter_group_other_items().apply_iter_items()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+((0, 3), (1, (2, 3)))
+#end_Frame-iter_group_other_items().apply_iter_items()
 
 #start_Frame-iter_series()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -17988,6 +18530,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -18664,6 +19210,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -21088,7 +21638,7 @@ via_hashlib(include_name, include... FrameHE  Accessor Hashlib
 via_hashlib(include_name, include... FrameHE  Accessor Hashlib
 via_hashlib(include_name, include... FrameHE  Accessor Hashlib
 via_hashlib(include_name, include... FrameHE  Accessor Hashlib
-<<U90>                               <<U7>    <<U27>               <<U83>
+<<U94>                               <<U7>    <<U27>               <<U83>
 #end_FrameHE-interface
 
 #start_FrameHE-__repr__()
@@ -22564,6 +23114,196 @@ q        -1
 >>> tuple(f.iter_group_labels_items(1).apply_iter_items(lambda k, v: v['b'].sum() if k == 'p' else -1))
 (('p', 1), ('q', -1))
 #end_FrameHE-iter_group_labels_items().apply_iter_items()
+
+#start_FrameHE-iter_group_other()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2))
+(<FrameHE>
+<Index>   a       b       c       <<U1>
+<Index>
+0         11      0       0
+2         10      3       0
+<int64>   <int64> <int64> <int64>, <FrameHE>
+<Index>   a       b       c       <<U1>
+<Index>
+1         4       8       1
+3         2       8       1
+<int64>   <int64> <int64> <int64>)
+#end_FrameHE-iter_group_other()
+
+#start_FrameHE-iter_group_other().apply()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other(np.arange(len(f)) % 2).apply(lambda f: f['b'].sum())
+<Series>
+<Index>
+0        3
+1        16
+<int64>  <int64>
+#end_FrameHE-iter_group_other().apply()
+
+#start_FrameHE-iter_group_other().apply_iter()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter(lambda f: f['b'].sum()))
+(3, 16)
+#end_FrameHE-iter_group_other().apply_iter()
+
+#start_FrameHE-iter_group_other().apply_iter_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter_items(lambda f: f['b'].sum()))
+((0, 3), (1, 16))
+#end_FrameHE-iter_group_other().apply_iter_items()
+
+#start_FrameHE-iter_group_other_array()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2))
+(array([[11,  0,  0],
+       [10,  3,  0]]), array([[4, 8, 1],
+       [2, 8, 1]]))
+#end_FrameHE-iter_group_other_array()
+
+#start_FrameHE-iter_group_other_array().apply()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array(np.arange(len(f)) % 2).apply(lambda a: np.sum(a))
+<Series>
+<Index>
+0        24
+1        24
+<int64>  <int64>
+#end_FrameHE-iter_group_other_array().apply()
+
+#start_FrameHE-iter_group_other_array().apply_iter()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter(lambda a: np.sum(a)))
+(24, 24)
+#end_FrameHE-iter_group_other_array().apply_iter()
+
+#start_FrameHE-iter_group_other_array().apply_iter_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter_items(lambda a: np.sum(a)))
+((0, 24), (1, 24))
+#end_FrameHE-iter_group_other_array().apply_iter_items()
+
+#start_FrameHE-iter_group_other_array_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2))
+((0, array([[11,  0,  0],
+       [10,  3,  0]])), (1, array([[4, 8, 1],
+       [2, 8, 1]])))
+#end_FrameHE-iter_group_other_array_items()
+
+#start_FrameHE-iter_group_other_array_items().apply()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 2).apply(lambda k, v: np.sum(v) if k == 0 else v.shape)
+<Series>
+<Index>
+0        24
+1        (2, 3)
+<int64>  <object>
+#end_FrameHE-iter_group_other_array_items().apply()
+
+#start_FrameHE-iter_group_other_array_items().apply_iter()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: np.sum(v) if k == 0 else v.shape))
+(24, (2, 3))
+#end_FrameHE-iter_group_other_array_items().apply_iter()
+
+#start_FrameHE-iter_group_other_array_items().apply_iter_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: np.sum(v) if k == 0 else v.shape))
+((0, 24), (1, (2, 3)))
+#end_FrameHE-iter_group_other_array_items().apply_iter_items()
+
+#start_FrameHE-iter_group_other_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2))
+((0, <FrameHE>
+<Index>   a       b       c       <<U1>
+<Index>
+0         11      0       0
+2         10      3       0
+<int64>   <int64> <int64> <int64>), (1, <FrameHE>
+<Index>   a       b       c       <<U1>
+<Index>
+1         4       8       1
+3         2       8       1
+<int64>   <int64> <int64> <int64>))
+#end_FrameHE-iter_group_other_items()
+
+#start_FrameHE-iter_group_other_items().apply()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_items(np.arange(len(f)) % 2).apply(lambda k, v: v['b'].sum() if k == 0 else v.shape)
+<Series>
+<Index>
+0        3
+1        (2, 3)
+<int64>  <object>
+#end_FrameHE-iter_group_other_items().apply()
+
+#start_FrameHE-iter_group_other_items().apply_iter()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+(3, (2, 3))
+#end_FrameHE-iter_group_other_items().apply_iter()
+
+#start_FrameHE-iter_group_other_items().apply_iter_items()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+((0, 3), (1, (2, 3)))
+#end_FrameHE-iter_group_other_items().apply_iter_items()
 
 #start_FrameHE-iter_series()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -25762,6 +26502,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
+----
+__index0__: [["p","q","r"]]
+a: [[0,2,4]]
+b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -26438,6 +27182,10 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
+----
+__index0__: [["p","q","r","s"]]
+a: [[10,2,8,3]]
+b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -28889,7 +29637,7 @@ via_hashlib(include_name, include... FrameGO  Accessor Hashlib
 via_hashlib(include_name, include... FrameGO  Accessor Hashlib
 via_hashlib(include_name, include... FrameGO  Accessor Hashlib
 via_hashlib(include_name, include... FrameGO  Accessor Hashlib
-<<U90>                               <<U7>    <<U27>               <<U83>
+<<U94>                               <<U7>    <<U27>               <<U83>
 #end_FrameGO-interface
 
 #start_FrameGO-__repr__()
@@ -30365,6 +31113,196 @@ q        -1
 >>> tuple(f.iter_group_labels_items(1).apply_iter_items(lambda k, v: v['b'].sum() if k == 'p' else -1))
 (('p', 1), ('q', -1))
 #end_FrameGO-iter_group_labels_items().apply_iter_items()
+
+#start_FrameGO-iter_group_other()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2))
+(<FrameGO>
+<IndexGO> a       b       c       <<U1>
+<Index>
+0         11      0       0
+2         10      3       0
+<int64>   <int64> <int64> <int64>, <FrameGO>
+<IndexGO> a       b       c       <<U1>
+<Index>
+1         4       8       1
+3         2       8       1
+<int64>   <int64> <int64> <int64>)
+#end_FrameGO-iter_group_other()
+
+#start_FrameGO-iter_group_other().apply()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other(np.arange(len(f)) % 2).apply(lambda f: f['b'].sum())
+<Series>
+<Index>
+0        3
+1        16
+<int64>  <int64>
+#end_FrameGO-iter_group_other().apply()
+
+#start_FrameGO-iter_group_other().apply_iter()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter(lambda f: f['b'].sum()))
+(3, 16)
+#end_FrameGO-iter_group_other().apply_iter()
+
+#start_FrameGO-iter_group_other().apply_iter_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other(np.arange(len(f)) % 2).apply_iter_items(lambda f: f['b'].sum()))
+((0, 3), (1, 16))
+#end_FrameGO-iter_group_other().apply_iter_items()
+
+#start_FrameGO-iter_group_other_array()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2))
+(array([[11,  0,  0],
+       [10,  3,  0]]), array([[4, 8, 1],
+       [2, 8, 1]]))
+#end_FrameGO-iter_group_other_array()
+
+#start_FrameGO-iter_group_other_array().apply()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array(np.arange(len(f)) % 2).apply(lambda a: np.sum(a))
+<Series>
+<Index>
+0        24
+1        24
+<int64>  <int64>
+#end_FrameGO-iter_group_other_array().apply()
+
+#start_FrameGO-iter_group_other_array().apply_iter()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter(lambda a: np.sum(a)))
+(24, 24)
+#end_FrameGO-iter_group_other_array().apply_iter()
+
+#start_FrameGO-iter_group_other_array().apply_iter_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array(np.arange(len(f)) % 2).apply_iter_items(lambda a: np.sum(a)))
+((0, 24), (1, 24))
+#end_FrameGO-iter_group_other_array().apply_iter_items()
+
+#start_FrameGO-iter_group_other_array_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2))
+((0, array([[11,  0,  0],
+       [10,  3,  0]])), (1, array([[4, 8, 1],
+       [2, 8, 1]])))
+#end_FrameGO-iter_group_other_array_items()
+
+#start_FrameGO-iter_group_other_array_items().apply()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 2).apply(lambda k, v: np.sum(v) if k == 0 else v.shape)
+<Series>
+<Index>
+0        24
+1        (2, 3)
+<int64>  <object>
+#end_FrameGO-iter_group_other_array_items().apply()
+
+#start_FrameGO-iter_group_other_array_items().apply_iter()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: np.sum(v) if k == 0 else v.shape))
+(24, (2, 3))
+#end_FrameGO-iter_group_other_array_items().apply_iter()
+
+#start_FrameGO-iter_group_other_array_items().apply_iter_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_array_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: np.sum(v) if k == 0 else v.shape))
+((0, 24), (1, (2, 3)))
+#end_FrameGO-iter_group_other_array_items().apply_iter_items()
+
+#start_FrameGO-iter_group_other_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2))
+((0, <FrameGO>
+<IndexGO> a       b       c       <<U1>
+<Index>
+0         11      0       0
+2         10      3       0
+<int64>   <int64> <int64> <int64>), (1, <FrameGO>
+<IndexGO> a       b       c       <<U1>
+<Index>
+1         4       8       1
+3         2       8       1
+<int64>   <int64> <int64> <int64>))
+#end_FrameGO-iter_group_other_items()
+
+#start_FrameGO-iter_group_other_items().apply()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f.iter_group_other_items(np.arange(len(f)) % 2).apply(lambda k, v: v['b'].sum() if k == 0 else v.shape)
+<Series>
+<Index>
+0        3
+1        (2, 3)
+<int64>  <object>
+#end_FrameGO-iter_group_other_items().apply()
+
+#start_FrameGO-iter_group_other_items().apply_iter()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+(3, (2, 3))
+#end_FrameGO-iter_group_other_items().apply_iter()
+
+#start_FrameGO-iter_group_other_items().apply_iter_items()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> tuple(f.iter_group_other_items(np.arange(len(f)) % 2).apply_iter_items(lambda k, v: v['b'].sum() if k == 0 else v.shape))
+((0, 3), (1, (2, 3)))
+#end_FrameGO-iter_group_other_items().apply_iter_items()
 
 #start_FrameGO-iter_series()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -69937,13 +70875,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f3a516248b0> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7fc0063590d0> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f39cecf1160> for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7fc0061e7670> for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -70070,7 +71008,7 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f3a51624a60>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7fc006359280>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -70132,7 +71070,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f3a51624c10>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7fc006359430>, ddof=0) for IndexHierarchy is not defined; convert to Frame.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -72432,13 +73370,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f3a516248b0> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function mean at 0x7fc0063590d0> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f39cecf1160> for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('<function median at 0x7fc0061e7670> for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -72565,7 +73503,7 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f3a51624a60>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function std at 0x7fc006359280>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -72627,7 +73565,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f3a51624c10>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
+NotImplementedError('functools.partial(<function var at 0x7fc006359430>, ddof=0) for IndexHierarchyGO is not defined; convert to Frame.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -82872,7 +83810,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f39ad0a1bc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbf50c39d40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -82932,13 +83870,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f39ad0a1bc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbf50c39740>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f39ad0a15c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbf5e4b1640>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
