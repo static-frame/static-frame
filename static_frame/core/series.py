@@ -941,6 +941,46 @@ class Series(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
+    @property
+    def iter_group_other_items(self,
+            ) -> IterNodeGroupOther['Series']:
+        '''
+        Iterator of pairs of label, :obj:`Series`, groped by unique values found in the passed container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other_array(self) -> IterNodeGroupOther['Series']:
+        return IterNodeGroupOther(
+                container=self,
+                function_items=partial(self._axis_group_items,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES
+                )
+
+    @property
+    def iter_group_other_array_items(self) -> IterNodeGroupOther['Series']:
+        return IterNodeGroupOther(
+                container=self,
+                function_items=partial(self._axis_group_items,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES
+                )
+
+
 
     #---------------------------------------------------------------------------
     @property
