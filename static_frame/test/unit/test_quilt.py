@@ -1,4 +1,5 @@
 import typing as tp
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -1651,6 +1652,43 @@ class TestUnit(TestCase):
         q1 = Quilt(b1, retain_labels=True)
         self.assertTrue(q1.shape, (8, 4))
         self.assertIs(q1.index.index_types[1], IndexSecond)
+
+    #---------------------------------------------------------------------------
+    def test_quilt_to_signature_bytes_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        bytes1 = q1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
+
+    def test_quilt_to_signature_bytes_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        bytes1 = q1._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(),
+            '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
+
+    def test_quilt_via_hashlib_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+
+        hd = q1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(hd,
+            'b9caa5a602b91077d278d35f5558f3bad8d268100ec82842849a9c949de441df')
+
+
 
 if __name__ == '__main__':
     import unittest

@@ -1767,3 +1767,15 @@ class Batch(ContainerOperand, StoreClientMixin):
                 config=self._config,
                 name=self._name,
                 )
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        return self.to_bus()._to_signature_bytes(
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
+                )

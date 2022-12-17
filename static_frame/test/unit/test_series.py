@@ -6,6 +6,7 @@ import string
 import typing as tp
 from collections import OrderedDict
 from enum import Enum
+from hashlib import sha256
 from io import StringIO
 
 import frame_fixtures as ff
@@ -30,6 +31,7 @@ from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearMonth
 from static_frame import Series
+from static_frame import SeriesHE
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
@@ -5752,6 +5754,120 @@ class TestUnit(TestCase):
         post = s1.iloc_notfalsy_last()
         self.assertEqual(post, -1)
 
+    #---------------------------------------------------------------------------
+    def test_series_to_signature_bytes_a(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'e'), name='')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_b(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 1), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_d(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1.index._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_e(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = SeriesHE((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            )
+
+    #---------------------------------------------------------------------------
+    def test_series_via_hashlib_a(self) -> None:
+        s1 = Series((1.2, 3.5), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib.to_bytes(), b'SeriesIndexa\x00\x00\x00b\x00\x00\x00333333\xf3?\x00\x00\x00\x00\x00\x00\x0c@'
+        )
+
+    def test_series_via_hashlib_b(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha256().hexdigest(), 'd2a6671bc702878497762d7af4e762e54224055f939fe326660a6073dc7644d0')
+
+    def test_series_via_hashlib_c(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().md5().hexdigest(), '321c866c3bf132ee72260076ebc46154')
+
+    def test_series_via_hashlib_d(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha512().hexdigest(), '5e44db5208ba1baf8cdf8627e1c41cfe3dcb8381aa4f09cef89450d75095891f654b44a4534047ce4a9f7a574ab2af1d8b1a6d91844f060cbe99e8c722441326')
+
+    def test_series_via_hashlib_e(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_256().hexdigest(), 'faa94e04975a03275ec0e7e74ede25b0dc27472147fb2801f4177372ce1ea51c')
+
+    def test_series_via_hashlib_f(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_512().hexdigest(), '07eb7dc979908432a856fd385754d4888456a59d96f6c58f5d4ead7fb941b806e8317b26a116037c512a9550a3a296ac3acfe332cf5fc3b3ff3f2859f017f56f')
+
+    def test_series_via_hashlib_g(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_128().hexdigest(8), '1e7840cc7dd526f6')
+
+    def test_series_via_hashlib_h(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_256().hexdigest(8), 'e106705c5b4b13b5')
+
+    def test_series_via_hashlib_i(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2b().hexdigest(), '837ffac5491f029a6c9292d1e961cb1ea596c345f3d3dd1ca2f203eba61a89109d7dfc9267b846b8a0439f2b29a5ec4e3dad48c775f11429cccaf52e307d3ad2')
+
+    def test_series_via_hashlib_j(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2s().hexdigest(), '0ded3bafd8125aeab9d48c9c2df106425b52bd660b1172972b892dd8a49aebef')
+
+
+    def test_series_via_hashlib_k(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+        self.assertEqual(s1.via_hashlib().blake2s(digest_size=8).hexdigest(), 'ab4163989a151825')
+
+
+    def test_series_via_hashlib_l(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+        self.assertEqual(s1.via_hashlib.blake2s(digest_size=4).hexdigest(), '9d621eb2')
 
 
 if __name__ == '__main__':

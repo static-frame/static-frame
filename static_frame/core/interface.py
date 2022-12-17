@@ -55,6 +55,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
@@ -206,6 +207,8 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
         InterfaceString,
         InterfaceDatetime,
         InterfaceTranspose,
+        InterfaceHashlib,
+
         InterfaceBatchValues,
         InterfaceBatchString,
         InterfaceBatchDatetime,
@@ -405,6 +408,7 @@ class InterfaceGroup:
     AccessorTranspose = 'Accessor Transpose'
     AccessorFillValue = 'Accessor Fill Value'
     AccessorRe = 'Accessor Regular Expression'
+    AccessorHashlib = 'Accessor Hashlib'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -429,6 +433,7 @@ INTERFACE_GROUP_DOC = {
     'Accessor Transpose': 'Interface representing a virtual transposition, permiting application of binary operators with Series along columns instead of rows.',
     'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
     'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
+    'Accessor Hashlib': 'Interface exposing cryptographic hashing via hashlib interfaces.',
     }
 
 class InterfaceRecord(tp.NamedTuple):
@@ -690,6 +695,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorFillValue
         elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:
             group = InterfaceGroup.AccessorRe
+        elif cls_interface is InterfaceHashlib:
+            group = InterfaceGroup.AccessorHashlib
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
 
@@ -700,7 +707,7 @@ class InterfaceRecord(tp.NamedTuple):
             delegate_reference = f'{cls_interface.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
-            if cls_interface in (InterfaceFillValue, InterfaceRe):
+            if cls_interface in (InterfaceFillValue, InterfaceRe, InterfaceHashlib):
                 terminus_sig, terminus_sig_no_args = _get_signatures(
                         name,
                         obj,
@@ -1093,7 +1100,7 @@ class InterfaceSummary(Features):
                         cls_interface=obj.__class__,
                         **kwargs,
                         )
-            # InterfaceFillValue, InterfaceRe are methods, must match name
+            # as InterfaceFillValue, InterfaceRe are methods, must match on name, not INTERFACE_ATTRIBUTE_CLS
             elif name == 'via_fill_value':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceFillValue,
@@ -1104,6 +1111,7 @@ class InterfaceSummary(Features):
                         cls_interface=InterfaceRe,
                         **kwargs,
                         )
+
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
             else: #

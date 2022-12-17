@@ -551,6 +551,49 @@ class ExGen:
             yield f"{name}.via_re('[X123]').{attr_funcs[1]}(){exporter}"
 
     @classmethod
+    def accessor_hashlib(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_hashlib(row: sf.Series,
+            name: str,
+            ctr_method: str,
+            ctr_kwargs: str,
+            exporter: str = '',
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        yield f'{name} = {ctr}'
+
+        if attr == 'via_hashlib().md5()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().sha256()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().sha512()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().sha3_256()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().sha3_512()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().shake_128()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest(8)"
+        elif attr == 'via_hashlib().shake_256()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest(8)"
+
+        elif attr == 'via_hashlib().blake2b()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+        elif attr == 'via_hashlib().blake2s()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
+
+
+        else:
+            raise NotImplementedError(attr)
+
+    @classmethod
     def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
         raise StopIteration()
 
@@ -1395,6 +1438,10 @@ class ExGenSeries(ExGen):
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_regular_expression(row, 's', '', SERIES_INIT_A)
+
+    @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 's', '', SERIES_INIT_A)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
@@ -2792,6 +2839,10 @@ class ExGenFrame(ExGen):
         yield from ExGen._accessor_regular_expression(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
 
     @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_B)
+
+    @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
@@ -3148,6 +3199,10 @@ class ExGenIndex(ExGen):
     @staticmethod
     def accessor_regular_expression(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_regular_expression(row, 'ix', '', INDEX_INIT_E)
+
+    @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'ix', '', INDEX_INIT_E)
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
@@ -3538,6 +3593,10 @@ class _ExGenIndexDT64(ExGen):
     @classmethod
     def accessor_regular_expression(cls, row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_regular_expression(row, 'ix', '', cls.INDEX_INIT_A)
+
+    @classmethod
+    def accessor_hashlib(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'ix', '', cls.INDEX_INIT_A)
 
     @classmethod
     def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -4029,6 +4088,10 @@ class ExGenIndexHierarchy(ExGen):
         yield from ExGen._accessor_regular_expression(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
 
     @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
+
+    @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
@@ -4333,6 +4396,11 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+    @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
+
+
 
 class ExGenYarn(ExGen):
 
@@ -4507,7 +4575,6 @@ class ExGenYarn(ExGen):
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._dictionary_like(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
 
-
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._display(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
@@ -4630,7 +4697,9 @@ class ExGenYarn(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-
+    @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
 
 
 
@@ -4949,7 +5018,6 @@ class ExGenBatch(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
 
@@ -4970,7 +5038,6 @@ class ExGenBatch(ExGen):
             yield f"tuple(bt.{attr_func}())"
         else:
             raise NotImplementedError(f'no handling for {attr}')
-
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
@@ -5152,10 +5219,13 @@ class ExGenBatch(ExGen):
         yield from ExGen._accessor_regular_expression(row, 'bt', '', BATCH_INIT_D, '.to_frame()')
 
     @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'bt', '', BATCH_INIT_D, '')
+
+
+    @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
-
-
 
 
 class ExGenQuilt(ExGen):
@@ -5637,6 +5707,11 @@ class ExGenQuilt(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+    @staticmethod
+    def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_hashlib(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
+
+
 
 class ExGenHLoc(ExGen):
 
@@ -5957,6 +6032,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorTranspose,
             InterfaceGroup.AccessorFillValue,
             InterfaceGroup.AccessorRe,
+            InterfaceGroup.AccessorHashlib,
             InterfaceGroup.AccessorValues,
             ):
         func = exg.group_to_method(ig)
