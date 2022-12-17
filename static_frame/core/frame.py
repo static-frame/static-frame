@@ -5546,7 +5546,7 @@ class Frame(ContainerOperand):
             index: IndexBase,
             columns: IndexBase,
             ordering: tp.Optional[np.ndarray],
-            ):
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         '''Utility for final iteration of the group_iter, shared by three methods.
         '''
         if as_array:

@@ -834,7 +834,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegate[FrameOrSeries]:
 
         index_ref = (self._container._index if axis == 0
-                else self._container._columns)
+                else self._container._columns) # type: ignore
 
         group_source = group_from_container(
                 index=index_ref,
