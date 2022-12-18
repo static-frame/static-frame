@@ -1212,7 +1212,7 @@ def group_from_container(
         group_source: tp.Any,
         fill_value: tp.Any,
         axis: int,
-        ) -> GetItemKeyType:
+        ) -> np.ndarray:
     '''
     Unpack group_source values from another Index, Series, or ILoc selection.
     '''

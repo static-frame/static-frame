@@ -879,6 +879,23 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             group_from_container(idx, np.arange(3).reshape(1, 1, 1), None, 0)
 
+    def test_group_from_container_b(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(ValueError):
+            group_from_container(idx, 'a', None, 0)
+
+    def test_group_from_container_c(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(RuntimeError):
+            group_from_container(idx, (2, 2), None, 0)
+
+    def test_group_from_container_d(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        gs = np.arange(6).reshape(3, 2)
+        group_from_container(idx, gs, None, 0)
+        # if wrong axis does not align
+        with self.assertRaises(RuntimeError):
+            group_from_container(idx, gs, None, 1)
 
 
 if __name__ == '__main__':
