@@ -1983,12 +1983,12 @@ class Series(ContainerOperand):
             as_array: bool = False,
             group_source: np.ndarray,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
-        if axis != 0:
-            raise AxisInvalid(f'invalid axis {axis}')
         '''
         Args:
             group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
         '''
+        if axis != 0:
+            raise AxisInvalid(f'invalid axis {axis}')
         # NOTE: this could be optimized with a sorting-based apporach when possible
         groups, locations = array_to_groups_and_locations(group_source)
 
