@@ -4,9 +4,13 @@ What is New in StaticFrame
 0.9.23
 ----------
 
+Added ``via_hashlib`` interface to all containers.
+
+Added ``Frame.iter_group_other()``, ``Frame.iter_group_other_items()``, ``Frame.iter_group_other_array()``, ``Frame.iter_group_other_array_items()``.
+
+Added ``Series.iter_group_other()``, ``Series.iter_group_other_items()``, ``Series.iter_group_other_array()``, ``Series.iter_group_other_array_items()``.
+
 Set ``arraykit`` version to 0.2.6.
-
-
 
 
 0.9.22
