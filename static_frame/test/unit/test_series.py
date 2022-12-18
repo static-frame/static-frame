@@ -3423,6 +3423,93 @@ class TestUnit(TestCase):
         self.assertEqual([p[1].__class__ for p in post], [np.ndarray, np.ndarray])
 
     #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other((0, 0, 0, 1, 1))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+
+    def test_series_iter_group_other_b(self) -> None:
+
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = [s.to_pairs() for s in s1.iter_group_other(s1.via_dt.year)] #type: ignore
+        dt64 = np.datetime64
+        self.assertEqual(post, [(('a', dt64('2010-01-01')), ('b', dt64('2010-01-02'))), (('c', dt64('2012-01-03')),), (('d', dt64('2013-04-01')), ('e', dt64('2013-04-02')))])
+
+    def test_series_iter_group_other_c(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(np.array((0, 0, 0, 1, 1)))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+
+    def test_series_iter_group_other_d(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(s1.index)] #type: ignore
+        self.assertEqual(post, [[10], [4], [10], [4], [10]])
+
+    def test_series_iter_group_other_e(self) -> None:
+
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        # force reindex
+        post = [(l, s.values.tolist()) for l, s in s1.iter_group_other_items(
+                s1.iloc[:3].via_dt.year.astype(str),
+                fill_value='',
+                )]
+        d = datetime.date
+        self.assertEqual(post, [
+                ('', [d(2013, 4, 1), d(2013, 4, 2)]),
+                ('2010', [d(2010, 1, 1), d(2010, 1, 2)]),
+                ('2012', [d(2012, 1, 3)])],
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_items_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [(l, s.values.tolist()) for
+                l, s in s1.iter_group_other_items((0, 0, 0, 1, 1))]
+        self.assertEqual(post, [(0, [10, 4, 10]), (1, [4, 10])])
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_array_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [a.tolist() for a in s1.iter_group_other_array((0, 0, 0, 1, 1))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_array_items_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        post = [(l, s.tolist()) for
+                l, s in s1.iter_group_other_array_items((0, 0, 0, 1, 1))]
+        self.assertEqual(post, [(0, [10, 4, 10]), (1, [4, 10])])
+
+
+    #---------------------------------------------------------------------------
     def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
         self.assertEqual(s1.loc_min(), 'c')

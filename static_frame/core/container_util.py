@@ -1207,6 +1207,64 @@ def key_from_container_key(
     # detect and fail on Frame?
     return key
 
+def group_from_container(
+        index: 'IndexBase',
+        group_source: tp.Any,
+        fill_value: tp.Any,
+        axis: int,
+        ) -> np.ndarray:
+    '''
+    Unpack group_source values from another Index, Series, or ILoc selection.
+    '''
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+
+    key: np.ndarray
+
+    if isinstance(group_source, np.ndarray):
+        if group_source.ndim > 2:
+            raise ValueError(f'{group_source.ndim}-dimensional containers are not supported.')
+        key = group_source
+    elif isinstance(group_source, Index):
+        # not that useful as value are unique
+        key = group_source.values
+    elif isinstance(group_source, Series):
+        if not group_source.index.equals(index):
+            key = group_source.reindex(index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else: # the index is equal
+            key = group_source.values
+
+    elif isinstance(group_source, Frame):
+        # we do not "rotate" the group_source here depending on axis; the ref index passed in is the index if axis 0, columns if axis 1; we compare to the corresponding axis in the group_source
+        if axis == 0 and not group_source.index.equals(index):
+            key = group_source.reindex(index=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        elif axis == 1 and not group_source.columns.equals(index):
+            key = group_source.reindex(columns=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else:
+            key = group_source.values
+    elif hasattr(group_source, '__iter__') and not isinstance(group_source, str):
+        key, _ = iterable_to_array_1d(group_source)
+    else:
+        raise ValueError(f'Group source not supported {type(group_source)}')
+
+    if key.ndim == 1 and len(key) != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({len(index)}).')
+    elif key.ndim == 2 and key.shape[axis] != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({key.shape[axis]}).')
+
+    return key
+
+
 
 #---------------------------------------------------------------------------
 class IMTOAdapterSeries:
