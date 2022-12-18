@@ -20,6 +20,7 @@ from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import get_col_format_factory
+from static_frame.core.container_util import group_from_container
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -28,7 +29,6 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
-from static_frame.core.container_util import group_from_container
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
