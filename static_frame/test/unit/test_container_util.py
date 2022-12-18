@@ -897,6 +897,13 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             group_from_container(idx, gs, None, 1)
 
+    def test_group_from_container_e(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        s = Frame.from_element(0, index=('a', 'c'), columns=('x',))
+        post = group_from_container(idx, s, None, 0)
+        self.assertEqual(post.tolist(), [[0], [None], [0]])
+
+
 
 if __name__ == '__main__':
     import unittest
