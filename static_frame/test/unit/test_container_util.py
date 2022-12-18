@@ -877,7 +877,7 @@ class TestUnit(TestCase):
     def test_group_from_container_a(self) -> None:
         idx = Index(('a', 'b', 'c'))
         with self.assertRaises(ValueError):
-            group_from_container(idx, np.arange(3).reshape(1, 1, 1), None, 0)
+            group_from_container(idx, np.arange(12).reshape(3, 2, 2), None, 0)
 
     def test_group_from_container_b(self) -> None:
         idx = Index(('a', 'b', 'c'))
