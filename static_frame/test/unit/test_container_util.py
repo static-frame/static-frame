@@ -28,6 +28,7 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import group_from_container
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
@@ -871,6 +872,13 @@ class TestUnit(TestCase):
                 [(2, 3), (2,), (2, 1)])
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
+
+    #---------------------------------------------------------------------------
+    def test_group_from_container_a(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(ValueError):
+            group_from_container(idx, np.arange(3).reshape(1, 1, 1), None, 0)
+
 
 
 if __name__ == '__main__':

@@ -1214,7 +1214,7 @@ def group_from_container(
         axis: int,
         ) -> GetItemKeyType:
     '''
-    Unpack selection values from another Index, Series, or ILoc selection.
+    Unpack group_source values from another Index, Series, or ILoc selection.
     '''
     from static_frame.core.frame import Frame
     from static_frame.core.index import Index
