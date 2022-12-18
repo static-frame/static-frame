@@ -1002,6 +1002,25 @@ class TestUnit(TestCase):
                 (('r', (('z', False), ('x', False), ('w', False), ('y', True))),)
                 )
 
+    def test_frame_iter_group_other_d(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = ((1, 1, False),
+                   (1, 1, False),
+                   (5, 1, False),
+                   (8, 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post1, post2 = list(f.iter_group_other(axis=0,
+                other=np.array([[1, 1], [0, 0], [1, 1], [0, 0]]),
+                fill_value = None
+                ))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('x', 1), ('y', 8))), ('q', (('x', 1), ('y', 2))), ('r', (('x', False), ('y', True))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('z', 1), ('w', 5))), ('q', (('z', 1), ('w', 1))), ('r', (('z', False), ('w', False))))
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_iter_group_other_items_a(self) -> None:
         columns = tuple('pqr')

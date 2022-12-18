@@ -5796,11 +5796,12 @@ class Frame(ContainerOperand):
 
         group_source_ndim = group_source.ndim
         ordering = None
+        if group_source_ndim > 1:
+            # normalize group_source for lex sorting
+            group_source_cols = [group_source[NULL_SLICE, i]
+                    for i in range(group_source.shape[1])]
         try:
             if group_source_ndim > 1:
-                # normalize group_source for lex sorting
-                group_source_cols = [group_source[NULL_SLICE, i]
-                        for i in group_source.shape[1]]
                 ordering = np.lexsort(list(reversed(group_source_cols)))
             else:
                 ordering = np.argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
