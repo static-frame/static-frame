@@ -569,7 +569,10 @@ class ExGen:
 
         yield f'{name} = {ctr}'
 
-        if attr == 'via_hashlib().md5()':
+        if attr == 'via_hashlib().to_bytes()':
+            yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}()"
+
+        elif attr == 'via_hashlib().md5()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
         elif attr == 'via_hashlib().sha256()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
