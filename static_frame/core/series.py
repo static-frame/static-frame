@@ -931,7 +931,7 @@ class Series(ContainerOperand):
     def iter_group_other(self,
             ) -> IterNodeGroupOther['Series']:
         '''
-        Iterator of :obj:`Series`, groped by unique values found in the passed container.
+        Iterator of :obj:`Series`, grouped by unique values found in the passed container.
         '''
         return IterNodeGroupOther(
                 container=self,
@@ -945,7 +945,7 @@ class Series(ContainerOperand):
     def iter_group_other_items(self,
             ) -> IterNodeGroupOther['Series']:
         '''
-        Iterator of pairs of label, :obj:`Series`, groped by unique values found in the passed container.
+        Iterator of pairs of label, :obj:`Series`, grouped by unique values found in the passed container.
         '''
         return IterNodeGroupOther(
                 container=self,
