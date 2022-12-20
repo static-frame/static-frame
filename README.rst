@@ -149,10 +149,14 @@ StaticFrame supports reindexing (conforming existing axis labels to new labels, 
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-We are going to use 80% of our data to train our classifier; the remaining 20% will be used to test the classifier. To divide our data into two groups, we will create a ``Series`` of contiguous integers and then extract a random selection of 80% of the values. The ``sample()`` method, given a count, samples that many values from the ``Series``. We can then use the ``drop`` interface to create a new ``Series`` that excludes the training group, leaving the testing group.
+We are going to use 80% of our data to train our classifier; the remaining 20% will be used to test the classifier. To divide our data into two groups, we will create a ``Series`` of contiguous integers and then extract a random selection of 80% of the values. The ``sample()`` method, given a count, samples that many values from the ``Series``.
 
 >>> sel = sf.Series(np.arange(len(data)))
 >>> sel_train = sel.sample(round(len(data) * .8))
+
+
+We can then use the ``drop`` interface to create a new ``Series`` that excludes the training group, leaving the testing group.
+
 >>> sel_test = sel.drop[sel_train]
 >>> sel_test.head()
 <Series>
@@ -163,6 +167,7 @@ We are going to use 80% of our data to train our classifier; the remaining 20% w
 23       23
 26       26
 <int64>  <int64>
+
 
 Next, we will use ``loc`` on the ``Frame`` to select the training subset of the data.
 
@@ -177,6 +182,7 @@ Next, we will use ``loc`` on the ``Frame`` to select the training subset of the 
 3       4.6       3.1       1.5       0.2       Iris-setosa
 4       5.0       3.6       1.4       0.2       Iris-setosa
 <int64> <float64> <float64> <float64> <float64> <<U15>
+
 
 To get a ``Series`` of counts per species, I can select the species column and iterate over groups, based on the species name, and count the size of each group. In StaticFrame, this can be done by calling ``iter_group_items()`` to get an iterator of pairs of group label, group ``Series``.This iterator can be given to a ``Batch``, a chaining processor of ``Frame`` operations; once the ``Batch`` is created, we can call multiple methods on it. A container is only returned when a finalizer method is called such as ``to_series()``.
 
@@ -260,6 +266,9 @@ sigma            Iris-virginica  0.63      0.35
 12      -0.66       -2.76           -4.29
 13      -2.5        -5.67           -6.82
 17      0.1         -4.02           -4.2
+
+
+
 
 >>> posterior = likelihood * prior
 >>> data_test['predict'] = posterior.loc_max(axis=1)
