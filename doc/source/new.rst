@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.0.0
+----------
+
+Added ``via_dt.year_month``.
+
+
 0.9.23
 ----------
 

@@ -37,6 +37,7 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 from static_frame.core.util import isna_array
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -4271,6 +4272,30 @@ class TestUnit(TestCase):
                 s2.to_pairs(),
                 (('x', 2014), ('y', 2013))
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_year_month_a(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.via_dt.year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', '2012-01'), ('d', '2013-04'), ('e', '2013-04'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_MONTH_STR)
+
+    def test_series_via_dt_year_month_b(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.astype(object).via_dt.year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', '2012-01'), ('d', '2013-04'), ('e', '2013-04'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_MONTH_STR)
+
+    #---------------------------------------------------------------------------
 
     def test_series_via_dt_day_a(self) -> None:
         dt64 = np.datetime64
