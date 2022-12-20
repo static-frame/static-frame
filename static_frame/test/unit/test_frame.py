@@ -8775,7 +8775,7 @@ class TestUnit(TestCase):
         b = sf.Frame.from_dict({0:(1,2), 1:(np.nan, np.nan), 2:(False, False)})
 
         # reblock first two columns into integers
-        c = a.astype[[0,1]](int)
+        c = a.astype[[0,1]](int, consolidate_blocks=True)
         self.assertEqual(c._blocks.shapes.tolist(),
                 [(2, 2), (2,)])
 
@@ -10569,6 +10569,30 @@ class TestUnit(TestCase):
 
         f2 = Frame().astype[:](str)
         self.assertEqual(f2.shape, (0, 0))
+
+    def test_frame_astype_i(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float, consolidate_blocks=True)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2, 2), (2, 2)]
+                )
+
+    def test_frame_astype_j(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2,), (2,), (2,), (2,)]
+                )
+
+
 
     #---------------------------------------------------------------------------
 
