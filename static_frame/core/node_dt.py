@@ -29,6 +29,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
+from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -45,6 +46,7 @@ ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 INTERFACE_DT = (
             'year',
+            'year_month',
             'month',
             'day',
             'hour',
@@ -179,6 +181,32 @@ class InterfaceDatetime(Interface[TContainer]):
                 yield array
 
         return self._blocks_to_container(blocks())
+
+
+    @property
+    def year_month(self) -> TContainer:
+        '''
+        Return the year and month of each element as string formatted YYYY-MM.
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
+                    array.flags.writeable = False
+                else: # must be object type
+                    array = array_from_element_method(
+                            array=block,
+                            method_name='strftime',
+                            args=('%Y-%m',),
+                            dtype=DTYPE_YEAR_MONTH_STR,
+                            )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
 
     @property
     def day(self) -> TContainer:
