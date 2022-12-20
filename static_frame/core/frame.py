@@ -9451,7 +9451,7 @@ class FrameAsType:
     def __call__(self,
             dtypes: DtypesSpecifier,
             *,
-            consolidate_blocks: bool = True,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
         '''
