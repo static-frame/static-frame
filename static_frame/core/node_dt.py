@@ -682,6 +682,13 @@ class InterfaceBatchDatetime(InterfaceBatch):
         return self._batch_apply(lambda c: c.via_dt.month)
 
     @property
+    def year_month(self) -> 'Batch':
+        '''
+        Return the month of each element, between 1 and 12 inclusive.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.year_month)
+
+    @property
     def day(self) -> 'Batch':
         '''
         Return the day of each element, between 1 and the number of days in the given month of the given year.
