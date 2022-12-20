@@ -37,8 +37,8 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import isna_array
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import isna_array
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
