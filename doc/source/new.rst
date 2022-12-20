@@ -4,6 +4,8 @@ What is New in StaticFrame
 1.0.0
 ----------
 
+API change: ``IndexHierarchy`` numerical and stastical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, no raise ``NotImplementedError``.
+
 Added ``via_dt.year_month``.
 
 
