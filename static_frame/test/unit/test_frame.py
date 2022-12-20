@@ -11,6 +11,7 @@ import unittest
 from collections import OrderedDict
 from collections import namedtuple
 from functools import partial
+from hashlib import sha256
 from io import StringIO
 from tempfile import TemporaryDirectory
 
@@ -11811,6 +11812,197 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_loc_notna_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_first().to_pairs(),
+                (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+        self.assertEqual(f1.loc_notna_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notna_b(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_first(axis=1).to_pairs(),
+                (('x', 'b'), ('y', 'a'), ('z', 'a'))
+                )
+        self.assertEqual(f1.loc_notna_last(axis=1).to_pairs(),
+                (('x', 'd'), ('y', 'b'), ('z', 'd'))
+                )
+
+    def test_frame_loc_notna_c(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (np.nan, np.nan, np.nan, np.nan),
+                (np.nan, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+        post = f1.loc_notna_first(fill_value=None)
+        self.assertEqual(post.to_pairs(),
+                (('a', None), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notna_d(self) -> None:
+
+        records = (
+                (None, None, None, None),
+                (None, None, None, None),
+                (None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=0).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None)))
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=1).to_pairs(),
+                (('x', None), ('y', None), ('z', None)))
+
+    def test_frame_iloc_notna_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notna_first().to_pairs(),
+                (('a', 1), ('b', 0), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last().to_pairs(),
+                (('a', 2), ('b', 0), ('c', 2), ('d', 0))
+                )
+
+    def test_frame_iloc_notna_b(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notna_first(axis=1).to_pairs(),
+                (('x', 1), ('y', 0), ('z', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last(axis=1).to_pairs(),
+                (('x', 3), ('y', 1), ('z', 3))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_loc_notfalsy_a(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 0, 0, 0),
+                (2, 0, 3, 0),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notfalsy_first().to_pairs(),
+                (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+        self.assertEqual(f1.loc_notfalsy_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notfalsy_b(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 1, 0, 0),
+                (2, 0, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notfalsy_first(axis=1).to_pairs(),
+                (('x', 'b'), ('y', 'a'), ('z', 'a'))
+                )
+        self.assertEqual(f1.loc_notfalsy_last(axis=1).to_pairs(),
+                (('x', 'd'), ('y', 'b'), ('z', 'd'))
+                )
+
+    def test_frame_iloc_notfalsy_a(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 0, 0, 0),
+                (2, 0, 3, 0),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notfalsy_first().to_pairs(),
+                (('a', 1), ('b', 0), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(f1.iloc_notfalsy_last().to_pairs(),
+                (('a', 2), ('b', 0), ('c', 2), ('d', 0))
+                )
+
+    def test_frame_iloc_notfalsy_b(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 1, 0, 0),
+                (2, 0, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notfalsy_first(axis=1).to_pairs(),
+                (('x', 1), ('y', 0), ('z', 0))
+                )
+        self.assertEqual(f1.iloc_notfalsy_last(axis=1).to_pairs(),
+                (('x', 3), ('y', 1), ('z', 3))
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_cov_a(self) -> None:
         f1= Frame.from_dict(
                 dict(a=(3,2,1), b=(4,5,6)),
@@ -14790,6 +14982,75 @@ class TestUnit(TestCase):
     def test_frame_from_dict_fields_e(self) -> None:
         with self.assertRaises(ErrorInitFrame):
             _  = Frame.from_dict_fields((),)
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_signature_bytes_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(),
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
+
+        f2 = ff.parse('f(F)|v(int64,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+
+    def test_frame_to_signature_bytes_b(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False, include_class=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False, include_class=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_c(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_d(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(3,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_e(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,int)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_f(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)|i(I,int)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_via_hashlib_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
+        hd = f1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(hd,
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
+
+
 
 
 

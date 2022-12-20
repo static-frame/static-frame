@@ -1,10 +1,34 @@
 What is New in StaticFrame
 ===============================
 
+1.0.0
+----------
+
+Added ``via_dt.year_month``.
+
+
+0.9.23
+----------
+
+Added ``via_hashlib`` interface to all containers.
+
+Added ``Frame.iter_group_other()``, ``Frame.iter_group_other_items()``, ``Frame.iter_group_other_array()``, ``Frame.iter_group_other_array_items()``.
+
+Added ``Series.iter_group_other()``, ``Series.iter_group_other_items()``, ``Series.iter_group_other_array()``, ``Series.iter_group_other_array_items()``.
+
+Set ``arraykit`` version to 0.2.6.
+
+
 0.9.22
 ----------
 
-``IndexYear`` no accepts selection by integers for years.
+``IndexYear`` now accepts selection by integers for years.
+
+Added ``Series.loc_notna_first()``, ``Series.loc_notna_last()``, ``Series.loc_notfalsy_first()``, ``Series.loc_notfalsy_last()``.
+
+Added ``Frame.loc_notna_first()``, ``Frame.loc_notna_last()``, ``Frame.loc_notfalsy_first()``, ``Frame.loc_notfalsy_last()``.
+
+Set ``arraykit`` version to 0.2.4.
 
 
 0.9.21

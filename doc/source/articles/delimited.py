@@ -13,6 +13,7 @@ import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import polars as pl
 
 sys.path.append(os.getcwd())
 
@@ -28,8 +29,9 @@ class FileIOTest:
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fixture.to_csv(self.fp, include_index=False)
-        self.dtypes = dict(self.fixture.dtypes)
-        self.format = list(self.dtypes.items())
+        self.dtypes_sf = dict(self.fixture.dtypes)
+        self.dtypes_pd = {k: (v if v.kind != 'U' else str) for k, v in self.dtypes_sf.items()}
+        # self.format = list(self.dtypes.items())
 
     def __call__(self):
         raise NotImplementedError()
@@ -51,7 +53,7 @@ class SFStr(FileIOTest):
 class SFTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes)
+        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes_sf)
         assert f.shape == self.fixture.shape
 
 #-------------------------------------------------------------------------------
@@ -70,7 +72,7 @@ class PandasStr(FileIOTest):
 class PandasTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes)
+        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes_pd)
         assert f.shape == self.fixture.shape
 
 #-------------------------------------------------------------------------------
@@ -89,7 +91,15 @@ class PandasPyArrowStr(FileIOTest):
 class PandasPyArrowTypeGiven(FileIOTest):
 
     def __call__(self):
-        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes)
+        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes_pd)
+        assert f.shape == self.fixture.shape
+
+
+#-------------------------------------------------------------------------------
+class PolarsTypeParse(FileIOTest):
+
+    def __call__(self):
+        f = pl.read_csv(self.fp)
         assert f.shape == self.fixture.shape
 
 
@@ -110,32 +120,44 @@ class NumpyLoadtxtTypeParse(FileIOTest):
         self.fixture = ff.parse(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fixture.fillna(0).to_csv(self.fp, include_index=False)
-        self.dtypes = dict(self.fixture.dtypes)
-        self.format = list(self.dtypes.items())
+        # self.dtypes = dict(self.fixture.dtypes)
+        # self.format = list(self.dtypes.items())
 
-    def __call__(self):
-        f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
+    # def __call__(self):
+    #     f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
 
 #-------------------------------------------------------------------------------
 NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
-FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
-FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_wide_columnar = f's({scale(100)},{scale(10_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+VALUES_UNIFORM = 'float'
+VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
+VALUES_COLUMNAR = 'int,bool,float,str'
+
+FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
+FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_wide_columnar = f's({scale(100)},{scale(10_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 
-FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v(float)|i(I,int)|c(I,str)'
-FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
+FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
-FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
+FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
 #-------------------------------------------------------------------------------
+
+def seconds_to_display(seconds: float) -> str:
+    seconds /= NUMBER
+    if seconds < 1e-4:
+        return f'{seconds * 1e6: .1f} (µs)'
+    if seconds < 1e-1:
+        return f'{seconds * 1e3: .1f} (ms)'
+    return f'{seconds: .1f} (s)'
 
 
 def plot_performance(frame: sf.Frame):
@@ -161,6 +183,9 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
         NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
+
+        PolarsTypeParse.__name__: 'Polars\n(type parsing)',
+
     }
 
     name_order = {
@@ -178,6 +203,8 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 3,
         NumpyLoadtxtTypeParse.__name__: 3,
+
+        PolarsTypeParse.__name__: 4,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -207,8 +234,8 @@ def plot_performance(frame: sf.Frame):
             time_max = fixture['time'].max()
             ax.set_yticks([0, time_max * 0.5, time_max])
             ax.set_yticklabels(['',
-                    f'{time_max * 0.5:.3f} (s)',
-                    f'{time_max:.3f} (s)',
+                    seconds_to_display(time_max * 0.5),
+                    seconds_to_display(time_max),
                     ], fontsize=6)
             # ax.set_xticks(x, names_display, rotation='vertical')
             ax.tick_params(
@@ -230,7 +257,7 @@ def plot_performance(frame: sf.Frame):
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
     fig.text(.05, .90, shape_msg, fontsize=6)
 
-    fp = '/tmp/serialize.png'
+    fp = '/tmp/delimited.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
@@ -300,7 +327,7 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-
+    # PolarsTypeParse,
     # PandasPyArrowTypeParse,
     # PandasPyArrowStr,
     # PandasPyArrowTypeGiven,

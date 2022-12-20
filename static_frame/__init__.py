@@ -69,6 +69,7 @@ from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate
@@ -117,4 +118,4 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.21'
+__version__ = '0.9.23'

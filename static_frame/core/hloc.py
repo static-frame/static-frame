@@ -14,7 +14,7 @@ class HLocMeta(type):
 
 class HLoc(metaclass=HLocMeta):
     '''
-    A simple wrapper for embedding hierarchical specificiations for :obj:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
+    A simple wrapper for embedding hierarchical specifications for :obj:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
 
     Implemented as a container of hierarchical keys that defines NULL slices for all lower dimensions that are not defined at construction.
     '''

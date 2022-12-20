@@ -1,12 +1,13 @@
 numpy==1.23.4
 automap==0.6.2
-arraykit==0.2.3
+arraykit==0.2.6
 
 pytest==7.1.2
 pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.9.3
 invoke==1.4.0
+ipython==7.16.3
 
 pandas==1.5.1
 xlsxwriter==1.1.2

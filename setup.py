@@ -66,7 +66,7 @@ def get_extras_require() -> tp.Dict[str, tp.List[str]]:
 setup(
     name='static-frame',
     version=get_version(),
-    description='Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface',
+    description='Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface.',
     long_description=get_long_description(),
     python_requires='>3.7.0',
     install_requires=list(get_install_requires()),

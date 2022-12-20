@@ -27,7 +27,7 @@ class StringIOTemporaryFile(StringIO):
         super().__del__()
 
     def seek(self, offset: int, whence: int = 0) -> int:
-        return self._file.seek(offset)
+        return self._file.seek(offset, whence)
 
     def read(self, size: tp.Optional[int] =-1) -> str:
         return self._file.read(size)
@@ -53,7 +53,7 @@ class BytesIOTemporaryFile(BytesIO):
         super().__del__()
 
     def seek(self, offset: int, whence: int = 0) -> int:
-        return self._file.seek(offset)
+        return self._file.seek(offset, whence)
 
     def read(self, size: tp.Optional[int] = -1) -> bytes:
         return self._file.read(size)
@@ -137,7 +137,7 @@ class WWW:
             if in_memory is True:
                 raise RuntimeError('If supplying an `fp`, `in_memory` cannot be True.')
             in_memory = False
-            if isinstance(fp, str):
+            if isinstance(fp, str): # just to pass Path
                 fp = Path(fp)
         else:
             in_memory = True if in_memory is None else in_memory
@@ -155,7 +155,7 @@ class WWW:
                 ) as f:
             fp_written = Path(f.name)
 
-            while True:
+            while True: # can use iter() function with for
                 b = extractor()
                 if b:
                     f.write(b)

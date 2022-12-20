@@ -44,6 +44,7 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -85,6 +86,7 @@ from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
@@ -163,6 +165,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
@@ -3637,7 +3640,6 @@ class Frame(ContainerOperand):
                 flags=flags,
                 )
 
-
     #---------------------------------------------------------------------------
     # iterators
 
@@ -3825,6 +3827,65 @@ class Frame(ContainerOperand):
                 function_items=partial(self._axis_group_labels_items, as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                )
+
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=self._axis_group_other,
+                function_items=self._axis_group_other_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=self._axis_group_other,
+                function_items=self._axis_group_other_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other_array(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_array_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -5476,7 +5537,46 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    # grouping methods naturally return their "index" as the group element
+    # grouping methods
+
+    def _axis_group_final_iter(self, *,
+            axis: int,
+            as_array: bool,
+            group_iter: tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray, TypeBlocks]],
+            index: IndexBase,
+            columns: IndexBase,
+            ordering: tp.Optional[np.ndarray],
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+        '''Utility for final iteration of the group_iter, shared by three methods.
+        '''
+        if as_array:
+            yield from ((group, array) for group, _, array in group_iter)
+        else:
+            for group, selection, tb in group_iter:
+                # NOTE: selection can be a Boolean array or a slice
+                if axis == 0:
+                    # axis 0 is a row iter, so need to slice index, keep columns
+                    index_group = (index._extract_iloc(selection) if ordering is None
+                            else index._extract_iloc(ordering[selection])
+                            )
+                    yield group, self.__class__(tb,
+                            index=index_group,
+                            columns=columns,
+                            own_columns=self.STATIC, # own if static
+                            own_index=True,
+                            own_data=True)
+                else:
+                    # axis 1 is a column iterators, so need to slice columns, keep index
+                    columns_group = (columns._extract_iloc(selection) if ordering is None
+                            else columns._extract_iloc(ordering[selection])
+                            )
+                    yield group, self.__class__(tb,
+                            index=index,
+                            columns=columns_group,
+                            own_index=True,
+                            own_columns=True,
+                            own_data=True)
+
 
     def _axis_group_iloc_items(self,
             key: GetItemKeyType,
@@ -5541,33 +5641,14 @@ class Frame(ContainerOperand):
                 index = self._index if not drop else self._index[drop_mask] # type: ignore
                 columns = self._columns
 
-        if as_array:
-            yield from ((group, array) for group, _, array in group_iter)
-        else:
-            for group, selection, tb in group_iter:
-                # NOTE: selection can be a Boolean array or a slice
-                if axis == 0:
-                    # axis 0 is a row iter, so need to slice index, keep columns
-                    index_group = (index._extract_iloc(selection) if ordering is None
-                            else index._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index_group,
-                            columns=columns,
-                            own_columns=self.STATIC, # own if static
-                            own_index=True,
-                            own_data=True)
-                else:
-                    # axis 1 is a column iterators, so need to slice columns, keep index
-                    columns_group = (columns._extract_iloc(selection) if ordering is None
-                            else columns._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index,
-                            columns=columns_group,
-                            own_index=True,
-                            own_columns=True,
-                            own_data=True)
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
 
     def _axis_group_loc_items(self,
             key: GetItemKeyType,
@@ -5679,33 +5760,15 @@ class Frame(ContainerOperand):
                     group_source=group_source,
                     )
 
-        if as_array:
-            yield from ((group, array) for group, _, array in group_iter)
-        else:
-            for group, selection, tb in group_iter:
-                # NOTE: selection can be a Boolean array or a slice
-                if axis == 0:
-                    # axis 0 is a row iter, so need to slice index, keep columns
-                    index_group = (index._extract_iloc(selection) if ordering is None
-                            else index._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index_group,
-                            columns=columns,
-                            own_columns=self.STATIC, # own if static
-                            own_index=True,
-                            own_data=True)
-                else:
-                    # axis 1 is a column iterators, so need to slice columns, keep index
-                    columns_group = (columns._extract_iloc(selection) if ordering is None
-                            else columns._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index,
-                            columns=columns_group,
-                            own_index=True,
-                            own_columns=True,
-                            own_data=True)
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
+
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
@@ -5717,6 +5780,81 @@ class Frame(ContainerOperand):
                 depth_level=depth_level,
                 axis=axis,
                 as_array=as_array,
+                ))
+
+    #-----------------------------------------------------------------------
+    def _axis_group_other_items(self,
+            *,
+            axis: int = 0,
+            as_array: bool = False,
+            group_source: np.ndarray,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+
+        blocks = self._blocks
+        index = self._index
+        columns = self._columns
+
+        group_source_ndim = group_source.ndim
+        ordering = None
+        if group_source_ndim > 1:
+            # normalize group_source for lex sorting
+            group_source_cols = [group_source[NULL_SLICE, i]
+                    for i in range(group_source.shape[1])]
+        try:
+            if group_source_ndim > 1:
+                ordering = np.lexsort(list(reversed(group_source_cols)))
+            else:
+                ordering = np.argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
+            use_sorted = True
+        except TypeError:
+            use_sorted = False
+
+        if use_sorted:
+            group_source = group_source[ordering]
+
+        if use_sorted:
+            if axis == 0:
+                blocks = self._blocks._extract(row_key=ordering)
+            else:
+                blocks = self._blocks._extract(column_key=ordering)
+
+            group_iter = group_sorted(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None, # assume this is not used
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
+        else:
+            group_iter = group_match(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None,
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
+
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
+
+    def _axis_group_other(self,
+            *,
+            axis: int = 0,
+            as_array: bool = False,
+            group_source: np.ndarray,
+            ) -> tp.Iterator['Frame']:
+        yield from (x for _, x in self._axis_group_other_items(
+                axis=axis,
+                as_array=as_array,
+                group_source=group_source,
                 ))
 
     #---------------------------------------------------------------------------
@@ -7014,6 +7152,8 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 )
 
+    #---------------------------------------------------------------------------
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
@@ -7102,6 +7242,229 @@ class Frame(ContainerOperand):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+
+    #---------------------------------------------------------------------------
+    def _label_not_missing(self,
+            *,
+            axis: int,
+            return_label: bool,
+            shift: int,
+            fill_value: tp.Hashable = np.nan,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> Series:
+        '''
+        Args:
+            func: Array processor such as `isna_array`.
+            pos: 0 or -1
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks._blocks:
+                # func returns True for missing, invert for not missing
+                bool_block = ~func(b)
+                bool_block.flags.writeable = False
+                yield bool_block
+
+        target = blocks_to_array_2d(blocks(),
+                shape=self.shape,
+                dtype=DTYPE_BOOL,
+                )
+        # assert len(pos) == len(np.unique(primary))
+        if axis == 0:
+            labels_returned = self._columns
+            labels_opposite = self._index
+            primary, secondary = np.nonzero(target.T)
+        else:
+            labels_returned = self._index
+            labels_opposite = self._columns
+            primary, secondary = np.nonzero(target)
+
+        index = immutable_index_filter(labels_returned)
+
+        if not len(primary):
+            return Series.from_element(fill_value,
+                    index=index,
+                    own_index=True,
+                    )
+        pos = np.nonzero(primary != np.roll(primary, shift))[0]
+        if not return_label:
+            post = np.full(shape=len(labels_returned),
+                    fill_value=fill_value,
+                    dtype=DTYPE_INT_DEFAULT,
+                    )
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = s
+        else:
+            primary_covered = len(labels_returned) == len(np.unique(primary))
+
+            if primary_covered:
+                post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
+            else:
+                dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
+                post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
+
+            for p, s in zip(primary[pos], secondary[pos]):
+                post[p] = labels_opposite[s]
+
+        post.flags.writeable = False
+        return Series(post, index=index, own_index=True)
+
+
+    def iloc_notna_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the first non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the last non-missing values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    #---------------------------------------------------------------------------
+    def iloc_notfalsy_first(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_last(self, *,
+            fill_value: int = -1,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the position corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=False,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_first(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the first non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def loc_notfalsy_last(self, *,
+            fill_value: tp.Hashable = np.nan,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the last non-falsy (including nan) values along the selected axis.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._label_not_missing(
+                axis=axis,
+                shift=-1,
+                return_label=True,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    #---------------------------------------------------------------------------
 
     def cov(self,
             *,
@@ -7784,6 +8147,32 @@ class Frame(ContainerOperand):
         return tuple(
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
+
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
+        v = (a.tobytes('F') for a in self._blocks._blocks)
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._columns._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding)),
+                v))
+
 
     #---------------------------------------------------------------------------
     # exporters: alternate libraries

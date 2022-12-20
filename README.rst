@@ -16,19 +16,17 @@
   :target: https://codecov.io/gh/static-frame/static-frame
 
 
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test.yml?branch=master&label=test&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/test.yml
 
-.. image:: https://img.shields.io/github/workflow/status/static-frame/static-frame/Test?label=test&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions?query=workflow%3ATest
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_forward.yml?branch=master&label=test-forward&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/test_forward.yml
 
-.. image:: https://img.shields.io/github/workflow/status/static-frame/static-frame/TestForward?label=test-forward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions?query=workflow%3ATestForward
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_backward.yml?branch=master&label=test-backward&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/test_backward.yml
 
-.. image:: https://img.shields.io/github/workflow/status/static-frame/static-frame/TestBackward?label=test-backward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions?query=workflow%3ATestBackward
-
-.. image:: https://img.shields.io/github/workflow/status/static-frame/static-frame/Quality?label=quality&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions?query=workflow%3AQuality
-
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/quality.yml?branch=master&label=quality&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/quality.yml
 
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg
@@ -96,7 +94,7 @@ Core StaticFrame requires the following:
 - Python>=3.7
 - NumPy>=1.18.5
 - automap==0.6.2
-- arraykit==0.2.3
+- arraykit==0.2.6
 
 For extended input and output, the following packages are required:
 
