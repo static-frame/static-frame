@@ -84,7 +84,6 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import ufunc_is_statistical
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
@@ -2181,10 +2180,6 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if not ufunc_is_statistical(ufunc):
-            # NOTE: as min and max are label based, it is awkward that statistical functions are calculated as Frames, per depth level; we permit this for sum, prod, cumsum, cumprod for backward compatibility, however they might also raise
-            raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to Frame.')
-
         if ufunc is np.max or ufunc is np.min:
             # max and min are treated per label; thus we do a lexical sort for axis 0
             if axis == 1:
@@ -2202,15 +2197,19 @@ class IndexHierarchy(IndexBase):
             # NOTE: this could return a tuple rather than an array
             return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
 
-        return self._blocks.ufunc_axis_skipna(
-                skipna=skipna,
-                axis=axis,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna,
-                composable=composable,
-                dtypes=dtypes,
-                size_one_unity=size_one_unity,
-                )
+        # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
+
+        # if not ufunc_is_statistical(ufunc):
+        # return self._blocks.ufunc_axis_skipna(
+        #         skipna=skipna,
+        #         axis=axis,
+        #         ufunc=ufunc,
+        #         ufunc_skipna=ufunc_skipna,
+        #         composable=composable,
+        #         dtypes=dtypes,
+        #         size_one_unity=size_one_unity,
+        #         )
 
     def _ufunc_shape_skipna(self, *,
             axis: int,
@@ -2227,16 +2226,18 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        if self._recache:
-            self._update_array_cache()
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
 
-        dtype = None if not dtypes else dtypes[0] # only a tuple
-        if skipna:
-            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
-        else:
-            post = ufunc(self.values, axis=axis, dtype=dtype)
-        post.flags.writeable = False
-        return post
+        # if self._recache:
+        #     self._update_array_cache()
+
+        # dtype = None if not dtypes else dtypes[0] # only a tuple
+        # if skipna:
+        #     post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
+        # else:
+        #     post = ufunc(self.values, axis=axis, dtype=dtype)
+        # post.flags.writeable = False
+        # return post
 
     # --------------------------------------------------------------------------
     # dictionary-like interface

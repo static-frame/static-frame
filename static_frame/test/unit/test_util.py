@@ -4,6 +4,7 @@ import typing as tp
 import unittest
 import warnings
 from enum import Enum
+from functools import partial
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -2690,6 +2691,13 @@ class TestUnit(TestCase):
     def test_ufunc_dtype_to_dtype_b(self) -> None:
         # NOTE: this tests the final fall through
         self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
+
+    def test_ufunc_dtype_to_dtype_c(self) -> None:
+        func = partial(np.std, ddof=1)
+        self.assertEqual(
+                ufunc_dtype_to_dtype(func, np.dtype(float)),
+                np.dtype(float)
+                )
 
     #---------------------------------------------------------------------------
 

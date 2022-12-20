@@ -531,11 +531,6 @@ def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
-def ufunc_is_statistical(func: UFunc) -> bool:
-    category = ufunc_to_category(func)
-    return not category is UFuncCategory.STATISTICAL
-
-
 def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''

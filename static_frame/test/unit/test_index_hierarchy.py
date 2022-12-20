@@ -3462,34 +3462,22 @@ class TestUnit(TestCase):
 
     def test_hierarchy_ufunc_axis_skipna_a(self) -> None:
 
-        ih1 = IndexHierarchy.from_product((10, 20), (3.1, np.nan))
-
-        self.assertAlmostEqualValues(
-                ih1.sum(axis=1, skipna=False).tolist(),
-                [13.1, np.nan, 23.1, np.nan])
-        self.assertAlmostEqualValues(
-                ih1.sum(axis=0, skipna=False).tolist(),
-                [60.0, np.nan]
-                )
-
-    def test_hierarchy_ufunc_axis_skipna_b(self) -> None:
-
-        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
-
-        # sum applies to the labels
-        self.assertEqual(ih1.sum().tolist(),
-                [60, 20]
-                )
-
-        self.assertEqual(ih1.cumprod().tolist(),
-                [[10, 3], [100, 21], [2000, 63], [40000, 441]]
-                )
-
-    def test_hierarchy_ufunc_axis_skipna_c(self) -> None:
-
         ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
         with self.assertRaises(NotImplementedError):
             _ = ih1.std()
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.sum()
+
+    def test_hierarchy_ufunc_shape_skipna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.cumprod()
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.cumsum()
+
 
     #---------------------------------------------------------------------------
 
@@ -4546,17 +4534,17 @@ class TestUnit(TestCase):
         post = ih.min()
         self.assertEqual(post.tolist(), [-1, -4])
 
-    def test_hierarchy_cumsum_a(self) -> None:
-        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
-        ih.append([-1, np.nan])
+    # def test_hierarchy_cumsum_a(self) -> None:
+    #     ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+    #     ih.append([-1, np.nan])
 
-        post = ih.cumsum()
-        self.assertEqual(post.tolist(),
-            [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
-            )
-        self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
-            [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
-            )
+    #     post = ih.cumsum()
+    #     self.assertEqual(post.tolist(),
+    #         [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
+    #         )
+    #     self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
+    #         [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
+    #         )
 
     #---------------------------------------------------------------------------
     def test_hierarchy_concat_a(self) -> None:
