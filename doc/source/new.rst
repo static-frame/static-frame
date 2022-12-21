@@ -8,6 +8,8 @@ API change: ``IndexHierarchy`` numerical and statistical methods, such as ``sum(
 
 API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False`` by default.
 
+API change: ``composite_index`` and ``composite_index_fill_value`` parameters removed from ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``; added ``include_index`` parameter.
+
 Added ``via_dt.year_month``.
 
 
