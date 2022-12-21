@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_detail(examples_defined=examples_defined, toc=toc, *interface['IndexDefaultConstructor']['constructor']) }}
+    {{ macros.api_detail(examples_defined=examples_defined, toc=toc, *interface['IndexDefaultConstructorFactory']['constructor']) }}
 

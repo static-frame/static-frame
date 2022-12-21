@@ -7,7 +7,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultConstructor
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.test.test_case import TestCase
@@ -49,7 +49,7 @@ class TestUnit(TestCase):
 
     def test_index_auto_factory_from_optional_constructor(self) -> None:
         initializer = 3
-        explicit_constructor = IndexDefaultConstructor(name='foo')
+        explicit_constructor = IndexDefaultConstructorFactory(name='foo')
         default_constructor = IndexDate
         post = IndexAutoFactory.from_optional_constructor(
                 initializer=initializer,
