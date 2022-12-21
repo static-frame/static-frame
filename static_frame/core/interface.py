@@ -129,7 +129,7 @@ DOCUMENTED_COMPONENTS = (
         StoreConfig,
         StoreFilter,
         IndexAutoFactory,
-        IndexDefaultConstructorFactory, # to be renamed IndexDefaultConstructorFactory
+        IndexDefaultConstructorFactory,
         IndexAutoConstructorFactory,
         NPZ,
         NPY,
