@@ -261,26 +261,26 @@ sigma            Iris-virginica  0.63      0.35
 
 We can now move on to processing our "test" data with the characteristics dervied from our "training" data. To do that, we will extract our previously selected test records with ``sel_test`` into a ``Frame`` to which we can add our ``posterior`` predictions and final classifications.
 
-It is common to process data by adding columns from left to right. StaticFrame permits this limited form of mutability with the grow-only ``FrameGO``. While underlying NumPy arrays are still always immutable, columns can be added to a ``FrameGO`` with bracket-style assignment.A ``FrameGO`` can be created from the ``Frame`` with the ``Frame.to_frame_go()`` method. As elsewhere, underlying immutable NumPy arrays do not have to be copied: this is a no-copy operation.
+It is common to process data in table by adding columns from left to right. StaticFrame permits this limited form of mutability with the grow-only ``FrameGO``. While underlying NumPy arrays are still always immutable, columns can be added to a ``FrameGO`` with bracket-style assignment.A ``FrameGO`` can be created from the ``Frame`` with the ``Frame.to_frame_go()`` method. As elsewhere, underlying immutable NumPy arrays do not have to be copied: this is a no-copy operation.
 
 Using two arguments to ``loc[]``, we can select rows with the ``sel_test`` ``Series.values`` attribute, and select columns with the labels for the sepal length and sepal width.
 
 >>> data_test = data.loc[sel_test.values, ['sepal_l', 'sepal_w']].to_frame_go()
 
 
-StaticFrame interfaces make great use of generators. As used below, the ``Frame.from_fields()`` constructor can create a ``Frame`` fomr a generator of column arrays . The ``fields`` function (defined below), for each index label (iris species), calculates a probability density function given the ``mu`` (mean) and ``sigma`` (standard deviation) for the species. The sum of the log is yielded.
+StaticFrame interfaces make great use of generators. As used below, the ``Frame.from_fields()`` constructor can create a ``Frame`` from a generator of column arrays . The ``likelihood_of_species()`` function (defined below), for each index label (iris species), calculates a probability density function for the test data, given the ``mu`` (mean) and ``sigma`` (standard deviation) for the species. The sum of the log is yielded.
 
 
 >>> from scipy.stats import norm
->>> def fields():
+>>> def likelihood_of_species():
 ...     for label in mu.index:
 ...             pdf = norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])
 ...             yield np.log(pdf).sum(axis=1)
 
 
-Finally, we can construct our The ``likelihood`` of each sample is given per column, where each column is a species.
+The finally, the ``likelihood`` of each test sample is given, per species, in the table below.
 
->>> likelihood = sf.Frame.from_fields(fields(), columns=mu.index, index=data_test.index)
+>>> likelihood = sf.Frame.from_fields(likelihood_of_species(), columns=mu.index, index=data_test.index)
 >>> round(likelihood.head(), 2)
 <Frame>
 <Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
@@ -292,13 +292,23 @@ Finally, we can construct our The ``likelihood`` of each sample is given per col
 17      0.1         -4.02           -4.2
 
 
-
+We can calculate the ``posterior`` by multiplying ``likelihood`` by ``prior``. Whenever performing binary operations on ``Frame`` and ``Series``, indices will be aligned and, if necessary, reindexed before processing.
 
 >>> posterior = likelihood * prior
->>> data_test['predict'] = posterior.loc_max(axis=1)
->>> data_test['observed'] = data['species']
->>> data_test['correct'] = data_test['predict'] == data_test['observed']
 
+
+To determine our prediction of species for each row of the test data, the column label (the species) of the maximum likelihood is selected with ``loc_max()``.
+
+>>> data_test['predict'] = posterior.loc_max(axis=1)
+
+
+We can add two additional columns to evaulate the effectivess of the classifier. First, we can add an "observer" column by adding the original "species" column from the original ``data`` ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found on the intersection of the indices will be added as a column.
+
+>>> data_test['observed'] = data['species']
+
+Now that we have populated a column of predicted values and observed values, we can compare the two to get a Boolean column indicating when the classifier gave a correct prediciton.
+
+>>> data_test['correct'] = data_test['predict'] == data_test['observed']
 >>> data_test.tail()
 <FrameGO>
 <IndexGO> sepal_l   sepal_w   predict         observed       correct <<U8>
@@ -310,6 +320,8 @@ Finally, we can construct our The ``likelihood`` of each sample is given per col
 147       6.5       3.0       Iris-virginica  Iris-virginica True
 <int64>   <float64> <float64> <<U15>          <<U15>         <bool>
 
+
+We can sum all correct Boolean to get the number of correct classifications and compare that to the length of the test data.
 
 >>> data_test["correct"].sum(), len(data_test)
 (22, 30)
