@@ -133,7 +133,7 @@ The ``Frame.head()`` method can be used to display just the first few rows. Noti
 
 Next, lets add column labels to the data. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels, never changing size or ordering). To add column labels to this data, the ``relabel()`` method is used to set new labels, regardless of the privous labels.
 
-While ``relabel()`` creates a new ``Frame``, it is important to keep in mind that underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations here: https://static-frame.readthedocs.io/en/latest/articles/no_copy.html)
+While ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations here: https://static-frame.readthedocs.io/en/latest/articles/no_copy.html)
 
 >>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
 >>> data.head()
@@ -154,7 +154,7 @@ Eighty percent of the data will be used to train the classifier; the remaining t
 >>> sel_train = sel.sample(round(len(data) * .8))
 
 
-The ``drop[]`` interface can be used to create a new ``Series`` that excludes the training group, leaving just the testing group. As many interfaces in StaticFrame (such as ``astype`` and ``assign``), brackets can be used to do ``loc[]`` style selections with one column, a list of columns, a slice of columns, or selection of columns with a Boolean array.
+The ``drop[]`` interface can be used to create a new ``Series`` that excludes the training group, leaving just the testing group. As many interfaces in StaticFrame (such as ``astype`` and ``assign``), brackets can be used to do ``loc[]`` style selections.
 
 >>> sel_test = sel.drop[sel_train]
 >>> sel_test.head()
@@ -168,7 +168,7 @@ The ``drop[]`` interface can be used to create a new ``Series`` that excludes th
 <int64>  <int64>
 
 
-To select the subset of the data for training, the integer Series can next be passed to ``loc[]`` on the data ``Frame``.
+To select the subset of the data for training, the integer ``Series`` can next be passed to ``Frame.loc[]`` on ``data``.
 
 >>> data_train = data.loc[sel_train]
 >>> data_train.head()
@@ -186,7 +186,7 @@ To select the subset of the data for training, the integer Series can next be pa
 With our data divided into two groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` by multiplying the ``prior`` and the ``likelihood``. (More on naive Bayes classifiers can be found here: https://en.wikipedia.org/wiki/Naive_Bayes_classifier)
 
 
-The ``prior`` is calculated as the percentage if samples of each species in the training data. This is the normalized count per species. To get a ``Series`` of counts per species, we can select the species column, iterate over groups based on species name, and count the size of each group.
+The ``prior`` is calculated as the percentage of samples of each species in the training data. This is the normalized count per species. To get a ``Series`` of counts per species, we can select the species column, iterate over groups based on species name, and count the size of each group.
 
 In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see here: https://static-frame.readthedocs.io/en/latest/articles/uhoc.html)
 
@@ -261,7 +261,7 @@ sigma            Iris-virginica  0.63      0.35
 
 We can now move on to processing our "test" data with the characteristics dervied from our "training" data. To do that, we will extract our previously selected test records with ``sel_test`` into a ``Frame`` to which we can add our ``posterior`` predictions and final classifications.
 
-It is common to process data in table by adding columns from left to right. StaticFrame permits this limited form of mutability with the grow-only ``FrameGO``. While underlying NumPy arrays are still always immutable, columns can be added to a ``FrameGO`` with bracket-style assignment.A ``FrameGO`` can be created from the ``Frame`` with the ``Frame.to_frame_go()`` method. As elsewhere, underlying immutable NumPy arrays do not have to be copied: this is a no-copy operation.
+It is common to process data in table by adding columns from left to right. StaticFrame permits this limited form of mutability with the grow-only ``FrameGO``. While underlying NumPy arrays are still always immutable, columns can be added to a ``FrameGO`` with bracket-style assignment. A ``FrameGO`` can be created from the ``Frame`` with the ``to_frame_go()`` method. As elsewhere, underlying immutable NumPy arrays do not have to be copied: this is a no-copy operation.
 
 Using two arguments to ``loc[]``, we can select rows with the ``sel_test`` ``Series.values`` attribute, and select columns with the labels for the sepal length and sepal width.
 
@@ -302,9 +302,10 @@ To determine our prediction of species for each row of the test data, the column
 >>> data_test['predict'] = posterior.loc_max(axis=1)
 
 
-We can add two additional columns to evaulate the effectivess of the classifier. First, we can add an "observer" column by adding the original "species" column from the original ``data`` ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found on the intersection of the indices will be added as a column.
+We can add two additional columns to evaulate the effectivess of the classifier. First, we can add an "observed" column by adding the original "species" column from the original ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found in the intersection of the indices will be added as a column.
 
 >>> data_test['observed'] = data['species']
+
 
 Now that we have populated a column of predicted values and observed values, we can compare the two to get a Boolean column indicating when the classifier gave a correct prediciton.
 
