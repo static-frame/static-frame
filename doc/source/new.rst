@@ -4,7 +4,9 @@ What is New in StaticFrame
 1.0.0
 ----------
 
-API change: ``IndexHierarchy`` numerical and stastical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, no raise ``NotImplementedError``.
+API change: ``IndexHierarchy`` numerical and statistical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, now raise ``NotImplementedError``.
+
+API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False`` by default.
 
 Added ``via_dt.year_month``.
 
@@ -974,7 +976,7 @@ API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatica
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
 
-API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to ``False`` by default.
 
 API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
@@ -1586,7 +1588,7 @@ Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delim
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
-The ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
+The ``DisplayConfig`` parameter ``type_show`` now, if ``False``, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 Added ``Frame.unset_index()``.
 
