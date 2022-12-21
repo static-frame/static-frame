@@ -10,6 +10,7 @@ from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.index import Index
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
@@ -36,11 +37,14 @@ def join(frame: 'Frame',
         left_template: str = '{}',
         right_template: str = '{}',
         fill_value: tp.Any = np.nan,
-        composite_index: bool = True,
-        composite_index_fill_value: tp.Hashable = None,
+        include_index: bool = False,
         ) -> 'Frame':
 
     from static_frame.core.frame import FrameGO
+
+    # NOTE: pre 1.0 these were optional parameters; now, we always return the data without an index; in the future, we might add back parameters to control how and if an index is returned
+    # composite_index: bool = True,
+    composite_index_fill_value: tp.Hashable = None
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -67,8 +71,8 @@ def join(frame: 'Frame',
         raise RuntimeError('left and right selections must be the same width.')
 
     # Find matching pairs. Get iloc of left to iloc of right.
-    # If composite_index is True, is_many is True, if False, need to check if it is possible to not havea composite index.
-    is_many = composite_index # one to many or many to many
+
+    is_many = False # one to many or many to many
 
     map_iloc = {}
     seen = set() # this stores
@@ -96,9 +100,6 @@ def join(frame: 'Frame',
         # build up a dictionary of left ilocs to an integer array of right matches
         # note that if row_left is the same as a previous row_left, we duplicate the matched_idx
         map_iloc[idx_left] = matched_idx
-
-    if not composite_index and is_many:
-        raise RuntimeError('A composite index is required in this join.')
 
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
@@ -183,7 +184,10 @@ def join(frame: 'Frame',
                 else:
                     values.append(fill_value)
             final[right_template.format(col)] = values
-        return final.to_frame()
+
+        if include_index:
+            return final.to_frame()
+        return final.to_frame().relabel(IndexAutoFactory) # type: ignore
 
     # From here, is_many is True
     row_key = []
@@ -233,7 +237,10 @@ def join(frame: 'Frame',
 
         array.flags.writeable = False
         final[right_template.format(col)] = array
-    return final.to_frame()
+
+    if include_index:
+        return final.to_frame()
+    return final.to_frame().relabel(IndexAutoFactory) # type: ignore
 
 
 

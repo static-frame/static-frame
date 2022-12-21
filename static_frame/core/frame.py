@@ -7774,8 +7774,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an inner join.
@@ -7788,8 +7789,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7804,8 +7803,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7819,8 +7819,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a left outer join.
@@ -7833,8 +7834,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7849,8 +7848,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7864,8 +7864,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a right outer join.
@@ -7878,8 +7879,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7894,8 +7893,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7909,8 +7909,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an outer join.
@@ -7923,8 +7924,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7939,8 +7938,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     #---------------------------------------------------------------------------
