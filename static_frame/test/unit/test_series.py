@@ -23,7 +23,7 @@ from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
-from static_frame import IndexDefaultFactory
+from static_frame import IndexDefaultConstructor
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
@@ -274,7 +274,7 @@ class TestUnit(TestCase):
     def test_series_from_dict_a(self) -> None:
 
         s1 = Series.from_dict(OrderedDict([('b', 4), ('a', 1)]),
-                index_constructor=IndexDefaultFactory('foo'),
+                index_constructor=IndexDefaultConstructor('foo'),
                 )
         self.assertEqual(s1.to_pairs(),
                 (('b', 4), ('a', 1)))
@@ -1390,7 +1390,7 @@ class TestUnit(TestCase):
         s1 = Series.from_items(zip(list('abc'), (1,2,3)),
                 dtype=str,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructor('bar'),
                 )
         self.assertEqual(s1.name, 'foo')
         self.assertEqual(s1.values.tolist(), ['1', '2', '3'])
@@ -3657,7 +3657,7 @@ class TestUnit(TestCase):
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
 
         s3 = Series.from_concat_items((('x', s1), ('y', s2)),
-                index_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructor('bar'),
                 )
         self.assertEqual(s3.index.name, 'bar')
 

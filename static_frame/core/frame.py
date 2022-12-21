@@ -69,7 +69,7 @@ from static_frame.core.index import IndexGO
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructor
 from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -614,9 +614,9 @@ class Frame(ContainerOperand):
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
             # default index construction does not yield elements, but instead yield Index objects for more efficient IndexHierarchy construction
             yield_elements = True
-            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultFactory)):
+            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultConstructor)):
                 yield_elements = False
-            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultFactory)):
+            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultConstructor)):
                 yield_elements = False
 
             for label, frame in items:

@@ -27,7 +27,7 @@ class IndexConstructorFactoryBase:
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
-class IndexDefaultFactory(IndexConstructorFactoryBase):
+class IndexDefaultConstructor(IndexConstructorFactoryBase):
     '''
     Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as an index constructor argument. An instance must be created.
     '''
@@ -108,7 +108,7 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructor]] = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
@@ -118,7 +118,7 @@ class IndexAutoFactory:
             # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
             if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime): # type: ignore
                 raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
-            if isinstance(explicit_constructor, IndexDefaultFactory):
+            if isinstance(explicit_constructor, IndexDefaultConstructor):
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
                         # NOTE might just pass name
@@ -144,7 +144,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructor]] = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''

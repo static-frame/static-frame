@@ -41,7 +41,7 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructor
 from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -369,7 +369,7 @@ class Series(ContainerOperand):
         '''
         array_values = []
 
-        if index_constructor is None or isinstance(index_constructor, IndexDefaultFactory):
+        if index_constructor is None or isinstance(index_constructor, IndexDefaultConstructor):
             # default index constructor expects delivery of Indices for greater efficiency
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
                 for label, series in items:

@@ -43,7 +43,7 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAut
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
-from static_frame.core.index_auto import IndexDefaultFactory as IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructor as IndexDefaultConstructor
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexHour as IndexHour
