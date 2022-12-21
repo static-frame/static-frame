@@ -187,7 +187,7 @@ def join(frame: 'Frame',
 
         if include_index:
             return final.to_frame()
-        return final.to_frame().relabel(IndexAutoFactory)
+        return final.to_frame().relabel(IndexAutoFactory) # type: ignore
 
     # From here, is_many is True
     row_key = []
@@ -240,7 +240,7 @@ def join(frame: 'Frame',
 
     if include_index:
         return final.to_frame()
-    return final.to_frame().relabel(IndexAutoFactory)
+    return final.to_frame().relabel(IndexAutoFactory) # type: ignore
 
 
 
