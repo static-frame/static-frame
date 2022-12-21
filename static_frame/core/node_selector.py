@@ -273,7 +273,7 @@ class BatchAsType:
     def __call__(self,
             dtypes: DtypesSpecifier,
             *,
-            consolidate_blocks: bool = True,
+            consolidate_blocks: bool = False,
             ) -> 'Batch':
         return self._batch_apply(
                 lambda c: c.astype[self._column_key](
