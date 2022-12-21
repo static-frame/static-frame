@@ -27,11 +27,10 @@ class IndexConstructorFactoryBase:
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
-class IndexDefaultFactory(IndexConstructorFactoryBase):
+class IndexDefaultConstructorFactory(IndexConstructorFactoryBase):
     '''
     Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as an index constructor argument. An instance must be created.
     '''
-    # NOTE: rename IndexDefaultConstructorFactory
 
     __slots__ = ('_name',)
 
@@ -99,7 +98,7 @@ IndexAutoInitializer = int
 # could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow into non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
-    '''NOTE: this class is treated as an ``index`` or ``columns`` argument, not as a constructor.
+    '''Class to be used as an ``index`` or ``columns`` argument (not as a constructor) to specify the creation of an auto-incremented integer index.
     '''
     __slots__ = ('_size', '_name')
 
@@ -108,7 +107,7 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
@@ -118,7 +117,7 @@ class IndexAutoFactory:
             # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
             if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime): # type: ignore
                 raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
-            if isinstance(explicit_constructor, IndexDefaultFactory):
+            if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
                         # NOTE might just pass name
@@ -144,7 +143,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''

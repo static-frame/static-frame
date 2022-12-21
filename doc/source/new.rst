@@ -582,7 +582,7 @@ Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.from_concat_items()``.
 
-Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+Introduced ``IndexDefaultConstructorFactory`` to permit specifying index ``name`` attributes with default index constructors.
 
 
 0.8.16
