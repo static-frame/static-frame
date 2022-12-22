@@ -5,7 +5,6 @@ import typing as tp
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
-
 api_example_str = '''
 
 #-------------------------------------------------------------------------------
