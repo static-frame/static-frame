@@ -135,7 +135,8 @@ Each record (row) in this data set describes observations of an iris flower: its
 
 As the columns are unlabelled, lets next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
 
-While ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations here: https://static-frame.readthedocs.io/en/latest/articles/no_copy.html)
+While ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`_.)
+
 
 >>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
 >>> data.head()
