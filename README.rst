@@ -332,7 +332,7 @@ We can calculate the ``posterior`` by multiplying ``likelihood`` by ``prior``. W
 <int64> <float64>   <float64>       <float64>
 
 
-We can now add columns to our ``data_test`` ``FrameGO``. To determine our best prediction of species for each row of the test data, the column label (the species) of the maximum likelihood is selected with ``loc_max()``.
+We can now add columns to our ``data_test`` ``FrameGO``. To determine our best prediction of species for each row of the test data, the column label (the species) of the maximum a posteriori estimate is selected with ``loc_max()``.
 
 >>> data_test['predict'] = posterior.loc_max(axis=1)
 >>> data_test.head()
