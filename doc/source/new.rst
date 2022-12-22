@@ -10,6 +10,8 @@ API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False``
 
 API change: ``composite_index`` and ``composite_index_fill_value`` parameters removed from ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``; added ``include_index`` parameter.
 
+API change: ``IndexDefaultFactory`` renamed ``IndexDefaultConstructorFactory``.
+
 Added ``via_dt.year_month``.
 
 
