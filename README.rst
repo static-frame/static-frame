@@ -49,7 +49,7 @@ static-frame
 
 A library of immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface. StaticFrame is suitable for applications in data science, data engineering, finance, scientific computing, and related fields where reducing opportunities for error by prohibiting in-place mutation is critical.
 
-While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy and two C-extension packages (maintained by the StaticFrame team): Pandas is not a dependency.
+While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy units; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy and two C-extension packages (maintained by the StaticFrame team): Pandas is not a dependency.
 
 A wide variety of table formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. Full serialization is also available via custom NPZ and NPY encodings, the latter supporting memory mapping.
 
@@ -109,7 +109,9 @@ Quick-Start Guide
 
 To get startred quickly, lets download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
 
-While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design makes for more maintainable code. (Read more about differences between Pandas and StaticFrame here: https://static-frame.readthedocs.io/en/latest/articles/upgrade.html)
+While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design leads to more maintainable code. (Read more about differences between Pandas and StaticFrame `here <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`_.)
+
+
 
 Lets download the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the class: here, we will use the ``Frame.from_csv()`` constructor. To download a file from the internet and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface.
 
@@ -192,12 +194,14 @@ To select a subset of the data for training, the ``sel_train`` ``Series`` can ne
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-With our data divided into two randomly-selected, non-overlapping groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` of the test data by multiplying the ``prior`` and the ``likelihood``. With the ``posterior``, we can determine which species the classifier has calculated is most likely. (More on naive Bayes classifiers can be found here: https://en.wikipedia.org/wiki/Naive_Bayes_classifier)
+With our data divided into two randomly-selected, non-overlapping groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` of the test data by multiplying the ``prior`` and the ``likelihood``. With the ``posterior``, we can determine which species the classifier has calculated is most likely. (More on naive Bayes classifiers can be found `here <https://en.wikipedia.org/wiki/Naive_Bayes_classifier>`_.)
+
+
 
 
 The ``prior`` is calculated as the percentage of samples of each species in the training data. This is the "normalized" count per species. To get a ``Series`` of counts per species, we can select the species column, iterate over groups based on species name, and count the size of each group.
 
-In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator (or any similar iterator) can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see here: https://static-frame.readthedocs.io/en/latest/articles/uhoc.html)
+In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator (or any similar iterator) can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/articles/uhoc.html>`_.)
 
 Once the ``Batch`` is created, selections, method calls, and operator expressions can be chained as if they were being called on a single container. Processing happens to every contained container, and a container is returned, only when a finalizer method, such as ``to_series()``, is called.
 
