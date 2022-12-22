@@ -384,9 +384,6 @@ To find the percentage of correct classifications among the test data, we can su
 
 This simple naive Bayes classifier can predict iris species correctly about 73% of the time.
 
-For more articles, videos, and interviews about StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/intro.html#media>`_. For an API overview of ``Frame``, see `here <https://static-frame.readthedocs.io/en/latest/api_overview/frame.html>`_.
-
-
 For further introduction to StaticFrame, including links to articles, videos, and documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`_.
 
 
