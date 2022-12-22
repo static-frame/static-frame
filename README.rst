@@ -347,7 +347,7 @@ We can now add columns to our ``data_test`` ``FrameGO``. To determine our best p
 <int64>   <float64> <float64> <<U15>
 
 
-We can add two additional columns to evaluate the effectivess of the classifier. First, we can add an "observed" column by adding the original "species" column from the original ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found in the intersection of the indices will be added as a column.
+We can add two additional columns to evaluate the effectivess of the classifier. First, we can add an "observed" column by adding the original "species" column from the original ``data`` ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found in the intersection of the indices will be added as a column.
 
 >>> data_test['observed'] = data['species']
 >>> data_test.head()
@@ -387,6 +387,7 @@ This simple naive Bayes classifier can predict iris species correctly about 73% 
 For more articles, videos, and interviews about StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/intro.html#media>`_. For an API overview of ``Frame``, see `here <https://static-frame.readthedocs.io/en/latest/api_overview/frame.html>`_.
 
 
+For further introduction to StaticFrame, including links to articles, videos, and documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`_.
 
 
 
