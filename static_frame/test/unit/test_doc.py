@@ -5,11 +5,6 @@ import typing as tp
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
-# useful constructors
-# >>> f = sf.FrameGO.from_records((('Encke', 3.30, '2003-12-28'), ('Giacobini-Zinner', 6.52, '1998-11-21'), ('Tempel-Tuttle', 32.92, '1998-02-28'), ('Wild 2', 6.39, '2003-09-25')), columns=('Name', 'Orbital Period', 'Perihelion Date'))
-
-
-
 
 api_example_str = '''
 
@@ -265,45 +260,45 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         raise RuntimeError('could not find target fn', target_fn)
 
-#     @classmethod
-#     def get_readme_str(cls) -> str:
-#         # mutate the README
-#         fp_alt = cls.get_test_input('jph_photos.txt')
+    @classmethod
+    def get_readme_str(cls) -> str:
+        # mutate the README
+        fp_alt = cls.get_test_input('iris.csv')
 
-#         readme_fp = cls.get_readme_fp()
-#         with open(readme_fp, encoding='utf-8') as f:
-#             readme_str = f.read()
+        readme_fp = cls.get_readme_fp()
+        with open(readme_fp, encoding='utf-8') as f:
+            readme_str = f.read()
 
-#         # update display config to remove colors
-#         readme_str = '''
-# >>> _display_config = sf.DisplayActive.get()
-# >>> sf.DisplayActive.update(type_color=False)
-# >>>
-#         ''' + readme_str
+        # update display config to remove colors
+        readme_str = '''
+>>> _display_config = sf.DisplayActive.get()
+>>> sf.DisplayActive.update(type_color=False)
+>>>
+        ''' + readme_str
 
-#         # inject content from local files
-#         src = ">>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))"
+        # inject content from local files
+        src = ">>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)"
 
-#         # using a raw string to avoid unicode decoding issues on windows
-#         dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"
+        # using a raw string to avoid unicode decoding issues on windows
+        dst = f">>> data = sf.Frame.from_csv('{fp_alt}', columns_depth=0)"
 
-#         if src not in readme_str:
-#             raise RuntimeError('did not find expected string')
+        if src not in readme_str:
+            raise RuntimeError('did not find expected string')
 
-#         readme_str = readme_str.replace(src, dst)
+        readme_str = readme_str.replace(src, dst)
 
-#         # restore active config
-#         readme_str = readme_str + '''
-# >>> sf.DisplayActive.set(_display_config)
-#         '''
+        # restore active config
+        readme_str = readme_str + '''
+>>> sf.DisplayActive.set(_display_config)
+        '''
 
-#         return readme_str
+        return readme_str
 
 
     def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
 
-        # doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
-        doctest_str = api_example_str
+        doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
+        # doctest_str = api_example_str
 
         sample = doctest.DocTestParser().get_doctest(
                 doctest_str,
