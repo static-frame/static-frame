@@ -109,7 +109,7 @@ Quick-Start Guide
 
 To get startred quickly, lets download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
 
-While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design leads to more maintainable code. (Read more about differences between Pandas and StaticFrame `here <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`_.)
+While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design leads to more maintainable code. (Read more about differences between Pandas and StaticFrame `here <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`__.)
 
 
 We can download the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the class: here, we will use the ``Frame.from_csv()`` constructor. To download a file from the internet and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface.
@@ -134,7 +134,7 @@ Each record (or row) in this dataset describes observations of an iris flower, i
 
 As the columns are unlabelled, lets next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
 
-Note that while ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`_.)
+Note that while ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`__.)
 
 
 >>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
@@ -195,11 +195,11 @@ To select a subset of the data for training, the ``sel_train`` ``Series`` can be
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-With our data divided into two randomly-selected, non-overlapping groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` of the test data by multiplying the ``prior`` and the ``likelihood``. With the ``posterior``, we can determine which species the classifier has calculated is most likely. (More on naive Bayes classifiers can be found `here <https://en.wikipedia.org/wiki/Naive_Bayes_classifier>`_.)
+With our data divided into two randomly-selected, non-overlapping groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` of the test data by multiplying the ``prior`` and the ``likelihood``. With the ``posterior``, we can determine which species the classifier has calculated is most likely. (More on naive Bayes classifiers can be found `here <https://en.wikipedia.org/wiki/Naive_Bayes_classifier>`__.)
 
 The ``prior`` is calculated as the percentage of samples of each species in the training data. This is the "normalized" count per species. To get a ``Series`` of counts per species, we can select the species column, iterate over groups based on species name, and count the size of each group.
 
-In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator (or any similar iterator) can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/articles/uhoc.html>`_.)
+In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator (or any similar iterator) can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/articles/uhoc.html>`__.)
 
 Once the ``Batch`` is created, selections, method calls, and operator expressions can be chained as if they were being called on a single container. Processing happens to every contained container, and a container is returned, only when a finalizer method, such as ``to_series()``, is called.
 
@@ -384,7 +384,7 @@ To find the percentage of correct classifications among the test data, we can su
 
 This simple naive Bayes classifier can predict iris species correctly about 73% of the time.
 
-For further introduction to StaticFrame, including links to articles, videos, and documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`_.
+For further introduction to StaticFrame, including links to articles, videos, and documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`__.
 
 
 
