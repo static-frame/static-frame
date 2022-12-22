@@ -8,7 +8,6 @@ from static_frame.test.test_case import skip_win
 
 api_example_str = '''
 
-
 #-------------------------------------------------------------------------------
 # import and setup
 
@@ -17,66 +16,6 @@ api_example_str = '''
 >>> sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 >>> import numpy as np
 >>> import static_frame as sf
-
-#-------------------------------------------------------------------------------
-# documentation introduction
-
-#start_immutability
-
->>> import static_frame as sf
->>> import numpy as np
-
->>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
->>> s #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s['Jupiter'] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: 'Series' object does not support item assignment
->>> s.iloc[0] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: 'InterfaceGetItem' object does not support item assignment
->>> s.values[0] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-ValueError: assignment destination is read-only
-
-#end_immutability
-
-#start_assign
->>> s.assign['Jupiter'](69) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  69
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s.assign['Uranus':](s['Uranus':] - 2) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  67
-Saturn   62
-Uranus   25
-Neptune  12
-<<U7>   <int64>
->>> s.assign.iloc[[0, 3]]((68, 11)) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  68
-Saturn   62
-Uranus   27
-Neptune  11
-<<U7>    <int64>
-
-#end_assign
 
 
 #-------------------------------------------------------------------------------
@@ -314,19 +253,3 @@ if __name__ == "__main__":
     import unittest
     unittest.main()
 
-
-
-
-
-# UNUSED
-
-
-# #start_Frame-from_records()
-# >>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
-# <Frame>
-# <Index> temperature distance  <<U11>
-# <Index>
-# Mars    -65         227.9
-# Neptune -200        4495.1
-# <<U7>   <int64>     <float64>
-# #end_Frame-from_records()
