@@ -2598,13 +2598,6 @@ class TestUnit(TestCase):
         s2 = f1.loc['x', :'r']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(s2.name, 'x')
 
-    def test_frame_loc_e(self) -> None:
-        fp = self.get_test_input('jph_photos.txt')
-        # using a raw string to avoid unicode decoding issues on windows
-        f = sf.Frame.from_tsv(fp, dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')
-        post = f.loc[f['albumId'] >= 98]
-        self.assertEqual(post.shape, (150, 5))
-
     def test_frame_loc_f(self) -> None:
         f = Frame.from_elements(range(3), index=sf.Index(tuple('abc'), name='index'))
         self.assertEqual(f.loc['b':].index.name, 'index') # type: ignore
