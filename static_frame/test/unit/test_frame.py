@@ -30,7 +30,7 @@ from static_frame import IndexAutoConstructorFactory
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
-from static_frame import IndexDefaultFactory
+from static_frame import IndexDefaultConstructorFactory
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
@@ -4572,8 +4572,8 @@ class TestUnit(TestCase):
                 columns=range(2),
                 dtype=object,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
-                columns_constructor=IndexDefaultFactory('baz'),
+                index_constructor=IndexDefaultConstructorFactory('bar'),
+                columns_constructor=IndexDefaultConstructorFactory('baz'),
                 )
 
         self.assertEqual(f1.to_pairs(),
@@ -8775,7 +8775,7 @@ class TestUnit(TestCase):
         b = sf.Frame.from_dict({0:(1,2), 1:(np.nan, np.nan), 2:(False, False)})
 
         # reblock first two columns into integers
-        c = a.astype[[0,1]](int)
+        c = a.astype[[0,1]](int, consolidate_blocks=True)
         self.assertEqual(c._blocks.shapes.tolist(),
                 [(2, 2), (2,)])
 
@@ -9139,7 +9139,7 @@ class TestUnit(TestCase):
 
         f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
                 axis=1,
-                columns_constructor=IndexDefaultFactory('foo'),
+                columns_constructor=IndexDefaultConstructorFactory('foo'),
                 )
         self.assertEqual(f4.columns.name, 'foo')
 
@@ -9161,7 +9161,7 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
                 axis=0,
-                index_constructor=IndexDefaultFactory('foo'),
+                index_constructor=IndexDefaultConstructorFactory('foo'),
                 )
         self.assertEqual(f3.index.name, 'foo')
 
@@ -10570,6 +10570,30 @@ class TestUnit(TestCase):
         f2 = Frame().astype[:](str)
         self.assertEqual(f2.shape, (0, 0))
 
+    def test_frame_astype_i(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float, consolidate_blocks=True)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2, 2), (2, 2)]
+                )
+
+    def test_frame_astype_j(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2,), (2,), (2,), (2,)]
+                )
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_pickle_a(self) -> None:
@@ -11331,8 +11355,8 @@ class TestUnit(TestCase):
 
         a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)),
                 index=tuple('wxyz'),
-                index_constructor=IndexDefaultFactory('foo'),
-                columns_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructorFactory('foo'),
+                columns_constructor=IndexDefaultConstructorFactory('bar'),
                 )
         self.assertEqual(a.index.name, 'foo')
         self.assertEqual(a.columns.name, 'bar')
@@ -11570,7 +11594,7 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 
-        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
+        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultConstructorFactory('foo'))
         self.assertEqual(
                 f.to_pairs(0),
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))

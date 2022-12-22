@@ -85,7 +85,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/store_config.rst
    api_overview/store_filter.rst
    api_overview/index_auto_factory.rst
-   api_overview/index_default_factory.rst
+   api_overview/index_default_constructor_factory.rst
    api_overview/index_auto_constructor_factory.rst
    api_overview/npz.rst
    api_overview/npy.rst
@@ -137,7 +137,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/store_config.rst
    api_detail/store_filter.rst
    api_detail/index_auto_factory.rst
-   api_detail/index_default_factory.rst
+   api_detail/index_default_constructor_factory.rst
    api_detail/index_auto_constructor_factory.rst
    api_detail/npz.rst
    api_detail/npy.rst
@@ -646,9 +646,9 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_auto_factory-constructor.rst
    api_overview/index_auto_factory-exporter.rst
    api_overview/index_auto_factory-display.rst
-   api_overview/index_default_factory-constructor.rst
-   api_overview/index_default_factory-method.rst
-   api_overview/index_default_factory-display.rst
+   api_overview/index_default_constructor_factory-constructor.rst
+   api_overview/index_default_constructor_factory-method.rst
+   api_overview/index_default_constructor_factory-display.rst
    api_overview/index_auto_constructor_factory-constructor.rst
    api_overview/index_auto_constructor_factory-exporter.rst
    api_overview/index_auto_constructor_factory-method.rst
@@ -667,6 +667,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/platform-constructor.rst
    api_overview/platform-exporter.rst
    api_overview/platform-display.rst
+
 
    api_detail/series-constructor.rst
    api_detail/series-exporter.rst
@@ -1167,9 +1168,9 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_auto_factory-constructor.rst
    api_detail/index_auto_factory-exporter.rst
    api_detail/index_auto_factory-display.rst
-   api_detail/index_default_factory-constructor.rst
-   api_detail/index_default_factory-method.rst
-   api_detail/index_default_factory-display.rst
+   api_detail/index_default_constructor_factory-constructor.rst
+   api_detail/index_default_constructor_factory-method.rst
+   api_detail/index_default_constructor_factory-display.rst
    api_detail/index_auto_constructor_factory-constructor.rst
    api_detail/index_auto_constructor_factory-exporter.rst
    api_detail/index_auto_constructor_factory-method.rst

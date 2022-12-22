@@ -69,7 +69,7 @@ from static_frame.core.index import IndexGO
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -614,9 +614,9 @@ class Frame(ContainerOperand):
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
             # default index construction does not yield elements, but instead yield Index objects for more efficient IndexHierarchy construction
             yield_elements = True
-            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultFactory)):
+            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultConstructorFactory)):
                 yield_elements = False
-            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultFactory)):
+            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultConstructorFactory)):
                 yield_elements = False
 
             for label, frame in items:
@@ -7774,8 +7774,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an inner join.
@@ -7788,8 +7789,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7804,8 +7803,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7819,8 +7819,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a left outer join.
@@ -7833,8 +7834,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7849,8 +7848,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7864,8 +7864,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a right outer join.
@@ -7878,8 +7879,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7894,8 +7893,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7909,8 +7909,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an outer join.
@@ -7923,8 +7924,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7939,8 +7938,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     #---------------------------------------------------------------------------
@@ -9451,7 +9451,7 @@ class FrameAsType:
     def __call__(self,
             dtypes: DtypesSpecifier,
             *,
-            consolidate_blocks: bool = True,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
         '''

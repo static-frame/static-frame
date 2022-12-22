@@ -28,7 +28,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexDateGO
@@ -129,7 +129,7 @@ DOCUMENTED_COMPONENTS = (
         StoreConfig,
         StoreFilter,
         IndexAutoFactory,
-        IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        IndexDefaultConstructorFactory,
         IndexAutoConstructorFactory,
         NPZ,
         NPY,
