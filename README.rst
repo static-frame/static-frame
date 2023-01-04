@@ -107,7 +107,7 @@ For extended input and output, the following packages are required:
 Quick-Start Guide
 ---------------------
 
-To get startred quickly, lets download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
+To get startred quickly, let's download the classic iris (flower) characteristics data set and build a simple naive Bayes classifier that can predict species from iris petal characteristics.
 
 While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design leads to more maintainable code. (Read more about differences between Pandas and StaticFrame `here <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`__.)
 
@@ -132,7 +132,7 @@ Each record (or row) in this dataset describes observations of an iris flower, i
 <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
-As the columns are unlabelled, lets next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
+As the columns are unlabelled, let's next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
 
 Note that while ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`__.)
 
