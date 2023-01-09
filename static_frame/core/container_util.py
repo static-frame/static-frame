@@ -36,6 +36,7 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -171,8 +172,10 @@ def get_col_dtype_factory(
                 return dtypes.get(col_idx, None)
 
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
-        if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
-            dtypes = tuple(dtypes) #type: ignore
+        if dtypes.__class__ is not FrozenGenerator and (
+                not hasattr(dtypes, '__len__')
+                or not hasattr(dtypes, '__getitem__')):
+            dtypes = FrozenGenerator(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
 
     return get_col_dtype

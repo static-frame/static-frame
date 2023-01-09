@@ -5,8 +5,8 @@ import unittest
 import warnings
 from enum import Enum
 from functools import partial
-from itertools import repeat
 from itertools import chain
+from itertools import repeat
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -20,6 +20,7 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
@@ -83,7 +84,6 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import validate_depth_selection
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2947,8 +2947,18 @@ class TestUnit(TestCase):
         self.assertEqual(fg[0], 'x')
         self.assertEqual(fg[1], 'x')
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(IndexError):
             _ = fg[4]
+
+    def test_frozen_generator_c(self) -> None:
+        d = {1:100, 2:200, 3:400}
+        fg = FrozenGenerator(d.values())
+        self.assertEqual(fg[2], 400)
+        self.assertEqual(fg[0], 100)
+        self.assertEqual(fg[1], 200)
+
+        with self.assertRaises(IndexError):
+            _ = fg[3]
 
 
 

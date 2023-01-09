@@ -588,12 +588,20 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
 
 #-------------------------------------------------------------------------------
 class FrozenGenerator:
+    '''
+    A wrapper of an iterator (or iterable) that stores values iterated for later recall; this never iterates the iterator unbound, but always iterates up to a target.
+    '''
     __slots__ = (
         '_gen',
         '_src',
         )
-    def __init__(self, gen: tp.Iterator[tp.Any]):
-        self._gen = gen
+
+    def __init__(self, gen: tp.Iterable[tp.Any]):
+        # NOTE: while generally called with an iterator, some iterables such as dict_values need to be converted to an iterator
+        if hasattr(gen, '__next__'):
+            self._gen = gen
+        else:
+            self._gen = iter(gen)
         self._src = []
 
     def __getitem__(self, key: int) -> tp.Any:
@@ -603,7 +611,7 @@ class FrozenGenerator:
                 try:
                     self._src.append(next(self._gen))
                 except StopIteration:
-                    raise KeyError(k) from None
+                    raise IndexError(k) from None
         return self._src[key]
 
 

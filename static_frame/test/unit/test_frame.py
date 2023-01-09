@@ -10,11 +10,11 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import namedtuple
-from itertools import chain
-from itertools import repeat
 from functools import partial
 from hashlib import sha256
 from io import StringIO
+from itertools import chain
+from itertools import repeat
 from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
@@ -6889,7 +6889,10 @@ class TestUnit(TestCase):
                 columns_depth=0,
                 dtypes=chain((int,), repeat(str)),
                 )
-        import ipdb; ipdb.set_trace()
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'U', 'U']
+                )
 
     #---------------------------------------------------------------------------
 
