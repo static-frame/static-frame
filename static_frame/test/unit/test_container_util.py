@@ -640,8 +640,12 @@ class TestUnit(TestCase):
         self.assertEqual(func3(0), None)
         self.assertEqual(func3(1), np.dtype(bool))
 
-        with self.assertRaises(RuntimeError):
-            _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
+    def test_get_col_dtype_factory_b(self) -> None:
+        func = get_col_dtype_factory({1: np.dtype(bool)}, None)
+        self.assertEqual(func(0), None)
+        self.assertEqual(func(1), np.dtype(bool))
+
+
 
     #---------------------------------------------------------------------------
 

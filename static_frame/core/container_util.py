@@ -143,7 +143,6 @@ def get_col_dtype_factory(
         index_depth: if a mapping is provided, and if processing fields that include fields that will be interpreted as the index (and that are not included in the ``columns`` mapping), provide the index depth to "pad" the appropriate offset and always return None for those `col_idx`. NOTE: this is only enabled when using a mapping.
     '''
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
-    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
     if is_mapping(dtypes):
         is_map = True
@@ -155,9 +154,6 @@ def get_col_dtype_factory(
         is_map = False
         is_element = False
 
-    if columns is None and is_map:
-        raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
-
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
         if is_map:
             col_idx = col_idx - index_depth
@@ -168,8 +164,12 @@ def get_col_dtype_factory(
         if is_element:
             return dtypes
         if is_map:
-            # mappings can be incomplete
-            return dtypes.get(columns[col_idx], None) #type: ignore
+            if columns is not None:
+                # mappings can be incomplete
+                return dtypes.get(columns[col_idx], None) #type: ignore
+            else: # assume mapping is by integer position, i.e. columns could be IndexAutoFactory too...
+                return dtypes.get(col_idx, None)
+
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
         if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
             dtypes = tuple(dtypes) #type: ignore

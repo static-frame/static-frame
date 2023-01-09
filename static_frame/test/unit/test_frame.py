@@ -6866,6 +6866,18 @@ class TestUnit(TestCase):
                 ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
                 )
 
+    def test_frame_from_delimited_r(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes={1:bool, 2:str},
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'b', 'U']
+                )
 
     #---------------------------------------------------------------------------
 
