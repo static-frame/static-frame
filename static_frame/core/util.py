@@ -587,6 +587,27 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
     return None
 
 #-------------------------------------------------------------------------------
+class FrozenGenerator:
+    __slots__ = (
+        '_gen',
+        '_src',
+        )
+    def __init__(self, gen: tp.Iterator[tp.Any]):
+        self._gen = gen
+        self._src = []
+
+    def __getitem__(self, key: int) -> tp.Any:
+        start = len(self._src)
+        if key >= start:
+            for k in range(start, key+1):
+                try:
+                    self._src.append(next(self._gen))
+                except StopIteration:
+                    raise KeyError(k) from None
+        return self._src[key]
+
+
+#-------------------------------------------------------------------------------
 # join utils
 
 class Join(Enum):

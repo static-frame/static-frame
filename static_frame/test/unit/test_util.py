@@ -5,6 +5,8 @@ import unittest
 import warnings
 from enum import Enum
 from functools import partial
+from itertools import repeat
+from itertools import chain
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -81,6 +83,7 @@ from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
+from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import validate_depth_selection
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2928,6 +2931,24 @@ class TestUnit(TestCase):
         post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
         self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
 
+    #---------------------------------------------------------------------------
+    def test_frozen_generator_a(self) -> None:
+        fg = FrozenGenerator(chain((3,), repeat(0)))
+
+        self.assertEqual(fg[2], 0)
+        self.assertEqual(fg[0], 3)
+        self.assertEqual(fg[1], 0)
+        self.assertEqual(fg[99], 0)
+
+    def test_frozen_generator_b(self) -> None:
+        fg = FrozenGenerator(('x' for _ in range(3)))
+
+        self.assertEqual(fg[2], 'x')
+        self.assertEqual(fg[0], 'x')
+        self.assertEqual(fg[1], 'x')
+
+        with self.assertRaises(KeyError):
+            _ = fg[4]
 
 
 

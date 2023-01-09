@@ -10,6 +10,8 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import namedtuple
+from itertools import chain
+from itertools import repeat
 from functools import partial
 from hashlib import sha256
 from io import StringIO
@@ -6878,6 +6880,16 @@ class TestUnit(TestCase):
                 [dt.kind for dt in f1.dtypes.values],
                 ['i', 'b', 'U']
                 )
+
+    def test_frame_from_delimited_s(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=chain((int,), repeat(str)),
+                )
+        import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
