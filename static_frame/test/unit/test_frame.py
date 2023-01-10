@@ -13221,6 +13221,14 @@ class TestUnit(TestCase):
                 (('a', ((0, '==zjZQ'), (1, '==zO5l'))), ('b', ((0, '==zaji'), (1, '==zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, '==z2Oo'), (1, '==z5l6'))))
                 )
 
+    def test_frame_str_format_e(self) -> None:
+        f1 = ff.parse('s(2,4)|v(float,float,bool,int)').relabel(
+                columns=IndexAutoFactory)
+        f2 = f1.via_str.format({0:'{:.2%}', 1:'{:.2f}', 2:'b{:=>4}', 3:'{:b}'})
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, '193040.00%'), (1, '-176034.00%'))), (1, ((0, '-610.80'), (1, '3243.94'))), (2, ((0, 'b===1'), (1, 'b===0'))), (3, ((0, '11111011111111001'), (1, '1000100011001101'))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_via_dt_year_a(self) -> None:

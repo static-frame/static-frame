@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.0.1
+-----------
+
+Parameters ``dtypes``, ``fill_value``, and ``format`` (given to ``via_str.format``) now properly work with ``defaultdict``, infinite iterators, and mappings indexed by position (when columns are not defined or created with ``IndexAutoFactory``).
+
+
 1.0.0
 ----------
 
