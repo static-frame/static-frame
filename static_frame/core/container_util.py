@@ -169,7 +169,7 @@ def get_col_dtype_factory(
                 # mappings can be incomplete
                 return dtypes.get(columns[col_idx], None) #type: ignore
             else: # assume mapping is by integer position, i.e. columns could be IndexAutoFactory too...
-                return dtypes.get(col_idx, None)
+                return dtypes.get(col_idx, None) #type: ignore
 
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
         if dtypes.__class__ is not FrozenGenerator and (
