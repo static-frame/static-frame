@@ -131,6 +131,12 @@ class ContainerMap:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
+
+def is_frozen_generator_input(value: tp.Any) -> bool:
+    return value.__class__ is not FrozenGenerator and (
+            not hasattr(value, '__len__')
+            or not hasattr(value, '__getitem__'))
+
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
@@ -172,9 +178,7 @@ def get_col_dtype_factory(
                 return dtypes.get(col_idx, None) #type: ignore
 
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
-        if dtypes.__class__ is not FrozenGenerator and (
-                not hasattr(dtypes, '__len__')
-                or not hasattr(dtypes, '__getitem__')):
+        if is_frozen_generator_input(dtypes):
             dtypes = FrozenGenerator(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
 
@@ -229,9 +233,9 @@ def get_col_fill_value_factory(
             return fill_value
         if is_map:
             return fill_value.get(columns[col_idx], np.nan) #type: ignore
-        # NOTE: the types trying to select here could be more explicit
-        if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
-            fill_value = tuple(fill_value)
+
+        if is_frozen_generator_input(fill_value):
+            fill_value = FrozenGenerator(fill_value)
         return fill_value[col_idx]
 
     return get_col_fill_value
@@ -268,8 +272,8 @@ def get_col_format_factory(
             return format # type: ignore
         if is_map:
             return format.get(fields[col_idx], '{}') #type: ignore
-        if not hasattr(format, '__len__') or not hasattr(format, '__getitem__'):
-            format = tuple(format)
+        if is_frozen_generator_input(format):
+            format = FrozenGenerator(format)
         return format[col_idx] # type: ignore
 
     return get_col_format_value
