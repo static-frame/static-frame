@@ -226,9 +226,6 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    # if columns is None and is_map:
-    #     raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
-
     def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
@@ -279,9 +276,6 @@ def get_col_format_factory(
     else: # can assume an element
         is_element = True
 
-    # if fields is None and is_map:
-    #     raise RuntimeError('cannot lookup format by name without supplied labels')
-
     def get_col_format_value(col_idx: int) -> str:
         nonlocal format # might mutate a generator into a tuple
         if is_element:
@@ -298,8 +292,6 @@ def get_col_format_factory(
         return format[col_idx] # type: ignore
 
     return get_col_format_value
-
-
 
 
 def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
