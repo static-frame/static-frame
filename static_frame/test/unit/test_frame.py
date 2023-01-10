@@ -9,8 +9,8 @@ import string
 import typing as tp
 import unittest
 from collections import OrderedDict
-from collections import namedtuple
 from collections import defaultdict
+from collections import namedtuple
 from functools import partial
 from hashlib import sha256
 from io import StringIO
