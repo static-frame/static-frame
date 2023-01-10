@@ -175,9 +175,9 @@ def get_col_dtype_factory(
             return dtypes
         if is_map:
             # if no columns, assume mapping is an integer mapping
-            key: int = columns[col_idx] if columns is not None else col_idx
+            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
-                return dtypes[key]
+                return dtypes[key] #type: ignore
             except KeyError:
                 return None
 
@@ -241,7 +241,7 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            key: int = columns[col_idx] if columns is not None else col_idx
+            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
                 return fill_value[key]
             except KeyError:
@@ -287,9 +287,9 @@ def get_col_format_factory(
         if is_element:
             return format # type: ignore
         if is_map:
-            key: int = fields[col_idx] if fields is not None else col_idx
+            key: tp.Hashable = fields[col_idx] if fields is not None else col_idx
             try: # try lookup for defaultdict support
-                return format[key]
+                return format[key] #type: ignore
             except KeyError:
                 return '{}'
 
