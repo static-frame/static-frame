@@ -9,10 +9,13 @@ import string
 import typing as tp
 import unittest
 from collections import OrderedDict
+from collections import defaultdict
 from collections import namedtuple
 from functools import partial
 from hashlib import sha256
 from io import StringIO
+from itertools import chain
+from itertools import repeat
 from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
@@ -4797,7 +4800,7 @@ class TestUnit(TestCase):
             # must provide an index
             _ = Frame.from_items(gen())
 
-    def test_frame_from_items_k(self) -> None:
+    def test_frame_from_items_k1(self) -> None:
 
         s1 = Series((2, 3), index=('b', 'c'))
         s2 = Series(('x', 'y'), index=('a',  'c'))
@@ -4810,6 +4813,21 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('x', (('a', 0), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
                 )
+
+    def test_frame_from_items_k2(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=defaultdict(lambda: None, {'z':False}),
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', None), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', None), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
+                )
+
 
     def test_frame_from_items_l(self) -> None:
 
@@ -6866,6 +6884,44 @@ class TestUnit(TestCase):
                 ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
                 )
 
+    def test_frame_from_delimited_r(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes={1:bool, 2:str},
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'b', 'U']
+                )
+
+    def test_frame_from_delimited_s(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=chain((int,), repeat(str)),
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'U', 'U']
+                )
+
+    def test_frame_from_delimited_t(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=defaultdict(lambda: str, {1: int}),
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['U', 'i', 'U']
+                )
 
     #---------------------------------------------------------------------------
 
@@ -13156,6 +13212,13 @@ class TestUnit(TestCase):
         f2 = f1.via_str.format(dict(c='{:=^12}', d=''))
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 'zjZQ'), (1, 'zO5l'))), ('b', ((0, 'zaji'), (1, 'zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, ''), (1, ''))))
+                )
+
+    def test_frame_str_format_d(self) -> None:
+        f1 = ff.parse('s(2,4)|v(str)').relabel(columns=list('abcd'))
+        f2 = f1.via_str.format(defaultdict(lambda: '{:=>6}', dict(c='{:=^12}')))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, '==zjZQ'), (1, '==zO5l'))), ('b', ((0, '==zaji'), (1, '==zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, '==z2Oo'), (1, '==z5l6'))))
                 )
 
     #---------------------------------------------------------------------------

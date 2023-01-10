@@ -640,8 +640,12 @@ class TestUnit(TestCase):
         self.assertEqual(func3(0), None)
         self.assertEqual(func3(1), np.dtype(bool))
 
-        with self.assertRaises(RuntimeError):
-            _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
+    def test_get_col_dtype_factory_b(self) -> None:
+        func = get_col_dtype_factory({1: np.dtype(bool)}, None)
+        self.assertEqual(func(0), None)
+        self.assertEqual(func(1), np.dtype(bool))
+
+
 
     #---------------------------------------------------------------------------
 
@@ -649,10 +653,6 @@ class TestUnit(TestCase):
         func1 = get_col_fill_value_factory({'a':-1, 'b':2}, columns=('b', 'a'))
         self.assertEqual(func1(0, np.dtype(float)), 2)
         self.assertEqual(func1(1, np.dtype(float)), -1)
-
-        with self.assertRaises(RuntimeError):
-            _ = get_col_fill_value_factory({'a':-1, 'b':2}, columns=None)
-
 
     def test_get_col_fill_value_b(self) -> None:
         func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
@@ -712,10 +712,6 @@ class TestUnit(TestCase):
         self.assertEqual(func(0), '{}')
         self.assertEqual(func(1), 'x{}')
         self.assertEqual(func(2), 'y{}')
-
-    def test_get_col_format_d2(self) -> None:
-        with self.assertRaises(RuntimeError):
-            _ = get_col_format_factory({'b':'x{}', 'c':'y{}'})
 
     def test_get_col_format_e(self) -> None:
         func = get_col_format_factory((f'{{:{i}}}' for i in range(3)), ('a', 'b', 'c'))

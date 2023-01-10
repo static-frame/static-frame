@@ -5,6 +5,8 @@ import unittest
 import warnings
 from enum import Enum
 from functools import partial
+from itertools import chain
+from itertools import repeat
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -18,6 +20,7 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
@@ -2928,6 +2931,34 @@ class TestUnit(TestCase):
         post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
         self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
 
+    #---------------------------------------------------------------------------
+    def test_frozen_generator_a(self) -> None:
+        fg = FrozenGenerator(chain((3,), repeat(0)))
+
+        self.assertEqual(fg[2], 0)
+        self.assertEqual(fg[0], 3)
+        self.assertEqual(fg[1], 0)
+        self.assertEqual(fg[99], 0)
+
+    def test_frozen_generator_b(self) -> None:
+        fg = FrozenGenerator(('x' for _ in range(3)))
+
+        self.assertEqual(fg[2], 'x')
+        self.assertEqual(fg[0], 'x')
+        self.assertEqual(fg[1], 'x')
+
+        with self.assertRaises(IndexError):
+            _ = fg[4]
+
+    def test_frozen_generator_c(self) -> None:
+        d = {1:100, 2:200, 3:400}
+        fg = FrozenGenerator(d.values())
+        self.assertEqual(fg[2], 400)
+        self.assertEqual(fg[0], 100)
+        self.assertEqual(fg[1], 200)
+
+        with self.assertRaises(IndexError):
+            _ = fg[3]
 
 
 
