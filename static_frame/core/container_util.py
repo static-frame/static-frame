@@ -154,6 +154,9 @@ def get_col_dtype_factory(
     if is_mapping(dtypes):
         is_map = True
         is_element = False
+        if isinstance(dtypes, defaultdict):
+            # make a copy so as to not mutate
+            dtypes = dtypes.copy()
     elif is_dtype_specifier(dtypes):
         is_map = False
         is_element = True
@@ -171,13 +174,15 @@ def get_col_dtype_factory(
         if is_element:
             return dtypes
         if is_map:
-            if columns is not None:
-                # mappings can be incomplete
-                return dtypes.get(columns[col_idx], None) #type: ignore
-            else: # assume mapping is by integer position, i.e. columns could be IndexAutoFactory too...
-                return dtypes.get(col_idx, None) #type: ignore
+            # if no columns, assume mapping is an integer mapping
+            key: int = columns[col_idx] if columns is not None else col_idx
+            try: # try lookup for defaultdict support
+                return dtypes[key]
+            except KeyError:
+                return None
 
-        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
+        # NOTE: dtypes might be a generator
+        # INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
         if is_frozen_generator_input(dtypes):
             dtypes = FrozenGenerator(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
@@ -205,6 +210,9 @@ def get_col_fill_value_factory(
         fill_value = FILL_VALUE_AUTO_DEFAULT
     elif is_mapping(fill_value):
         is_map = True
+        if isinstance(fill_value, defaultdict):
+            # make a copy so as to not mutate
+            fill_value = fill_value.copy()
     elif fill_value.__class__ is np.ndarray: # tuple is an element
         if fill_value.ndim > 1:
             raise ValueError('Fill values must be one-dimensional arrays.')
@@ -218,13 +226,14 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    if columns is None and is_map:
-        raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
+    # if columns is None and is_map:
+    #     raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
 
     def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
+
         if is_fva and dtype is not None: # use the mapping from dtype
             return fill_value[dtype]
         if is_fva and dtype is None:
@@ -232,7 +241,11 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            return fill_value.get(columns[col_idx], np.nan) #type: ignore
+            key: int = columns[col_idx] if columns is not None else col_idx
+            try: # try lookup for defaultdict support
+                return fill_value[key]
+            except KeyError:
+                return np.nan
 
         if is_frozen_generator_input(fill_value):
             fill_value = FrozenGenerator(fill_value)
@@ -257,21 +270,29 @@ def get_col_format_factory(
 
     if is_mapping(format):
         is_map = True
+        if isinstance(format, defaultdict):
+            # make a copy so as to not mutate
+            format = format.copy()
     elif hasattr(format, '__iter__') and not isinstance(format, str):
         # an iterable or iterator but not a string
         pass
     else: # can assume an element
         is_element = True
 
-    if fields is None and is_map:
-        raise RuntimeError('cannot lookup format by name without supplied labels')
+    # if fields is None and is_map:
+    #     raise RuntimeError('cannot lookup format by name without supplied labels')
 
     def get_col_format_value(col_idx: int) -> str:
         nonlocal format # might mutate a generator into a tuple
         if is_element:
             return format # type: ignore
         if is_map:
-            return format.get(fields[col_idx], '{}') #type: ignore
+            key: int = fields[col_idx] if fields is not None else col_idx
+            try: # try lookup for defaultdict support
+                return format[key]
+            except KeyError:
+                return '{}'
+
         if is_frozen_generator_input(format):
             format = FrozenGenerator(format)
         return format[col_idx] # type: ignore

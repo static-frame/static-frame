@@ -10,6 +10,7 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import namedtuple
+from collections import defaultdict
 from functools import partial
 from hashlib import sha256
 from io import StringIO
@@ -6892,6 +6893,19 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [dt.kind for dt in f1.dtypes.values],
                 ['i', 'U', 'U']
+                )
+
+    def test_frame_from_delimited_t(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=defaultdict(lambda: str, {1: int}),
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['U', 'i', 'U']
                 )
 
     #---------------------------------------------------------------------------
