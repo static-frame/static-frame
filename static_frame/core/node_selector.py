@@ -311,3 +311,37 @@ class InterfaceBatchAsType(Interface[TContainer]):
                 batch_apply=self._batch_apply,
                 column_key=NULL_SLICE,
                 )(dtype)
+
+
+#-------------------------------------------------------------------------------
+
+class InterfaceConsolidate(Interface[TContainer]):
+    '''An instance to serve as an interface to __getitem__ extractors.
+    '''
+
+    __slots__ = ('_func_getitem',)
+    INTERFACE = ('__getitem__', '__call__')
+
+    def __init__(self,
+            func_getitem: tp.Callable[[GetItemKeyType], 'FrameConsolidate']
+            ) -> None:
+        '''
+        Args:
+            _func_getitem: a callable that expects a _func_getitem key and returns a FrameConsolidate interface.
+        '''
+        self._func_getitem = func_getitem
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> 'FrameConsolidate':
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._func_getitem(key)
+
+    def __call__(self) -> 'Frame':
+        '''
+        Apply to all columns.
+        '''
+        return self._func_getitem(NULL_SLICE)()

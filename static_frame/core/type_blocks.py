@@ -1612,7 +1612,7 @@ class TypeBlocks(ContainerOperand):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    # NOTE: this might cache its results as it is it might be frequently called with the same arguments in some scenarios (group)
+    # NOTE: this might cache its results as it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
             key: GetItemKeyTypeCompound,
             retain_key_order: bool = True
@@ -1633,7 +1633,7 @@ class TypeBlocks(ContainerOperand):
                 # the index has the pair block, column integer
                 yield self._index[key]
             else: # all cases where we try to get contiguous slices
-                if isinstance(key, slice):
+                if key.__class__ is slice:
                     #  slice the index; null slice already handled
                     if not retain_key_order:
                         key = slice_to_ascending_slice(key, self._shape[1])
@@ -1742,7 +1742,7 @@ class TypeBlocks(ContainerOperand):
 
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
-                if isinstance(target_slice, slice):
+                if target_slice.__class__ is slice:
                     target_start = target_slice.start
                     target_stop = target_slice.stop
                 else: # it is an integer
@@ -1767,8 +1767,6 @@ class TypeBlocks(ContainerOperand):
                 yield b # no change for this block
             else:
                 yield from parts
-
-
 
     def _astype_blocks_from_dtypes(self,
             dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]],
@@ -1809,6 +1807,73 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
                 else:
                     yield b[NULL_SLICE, slice(group_start, None)]
+
+    def _consolidate_select_blocks(self,
+            column_key: GetItemKeyType,
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given any column selection, consolidate when possible within that region.
+        Generator-producer of np.ndarray.
+        '''
+        # block slices must be in ascending order, not key order
+        block_slices = iter(self._key_to_block_slices(
+                column_key,
+                retain_key_order=False))
+
+        target_slice: tp.Optional[tp.Union[slice, int]]
+
+        target_block_idx = target_slice = None
+        targets_remain = True
+
+        for block_idx, b in enumerate(self._blocks):
+            parts = []
+            part_start_last = 0
+
+            while targets_remain:
+                # get target block and slice
+                if target_block_idx is None: # can be zero
+                    try:
+                        target_block_idx, target_slice = next(block_slices)
+                    except StopIteration:
+                        targets_remain = False
+                        break
+
+                if block_idx != target_block_idx:
+                    break # need to advance blocks
+
+                if b.ndim == 1: # given 1D array, our row key is all we need
+                    parts.append(b)
+                    part_start_last = 1
+                    target_block_idx = target_slice = None
+                    break
+
+                assert target_slice is not None
+                # target_slice can be a slice or an integer
+                if target_slice.__class__ is slice:
+                    target_start = target_slice.start
+                    target_stop = target_slice.stop
+                else: # it is an integer
+                    target_start = target_slice
+                    target_stop = target_slice + 1
+
+                assert target_start is not None and target_stop is not None
+                if target_start > part_start_last:
+                    # yield un changed components before and after
+                    parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
+
+                parts.append(b[NULL_SLICE, target_slice])
+                part_start_last = target_stop
+
+                target_block_idx = target_slice = None
+
+            if b.ndim != 1 and part_start_last < b.shape[1]:
+                parts.append(b[NULL_SLICE, slice(part_start_last, None)])
+
+            if not parts:
+                yield b # no change for this block
+            else:
+                # TODO: consolidate this maybe
+                yield from parts
 
     def _ufunc_blocks(self,
             column_key: GetItemKeyType,
@@ -1852,7 +1917,7 @@ class TypeBlocks(ContainerOperand):
                     break
 
                 # target_slice can be a slice or an integer
-                if isinstance(target_slice, slice):
+                if target_slice.__class__ is slice:
                     if target_slice == NULL_SLICE:
                         target_start = 0
                         target_stop = b.shape[1]
@@ -1937,7 +2002,7 @@ class TypeBlocks(ContainerOperand):
                     break
 
                 # target_slice can be a slice or an integer
-                if isinstance(target_slice, slice):
+                if target_slice.__class__ is slice:
                     if target_slice == NULL_SLICE:
                         target_start = 0
                         target_stop = b.shape[1]

@@ -92,6 +92,7 @@ from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
@@ -3525,13 +3526,22 @@ class Frame(ContainerOperand):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType['Frame']:
         '''
-        Retype one or more columns. When used as a function, can provide  retype the entire ``Frame``;  Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
+        Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
         Args:
             {dtype}
         '''
         # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+
+    @property # type: ignore
+    def consolidate(self) -> InterfaceConsolidate['Frame']:
+        '''
+        Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
+
+        '''
+        # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
+        return InterfaceConsolidate(func_getitem=self._extract_getitem_consolidate)
 
     #---------------------------------------------------------------------------
     # via interfaces
@@ -5223,6 +5233,11 @@ class Frame(ContainerOperand):
     def _extract_getitem_astype(self, key: GetItemKeyType) -> 'FrameAsType':
         # extract if tuple, then pack back again
         _, key = self._compound_loc_to_getitem_iloc(key)
+        return FrameAsType(self, column_key=key)
+
+    def _extract_getitem_consolidate(self, key: GetItemKeyType) -> 'Frame':
+        _, key = self._compound_loc_to_getitem_iloc(key)
+
         return FrameAsType(self, column_key=key)
 
     #---------------------------------------------------------------------------
