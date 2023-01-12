@@ -34,6 +34,7 @@ def build(output: Path,
         inter = InterfaceSummary.to_frame(cls, #type: ignore
                 minimized=False,
                 max_args=99,
+                max_doc_chars=999_999,
                 )
         for sig_full, row in inter.iter_series_items(axis=1):
             key = f'{row["cls_name"]}.{row["signature_no_args"]}'
@@ -54,13 +55,16 @@ def build(output: Path,
     assert len(sigs) == len(sig_full_to_sig)
     assert len(sigs) == len(sig_to_doc)
 
+    # as we want to create a Map in javascript, store values as array of pairs
+    itemize = lambda d: tuple(d.items())
+
     name_bundle = (
-            ('sig_full_to_sig', sig_full_to_sig),
-            ('sig_to_doc', sig_to_doc),
-            ('method_to_sig', method_to_sig),
+            ('sig_full_to_sig', itemize(sig_full_to_sig)),
+            ('sig_to_doc', itemize(sig_to_doc)),
+            ('method_to_sig', itemize(method_to_sig)),
             ('sigs', sigs),
             ('methods', tuple(sorted(methods))),
-            ('sig_to_example', sig_to_example),
+            ('sig_to_example', itemize(sig_to_example)),
             )
 
     if component:
