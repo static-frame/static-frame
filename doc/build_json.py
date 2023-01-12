@@ -24,11 +24,11 @@ def build(output: Path,
     if not write and not display:
         return
 
-    sig_to_sig_full = {}
+    sig_full_to_sig = {}
     sig_to_doc = {}
     method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
     sigs = []
-    methods = set() # on
+    methods = set()
 
     for cls in DOCUMENTED_COMPONENTS:
         inter = InterfaceSummary.to_frame(cls, #type: ignore
@@ -40,7 +40,7 @@ def build(output: Path,
             sigs.append(key)
 
             sig_full = f'{row["cls_name"]}.{sig_full}'
-            sig_to_sig_full[key] = sig_full
+            sig_full_to_sig[sig_full] = key
             # sig_full_to_key[sig_full] = key
 
             sig_to_doc[key] = row['doc']
@@ -51,11 +51,11 @@ def build(output: Path,
     sig_to_example = to_json_bundle()
 
     assert len(methods) == len(method_to_sig)
-    assert len(sigs) == len(sig_to_sig_full)
+    assert len(sigs) == len(sig_full_to_sig)
     assert len(sigs) == len(sig_to_doc)
 
     name_bundle = (
-            ('sig_to_sig_full', sig_to_sig_full),
+            ('sig_full_to_sig', sig_full_to_sig),
             ('sig_to_doc', sig_to_doc),
             ('method_to_sig', method_to_sig),
             ('sigs', sigs),
