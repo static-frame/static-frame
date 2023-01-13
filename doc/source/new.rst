@@ -1,6 +1,16 @@
 What is New in StaticFrame
 ===============================
 
+1.dev
+-----------
+
+``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
+
+Added ``index_constructors`` arguments to ``IndexHierarchy.rehierarch()``, ``Series.rehierarch()``, ``Bus.rehierarch()``, ``Yarn.rehierarch()``.
+
+Added ``index_constructors``, ``columns_constructors`` arguments to ``Frame.rehierarch()``.
+
+
 1.0.1
 -----------
 
