@@ -4460,6 +4460,9 @@ class Frame(ContainerOperand):
     def rehierarch(self,
             index: tp.Optional[tp.Iterable[int]] = None,
             columns: tp.Optional[tp.Iterable[int]] = None,
+            *,
+            index_constructors: IndexConstructors = None,
+            columns_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
@@ -4477,6 +4480,7 @@ class Frame(ContainerOperand):
             index_idx, index_iloc = rehierarch_from_index_hierarchy(
                     labels=self._index,
                     depth_map=index,
+                    index_constructors=index_constructors,
                     name=self._index.name
                     )
         else:
@@ -4487,6 +4491,7 @@ class Frame(ContainerOperand):
             columns_idx, columns_iloc = rehierarch_from_index_hierarchy(
                     labels=self._columns,
                     depth_map=columns,
+                    index_constructors=columns_constructors,
                     name=self._columns.name
                     )
             own_columns = True

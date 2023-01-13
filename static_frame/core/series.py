@@ -82,6 +82,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -1213,7 +1214,9 @@ class Series(ContainerOperand):
                 )
 
     def rehierarch(self,
-            depth_map: tp.Sequence[int]
+            depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> 'Series':
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
@@ -1224,6 +1227,7 @@ class Series(ContainerOperand):
         index, iloc_map = rehierarch_from_index_hierarchy(
                 labels=self._index, #type: ignore
                 depth_map=depth_map,
+                index_constructors=index_constructors,
                 name=self._index.name,
                 )
         values = self.values[iloc_map]
