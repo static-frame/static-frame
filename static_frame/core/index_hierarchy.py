@@ -1765,6 +1765,8 @@ class IndexHierarchy(IndexBase):
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
@@ -1776,9 +1778,14 @@ class IndexHierarchy(IndexBase):
                 labels=self._blocks,
                 depth_map=depth_map,
                 )
+
+        if index_constructors is None:
+            # transform the existing index constructors correspondingly
+            index_constructors = self.index_types.values[list(depth_map)]
+
         return self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
-            index_constructors=self._index_constructors,
+            index_constructors=index_constructors,
             own_blocks=True,
             )
 

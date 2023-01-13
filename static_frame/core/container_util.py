@@ -1016,10 +1016,15 @@ def rehierarch_from_index_hierarchy(*,
     if labels._recache:
         labels._update_array_cache()
 
+    # will validate depth_map
     rehierarched_blocks, index_iloc = rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
             )
+
+    if index_constructors is None:
+        # transform the existing index constructors correspondingly
+        index_constructors = labels.index_types.values[list(depth_map)]
 
     return labels.__class__._from_type_blocks(
             blocks=rehierarched_blocks,

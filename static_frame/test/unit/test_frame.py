@@ -5604,6 +5604,26 @@ class TestUnit(TestCase):
                  ((200, False), 'new'))))
                 )
 
+    def test_frame_rehierarch_e(self) -> None:
+        f = sf.Frame.from_items(
+            [("price", [2, 3, 4])],
+            index=sf.IndexHierarchy.from_product(
+                ["APPL"],
+                sf.IndexDate(
+                    [
+                        np.datetime64("2022-01-01"),
+                        np.datetime64("2022-01-02"),
+                        np.datetime64("2022-01-03"),
+                    ]
+                ),
+            ),
+        )
+        f.rehierarch((1, 0))
+        self.assertEqual(
+                f.to_pairs(),
+                (('price', ((('APPL', np.datetime64('2022-01-01')), 2), (('APPL', np.datetime64('2022-01-02')), 3), (('APPL', np.datetime64('2022-01-03')), 4))),)
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_get_a(self) -> None:
