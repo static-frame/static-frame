@@ -7,7 +7,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from doc.build_example import to_json_bundle
-from doc.build_source import name_to_snake_case
+# from doc.build_source import name_to_snake_case
 from static_frame import __version__ as VERSION
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
@@ -43,7 +43,7 @@ def build(output: Path,
             # sig_full_to_key[sig_full] = key
 
             sig_to_doc[key] = row['doc']
-            sig_to_group[key] = name_to_snake_case(row['group'])
+            sig_to_group[key] = row['group']
 
             method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
