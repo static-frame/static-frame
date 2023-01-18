@@ -7,13 +7,10 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from doc.build_example import to_json_bundle
+from doc.build_source import name_to_snake_case
 from static_frame import __version__ as VERSION
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
-
-# import os
-# import sys
-# import datetime
 
 
 def build(output: Path,
@@ -26,6 +23,7 @@ def build(output: Path,
 
     sig_full_to_sig = {}
     sig_to_doc = {}
+    sig_to_group = {}
     method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
     sigs = []
     methods = set()
@@ -45,6 +43,7 @@ def build(output: Path,
             # sig_full_to_key[sig_full] = key
 
             sig_to_doc[key] = row['doc']
+            sig_to_group[key] = name_to_snake_case(row['group'])
 
             method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
@@ -54,6 +53,7 @@ def build(output: Path,
     assert len(methods) == len(method_to_sig)
     assert len(sigs) == len(sig_full_to_sig)
     assert len(sigs) == len(sig_to_doc)
+    assert len(sigs) == len(sig_to_group)
 
     # as we want to create a Map in javascript, store values as array of pairs
 #     itemize = lambda d: tuple(d.items())
@@ -61,6 +61,7 @@ def build(output: Path,
     name_bundle = (
             ('sig_full_to_sig', sig_full_to_sig),
             ('sig_to_doc', sig_to_doc),
+            ('sig_to_group', sig_to_group),
             ('method_to_sig', method_to_sig),
             ('sigs', sigs),
             ('methods', tuple(sorted(methods))),
