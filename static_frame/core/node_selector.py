@@ -323,16 +323,16 @@ class InterfaceConsolidate(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[GetItemKeyType], 'FrameConsolidate']
+            func_getitem: tp.Callable[[GetItemKeyType], 'Frame']
             ) -> None:
         '''
         Args:
-            _func_getitem: a callable that expects a _func_getitem key and returns a FrameConsolidate interface.
+            _func_getitem: a callable that expects a _func_getitem key and returns a Frame interface.
         '''
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'FrameConsolidate':
+    def __getitem__(self, key: GetItemKeyType) -> 'Frame':
         '''Selector of columns by label.
 
         Args:
@@ -344,4 +344,4 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''
         Apply to all columns.
         '''
-        return self._func_getitem(NULL_SLICE)()
+        return self._func_getitem(NULL_SLICE)

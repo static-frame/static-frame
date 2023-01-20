@@ -1591,7 +1591,7 @@ class TypeBlocks(ContainerOperand):
                     #  slice the index; null slice already handled
                     if not retain_key_order:
                         key = slice_to_ascending_slice(key, self._shape[1])
-                    indices: tp.Iterable[tp.Tuple[int, int]] = self._index[key]
+                    indices: tp.Iterable[tp.Tuple[int, int]] = self._index[key] #type: ignore
                 elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
                     # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
@@ -1697,11 +1697,11 @@ class TypeBlocks(ContainerOperand):
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
-                    target_start = target_slice.start
-                    target_stop = target_slice.stop
+                    target_start = target_slice.start #type: ignore
+                    target_stop = target_slice.stop #type: ignore
                 else: # it is an integer
                     target_start = target_slice
-                    target_stop = target_slice + 1
+                    target_stop = target_slice + 1 #type: ignore
 
                 assert target_start is not None and target_stop is not None
                 if target_start > part_start_last:
@@ -1779,7 +1779,7 @@ class TypeBlocks(ContainerOperand):
         target_block_idx = target_slice = None
         targets_remain = True
 
-        consolidate = []
+        consolidate: tp.List[np.ndarray] = []
 
         def consolidate_and_clear() -> tp.Iterator[np.ndarray]:
             yield from self.consolidate_blocks(consolidate)
@@ -1813,11 +1813,11 @@ class TypeBlocks(ContainerOperand):
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
-                    target_start = target_slice.start
-                    target_stop = target_slice.stop
+                    target_start = target_slice.start #type: ignore
+                    target_stop = target_slice.stop #type: ignore
                 else: # it is an integer
                     target_start = target_slice
-                    target_stop = target_slice + 1
+                    target_stop = target_slice + 1 #type: ignore
 
                 assert target_start is not None and target_stop is not None
                 if target_start > part_start_last:
@@ -1893,8 +1893,8 @@ class TypeBlocks(ContainerOperand):
                         target_start = 0
                         target_stop = b.shape[1]
                     else:
-                        target_start = target_slice.start
-                        target_stop = target_slice.stop
+                        target_start = target_slice.start #type: ignore
+                        target_stop = target_slice.stop #type: ignore
                 else: # it is an integer
                     target_start = target_slice # type: ignore
                     target_stop = target_slice + 1 # type: ignore
@@ -1978,11 +1978,11 @@ class TypeBlocks(ContainerOperand):
                         target_start = 0
                         target_stop = b.shape[1]
                     else:
-                        target_start = target_slice.start
-                        target_stop = target_slice.stop
+                        target_start = target_slice.start #type: ignore
+                        target_stop = target_slice.stop #type: ignore
                 else: # it is an integer
-                    target_start = target_slice # can be zero
-                    target_stop = target_slice + 1
+                    target_start = target_slice #type: ignore
+                    target_stop = target_slice + 1 #type: ignore
 
                 # assert target_start is not None and target_stop is not None
                 # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
