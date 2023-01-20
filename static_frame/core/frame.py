@@ -5242,8 +5242,13 @@ class Frame(ContainerOperand):
 
     def _extract_getitem_consolidate(self, key: GetItemKeyType) -> 'Frame':
         _, key = self._compound_loc_to_getitem_iloc(key)
-
-        return FrameAsType(self, column_key=key)
+        blocks = TypeBlocks.from_blocks(self._blocks._consolidate_select_blocks(key))
+        return self.__class__(blocks,
+                index=self._index,
+                columns=self._columns,
+                own_index=True,
+                own_data=True,
+                )
 
     #---------------------------------------------------------------------------
     # dictionary-like interface

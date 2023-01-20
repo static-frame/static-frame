@@ -4159,7 +4159,7 @@ class TestUnit(TestCase):
             ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
 
 
-    def test_type_blocks_consolidate_select_a(self) -> None:
+    def test_type_blocks_consolidate_select_a1(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([4, 5, 6])
@@ -4168,23 +4168,83 @@ class TestUnit(TestCase):
         a5 = np.array([True, True, False])
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
-        post = tuple(tb1._consolidate_select_blocks([2, 3]))
-        import ipdb; ipdb.set_trace()
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks([2, 3]))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3,), (3,), (3, 2), (3,)]
+                )
 
-    def test_type_blocks_consolidate_select_b(self) -> None:
+    def test_type_blocks_consolidate_select_a2(self) -> None:
 
-        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
-        a3 = np.array([8, 1, 2])
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
         a4 = np.array([True, False, True])
         a5 = np.array([True, True, False])
 
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(2, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3,), (3,), (3, 3)]
+                )
+
+    def test_type_blocks_consolidate_select_a3(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 2), (3, 3)]
+                )
+
+    def test_type_blocks_consolidate_select_b1(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
         tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
-        post = tuple(tb1._consolidate_select_blocks([2, 3, 4]))
-        print('post')
-        for x in post: print(x)
-        import ipdb; ipdb.set_trace()
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks([2, 3, 4]))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 2), (3, 3), (3,)]
+                )
 
+    def test_type_blocks_consolidate_select_b2(self) -> None:
 
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, 5)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 5), (3,)]
+                )
+
+    def test_type_blocks_consolidate_select_b3(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 5), (3,)]
+                )
 
 
 

@@ -749,52 +749,6 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # value extraction
 
-    # @staticmethod
-    # def _blocks_to_array(*,
-    #         blocks: tp.Sequence[np.ndarray],
-    #         shape: tp.Tuple[int, int],
-    #         row_dtype: np.dtype,
-    #         ) -> np.ndarray:
-    #     '''
-    #     Given blocks and a combined shape, return a consolidated 2D or 1D array.
-
-    #     Args:
-    #         shape: used in constructing returned array; not used as a constraint.
-    #         force_1d: if True, a single row reduces to a 1D
-    #     '''
-    #     assert row_dtype is not None
-
-    #     # assume column_multiple is True, as this routine is called after handling extraction of single columns
-    #     if len(blocks) == 1:
-    #         return column_2d_filter(blocks[0])
-
-    #     # get empty array and fill parts
-    #     array = np.empty(shape, dtype=row_dtype)
-
-    #     pos = 0
-    #     array_ndim = array.ndim
-
-    #     for block in blocks:
-    #         block_ndim = block.ndim
-
-    #         if block_ndim == 1:
-    #             end = pos + 1
-    #         else:
-    #             end = pos + block.shape[1]
-
-    #         if array_ndim == 1:
-    #             array[pos: end] = block # gets a row from array
-    #         else:
-    #             if block_ndim == 1:
-    #                 array[NULL_SLICE, pos] = block # a 1d array
-    #             else:
-    #                 array[NULL_SLICE, pos: end] = block # gets a row / row slice from array
-    #         pos = end
-
-    #     array.flags.writeable = False
-    #     return array
-
-
     @property
     def values(self) -> np.ndarray:
         '''Returns a consolidated NP array of the all blocks.
@@ -1828,11 +1782,12 @@ class TypeBlocks(ContainerOperand):
         consolidate = []
 
         def consolidate_and_clear() -> tp.Iterator[np.ndarray]:
-            yield from consolidate
+            yield from self.consolidate_blocks(consolidate)
             consolidate.clear()
 
         for block_idx, b in enumerate(self._blocks):
             part_start_last = 0 # non-inclusive upper boundary, used to signal if block components have been read
+            # import ipdb; ipdb.set_trace()
 
             while targets_remain:
                 # get target block and slice
@@ -1871,10 +1826,15 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, slice(part_start_last, target_start)]
 
                 consolidate.append(b[NULL_SLICE, target_slice])
+                # import ipdb; ipdb.set_trace()
                 part_start_last = target_stop
                 target_block_idx = target_slice = None
+                if part_start_last == b.shape[1]:
+                    # NOTE: this might be an optimization for related routines
+                    break # done with this blcok
 
-            print("block", b, part_start_last, consolidate)
+            # import ipdb; ipdb.set_trace()
+            # print("block", b, part_start_last, consolidate)
             # if there are columns left in the block that are not targeted
             if b.ndim != 1 and part_start_last < b.shape[1]:
                 yield from consolidate_and_clear()
