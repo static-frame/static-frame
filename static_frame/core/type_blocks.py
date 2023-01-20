@@ -1825,9 +1825,14 @@ class TypeBlocks(ContainerOperand):
         target_block_idx = target_slice = None
         targets_remain = True
 
+        consolidate = []
+
+        def consolidate_and_clear() -> tp.Iterator[np.ndarray]:
+            yield from consolidate
+            consolidate.clear()
+
         for block_idx, b in enumerate(self._blocks):
-            parts = []
-            part_start_last = 0
+            part_start_last = 0 # non-inclusive upper boundary, used to signal if block components have been read
 
             while targets_remain:
                 # get target block and slice
@@ -1839,13 +1844,16 @@ class TypeBlocks(ContainerOperand):
                         break
 
                 if block_idx != target_block_idx:
+                    yield from consolidate_and_clear()
+                    yield b
+                    part_start_last = 1 if b.ndim == 1 else b.shape[1]
                     break # need to advance blocks
 
                 if b.ndim == 1: # given 1D array, our row key is all we need
-                    parts.append(b)
+                    consolidate.append(b)
                     part_start_last = 1
                     target_block_idx = target_slice = None
-                    break
+                    break # move on to next block
 
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
@@ -1858,22 +1866,25 @@ class TypeBlocks(ContainerOperand):
 
                 assert target_start is not None and target_stop is not None
                 if target_start > part_start_last:
+                    yield from consolidate_and_clear()
                     # yield un changed components before and after
-                    parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
+                    yield b[NULL_SLICE, slice(part_start_last, target_start)]
 
-                parts.append(b[NULL_SLICE, target_slice])
+                consolidate.append(b[NULL_SLICE, target_slice])
                 part_start_last = target_stop
-
                 target_block_idx = target_slice = None
 
+            print("block", b, part_start_last, consolidate)
+            # if there are columns left in the block that are not targeted
             if b.ndim != 1 and part_start_last < b.shape[1]:
-                parts.append(b[NULL_SLICE, slice(part_start_last, None)])
+                yield from consolidate_and_clear()
+                yield b[NULL_SLICE, slice(part_start_last, None)]
+            elif part_start_last == 0:
+                # no targets remain, and no partial blocks are targets
+                yield from consolidate_and_clear()
+                yield b
 
-            if not parts:
-                yield b # no change for this block
-            else:
-                # TODO: consolidate this maybe
-                yield from parts
+        yield from consolidate_and_clear()
 
     def _ufunc_blocks(self,
             column_key: GetItemKeyType,

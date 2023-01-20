@@ -4100,21 +4100,21 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in post], [(3,)])
 
     #---------------------------------------------------------------------------
-    def test_iter(self) -> None:
+    def test_type_blocks_iter(self) -> None:
         tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
 
         with self.assertRaises(NotImplementedError):
             iter(tb)
 
     #---------------------------------------------------------------------------
-    def test_iter_row_elements_a(self) -> None:
+    def test_type_blocks_iter_row_elements_a(self) -> None:
         tb1 = ff.parse('s(3,10)|v(int,int,bool,str)')._blocks
         post = tuple(tb1.iter_row_elements(2))
         self.assertEqual(post,
                 (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
 
     #---------------------------------------------------------------------------
-    def test_iter_columns_tuples_a(self) -> None:
+    def test_type_blocks_iter_columns_tuples_a(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))
         self.assertEqual(post1,
@@ -4126,7 +4126,7 @@ class TestUnit(TestCase):
                 ((92867, 13448), (-41157, -168387), (False, True), ('z5l6', 'zr4u'), (146284, 32395), (13448, 58768))
                 )
 
-    def test_iter_columns_tuples_b(self) -> None:
+    def test_type_blocks_iter_columns_tuples_b(self) -> None:
         tb1 = ff.parse('s(2,3)|v(str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))
         self.assertEqual(post1, (('zjZQ', 'zO5l'), ('zaji', 'zJnC'), ('ztsv', 'zUvW')))
@@ -4134,29 +4134,57 @@ class TestUnit(TestCase):
                 [['zjZQ', 'zaji', 'ztsv'], ['zO5l', 'zJnC', 'zUvW']])
 
     #---------------------------------------------------------------------------
-    def test_unified_dtypes_a(self) -> None:
+    def test_type_blocks_unified_dtypes_a(self) -> None:
 
         a1 = np.array([False, True, False])
         a2 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, a2))
         self.assertTrue(tb1.unified_dtypes)
 
-    def test_unified_dtypes_b(self) -> None:
+    def test_type_blocks_unified_dtypes_b(self) -> None:
         a1 = np.array([False, True, False])
         a2 = np.array([0, 2, 1])
         tb1 = TypeBlocks.from_blocks((a1, a2))
         self.assertFalse(tb1.unified_dtypes)
 
-    def test_unified_dtypes_c(self) -> None:
+    def test_type_blocks_unified_dtypes_c(self) -> None:
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
 
     #---------------------------------------------------------------------------
-    def test_key_to_block_slices_exception(self) -> None:
+    def test_type_blocks_key_to_block_slices_exception(self) -> None:
         # as this is an loc-is-iloc index, the key gets passed directly to type blocks
         with self.assertRaises(KeyError):
             ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
+
+
+    def test_type_blocks_consolidate_select_a(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = tuple(tb1._consolidate_select_blocks([2, 3]))
+        import ipdb; ipdb.set_trace()
+
+    def test_type_blocks_consolidate_select_b(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = tuple(tb1._consolidate_select_blocks([2, 3, 4]))
+        print('post')
+        for x in post: print(x)
+        import ipdb; ipdb.set_trace()
+
+
 
 
 
