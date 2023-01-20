@@ -11,7 +11,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
 
 - Code: https://github.com/static-frame/static-frame
 - Packages: https://pypi.org/project/static-frame
-- Benchmarks: https://static-frame.github.io/static-frame-benchmark
+- API Search: https://staticframe.dev
 - Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-frame/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
 
 .. toctree::

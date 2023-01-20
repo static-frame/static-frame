@@ -62,9 +62,10 @@ Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
 
+API Search: https://staticframe.dev
+
 Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-frame/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
 
-Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`_
 
 
 Installation

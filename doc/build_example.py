@@ -6242,18 +6242,21 @@ def to_json_bundle(
     post: tp.Dict[str, tp.List[str]] = {}
     lines: tp.List[str] = []
     sig = ''
+    collect = False
 
     for line in gen_all_examples(component):
         if line.startswith(TAG_START):
             prefix, method = line.split('-')
             cls_name = prefix.replace(TAG_START, '')
             sig = f'{cls_name}.{method}'
+            collect = True
         elif line.startswith(TAG_END):
             if lines:
                 post[sig] = lines.copy()
                 lines.clear()
             sig = ''
-        else:
+            collect = False
+        elif collect:
             lines.append(line)
     return post
 
