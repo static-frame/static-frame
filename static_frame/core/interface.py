@@ -67,6 +67,8 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
+# from static_frame.core.node_selector import InterfaceConsolidate
+
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -321,6 +323,7 @@ class Features:
     '''
 
     GETITEM = '__getitem__'
+    CALL = '__call__'
 
     EXCLUDE_PRIVATE = {
         '__class__',
@@ -534,7 +537,6 @@ class InterfaceRecord(tp.NamedTuple):
 
                 delegate_obj = getattr(obj, field)
                 delegate_reference = f'{obj.__class__.__name__}.{field}'
-
                 if field == Features.GETITEM:
                     # the cls.getitem version returns a FrameAsType
                     signature, signature_no_args = _get_signatures(
@@ -575,6 +577,54 @@ class InterfaceRecord(tp.NamedTuple):
                     signature_no_args=signature_no_args
                     )
 
+    @classmethod
+    def gen_from_consolidate(cls, *,
+            cls_name: str,
+            cls_target: tp.Type[ContainerBase],
+            name: str,
+            obj: tp.Any,
+            reference: str,
+            doc: str,
+            max_args: int,
+            max_doc_chars: int,
+            ) -> tp.Iterator['InterfaceRecord']:
+        '''Interfaces that are not full selectors or via but define an INTERFACE component.
+        '''
+        for field in obj.INTERFACE:
+            delegate_reference = f'{obj.__class__.__name__}.{field}'
+            doc = Features.scrub_doc(
+                    getattr(obj.__class__, field).__doc__,
+                    max_doc_chars=max_doc_chars,
+                    )
+            if field == 'status':
+                delegate_obj = getattr(obj.__class__, field) # from class for property
+                assert isinstance(delegate_obj, property)
+                yield cls(cls_name,
+                        InterfaceGroup.Method,
+                        f'{name}.{field}', # manual construct signature
+                        doc,
+                        reference,
+                        is_attr=True,
+                        signature_no_args=delegate_reference
+                        )
+            else:
+                delegate_obj = getattr(obj, field)
+                signature, signature_no_args = _get_signatures(
+                        name,
+                        delegate_obj,
+                        is_getitem=field == Features.GETITEM,
+                        max_args=max_args,
+                        )
+                yield cls(cls_name,
+                        InterfaceGroup.Method,
+                        signature,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        is_attr=False,
+                        delegate_reference=delegate_reference,
+                        signature_no_args=signature_no_args
+                        )
 
     @classmethod
     def gen_from_constructor(cls, *,
@@ -744,7 +794,7 @@ class InterfaceRecord(tp.NamedTuple):
 
             if isinstance(delegate_obj, property):
                 # some date tools are properties
-                yield InterfaceRecord(cls_name,
+                yield cls(cls_name,
                         group,
                         terminus_name,
                         doc,
@@ -1116,6 +1166,8 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_display(**kwargs)
             elif name == 'astype':
                 yield from InterfaceRecord.gen_from_astype(**kwargs)
+            elif name == 'consolidate':
+                yield from InterfaceRecord.gen_from_consolidate(**kwargs)
             elif callable(obj) and name.startswith('from_') or name == '__init__':
                 yield from InterfaceRecord.gen_from_constructor(**kwargs)
             elif callable(obj) and name.startswith('to_'):
@@ -1154,7 +1206,7 @@ class InterfaceSummary(Features):
 
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
-            else: #
+            else:
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,

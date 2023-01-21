@@ -3540,8 +3540,10 @@ class Frame(ContainerOperand):
         Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
 
         '''
-        # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
-        return InterfaceConsolidate(func_getitem=self._extract_getitem_consolidate)
+        return InterfaceConsolidate(
+                container=self,
+                func_getitem=self._extract_getitem_consolidate,
+                )
 
     #---------------------------------------------------------------------------
     # via interfaces

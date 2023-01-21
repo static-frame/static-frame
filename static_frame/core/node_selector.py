@@ -319,21 +319,31 @@ class InterfaceConsolidate(Interface[TContainer]):
     '''An instance to serve as an interface to __getitem__ extractors.
     '''
 
-    __slots__ = ('_func_getitem',)
-    INTERFACE = ('__getitem__', '__call__')
+    __slots__ = (
+            '_container',
+            '_func_getitem',
+            )
+
+    INTERFACE = (
+            '__getitem__',
+            '__call__',
+            'status',
+            )
 
     def __init__(self,
+            container: TContainer,
             func_getitem: tp.Callable[[GetItemKeyType], 'Frame']
             ) -> None:
         '''
         Args:
             _func_getitem: a callable that expects a _func_getitem key and returns a Frame interface.
         '''
+        self._container = container
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Frame':
-        '''Selector of columns by label.
+        '''Selector of columns by label for consolidation.
 
         Args:
             key: {key_loc}
@@ -342,8 +352,17 @@ class InterfaceConsolidate(Interface[TContainer]):
 
     def __call__(self) -> 'Frame':
         '''
-        Apply to all columns.
+        Apply consolidation to all columns.
         '''
         return self._func_getitem(NULL_SLICE)
 
-    # NOTE: might add a property that exposes a frame of block shapes and dtype per row, something like cols, shape, dtype
+    @property
+    def status(self) -> 'Frame':
+        '''Display consolidation status of this Frame.
+        '''
+        from static_frame.core.frame import Frame
+        def gen():
+            for block in self._container._blocks._blocks:
+                yield block.shape, block.dtype
+
+        return Frame.from_records(gen(), columns=('shape', 'dtype'))

@@ -119,9 +119,11 @@ FRAME_INIT_FROM_FIELDS_C = dict(fields=((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' 
 
 FRAME_INIT_FROM_FIELDS_D = dict(fields=((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 FRAME_INIT_FROM_FIELDS_E = dict(fields=((10, 2, 0, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
-FRAME_INIT_FROM_FIELDS_F = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_F1 = dict(fields=((10, 2, 0, 0), (8, 3, 8, 0), (1, 0, 0, 0)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_F2 = dict(fields=((0, 0, 10, 2), (20, 18, -3, 18), (0, 0, 0, 1)), columns=('a', 'b', 'c'), name='x')
 
-FRAME_INIT_FROM_FIELDS_G = dict(fields=((0, 0, 10, 2), (20, 18, -3, 18), (0, 0, 0, 1)), columns=('a', 'b', 'c'), name='x')
+FRAME_INIT_FROM_FIELDS_G = dict(fields=((0, 0, 10, 2), (20, 18, -3, 18), (0, 0, 0, 1), (False, True, True, False), (True, True, False, True)), columns=('a', 'b', 'c', 'd', 'e'), name='x')
+
 FRAME_INIT_FROM_FIELDS_H = dict(fields=((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=b"dict(c=np.datetime64)", name='x')
 
 FRAME_INIT_FROM_FIELDS_I = dict(fields=((10, 2, np.nan, np.nan), (8, 3, 8, np.nan), (1, np.nan, np.nan, np.nan)), columns=('a', 'b', 'c'), name='x')
@@ -243,7 +245,7 @@ BATCH_INIT_D = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8
 BATCH_INIT_E = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_I)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_J)})'.encode('utf-8'))))
 
 # good for ranking
-BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'.encode('utf-8'))))
+BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F2)})'.encode('utf-8'))))
 
 # index hierarchy
 BATCH_INIT_G = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M2)})'.encode('utf-8'))))
@@ -1836,6 +1838,18 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f'
             yield f"f.{attr_func}(lower=2, upper=4)"
+        elif attr in ('consolidate()', 'consolidate.status'):
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield 'f1'
+            yield 'f1.consolidate.status'
+            yield 'f2 = f1.consolidate()'
+            yield 'f2.consolidate.status'
+        elif attr == 'consolidate[]':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield 'f1'
+            yield 'f1.consolidate.status'
+            yield "f2 = f1.consolidate['a':'c']"
+            yield 'f2.consolidate.status'
         elif attr == 'count()':
             yield f'f = {icls}.from_items({kwa(FRAME_INIT_FROM_ITEMS_B)})'
             yield 'f'
@@ -1873,19 +1887,19 @@ class ExGenFrame(ExGen):
             yield f"f.{attr_func}(dict(a=1, b='abc', c=np.datetime64('2022-01-10')))"
 
         elif attr == 'fillfalsy_backward()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F2)})'
             yield 'f'
             yield f"f.{attr_func}()"
         elif attr == 'fillfalsy_forward()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F1)})'
             yield 'f'
             yield f"f.{attr_func}()"
         elif attr == 'fillfalsy_leading()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_G)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F2)})'
             yield 'f'
             yield f"f.{attr_func}(-1)"
         elif attr == 'fillfalsy_trailing()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F1)})'
             yield 'f'
             yield f"f.{attr_func}(-1)"
 
@@ -1964,7 +1978,7 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"f.{attr_func}()"
         elif attr == 'isin()':
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F)})'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F1)})'
             yield f"f.{attr_func}((0, 8))"
 
         elif attr == 'join_inner()':
