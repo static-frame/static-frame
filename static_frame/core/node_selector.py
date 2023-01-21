@@ -361,7 +361,7 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame
-        columns = self._container.columns
+        columns = self._container.columns # type: ignore
 
         def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
             pos = 0
