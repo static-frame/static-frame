@@ -11,6 +11,7 @@ from functools import partial
 import numpy as np
 from arraykit import name_filter
 
+from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
@@ -32,6 +33,7 @@ from static_frame.core.util import iterable_to_array_1d
 if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
@@ -816,6 +818,36 @@ class IterNodeGroupAxis(IterNode[FrameOrSeries]):
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, key=key, axis=axis, drop=drop)
 
+
+class IterNodeGroupOther(IterNode[FrameOrSeries]):
+    '''
+    Iterator on 1D groupings where group values are provided.
+    '''
+
+    __slots__ = ()
+
+    def __call__(self,
+            other: tp.Union[np.ndarray, 'Index', 'Series', tp.Iterable[tp.Any]],
+            *,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+
+        index_ref = (self._container._index if axis == 0
+                else self._container._columns) # type: ignore
+
+        group_source = group_from_container(
+                index=index_ref,
+                group_source=other,
+                fill_value=fill_value,
+                axis=axis,
+                )
+
+        # kwargs are partialed into finc_values, func_items
+        return IterNode.get_delegate(self,
+                axis=axis,
+                group_source=group_source,
+                )
 
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
 

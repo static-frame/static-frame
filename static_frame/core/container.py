@@ -12,6 +12,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -19,6 +20,7 @@ from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
+from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
@@ -55,6 +57,10 @@ class ContainerBase(metaclass=InterfaceMeta):
     # def __sizeof__(self) -> int:
         # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).
         # return memory_total(self, format=MeasureFormat.REFERENCED)
+
+    @property
+    def name(self) -> NameType:
+        return None
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
@@ -162,6 +168,30 @@ class ContainerBase(metaclass=InterfaceMeta):
         return NotImplemented #pragma: no cover
 
     #---------------------------------------------------------------------------
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+        raise NotImplementedError() #pragma: no cover
+
+    @property
+    def via_hashlib(self,
+            # include_name: bool = True,
+            # include_class: bool = True,
+            # encoding: str = 'utf-8',
+            ) -> InterfaceHashlib:
+        '''
+        Interface for deriving cryptographic hashes from this container.
+        '''
+        return InterfaceHashlib(
+                to_bytes=self._to_signature_bytes,
+                include_name=True,
+                include_class=True,
+                encoding='utf-8',
+                )
+
     def to_visidata(self) -> None:
         '''Open an interactive VisiData session.
         '''
@@ -609,7 +639,6 @@ class ContainerOperand(ContainerBase):
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
-
 
 #-------------------------------------------------------------------------------
 # TODO: replace usage with ContainerMap; use this in a test to validate

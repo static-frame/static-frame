@@ -28,7 +28,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexDateGO
@@ -55,6 +55,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
@@ -82,6 +83,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
+from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
 #-------------------------------------------------------------------------------
@@ -120,13 +122,14 @@ DOCUMENTED_COMPONENTS = (
         IndexNanosecondGO,
         HLoc,
         ILoc,
+        WWW,
         FillValueAuto,
         DisplayActive,
         DisplayConfig,
         StoreConfig,
         StoreFilter,
         IndexAutoFactory,
-        IndexDefaultFactory, # to be renamed IndexDefaultConstructor
+        IndexDefaultConstructorFactory,
         IndexAutoConstructorFactory,
         NPZ,
         NPY,
@@ -204,6 +207,8 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
         InterfaceString,
         InterfaceDatetime,
         InterfaceTranspose,
+        InterfaceHashlib,
+
         InterfaceBatchValues,
         InterfaceBatchString,
         InterfaceBatchDatetime,
@@ -214,6 +219,7 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
 # function inspection utilities
 
 MAX_ARGS = 3
+MAX_DOC_CHARS = 80
 
 def _get_parameters(
         func: AnyCallable,
@@ -314,8 +320,6 @@ class Features:
     Core utilities need by both Interface and InterfaceSummary
     '''
 
-    DOC_CHARS = 80
-
     GETITEM = '__getitem__'
 
     EXCLUDE_PRIVATE = {
@@ -368,19 +372,25 @@ class Features:
 
 
     @classmethod
-    def scrub_doc(cls, doc: tp.Optional[str]) -> str:
+    def scrub_doc(cls,
+            doc: tp.Optional[str],
+            *,
+            max_doc_chars: int = MAX_DOC_CHARS,
+            remove_backticks: bool = True,
+            ) -> str:
         if not doc:
             return ''
-        doc = doc.replace('`', '')
+        if remove_backticks:
+            doc = doc.replace('`', '')
         doc = doc.replace(':py:meth:', '')
         doc = doc.replace(':obj:', '')
         doc = doc.replace('static_frame.', '')
 
         # split and join removes contiguous whitespace
         msg = ' '.join(doc.split())
-        if len(msg) <= cls.DOC_CHARS:
+        if len(msg) <= max_doc_chars:
             return msg
-        return msg[:cls.DOC_CHARS].strip() + Display.ELLIPSIS
+        return msg[:max_doc_chars].strip() + Display.ELLIPSIS
 
 
 #-------------------------------------------------------------------------------
@@ -403,6 +413,7 @@ class InterfaceGroup:
     AccessorTranspose = 'Accessor Transpose'
     AccessorFillValue = 'Accessor Fill Value'
     AccessorRe = 'Accessor Regular Expression'
+    AccessorHashlib = 'Accessor Hashlib'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -427,6 +438,7 @@ INTERFACE_GROUP_DOC = {
     'Accessor Transpose': 'Interface representing a virtual transposition, permiting application of binary operators with Series along columns instead of rows.',
     'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
     'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
+    'Accessor Hashlib': 'Interface exposing cryptographic hashing via hashlib interfaces.',
     }
 
 class InterfaceRecord(tp.NamedTuple):
@@ -451,6 +463,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         if name == 'values':
             signature = signature_no_args = name
@@ -478,6 +491,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         if name != 'interface':
             # signature = f'{name}()'
@@ -512,6 +526,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         # InterfaceAsType found on Frame, IndexHierarchy
         if isinstance(obj, (InterfaceAsType, InterfaceBatchAsType)):
@@ -536,7 +551,10 @@ class InterfaceRecord(tp.NamedTuple):
                             is_getitem=False,
                             max_args=max_args,
                             )
-                doc = Features.scrub_doc(getattr(obj.__class__, field).__doc__)
+                doc = Features.scrub_doc(
+                        getattr(obj.__class__, field).__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
                 yield cls(cls_name,
                         InterfaceGroup.Method,
                         signature,
@@ -567,6 +585,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
@@ -592,6 +611,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
@@ -617,6 +637,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
@@ -643,7 +664,10 @@ class InterfaceRecord(tp.NamedTuple):
             for field in cls_interface.INTERFACE: # apply, map, etc
                 delegate_obj = getattr(cls_interface, field)
                 delegate_reference = f'{cls_interface.__name__}.{field}'
-                doc = Features.scrub_doc(delegate_obj.__doc__)
+                doc = Features.scrub_doc(
+                        delegate_obj.__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
 
                 signature, signature_no_args = _get_signatures(
                         name,
@@ -674,6 +698,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             cls_interface: tp.Type[Interface[TContainer]],
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues:
@@ -688,6 +713,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorFillValue
         elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:
             group = InterfaceGroup.AccessorRe
+        elif cls_interface is InterfaceHashlib:
+            group = InterfaceGroup.AccessorHashlib
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
 
@@ -696,9 +723,12 @@ class InterfaceRecord(tp.NamedTuple):
         for field in cls_interface.INTERFACE: # apply, map, etc
             delegate_obj = getattr(cls_interface, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'
-            doc = Features.scrub_doc(delegate_obj.__doc__)
+            doc = Features.scrub_doc(
+                    delegate_obj.__doc__,
+                    max_doc_chars=max_doc_chars,
+                    )
 
-            if cls_interface in (InterfaceFillValue, InterfaceRe):
+            if cls_interface in (InterfaceFillValue, InterfaceRe, InterfaceHashlib):
                 terminus_sig, terminus_sig_no_args = _get_signatures(
                         name,
                         obj,
@@ -752,6 +782,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
         For root __getitem__ methods, as well as __getitem__ on InterfaceGetItem objects.
@@ -790,13 +821,17 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             cls_interface: tp.Type[Interface[TContainer]],
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
             # get from object, not class
             delegate_obj = getattr(obj, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'
-            doc = Features.scrub_doc(delegate_obj.__doc__)
+            doc = Features.scrub_doc(
+                    delegate_obj.__doc__,
+                    max_doc_chars=max_doc_chars,
+                    )
 
             if field != Features.GETITEM:
                 delegate_is_attr = True
@@ -839,6 +874,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             cls_interface: tp.Type[Interface[TContainer]],
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
@@ -846,13 +882,19 @@ class InterfaceRecord(tp.NamedTuple):
             # get from object, not class
             delegate_obj = getattr(obj, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'
-            delegate_doc = Features.scrub_doc(delegate_obj.__doc__)
+            delegate_doc = Features.scrub_doc(
+                    delegate_obj.__doc__,
+                    max_doc_chars=max_doc_chars,
+                    )
 
             # will be either SeriesAssign or FrameAssign
             for field_terminus in obj.delegate.INTERFACE:
                 terminus_obj = getattr(obj.delegate, field_terminus)
                 terminus_reference = f'{obj.delegate.__name__}.{field_terminus}'
-                terminus_doc = Features.scrub_doc(terminus_obj.__doc__)
+                terminus_doc = Features.scrub_doc(
+                        terminus_obj.__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
 
                 # use the delegate to get the root signature, as the root is just a property that returns an InterfaceAssignTrio or similar
                 if field != Features.GETITEM:
@@ -896,6 +938,7 @@ class InterfaceRecord(tp.NamedTuple):
             reference: str,
             doc: str,
             max_args: int,
+            max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
@@ -988,6 +1031,8 @@ class InterfaceSummary(Features):
             elif target is MemoryDisplay:
                 f = Frame(EMPTY_ARRAY)
                 instance = target.from_any(f)
+            elif target is WWW:
+                instance = target()
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
@@ -1029,15 +1074,20 @@ class InterfaceSummary(Features):
     def interrogate(cls,
             target: tp.Type[ContainerBase],
             *,
-            max_args: int = MAX_ARGS
+            max_args: int = MAX_ARGS,
+            max_doc_chars: int = MAX_DOC_CHARS,
             ) -> tp.Iterator[InterfaceRecord]:
         for name_attr, obj, obj_cls in cls.name_obj_iter(target):
             doc = ''
 
             if isinstance(obj_cls, property):
-                doc = cls.scrub_doc(obj_cls.__doc__)
+                doc = cls.scrub_doc(obj_cls.__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
             elif hasattr(obj, '__doc__'):
-                doc = cls.scrub_doc(obj.__doc__)
+                doc = cls.scrub_doc(obj.__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
 
             if name_attr == 'values':
                 name = name_attr # on Batch this is generator that has an generic name
@@ -1057,6 +1107,7 @@ class InterfaceSummary(Features):
                     reference=reference,
                     doc=doc,
                     max_args=max_args,
+                    max_doc_chars=max_doc_chars,
                     )
 
             if name in cls.DICT_LIKE:
@@ -1089,7 +1140,7 @@ class InterfaceSummary(Features):
                         cls_interface=obj.__class__,
                         **kwargs,
                         )
-            # InterfaceFillValue, InterfaceRe are methods, must match name
+            # as InterfaceFillValue, InterfaceRe are methods, must match on name, not INTERFACE_ATTRIBUTE_CLS
             elif name == 'via_fill_value':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceFillValue,
@@ -1100,6 +1151,7 @@ class InterfaceSummary(Features):
                         cls_interface=InterfaceRe,
                         **kwargs,
                         )
+
             elif callable(obj): # general methods
                 yield from InterfaceRecord.gen_from_method(**kwargs)
             else: #
@@ -1117,12 +1169,16 @@ class InterfaceSummary(Features):
             *,
             minimized: bool = True,
             max_args: int = MAX_ARGS,
+            max_doc_chars: int = MAX_DOC_CHARS,
             ) -> Frame:
         '''
         Reduce to key fields.
         '''
         f = Frame.from_records(
-                cls.interrogate(target, max_args=max_args),
+                cls.interrogate(target,
+                        max_args=max_args,
+                        max_doc_chars=max_doc_chars,
+                        ),
                 )
         # order be group order
         f = Frame.from_concat(

@@ -43,7 +43,7 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAut
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
-from static_frame.core.index_auto import IndexDefaultFactory as IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory as IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexHour as IndexHour
@@ -69,6 +69,7 @@ from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate
@@ -84,6 +85,7 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
@@ -113,6 +115,7 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.18'
+__version__ = '1.0.1'

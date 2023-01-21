@@ -7,13 +7,10 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from doc.build_example import to_json_bundle
+from doc.build_source import name_to_snake_case
 from static_frame import __version__ as VERSION
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
-
-# import os
-# import sys
-# import datetime
 
 
 def build(output: Path,
@@ -24,26 +21,29 @@ def build(output: Path,
     if not write and not display:
         return
 
-    sig_to_sig_full = {}
+    sig_full_to_sig = {}
     sig_to_doc = {}
+    sig_to_group = {}
     method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
     sigs = []
-    methods = set() # on
+    methods = set()
 
     for cls in DOCUMENTED_COMPONENTS:
         inter = InterfaceSummary.to_frame(cls, #type: ignore
                 minimized=False,
                 max_args=99,
+                max_doc_chars=999_999,
                 )
         for sig_full, row in inter.iter_series_items(axis=1):
             key = f'{row["cls_name"]}.{row["signature_no_args"]}'
             sigs.append(key)
 
             sig_full = f'{row["cls_name"]}.{sig_full}'
-            sig_to_sig_full[key] = sig_full
+            sig_full_to_sig[sig_full] = key
             # sig_full_to_key[sig_full] = key
 
             sig_to_doc[key] = row['doc']
+            sig_to_group[key] = name_to_snake_case(row['group'])
 
             method_to_sig[row["signature_no_args"]].append(key)
             methods.add(row["signature_no_args"])
@@ -51,12 +51,17 @@ def build(output: Path,
     sig_to_example = to_json_bundle()
 
     assert len(methods) == len(method_to_sig)
-    assert len(sigs) == len(sig_to_sig_full)
+    assert len(sigs) == len(sig_full_to_sig)
     assert len(sigs) == len(sig_to_doc)
+    assert len(sigs) == len(sig_to_group)
+
+    # as we want to create a Map in javascript, store values as array of pairs
+#     itemize = lambda d: tuple(d.items())
 
     name_bundle = (
-            ('sig_to_sig_full', sig_to_sig_full),
+            ('sig_full_to_sig', sig_full_to_sig),
             ('sig_to_doc', sig_to_doc),
+            ('sig_to_group', sig_to_group),
             ('method_to_sig', method_to_sig),
             ('sigs', sigs),
             ('methods', tuple(sorted(methods))),

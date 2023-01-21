@@ -1,3 +1,4 @@
+import csv
 import typing as tp
 from collections.abc import Set
 from copy import deepcopy
@@ -22,6 +23,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
@@ -39,7 +41,7 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -50,6 +52,7 @@ from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
@@ -79,6 +82,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -217,7 +221,12 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
-            thousands_char: str = ',',
+            skip_initial_space: bool = False,
+            quoting: int = csv.QUOTE_MINIMAL,
+            quote_char: str = '"',
+            quote_double: bool = True,
+            escape_char: tp.Optional[str] = None,
+            thousands_char: str = '',
             decimal_char: str = '.',
             own_index: bool = False,
             ) -> 'Series':
@@ -231,8 +240,13 @@ class Series(ContainerOperand):
                 (delimited,), # make into iterable of one string
                 dtypes=get_col_dtype,
                 delimiter=delimiter,
+                quoting=quoting,
+                quotechar=quote_char,
+                doublequote=quote_double,
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
+                skipinitialspace=skip_initial_space,
                 )
         if own_index:
             index_final = index
@@ -356,7 +370,7 @@ class Series(ContainerOperand):
         '''
         array_values = []
 
-        if index_constructor is None or isinstance(index_constructor, IndexDefaultFactory):
+        if index_constructor is None or isinstance(index_constructor, IndexDefaultConstructorFactory):
             # default index constructor expects delivery of Indices for greater efficiency
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
                 for label, series in items:
@@ -476,6 +490,9 @@ class Series(ContainerOperand):
             index = None
         elif index is not None:
             pass # pass index into constructor
+        elif isinstance(value.index, pandas.MultiIndex):
+            index = IndexHierarchy.from_pandas(value.index)
+            own_index = True
         else: # if None
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
@@ -749,6 +766,8 @@ class Series(ContainerOperand):
         return InterfaceString(
                 blocks=(self.values,),
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
+                labels=range(1)
                 )
 
     @property
@@ -802,7 +821,6 @@ class Series(ContainerOperand):
                 flags=flags,
                 )
 
-
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup['Series']:
@@ -811,8 +829,10 @@ class Series(ContainerOperand):
         '''
         return IterNodeGroup(
                 container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        group_source=self.values),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -821,8 +841,10 @@ class Series(ContainerOperand):
     def iter_group_items(self) -> IterNodeGroup['Series']:
         return IterNodeGroup(
                 container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        group_source=self.values),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -835,8 +857,12 @@ class Series(ContainerOperand):
         '''
         return IterNodeGroup(
                 container=self,
-                function_items=partial(self._axis_group_items, as_array=True),
-                function_values=partial(self._axis_group, as_array=True),
+                function_items=partial(self._axis_group_items,
+                        as_array=True,
+                        group_source=self.values),
+                function_values=partial(self._axis_group,
+                        as_array=True,
+                        group_source=self.values),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -845,8 +871,12 @@ class Series(ContainerOperand):
     def iter_group_array_items(self) -> IterNodeGroup['Series']:
         return IterNodeGroup(
                 container=self,
-                function_items=partial(self._axis_group_items, as_array=True),
-                function_values=partial(self._axis_group, as_array=True),
+                function_items=partial(self._axis_group_items,
+                        group_source=self.values,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        group_source=self.values,
+                        as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
@@ -877,8 +907,10 @@ class Series(ContainerOperand):
     def iter_group_labels_array(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=partial(self._axis_group_labels_items, as_array=True),
-                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items,
+                        as_array=True),
+                function_values=partial(self._axis_group_labels,
+                        as_array=True),
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
@@ -887,11 +919,69 @@ class Series(ContainerOperand):
     def iter_group_labels_array_items(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=partial(self._axis_group_labels_items, as_array=True),
-                function_values=partial(self._axis_group_labels, as_array=True),
+                function_items=partial(self._axis_group_labels_items,
+                        as_array=True),
+                function_values=partial(self._axis_group_labels,
+                        as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS
                 )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other(self,
+            ) -> IterNodeGroupOther['Series']:
+        '''
+        Iterator of :obj:`Series`, grouped by unique values found in the passed container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_items(self,
+            ) -> IterNodeGroupOther['Series']:
+        '''
+        Iterator of pairs of label, :obj:`Series`, grouped by unique values found in the passed container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other_array(self) -> IterNodeGroupOther['Series']:
+        return IterNodeGroupOther(
+                container=self,
+                function_items=partial(self._axis_group_items,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES
+                )
+
+    @property
+    def iter_group_other_array_items(self) -> IterNodeGroupOther['Series']:
+        return IterNodeGroupOther(
+                container=self,
+                function_items=partial(self._axis_group_items,
+                        as_array=True),
+                function_values=partial(self._axis_group,
+                        as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES
+                )
+
+
 
     #---------------------------------------------------------------------------
     @property
@@ -1124,7 +1214,9 @@ class Series(ContainerOperand):
                 )
 
     def rehierarch(self,
-            depth_map: tp.Sequence[int]
+            depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> 'Series':
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
@@ -1135,6 +1227,7 @@ class Series(ContainerOperand):
         index, iloc_map = rehierarch_from_index_hierarchy(
                 labels=self._index, #type: ignore
                 depth_map=depth_map,
+                index_constructors=index_constructors,
                 name=self._index.name,
                 )
         values = self.values[iloc_map]
@@ -1892,11 +1985,16 @@ class Series(ContainerOperand):
     def _axis_group_items(self, *,
             axis: int = 0,
             as_array: bool = False,
+            group_source: np.ndarray,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+        '''
+        Args:
+            group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
+        '''
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
-
-        groups, locations = array_to_groups_and_locations(self.values)
+        # NOTE: this could be optimized with a sorting-based apporach when possible
+        groups, locations = array_to_groups_and_locations(group_source)
 
         func = self.values.__getitem__ if as_array else self._extract_iloc
 
@@ -1904,11 +2002,17 @@ class Series(ContainerOperand):
             selection = locations == idx
             yield g, func(selection)
 
+
     def _axis_group(self, *,
             axis: int = 0,
             as_array: bool = False,
+            group_source: np.ndarray,
             ) -> tp.Iterator['Series']:
-        yield from (x for _, x in self._axis_group_items(axis=axis, as_array=as_array))
+        yield from (x for _, x in self._axis_group_items(
+                axis=axis,
+                as_array=as_array,
+                group_source=group_source,
+                ))
 
 
     def _axis_element_items(self,
@@ -2567,6 +2671,7 @@ class Series(ContainerOperand):
             skipna: bool = True,
             skipfalsy: bool = False,
             unique: bool = False,
+            axis: int = 0,
             ) -> int:
         '''
         Return the count of non-NA, non-falsy, and/or unique elements.
@@ -2576,6 +2681,7 @@ class Series(ContainerOperand):
             skipfalsy: skip falsu values (0, '', False, None, NaN)
             unique: Count unique items after optionally applying ``skipna`` or ``skipfalsy`` removals.
         '''
+        # NOTE: axis arg for compat with Frame, is not used
         if not skipna and skipfalsy:
             raise RuntimeError('Cannot skipfalsy and not skipna.')
 
@@ -2684,6 +2790,203 @@ class Series(ContainerOperand):
         '''
         return argmax_1d(self.values, skipna=skipna) #type: ignore
 
+
+    #---------------------------------------------------------------------------
+
+    def _label_not_missing(self,
+            *,
+            return_label: bool,
+            pos: int,
+            fill_value: tp.Hashable = np.nan,
+            func: tp.Callable[[np.ndarray], np.ndarray],
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {skipna}
+            pos: 0 or -1
+
+        Returns:
+            tp.Hashable
+        '''
+        # if skipna is False and a NaN is returned, this will raise
+        if not len(self.values):
+            return fill_value
+        target = ~func(self.values)
+        post = np.nonzero(target)[0]
+        if len(post) == 0:
+            return fill_value
+        if return_label:
+            return self.index[post[pos]]
+        return post[pos] #type: ignore
+
+    def iloc_notna_first(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=0,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def iloc_notna_last(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the last not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=-1,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_first(self,
+            *,
+            fill_value: tp.Hashable = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=0,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+    def loc_notna_last(self,
+            *,
+            fill_value: tp.Hashable = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the last not NA (None or nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=-1,
+                fill_value=fill_value,
+                func=isna_array,
+                )
+
+
+    #---------------------------------------------------------------------------
+    def loc_notfalsy_first(self,
+            *,
+            fill_value: tp.Hashable = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the first non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=0,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_first(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the first non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=0,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+
+    def loc_notfalsy_last(self,
+            *,
+            fill_value: tp.Hashable = np.nan,
+            ) -> tp.Hashable:
+        '''
+        Return the label corresponding to the last non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=True,
+                pos=-1,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+    def iloc_notfalsy_last(self,
+            *,
+            fill_value: int = -1,
+            ) -> tp.Hashable:
+        '''
+        Return the position corresponding to the last non-falsy (including nan) value found.
+
+        Args:
+            {fill_value}
+
+        Returns:
+            tp.Hashable
+        '''
+        return self._label_not_missing(
+                return_label=False,
+                pos=-1,
+                fill_value=fill_value,
+                func=isfalsy_array,
+                )
+
+
+
+    #---------------------------------------------------------------------------
 
     def cov(self,
             other: tp.Union['Series', np.ndarray],
@@ -3112,7 +3415,6 @@ class Series(ContainerOperand):
                 name=name,
                 )
 
-
     def to_series_he(self) -> 'SeriesHE':
         '''
         Return a :obj:`SeriesHE` from this :obj:`Series`.
@@ -3123,6 +3425,25 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self.values.tobytes(),)
+                ))
+
+    #---------------------------------------------------------------------------
 
     def to_pandas(self) -> 'pandas.Series':
         '''
@@ -3135,6 +3456,7 @@ class Series(ContainerOperand):
         return pandas.Series(self.values.copy(),
                 index=self._index.to_pandas(),
                 name=self._name)
+
 
     @doc_inject(class_name='Series')
     def to_html(self,

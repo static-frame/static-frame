@@ -12,6 +12,7 @@ from collections import defaultdict
 from collections import namedtuple
 from copy import deepcopy
 from enum import Enum
+from fractions import Fraction
 from functools import partial
 from functools import reduce
 from io import StringIO
@@ -19,7 +20,6 @@ from itertools import chain
 from itertools import zip_longest
 from os import PathLike
 from types import TracebackType
-from urllib import request
 
 import numpy as np
 from arraykit import column_2d_filter
@@ -137,6 +137,7 @@ DTYPE_UINT_DEFAULT = np.dtype(np.uint64)
 
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
+DTYPE_YEAR_MONTH_STR = np.dtype('U7')
 
 DTYPES_BOOL = (DTYPE_BOOL,)
 DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
@@ -381,9 +382,9 @@ FrameInitializer = tp.Union[
         np.ndarray,
         ] # need to add FRAME_INITIALIZER_DEFAULT
 
-DateInitializer = tp.Union[str, datetime.date, np.datetime64]
-YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
-YearInitializer = tp.Union[str, datetime.date, np.datetime64]
+DateInitializer = tp.Union[int, str, datetime.date, np.datetime64]
+YearMonthInitializer = tp.Union[int, str, datetime.date, np.datetime64]
+YearInitializer = tp.Union[int, str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
@@ -530,11 +531,6 @@ def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
-def ufunc_is_statistical(func: UFunc) -> bool:
-    category = ufunc_to_category(func)
-    return not category is UFuncCategory.STATISTICAL
-
-
 def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''
@@ -589,6 +585,39 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
             return dtype # keep same size
 
     return None
+
+#-------------------------------------------------------------------------------
+FGItemT = tp.TypeVar('FGItemT')
+
+
+class FrozenGenerator:
+    '''
+    A wrapper of an iterator (or iterable) that stores values iterated for later recall; this never iterates the iterator unbound, but always iterates up to a target.
+    '''
+    __slots__ = (
+        '_gen',
+        '_src',
+        )
+
+    def __init__(self, gen: tp.Iterable[FGItemT]):
+        # NOTE: while generally called with an iterator, some iterables such as dict_values need to be converted to an iterator
+        self._gen: tp.Iterator[FGItemT]
+        if hasattr(gen, '__next__'):
+            self._gen = gen #type: ignore
+        else:
+            self._gen = iter(gen)
+        self._src: tp.List[FGItemT] = []
+
+    def __getitem__(self, key: int) -> FGItemT:
+        start = len(self._src)
+        if key >= start:
+            for k in range(start, key + 1):
+                try:
+                    self._src.append(next(self._gen))
+                except StopIteration:
+                    raise IndexError(k) from None
+        return self._src[key]
+
 
 #-------------------------------------------------------------------------------
 # join utils
@@ -1757,7 +1786,7 @@ TD64_MS = np.timedelta64(1, 'ms')
 TD64_US = np.timedelta64(1, 'us')
 TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
+DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
@@ -1767,22 +1796,29 @@ def to_datetime64(
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
+
+    Args:
+        dtype: Provide the expected dtype of the returned value.
     '''
-    # for now, only support creating from a string, as creation from integers is based on offset from epoch
     if not isinstance(value, np.datetime64):
         if dtype is None:
-            # let constructor figure it out
+            # let constructor figure it out; if value is an integer it will raise
             dt = np.datetime64(value)
         else: # assume value is single value;
-            # note that integers will be converted to units from epoch
+            # integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
-                if dtype == DT64_YEAR: # convert to string as that is generally what is wanted
+                if dtype == DT64_YEAR: # convert to string
                     value = str(value)
-                elif dtype in _DT_NOT_FROM_INT:
+                elif dtype in DT_NOT_FROM_INT:
                     raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
+                # permit NaNs to pass
+                if not np.isnan(dt) and dtype == DT64_YEAR:
+                    dt_naive = np.datetime64(value)
+                    if dt_naive.dtype != dt.dtype:
+                        raise InvalidDatetime64Initializer(f'value ({value}) will not be converted to dtype ({dtype})')
             else: # cannot use a generic datetime type
                 dt = np.datetime64(value)
     else: # if a dtype was explicitly given, check it
@@ -1847,19 +1883,28 @@ def key_to_datetime_key(
     if isinstance(key, str):
         return to_datetime64(key, dtype=dtype)
 
+    if isinstance(key, INT_TYPES):
+        return to_datetime64(key, dtype=dtype)
+
     if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
+        if dtype == DT64_YEAR and key.dtype.kind in DTYPE_INT_KINDS:
+            key = key.astype(DTYPE_STR)
         return key.astype(dtype)
 
     if hasattr(key, '__len__'):
+        if dtype == DT64_YEAR:
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype) # type: ignore
         # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representation
         return np.array(key, dtype=dtype)
 
-    if hasattr(key, '__next__'): # a generator-like
+    if hasattr(key, '__iter__'): # a generator-like
+        if dtype == DT64_YEAR:
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype) # type: ignore
         return np.array(tuple(key), dtype=dtype) #type: ignore
 
-    # for now, return key unaltered
+    # could be None
     return key
 
 #-------------------------------------------------------------------------------
@@ -2948,7 +2993,7 @@ def array_from_element_attr(*,
     post.flags.writeable = False
     return post
 
-def array_from_element_apply(*,
+def array_from_element_apply(
         array: np.ndarray,
         func: AnyCallable,
         dtype: np.dtype
@@ -2981,7 +3026,7 @@ def array_from_element_method(*,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> np.array:
     '''
-    Handle element-wise method calling on arrays of Python objects.
+    Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
     Args:
         pre_insert:
@@ -3136,6 +3181,48 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
         return value
     return tuple(list_to_tuple(v) for v in value)
 
+class JSONFilter:
+
+    @staticmethod
+    def from_element(obj: tp.Any) -> tp.Any:
+        '''Convert non-JSON compatible objects to JSON compatible objects or strings.
+        '''
+        if obj is None:
+            return None
+        if isinstance(obj, (str, int, float)):
+            return obj
+        if isinstance(obj, datetime.date):
+            return obj.isoformat()
+        if isinstance(obj, (Fraction, complex, np.timedelta64, np.datetime64)):
+            return str(obj)
+        if hasattr(obj, 'dtype'): #type: ignore
+            if obj.dtype.kind in ('c', 'M', 'm'):
+                if obj.ndim == 0:
+                    return str(obj)
+                if obj.ndim == 1:
+                    return [str(e) for e in obj]
+                return [[str(e) for e in row] for row in obj]
+            if obj.ndim == 0:
+                return obj.item()
+            return obj.tolist()
+
+        fe = JSONFilter.from_element
+        if isinstance(obj, dict):
+            return {fe(k): fe(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            return [fe(e) for e in obj]
+
+    @classmethod
+    def from_items(cls,
+            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
+            ) -> tp.Any:
+        return {cls.from_element(k): cls.from_element(v) for k, v in items}
+
+    @classmethod
+    def from_iterable(cls,
+            iterable: tp.Iterator[tp.Any],
+            ) -> tp.Any:
+        return [cls.from_element(v) for v in iterable]
 
 #-------------------------------------------------------------------------------
 
@@ -3217,15 +3304,6 @@ def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextI
     if isinstance(fp, PathLike):
         return str(fp)
     return fp #type: ignore [return-value]
-
-
-def _read_url(fp: str) -> str:
-    '''
-    Read a URL into memory, return a decoded string.
-    '''
-    with request.urlopen(fp) as response: #pragma: no cover
-        return tp.cast(str, response.read().decode('utf-8')) #pragma: no cover
-
 
 def write_optional_file(
         content: str,

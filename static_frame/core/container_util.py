@@ -14,6 +14,7 @@ from arraykit import column_2d_filter
 from arraykit import resolve_dtype_iter
 from numpy import char as npc
 
+from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
@@ -35,6 +36,7 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -57,7 +59,7 @@ if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    # from static_frame.core.index_auto import IndexDefaultFactory #pylint: disable=W0611,C0412 #pragma: no
+    # from static_frame.core.index_auto import IndexDefaultConstructorFactory #pylint: disable=W0611,C0412 #pragma: no
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -90,7 +92,7 @@ class ContainerMap:
         from static_frame.core.frame import Frame
         from static_frame.core.frame import FrameGO
         from static_frame.core.frame import FrameHE
-        # not containers but neede for build_example.py
+        # not containers but needed for build_example.py
         from static_frame.core.hloc import HLoc
         from static_frame.core.index import ILoc
         from static_frame.core.index import Index
@@ -129,6 +131,12 @@ class ContainerMap:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
 
+
+def is_frozen_generator_input(value: tp.Any) -> bool:
+    return value.__class__ is not FrozenGenerator and (
+            not hasattr(value, '__len__')
+            or not hasattr(value, '__getitem__'))
+
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
@@ -142,20 +150,19 @@ def get_col_dtype_factory(
         index_depth: if a mapping is provided, and if processing fields that include fields that will be interpreted as the index (and that are not included in the ``columns`` mapping), provide the index depth to "pad" the appropriate offset and always return None for those `col_idx`. NOTE: this is only enabled when using a mapping.
     '''
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
-    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
     if is_mapping(dtypes):
         is_map = True
         is_element = False
+        if isinstance(dtypes, defaultdict):
+            # make a copy so as to not mutate
+            dtypes = dtypes.copy()
     elif is_dtype_specifier(dtypes):
         is_map = False
         is_element = True
     else: # an iterable of types
         is_map = False
         is_element = False
-
-    if columns is None and is_map:
-        raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
         if is_map:
@@ -167,11 +174,17 @@ def get_col_dtype_factory(
         if is_element:
             return dtypes
         if is_map:
-            # mappings can be incomplete
-            return dtypes.get(columns[col_idx], None) #type: ignore
-        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
-        if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
-            dtypes = tuple(dtypes) #type: ignore
+            # if no columns, assume mapping is an integer mapping
+            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            try: # try lookup for defaultdict support
+                return dtypes[key] #type: ignore
+            except KeyError:
+                return None
+
+        # NOTE: dtypes might be a generator
+        # INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
+        if is_frozen_generator_input(dtypes):
+            dtypes = FrozenGenerator(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
 
     return get_col_dtype
@@ -197,6 +210,9 @@ def get_col_fill_value_factory(
         fill_value = FILL_VALUE_AUTO_DEFAULT
     elif is_mapping(fill_value):
         is_map = True
+        if isinstance(fill_value, defaultdict):
+            # make a copy so as to not mutate
+            fill_value = fill_value.copy()
     elif fill_value.__class__ is np.ndarray: # tuple is an element
         if fill_value.ndim > 1:
             raise ValueError('Fill values must be one-dimensional arrays.')
@@ -210,13 +226,11 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    if columns is None and is_map:
-        raise RuntimeError('cannot lookup fill_value by name without supplied columns labels')
-
     def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
+
         if is_fva and dtype is not None: # use the mapping from dtype
             return fill_value[dtype]
         if is_fva and dtype is None:
@@ -224,13 +238,60 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            return fill_value.get(columns[col_idx], np.nan) #type: ignore
-        # NOTE: the types trying to select here could be more explicit
-        if not hasattr(fill_value, '__len__') or not hasattr(fill_value, '__getitem__'):
-            fill_value = tuple(fill_value)
+            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            try: # try lookup for defaultdict support
+                return fill_value[key]
+            except KeyError:
+                return np.nan
+
+        if is_frozen_generator_input(fill_value):
+            fill_value = FrozenGenerator(fill_value)
         return fill_value[col_idx]
 
     return get_col_fill_value
+
+
+def get_col_format_factory(
+        format: tp.Any,
+        fields: tp.Optional[tp.Sequence[tp.Hashable]] = None,
+        ) -> tp.Callable[[int], str]:
+    '''
+    Return a function to get string format, used in InterfaceString.
+
+    Args:
+        fields: In common usage in Frame constructors, ``fields`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Can also be an ``Index``.
+    '''
+    # if all false it is an iterable
+    is_map = False
+    is_element = False
+
+    if is_mapping(format):
+        is_map = True
+        if isinstance(format, defaultdict):
+            # make a copy so as to not mutate
+            format = format.copy()
+    elif hasattr(format, '__iter__') and not isinstance(format, str):
+        # an iterable or iterator but not a string
+        pass
+    else: # can assume an element
+        is_element = True
+
+    def get_col_format_value(col_idx: int) -> str:
+        nonlocal format # might mutate a generator into a tuple
+        if is_element:
+            return format # type: ignore
+        if is_map:
+            key: tp.Hashable = fields[col_idx] if fields is not None else col_idx
+            try: # try lookup for defaultdict support
+                return format[key] #type: ignore
+            except KeyError:
+                return '{}'
+
+        if is_frozen_generator_input(format):
+            format = FrozenGenerator(format)
+        return format[col_idx] # type: ignore
+
+    return get_col_format_value
 
 
 def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
@@ -955,10 +1016,15 @@ def rehierarch_from_index_hierarchy(*,
     if labels._recache:
         labels._update_array_cache()
 
+    # will validate depth_map
     rehierarched_blocks, index_iloc = rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
             )
+
+    if index_constructors is None:
+        # transform the existing index constructors correspondingly
+        index_constructors = labels.index_types.values[list(depth_map)]
 
     return labels.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
@@ -1165,6 +1231,64 @@ def key_from_container_key(
 
     # detect and fail on Frame?
     return key
+
+def group_from_container(
+        index: 'IndexBase',
+        group_source: tp.Any,
+        fill_value: tp.Any,
+        axis: int,
+        ) -> np.ndarray:
+    '''
+    Unpack group_source values from another Index, Series, or ILoc selection.
+    '''
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+
+    key: np.ndarray
+
+    if isinstance(group_source, np.ndarray):
+        if group_source.ndim > 2:
+            raise ValueError(f'{group_source.ndim}-dimensional containers are not supported.')
+        key = group_source
+    elif isinstance(group_source, Index):
+        # not that useful as value are unique
+        key = group_source.values
+    elif isinstance(group_source, Series):
+        if not group_source.index.equals(index):
+            key = group_source.reindex(index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else: # the index is equal
+            key = group_source.values
+
+    elif isinstance(group_source, Frame):
+        # we do not "rotate" the group_source here depending on axis; the ref index passed in is the index if axis 0, columns if axis 1; we compare to the corresponding axis in the group_source
+        if axis == 0 and not group_source.index.equals(index):
+            key = group_source.reindex(index=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        elif axis == 1 and not group_source.columns.equals(index):
+            key = group_source.reindex(columns=index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    ).values
+        else:
+            key = group_source.values
+    elif hasattr(group_source, '__iter__') and not isinstance(group_source, str):
+        key, _ = iterable_to_array_1d(group_source)
+    else:
+        raise ValueError(f'Group source not supported {type(group_source)}')
+
+    if key.ndim == 1 and len(key) != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({len(index)}).')
+    elif key.ndim == 2 and key.shape[axis] != len(index):
+        raise RuntimeError(f'`group_source` length ({len(key)}) does not match length of container for axis ({key.shape[axis]}).')
+
+    return key
+
 
 
 #---------------------------------------------------------------------------
@@ -1630,6 +1754,27 @@ class MessagePackElement:
         elif typ == 'A': #recursion not covered by msgpack-numpy
             return unpackb(d) #recurse unpackb
         return d
+
+#-------------------------------------------------------------------------------
+
+def iter_component_signature_bytes(
+        container: ContainerBase,
+        include_name: bool,
+        include_class: bool,
+        encoding: str,
+        ) -> tp.Iterator[bytes]:
+    '''Convert class and name to byte components. Handle encding error and provide a useful exception.
+
+    Args:
+        include_class: if class is not included, a Series and an Index might evaluate to the same hash.
+    '''
+    if include_name:
+        try:
+            yield bytes(container.name, encoding=encoding) #type: ignore
+        except TypeError as e:
+            raise TypeError('The name attribute must be byte-encodable to produce a hash digest. Rename or set `include_name` to False.') from e
+    if include_class:
+        yield bytes(container.__class__.__name__, encoding=encoding)
 
 
 

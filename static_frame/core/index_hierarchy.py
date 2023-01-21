@@ -4,6 +4,7 @@ import typing as tp
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
+from itertools import chain
 
 import numpy as np
 from arraykit import get_new_indexers_and_screen
@@ -12,6 +13,7 @@ from arraykit import name_filter
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -82,7 +84,6 @@ from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import ufunc_is_statistical
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
@@ -1223,6 +1224,8 @@ class IndexHierarchy(IndexBase):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
+                ndim=self._NDIM,
+                labels=range(self.depth)
                 )
 
     @property
@@ -1760,6 +1763,8 @@ class IndexHierarchy(IndexBase):
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
@@ -1771,9 +1776,14 @@ class IndexHierarchy(IndexBase):
                 labels=self._blocks,
                 depth_map=depth_map,
                 )
+
+        if index_constructors is None:
+            # transform the existing index constructors correspondingly
+            index_constructors = self.index_types.values[list(depth_map)]
+
         return self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
-            index_constructors=self._index_constructors,
+            index_constructors=index_constructors,
             own_blocks=True,
             )
 
@@ -2175,10 +2185,6 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if not ufunc_is_statistical(ufunc):
-            # NOTE: as min and max are label based, it is awkward that statistical functions are calculated as Frames, per depth level; we permit this for sum, prod, cumsum, cumprod for backward compatibility, however they might also raise
-            raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to Frame.')
-
         if ufunc is np.max or ufunc is np.min:
             # max and min are treated per label; thus we do a lexical sort for axis 0
             if axis == 1:
@@ -2196,15 +2202,19 @@ class IndexHierarchy(IndexBase):
             # NOTE: this could return a tuple rather than an array
             return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
 
-        return self._blocks.ufunc_axis_skipna(
-                skipna=skipna,
-                axis=axis,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna,
-                composable=composable,
-                dtypes=dtypes,
-                size_one_unity=size_one_unity,
-                )
+        # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
+
+        # if not ufunc_is_statistical(ufunc):
+        # return self._blocks.ufunc_axis_skipna(
+        #         skipna=skipna,
+        #         axis=axis,
+        #         ufunc=ufunc,
+        #         ufunc_skipna=ufunc_skipna,
+        #         composable=composable,
+        #         dtypes=dtypes,
+        #         size_one_unity=size_one_unity,
+        #         )
 
     def _ufunc_shape_skipna(self, *,
             axis: int,
@@ -2221,16 +2231,18 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        if self._recache:
-            self._update_array_cache()
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
 
-        dtype = None if not dtypes else dtypes[0] # only a tuple
-        if skipna:
-            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
-        else:
-            post = ufunc(self.values, axis=axis, dtype=dtype)
-        post.flags.writeable = False
-        return post
+        # if self._recache:
+        #     self._update_array_cache()
+
+        # dtype = None if not dtypes else dtypes[0] # only a tuple
+        # if skipna:
+        #     post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
+        # else:
+        #     post = ufunc(self.values, axis=axis, dtype=dtype)
+        # post.flags.writeable = False
+        # return post
 
     # --------------------------------------------------------------------------
     # dictionary-like interface
@@ -2245,7 +2257,6 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         # Don't use .values, as that can coerce types
         yield from self._blocks.iter_row_tuples(None)
-        # yield from zip(*map(self.values_at_depth, range(self.depth)))
 
     def __reversed__(self: IH) -> tp.Iterator[SingleLabelType]:
         '''
@@ -2709,6 +2720,22 @@ class IndexHierarchy(IndexBase):
         from static_frame import FrameGO
         return tp.cast(FrameGO, self._to_frame(FrameGO))
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                v,
+                ))
+
+    # --------------------------------------------------------------------------
     def to_pandas(self: IH) -> 'DataFrame':
         '''
         Return a Pandas MultiIndex.
@@ -2726,6 +2753,8 @@ class IndexHierarchy(IndexBase):
         mi.name = self._name
         mi.names = self.names
         return mi
+
+    # --------------------------------------------------------------------------
 
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,

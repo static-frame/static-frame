@@ -5,6 +5,7 @@ import typing as tp
 import unittest
 from collections import OrderedDict
 from functools import wraps
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -3459,34 +3460,22 @@ class TestUnit(TestCase):
 
     def test_hierarchy_ufunc_axis_skipna_a(self) -> None:
 
-        ih1 = IndexHierarchy.from_product((10, 20), (3.1, np.nan))
-
-        self.assertAlmostEqualValues(
-                ih1.sum(axis=1, skipna=False).tolist(),
-                [13.1, np.nan, 23.1, np.nan])
-        self.assertAlmostEqualValues(
-                ih1.sum(axis=0, skipna=False).tolist(),
-                [60.0, np.nan]
-                )
-
-    def test_hierarchy_ufunc_axis_skipna_b(self) -> None:
-
-        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
-
-        # sum applies to the labels
-        self.assertEqual(ih1.sum().tolist(),
-                [60, 20]
-                )
-
-        self.assertEqual(ih1.cumprod().tolist(),
-                [[10, 3], [100, 21], [2000, 63], [40000, 441]]
-                )
-
-    def test_hierarchy_ufunc_axis_skipna_c(self) -> None:
-
         ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
         with self.assertRaises(NotImplementedError):
             _ = ih1.std()
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.sum()
+
+    def test_hierarchy_ufunc_shape_skipna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.cumprod()
+
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.cumsum()
+
 
     #---------------------------------------------------------------------------
 
@@ -4543,17 +4532,17 @@ class TestUnit(TestCase):
         post = ih.min()
         self.assertEqual(post.tolist(), [-1, -4])
 
-    def test_hierarchy_cumsum_a(self) -> None:
-        ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
-        ih.append([-1, np.nan])
+    # def test_hierarchy_cumsum_a(self) -> None:
+    #     ih = IndexHierarchyGO.from_labels([[1, 2], [20, 1], [3, 4]])
+    #     ih.append([-1, np.nan])
 
-        post = ih.cumsum()
-        self.assertEqual(post.tolist(),
-            [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
-            )
-        self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
-            [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
-            )
+    #     post = ih.cumsum()
+    #     self.assertEqual(post.tolist(),
+    #         [[1.0, 2.0], [21.0, 3.0], [24.0, 7.0], [23.0, 7.0]]
+    #         )
+    #     self.assertEqual(ih.cumsum(skipna=False).astype(str).tolist(),
+    #         [['1.0', '2.0'], ['21.0', '3.0'], ['24.0', '7.0'], ['23.0', 'nan']]
+    #         )
 
     #---------------------------------------------------------------------------
     def test_hierarchy_concat_a(self) -> None:
@@ -4564,6 +4553,46 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat((f1, f2)) # RuntimeError
         self.assertTrue(f.index.equals(f3.index, compare_dtype=True, compare_class=True))
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_to_signature_bytes_a(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=np.int64), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        post = hidx1._to_signature_bytes()
+
+        self.assertEqual(sha256(post).hexdigest(), 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
+
+    def test_hierarchy_to_signature_bytes_b(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        hidx2 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-06', '2019-01-09'), name='')
+
+        post1 = hidx1._to_signature_bytes()
+        post2 = hidx2._to_signature_bytes()
+
+        self.assertNotEqual(sha256(post1).hexdigest(), sha256(post2).hexdigest())
+
+    def test_hierarchy_to_signature_bytes_c(self) -> None:
+
+        hidx1 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+
+        hidx2 = IndexHierarchy.from_product(Index((1, 2)), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='foo')
+
+        post1 = hidx1._to_signature_bytes(include_name=False)
+        post2 = hidx2._to_signature_bytes(include_name=False)
+
+        self.assertEqual(sha256(post1).hexdigest(), sha256(post2).hexdigest())
+
+
+    def test_hierarchy_via_hashlib_a(self) -> None:
+        hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=np.int64), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+        hd = hidx1.via_hashlib().sha256().hexdigest()
+        self.assertEqual(hd, 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
+
+
 
 
 

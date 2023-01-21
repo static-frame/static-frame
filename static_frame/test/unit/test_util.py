@@ -1,8 +1,12 @@
 import datetime
+import json
 import typing as tp
 import unittest
 import warnings
 from enum import Enum
+from functools import partial
+from itertools import chain
+from itertools import repeat
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -16,6 +20,8 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import FrozenGenerator
+from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
@@ -967,11 +973,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _isin_2d(arr_1d, s3)
     #---------------------------------------------------------------------------
-
-    # @unittest.skip('requires network')
-    # def test_read_url(self) -> None:
-    #     url = 'https://jsonplaceholder.typicode.com/todos'
-    #     post = _read_url(url)
 
     def test_slice_to_ascending_slice_a(self) -> None:
 
@@ -2694,6 +2695,13 @@ class TestUnit(TestCase):
         # NOTE: this tests the final fall through
         self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
 
+    def test_ufunc_dtype_to_dtype_c(self) -> None:
+        func = partial(np.std, ddof=1)
+        self.assertEqual(
+                ufunc_dtype_to_dtype(func, np.dtype(float)),
+                np.dtype(float)
+                )
+
     #---------------------------------------------------------------------------
 
     def test_list_to_tuple_a(self) -> None:
@@ -2898,6 +2906,59 @@ class TestUnit(TestCase):
         self.assertEqual(bytes_to_size_label(1), '1 B')
         self.assertEqual(bytes_to_size_label(1023), '1023 B')
         self.assertEqual(bytes_to_size_label(1024), '1.0 KB')
+
+    #---------------------------------------------------------------------------
+    def test_json_encoder_numpy_a(self) -> None:
+        post1 = json.dumps(JSONFilter.from_element(dict(a=1, b=2)))
+        self.assertEqual(post1, '{"a": 1, "b": 2}')
+
+        post2 = json.dumps(JSONFilter.from_element(dict(a=np.arange(3))))
+        self.assertEqual(post2, '{"a": [0, 1, 2]}')
+
+        post3 = json.dumps(JSONFilter.from_element(dict(a=datetime.date(2022,1,5))))
+        self.assertEqual(post3, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(JSONFilter.from_element(dict(a=np.datetime64('2022-01-05'))))
+        self.assertEqual(post4, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(JSONFilter.from_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
+        self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
+
+    def test_json_encoder_numpy_b(self) -> None:
+        post1 = json.dumps(JSONFilter.from_element(dict(a=np.array((complex(1.2), complex(3.5))))))
+        self.assertEqual(post1, '{"a": ["(1.2+0j)", "(3.5+0j)"]}')
+
+        post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
+        self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
+
+    #---------------------------------------------------------------------------
+    def test_frozen_generator_a(self) -> None:
+        fg = FrozenGenerator(chain((3,), repeat(0)))
+
+        self.assertEqual(fg[2], 0)
+        self.assertEqual(fg[0], 3)
+        self.assertEqual(fg[1], 0)
+        self.assertEqual(fg[99], 0)
+
+    def test_frozen_generator_b(self) -> None:
+        fg = FrozenGenerator(('x' for _ in range(3)))
+
+        self.assertEqual(fg[2], 'x')
+        self.assertEqual(fg[0], 'x')
+        self.assertEqual(fg[1], 'x')
+
+        with self.assertRaises(IndexError):
+            _ = fg[4]
+
+    def test_frozen_generator_c(self) -> None:
+        d = {1:100, 2:200, 3:400}
+        fg = FrozenGenerator(d.values())
+        self.assertEqual(fg[2], 400)
+        self.assertEqual(fg[0], 100)
+        self.assertEqual(fg[1], 200)
+
+        with self.assertRaises(IndexError):
+            _ = fg[3]
 
 
 
