@@ -338,7 +338,7 @@ class InterfaceConsolidate(Interface[TContainer]):
         Args:
             _func_getitem: a callable that expects a _func_getitem key and returns a Frame interface.
         '''
-        self._container = container
+        self._container: TContainer = container
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
@@ -361,8 +361,8 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame
-        def gen():
-            for block in self._container._blocks._blocks:
-                yield block.shape, block.dtype
+        def gen() -> tp.Tuple[np.dtype, np.Tuple[int, ...], int]:
+            for block in self._container._blocks._blocks: # type: ignore
+                yield block.dtype, block.shape, block.ndim
 
-        return Frame.from_records(gen(), columns=('shape', 'dtype'))
+        return Frame.from_records(gen(), columns=('dtype', 'shape', 'ndim')) #type: ignore
