@@ -591,7 +591,6 @@ class InterfaceRecord(tp.NamedTuple):
         '''Interfaces that are not full selectors or via but define an INTERFACE component.
         '''
         for field in obj.INTERFACE:
-            delegate_reference = f'{obj.__class__.__name__}.{field}'
             doc = Features.scrub_doc(
                     getattr(obj.__class__, field).__doc__,
                     max_doc_chars=max_doc_chars,
@@ -605,9 +604,10 @@ class InterfaceRecord(tp.NamedTuple):
                         doc,
                         reference,
                         is_attr=True,
-                        signature_no_args=delegate_reference
+                        signature_no_args=f'{name}.{field}'
                         )
             else:
+                delegate_reference = f'{obj.__class__.__name__}.{field}'
                 delegate_obj = getattr(obj, field)
                 signature, signature_no_args = _get_signatures(
                         name,
