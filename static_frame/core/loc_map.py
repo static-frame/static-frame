@@ -510,8 +510,8 @@ class HierarchicalLocMap:
 
         target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=np.uint64)
 
-        for i in range(len(bit_offset_encoders)):
-            target[i] = (encoded_arr >> starts[i]) & masks[i]
+        for depth in range(len(bit_offset_encoders)):
+            target[depth] = (encoded_arr >> starts[depth]) & masks[depth]
 
         target.flags.writeable = False
         return target

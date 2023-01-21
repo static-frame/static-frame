@@ -4,6 +4,7 @@ import datetime
 import fnmatch
 import io
 import itertools
+import functools
 import os
 import pstats
 import random
@@ -1762,6 +1763,249 @@ class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
     extend_only_no_recache = extend_only_recache
     append_only_no_recache = append_only_recache
 
+
+#-------------------------------------------------------------------------------
+
+class IndexHierarchySetOperations(Perf):
+
+    NUMBER = 10
+
+    @staticmethod
+    def _split_into_w_overlap(
+            index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
+            n_parts: int,
+            ) -> tp.List[sf.IndexHierarchy]:
+        size = len(index) //  n_parts
+        half = size // 2
+
+        is_sf = isinstance(index, sf.IndexHierarchy)
+
+        indices = []
+        for i in range(n_parts):
+            if i == 0:
+                sl = slice(0, size*(i+1) + half)
+            elif i == n_parts - 1:
+                sl = slice(size * i - half, None)
+            else:
+                sl = slice(size * i - half, size*(i+1) + half)
+
+            if is_sf:
+                indices.append(index.iloc[sl])
+            else:
+                indices.append(index[sl])
+
+        return indices
+
+    @staticmethod
+    def _split_into_wo_overlap(
+            index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
+            n_parts: int,
+            ) -> tp.List[sf.IndexHierarchy]:
+        size = len(index) //  n_parts
+
+        is_sf = isinstance(index, sf.IndexHierarchy)
+
+        indices = []
+        for i in range(n_parts):
+            if i == 0:
+                sl = slice(0, size*(i+1))
+            elif i == n_parts - 1:
+                sl = slice(size * i, None)
+            else:
+                sl = slice(size * i, size*(i+1))
+
+            if is_sf:
+                indices.append(index.iloc[sl])
+            else:
+                indices.append(index[sl])
+
+        return indices
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        product_args = [tuple(string.printable), [True, False, None, object()]]
+
+        splits = [
+            slice(0, 10),
+            slice(10, 9000),
+            slice(9000, 9000),
+            slice(8999, 10000),
+            slice(9500, None),
+            slice(4500, 67, -1),
+            [4,7,100, 101, 0, 999, 9999, 456, 2],
+            slice(0, None, 4),
+            slice(100, 2000, 5),
+        ]
+
+        self.ih1 = sf.IndexHierarchy.from_product(range(900), *product_args)
+        self.ih2 = sf.IndexHierarchy.from_product(*product_args, range(900))
+        self.mi1 = self.ih1.to_pandas()
+
+        self.n_args_a = [self.ih1.copy() for _ in range(10)]
+        self.n_args_b = self._split_into_w_overlap(self.ih1, 10)
+        self.n_args_c = self._split_into_wo_overlap(self.ih1, 10)
+        self.n_args_d = [self.ih1.iloc[split].copy() for split in splits] + [self.ih2.copy()]
+
+        # Same as n_args_a, except last copy only has one value (meaning intersection will only have 1 value)
+        self.n_args_e = [x.copy() for x in self.n_args_a]
+        self.n_args_e[-1] = self.n_args_e[-1].iloc[-1:]
+
+        self.r_args_a = [x.to_pandas() for x in self.n_args_a]
+        self.r_args_b = [x.to_pandas() for x in self.n_args_b]
+        self.r_args_c = [x.to_pandas() for x in self.n_args_c]
+        self.r_args_d = [x.to_pandas() for x in self.n_args_d]
+        self.r_args_e = [x.to_pandas() for x in self.n_args_e]
+
+        FMD_success = FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN, explanation='Suck it pandas')
+        FMD_failure = FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation='Screw you pandas')
+        self.meta = dict(
+                union_self_10x=FMD_success,
+                union_overlap_10x=FMD_success,
+                union_no_overlap_10x=FMD_success,
+                union_mixed_10x=FMD_success,
+                intersection_self_10x=FMD_failure,
+                intersection_overlap_10x=FMD_success,
+                intersection_no_overlap_10x=FMD_success,
+                intersection_mixed_10x=FMD_success,
+                intersection_self_9x_with_stub=FMD_success,
+                difference_self_10x=FMD_success,
+                difference_overlap_10x=FMD_success,
+                difference_no_overlap_10x=FMD_success,
+                difference_mixed_10x=FMD_success,
+                )
+
+
+class IndexHierarchySetOperations_N(IndexHierarchySetOperations, Native):
+    def union_self_10x(self) -> None:
+        self.ih1.union(*self.n_args_a)
+
+    def union_overlap_10x(self) -> None:
+        self.ih1.union(*self.n_args_b)
+
+    def union_no_overlap_10x(self) -> None:
+        self.ih1.union(*self.n_args_c)
+
+    def union_mixed_10x(self) -> None:
+        self.ih1.union(*self.n_args_d)
+
+    # ---------------------------------------------------------------------------
+
+    def intersection_self_10x(self) -> None:
+        # Constant intersections with self. Opportunity for quick exit.
+        self.ih1.intersection(*self.n_args_a)
+
+    def intersection_overlap_10x(self) -> None:
+        # Decent case scenario - will eventually be empty leading to early exit
+        self.ih1.intersection(*self.n_args_b)
+
+    def intersection_no_overlap_10x(self) -> None:
+        # Best case scenario - 1st iteration will be empty leading to early exit
+        self.ih1.intersection(*self.n_args_c)
+
+    def intersection_mixed_10x(self) -> None:
+        # Best case scenario - 1st iteration will be empty leading to early exit
+        self.ih1.intersection(*self.n_args_d)
+
+    def intersection_self_9x_with_stub(self) -> None:
+        # Worst case scenario - iterate everything, final result has 1 value,
+        # meaning we then have to remove the union bloat
+        self.ih1.intersection(*self.n_args_e)
+
+    # ---------------------------------------------------------------------------
+
+    def difference_self_10x(self) -> None:
+        self.ih1.difference(*self.n_args_a)
+
+    def difference_overlap_10x(self) -> None:
+        self.ih1.difference(*self.n_args_b)
+
+    def difference_no_overlap_10x(self) -> None:
+        self.ih1.difference(*self.n_args_c)
+
+    def difference_mixed_10x(self) -> None:
+        self.ih1.difference(*self.n_args_d)
+
+
+class IndexHierarchySetOperations_R(IndexHierarchySetOperations, Reference):
+
+    @staticmethod
+    def _union(first: pd.MultiIndex, *others: pd.MultiIndex) -> None:
+        for index in others:
+            first = first.union(index, sort=False)
+
+    @staticmethod
+    def _intersection(first: pd.MultiIndex, *others: pd.MultiIndex) -> None:
+        for index in others:
+            first = first.intersection(index, sort=False)
+
+    @staticmethod
+    def _difference(first: pd.MultiIndex, *others: pd.MultiIndex) -> None:
+        for index in others:
+            first = first.difference(index, sort=False)
+
+    def union_self_10x(self) -> None:
+        self._union(self.mi1, *self.r_args_a)
+
+    def union_overlap_10x(self) -> None:
+        self._union(self.mi1, *self.r_args_b)
+
+    def union_no_overlap_10x(self) -> None:
+        self._union(self.mi1, *self.r_args_c)
+
+    def union_mixed_10x(self) -> None:
+        self._union(self.mi1, *self.r_args_d)
+
+    # ---------------------------------------------------------------------------
+
+    def intersection_self_10x(self) -> None:
+        self._intersection(self.mi1, *self.r_args_a)
+
+    def intersection_overlap_10x(self) -> None:
+        self._intersection(self.mi1, *self.r_args_b)
+
+    def intersection_no_overlap_10x(self) -> None:
+        self._intersection(self.mi1, *self.r_args_c)
+
+    def intersection_mixed_10x(self) -> None:
+        self._intersection(self.mi1, *self.r_args_d)
+
+    def intersection_self_9x_with_stub(self) -> None:
+        self._intersection(self.mi1, *self.r_args_e)
+
+    # ---------------------------------------------------------------------------
+
+    def difference_self_10x(self) -> None:
+        self._difference(self.mi1, *self.r_args_a)
+
+    def difference_overlap_10x(self) -> None:
+        self._difference(self.mi1, *self.r_args_b)
+
+    def difference_no_overlap_10x(self) -> None:
+        self._difference(self.mi1, *self.r_args_c)
+
+    def difference_mixed_10x(self) -> None:
+        self._difference(self.mi1, *self.r_args_d)
+
+"""
+name                                                       iterations Native  Reference n/r    r/n       win    status explanation
+IndexHierarchySetOperations.difference_mixed_10x           10.0       0.7502  4.2103    0.1782 5.6125    True   ✓      Suck it pandas
+IndexHierarchySetOperations.difference_no_overlap_10x      10.0       0.5087  3.9617    0.1284 7.7874    True   ✓      Suck it pandas
+IndexHierarchySetOperations.difference_overlap_10x         10.0       0.5155  4.6849    0.11   9.0881    True   ✓      Suck it pandas
+IndexHierarchySetOperations.difference_self_10x            10.0       0.3038  8.5467    0.0355 28.134    True   ✓      Suck it pandas
+
+name                                                       iterations Native  Reference n/r    r/n       win    status explanation
+IndexHierarchySetOperations.intersection_mixed_10x         10.0       0.0017  1.9046    0.0009 1120.5116 True   ✓      Suck it pandas
+IndexHierarchySetOperations.intersection_no_overlap_10x    10.0       0.037   0.9221    0.0402 24.8992   True   ✓      Suck it pandas
+IndexHierarchySetOperations.intersection_overlap_10x       10.0       0.0627  2.7381    0.0229 43.6522   True   ✓      Suck it pandas
+IndexHierarchySetOperations.intersection_self_10x          10.0       4.7025  2.1827    2.1545 0.4642    False  ?      Screw you pandas
+IndexHierarchySetOperations.intersection_self_9x_with_stub 10.0       1.2958  2.0229    0.6406 1.5611    True   ✓      Suck it pandas
+
+IndexHierarchySetOperations.union_mixed_10x                10.0       0.6749  12.9996   0.0519 19.2607   True   ✓      Suck it pandas
+IndexHierarchySetOperations.union_no_overlap_10x           10.0       0.2331  10.5962   0.022  45.4626   True   ✓      Suck it pandas
+IndexHierarchySetOperations.union_overlap_10x              10.0       0.36    12.4518   0.0289 34.5915   True   ✓      Suck it pandas
+IndexHierarchySetOperations.union_self_10x                 10.0       1.113   1.7538    0.6346 1.5758    True   ✓      Suck it pandas
+"""
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
