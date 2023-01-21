@@ -67,8 +67,6 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
-# from static_frame.core.node_selector import InterfaceConsolidate
-
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -87,6 +85,9 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
+
+# from static_frame.core.node_selector import InterfaceConsolidate
+
 
 #-------------------------------------------------------------------------------
 
