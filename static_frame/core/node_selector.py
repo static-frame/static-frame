@@ -345,3 +345,5 @@ class InterfaceConsolidate(Interface[TContainer]):
         Apply to all columns.
         '''
         return self._func_getitem(NULL_SLICE)
+
+    # NOTE: might add a property that exposes a frame of block shapes and dtype per row, something like cols, shape, dtype
