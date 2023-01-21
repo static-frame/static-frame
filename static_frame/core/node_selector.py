@@ -361,8 +361,20 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame
-        def gen() -> tp.Tuple[np.dtype, np.Tuple[int, ...], int]:
-            for block in self._container._blocks._blocks: # type: ignore
-                yield block.dtype, block.shape, block.ndim
+        columns = self._container.columns
 
-        return Frame.from_records(gen(), columns=('dtype', 'shape', 'ndim')) #type: ignore
+        def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
+            pos = 0
+            nonlocal columns
+
+            for block in self._container._blocks._blocks: # type: ignore
+                width = 1 if block.ndim == 1 else block.shape[1]
+                if pos + width >= len(columns):
+                    end = None
+                else:
+                    end = columns[pos + width]
+                c = slice(columns[pos], end)
+                pos += width
+                yield c, block.dtype, block.shape, block.ndim
+
+        return Frame.from_records(gen(), columns=('columns', 'dtype', 'shape', 'ndim')) #type: ignore

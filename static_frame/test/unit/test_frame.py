@@ -15198,5 +15198,21 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(), f1.to_pairs())
         self.assertEqual(f2._blocks.shapes.tolist(), [(3,), (3, 2), (3,)])
 
+    def test_frame_consolidate_c(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate['b':'c']
+        post = f2.consolidate.status
+        self.assertEqual(post.to_pairs(),
+                (('columns', ((0, slice('a', 'b', None)), (1, slice('b', 'd', None)), (2, slice('d', None, None)))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))))
+                )
+
+
 if __name__ == '__main__':
     unittest.main()
