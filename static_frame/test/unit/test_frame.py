@@ -15209,9 +15209,11 @@ class TestUnit(TestCase):
                 )
         f2 = f1.consolidate['b':'c']
         post = f2.consolidate.status
+
+
         self.assertEqual(post.to_pairs(),
-                (('columns', ((0, slice('a', 'b', None)), (1, slice('b', 'd', None)), (2, slice('d', None, None)))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))))
-                )
+                (('loc', ((0, 'a'), (1, slice('b', 'c', None)), (2, 'd'))), ('iloc', ((0, slice(0, 1, None)), (1, slice(1, 3, None)), (2, slice(3, None, None)))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))), ('owndata', ((0, True), (1, True), (2, True))), ('f_contiguous', ((0, True), (1, False), (2, True))), ('c_contiguous', ((0, True), (1, True), (2, True))))
+        )
 
 
 if __name__ == '__main__':

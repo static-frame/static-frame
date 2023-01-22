@@ -361,20 +361,37 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame
+
+        flag_attrs =('owndata', 'f_contiguous', 'c_contiguous')
         columns = self._container.columns # type: ignore
 
         def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
-            pos = 0
+            iloc_start = 0
             nonlocal columns
 
-            for block in self._container._blocks._blocks: # type: ignore
-                width = 1 if block.ndim == 1 else block.shape[1]
-                if pos + width >= len(columns):
-                    end = None
-                else:
-                    end = columns[pos + width]
-                c = slice(columns[pos], end)
-                pos += width
-                yield c, block.dtype, block.shape, block.ndim
+            for b in self._container._blocks._blocks: # type: ignore
+                width = 1 if b.ndim == 1 else b.shape[1]
 
-        return Frame.from_records(gen(), columns=('columns', 'dtype', 'shape', 'ndim')) #type: ignore
+                iloc_end = iloc_start + width
+                if iloc_end >= len(columns):
+                    iloc_slice = slice(iloc_start, None)
+                else:
+                    iloc_slice = slice(iloc_start, iloc_end)
+
+                sub = columns[iloc_slice] # returns a column
+                if len(sub) == 1:
+                    loc = sub[0]
+                else: # get inclusive slice
+                    loc = slice(sub[0], sub[-1])
+
+                yield [loc, iloc_slice, b.dtype, b.shape, b.ndim] + [
+                    getattr(b.flags, attr) for attr in flag_attrs]
+
+                iloc_start = iloc_end
+
+        return Frame.from_records(gen(),
+            columns=('loc', 'iloc', 'dtype', 'shape', 'ndim') + flag_attrs
+            ) #type: ignore
+
+
+
