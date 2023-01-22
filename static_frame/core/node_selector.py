@@ -379,6 +379,7 @@ class InterfaceConsolidate(Interface[TContainer]):
                     iloc_slice = slice(iloc_start, iloc_end)
 
                 sub = columns[iloc_slice] # returns a column
+                iloc: tp.Union[int, slice]
                 if len(sub) == 1:
                     loc = sub[0] #type: ignore
                     iloc = iloc_start
