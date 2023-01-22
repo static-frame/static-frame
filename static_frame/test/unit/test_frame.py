@@ -15206,6 +15206,7 @@ class TestUnit(TestCase):
                 (5, 6, 8)),
                 columns=('a', 'b', 'c', 'd'),
                 index=('x', 'y', 'z'),
+                dtypes=np.int64,
                 )
         f2 = f1.consolidate['b':'c']
         post = f2.consolidate.status
