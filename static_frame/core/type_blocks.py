@@ -1813,13 +1813,14 @@ class TypeBlocks(ContainerOperand):
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
-                    target_start = target_slice.start #type: ignore
-                    target_stop = target_slice.stop #type: ignore
+                    target_start = target_slice.start if target_slice.start is not None else part_start_last #type: ignore
+                    target_stop = target_slice.stop if target_slice.stop is not None else b.shape[1] #type: ignore
                 else: # it is an integer
                     target_start = target_slice
                     target_stop = target_slice + 1 #type: ignore
 
                 assert target_start is not None and target_stop is not None
+
                 if target_start > part_start_last:
                     yield from consolidate_and_clear()
                     # yield un changed components before and after

@@ -15215,6 +15215,21 @@ class TestUnit(TestCase):
                 (('loc', ((0, 'a'), (1, slice('b', 'c', None)), (2, 'd'))), ('iloc', ((0, slice(0, 1, None)), (1, slice(1, 3, None)), (2, slice(3, None, None)))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))), ('owndata', ((0, True), (1, True), (2, True))), ('f_contiguous', ((0, True), (1, False), (2, True))), ('c_contiguous', ((0, True), (1, True), (2, True))))
                 )
 
+    def test_frame_consolidate_d(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate['b':'c']
+        f3 = f2.consolidate()
+        self.assertEqual(f3.consolidate.status.to_pairs(),
+                (('loc', ((0, slice('a', 'd', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 4)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
+                )
 
 if __name__ == '__main__':
     unittest.main()
