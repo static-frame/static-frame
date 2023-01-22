@@ -381,10 +381,12 @@ class InterfaceConsolidate(Interface[TContainer]):
                 sub = columns[iloc_slice] # returns a column
                 if len(sub) == 1:
                     loc = sub[0] #type: ignore
+                    iloc = iloc_start
                 else: # get inclusive slice
                     loc = slice(sub[0], sub[-1]) #type: ignore
+                    iloc = iloc_slice
 
-                yield [loc, iloc_slice, b.dtype, b.shape, b.ndim] + [
+                yield [loc, iloc, b.dtype, b.shape, b.ndim] + [
                     getattr(b.flags, attr) for attr in flag_attrs]
 
                 iloc_start = iloc_end
