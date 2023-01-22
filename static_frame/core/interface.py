@@ -86,7 +86,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
-# from static_frame.core.node_selector import InterfaceConsolidate
+from static_frame.core.node_selector import InterfaceConsolidate
 
 
 #-------------------------------------------------------------------------------
@@ -591,41 +591,57 @@ class InterfaceRecord(tp.NamedTuple):
             ) -> tp.Iterator['InterfaceRecord']:
         '''Interfaces that are not full selectors or via but define an INTERFACE component.
         '''
-        for field in obj.INTERFACE:
-            doc = Features.scrub_doc(
-                    getattr(obj.__class__, field).__doc__,
-                    max_doc_chars=max_doc_chars,
+        if isinstance(obj, InterfaceConsolidate):
+            for field in obj.INTERFACE:
+                doc = Features.scrub_doc(
+                        getattr(obj.__class__, field).__doc__,
+                        max_doc_chars=max_doc_chars,
+                        )
+                if field == 'status':
+                    delegate_obj = getattr(obj.__class__, field) # from class for property
+                    assert isinstance(delegate_obj, property)
+                    yield cls(cls_name,
+                            InterfaceGroup.Method,
+                            f'{name}.{field}', # manual construct signature
+                            doc,
+                            reference,
+                            is_attr=True,
+                            signature_no_args=f'{name}.{field}'
+                            )
+                else:
+                    delegate_reference = f'{obj.__class__.__name__}.{field}'
+                    delegate_obj = getattr(obj, field)
+                    signature, signature_no_args = _get_signatures(
+                            name,
+                            delegate_obj,
+                            is_getitem=field == Features.GETITEM,
+                            max_args=max_args,
+                            )
+                    yield cls(cls_name,
+                            InterfaceGroup.Method,
+                            signature,
+                            doc,
+                            reference,
+                            delegate_reference=delegate_reference,
+                            signature_no_args=signature_no_args
+                            )
+        else:
+            # TypeBlocks has a consolidate method
+            signature, signature_no_args = _get_signatures(
+                    name,
+                    obj,
+                    is_getitem=False,
+                    max_args=max_args,
                     )
-            if field == 'status':
-                delegate_obj = getattr(obj.__class__, field) # from class for property
-                assert isinstance(delegate_obj, property)
-                yield cls(cls_name,
-                        InterfaceGroup.Method,
-                        f'{name}.{field}', # manual construct signature
-                        doc,
-                        reference,
-                        is_attr=True,
-                        signature_no_args=f'{name}.{field}'
-                        )
-            else:
-                delegate_reference = f'{obj.__class__.__name__}.{field}'
-                delegate_obj = getattr(obj, field)
-                signature, signature_no_args = _get_signatures(
-                        name,
-                        delegate_obj,
-                        is_getitem=field == Features.GETITEM,
-                        max_args=max_args,
-                        )
-                yield cls(cls_name,
-                        InterfaceGroup.Method,
-                        signature,
-                        doc,
-                        reference,
-                        use_signature=True,
-                        is_attr=False,
-                        delegate_reference=delegate_reference,
-                        signature_no_args=signature_no_args
-                        )
+            yield cls(cls_name,
+                    InterfaceGroup.Method,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
+        # import ipdb; ipdb.set_trace()
+
 
     @classmethod
     def gen_from_constructor(cls, *,
