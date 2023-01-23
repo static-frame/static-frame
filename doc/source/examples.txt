@@ -11905,23 +11905,23 @@ r          4       4
 <int64>    <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate['a':'c']
 >>> f2.consolidate.status
 <Frame>
-<Index> loc                  iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc                  iloc              dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       slice('a', 'c', N... slice(0, 3, None)    int64    (4, 3)   2       True    False        True
-1       d                    slice(3, 4, None)    bool     (4,)     1       True    True         True
-2       e                    slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <object>             <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       slice('a', 'c', N... slice(0, 3, None) int64    (4, 3)   2       True    False        True
+1       d                    3                 bool     (4,)     1       True    True         True
+2       e                    4                 bool     (4,)     1       True    True         True
+<int64> <object>             <object>          <object> <object> <int64> <bool>  <bool>       <bool>
 #end_Frame-consolidate[]
 
 #start_Frame-consolidate()
@@ -11937,14 +11937,14 @@ r          4       4
 <int64>    <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -11968,14 +11968,14 @@ r          4       4
 <int64>    <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -20017,23 +20017,23 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate['a':'c']
 >>> f2.consolidate.status
 <Frame>
-<Index> loc                  iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc                  iloc              dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       slice('a', 'c', N... slice(0, 3, None)    int64    (4, 3)   2       True    False        True
-1       d                    slice(3, 4, None)    bool     (4,)     1       True    True         True
-2       e                    slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <object>             <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       slice('a', 'c', N... slice(0, 3, None) int64    (4, 3)   2       True    False        True
+1       d                    3                 bool     (4,)     1       True    True         True
+2       e                    4                 bool     (4,)     1       True    True         True
+<int64> <object>             <object>          <object> <object> <int64> <bool>  <bool>       <bool>
 #end_FrameHE-consolidate[]
 
 #start_FrameHE-consolidate()
@@ -20049,14 +20049,14 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -20080,14 +20080,14 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -28101,23 +28101,23 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate['a':'c']
 >>> f2.consolidate.status
 <Frame>
-<Index> loc                  iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc                  iloc              dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       slice('a', 'c', N... slice(0, 3, None)    int64    (4, 3)   2       True    False        True
-1       d                    slice(3, 4, None)    bool     (4,)     1       True    True         True
-2       e                    slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <object>             <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       slice('a', 'c', N... slice(0, 3, None) int64    (4, 3)   2       True    False        True
+1       d                    3                 bool     (4,)     1       True    True         True
+2       e                    4                 bool     (4,)     1       True    True         True
+<int64> <object>             <object>          <object> <object> <int64> <bool>  <bool>       <bool>
 #end_FrameGO-consolidate[]
 
 #start_FrameGO-consolidate()
@@ -28133,14 +28133,14 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -28164,14 +28164,14 @@ r            4       4
 <int64>      <int64> <int64> <int64> <bool> <bool>
 >>> f1.consolidate.status
 <Frame>
-<Index> loc   iloc                 dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
+<Index> loc   iloc    dtype    shape    ndim    owndata f_contiguous c_contiguous <<U12>
 <Index>
-0       a     slice(0, 1, None)    int64    (4,)     1       True    True         True
-1       b     slice(1, 2, None)    int64    (4,)     1       True    True         True
-2       c     slice(2, 3, None)    int64    (4,)     1       True    True         True
-3       d     slice(3, 4, None)    bool     (4,)     1       True    True         True
-4       e     slice(4, None, None) bool     (4,)     1       True    True         True
-<int64> <<U1> <object>             <object> <object> <int64> <bool>  <bool>       <bool>
+0       a     0       int64    (4,)     1       True    True         True
+1       b     1       int64    (4,)     1       True    True         True
+2       c     2       int64    (4,)     1       True    True         True
+3       d     3       bool     (4,)     1       True    True         True
+4       e     4       bool     (4,)     1       True    True         True
+<int64> <<U1> <int64> <object> <object> <int64> <bool>  <bool>       <bool>
 >>> f2 = f1.consolidate()
 >>> f2.consolidate.status
 <Frame>
@@ -71164,13 +71164,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f8f105e1310> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f1108323310> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f8f105e13a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f11083233a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -71218,13 +71218,13 @@ False            True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f8fbfbb99d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f11b69959d0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f8fbfbb5f70> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f11b6991f70> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -71487,13 +71487,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f8fbfbbd0d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f11b69990d0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f8fbfa4d670> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f11b6829670> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -71505,7 +71505,7 @@ NotImplementedError('<function median at 0x7f8fbfa4d670> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f8fbfbb9820> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f11b6995820> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -71620,13 +71620,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f8fbfbbd280>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f11b6999280>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f8fbfbb5a60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f11b6991a60> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -71682,7 +71682,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f8fbfbbd430>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f11b6999430>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -73649,13 +73649,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f8f105e1310> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f1108323310> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f8f105e13a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f11083233a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -73716,13 +73716,13 @@ False              True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f8fbfbb99d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f11b69959d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f8fbfbb5f70> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f11b6991f70> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -73993,13 +73993,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f8fbfbbd0d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f11b69990d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f8fbfa4d670> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f11b6829670> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -74011,7 +74011,7 @@ NotImplementedError('<function median at 0x7f8fbfa4d670> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f8fbfbb9820> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f11b6995820> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -74126,13 +74126,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f8fbfbbd280>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f11b6999280>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f8fbfbb5a60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f11b6991a60> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -74188,7 +74188,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f8fbfbbd430>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f11b6999430>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -84487,7 +84487,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f8eeae5b0c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f10f91d7c40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -84547,13 +84547,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f8eeae5b4c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f10e9c1af40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f8eeae5bac0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f10e9c1a5c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
