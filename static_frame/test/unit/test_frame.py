@@ -15268,6 +15268,11 @@ class TestUnit(TestCase):
                 ((0, (3, 2)), (1, (3,)), (2, (3, 2)))
                 )
 
+        f3 = f1.consolidate[:]
+        self.assertEqual(
+                f3.consolidate.status['shape'].values[0],
+                (3, 5),
+                )
 
 if __name__ == '__main__':
     unittest.main()
