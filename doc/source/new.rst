@@ -4,6 +4,8 @@ What is New in StaticFrame
 1.dev
 -----------
 
+Added ``Frame.consolidate`` interface, including ``Frame.consolidate[]`` and ``Frame.consolidate.status``.
+
 ``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
 
 Added ``index_constructors`` arguments to ``IndexHierarchy.rehierarch()``, ``Series.rehierarch()``, ``Bus.rehierarch()``, ``Yarn.rehierarch()``.
