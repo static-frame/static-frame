@@ -15249,6 +15249,24 @@ class TestUnit(TestCase):
                 (('loc', ((0, slice('a', 'e', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 5)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
         )
 
+    def test_frame_consolidate_f(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8),
+                (1, 0, 1),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                consolidate_blocks=True,
+                )
+        # NOTE: this will take a consolidated Frame and break it into three such that the target column is consolidated
+        f2 = f1.consolidate['c']
+        self.assertEqual(f2.consolidate.status['shape'].to_pairs(),
+                ((0, (3, 2)), (1, (3,)), (2, (3, 2)))
+                )
 
 
 if __name__ == '__main__':
