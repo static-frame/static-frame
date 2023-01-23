@@ -627,6 +627,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns
 
+    @property
+    def bus(self) -> tp.Union[Bus, Yarn]:
+        '''The ``Bus`` instance assigned to this ``Quilt``.
+        '''
+        return self._bus
+
     #---------------------------------------------------------------------------
 
     @property

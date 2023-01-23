@@ -1688,6 +1688,17 @@ class TestUnit(TestCase):
         self.assertEqual(hd,
             'b9caa5a602b91077d278d35f5558f3bad8d268100ec82842849a9c949de441df')
 
+    #------------------------------------------------------------------
+
+    def test_quilt_bus_a(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        b1 = q1.bus
+
+        self.assertEqual(b1.index.values.tolist(),
+            ['zZbu', 'z2Oo', 'zOyq', 'zjZQ'])
+
 
 
 if __name__ == '__main__':
