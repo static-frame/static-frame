@@ -1814,9 +1814,9 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if available is None:
-                multi_depth = True
-            else:
                 multi_depth = False
+            else:
+                multi_depth = True
                 unmatchable = ~available
 
             if key_at_depth.start is not None:
