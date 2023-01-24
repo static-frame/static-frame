@@ -1,19 +1,20 @@
-from functools import partial
 import typing as tp
+from functools import partial
 
 import numpy as np
+
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
-from static_frame.core.index import Index
-from static_frame.core.container_util import index_many_to_one
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
+from static_frame.core.util import intersect1d
+from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import intersect1d
 
 
 class ValidationResult(tp.NamedTuple):

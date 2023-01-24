@@ -2,9 +2,9 @@ import argparse
 import cProfile
 import datetime
 import fnmatch
+import functools
 import io
 import itertools
-import functools
 import os
 import pstats
 import random
@@ -25,8 +25,8 @@ from pyinstrument import Profiler  # type: ignore
 sys.path.append(os.getcwd())
 
 import static_frame as sf
-from static_frame.core.index_base import IndexBase
 from static_frame.core.display_color import HexColor
+from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
 
 
