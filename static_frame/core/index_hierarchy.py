@@ -2372,6 +2372,16 @@ class IndexHierarchy(IndexBase):
                 if self_index.__class__ != other_index.__class__:
                     return False
 
+        # Might be a shallow copy!
+        if (
+            self._blocks is other._blocks
+            or self._blocks.values is other._blocks.values
+            or (
+                tuple(map(id, self._blocks._blocks)) == tuple(map(id, other._blocks._blocks))
+            )
+        ):
+            return True
+
         # indices & indexers are encoded in values_at_depth
         for i in range(self.depth):
             if not arrays_equal(

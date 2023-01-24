@@ -1,5 +1,6 @@
 from functools import partial
 import typing as tp
+from collections import defaultdict
 
 import numpy as np
 from static_frame.core.exception import ErrorInitIndex
@@ -20,8 +21,13 @@ class ValidationResult(tp.NamedTuple):
     indices: tp.List[IndexHierarchy]
     depth: int
     any_dropped: bool
+    any_shallow_copies: bool
     name: tp.Hashable
     index_constructors: tp.List[IndexConstructor]
+
+
+def _get_shallow_copy_key(ih: IndexHierarchy) -> tp.Tuple[int, ...]:
+    return tuple(map(id, ih._blocks._blocks))
 
 
 def _validate_and_process_indices(
@@ -29,6 +35,10 @@ def _validate_and_process_indices(
         ) -> ValidationResult:
     '''
     Common sanitization for IndexHierarchy operations.
+    1. Remove empty or cloned indices
+    2. Ensure all indices have same depth
+    3. Use the first index's name, if all indices have same name
+    4. Use the first index's index_constructors, if all indices have same index_constructors
 
     This will also invoke recache on all indices due to the `.size` call
     '''
@@ -37,39 +47,55 @@ def _validate_and_process_indices(
     name: tp.Hashable = indices[0].name
     index_constructors = list(indices[0]._index_constructors)
 
-    depth = None
-    filtered: tp.List[IndexHierarchy] = []
+    shallow_copies: tp.DefaultDict[tp.Tuple[int, ...], int] = defaultdict(int)
+
+    depth: tp.Optional[int] = None
+    filtered_indices: tp.List[IndexHierarchy] = []
     for idx in indices:
-        if idx.name != name:
+        if name is not None and idx.name != name:
             name = None
 
-        if index_constructors:
-            for i, ctor in enumerate(idx._index_constructors):
-                if ctor != index_constructors[i]:
-                    index_constructors = []
-                    break
+        for ctor, other_ctor in zip(idx._index_constructors, index_constructors):
+            if other_ctor != ctor:
+                index_constructors = []
+                break
 
         # Drop empty indices
         if not idx.size:
             any_dropped = True
             continue
 
-        filtered.append(idx)
+        filtered_indices.append(idx)
 
         if depth is None:
             depth = idx.depth
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
 
-    if not index_constructors:
-        index_constructors = [Index] * depth
+        shallow_copies[_get_shallow_copy_key(idx)] += 1
+
+    shallow_copies.default_factory = None
+    any_shallow_copies = False
+    filtered_unique_indices: tp.List[IndexHierarchy] = []
+
+    # Get rid of all shallow copies, leaving only the first instance.
+    for idx in reversed(filtered_indices):
+        key = _get_shallow_copy_key(idx)
+
+        if shallow_copies[key] > 1:
+            shallow_copies[key] -= 1
+            any_shallow_copies = True
+        else:
+            # Only append the first instance of a shallow copy
+            filtered_unique_indices.append(idx)
 
     return ValidationResult(
-            indices=filtered,
+            indices=filtered_unique_indices[::-1],
             depth=depth,
             any_dropped=any_dropped,
+            any_shallow_copies=any_shallow_copies,
             name=name,
-            index_constructors=index_constructors,
+            index_constructors=index_constructors or [Index] * depth,
             )
 
 
@@ -200,7 +226,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     if not lhs.size:
         return return_specific(lhs)
 
-    indices, depth, any_dropped, name, index_constructors = _validate_and_process_indices(indices)
+    indices, depth, any_dropped, _, name, index_constructors = _validate_and_process_indices(indices)
 
     if any_dropped:
         return return_empty(index_constructors, name)
@@ -285,7 +311,11 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     if not lhs.size:
         return return_specific(lhs)
 
-    indices, depth, _, name, index_constructors = _validate_and_process_indices(indices)
+    indices, depth, _, any_shallow_copies, name, index_constructors = _validate_and_process_indices(indices)
+
+    if any_shallow_copies:
+        # The presence of any duplicates always means an empty result: `S - S === {}``
+        return return_empty(index_constructors, name)
 
     if len(indices) == 1 and indices[0] is lhs:
         # All the other indices were empty!
@@ -306,7 +336,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
             )
 
     # Order the rest largest to smallest reversed (we will pop)
-    indices = sorted(indices[1:], key=lambda x: x.size)
+    indices = sorted(indices[1:], key=lambda x: len(x))
 
     difference_encodings = get_encodings(lhs)
 
@@ -362,7 +392,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         In every other case, it will most likely NOT be sorted.
     '''
     lhs = indices[0]
-    indices, depth, _, name, index_constructors = _validate_and_process_indices(indices)
+    indices, depth, _, _, name, index_constructors = _validate_and_process_indices(indices)
 
     # 1. Find union_indices
     union_indices: tp.List[Index] = build_union_indices(indices, index_constructors, depth)

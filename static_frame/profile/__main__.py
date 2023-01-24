@@ -25,6 +25,7 @@ from pyinstrument import Profiler  # type: ignore
 sys.path.append(os.getcwd())
 
 import static_frame as sf
+from static_frame.core.index_base import IndexBase
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import AnyCallable
 
@@ -43,6 +44,7 @@ class PerfStatus(Enum):
         if self.value[1]:
             return HexColor.format_terminal('darkgreen', str(v))
         return HexColor.format_terminal('darkorange', str(v))
+
 
 class FunctionMetaData(tp.NamedTuple):
     line_target: tp.Optional[AnyCallable] = None
@@ -66,9 +68,11 @@ class Perf:
             if not name.startswith('_') and callable(getattr(self, name)):
                 yield name
 
+
 class PerfPrivate(Perf):
     '''For "internal" performance tests that are not part of systematic testing.
     '''
+
 
 class PerfKey: pass
 class Native(PerfKey): pass
@@ -88,6 +92,7 @@ class IndexIterLabelApply(Perf):
         self.sfi_int = ff.parse('s(100,1)|i(I,int)|c(I,int)').index
         self.pdi_int = self.sfi_int.to_pandas()
 
+
 class IndexIterLabelApply_N(IndexIterLabelApply, Native):
 
     def index_int(self) -> None:
@@ -95,6 +100,7 @@ class IndexIterLabelApply_N(IndexIterLabelApply, Native):
 
     def index_int_dtype(self) -> None:
         self.sfi_int.iter_label().apply(lambda s: s * 10, dtype=int)
+
 
 class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
 
@@ -107,8 +113,8 @@ class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
         pd.Series(self.pdi_int).apply(lambda s: s * 10)
 
 
-
 #-------------------------------------------------------------------------------
+
 class SeriesIsNa(Perf):
     NUMBER = 10_000
 
@@ -139,6 +145,7 @@ class SeriesIsNa(Perf):
                 ),
             }
 
+
 class SeriesIsNa_N(SeriesIsNa, Native):
 
     def float_index_auto(self) -> None:
@@ -149,6 +156,7 @@ class SeriesIsNa_N(SeriesIsNa, Native):
 
     def bool_index_auto(self) -> None:
         self.sfs_bool.isna()
+
 
 class SeriesIsNa_R(SeriesIsNa, Reference):
 
@@ -161,7 +169,9 @@ class SeriesIsNa_R(SeriesIsNa, Reference):
     def bool_index_auto(self) -> None:
         self.pds_bool.isna()
 
+
 #-------------------------------------------------------------------------------
+
 class SeriesDropNa(Perf):
     NUMBER = 200
 
@@ -221,6 +231,7 @@ class SeriesDropNa(Perf):
                 )
             }
 
+
 class SeriesDropNa_N(SeriesDropNa, Native):
 
     def float_index_auto(self) -> None:
@@ -277,9 +288,8 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
         assert 'zDa2' in s
 
 
-
-
 #-------------------------------------------------------------------------------
+
 class SeriesFillNa(Perf):
     NUMBER = 100
 
@@ -310,6 +320,7 @@ class SeriesFillNa(Perf):
                 ),
             }
 
+
 class SeriesFillNa_N(SeriesFillNa, Native):
 
     def float_index_str(self) -> None:
@@ -331,7 +342,9 @@ class SeriesFillNa_R(SeriesFillNa, Reference):
         s = self.pds_object_str.fillna('')
         assert 'zDa2' in s
 
+
 #-------------------------------------------------------------------------------
+
 class SeriesDropDuplicated(Perf):
     NUMBER = 500
 
@@ -366,6 +379,7 @@ class SeriesDropDuplicated(Perf):
                 ),
             }
 
+
 class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
 
     def float_index_str(self) -> None:
@@ -378,6 +392,7 @@ class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
 
     def bool_index_str(self) -> None:
         self.sfs_bool.drop_duplicated()
+
 
 class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
 
@@ -392,7 +407,9 @@ class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
     def bool_index_str(self) -> None:
         self.pds_bool.drop_duplicates(keep=False)
 
+
 #-------------------------------------------------------------------------------
+
 class SeriesIterElementApply(Perf):
     NUMBER = 500
 
@@ -430,6 +447,7 @@ class SeriesIterElementApply(Perf):
                 ),
             }
 
+
 class SeriesIterElementApply_N(SeriesIterElementApply, Native):
 
     def float_index_str(self) -> None:
@@ -440,6 +458,7 @@ class SeriesIterElementApply_N(SeriesIterElementApply, Native):
 
     def bool_index_str(self) -> None:
         self.sfs_bool.iter_element().apply(lambda x: str(x))
+
 
 class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
 
@@ -454,6 +473,7 @@ class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
 
 
 #-------------------------------------------------------------------------------
+
 class SeriesViaStr(Perf):
     NUMBER = 100
 
@@ -474,6 +494,7 @@ class SeriesViaStr(Perf):
                 ),
             }
 
+
 class SeriesViaStr_N(SeriesViaStr, Native):
 
     def index_auto_find(self) -> None:
@@ -482,6 +503,7 @@ class SeriesViaStr_N(SeriesViaStr, Native):
 
     def index_auto_contains(self) -> None:
         s = self.sfs.via_str.contains('jh')
+
 
 class SeriesViaStr_R(SeriesViaStr, Reference):
 
@@ -493,10 +515,8 @@ class SeriesViaStr_R(SeriesViaStr, Reference):
         s = self.pds.str.contains('jh')
 
 
-
-
-
 #-------------------------------------------------------------------------------
+
 class FrameDropNa(Perf):
     NUMBER = 100
 
@@ -539,6 +559,7 @@ class FrameDropNa(Perf):
                 ),
             }
 
+
 class FrameDropNa_N(FrameDropNa, Native):
 
     def float_index_auto_row(self) -> None:
@@ -570,6 +591,7 @@ class FrameDropNa_R(FrameDropNa, Reference):
     def float_index_str_column(self) -> None:
         self.pdf_float_str_column.dropna(axis=1)
 
+
 #-------------------------------------------------------------------------------
 
 class FrameILoc(Perf):
@@ -592,6 +614,7 @@ class FrameILoc(Perf):
                 ),
             }
 
+
 class FrameILoc_N(FrameILoc, Native):
 
     def element_index_auto(self) -> None:
@@ -600,6 +623,7 @@ class FrameILoc_N(FrameILoc, Native):
     def element_index_str(self) -> None:
         self.sff2.iloc[50, 50]
 
+
 class FrameILoc_R(FrameILoc, Reference):
 
     def element_index_auto(self) -> None:
@@ -607,6 +631,7 @@ class FrameILoc_R(FrameILoc, Reference):
 
     def element_index_str(self) -> None:
         self.pdf2.iloc[50, 50]
+
 
 #-------------------------------------------------------------------------------
 
@@ -630,6 +655,7 @@ class FrameLoc(Perf):
                 ),
             }
 
+
 class FrameLoc_N(FrameLoc, Native):
 
     def element_index_auto(self) -> None:
@@ -637,6 +663,7 @@ class FrameLoc_N(FrameLoc, Native):
 
     def element_index_str(self) -> None:
         self.sff2.loc['zGuv', 'zGuv']
+
 
 class FrameLoc_R(FrameLoc, Reference):
 
@@ -696,6 +723,7 @@ class FrameIterSeriesApply(Perf):
                 ),
             }
 
+
 class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
 
     def float_index_str_row(self) -> None:
@@ -732,7 +760,6 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
     def mixed_index_str_column_dtype(self) -> None:
         s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1], dtype=str)
         assert -149082 in s.index
-
 
 
 class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
@@ -809,6 +836,7 @@ class FrameIterTuple(Perf):
                 ),
             }
 
+
 class FrameIterTuple_N(FrameIterTuple, Native):
 
     def float_index_str_row(self) -> None:
@@ -822,6 +850,7 @@ class FrameIterTuple_N(FrameIterTuple, Native):
     def uniform_index_str_row(self) -> None:
         rows = list(self.sff_uniform.iter_tuple(axis=1))
         assert len(rows) == 10000
+
 
 class FrameIterTuple_R(FrameIterTuple, Reference):
 
@@ -837,7 +866,9 @@ class FrameIterTuple_R(FrameIterTuple, Reference):
         rows = list(self.pdf_uniform.itertuples(index=False))
         assert len(rows) == 10000
 
+
 #-------------------------------------------------------------------------------
+
 class FrameIterGroupApply(Perf):
     NUMBER = 1000
 
@@ -867,6 +898,7 @@ class FrameIterGroupApply(Perf):
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             }
+
 
 class FrameIterGroupApply_N(FrameIterGroupApply, Native):
 
@@ -903,6 +935,7 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 
 
 #-------------------------------------------------------------------------------
+
 class Pivot(Perf):
     NUMBER = 150
 
@@ -961,6 +994,7 @@ class Pivot(Perf):
                 ),
             }
 
+
 class Pivot_N(Pivot, Native):
 
     def index1_columns0_data2(self) -> None:
@@ -1000,6 +1034,7 @@ class Pivot_R(Pivot, Reference):
 
 
 #-------------------------------------------------------------------------------
+
 class JoinLeft(Perf):
     NUMBER = 100
 
@@ -1021,11 +1056,13 @@ class JoinLeft(Perf):
                 ),
             }
 
+
 class JoinLeft_N(JoinLeft, Native):
 
     def basic(self) -> None:
         post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
         assert post.shape == (5046, 7)
+
 
 class JoinLeft_R(JoinLeft, Reference):
 
@@ -1034,8 +1071,8 @@ class JoinLeft_R(JoinLeft, Reference):
         assert post.shape == (5046, 7)
 
 
-
 #-------------------------------------------------------------------------------
+
 class BusItemsZipPickle(PerfPrivate):
     NUMBER = 1
 
@@ -1062,6 +1099,7 @@ class BusItemsZipPickle(PerfPrivate):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
+
 class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 
     def int_index_str(self) -> None:
@@ -1069,12 +1107,15 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
         for label, frame in bus.items():
            assert frame.shape[0] == 2
 
+
 class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
 
     def int_index_str(self) -> None:
         pass
 
+
 #-------------------------------------------------------------------------------
+
 class FrameToParquet(Perf):
     NUMBER = 4
 
@@ -1099,6 +1140,7 @@ class FrameToParquet(Perf):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
+
 class FrameToParquet_N(FrameToParquet, Native):
 
     def write_wide_mixed_index_str(self) -> None:
@@ -1116,7 +1158,9 @@ class FrameToParquet_R(FrameToParquet, Reference):
     def write_tall_mixed_index_str(self) -> None:
         self.pdf2.to_parquet(self.fp)
 
+
 #-------------------------------------------------------------------------------
+
 class FrameToNPZ(PerfPrivate):
     NUMBER = 1
 
@@ -1136,10 +1180,12 @@ class FrameToNPZ(PerfPrivate):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
+
 class FrameToNPZ_N(FrameToNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
+
 
 class FrameToNPZ_R(FrameToNPZ, Reference):
 
@@ -1174,17 +1220,18 @@ class FrameFromNPZ(PerfPrivate):
         os.unlink(self.fp_npz)
         os.unlink(self.fp_parquet)
 
+
 class FrameFromNPZ_N(FrameFromNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_npz(self.fp_npz)
+
 
 class FrameFromNPZ_R(FrameFromNPZ, Reference):
 
     # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_parquet(self.fp_parquet)
-
 
 
 class FrameFromCSV(Perf):
@@ -1207,10 +1254,12 @@ class FrameFromCSV(Perf):
     def __del__(self) -> None:
         os.unlink(self.fp)
 
+
 class FrameFromCSV_N(FrameFromCSV, Native):
 
     def square_mixed_index_str(self) -> None:
         sf.Frame.from_csv(self.fp)
+
 
 class FrameFromCSV_R(FrameFromCSV, Reference):
 
@@ -1219,6 +1268,7 @@ class FrameFromCSV_R(FrameFromCSV, Reference):
 
 
 #-------------------------------------------------------------------------------
+
 class Group(Perf):
     NUMBER = 200
 
@@ -1250,6 +1300,7 @@ class Group(Perf):
                 ),
             }
 
+
 class Group_N(Group, Native):
 
     def wide_group_2(self) -> None:
@@ -1273,6 +1324,7 @@ class Group_R(Group, Reference):
 
 
 #-------------------------------------------------------------------------------
+
 class GroupLabel(Perf):
     NUMBER = 20
 
@@ -1296,11 +1348,13 @@ class GroupLabel(Perf):
             #     ),
             }
 
+
 class GroupLabel_N(GroupLabel, Native):
 
     def tall_group_1(self) -> None:
         post = tuple(self.sff1.iter_group_labels_items(1))
         assert len(post) == 5000
+
 
 class GroupLabel_R(GroupLabel, Reference):
 
@@ -1341,6 +1395,7 @@ class FrameFromConcat(Perf):
         #         ),
         #     }
 
+
 class FrameFromConcat_N(FrameFromConcat, Native):
 
     def tall_mixed_20(self) -> None:
@@ -1350,6 +1405,7 @@ class FrameFromConcat_N(FrameFromConcat, Native):
     def tall_uniform_20(self) -> None:
         f = sf.Frame.from_concat(self.tall_uniform_sff1, index=sf.IndexAutoFactory)
         assert f.shape == (200_000, 10)
+
 
 class FrameFromConcat_R(FrameFromConcat, Reference):
 
@@ -1833,7 +1889,7 @@ class IndexHierarchySetOperations(Perf):
             slice(8999, 10000),
             slice(9500, None),
             slice(4500, 67, -1),
-            [4,7,100, 101, 0, 999, 9999, 456, 2],
+            [4, 7, 100, 101, 0, 999, 9999, 456, 2],
             slice(0, None, 4),
             slice(100, 2000, 5),
         ]
@@ -1857,22 +1913,21 @@ class IndexHierarchySetOperations(Perf):
         self.r_args_d = [x.to_pandas() for x in self.n_args_d]
         self.r_args_e = [x.to_pandas() for x in self.n_args_e]
 
-        FMD_success = FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN, explanation='Suck it pandas')
-        FMD_failure = FunctionMetaData(perf_status=PerfStatus.UNEXPLAINED_LOSS, explanation='Screw you pandas')
+        FMD_success = functools.partial(FunctionMetaData, perf_status=PerfStatus.EXPLAINED_WIN)
         self.meta = dict(
-                union_self_10x=FMD_success,
-                union_overlap_10x=FMD_success,
-                union_no_overlap_10x=FMD_success,
-                union_mixed_10x=FMD_success,
-                intersection_self_10x=FMD_failure,
-                intersection_overlap_10x=FMD_success,
-                intersection_no_overlap_10x=FMD_success,
-                intersection_mixed_10x=FMD_success,
-                intersection_self_9x_with_stub=FMD_success,
-                difference_self_10x=FMD_success,
-                difference_overlap_10x=FMD_success,
-                difference_no_overlap_10x=FMD_success,
-                difference_mixed_10x=FMD_success,
+                union_self_10x=FMD_success(),
+                union_overlap_10x=FMD_success(),
+                union_no_overlap_10x=FMD_success(),
+                union_mixed_10x=FMD_success(),
+                intersection_self_10x=FMD_success(),
+                intersection_overlap_10x=FMD_success(),
+                intersection_no_overlap_10x=FMD_success(),
+                intersection_mixed_10x=FMD_success(),
+                intersection_self_9x_with_stub=FMD_success(),
+                difference_self_10x=FMD_success(explanation="Shortcuts to check for shallow copies"),
+                difference_overlap_10x=FMD_success(),
+                difference_no_overlap_10x=FMD_success(),
+                difference_mixed_10x=FMD_success(),
                 )
 
 
@@ -1987,25 +2042,6 @@ class IndexHierarchySetOperations_R(IndexHierarchySetOperations, Reference):
     def difference_mixed_10x(self) -> None:
         self._difference(self.mi1, *self.r_args_d)
 
-"""
-name                                                       iterations Native  Reference n/r    r/n       win    status explanation
-IndexHierarchySetOperations.difference_mixed_10x           10.0       0.7502  4.2103    0.1782 5.6125    True   ✓      Suck it pandas
-IndexHierarchySetOperations.difference_no_overlap_10x      10.0       0.5087  3.9617    0.1284 7.7874    True   ✓      Suck it pandas
-IndexHierarchySetOperations.difference_overlap_10x         10.0       0.5155  4.6849    0.11   9.0881    True   ✓      Suck it pandas
-IndexHierarchySetOperations.difference_self_10x            10.0       0.3038  8.5467    0.0355 28.134    True   ✓      Suck it pandas
-
-name                                                       iterations Native  Reference n/r    r/n       win    status explanation
-IndexHierarchySetOperations.intersection_mixed_10x         10.0       0.0017  1.9046    0.0009 1120.5116 True   ✓      Suck it pandas
-IndexHierarchySetOperations.intersection_no_overlap_10x    10.0       0.037   0.9221    0.0402 24.8992   True   ✓      Suck it pandas
-IndexHierarchySetOperations.intersection_overlap_10x       10.0       0.0627  2.7381    0.0229 43.6522   True   ✓      Suck it pandas
-IndexHierarchySetOperations.intersection_self_10x          10.0       4.7025  2.1827    2.1545 0.4642    False  ?      Screw you pandas
-IndexHierarchySetOperations.intersection_self_9x_with_stub 10.0       1.2958  2.0229    0.6406 1.5611    True   ✓      Suck it pandas
-
-IndexHierarchySetOperations.union_mixed_10x                10.0       0.6749  12.9996   0.0519 19.2607   True   ✓      Suck it pandas
-IndexHierarchySetOperations.union_no_overlap_10x           10.0       0.2331  10.5962   0.022  45.4626   True   ✓      Suck it pandas
-IndexHierarchySetOperations.union_overlap_10x              10.0       0.36    12.4518   0.0289 34.5915   True   ✓      Suck it pandas
-IndexHierarchySetOperations.union_self_10x                 10.0       1.113   1.7538    0.6346 1.5758    True   ✓      Suck it pandas
-"""
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
