@@ -4607,6 +4607,9 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels(labels)
         x = ih.loc[HLoc['b', :, 20:]]
         self.assertEqual(len(x), 4)
+        self.assertEqual(x.values.tolist(),
+            [['b', 2, 20], ['b', 3, 10], ['b', 4, 20], ['b', 5, 10]]
+            )
 
 if __name__ == '__main__':
     unittest.main()
