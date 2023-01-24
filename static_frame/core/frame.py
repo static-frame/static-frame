@@ -6491,8 +6491,8 @@ class Frame(ContainerOperand):
 
             if index_depth == 1:
                 # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
-                columns_labels = TypeBlocks.from_blocks(
-                        concat_resolved((np.array([name]), self._columns.values_at_depth(i))) # type: ignore
+                columns_labels = TypeBlocks.from_blocks( # type: ignore
+                        concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
                         for i, name in enumerate(names[0]) #type: ignore
                         )
             else:
@@ -6704,8 +6704,8 @@ class Frame(ContainerOperand):
 
             if columns_depth == 1:
                 # assume that names[0] is an iterable of labels per index depth level (one row of labels)
-                index_labels = TypeBlocks.from_blocks(
-                        concat_resolved((np.array([name]), self._index.values_at_depth(i))) # type: ignore
+                index_labels = TypeBlocks.from_blocks( # type: ignore
+                        concat_resolved((np.array([name]), self._index.values_at_depth(i)))
                         for i, name in enumerate(names[0]) # type: ignore
                         )
             else:
