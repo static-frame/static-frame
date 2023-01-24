@@ -1,8 +1,13 @@
 What is New in StaticFrame
 ===============================
 
-1.dev
+
+1.1.0
 -----------
+
+Added ``Frame.consolidate`` interface, including ``Frame.consolidate[]`` and ``Frame.consolidate.status``.
+
+Added ``Quilt.bus`` property.
 
 ``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
 

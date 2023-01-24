@@ -7,7 +7,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 from doc.build_example import to_json_bundle
-from doc.build_source import name_to_snake_case
+# from doc.build_source import name_to_snake_case
 from static_frame import __version__ as VERSION
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceSummary
@@ -17,6 +17,7 @@ def build(output: Path,
         write: bool = False,
         display: bool = False,
         component: tp.Optional[str] = None,
+        zip_output: bool = False,
         ) -> tp.Optional[str]:
     if not write and not display:
         return
@@ -26,7 +27,7 @@ def build(output: Path,
     sig_to_group = {}
     method_to_sig = defaultdict(list) # one to many mapping from unqualified methods to keys
     sigs = []
-    methods = set()
+    # methods = set()
 
     for cls in DOCUMENTED_COMPONENTS:
         inter = InterfaceSummary.to_frame(cls, #type: ignore
@@ -43,14 +44,14 @@ def build(output: Path,
             # sig_full_to_key[sig_full] = key
 
             sig_to_doc[key] = row['doc']
-            sig_to_group[key] = name_to_snake_case(row['group'])
+            sig_to_group[key] = row['group']
 
             method_to_sig[row["signature_no_args"]].append(key)
-            methods.add(row["signature_no_args"])
+            # methods.add(row["signature_no_args"])
 
     sig_to_example = to_json_bundle()
 
-    assert len(methods) == len(method_to_sig)
+    # assert len(methods) == len(method_to_sig)
     assert len(sigs) == len(sig_full_to_sig)
     assert len(sigs) == len(sig_to_doc)
     assert len(sigs) == len(sig_to_group)
@@ -64,8 +65,9 @@ def build(output: Path,
             ('sig_to_group', sig_to_group),
             ('method_to_sig', method_to_sig),
             ('sigs', sigs),
-            ('methods', tuple(sorted(methods))),
+            # ('methods', tuple(sorted(methods))),
             ('sig_to_example', sig_to_example),
+            ('metadata', {'version': VERSION})
             )
 
     if component:
@@ -74,10 +76,9 @@ def build(output: Path,
     if display:
         for name, bundle in name_bundle:
             print(json.dumps(bundle, indent=4))
-    if write:
+
+    if write and zip_output:
         fp = output / f'sf-api-{VERSION}.zip'
-        # if fp.suffix != '.zip':
-        #     raise RuntimeError('suffix must be .zip')
         if fp.exists():
             raise RuntimeError(f'output path exists: {fp}')
         with ZipFile(fp, mode='w', allowZip64=True) as archive:
@@ -85,6 +86,13 @@ def build(output: Path,
                 with archive.open(f'{name}.json', 'w', force_zip64=True) as f:
                     f.write(json.dumps(bundle).encode('utf-8'))
         return str(fp)
+
+    if write and not zip_output:
+        for name, bundle in name_bundle:
+            fp = output / f'{name}.json'
+            with open(fp, 'w') as f:
+                f.write(json.dumps(bundle))
+            print(str(fp))
 
 def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -108,6 +116,10 @@ def get_arg_parser() -> argparse.ArgumentParser:
             help='Name of JSON to process, else all.',
             default=None,
             )
+    p.add_argument('--zip',
+            help='Optionally zip output.',
+            action='store_true',
+            )
     return p
 
 
@@ -118,6 +130,7 @@ if __name__ == '__main__':
             display=options.print,
             write=options.write,
             component=options.component,
+            zip_output=options.zip,
             )
     if post:
         print(post)

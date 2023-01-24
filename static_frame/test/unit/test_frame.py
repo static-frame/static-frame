@@ -15158,9 +15158,121 @@ class TestUnit(TestCase):
             'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
             )
 
+    #---------------------------------------------------------------------------
+    def test_frame_consolidate_a(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (False, True, False),
+                (True, False, True)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate[:]
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3, 2), (3, 2)])
 
+    def test_frame_consolidate_b1(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate['a':'c']
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3), (3,)])
 
+    def test_frame_consolidate_b2(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate['b':'c']
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3,), (3, 2), (3,)])
 
+    def test_frame_consolidate_c(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate['b':'c']
+        post = f2.consolidate.status
+        self.assertEqual(post.to_pairs(),
+                (('loc', ((0, 'a'), (1, slice('b', 'c', None)), (2, 'd'))), ('iloc', ((0, 0), (1, slice(1, 3, None)), (2, 3))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))), ('owndata', ((0, True), (1, True), (2, True))), ('f_contiguous', ((0, True), (1, False), (2, True))), ('c_contiguous', ((0, True), (1, True), (2, True))))
+                )
+
+    def test_frame_consolidate_d(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate['b':'c']
+        f3 = f2.consolidate()
+        self.assertEqual(f3.consolidate.status.to_pairs(),
+                (('loc', ((0, slice('a', 'd', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 4)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
+                )
+
+    def test_frame_consolidate_e(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8),
+                (1, 0, 1),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate[['a', 'c', 'e']]
+        self.assertTrue(f1.consolidate.status.equals(f2.consolidate.status))
+        f3 = f2.consolidate()
+        self.assertEqual(f3.consolidate.status.to_pairs(),
+                (('loc', ((0, slice('a', 'e', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 5)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
+        )
+
+    def test_frame_consolidate_f(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8),
+                (1, 0, 1),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                consolidate_blocks=True,
+                )
+        # NOTE: this will take a consolidated Frame and break it into three such that the target column is consolidated
+        f2 = f1.consolidate['c']
+        self.assertEqual(f2.consolidate.status['shape'].to_pairs(),
+                ((0, (3, 2)), (1, (3,)), (2, (3, 2)))
+                )
+
+        f3 = f1.consolidate[:]
+        self.assertEqual(
+                f3.consolidate.status['shape'].values[0],
+                (3, 5),
+                )
 
 if __name__ == '__main__':
     unittest.main()
