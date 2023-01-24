@@ -312,7 +312,6 @@ class TestUnit(TestCase):
                 slice('2018-01-01', '2018-01-04'),
                 np.array(['x', 'y'])])
 
-        # this will break if we recognize this can be a slice
         self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
@@ -320,15 +319,13 @@ class TestUnit(TestCase):
                 slice('2018-01-01', '2018-01-04', 2),
                 np.array(['x', 'y'])])
 
-        # this will break if we recognize this can be a slice
-        self.assertEqual(list(post), [0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21]) # type: ignore
+        self.assertEqual(list(post), [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
                 ['x', 'y']])
 
-        # this will break if we recognize this can be a slice
         self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
@@ -341,8 +338,9 @@ class TestUnit(TestCase):
         post = ih._loc_to_iloc(HLoc['C', '2018-01-03', 'y'])
         self.assertEqual(post, 21)
 
-        post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(list(post), [13, 15]) # type: ignore
+        post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore
+        # NOTE: we assume that the depth 1 selection is independent of 'B' selection
+        self.assertEqual(list(post), [9, 11, 13, 15]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
         self.assertEqual(list(post), [12, 13, 20, 21]) # type: ignore
@@ -620,7 +618,7 @@ class TestUnit(TestCase):
 
         post2 = ih1._loc_to_iloc(HLoc['b', 10:12])
         self.assertEqual(list(post2), list(ih1_alt._loc_to_iloc(HLoc['b', 10:12])))
-        self.assertEqual(list(post2), [30, 31, 32])
+        self.assertEqual(list(post2), [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])
 
         post3 = ih1._loc_to_iloc(HLoc['b', [0, 10, 19]])
         self.assertEqual(list(post3), list(ih1_alt._loc_to_iloc(HLoc['b', [0, 10, 19]])))
@@ -4594,9 +4592,21 @@ class TestUnit(TestCase):
         hd = hidx1.via_hashlib().sha256().hexdigest()
         self.assertEqual(hd, 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
 
-
-
-
+    #---------------------------------------------------------------------------
+    def test_hierarchy_hloc_a(self) -> None:
+        labels = [
+            ('a', 1, 10),
+            ('a', 2, 10),
+            ('b', 1, 10),
+            ('b', 2, 20),
+            ('b', 3, 10),
+            ('b', 4, 20),
+            ('b', 5, 10),
+            ('c', 1, 10),
+            ]
+        ih = IndexHierarchy.from_labels(labels)
+        x = ih.loc[HLoc['b', :, 20:]]
+        self.assertEqual(len(x), 4)
 
 if __name__ == '__main__':
     unittest.main()

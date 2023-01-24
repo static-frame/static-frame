@@ -1794,7 +1794,6 @@ class IndexHierarchy(IndexBase):
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
             key: tp.Union[np.ndarray, CompoundLabelType],
-            single_depth: bool,
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
@@ -1812,10 +1811,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key_at_depth, slice):
             if key_at_depth.start is not None:
-                if not single_depth:
-                    start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
-                else:
-                    [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
+                [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
             else:
                 start = 0
 
@@ -1827,28 +1823,23 @@ class IndexHierarchy(IndexBase):
                     )
 
             if key_at_depth.stop is not None:
-                if not single_depth:
-                    stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
-                else:
-                    [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
-                    stop += 1
+                # get the last stop value observed
+                [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
+                stop += 1
             else:
                 stop = len(indexer_at_depth)
 
-            if key_at_depth.step is None or key_at_depth.step == 1:
-                other = PositionsAllocator.get(stop)[start:]
-            else:
-                other = np.arange(start, stop, key_at_depth.step)
-
-            if single_depth:
-                return other
-
-            return isin_array(
-                    array=indexer_at_depth,
-                    array_is_unique=False,
-                    other=other,
-                    other_is_unique=True
-                    )
+            target = np.arange(start, stop, key_at_depth.step)
+            post = np.full(len(indexer_at_depth), False)
+            post[target] = True
+            return post
+            # import ipdb; ipdb.set_trace()
+            # return isin_array(
+            #         array=indexer_at_depth,
+            #         array_is_unique=False,
+            #         other=other,
+            #         other_is_unique=True
+            #         )
 
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
@@ -1913,7 +1904,7 @@ class IndexHierarchy(IndexBase):
             mask = self._build_mask_for_key_at_depth(
                     depth=meaningful_depths[0],
                     key=key,
-                    single_depth=True,
+                    # single_depth=True,
                     )
         else:
             # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
@@ -1930,13 +1921,12 @@ class IndexHierarchy(IndexBase):
                 mask = self._build_mask_for_key_at_depth(
                         depth=depth,
                         key=key,
-                        single_depth=False,
+                        # single_depth=False,
                         )
                 mask_2d[:, depth] = mask
 
             mask = mask_2d.all(axis=1)
             del mask_2d
-
         return self.positions[mask]
 
     def _loc_to_iloc(self: IH,
@@ -2000,7 +1990,6 @@ class IndexHierarchy(IndexBase):
                     raise RuntimeError(
                         f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].'
                     )
-
             else:
                 key = sanitized_key
                 if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
@@ -2014,7 +2003,6 @@ class IndexHierarchy(IndexBase):
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
-
         if any(isinstance(k, tuple) for k in key): # type: ignore
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
