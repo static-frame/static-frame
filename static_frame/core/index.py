@@ -86,7 +86,7 @@ if tp.TYPE_CHECKING:
     from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
 
-I = tp.TypeVar('I', bound=IndexBase)
+I = tp.TypeVar('I', bound='Index')
 
 
 class ILocMeta(type):
@@ -115,7 +115,7 @@ class ILoc(metaclass=ILocMeta):
 
 
 
-def immutable_index_filter(index: I) -> IndexBase:
+def immutable_index_filter(index: IndexBase) -> IndexBase:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
 
     if index.STATIC:
@@ -125,7 +125,7 @@ def immutable_index_filter(index: I) -> IndexBase:
 
 def mutable_immutable_index_filter(
         target_static: bool,
-        index: I
+        index: IndexBase,
         ) -> IndexBase:
     if target_static:
         return immutable_index_filter(index)
@@ -364,9 +364,9 @@ class Index(IndexBase):
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         assert not self._recache # __deepcopy__ is implemented on derived GO class
         obj = self.__class__.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo) #type: ignore
-        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
-        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
 
@@ -394,7 +394,7 @@ class Index(IndexBase):
         '''
         Return shallow copy of this Index.
         '''
-        return self.__copy__() #type: ignore
+        return self.__copy__()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -452,7 +452,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return mloc(self._labels)
+        return mloc(self._labels) # type: ignore
 
     @property
     def dtype(self) -> np.dtype:
@@ -704,11 +704,12 @@ class Index(IndexBase):
         return self._positions
 
     @property
-    def _unique_with_indexers(self) -> tp.Tuple[np.ndarray, np.ndarray]:
+    def _unique_with_indexers(self: I) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
         Return a tuple of (unique values, indexers, inverse indexers).
         '''
         if self._recache:
+            self._unique_with_indexers_tup = None # clear cache
             self._update_array_cache()
 
         if self._unique_with_indexers_tup is None:
@@ -1381,15 +1382,15 @@ class _IndexGOMixin:
             self._update_array_cache()
 
         obj = self.__class__.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo) #type: ignore
-        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
-        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False # pylint: disable=E0237
         obj._name = self._name # pylint: disable=E0237
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
-        obj._unique_with_indexers_tup = None #type: ignore
+        obj._unique_with_indexers_tup = None
 
         memo[id(self)] = obj
         return obj
@@ -1475,6 +1476,7 @@ class _IndexGOMixin:
         '''
         for value in values:
             self.append(value)
+
 
 INDEX_GO_LEAF_SLOTS = (
         '_labels_mutable',

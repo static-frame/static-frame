@@ -2475,7 +2475,7 @@ class IndexHierarchy(IndexBase):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_union(self, *others)
+            return index_hierarchy_union(self, *others) # type: ignore
 
         return super().union(*others)
 
@@ -2483,7 +2483,7 @@ class IndexHierarchy(IndexBase):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_intersection(self, *others)
+            return index_hierarchy_intersection(self, *others) # type: ignore
 
         return super().intersection(*others)
 
@@ -2491,7 +2491,7 @@ class IndexHierarchy(IndexBase):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_difference(self, *others)
+            return index_hierarchy_difference(self, *others) # type: ignore
 
         return super().difference(*others)
 
