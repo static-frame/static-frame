@@ -80,7 +80,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
-from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
@@ -1833,7 +1832,6 @@ class IndexHierarchy(IndexBase):
             post = np.full(len(indexer_at_depth), False)
             post[target] = True
             return post
-            # import ipdb; ipdb.set_trace()
             # return isin_array(
             #         array=indexer_at_depth,
             #         array_is_unique=False,

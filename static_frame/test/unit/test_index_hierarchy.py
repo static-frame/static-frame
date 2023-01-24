@@ -4604,12 +4604,37 @@ class TestUnit(TestCase):
             ('b', 5, 10),
             ('c', 1, 10),
             ]
-        ih = IndexHierarchy.from_labels(labels)
-        x = ih.loc[HLoc['b', :, 20:]]
-        self.assertEqual(len(x), 4)
-        self.assertEqual(x.values.tolist(),
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.loc[HLoc['b', :, 20:]]
+        self.assertEqual(len(ih2), 4)
+        self.assertEqual(ih2.values.tolist(),
             [['b', 2, 20], ['b', 3, 10], ['b', 4, 20], ['b', 5, 10]]
             )
+
+    def test_hierarchy_hloc_b(self) -> None:
+        labels = [
+            ('a', 1, 70),
+            ('a', 2, 50),
+            ('a', 3, 30),
+            ('a', 4, 10),
+            ('b', 1, 70),
+            ('b', 2, 50),
+            ('b', 3, 30),
+            ('b', 4, 10),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        # NOTE: because the first occurance of 30 is found in 'a', we end up selecting all of 'b'
+        ih2 = ih1.loc[HLoc['b', :, 30:]]
+        self.assertEqual(ih2.values.tolist(),
+            [['b', 1, 70], ['b', 2, 50], ['b', 3, 30], ['b', 4, 10]]
+            )
+
+        # if we first select 'b', the selection of 30 is bound within that selection
+        ih3 = ih1.loc[HLoc['b']].loc[HLoc[:, :, 30:]]
+        self.assertEqual(ih3.values.tolist(),
+            [['b', 3, 30], ['b', 4, 10]]
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
