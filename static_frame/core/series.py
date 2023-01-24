@@ -1813,7 +1813,7 @@ class Series(ContainerOperand):
     def mloc(self) -> int:
         '''{doc_int}
         '''
-        return mloc(self.values) # type: ignore
+        return mloc(self.values)
 
     @property
     def dtype(self) -> np.dtype:

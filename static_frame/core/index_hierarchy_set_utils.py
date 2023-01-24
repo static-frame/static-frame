@@ -1,6 +1,5 @@
 from functools import partial
 import typing as tp
-from collections import defaultdict
 
 import numpy as np
 from static_frame.core.exception import ErrorInitIndex
