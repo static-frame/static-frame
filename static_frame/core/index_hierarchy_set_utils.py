@@ -18,7 +18,7 @@ from static_frame.core.util import intersect1d
 
 
 class ValidationResult(tp.NamedTuple):
-    indices: tp.Tuple[IndexHierarchy]
+    indices: tp.List[IndexHierarchy]
     depth: int
     any_dropped: bool
     any_shallow_copies: bool
@@ -83,7 +83,7 @@ def _validate_and_process_indices(
     assert depth is not None # mypy
 
     return ValidationResult(
-            indices=tuple(unique_indices.values()),
+            indices=list(unique_indices.values()),
             depth=depth,
             any_dropped=any_dropped,
             any_shallow_copies=any_shallow_copies,
