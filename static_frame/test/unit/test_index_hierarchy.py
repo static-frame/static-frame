@@ -316,7 +316,7 @@ class TestUnit(TestCase):
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04', 2),
+                slice('2018-01-01', '2018-01-04', 2), # selects across full region from first start
                 np.array(['x', 'y'])])
 
         self.assertEqual(list(post), [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]) # type: ignore
@@ -340,7 +340,7 @@ class TestUnit(TestCase):
 
         post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore
         # NOTE: we assume that the depth 1 selection is independent of 'B' selection
-        self.assertEqual(list(post), [9, 11, 13, 15]) # type: ignore
+        self.assertEqual(list(post), [13, 15]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
         self.assertEqual(list(post), [12, 13, 20, 21]) # type: ignore
@@ -618,7 +618,7 @@ class TestUnit(TestCase):
 
         post2 = ih1._loc_to_iloc(HLoc['b', 10:12])
         self.assertEqual(list(post2), list(ih1_alt._loc_to_iloc(HLoc['b', 10:12])))
-        self.assertEqual(list(post2), [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32])
+        self.assertEqual(list(post2), [30, 31, 32])
 
         post3 = ih1._loc_to_iloc(HLoc['b', [0, 10, 19]])
         self.assertEqual(list(post3), list(ih1_alt._loc_to_iloc(HLoc['b', [0, 10, 19]])))
@@ -4623,13 +4623,11 @@ class TestUnit(TestCase):
             ('b', 4, 10),
             ]
         ih1 = IndexHierarchy.from_labels(labels)
-        # NOTE: because the first occurance of 30 is found in 'a', we end up selecting all of 'b'
         ih2 = ih1.loc[HLoc['b', :, 30:]]
         self.assertEqual(ih2.values.tolist(),
-            [['b', 1, 70], ['b', 2, 50], ['b', 3, 30], ['b', 4, 10]]
+            [['b', 3, 30], ['b', 4, 10]]
             )
-
-        # if we first select 'b', the selection of 30 is bound within that selection
+        # same result
         ih3 = ih1.loc[HLoc['b']].loc[HLoc[:, :, 30:]]
         self.assertEqual(ih3.values.tolist(),
             [['b', 3, 30], ['b', 4, 10]]

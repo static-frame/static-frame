@@ -1793,9 +1793,13 @@ class IndexHierarchy(IndexBase):
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
             key: tp.Union[np.ndarray, CompoundLabelType],
+            slice_target: np.ndarray,
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
+
+        Args:
+            slice_target: subset of region to search for start / end positions of slice values. We only take slices within regions previously selected.
         '''
         # This private internal method assumes recache has already been checked for!
 
@@ -1809,8 +1813,11 @@ class IndexHierarchy(IndexBase):
         indexer_at_depth = self._indexers[depth]
 
         if isinstance(key_at_depth, slice):
+            unmatchable = ~slice_target
             if key_at_depth.start is not None:
-                [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start)
+                matched[unmatchable] = False # set all regions unavailable to slice to False
+                [[start, *_]] = np.nonzero(matched)
             else:
                 start = 0
 
@@ -1823,7 +1830,9 @@ class IndexHierarchy(IndexBase):
 
             if key_at_depth.stop is not None:
                 # get the last stop value observed
-                [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop)
+                matched[unmatchable] = False
+                [[*_, stop]] = np.nonzero(matched)
                 stop += 1
             else:
                 stop = len(indexer_at_depth)
@@ -1832,6 +1841,7 @@ class IndexHierarchy(IndexBase):
             post = np.full(len(indexer_at_depth), False)
             post[target] = True
             return post
+
             # return isin_array(
             #         array=indexer_at_depth,
             #         array_is_unique=False,
@@ -1897,11 +1907,15 @@ class IndexHierarchy(IndexBase):
                 depth for depth, k in enumerate(key)
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
+
+        slice_target = np.full(self._indexers.shape[1], True)
+
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(
                     depth=meaningful_depths[0],
                     key=key,
+                    slice_target=slice_target,
                     # single_depth=True,
                     )
         else:
@@ -1919,8 +1933,10 @@ class IndexHierarchy(IndexBase):
                 mask = self._build_mask_for_key_at_depth(
                         depth=depth,
                         key=key,
+                        slice_target=slice_target,
                         # single_depth=False,
                         )
+                slice_target &= mask
                 mask_2d[:, depth] = mask
 
             mask = mask_2d.all(axis=1)
