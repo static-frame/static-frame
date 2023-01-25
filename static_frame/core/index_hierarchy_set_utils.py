@@ -233,7 +233,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if not lhs.size:
         # If the first index is empty, the intersection will also be empty
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     args = _validate_and_process_indices(indices)
     del indices
@@ -290,7 +290,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     if len(intersection_encodings) == len(lhs):
         # In intersections, nothing can be added. If the size didn't change, then it means
         # nothing was removed, which means the union is the same as the first index
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     # 5. Convert the intersection encodings back to 2-D indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
@@ -336,7 +336,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if not lhs.size:
         # If the first index is empty, the intersection will also be empty
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     args = _validate_and_process_indices(indices)
     del indices
@@ -348,7 +348,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if len(filtered_indices) == 1:
         # All the other indices were empty!
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     # 1. Find union_indices
     union_indices = build_union_indices(
@@ -393,7 +393,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     if len(difference_encodings) == len(lhs):
         # In differences, nothing can be added. If the size didn't change, then it means
         # nothing was removed, which means the difference is the same as the first index
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     # 5. Convert the difference encodings back to 2-D indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
@@ -465,7 +465,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     if len(union_encodings) == len(lhs):
         # In unions, nothing can be dropped. If the size didn't change, then it means
         # nothing was added, which means the union is the same as the first index
-        return mutable_immutable_index_filter(lhs.STATIC, lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     # 5. Convert the union encodings back to 2-D indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
