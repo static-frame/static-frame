@@ -229,7 +229,11 @@ class HierarchicalLocMap:
                 num_unique_elements_per_depth=list(map(len, indices))
                 )
         try:
-            self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+            self.encoded_indexer_map = self.build_encoded_indexers_map(
+                    encoding_can_overflow=self.encoding_can_overflow,
+                    bit_offset_encoders=self.bit_offset_encoders,
+                    indexers=indexers,
+                    )
         except FirstDuplicatePosition as e:
             duplicate_labels = tuple(
                     index[indexer[e.first_dup]]
@@ -304,14 +308,18 @@ class HierarchicalLocMap:
         # If the last end bit is greater than 64, then it means we cannot encode a label's indexer into a uint64.
         return bit_start_positions, bit_end_positions[-1] > 64
 
-    def build_encoded_indexers_map(self: _HLMap,
+    @staticmethod
+    def build_encoded_indexers_map(
+            *,
+            encoding_can_overflow: bool,
+            bit_offset_encoders: np.ndarray,
             indexers: np.ndarray,
             ) -> FrozenAutoMap:
         '''
         Builds up a mapping from indexers to iloc positions using their encoded values
         '''
         # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
-        if self.encoding_can_overflow:
+        if encoding_can_overflow:
             indexers = indexers.astype(object).T
         else:
             indexers = indexers.astype(DTYPE_UINT_DEFAULT).T
@@ -327,7 +335,7 @@ class HierarchicalLocMap:
         #    [0, 2, 0] => [0, 8,  0]       ([00, 10 00, 00 00 00])
         #    [2, 2, 0] => [2, 8,  0]       ([10, 10 00, 00 00 00])
         #    [1, 0, 1] => [1, 0, 16]       ([01, 00 00, 01 00 00])
-        encoded_indexers = indexers << self.bit_offset_encoders
+        encoded_indexers = indexers << bit_offset_encoders
 
         # Finally, we bitwise OR all them together to encode them into a single, unique uint64 for each iloc
         #  encoded_indexers   bitwise OR   (Bit representation)

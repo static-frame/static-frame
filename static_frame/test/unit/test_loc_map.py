@@ -1,6 +1,5 @@
 import typing as tp
 from copy import deepcopy
-from types import SimpleNamespace
 
 import numpy as np
 
@@ -203,11 +202,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(bit_offsets.tolist(), [0, 8, 11])
         self.assertFalse(overflow)
 
-        hlmap = SimpleNamespace(
+        result = HierarchicalLocMap.build_encoded_indexers_map(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=bit_offsets,
+                indexers=indexers,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -230,11 +229,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(bit_offsets.tolist(), [0, 21, 42, 63])
         self.assertTrue(overflow)
 
-        hlmap = SimpleNamespace(
+        result = HierarchicalLocMap.build_encoded_indexers_map(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=bit_offsets,
+                indexers=indexers,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -484,6 +483,53 @@ class TestHierarchicalLocMapUnit(TestCase):
         valid_subset = [1, 2, 3, 4, 5, 6, 8, 9]
         post = hlmap.indexers_to_iloc(invalid_indexers[valid_subset].copy())
         self.assertListEqual(post, valid_subset)
+
+    def test_unpack_encoding_a(self) -> None:
+        # Test the docstring!
+        encoded_arr = np.array([36, 8, 10, 17], dtype=np.uint64)
+
+        post = HierarchicalLocMap.unpack_encoding(
+            encoded_arr=encoded_arr,
+            bit_offset_encoders=np.array([0, 2, 4], dtype=np.uint64),
+        )
+        expected = np.array(
+            [
+                [0, 1, 2],
+                [0, 2, 0],
+                [2, 2, 0],
+                [1, 0, 1],
+            ],
+            dtype=np.uint64,
+        ).T
+
+        assert (post == expected).all().all()
+
+    def test_encoding_roundtrip(self) -> None:
+        indexers = np.array(
+            [
+                [0, 2, 1, 1, 4, 5, 6, 7, 8, 9, 0],
+                [1, 0, 2, 0, 5, 4, 5, 8, 9, 0, 7],
+                [0, 9, 4, 2, 1, 3, 1, 4, 5, 6, 7],
+            ],
+            dtype=np.uint64,
+        )
+        indexers.flags.writeable = False
+
+        bit_offset_encoders, can_overlow = HierarchicalLocMap.build_offsets_and_overflow([10, 10, 10])
+        assert not can_overlow
+
+        encodings = HierarchicalLocMap.build_encoded_indexers_map(
+                encoding_can_overflow=can_overlow,
+                bit_offset_encoders=bit_offset_encoders,
+                indexers=indexers,
+                )
+        encoded_arr = np.array(list(encodings), dtype=np.uint64)
+
+        unpacked_indexers = HierarchicalLocMap.unpack_encoding(encoded_arr, bit_offset_encoders)
+
+        assert unpacked_indexers is not indexers
+        assert id(unpacked_indexers) != id(indexers)
+        assert (unpacked_indexers == indexers).all().all()
 
 
 if __name__ == '__main__':

@@ -716,11 +716,11 @@ class Index(IndexBase):
         Return a tuple of (unique values, indexers, inverse indexers).
         '''
         if self._recache:
-            self._unique_with_indexers_tup = None # clear cache
             self._update_array_cache()
 
         if self._unique_with_indexers_tup is None:
             self._unique_with_indexers_tup = ufunc_unique1d_indexer(self.values)
+
         return self._unique_with_indexers_tup
 
     def _index_iloc_map(self: I, other: I) -> np.ndarray:
@@ -732,8 +732,6 @@ class Index(IndexBase):
         if self.__len__() == 0:
             return EMPTY_ARRAY
 
-        ar1: np.ndarray
-        ar1_indexer: np.ndarray
         ar1, ar1_indexer = self._unique_with_indexers
         ar2 = other.values
 
