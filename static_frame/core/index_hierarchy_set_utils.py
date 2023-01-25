@@ -86,7 +86,7 @@ def _validate_and_process_indices(
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
 
-        key = get_shallow_copy_key(idx)
+        key = tuple(idx._blocks.iter_shallow_keys())
 
         if key not in shallow_copy_keys:
             unique_non_empty_indices.append(idx)

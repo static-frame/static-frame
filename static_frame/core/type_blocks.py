@@ -71,6 +71,7 @@ from static_frame.core.util import view_2d_as_1d
 
 
 #---------------------------------------------------------------------------
+
 def group_match(
         blocks: 'TypeBlocks',
         *,
@@ -160,6 +161,7 @@ def group_match(
                     row_key=row_key,
                     column_key=selection,
                     )
+
 
 def group_sorted(
         blocks: 'TypeBlocks',
@@ -265,6 +267,7 @@ def group_sorted(
             yield tuple(group_source[start]), slc, chunk
         else:
             yield group_source[start], slc, chunk
+
 
 #-------------------------------------------------------------------------------
 
@@ -403,8 +406,8 @@ def assign_inner_from_iloc_by_sequence(
     return value, assigned_target
 
 
-
 #-------------------------------------------------------------------------------
+
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
 
@@ -4162,6 +4165,29 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
+    def iter_shallow_keys(self: "TypeBlocks") -> tp.Iterator[tp.Hashable]:
+        '''
+        Calling id(...) on numpy arrays is not always reliable, so instead,
+        we will use the underlying array properties to determine the ID for this
+        index hierarchy, with the desire to encounter duplicate keys for shallow copies.
+
+        Yields:
+            a hashable key that will only collide with the keys from shallow copies/views
+        '''
+        for block in self._blocks:
+            # You need all three of these to uniquely identify a numpy array
+            yield mloc(block), block.shape, block.strides
+
+
+    def is_shallow_copy(self: "TypeBlocks", other: "TypeBlocks") -> bool:
+        '''Determine whether or not the underlying blocks are the same.'''
+
+        for key1, key2 in zip_longest(self.iter_shallow_keys(), other.iter_shallow_keys()):
+            if key1 != key2:
+                return False
+
+        return True
+
     @doc_inject()
     def equals(self,
             other: tp.Any,
@@ -4190,6 +4216,10 @@ class TypeBlocks(ContainerOperand):
         # same type from here
         if self._shape != other._shape:
             return False
+
+        if self.is_shallow_copy(other):
+            return True
+
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
