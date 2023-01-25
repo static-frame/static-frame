@@ -7987,7 +7987,7 @@ class Frame(ContainerOperand):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')
 
-        if not len(container.index): # must be empty data, empty index container
+        if container.ndim == 2 and not len(container.columns): # type: ignore
             return self if self.STATIC else self.__class__(self)
 
         # this filter is needed to handle possible invalid ILoc values passed through
