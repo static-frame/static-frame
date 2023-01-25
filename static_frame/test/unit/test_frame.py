@@ -2258,7 +2258,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
                 )
 
-    def test_frame_insert_b(self) -> None:
+    def test_frame_insert_b1(self) -> None:
         records = (
                 ('a', False, True),
                 ('b', True, False))
@@ -2269,24 +2269,35 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             f1._insert(0, 'a', after=False)
 
-        s1 = sf.Series(())
-
-        f2 = f1.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f_empty = sf.Frame(np.array(()).reshape(2, 0), index=f1.index)
+        f2 = f1.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertNotEqual(id(f1), id(f2))
 
         f3 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('x','y'))
-        f4 = f3.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f4 = f3.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f4))
 
         # matching index but no columns
         f5 = FrameGO(columns=(), index=('x','y'))
         f6 = f3.insert_before('q', f5)
-        self.assertTrue(f3.equals(f6)) # no insertion of an empty container
+        self.assertTrue(f3.equals(f6)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f6))
+
+    def test_frame_insert_b2(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        f_empty = sf.Frame(np.array(()).reshape(0, 2), columns=('s', 't'))
+        f2 = f1.insert_before('q', f_empty)
+        self.assertEqual(f2.columns.values.tolist(), ['p', 's', 't', 'q', 'r'])
 
     def test_frame_insert_c(self) -> None:
         records = (
@@ -2373,7 +2384,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1.insert_after(slice('q', 'r'), s1)
 
-    def test_frame_insert_g(self) -> None:
+    def test_frame_insert_g1(self) -> None:
         f = ff.parse('s(3,3)|v(str)')
         f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(1, index=f.index, name='a'))
 
@@ -2385,6 +2396,21 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))), ('b', ((0, 2), (1, 2), (2, 2))))
                 )
+
+    def test_frame_insert_g2(self) -> None:
+        # a Frame with four columns, no rows; inserting an empty Series will work as with FrameGO
+        empty = sf.Frame.from_records([], columns=list("abcd"))
+        new_column = sf.Series(np.array(()), name='e')
+        f2 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f2.shape, (0, 5))
+        self.assertEqual(f2.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
+        # this works too as we take the intersection index
+        new_column = sf.Series([0,], index=('a',), name='e')
+        f3 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f3.shape, (0, 5))
+        self.assertEqual(f3.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
 
     def test_frame_insert_h(self) -> None:
         f = ff.parse('s(2,3)|v(str)')
