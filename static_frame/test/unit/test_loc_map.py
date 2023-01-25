@@ -491,6 +491,7 @@ class TestHierarchicalLocMapUnit(TestCase):
         post = HierarchicalLocMap.unpack_encoding(
             encoded_arr=encoded_arr,
             bit_offset_encoders=np.array([0, 2, 4], dtype=np.uint64),
+            encoding_can_overflow=False,
         )
         expected = np.array(
             [
@@ -515,17 +516,21 @@ class TestHierarchicalLocMapUnit(TestCase):
         )
         indexers.flags.writeable = False
 
-        bit_offset_encoders, can_overlow = HierarchicalLocMap.build_offsets_and_overflow([10, 10, 10])
-        assert not can_overlow
+        bit_offset_encoders, can_overflow = HierarchicalLocMap.build_offsets_and_overflow([10, 10, 10])
+        assert not can_overflow
 
         encodings = HierarchicalLocMap.build_encoded_indexers_map(
-                encoding_can_overflow=can_overlow,
+                encoding_can_overflow=can_overflow,
                 bit_offset_encoders=bit_offset_encoders,
                 indexers=indexers,
                 )
         encoded_arr = np.array(list(encodings), dtype=np.uint64)
 
-        unpacked_indexers = HierarchicalLocMap.unpack_encoding(encoded_arr, bit_offset_encoders)
+        unpacked_indexers = HierarchicalLocMap.unpack_encoding(
+                encoded_arr=encoded_arr,
+                bit_offset_encoders=bit_offset_encoders,
+                encoding_can_overflow=can_overflow,
+                )
 
         assert unpacked_indexers is not indexers
         assert id(unpacked_indexers) != id(indexers)

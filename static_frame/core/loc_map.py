@@ -443,6 +443,7 @@ class HierarchicalLocMap:
     def unpack_encoding(
             encoded_arr: np.ndarray,
             bit_offset_encoders: np.ndarray,
+            encoding_can_overflow: bool,
             ) -> np.ndarray:
         '''
         Given an encoding, unpack it into its constituent parts
@@ -510,9 +511,10 @@ class HierarchicalLocMap:
         assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
         assert encoded_arr.ndim == 1 # Encodings are always 1D
 
-        # TODO: 64 is not correct! It can be larger if encoding_can_overflow
+        dtype = object if encoding_can_overflow else np.uint64
+
         starts = bit_offset_encoders
-        stops = np.concatenate((starts[1:], np.array([64], dtype=np.uint64)))
+        stops = np.concatenate((starts[1:], np.array([64], dtype=dtype)))
         lens = stops - starts
         masks = [x for x in (1 << lens) - 1]
 

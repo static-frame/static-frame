@@ -273,7 +273,9 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     # 5. Convert the intersection encodings back to 2-D indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
-            intersection_encodings, bit_offset_encoders
+            encoded_arr=intersection_encodings,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_can_overflow=encoding_dtype is object,
             )
 
     # 6. Remove any bloat from the union indexers.
@@ -366,7 +368,9 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     # 5. Convert the difference encodings back to 2-D indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
-            difference_encodings, bit_offset_encoders
+            encoded_arr=difference_encodings,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_can_overflow=encoding_dtype is object,
             )
 
     # 6. Remove any bloat from the union indexers.
@@ -436,7 +440,9 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
 
     # 5. Convert the union encodings back to 2-D indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
-            union_encodings, bit_offset_encoders
+            encoded_arr=union_encodings,
+            bit_offset_encoders=bit_offset_encoders,
+            encoding_can_overflow=encoding_dtype is object,
             )
 
     return IndexHierarchy(
