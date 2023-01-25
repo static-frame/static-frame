@@ -271,11 +271,7 @@ class Index(IndexBase):
         '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
-        try:
-            self._argsort_cache: tp.Optional[_ArgsortCache] = None
-        except BaseException as e:
-            breakpoint()
-            __a__ = 1
+        self._argsort_cache: tp.Optional[_ArgsortCache] = None
 
         positions = None
         is_typed = self._DTYPE is not None # only True for datetime64 indices
@@ -728,9 +724,10 @@ class Index(IndexBase):
 
     def _get_argsort_cache(self: I) -> _ArgsortCache:
         '''
-        Return a cached argsorted array of self.
-        This is equivalent to calling ufunc_unique_1d(self.values)[1], except faster
-        since self is already unique.
+        Return a cached NT containing self.values sorted, along with the argsort key
+
+        This utilizes a lazy instance cache attribute, since sorting is expensive,
+        and this operation is typically called either never, or often.
         '''
         if self._recache:
             self._update_array_cache()
