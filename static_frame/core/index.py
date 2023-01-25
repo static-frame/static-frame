@@ -1,7 +1,6 @@
 import typing as tp
 from collections import Counter
 from copy import deepcopy
-from functools import partial
 from itertools import chain
 from itertools import zip_longest
 
@@ -80,6 +79,7 @@ from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 
+
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
 
@@ -97,6 +97,7 @@ class ILocMeta(type):
             ) -> 'ILoc':
         return cls(key) #type: ignore
 
+
 class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
     '''
@@ -113,7 +114,6 @@ class ILoc(metaclass=ILocMeta):
         if isinstance(self.key, tuple):
             return f'<ILoc[{",".join(map(key_to_str, self.key))}]>'
         return f'<ILoc[{key_to_str(self.key)}]>'
-
 
 
 def immutable_index_filter(index: IndexBase) -> IndexBase:
@@ -135,7 +135,23 @@ def mutable_immutable_index_filter(
         return index._MUTABLE_CONSTRUCTOR(index)
     return index.__class__(index) # create new instance
 
+
 #-------------------------------------------------------------------------------
+
+class _ArgsortCache(tp.NamedTuple):
+    arr: np.ndarray
+    key: np.ndarray
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> '_ArgsortCache':
+        obj = self.__class__.__new__(
+                self.__class__,
+                array_deepcopy(self.arr, memo=memo),
+                array_deepcopy(self.key, memo=memo),
+                )
+
+        memo[id(self)] = obj
+        return obj
+
 
 class Index(IndexBase):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
@@ -146,7 +162,7 @@ class Index(IndexBase):
         '_positions',
         '_recache',
         '_name',
-        '_unique_with_indexers_tup',
+        '_argsort_cache',
         )
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
@@ -163,7 +179,7 @@ class Index(IndexBase):
     _positions: np.ndarray
     _recache: bool
     _name: NameType
-    _unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]]
+    _argsort_cache: tp.Optional[_ArgsortCache]
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
@@ -255,7 +271,11 @@ class Index(IndexBase):
         '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
-        self._unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]] = None
+        try:
+            self._argsort_cache: tp.Optional[_ArgsortCache] = None
+        except BaseException as e:
+            breakpoint()
+            __a__ = 1
 
         positions = None
         is_typed = self._DTYPE is not None # only True for datetime64 indices
@@ -364,18 +384,14 @@ class Index(IndexBase):
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         assert not self._recache # __deepcopy__ is implemented on derived GO class
+
         obj = self.__class__.__new__(self.__class__)
         obj._map = deepcopy(self._map, memo)
         obj._labels = array_deepcopy(self._labels, memo)
         obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
-
-        if self._unique_with_indexers_tup is not None:
-            array_dc = partial(array_deepcopy, memo=memo)
-            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup)) # type: ignore
-        else:
-            obj._unique_with_indexers_tup = None
+        obj._argsort_cache = deepcopy(self._argsort_cache, memo)
 
         memo[id(self)] = obj
         return obj
@@ -710,18 +726,19 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
-    @property
-    def _unique_with_indexers(self: I) -> tp.Tuple[np.ndarray, np.ndarray]:
+    def _get_argsort_cache(self: I) -> _ArgsortCache:
         '''
-        Return a tuple of (unique values, indexers, inverse indexers).
+        Return a cached argsorted array of self.
+        This is equivalent to calling ufunc_unique_1d(self.values)[1], except faster
+        since self is already unique.
         '''
         if self._recache:
             self._update_array_cache()
 
-        if self._unique_with_indexers_tup is None:
-            self._unique_with_indexers_tup = ufunc_unique1d_indexer(self.values)
+        if self._argsort_cache is None:
+            self._argsort_cache = _ArgsortCache(*ufunc_unique1d_indexer(self.values))
 
-        return self._unique_with_indexers_tup
+        return self._argsort_cache
 
     def _index_iloc_map(self: I, other: I) -> np.ndarray:
         '''
@@ -732,7 +749,8 @@ class Index(IndexBase):
         if self.__len__() == 0:
             return EMPTY_ARRAY
 
-        ar1, ar1_indexer = self._unique_with_indexers
+        # Equivalent to: ufunc_unique1d_indexer(self.values)
+        ar1, ar1_indexer = self._get_argsort_cache()
         ar2 = other.values
 
         aux = concat_resolved((ar1, ar2))
@@ -1379,7 +1397,7 @@ class _IndexGOMixin:
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
-    _unique_with_indexers_tup: tp.Optional[tp.Tuple[np.ndarray, np.ndarray]]
+    _argsort_cache: tp.Optional[_ArgsortCache]
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I: #type: ignore
@@ -1395,12 +1413,7 @@ class _IndexGOMixin:
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
-
-        if self._unique_with_indexers_tup is not None:
-            array_dc = partial(array_deepcopy, memo=memo)
-            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup)) # type: ignore
-        else:
-            obj._unique_with_indexers_tup = None
+        obj._argsort_cache = deepcopy(self._argsort_cache, memo)
 
         memo[id(self)] = obj
         return obj
@@ -1446,7 +1459,8 @@ class _IndexGOMixin:
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
         self._recache = False # pylint: disable=E0237
 
-        self._unique_with_indexers_tup = None # clear cache
+        # clear cache
+        self._argsort_cache = None
 
     #---------------------------------------------------------------------------
     # grow only mutation
