@@ -30,6 +30,7 @@ from static_frame import TypeBlocks
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -2681,7 +2682,7 @@ class TestUnit(TestCase):
         post = ih1.intersection(ih2, ih3)
         assert len(post) == 0
 
-    def test_hierarchy_set_operators_n(self) -> None:
+    def test_hierarchy_set_operators_o(self) -> None:
         # Test the short-circuit optimization for differences when all elements are disjoint
         ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
         ih2 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
@@ -2689,6 +2690,27 @@ class TestUnit(TestCase):
 
         post = ih1.difference(ih2, ih3)
         assert post.equals(ih1)
+
+    def test_hierarchy_set_operators_p(self) -> None:
+        # Add edge-case coverage for the generic 2D set approach invoked by IndexBase.
+        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+
+        empty_mask = np.full(len(ih), False)
+
+        post1 = IndexBase.intersection(ih, ih[empty_mask])
+        post2 = IndexBase.intersection(ih, ih.values[empty_mask])
+        post3 = IndexBase.intersection(ih[empty_mask], ih)
+
+        post4 = IndexBase.difference(ih, ih.values[empty_mask])
+        post5 = IndexBase.difference(ih, ih[empty_mask])
+        post6 = IndexBase.difference(ih[empty_mask], ih)
+
+        assert len(post1) == len(post2) == len(post3) == len(post6) == 0
+        assert post4.equals(ih)
+        assert post5.equals(ih)
+
+        with self.assertRaises(RuntimeError):
+            IndexBase.intersection(ih, np.array([[]]))
 
     #---------------------------------------------------------------------------
 
