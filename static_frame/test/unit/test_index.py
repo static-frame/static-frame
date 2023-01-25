@@ -1719,7 +1719,25 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_hashlib().sha256().hexdigest(),
             'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
 
+    def test_unique_with_indexers(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = IndexGO(('a', 'b', 'c', 'd'), name='')
 
+        unique1, indexers1 = idx1._unique_with_indexers
+        unique2, indexers2 = idx2._unique_with_indexers
+
+        # Force re-cache
+        idx2.append("e")
+        unique3, indexers3 = idx2._unique_with_indexers
+
+        assert (unique1 == unique2).all()
+        assert (indexers1 == indexers2).all()
+
+        assert unique1.size != unique3.size
+        assert indexers1.size != indexers3.size
+
+        assert unique1.size == indexers1.size
+        assert unique3.size == indexers3.size
 
 
 if __name__ == '__main__':

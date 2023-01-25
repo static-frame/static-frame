@@ -2415,6 +2415,10 @@ class TestUnit(TestCase):
         self.assertEqual(post3.values.tolist(),
                 [['I', 'A'], ['I', 'B']])
 
+        post4 = ih1.difference(tuple(ih2))
+        self.assertTrue(post3.equals(post4))
+        self.assertTrue(post4.equals(post3))
+
     def test_hierarchy_set_operators_b(self) -> None:
 
         labels = (
@@ -2615,7 +2619,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = ih1.intersection(['a', 'b'])
 
-    def test_hierarchy_set_operators_m(self) -> None:
+    def test_hierarchy_set_operators_l(self) -> None:
         labels = (
                 ('I', 'A'),
                 ('I', 'B'),
@@ -2654,7 +2658,7 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['II', 'A'], ['III', 'A'], ['IV', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['IV', 'B']]
                 )
 
-    def test_hierarchy_set_operators_l(self) -> None:
+    def test_hierarchy_set_operators_m(self) -> None:
         labels = (
                 ('II', 'B'),
                 ('II', 'A'),
@@ -2666,6 +2670,25 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [['I', 'B'], ['II', 'B']]
                 )
+
+    def test_hierarchy_set_operators_n(self) -> None:
+        # Test the short-circuit optimization for intersections when the result
+        # will be empty
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('II', 'III'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+
+        post = ih1.intersection(ih2, ih3)
+        assert len(post) == 0
+
+    def test_hierarchy_set_operators_n(self) -> None:
+        # Test the short-circuit optimization for differences when all elements are disjoint
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('C', 'D'))
+
+        post = ih1.difference(ih2, ih3)
+        assert post.equals(ih1)
 
     #---------------------------------------------------------------------------
 
