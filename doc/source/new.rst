@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+1.1.1-dev
+-----------
+
+Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
 
 1.1.0
 -----------
