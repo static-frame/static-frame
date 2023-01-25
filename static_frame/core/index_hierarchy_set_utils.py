@@ -231,20 +231,22 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     lhs = indices[0]
 
     if not lhs.size:
+        # If the first index is empty, the intersection will also be empty
         return return_specific(lhs)
 
-    result = _validate_and_process_indices(indices)
+    args = _validate_and_process_indices(indices)
     del indices
-    filtered_indices = result.indices
+    filtered_indices = args.indices
 
-    if result.any_dropped:
-        return return_empty(result.index_constructors, result.name)
+    if args.any_dropped:
+        # If any index was empty, the intersection will also be empty
+        return return_empty(args.index_constructors, args.name)
 
     # 1. Find union_indices
-    union_indices: tp.List[Index] = build_union_indices(
+    union_indices = build_union_indices(
             filtered_indices,
-            result.index_constructors,
-            result.depth,
+            args.index_constructors,
+            args.depth,
             )
 
     # 2-3. Remap indexers and convert to encodings
@@ -253,7 +255,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     get_encodings = partial(
             _get_encodings,
             union_indices=union_indices,
-            depth=result.depth,
+            depth=args.depth,
             bit_offset_encoders=bit_offset_encoders,
             encoding_dtype=encoding_dtype,
             )
@@ -273,8 +275,8 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         intersection_encodings = intersect1d(intersection_encodings, next_encodings)
 
         if not intersection_encodings.size:
-            # 4.a. If the intersection is ever empty, we can stop!
-            return return_empty(result.index_constructors, result.name)
+            # 4.a. If the intermediate intersection is ever empty, the end result must be empty
+            return return_empty(args.index_constructors, args.name)
 
     if len(intersection_encodings) == len(lhs):
         # In intersections, nothing can be added. If the size didn't change, then it means
@@ -294,7 +296,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=final_indices,
         indexers=final_indexers,
-        name=result.name,
+        name=args.name,
     )
 
 
@@ -324,25 +326,26 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     lhs = indices[0]
 
     if not lhs.size:
+        # If the first index is empty, the intersection will also be empty
         return return_specific(lhs)
 
-    result = _validate_and_process_indices(indices)
+    args = _validate_and_process_indices(indices)
     del indices
-    filtered_indices = result.indices
+    filtered_indices = args.indices
 
-    if result.any_shallow_copies:
-        # The presence of any duplicates always means an empty result: `S - S === {}``
-        return return_empty(result.index_constructors, result.name)
+    if args.any_shallow_copies:
+        # The presence of any duplicates always means an empty result
+        return return_empty(args.index_constructors, args.name)
 
     if len(filtered_indices) == 1 and filtered_indices[0] is lhs:
         # All the other indices were empty!
         return return_specific(lhs)
 
     # 1. Find union_indices
-    union_indices: tp.List[Index] = build_union_indices(
+    union_indices = build_union_indices(
             filtered_indices,
-            result.index_constructors,
-            result.depth,
+            args.index_constructors,
+            args.depth,
             )
 
     # 2-3. Remap indexers and convert to encodings
@@ -351,7 +354,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     get_encodings = partial(
             _get_encodings,
             union_indices=union_indices,
-            depth=result.depth,
+            depth=args.depth,
             bit_offset_encoders=bit_offset_encoders,
             encoding_dtype=encoding_dtype,
             )
@@ -368,12 +371,12 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         difference_encodings = setdiff1d(difference_encodings, next_encodings)
 
         if not difference_encodings.size:
-            # 4.a. If the difference is ever empty, we can stop!
-            return return_empty(result.index_constructors, result.name)
+            # 4.a. If the intermediate difference is ever empty, the end result must be empty
+            return return_empty(args.index_constructors, args.name)
 
     if len(difference_encodings) == len(lhs):
         # In differences, nothing can be added. If the size didn't change, then it means
-        # nothing was removed, which means the union is the same as the first index
+        # nothing was removed, which means the difference is the same as the first index
         return return_specific(lhs)
 
     # 5. Convert the difference encodings back to 2-D indexers
@@ -389,7 +392,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=final_indices,
         indexers=final_indexers,
-        name=result.name,
+        name=args.name,
     )
 
 
@@ -415,15 +418,15 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         In every other case, it will most likely NOT be sorted.
     '''
     lhs = indices[0]
-    result = _validate_and_process_indices(indices)
+    args = _validate_and_process_indices(indices)
     del indices
-    filtered_indices = result.indices
+    filtered_indices = args.indices
 
     # 1. Find union_indices
-    union_indices: tp.List[Index] = build_union_indices(
+    union_indices = build_union_indices(
             filtered_indices,
-            result.index_constructors,
-            result.depth,
+            args.index_constructors,
+            args.depth,
             )
 
     # 2-3. Remap indexers and convert to encodings
@@ -432,12 +435,12 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     get_encodings = partial(
             _get_encodings,
             union_indices=union_indices,
-            depth=result.depth,
+            depth=args.depth,
             bit_offset_encoders=bit_offset_encoders,
             encoding_dtype=encoding_dtype,
             )
 
-    union_encodings: tp.List[np.ndarray] = list(map(get_encodings, filtered_indices))
+    union_encodings = list(map(get_encodings, filtered_indices))
     del filtered_indices
 
     # 4. Build up the union of the encodings (i.e., whatever encodings are unique)
@@ -458,5 +461,5 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     return IndexHierarchy(
         indices=union_indices,
         indexers=union_indexers,
-        name=result.name,
+        name=args.name,
     )
