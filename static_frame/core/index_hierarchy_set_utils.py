@@ -372,8 +372,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     #
     # We have a greatest chance of getting a `smaller intermediate difference if we start from the
     # largest to the smallest index. This will, in turn, mean every subsequent difference routine
-    # will be comparing against the most labels it can, increasing our likelihood of going to zero.
-    # And, as we get smaller, our likelihood of becoming empty increases.
+    # will be comparing against the most labels it can, increasing our likelihood of becoming empty.
     #
     # This is why we sort the indices in order, so we can pop the largest first.
     filtered_indices = sorted(filtered_indices[1:], key=len) # (We will pop)
