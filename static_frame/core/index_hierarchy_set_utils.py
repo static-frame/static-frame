@@ -12,7 +12,6 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import intersect1d
@@ -154,7 +153,7 @@ def _get_encodings(
         union_indices: tp.List[Index],
         depth: int,
         bit_offset_encoders: np.ndarray,
-        encoding_dtype: DtypeSpecifier,
+        encoding_dtype: np.dtype,
         ) -> np.ndarray:
     '''Encode `ih` based on the union indices'''
     remapped_indexers: tp.List[np.ndarray] = []
