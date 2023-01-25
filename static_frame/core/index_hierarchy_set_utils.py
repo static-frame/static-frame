@@ -2,6 +2,7 @@ import typing as tp
 from functools import partial
 
 import numpy as np
+from arraykit import mloc
 
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
@@ -26,11 +27,20 @@ class ValidationResult(tp.NamedTuple):
     index_constructors: tp.List[IndexConstructor]
 
 
-def _get_shallow_copy_key(ih: IndexHierarchy) -> tp.Tuple[int, ...]:
-    # calling id(...) on numpy arrays is not always reliable, so we might not
-    # get the optimization we hope for
-    # Maybe look at numpy's view object instead
-    return tuple(map(id, ih._blocks._blocks))
+def _get_shallow_copy_key(ih: IndexHierarchy) -> tp.Hashable:
+    # calling id(...) on numpy arrays is not always reliable, so instead,
+    # we will use the underlying array properties to determine the ID for this
+    # index hierarchy, with the desire to encounter duplicate keys for shallow copies
+
+    result: tp.List[tp.Union[int, tp.Tuple[int, ...]]] = []
+
+    for block in ih._blocks._blocks:
+        # You need all three of these to uniquely identify a numpy array
+        result.append(mloc(block))
+        result.append(block.shape)
+        result.append(block.strides)
+
+    return tuple(result)
 
 
 def _validate_and_process_indices(
