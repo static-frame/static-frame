@@ -507,18 +507,18 @@ class HierarchicalLocMap:
 
             NOTE: This is the inverse of the documentation in `build_encoded_indexers_map`
         '''
-        assert bit_offset_encoders.dtype == np.uint64
+        assert bit_offset_encoders.dtype == DTYPE_UINT_DEFAULT
         assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
         assert encoded_arr.ndim == 1 # Encodings are always 1D
 
-        dtype = object if encoding_can_overflow else np.uint64
+        dtype = object if encoding_can_overflow else DTYPE_UINT_DEFAULT
 
         starts = bit_offset_encoders
         stops = np.concatenate((starts[1:], np.array([64], dtype=dtype)))
         lens = stops - starts
         masks = [x for x in (1 << lens) - 1]
 
-        target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=np.uint64)
+        target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=DTYPE_UINT_DEFAULT)
 
         for depth in range(len(bit_offset_encoders)):
             target[depth] = (encoded_arr >> starts[depth]) & masks[depth]

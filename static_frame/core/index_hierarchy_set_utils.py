@@ -7,6 +7,7 @@ from arraykit import mloc
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.index import Index
+from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.util import DtypeSpecifier
@@ -16,6 +17,8 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import DTYPE_UINT_DEFAULT
+from static_frame.core.util import DTYPE_OBJECT
 
 
 class ValidationResult(tp.NamedTuple):
@@ -111,15 +114,11 @@ def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, Dty
     bit_offset_encoders, encoding_can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
         num_unique_elements_per_depth=list(map(len, indices)),
     )
-    encoding_dtype = object if encoding_can_overflow else np.uint64
+    encoding_dtype = DTYPE_OBJECT if encoding_can_overflow else DTYPE_UINT_DEFAULT
     return bit_offset_encoders, encoding_dtype
 
 
-def return_specific(ih: IndexHierarchy) -> IndexHierarchy:
-    return ih if ih.STATIC else ih.__deepcopy__({})
-
-
-def return_empty(
+def get_empty(
         index_constructors: tp.List[IndexConstructor],
         name: tp.Hashable,
         ) -> IndexHierarchy:
@@ -201,7 +200,7 @@ def _remove_union_bloat(
             final_indices.append(index._extract_iloc(unique))
             final_indexers.append(new_indexers)
 
-    final_indexers_arr = np.array(final_indexers, dtype=np.uint64)
+    final_indexers_arr = np.array(final_indexers, dtype=DTYPE_UINT_DEFAULT)
     final_indexers_arr.flags.writeable = False
 
     return final_indices, final_indexers_arr
@@ -234,7 +233,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if not lhs.size:
         # If the first index is empty, the intersection will also be empty
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     args = _validate_and_process_indices(indices)
     del indices
@@ -242,7 +241,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if args.any_dropped:
         # If any index was empty, the intersection will also be empty
-        return return_empty(args.index_constructors, args.name)
+        return get_empty(args.index_constructors, args.name)
 
     # 1. Find union_indices
     union_indices = build_union_indices(
@@ -286,18 +285,18 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
         if not intersection_encodings.size:
             # 4.a. If the intermediate intersection is ever empty, the end result must be empty
-            return return_empty(args.index_constructors, args.name)
+            return get_empty(args.index_constructors, args.name)
 
     if len(intersection_encodings) == len(lhs):
         # In intersections, nothing can be added. If the size didn't change, then it means
         # nothing was removed, which means the union is the same as the first index
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     # 5. Convert the intersection encodings back to 2-D indexers
     intersection_indexers = HierarchicalLocMap.unpack_encoding(
             encoded_arr=intersection_encodings,
             bit_offset_encoders=bit_offset_encoders,
-            encoding_can_overflow=encoding_dtype is object,
+            encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
             )
 
     # 6. Remove any bloat from the union indexers.
@@ -337,7 +336,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if not lhs.size:
         # If the first index is empty, the intersection will also be empty
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     args = _validate_and_process_indices(indices)
     del indices
@@ -345,11 +344,11 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if args.any_shallow_copies:
         # The presence of any duplicates always means an empty result
-        return return_empty(args.index_constructors, args.name)
+        return get_empty(args.index_constructors, args.name)
 
     if len(filtered_indices) == 1:
         # All the other indices were empty!
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     # 1. Find union_indices
     union_indices = build_union_indices(
@@ -389,18 +388,18 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
         if not difference_encodings.size:
             # 4.a. If the intermediate difference is ever empty, the end result must be empty
-            return return_empty(args.index_constructors, args.name)
+            return get_empty(args.index_constructors, args.name)
 
     if len(difference_encodings) == len(lhs):
         # In differences, nothing can be added. If the size didn't change, then it means
         # nothing was removed, which means the difference is the same as the first index
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     # 5. Convert the difference encodings back to 2-D indexers
     difference_indexers = HierarchicalLocMap.unpack_encoding(
             encoded_arr=difference_encodings,
             bit_offset_encoders=bit_offset_encoders,
-            encoding_can_overflow=encoding_dtype is object,
+            encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
             )
 
     # 6. Remove any bloat from the union indexers.
@@ -466,13 +465,13 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     if len(union_encodings) == len(lhs):
         # In unions, nothing can be dropped. If the size didn't change, then it means
         # nothing was added, which means the union is the same as the first index
-        return return_specific(lhs)
+        return mutable_immutable_index_filter(lhs.STATIC, lhs)
 
     # 5. Convert the union encodings back to 2-D indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
             encoded_arr=union_encodings,
             bit_offset_encoders=bit_offset_encoders,
-            encoding_can_overflow=encoding_dtype is object,
+            encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
             )
 
     return IndexHierarchy(
