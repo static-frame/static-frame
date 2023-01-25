@@ -260,8 +260,16 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
             encoding_dtype=encoding_dtype,
             )
 
-    # Start with the smallest index to minimize the number of remappings
-    filtered_indices = sorted(filtered_indices, key=lambda x: x.size, reverse=True)
+    # For any two indices being compared, we will have `fewer comparisons and a `higher likelihood of
+    # creating a `smaller index, if the second index is *as small as it can be*.
+    #
+    # We have a greatest chance of getting a `smaller intermediate intersection if we start from the
+    # smallest to the largest index. This will, in turn, mean every subsequent intersection routine
+    # will be comparing against a `smaller set of labels. And, as we get smaller, our likelihood of
+    # becoming empty increases.
+    #
+    # This is why we sort the indices in reverse order, so we can pop the smallest first.
+    filtered_indices = sorted(filtered_indices, key=len, reverse=True)
 
     # Choose the smallest
     first_ih = filtered_indices.pop()
@@ -359,8 +367,16 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
             encoding_dtype=encoding_dtype,
             )
 
-    # Order the rest largest to smallest reversed (we will pop)
-    filtered_indices = sorted(filtered_indices[1:], key=len)
+    # For any two indices being diffed, we will have `more comparisons and a `higher likelihood of
+    # finding a match, if the second index is *as large as it can be*.
+    #
+    # We have a greatest chance of getting a `smaller intermediate difference if we start from the
+    # largest to the smallest index. This will, in turn, mean every subsequent difference routine
+    # will be comparing against the most labels it can, increasing our likelihood of going to zero.
+    # And, as we get smaller, our likelihood of becoming empty increases.
+    #
+    # This is why we sort the indices in order, so we can pop the largest first.
+    filtered_indices = sorted(filtered_indices[1:], key=len) # (We will pop)
 
     difference_encodings = get_encodings(lhs)
 
