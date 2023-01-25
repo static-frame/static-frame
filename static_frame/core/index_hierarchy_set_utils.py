@@ -61,7 +61,8 @@ def _validate_and_process_indices(
     name: tp.Hashable = indices[0].name
     index_constructors = list(indices[0]._index_constructors)
 
-    unique_indices: tp.Dict[tp.Tuple[int, ...], IndexHierarchy] = {}
+    shallow_copy_keys: tp.Set[tp.Hashable] = set()
+    unique_non_empty_indices: tp.List[IndexHierarchy] = []
 
     depth: tp.Optional[int] = None
     for idx in indices:
@@ -85,15 +86,14 @@ def _validate_and_process_indices(
 
         key = _get_shallow_copy_key(idx)
 
-        if key not in unique_indices:
-            unique_indices[key] = idx
-        else:
-            any_shallow_copies = True
+        if key not in shallow_copy_keys:
+            unique_non_empty_indices.append(idx)
+            shallow_copy_keys.add(key)
 
     assert depth is not None # mypy
 
     return ValidationResult(
-            indices=list(unique_indices.values()),
+            indices=unique_non_empty_indices,
             depth=depth,
             any_dropped=any_dropped,
             any_shallow_copies=any_shallow_copies,
