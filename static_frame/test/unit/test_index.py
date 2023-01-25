@@ -1739,6 +1739,64 @@ class TestUnit(TestCase):
         assert unique1.size == indexers1.size
         assert unique3.size == indexers3.size
 
+    def test_unique_with_indexers_a(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        unique1, indexers1 = idx1._unique_with_indexers
+        assert (unique1 == idx1.values).all()
+
+        idx2 = idx1.__deepcopy__({})
+
+        # Force re-cache
+        idx1.append("e")
+
+        idx3 = idx1.__deepcopy__({})
+
+        unique2, indexers2 = idx1._unique_with_indexers
+        unique3, indexers3 = idx2._unique_with_indexers
+        unique4, indexers4 = idx3._unique_with_indexers
+
+        assert (unique2 == idx1.values).all()
+        assert (unique1 == idx2.values).all()
+        assert (unique2 == idx3.values).all()
+
+        assert (unique1 == unique3).all()
+        assert (unique2 == unique4).all()
+
+        assert (indexers1 == indexers3).all()
+        assert (indexers2 == indexers4).all()
+
+        assert len(unique1) == len(unique3) == len(indexers1) == len(indexers3) == 4
+        assert len(unique2) == len(unique4) == len(indexers2) == len(indexers4) == 5
+
+    def test_unique_with_indexers_b(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        assert idx1._unique_with_indexers_tup is None
+
+        idx2 = idx1.__deepcopy__({})
+        assert idx2._unique_with_indexers_tup is None
+
+        unique1, indexers1 = idx1._unique_with_indexers
+        assert idx1._unique_with_indexers_tup is not None
+        idx3 = idx1.__deepcopy__({})
+        assert idx3._unique_with_indexers_tup is not None
+
+        unique2, indexers2 = idx2._unique_with_indexers
+        unique3, indexers3 = idx3._unique_with_indexers
+
+        assert len(unique1) == len(unique2) == len(indexers1) == len(indexers2) == len(unique3) == len(indexers3) == 4
+
+        assert unique1 is not unique2
+        assert unique1 is not unique3
+        assert unique2 is not unique3
+        assert indexers1 is not indexers2
+        assert indexers1 is not indexers3
+        assert indexers2 is not indexers3
+        assert (unique1 == unique2).all()
+        assert (unique2 == unique3).all()
+        assert (indexers1 == indexers2).all()
+        assert (indexers2 == indexers3).all()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 import typing as tp
 from collections import Counter
 from copy import deepcopy
+from functools import partial
 from itertools import chain
 from itertools import zip_longest
 
@@ -369,6 +370,12 @@ class Index(IndexBase):
         obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
+
+        if self._unique_with_indexers_tup is not None:
+            array_dc = partial(array_deepcopy, memo=memo)
+            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup))
+        else:
+            obj._unique_with_indexers_tup = None
 
         memo[id(self)] = obj
         return obj
@@ -1390,7 +1397,12 @@ class _IndexGOMixin:
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
-        obj._unique_with_indexers_tup = None
+
+        if self._unique_with_indexers_tup is not None:
+            array_dc = partial(array_deepcopy, memo=memo)
+            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup))
+        else:
+            obj._unique_with_indexers_tup = None
 
         memo[id(self)] = obj
         return obj
@@ -1435,6 +1447,8 @@ class _IndexGOMixin:
                 dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
         self._recache = False # pylint: disable=E0237
+
+        self._unique_with_indexers_tup = None # clear cache
 
     #---------------------------------------------------------------------------
     # grow only mutation
