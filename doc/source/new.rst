@@ -1,10 +1,12 @@
 What is New in StaticFrame
 ===============================
 
-1.1.1-dev
+1.1.1
 -----------
 
 Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
+Corrected issue with some ``IndexHierarchy`` formations when using slices in an ``HLoc`` with more than one depth selection.
 
 
 1.1.0
