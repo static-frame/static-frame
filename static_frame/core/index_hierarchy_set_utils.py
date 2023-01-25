@@ -107,7 +107,7 @@ def _validate_and_process_indices(
             )
 
 
-def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, DtypeSpecifier]:
+def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, np.dtype]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
@@ -139,7 +139,7 @@ def build_union_indices(
 
     for i in range(depth):
         union = index_many_to_one(
-                (idx.index_at_depth(i) for idx in indices),
+                (idx._indices[i] for idx in indices),
                 cls_default=index_constructors[i],
                 many_to_one_type=ManyToOneType.UNION,
                 )
@@ -162,15 +162,15 @@ def _get_encodings(
     union_idx: Index
     idx: Index
     indexer: np.ndarray
-
+    depth_level = list(range(depth))
     for ( # type: ignore
         union_idx,
         idx,
         indexer
     ) in zip(
         union_indices,
-        ih.index_at_depth(list(range(depth))),
-        ih.indexer_at_depth(list(range(depth)))
+        ih.index_at_depth(depth_level),
+        ih.indexer_at_depth(depth_level)
     ):
         # 2. For each depth, for each index, remap the indexers to the shared base.
         indexer_remap_key = idx._index_iloc_map(union_idx)
