@@ -2699,11 +2699,11 @@ class TestUnit(TestCase):
 
         post1 = IndexBase.intersection(ih, ih[empty_mask])
         post2 = IndexBase.intersection(ih, ih.values[empty_mask])
-        post3 = IndexBase.intersection(ih[empty_mask], ih)
+        post3 = IndexBase.intersection(ih[empty_mask], ih) # type: ignore
 
         post4 = IndexBase.difference(ih, ih.values[empty_mask])
         post5 = IndexBase.difference(ih, ih[empty_mask])
-        post6 = IndexBase.difference(ih[empty_mask], ih)
+        post6 = IndexBase.difference(ih[empty_mask], ih) # type: ignore
 
         assert len(post1) == len(post2) == len(post3) == len(post6) == 0
         assert post4.equals(ih)
