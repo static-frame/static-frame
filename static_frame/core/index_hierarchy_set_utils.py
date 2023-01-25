@@ -10,6 +10,8 @@ from static_frame.core.index import Index
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
@@ -17,8 +19,6 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
 
 
 class ValidationResult(tp.NamedTuple):
