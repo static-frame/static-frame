@@ -8005,9 +8005,6 @@ class Frame(ContainerOperand):
         labels_insert: tp.Iterable[tp.Hashable]
 
         if isinstance(container, Frame):
-            if not len(container.columns):
-                return self if self.STATIC else self.__class__(self)
-
             labels_insert = container.columns.__iter__()
             blocks_insert = container._blocks._blocks
 
