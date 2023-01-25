@@ -345,7 +345,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         # The presence of any duplicates always means an empty result
         return return_empty(args.index_constructors, args.name)
 
-    if len(filtered_indices) == 1 and filtered_indices[0] is lhs:
+    if len(filtered_indices) == 1:
         # All the other indices were empty!
         return return_specific(lhs)
 
