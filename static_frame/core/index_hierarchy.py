@@ -80,7 +80,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
-from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
@@ -1792,10 +1791,13 @@ class IndexHierarchy(IndexBase):
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
             key: tp.Union[np.ndarray, CompoundLabelType],
-            single_depth: bool,
+            available: tp.Optional[np.ndarray],
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
+
+        Args:
+            available: Optional Boolean array denoting with True the subset of region to search for start / end positions of slice values. We only take slices within regions previously selected by already-processed depths. If None, some optimizations are available for working with slices.
         '''
         # This private internal method assumes recache has already been checked for!
 
@@ -1809,11 +1811,17 @@ class IndexHierarchy(IndexBase):
         indexer_at_depth = self._indexers[depth]
 
         if isinstance(key_at_depth, slice):
+            if available is None:
+                multi_depth = False
+            else:
+                multi_depth = True
+                unmatchable = ~available
+
             if key_at_depth.start is not None:
-                if not single_depth:
-                    start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
-                else:
-                    [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start)
+                if multi_depth:
+                    matched[unmatchable] = False # set all regions unavailable to slice to False
+                [[start, *_]] = np.nonzero(matched)
             else:
                 start = 0
 
@@ -1825,28 +1833,19 @@ class IndexHierarchy(IndexBase):
                     )
 
             if key_at_depth.stop is not None:
-                if not single_depth:
-                    stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
-                else:
-                    [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
-                    stop += 1
+                # get the last stop value observed
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop)
+                if multi_depth:
+                    matched[unmatchable] = False
+                [[*_, stop]] = np.nonzero(matched)
+                stop += 1
             else:
                 stop = len(indexer_at_depth)
 
-            if key_at_depth.step is None or key_at_depth.step == 1:
-                other = PositionsAllocator.get(stop)[start:]
-            else:
-                other = np.arange(start, stop, key_at_depth.step)
-
-            if single_depth:
-                return other
-
-            return isin_array(
-                    array=indexer_at_depth,
-                    array_is_unique=False,
-                    other=other,
-                    other_is_unique=True
-                    )
+            target = np.arange(start, stop, key_at_depth.step)
+            post = np.full(len(indexer_at_depth), False)
+            post[target] = True
+            return post
 
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
@@ -1906,12 +1905,13 @@ class IndexHierarchy(IndexBase):
                 depth for depth, k in enumerate(key)
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
+
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(
                     depth=meaningful_depths[0],
                     key=key,
-                    single_depth=True,
+                    available=None,
                     )
         else:
             # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
@@ -1922,18 +1922,14 @@ class IndexHierarchy(IndexBase):
                 except KeyError:
                     raise KeyError(key) from None
 
-            mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
+            mask = np.full(self._indexers.shape[1], True, dtype=DTYPE_BOOL)
 
             for depth in meaningful_depths:
-                mask = self._build_mask_for_key_at_depth(
+                mask &= self._build_mask_for_key_at_depth(
                         depth=depth,
                         key=key,
-                        single_depth=False,
+                        available=mask,
                         )
-                mask_2d[:, depth] = mask
-
-            mask = mask_2d.all(axis=1)
-            del mask_2d
 
         return self.positions[mask]
 
@@ -1998,7 +1994,6 @@ class IndexHierarchy(IndexBase):
                     raise RuntimeError(
                         f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].'
                     )
-
             else:
                 key = sanitized_key
                 if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
@@ -2012,7 +2007,6 @@ class IndexHierarchy(IndexBase):
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
-
         if any(isinstance(k, tuple) for k in key): # type: ignore
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
