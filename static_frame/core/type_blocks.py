@@ -69,7 +69,6 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
 
-
 #---------------------------------------------------------------------------
 
 def group_match(
