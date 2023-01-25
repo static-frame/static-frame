@@ -1778,7 +1778,7 @@ class TestUnit(TestCase):
 
         unique1, indexers1 = idx1._unique_with_indexers
         assert idx1._unique_with_indexers_tup is not None
-        idx3 = idx1.__deepcopy__({})
+        idx3 = idx1.__deepcopy__({}) # type: ignore
         assert idx3._unique_with_indexers_tup is not None
 
         unique2, indexers2 = idx2._unique_with_indexers

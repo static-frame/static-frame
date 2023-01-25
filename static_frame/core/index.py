@@ -373,7 +373,7 @@ class Index(IndexBase):
 
         if self._unique_with_indexers_tup is not None:
             array_dc = partial(array_deepcopy, memo=memo)
-            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup))
+            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup)) # type: ignore
         else:
             obj._unique_with_indexers_tup = None
 
@@ -1398,7 +1398,7 @@ class _IndexGOMixin:
 
         if self._unique_with_indexers_tup is not None:
             array_dc = partial(array_deepcopy, memo=memo)
-            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup))
+            obj._unique_with_indexers_tup = tuple(map(array_dc, self._unique_with_indexers_tup)) # type: ignore
         else:
             obj._unique_with_indexers_tup = None
 
