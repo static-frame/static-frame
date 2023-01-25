@@ -514,7 +514,10 @@ class HierarchicalLocMap:
         dtype = object if encoding_can_overflow else DTYPE_UINT_DEFAULT
 
         starts = bit_offset_encoders
-        stops = np.concatenate((starts[1:], np.array([64], dtype=dtype)))
+        stops = np.empty(len(starts), dtype=dtype)
+        stops[:-1] = starts[1:]
+        stops[-1] = 64
+
         lens = stops - starts
         masks = [x for x in (1 << lens) - 1]
 
