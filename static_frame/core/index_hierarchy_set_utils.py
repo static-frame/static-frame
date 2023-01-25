@@ -27,7 +27,7 @@ class ValidationResult(tp.NamedTuple):
     index_constructors: tp.List[IndexConstructor]
 
 
-def _get_shallow_copy_key(ih: IndexHierarchy) -> tp.Hashable:
+def get_shallow_copy_key(ih: IndexHierarchy) -> tp.Hashable:
     # calling id(...) on numpy arrays is not always reliable, so instead,
     # we will use the underlying array properties to determine the ID for this
     # index hierarchy, with the desire to encounter duplicate keys for shallow copies
@@ -84,7 +84,7 @@ def _validate_and_process_indices(
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
 
-        key = _get_shallow_copy_key(idx)
+        key = get_shallow_copy_key(idx)
 
         if key not in shallow_copy_keys:
             unique_non_empty_indices.append(idx)
