@@ -3239,7 +3239,7 @@ class Reanimate:
     pass
 
 class ReanimateDT64(Reanimate):
-    RE = re.compile(r"datetime64\('([-.T:0-9]+)'\)")
+    RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
 
     @classmethod
     def filter(cls, value: str) -> tp.Any:
