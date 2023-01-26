@@ -54,9 +54,8 @@ from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import ufunc_unique1d_indexer
-
+from static_frame.core.util import ufunc_unique2d
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover

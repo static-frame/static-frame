@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import typing as tp
 
 import invoke
@@ -44,8 +44,8 @@ def interface(context, container=None, doc=False):
     '''
     Optionally select a container type to discover what API endpoints have examples.
     '''
-    from static_frame.core.container import ContainerBase
     import static_frame as sf
+    from static_frame.core.container import ContainerBase
 
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
