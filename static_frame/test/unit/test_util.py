@@ -22,6 +22,7 @@ from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import JSONFilter
+from static_frame.core.util import JSONFilterRepr
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
@@ -2930,6 +2931,18 @@ class TestUnit(TestCase):
 
         post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
         self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
+
+
+    def test_json_encoder_numpy_c(self) -> None:
+        src = dict(a=np.datetime64("2022-01-01"), b=np.datetime64("1542-06-27"))
+        post1 = json.dumps(JSONFilterRepr.from_element(src))
+
+        post2 = JSONFilterRepr.to_element(json.loads(post1))
+
+        import ipdb; ipdb.set_trace()
+
+        self.assertEqual(post1, '{"a": 1, "b": 2}')
+
 
     #---------------------------------------------------------------------------
     def test_frozen_generator_a(self) -> None:

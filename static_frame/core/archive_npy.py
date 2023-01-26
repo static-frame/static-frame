@@ -353,6 +353,7 @@ class ArchiveZip(Archive):
         return self._archive.getinfo(name).file_size
 
     def write_metadata(self, content: tp.Any) -> None:
+        # writestr is a method on the ZipFile
         self._archive.writestr(self.FILE_META, json.dumps(content))
 
     def read_metadata(self) -> tp.Any:

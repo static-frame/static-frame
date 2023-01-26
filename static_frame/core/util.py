@@ -3182,6 +3182,8 @@ def list_to_tuple(value: tp.Any) -> tp.Any:
     return tuple(list_to_tuple(v) for v in value)
 
 class JSONFilter:
+    '''Note: this is filter for encoding NumPy arrays and Python objects in generally readible format by naive consumers. Thus all dates are represented as date strings. This differs from using `__repr__` and attempting to reanimate Python types.
+    '''
 
     @staticmethod
     def from_element(obj: tp.Any) -> tp.Any:
@@ -3212,10 +3214,14 @@ class JSONFilter:
         if hasattr(obj, '__iter__'):
             return [fe(e) for e in obj]
 
+        return obj
+
     @classmethod
     def from_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
+        '''Return a key-value mapping.
+        '''
         return {cls.from_element(k): cls.from_element(v) for k, v in items}
 
     @classmethod
@@ -3223,6 +3229,44 @@ class JSONFilter:
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
         return [cls.from_element(v) for v in iterable]
+
+
+class JSONFilterRepr(JSONFilter):
+    '''JSON encoding of select types to permit reanimation. Let fail types that are not specifically handled.
+    '''
+
+    @staticmethod
+    def from_element(obj: tp.Any) -> tp.Any:
+
+        if isinstance(obj, str):
+            return obj
+        if isinstance(obj, (datetime.date, np.datetime64)):
+            return repr(obj)
+
+        fe = JSONFilterRepr.from_element
+        if isinstance(obj, dict):
+            return {fe(k): fe(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            return [fe(e) for e in obj]
+
+        return obj
+
+    @staticmethod
+    def to_element(obj: tp.Any) -> tp.Any:
+        '''Given a dict post JSON conversion, look for any string and attempt element conversion.
+        '''
+        if isinstance(obj, str):
+            # test regular expressions
+            return obj
+
+        te = JSONFilterRepr.to_element
+        if isinstance(obj, dict):
+            return {te(k): te(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            return [te(e) for e in obj]
+
+        return e
+
 
 #-------------------------------------------------------------------------------
 
