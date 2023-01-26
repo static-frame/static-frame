@@ -10364,6 +10364,24 @@ class TestUnit(TestCase):
             self.assertTrue(f1.equals(f2))
             self.assertIs(f2.__class__, FrameGO)
 
+    def test_frame_to_npz_l1(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(np.datetime64('2022-02-22'))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
+    def test_frame_to_npz_l2(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(datetime.date(2022, 2, 22))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
     def test_frame_to_npz_empty(self) -> None:
         f1 = Frame()
 
@@ -10376,6 +10394,7 @@ class TestUnit(TestCase):
         from datetime import date
         with temp_file('.npz') as fp:
             with self.assertRaises(ErrorNPYEncode):
+                # fails to being an object array
                 sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npz(fp)
             self.assertFalse(os.path.exists(fp))
 

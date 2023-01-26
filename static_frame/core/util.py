@@ -3177,14 +3177,6 @@ def array_sample(
 #-------------------------------------------------------------------------------
 # json utils
 
-def list_to_tuple(value: tp.Any) -> tp.Any:
-    '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
-    '''
-    # Using `is` here deemed appropriate as objects coming back from json decoder.
-    if value.__class__ is not list:
-        return value
-    return tuple(list_to_tuple(v) for v in value)
-
 class JSONFilter:
     '''Note: this is filter for encoding NumPy arrays and Python objects in generally readible format by naive consumers. Thus all dates are represented as date strings. This differs from using `__repr__` and attempting to reanimate Python types.
     '''
@@ -3194,7 +3186,7 @@ class JSONFilter:
         '''Convert non-JSON compatible objects to JSON compatible objects or strings.
         '''
         if obj is None:
-            return None
+            return obj
         if isinstance(obj, (str, int, float)):
             return obj
         if isinstance(obj, datetime.date):
@@ -3267,32 +3259,39 @@ class ReanimateDTD(Reanimate):
 
 
 class JSONTranslator(JSONFilter):
-    '''JSON encoding of select types to permit reanimation. Let fail types that are not specifically handled.
+    '''JSON encoding of select types to permit reanimation. Let fail types that are not encodable and are not explicitly handled.
     '''
     REANIMATEABLE = (ReanimateDT64, ReanimateDTD)
 
     @staticmethod
-    def from_element(obj: tp.Any) -> tp.Any:
-        '''From a Python object, pre JSON encoding, replacing any Python objects with discoverale strings.
+    def encode_element(obj: tp.Any) -> tp.Any:
+        '''From a Python object, pre-JSON encoding, replacing any Python objects with discoverable strings.
         '''
+        if obj is None:
+            return obj
+
         if isinstance(obj, str):
             return obj
 
         if isinstance(obj, (np.datetime64, datetime.date)):
             return repr(obj) # take repr for encoding / decoding
 
-        fe = JSONTranslator.from_element #type: ignore
+        fe = JSONTranslator.encode_element #type: ignore
         if isinstance(obj, dict):
             return {fe(k): fe(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
+            # all iterables must be lists for JSON encoding
             return [fe(e) for e in obj]
 
         return obj
 
     @classmethod
-    def to_element(cls, obj: tp.Any) -> tp.Any:
-        '''Given a dict post JSON conversion, check all strings for strings that can be converted to python objects.
+    def decode_element(cls, obj: tp.Any) -> tp.Any:
+        '''Given an object post JSON conversion, check all strings for strings that can be converted to python objects.
         '''
+        if obj is None:
+            return obj
+
         if isinstance(obj, str):
             # test regular expressions
             for reanimate in cls.REANIMATEABLE:
@@ -3301,11 +3300,12 @@ class JSONTranslator(JSONFilter):
                     return post
             return obj
 
-        te = cls.to_element
+        te = cls.decode_element
         if isinstance(obj, dict):
             return {te(k): te(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            return [te(e) for e in obj]
+            # realize all things JSON gives as lists to tuples
+            return tuple(te(e) for e in obj)
 
         return obj
 

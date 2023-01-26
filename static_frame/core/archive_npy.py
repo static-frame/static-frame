@@ -26,11 +26,11 @@ from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
-from static_frame.core.util import list_to_tuple
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -354,7 +354,10 @@ class ArchiveZip(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         # writestr is a method on the ZipFile
-        self._archive.writestr(self.FILE_META, json.dumps(content))
+        self._archive.writestr(
+                self.FILE_META,
+                json.dumps(content),
+                )
 
     def read_metadata(self) -> tp.Any:
         return json.loads(self._archive.read(self.FILE_META))
@@ -558,7 +561,9 @@ class ArchiveZipWrapper(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
-        self._archive.writestr(name, json.dumps(content))
+        self._archive.writestr(name,
+                json.dumps(content),
+                )
 
     def read_metadata(self) -> tp.Any:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
@@ -600,7 +605,7 @@ class ArchiveIndexConverter:
             ) -> None:
         '''
         Args:
-            metadata: mutates in place with json components
+            metadata: mutates in place with json components for class names of index types.
         '''
         if depth == 1 and index._map is None: # type: ignore
             pass # do not store anything
@@ -673,9 +678,12 @@ class ArchiveFrameConverter:
             consolidate_blocks: bool = False,
             ) -> None:
         metadata: tp.Dict[str, tp.Any] = {}
-        metadata[Label.KEY_NAMES] = [frame._name,
-                frame._index._name,
-                frame._columns._name,
+
+        # NOTE: isolate custom pre-json encoding only where needed: on `name` attributes; the name might be nested tuples, so we cannot assume that name is just a string
+        metadata[Label.KEY_NAMES] = [
+                JSONTranslator.encode_element(frame._name),
+                JSONTranslator.encode_element(frame._index._name),
+                JSONTranslator.encode_element(frame._columns._name),
                 ]
         # do not store Frame class as caller will determine
         metadata[Label.KEY_TYPES] = [
@@ -770,8 +778,8 @@ class ArchiveFrameConverter:
 
         metadata = archive.read_metadata()
 
-        # JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
-        name, name_index, name_columns = (list_to_tuple(n)
+        # NOTE: we isolate custom post-JSON decoding to only where it is needed: the name attributes. JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
+        name, name_index, name_columns = (JSONTranslator.decode_element(n)
                 for n in metadata[Label.KEY_NAMES])
 
         block_count, depth_index, depth_columns = metadata[Label.KEY_DEPTHS]

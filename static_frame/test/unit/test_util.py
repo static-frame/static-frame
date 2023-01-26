@@ -63,7 +63,6 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import list_to_tuple
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
@@ -2705,19 +2704,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_list_to_tuple_a(self) -> None:
-        self.assertEqual(list_to_tuple(
-                [3, 4, [None, (10, 20), 'foo']]),
-                (3, 4, (None, (10, 20), 'foo'))
-                )
-
-        self.assertEqual(list_to_tuple(
-                [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
-                (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
-                )
-
-    #---------------------------------------------------------------------------
-
     def test_ufunc_unique1d_positions_a(self) -> None:
         pos, indexer = ufunc_unique1d_positions(np.array([3, 2, 3, 2, 5, 3]))
         self.assertEqual(pos.tolist(), [1, 0, 4])
@@ -2940,9 +2926,9 @@ class TestUnit(TestCase):
 
     def test_json_translator_a(self) -> None:
         src = dict(a=np.datetime64("2022-01-01"), b=np.datetime64("1542-06-27"))
-        post1 = json.dumps(JSONTranslator.from_element(src))
+        post1 = json.dumps(JSONTranslator.encode_element(src))
 
-        post2 = JSONTranslator.to_element(json.loads(post1))
+        post2 = JSONTranslator.decode_element(json.loads(post1))
 
         self.assertEqual(list(post2.items()),
             [('a', np.datetime64('2022-01-01')),
@@ -2950,13 +2936,25 @@ class TestUnit(TestCase):
 
     def test_json_translator_b(self) -> None:
         src = dict(a=datetime.date(2022, 1, 1), b=datetime.date(1542, 6, 7))
-        post1 = json.dumps(JSONTranslator.from_element(src))
+        post1 = json.dumps(JSONTranslator.encode_element(src))
 
-        post2 = JSONTranslator.to_element(json.loads(post1))
+        post2 = JSONTranslator.decode_element(json.loads(post1))
 
         self.assertEqual(list(post2.items()),
             [('a', datetime.date(2022, 1, 1)),
             ('b', datetime.date(1542, 6, 7))])
+
+    def test_json_translator_c(self) -> None:
+
+        self.assertEqual(JSONTranslator.decode_element(
+                [3, 4, [None, (10, 20), 'foo']]),
+                (3, 4, (None, (10, 20), 'foo'))
+                )
+
+        self.assertEqual(JSONTranslator.decode_element(
+                [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
+                (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
+                )
 
 
         # import ipdb; ipdb.set_trace()
