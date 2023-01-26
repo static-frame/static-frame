@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.2-dev
+-----------
+
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+
+
 1.1.1
 -----------
 
