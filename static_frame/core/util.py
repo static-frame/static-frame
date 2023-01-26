@@ -3276,10 +3276,11 @@ class JSONTranslator(JSONFilter):
         if isinstance(obj, (np.datetime64, datetime.date)):
             return repr(obj) # take repr for encoding / decoding
 
-        fe = JSONTranslator.encode_element #type: ignore
         if isinstance(obj, dict):
+            fe = JSONTranslator.encode_element #type: ignore
             return {fe(k): fe(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
+            fe = JSONTranslator.encode_element #type: ignore
             # all iterables must be lists for JSON encoding
             return [fe(e) for e in obj]
 
@@ -3287,7 +3288,7 @@ class JSONTranslator(JSONFilter):
 
     @classmethod
     def decode_element(cls, obj: tp.Any) -> tp.Any:
-        '''Given an object post JSON conversion, check all strings for strings that can be converted to python objects.
+        '''Given an object post JSON conversion, check all strings for strings that can be converted to python objects. Also, all lists are converted to tuples
         '''
         if obj is None:
             return obj
@@ -3300,12 +3301,13 @@ class JSONTranslator(JSONFilter):
                     return post
             return obj
 
-        te = cls.decode_element
-        if isinstance(obj, dict):
-            return {te(k): te(v) for k, v in obj.items()}
-        if hasattr(obj, '__iter__'):
+        if obj.__class__ is list: # post JSON, only ever be lists
+            te = cls.decode_element
             # realize all things JSON gives as lists to tuples
             return tuple(te(e) for e in obj)
+        if isinstance(obj, dict):
+            te = cls.decode_element
+            return {te(k): te(v) for k, v in obj.items()}
 
         return obj
 
