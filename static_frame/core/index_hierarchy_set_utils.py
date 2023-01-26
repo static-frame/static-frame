@@ -71,10 +71,11 @@ def _validate_and_process_indices(
         if name is not None and idx.name != name:
             name = None
 
-        for ctor, other_ctor in zip(idx._index_constructors, index_constructors):
-            if other_ctor != ctor:
-                index_constructors = []
-                break
+        if index_constructors:
+            for ctor, other_ctor in zip(idx._index_constructors, index_constructors):
+                if other_ctor != ctor:
+                    index_constructors = []
+                    break
 
         # Drop empty indices
         if not idx.size:
