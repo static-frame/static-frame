@@ -142,8 +142,7 @@ class _ArgsortCache(tp.NamedTuple):
     key: np.ndarray
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> '_ArgsortCache':
-        obj = self.__class__.__new__(
-                self.__class__,
+        obj = self.__class__(
                 array_deepcopy(self.arr, memo=memo),
                 array_deepcopy(self.key, memo=memo),
                 )
