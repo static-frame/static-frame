@@ -2939,10 +2939,9 @@ class TestUnit(TestCase):
 
         post2 = JSONFilterRepr.to_element(json.loads(post1))
 
-        import ipdb; ipdb.set_trace()
-
-        self.assertEqual(post1, '{"a": 1, "b": 2}')
-
+        self.assertEqual(list(post2.items()),
+            [('a', np.datetime64('2022-01-01')),
+            ('b', np.datetime64('1542-06-27'))])
 
     #---------------------------------------------------------------------------
     def test_frozen_generator_a(self) -> None:

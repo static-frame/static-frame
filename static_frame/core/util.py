@@ -3243,7 +3243,6 @@ class ReanimateDT64(Reanimate):
 
     @classmethod
     def filter(cls, value: str) -> tp.Any:
-        print(value)
         post = cls.RE.fullmatch(value)
         if post is None:
             return value
