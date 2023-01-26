@@ -6,6 +6,8 @@ import os
 import tempfile
 import typing as tp
 import warnings
+import re
+import ast
 from collections import Counter
 from collections import abc
 from collections import defaultdict
@@ -3220,7 +3222,7 @@ class JSONFilter:
     def from_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
-        '''Return a key-value mapping.
+        '''Return a key-value mapping. This is only useful in that it avoids doing all isinstance checks.
         '''
         return {cls.from_element(k): cls.from_element(v) for k, v in items}
 
@@ -3228,19 +3230,50 @@ class JSONFilter:
     def from_iterable(cls,
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
+        '''Return an iterable. Only useful to avoid all isinstance checks in from_element().
+        '''
         return [cls.from_element(v) for v in iterable]
+
+
+class Reanimate:
+    pass
+
+class ReanimateDT64(Reanimate):
+    RE = re.compile(r"datetime64\('([-.T:0-9]+)'\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        print(value)
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        return np.datetime64(post.group(1))
+
+class ReanimateDTD(Reanimate):
+    RE = re.compile(r"datetime.date\(([ ,0-9]+)\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        args = ast.literal_eval(post.group(1))
+        return datetime.date(*args)
 
 
 class JSONFilterRepr(JSONFilter):
     '''JSON encoding of select types to permit reanimation. Let fail types that are not specifically handled.
     '''
+    REANIMATABLE = (ReanimateDT64, ReanimateDTD)
 
     @staticmethod
     def from_element(obj: tp.Any) -> tp.Any:
 
         if isinstance(obj, str):
             return obj
+
         if isinstance(obj, (datetime.date, np.datetime64)):
+            # take repr, not str
             return repr(obj)
 
         fe = JSONFilterRepr.from_element
@@ -3251,12 +3284,16 @@ class JSONFilterRepr(JSONFilter):
 
         return obj
 
-    @staticmethod
-    def to_element(obj: tp.Any) -> tp.Any:
+    @classmethod
+    def to_element(cls, obj: tp.Any) -> tp.Any:
         '''Given a dict post JSON conversion, look for any string and attempt element conversion.
         '''
         if isinstance(obj, str):
             # test regular expressions
+            for reanimate in cls.REANIMATABLE:
+                post = reanimate.filter(obj)
+                if post is not obj:
+                    return post
             return obj
 
         te = JSONFilterRepr.to_element
