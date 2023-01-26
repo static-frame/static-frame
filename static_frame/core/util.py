@@ -3311,7 +3311,6 @@ class JSONTranslator(JSONFilter):
 
         return obj
 
-
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(
