@@ -14,6 +14,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.fill_value_auto import FillValueAuto
+from static_frame.core.frame import Frame
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.type_blocks import group_match
 from static_frame.core.type_blocks import group_sorted
@@ -184,7 +185,7 @@ class TestUnit(TestCase):
                 [(0, NULL_SLICE), (1, NULL_SLICE)]
                 )
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(KeyError):
             list(tb1._key_to_block_slices('a'))
 
     #---------------------------------------------------------------------------
@@ -1415,6 +1416,105 @@ class TestUnit(TestCase):
                            targets=targets,
                            values=values
                            ))
+
+
+    #--------------------------------------------------------------------------
+    def test_type_blocks_assign_from_iloc_a(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        with self.assertRaises(ValueError):
+            _ = list(f1._blocks._assign_from_iloc_by_sequence(
+                        value=(),
+                        row_key=0,
+                        column_key=0))
+
+    def test_type_blocks_assign_from_iloc_b(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        with self.assertRaises(ValueError):
+            _ = list(f1._blocks._assign_from_iloc_by_sequence(
+                        value=np.arange(3),
+                        row_key=0,
+                        column_key=0))
+
+    def test_type_blocks_assign_from_iloc_c(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        post = list(f1._blocks._assign_from_iloc_by_sequence(
+                    value=[True],
+                    row_key=1,
+                    column_key=2))
+        from datetime import date
+        self.assertEqual([a.tolist() for a in post],
+                [[10, 2, 8],
+                [[False], [False], [False]],
+                [False, True, False],
+                [date(1517, 1, 1), date(1517, 4, 1), date(1517, 12, 31)]
+                ]
+                )
+
+    def test_type_blocks_assign_from_iloc_d(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        with self.assertRaises(ValueError):
+            _ = list(f1._blocks._assign_from_iloc_by_sequence(
+                    value=[100, True, True, np.datetime64('2022-01-01')],
+                    row_key=1,
+                    column_key=1))
+
+    def test_type_blocks_assign_from_iloc_e(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2),
+                (False, False),
+                (False, False),
+                ('1517-01-01', '1517-04-01'),
+                ),
+                dtypes =(int, bool, bool, np.datetime64),
+                consolidate_blocks=True,
+                )
+        post = list(f1._blocks._assign_from_iloc_by_sequence(
+                value=[100, True, True, np.datetime64('2022-01-01')],
+                row_key=None,
+                column_key=None))
+        from datetime import date
+        self.assertEqual([a.tolist() for a in post],
+                [[100, 100], [[True, True], [True, True]],
+                [date(2022, 1, 1), date(2022, 1, 1)]]
+                )
+        # import ipdb; ipdb.set_trace()
 
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
@@ -4000,21 +4100,21 @@ class TestUnit(TestCase):
         self.assertEqual([a.shape for a in post], [(3,)])
 
     #---------------------------------------------------------------------------
-    def test_iter(self) -> None:
+    def test_type_blocks_iter(self) -> None:
         tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
 
         with self.assertRaises(NotImplementedError):
             iter(tb)
 
     #---------------------------------------------------------------------------
-    def test_iter_row_elements_a(self) -> None:
+    def test_type_blocks_iter_row_elements_a(self) -> None:
         tb1 = ff.parse('s(3,10)|v(int,int,bool,str)')._blocks
         post = tuple(tb1.iter_row_elements(2))
         self.assertEqual(post,
                 (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
 
     #---------------------------------------------------------------------------
-    def test_iter_columns_tuples_a(self) -> None:
+    def test_type_blocks_iter_columns_tuples_a(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))
         self.assertEqual(post1,
@@ -4026,7 +4126,7 @@ class TestUnit(TestCase):
                 ((92867, 13448), (-41157, -168387), (False, True), ('z5l6', 'zr4u'), (146284, 32395), (13448, 58768))
                 )
 
-    def test_iter_columns_tuples_b(self) -> None:
+    def test_type_blocks_iter_columns_tuples_b(self) -> None:
         tb1 = ff.parse('s(2,3)|v(str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))
         self.assertEqual(post1, (('zjZQ', 'zO5l'), ('zaji', 'zJnC'), ('ztsv', 'zUvW')))
@@ -4034,23 +4134,119 @@ class TestUnit(TestCase):
                 [['zjZQ', 'zaji', 'ztsv'], ['zO5l', 'zJnC', 'zUvW']])
 
     #---------------------------------------------------------------------------
-    def test_unified_dtypes_a(self) -> None:
+    def test_type_blocks_unified_dtypes_a(self) -> None:
 
         a1 = np.array([False, True, False])
         a2 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, a2))
         self.assertTrue(tb1.unified_dtypes)
 
-    def test_unified_dtypes_b(self) -> None:
+    def test_type_blocks_unified_dtypes_b(self) -> None:
         a1 = np.array([False, True, False])
         a2 = np.array([0, 2, 1])
         tb1 = TypeBlocks.from_blocks((a1, a2))
         self.assertFalse(tb1.unified_dtypes)
 
-    def test_unified_dtypes_c(self) -> None:
+    def test_type_blocks_unified_dtypes_c(self) -> None:
         a1 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, ))
         self.assertTrue(tb1.unified_dtypes)
+
+    #---------------------------------------------------------------------------
+    def test_type_blocks_key_to_block_slices_exception(self) -> None:
+        # as this is an loc-is-iloc index, the key gets passed directly to type blocks
+        with self.assertRaises(KeyError):
+            ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
+
+
+    def test_type_blocks_consolidate_select_a1(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks([2, 3]))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3,), (3,), (3, 2), (3,)]
+                )
+
+    def test_type_blocks_consolidate_select_a2(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(2, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3,), (3,), (3, 3)]
+                )
+
+    def test_type_blocks_consolidate_select_a3(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 2), (3, 3)]
+                )
+
+    def test_type_blocks_consolidate_select_b1(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks([2, 3, 4]))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 2), (3, 3), (3,)]
+                )
+
+    def test_type_blocks_consolidate_select_b2(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, 5)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 5), (3,)]
+                )
+
+    def test_type_blocks_consolidate_select_b3(self) -> None:
+
+        a1 = np.array([[1, 2, 4], [3, 4, 3], [5, 6, 0]])
+        a3 = np.array([8, 1, 2])
+        a4 = np.array([-1, -2, -4])
+        a5 = np.array([True, True, False])
+
+        tb1 = TypeBlocks.from_blocks((a1, a3, a4, a5))
+        post = TypeBlocks.from_blocks(tb1._consolidate_select_blocks(slice(0, None)))
+        self.assertEqual(tb1.dtypes.tolist(), post.dtypes.tolist())
+        self.assertEqual(post.shapes.tolist(),
+                [(3, 5), (3,)]
+                )
+
+
 
 if __name__ == '__main__':
     import unittest

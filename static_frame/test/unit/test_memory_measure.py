@@ -7,8 +7,8 @@ from automap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
+from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.memory_measure import MemoryMeasure
-from static_frame.core.memory_measure import memory_display
 from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
@@ -443,25 +443,10 @@ class TestUnit(TestCase):
     def test_memory_display_a(self) -> None:
         f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
 
-        # size = memory_total(f.index, format=MeasureFormat.LOCAL_MATERIALIZED_DATA)
-        post = memory_display(f,
+        post = MemoryDisplay.from_any(f,
                 (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
-                size_label=False,
                 )
-        self.assertEqual(post.loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
-
-
-# <Frame>
-# <Index> L       LM      LMD     R        RM      RMD     <<U3>
-# <Index>
-# Index   1.55 KB 1.59 KB 1.37 KB 9.65 KB  1.71 KB 1.49 KB
-# Columns 208.0 B 224.0 B 112.0 B 8.3 KB   288.0 B 176.0 B
-# Values  3.87 KB 4.0 KB  3.12 KB 3.87 KB  4.0 KB  3.12 KB
-# Total   5.66 KB 5.83 KB 4.63 KB 13.75 KB 6.02 KB 4.82 KB
-# <<U7>   <<U7>   <<U7>   <<U7>   <<U8>    <<U7>   <<U7>
-
-        # import ipdb; ipdb.set_trace()
-
+        self.assertEqual(post.to_frame().loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
 
 if __name__ == '__main__':
     unittest.main()

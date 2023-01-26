@@ -129,4 +129,4 @@ Consistent Interfaces for More Maintainable Code
 
 Resetting an index is not a complex operation. However, how to provide the option to create an AIII within diverse interfaces is not obvious. The approach taken with StaticFrame offers a consistent interface, leading to more maintainable code.
 
-For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/InvestmentSystems/static-frame).
+For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/static-frame/static-frame).

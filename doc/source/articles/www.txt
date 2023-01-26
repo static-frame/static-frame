@@ -1,0 +1,56 @@
+
+
+
+While StaticFrame offers a variety of constructors to read CSV, XLSX, JSON, and a variety of other formats, all such interfaces take either a file path or a StringIO / BytesIO instance. While it is common to download resources from the internet, these interfaces do not accept a URL, as there are a number of options as to how a resource should be downloaded (i.e., to disk or in-memory). Static 0.9.19 introduces the `WWW` interface as drop-in replacement for file specifiers to StaticFrame constructors. With this interface, users can select if a download is just stored in memory, written to temporary files (that clean themselves up), or written to an arbitrary file path and persisted. In addition, resources for extracting single files from ZIP or GZIP archives are provided.
+
+In CR we will review the implementation, including how to easily download files without ``requests`` and a custom StringIO subclass that looks like StringIO but is really an auto-deleting file.
+
+
+CSV
+
+---
+
+pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data')
+
+---
+
+sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
+
+
+
+sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data'), columns_depth=0)
+
+
+https://archive.ics.uci.edu/ml/machine-learning-databases/00591/name_gender_dataset.csv
+
+
+>>> sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/00591/name_gender_dataset.csv'), columns_depth=0)
+
+
+--
+JSON
+
+https://data.townofcary.org/api/v2/catalog/datasets/rdu-weather-history/exports/json
+
+
+>>> sf.Frame.from_json_records(sf.WWW.from_file('https://data.townofcary.org/api/v2/catalog/datasets/rdu-weather-history/exports/json'))
+
+
+--
+
+
+ZIP files
+
+# Gives SSL issue
+
+https://archive-beta.ics.uci.edu/static/ml/datasets/743/maskreminder.zip
+https://archive-beta.ics.uci.edu/static/ml/datasets/733/water+quality+prediction-1.zip
+
+
+This works; had to use named file as interface does not support string io
+
+sf.Frame.from_xlsx(sf.WWW.from_zip('https://archive.ics.uci.edu/ml/machine-learning-databases/00602/DryBeanDataset.zip', component='DryBeanDataset/Dry_Bean_Dataset.xlsx', encoding=None, fp='/tmp/beans.xlsx'), columns_depth=0)
+
+
+
+https://archive.ics.uci.edu/ml/machine-learning-databases/eeg-mld/

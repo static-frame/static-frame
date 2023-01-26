@@ -2,6 +2,7 @@ import os
 import typing as tp
 from datetime import date
 from datetime import datetime
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
@@ -100,11 +101,13 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
-                name='foo')
+                name='foo',
+                dtypes=np.int64)
         f2 = Frame.from_dict(
                 dict(a=(1,2,3), b=(4,5,6)),
                 index=('x', 'y', 'z'),
-                name='bar')
+                name='bar',
+                dtypes=np.int64)
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
         b1 = Bus.from_frames((f1, f2), config=config)
@@ -2303,6 +2306,45 @@ class TestUnit(TestCase):
                 b1.to_zip_npy(fp)
             self.assertFalse(os.path.exists(fp))
 
+    #---------------------------------------------------------------------------
+
+    def test_bus_to_signature_bytes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
+
+        b2 = Bus.from_frames((f1, f2))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+    def test_bus_to_signature_bytes_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+
+        b2 = Bus.from_frames((f1, f2, f4))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+
+    def test_bus_via_hashlib_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        d = b1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(d,
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
 
 
 

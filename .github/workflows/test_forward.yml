@@ -13,7 +13,6 @@ jobs:
       matrix:
         os: ['ubuntu-20.04']
         python-version: ['3.9', '3.10']
-
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -33,19 +32,17 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get install libhdf5-dev
         python -m pip install --upgrade pip
-        pip install wheel==0.37.1
-        pip install numpy==1.23.1
-        pip install Cython==0.29.28
-        pip install setuptools==41.2.0
         pip install -r requirements-test-forward.txt
 
     - name: Invoke Test
       run: inv test --cov
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
-        file: coverage.xml
+        token: 6de39346-7381-441d-80d3-a6c0c051be2d
+        files: coverage.xml
         fail_ci_if_error: false
         verbose: true

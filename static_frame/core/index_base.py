@@ -1,9 +1,14 @@
 import typing as tp
+from functools import partial
+from itertools import chain
 
 import numpy as np
 from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import IMTOAdapter
+from static_frame.core.container_util import imto_adapter_factory
+from static_frame.core.container_util import index_many_to_one
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -16,10 +21,10 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
@@ -88,10 +93,6 @@ class IndexBase(ContainerOperand):
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
-    _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-    _UFUNC_DIFFERENCE: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
-
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
     #---------------------------------------------------------------------------
@@ -113,61 +114,18 @@ class IndexBase(ContainerOperand):
 
         from static_frame import Index
         from static_frame import IndexGO
-        from static_frame import IndexHierarchy
-        from static_frame import IndexHierarchyGO
         from static_frame import IndexNanosecond
         from static_frame import IndexNanosecondGO
         from static_frame.core.index_datetime import IndexDatetime
 
-        if isinstance(value, pandas.MultiIndex):
-            if value.has_duplicates:
-                raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
-
-            # iterating over a hierarchical index will iterate over labels
-            name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
-
-            # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
-            if all(n is None for n in name): #type: ignore
-                name = None
-
-            hierarchy_constructor = IndexHierarchy if cls.STATIC else IndexHierarchyGO
-
-            def build_index(pd_idx: pandas.Index) -> Index:
-                # NOTE: Newer versions of pandas will not require Python date objects to live inside
-                # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
-                # Only numpy datetime objects are put into a DatetimeIndex.
-                if isinstance(pd_idx, pandas.DatetimeIndex):
-                    constructor: tp.Type[Index] = IndexNanosecond
-                else:
-                    constructor = Index
-
-                if cls.STATIC:
-                    return constructor(pd_idx, name=pd_idx.name)
-                return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
-
-            indices: tp.List[Index] = []
-            indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
-
-            for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
-                indexers[i] = codes
-                indices.append(build_index(levels))
-
-            indexers.flags.writeable = False
-
-            return hierarchy_constructor(
-                    indices=indices,
-                    indexers=indexers,
-                    name=name,
-                    )
-
-        elif isinstance(value, pandas.DatetimeIndex):
+        if isinstance(value, pandas.DatetimeIndex):
             # if IndexDatetime, use cls, else use IndexNanosecond
             if issubclass(cls, IndexDatetime):
                 return cls(value, name=value.name)
-            else:
-                if not cls.STATIC:
-                    return IndexNanosecondGO(value, name=value.name)
-                return IndexNanosecond(value, name=value.name)
+
+            if not cls.STATIC:
+                return IndexNanosecondGO(value, name=value.name)
+            return IndexNanosecond(value, name=value.name)
 
         if not cls.STATIC:
             return IndexGO(value, name=value.name)
@@ -422,46 +380,53 @@ class IndexBase(ContainerOperand):
     # set operations
 
     def _ufunc_set(self: I,
-            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
+            others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
+            many_to_one_type: ManyToOneType,
             ) -> I:
-        raise NotImplementedError() #pragma: no cover
+        '''Normalize inputs and call `index_many_to_one`.
+        '''
+
+        if self._recache:
+            self._update_array_cache()
+
+        imtoaf = partial(imto_adapter_factory,
+                depth=self.depth,
+                name=self.name,
+                ndim=self.ndim,
+                )
+
+        indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
+
+        if hasattr(others, '__len__') and len(others) == 1:
+            # NOTE: having only one `other` is far more common than many others; thus, optimzie for that case by not using an iterator
+            indices = (self, imtoaf(others[0])) # type: ignore
+        else:
+            indices = chain((self,), (imtoaf(other) for other in others))
+
+        return index_many_to_one( # type: ignore
+                indices,
+                cls_default=self.__class__,
+                many_to_one_type=many_to_one_type,
+                )
+
 
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        func = self.__class__._UFUNC_INTERSECTION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
-
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
+        return self._ufunc_set(others, ManyToOneType.INTERSECT)
 
     def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        func = self.__class__._UFUNC_UNION
-        if len(others) == 1:
-            return self._ufunc_set(func, others[0])
+        return self._ufunc_set(others, ManyToOneType.UNION)
 
-        post = self
-        for other in others:
-            post = post._ufunc_set(func, other)
-        return post
-
-
-    def difference(self: I, other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
-        return self._ufunc_set(
-                self.__class__._UFUNC_DIFFERENCE,
-                other)
+        return self._ufunc_set(others, ManyToOneType.DIFFERENCE)
 
     #---------------------------------------------------------------------------
     # via interfaces
@@ -526,4 +491,10 @@ class IndexBase(ContainerOperand):
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+        raise NotImplementedError() #pragma: no cover
 

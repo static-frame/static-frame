@@ -6,8 +6,10 @@ import string
 import typing as tp
 from collections import OrderedDict
 from enum import Enum
+from hashlib import sha256
 from io import StringIO
 
+import frame_fixtures as ff
 import numpy as np
 
 import static_frame as sf
@@ -21,7 +23,7 @@ from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
-from static_frame import IndexDefaultFactory
+from static_frame import IndexDefaultConstructorFactory
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
@@ -29,11 +31,13 @@ from static_frame import IndexSecond
 from static_frame import IndexYear
 from static_frame import IndexYearMonth
 from static_frame import Series
+from static_frame import SeriesHE
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 from static_frame.core.util import isna_array
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -270,7 +274,7 @@ class TestUnit(TestCase):
     def test_series_from_dict_a(self) -> None:
 
         s1 = Series.from_dict(OrderedDict([('b', 4), ('a', 1)]),
-                index_constructor=IndexDefaultFactory('foo'),
+                index_constructor=IndexDefaultConstructorFactory('foo'),
                 )
         self.assertEqual(s1.to_pairs(),
                 (('b', 4), ('a', 1)))
@@ -1386,7 +1390,7 @@ class TestUnit(TestCase):
         s1 = Series.from_items(zip(list('abc'), (1,2,3)),
                 dtype=str,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructorFactory('bar'),
                 )
         self.assertEqual(s1.name, 'foo')
         self.assertEqual(s1.values.tolist(), ['1', '2', '3'])
@@ -1511,7 +1515,7 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(
-                s1.assign.loc[['b', 'd']](3000).values.tolist(), #type: ignore
+                s1.assign.loc[['b', 'd']](3000).values.tolist(),
                 [0, 3000, 2, 3000])
 
         self.assertEqual(
@@ -1613,7 +1617,7 @@ class TestUnit(TestCase):
     def test_series_assign_j(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--') #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element(lambda e: f'--{e}--')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '--3--'))
                 )
@@ -1621,11 +1625,51 @@ class TestUnit(TestCase):
     def test_series_assign_k(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
-        s2 = s1.assign.loc[['b', 'd']].apply_element_items( #type: ignore
+        s2 = s1.assign.loc[['b', 'd']].apply_element_items(
                 lambda k, e: f'--{e}--' if k == 'b' else f'*{e}*')
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', '--1--'), ('c', 2), ('d', '*3*'))
                 )
+
+    def test_series_assign_l(self) -> None:
+
+        p1 = Series(('a', 'b'))
+        q1 = Series(('c', 'd'))
+        post1 = p1.assign.loc[p1 == q1](q1)
+        self.assertEqual(post1.dtype, p1.dtype)
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 'b')))
+
+        p2 = Series(('a', 'b', 'c'))
+        q2 = Series(('c', 'd', 'e'))
+        post2 = p2.assign.loc[1:](q2)
+        self.assertEqual(post2.dtype, p2.dtype)
+        self.assertEqual(post2.to_pairs(), ((0, 'a'), (1, 'd'), (2, 'e')))
+
+        p3 = Series(('a', 'b', 'c'))
+        q3 = Series(('c',))
+        post3 = p3.assign.loc[1:](q3, fill_value='')
+        self.assertEqual(post3.dtype, p3.dtype)
+        self.assertEqual(post3.to_pairs(), ((0, 'a'), (1, ''), (2, '')))
+
+
+    def test_series_assign_m(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](range(3, 9, 3))
+        self.assertEqual(post1.to_pairs(), ((0, 'a'), (1, 3), (2, 6)))
+
+
+    def test_series_assign_n(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'))
+        post1 = s1.assign.iloc[1:](())
+        self.assertTrue(s1.equals(post1))
+
+        post2 = s1.assign.iloc[1:](np.array(()))
+        self.assertTrue(s1.equals(post2))
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -1722,6 +1766,17 @@ class TestUnit(TestCase):
         s2 = s1.loc[:]
         self.assertEqual(s2.to_pairs(),
             ((0, 'a'), (1, 'b'), (2, 'c')))
+
+    def test_series_loc_extract_k(self) -> None:
+
+        s1 = Series(('a', 'b', 'c'), index=IndexYear((1542, 1834, 2022)))
+        self.assertEqual(s1[1542, 2022].to_pairs(),
+                ((np.datetime64('1542'), 'a'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[1834:].to_pairs(),
+                ((np.datetime64('1834'), 'b'), (np.datetime64('2022'), 'c')))
+
+        self.assertEqual(s1[2022], 'c')
 
     #---------------------------------------------------------------------------
 
@@ -2641,6 +2696,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((0, 10), (1, 20)))
 
+
+    def test_series_from_pandas_j(self) -> None:
+        import pandas as pd
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
+        pds = f1[ILoc[0]].to_pandas()
+        s1 = Series.from_pandas(pds)
+        self.assertEqual(s1.index.depth, 2)
+        self.assertEqual(s1.to_pairs(),
+                (((34715, 105269), False), ((34715, 119909), False)))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_to_pandas_a(self) -> None:
@@ -3151,6 +3217,21 @@ class TestUnit(TestCase):
             # RuntimeError: Attempting to create IndexDate from an IndexAutoFactory, which is generally not desired as the result will be an offset from the epoch.
             f1 = s1.to_frame(columns_constructor=IndexDate)
 
+    def test_series_to_frame_k(self) -> None:
+        from datetime import date
+        f = Frame.from_element(1, columns=IndexDate([date(2022, 9, 30)]), index=[1])
+        s = f[sf.ILoc[-1]]
+        f = s.to_frame(columns_constructor=sf.IndexDate)
+        self.assertEqual(f.to_pairs(),
+                ((np.datetime64('2022-09-30'), ((1, 1),)),)
+                )
+
+    def test_series_to_frame_l(self) -> None:
+        s1 = Series([1,2,3])
+        f1 = s1.rename('a').to_frame(name='b')
+        self.assertEqual(f1.name, 'b')
+        self.assertEqual(tuple(f1.columns), ('a',))
+
     #---------------------------------------------------------------------------
 
     def test_series_to_frame_go_a(self) -> None:
@@ -3375,6 +3456,93 @@ class TestUnit(TestCase):
         self.assertEqual([p[1].__class__ for p in post], [np.ndarray, np.ndarray])
 
     #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other((0, 0, 0, 1, 1))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+
+    def test_series_iter_group_other_b(self) -> None:
+
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = [s.to_pairs() for s in s1.iter_group_other(s1.via_dt.year)] #type: ignore
+        dt64 = np.datetime64
+        self.assertEqual(post, [(('a', dt64('2010-01-01')), ('b', dt64('2010-01-02'))), (('c', dt64('2012-01-03')),), (('d', dt64('2013-04-01')), ('e', dt64('2013-04-02')))])
+
+    def test_series_iter_group_other_c(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(np.array((0, 0, 0, 1, 1)))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+
+    def test_series_iter_group_other_d(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [s.values.tolist() for s in s1.iter_group_other(s1.index)] #type: ignore
+        self.assertEqual(post, [[10], [4], [10], [4], [10]])
+
+    def test_series_iter_group_other_e(self) -> None:
+
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        # force reindex
+        post = [(l, s.values.tolist()) for l, s in s1.iter_group_other_items(
+                s1.iloc[:3].via_dt.year.astype(str),
+                fill_value='',
+                )]
+        d = datetime.date
+        self.assertEqual(post, [
+                ('', [d(2013, 4, 1), d(2013, 4, 2)]),
+                ('2010', [d(2010, 1, 1), d(2010, 1, 2)]),
+                ('2012', [d(2012, 1, 3)])],
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_items_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [(l, s.values.tolist()) for
+                l, s in s1.iter_group_other_items((0, 0, 0, 1, 1))]
+        self.assertEqual(post, [(0, [10, 4, 10]), (1, [4, 10])])
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_array_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+        post = [a.tolist() for a in s1.iter_group_other_array((0, 0, 0, 1, 1))] #type: ignore
+        self.assertEqual(post, [[10, 4, 10], [4, 10]])
+
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_group_other_array_items_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        post = [(l, s.tolist()) for
+                l, s in s1.iter_group_other_array_items((0, 0, 0, 1, 1))]
+        self.assertEqual(post, [(0, [10, 4, 10]), (1, [4, 10])])
+
+
+    #---------------------------------------------------------------------------
     def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
         self.assertEqual(s1.loc_min(), 'c')
@@ -3521,7 +3689,7 @@ class TestUnit(TestCase):
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
 
         s3 = Series.from_concat_items((('x', s1), ('y', s2)),
-                index_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructorFactory('bar'),
                 )
         self.assertEqual(s3.index.name, 'bar')
 
@@ -3795,7 +3963,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_str_capitalize_a(self) -> None:
+    def test_series_str_capitalize_a1(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
         s2 = s1.via_str.capitalize()
 
@@ -3808,6 +3976,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(s4.to_pairs(),
             (('x', '20'), ('y', '30'))
+            )
+
+    def test_series_str_capitalize_a2(self) -> None:
+        s1 = Series((b'foo', b'bar'), index=('x', 'y'))
+        s2 = s1.via_str.capitalize()
+        self.assertEqual(s2.dtype, np.dtype('S3'))
+        self.assertEqual(s2.to_pairs(),
+            (('x', b'Foo'), ('y', b'Bar'))
             )
 
     def test_series_str_center_a(self) -> None:
@@ -4084,12 +4260,33 @@ class TestUnit(TestCase):
                 ((0, 'a'), (1, 'c'), (2, 'd'))
                 )
 
-    def test_series_str_contains_a(self) -> None:
+    def test_series_str_contains_a1(self) -> None:
         s1 = Series(['ab_cdldkj', 'cd_LKSJ', 'df_foooooo'])
         s2 = s1.via_str.contains('cd')
         self.assertEqual(s2.to_pairs(),
                 ((0, True), (1, True), (2, False))
                 )
+
+    def test_series_str_contains_a2(self) -> None:
+        s1 = Series([b'ab_cdldkj', b'cd_LKSJ', b'df_foooooo'])
+        s2 = s1.via_str.contains(b'cd')
+        self.assertEqual(s2.to_pairs(),
+                ((0, True), (1, True), (2, False))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_series_str_format_a(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format('{:.0%}')
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '667%'), (2, '1333%'), (3, '1667%')))
+
+    def test_series_str_format_b(self) -> None:
+        s1 = Series([10, 20, 40, 50]) / 3
+        s2 = s1.via_str.format(['{:.0%}', '{:.4}', 'p{:.1}', 'q{:.4}'])
+        self.assertEqual(s2.to_pairs(),
+            ((0, '333%'), (1, '6.667'), (2, 'p1e+01'), (3, 'q16.67')))
+
 
     #---------------------------------------------------------------------------
 
@@ -4107,6 +4304,30 @@ class TestUnit(TestCase):
                 s2.to_pairs(),
                 (('x', 2014), ('y', 2013))
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_year_month_a(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.via_dt.year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', '2012-01'), ('d', '2013-04'), ('e', '2013-04'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_MONTH_STR)
+
+    def test_series_via_dt_year_month_b(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '2012-01-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.astype(object).via_dt.year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', '2012-01'), ('d', '2013-04'), ('e', '2013-04'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_MONTH_STR)
+
+    #---------------------------------------------------------------------------
 
     def test_series_via_dt_day_a(self) -> None:
         dt64 = np.datetime64
@@ -4550,7 +4771,7 @@ class TestUnit(TestCase):
                 )
 
     def test_series_enum_c(self) -> None:
-        # see: https://github.com/InvestmentSystems/static-frame/issues/239
+        # see: https://github.com/static-frame/static-frame/issues/239
 
         class Bar(str, Enum):
             a = 'a'
@@ -5420,6 +5641,290 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillfalsy(Series.from_dict({'c':20, 'b':30})).to_pairs(),
                 (('a', 'a'), ('b', 30), ('c', 20)),
                 )
+
+    #---------------------------------------------------------------------------
+    def test_series_from_delimited_a(self) -> None:
+        s1 = Series.from_delimited('3|5|23|3', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, 3), (1, 5), (2, 23), (3, 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+
+    def test_series_from_delimited_b(self) -> None:
+        s1 = Series.from_delimited('true||false|true', delimiter='|')
+        self.assertEqual(s1.to_pairs(),
+                ((0, True), (1, False), (2, False), (3, True)),
+                )
+        self.assertEqual(s1.dtype.kind, 'b')
+
+
+    def test_series_from_delimited_c(self) -> None:
+        s1 = Series.from_delimited('2021-01:1517-04:1620-12', delimiter=':', dtype=np.datetime64)
+        self.assertEqual(s1.to_pairs(),
+                ((0, np.datetime64('2021-01')), (1, np.datetime64('1517-04')), (2, np.datetime64('1620-12'))),
+                )
+        self.assertEqual(s1.dtype.kind, 'M')
+
+    def test_series_from_delimited_d(self) -> None:
+        index = Index(('a', 'b', 'c', 'd'))
+        s1 = Series.from_delimited('3|5|23|3',
+                delimiter='|',
+                index=index,
+                own_index=True,
+                )
+        self.assertEqual(s1.to_pairs(),
+                (('a', 3), ('b', 5), ('c', 23), ('d', 3)),
+                )
+        self.assertEqual(s1.dtype.kind, 'i')
+        self.assertIs(s1.index, index)
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notna_first_a(self) -> None:
+        s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first()
+        self.assertEqual(post, 'c')
+
+    def test_series_loc_notna_first_b(self) -> None:
+        s1 = Series((1, 2, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first()
+        self.assertEqual(post, 'a')
+
+    def test_series_loc_notna_first_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_first(fill_value=None)
+        self.assertEqual(post, None)
+
+    def test_series_loc_notna_first_d(self) -> None:
+        s1 = Series(())
+        self.assertEqual(s1.loc_notna_first(fill_value=None), None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notna_first_a(self) -> None:
+        s1 = Series((None, None, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, 2)
+
+    def test_series_iloc_notna_first_b(self) -> None:
+        s1 = Series((1, 2, 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, 0)
+
+    def test_series_iloc_notna_first_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_first()
+        self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notna_last_a(self) -> None:
+        s1 = Series(('x', 'y', None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last()
+        self.assertEqual(post, 'b')
+
+    def test_series_loc_notna_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last()
+        self.assertEqual(post, 'd')
+
+    def test_series_loc_notna_last_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notna_last(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notna_last_a(self) -> None:
+        s1 = Series(('x', 'y', None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, 1)
+
+    def test_series_iloc_notna_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, 3)
+
+    def test_series_iloc_notna_last_c(self) -> None:
+        s1 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notna_last()
+        self.assertEqual(post, -1)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notfalsy_first_a(self) -> None:
+        s1 = Series(('', '', 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first()
+        self.assertEqual(post, 'c')
+
+    def test_series_loc_notfalsy_first_b(self) -> None:
+        s1 = Series((1, 2, 0, 4), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first()
+        self.assertEqual(post, 'a')
+
+    def test_series_loc_notfalsy_first_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_first(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notfalsy_first_a(self) -> None:
+        s1 = Series(('', '', 'x', 'y'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, 2)
+
+    def test_series_iloc_notfalsy_first_b(self) -> None:
+        s1 = Series((1, 2, 0, 4), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, 0)
+
+    def test_series_iloc_notfalsy_first_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_first()
+        self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_loc_notfalsy_last_a(self) -> None:
+        s1 = Series(('x', 'y', '', ''), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last()
+        self.assertEqual(post, 'b')
+
+    def test_series_loc_notfalsy_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last()
+        self.assertEqual(post, 'd')
+
+    def test_series_loc_notfalsy_last_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.loc_notfalsy_last(fill_value=None)
+        self.assertEqual(post, None)
+
+    #---------------------------------------------------------------------------
+    def test_series_iloc_notfalsy_last_a(self) -> None:
+        s1 = Series(('x', 'y', '', ''), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, 1)
+
+    def test_series_iloc_notfalsy_last_b(self) -> None:
+        s1 = Series(('x', 'y', 'z', 'w'), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, 3)
+
+    def test_series_iloc_notfalsy_last_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        post = s1.iloc_notfalsy_last()
+        self.assertEqual(post, -1)
+
+    #---------------------------------------------------------------------------
+    def test_series_to_signature_bytes_a(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'e'), name='')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_b(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 1), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_c(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='')
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'), name='foo')
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_d(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1.index._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+    def test_series_to_signature_bytes_e(self) -> None:
+        s1 = Series((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+        s2 = SeriesHE((0, 0, 0, 0), index=('a', 'b', 'c', 'd'))
+
+        self.assertNotEqual(
+            sha256(s1._to_signature_bytes(include_name=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(include_name=False)).hexdigest(),
+            )
+
+        self.assertEqual(
+            sha256(s1._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            sha256(s2._to_signature_bytes(
+                include_name=False, include_class=False)).hexdigest(),
+            )
+
+    #---------------------------------------------------------------------------
+    def test_series_via_hashlib_a(self) -> None:
+        s1 = Series((1.2, 3.5), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib.to_bytes(), b'SeriesIndexa\x00\x00\x00b\x00\x00\x00333333\xf3?\x00\x00\x00\x00\x00\x00\x0c@'
+        )
+
+    def test_series_via_hashlib_b(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha256().hexdigest(), 'd2a6671bc702878497762d7af4e762e54224055f939fe326660a6073dc7644d0')
+
+    def test_series_via_hashlib_c(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().md5().hexdigest(), '321c866c3bf132ee72260076ebc46154')
+
+    def test_series_via_hashlib_d(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha512().hexdigest(), '5e44db5208ba1baf8cdf8627e1c41cfe3dcb8381aa4f09cef89450d75095891f654b44a4534047ce4a9f7a574ab2af1d8b1a6d91844f060cbe99e8c722441326')
+
+    def test_series_via_hashlib_e(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_256().hexdigest(), 'faa94e04975a03275ec0e7e74ede25b0dc27472147fb2801f4177372ce1ea51c')
+
+    def test_series_via_hashlib_f(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().sha3_512().hexdigest(), '07eb7dc979908432a856fd385754d4888456a59d96f6c58f5d4ead7fb941b806e8317b26a116037c512a9550a3a296ac3acfe332cf5fc3b3ff3f2859f017f56f')
+
+    def test_series_via_hashlib_g(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_128().hexdigest(8), '1e7840cc7dd526f6')
+
+    def test_series_via_hashlib_h(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().shake_256().hexdigest(8), 'e106705c5b4b13b5')
+
+    def test_series_via_hashlib_i(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2b().hexdigest(), '837ffac5491f029a6c9292d1e961cb1ea596c345f3d3dd1ca2f203eba61a89109d7dfc9267b846b8a0439f2b29a5ec4e3dad48c775f11429cccaf52e307d3ad2')
+
+    def test_series_via_hashlib_j(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+
+        self.assertEqual(s1.via_hashlib().blake2s().hexdigest(), '0ded3bafd8125aeab9d48c9c2df106425b52bd660b1172972b892dd8a49aebef')
+
+
+    def test_series_via_hashlib_k(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+        self.assertEqual(s1.via_hashlib().blake2s(digest_size=8).hexdigest(), 'ab4163989a151825')
+
+
+    def test_series_via_hashlib_l(self) -> None:
+        s1 = Series((False, True), index=('a', 'b')).rename('', index='')
+        self.assertEqual(s1.via_hashlib.blake2s(digest_size=4).hexdigest(), '9d621eb2')
 
 
 if __name__ == '__main__':

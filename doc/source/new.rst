@@ -1,14 +1,150 @@
 What is New in StaticFrame
 ===============================
 
+1.1.1
+-----------
+
+Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
+Corrected issue with some ``IndexHierarchy`` formations when using slices in an ``HLoc`` with more than one depth selection.
+
+
+1.1.0
+-----------
+
+Added ``Frame.consolidate`` interface, including ``Frame.consolidate[]`` and ``Frame.consolidate.status``.
+
+Added ``Quilt.bus`` property.
+
+``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
+
+Added ``index_constructors`` arguments to ``IndexHierarchy.rehierarch()``, ``Series.rehierarch()``, ``Bus.rehierarch()``, ``Yarn.rehierarch()``.
+
+Added ``index_constructors``, ``columns_constructors`` arguments to ``Frame.rehierarch()``.
+
+
+1.0.1
+-----------
+
+Parameters ``dtypes``, ``fill_value``, and ``format`` (given to ``via_str.format``) now properly work with ``defaultdict``, infinite iterators, and mappings indexed by position (when columns are not defined or created with ``IndexAutoFactory``).
+
+
+1.0.0
+----------
+
+API change: ``IndexHierarchy`` numerical and statistical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, now raise ``NotImplementedError``.
+
+API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False`` by default.
+
+API change: ``composite_index`` and ``composite_index_fill_value`` parameters removed from ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``; added ``include_index`` parameter.
+
+API change: ``IndexDefaultFactory`` renamed ``IndexDefaultConstructorFactory``.
+
+Added ``via_dt.year_month``.
+
+
+0.9.23
+----------
+
+Added ``via_hashlib`` interface to all containers.
+
+Added ``Frame.iter_group_other()``, ``Frame.iter_group_other_items()``, ``Frame.iter_group_other_array()``, ``Frame.iter_group_other_array_items()``.
+
+Added ``Series.iter_group_other()``, ``Series.iter_group_other_items()``, ``Series.iter_group_other_array()``, ``Series.iter_group_other_array_items()``.
+
+Set ``arraykit`` version to 0.2.6.
+
+
+0.9.22
+----------
+
+``IndexYear`` now accepts selection by integers for years.
+
+Added ``Series.loc_notna_first()``, ``Series.loc_notna_last()``, ``Series.loc_notfalsy_first()``, ``Series.loc_notfalsy_last()``.
+
+Added ``Frame.loc_notna_first()``, ``Frame.loc_notna_last()``, ``Frame.loc_notfalsy_first()``, ``Frame.loc_notfalsy_last()``.
+
+Set ``arraykit`` version to 0.2.4.
+
+
+0.9.21
+----------
+
+Set ``arraykit`` version to 0.2.3.
+
+Set ``automap`` version to 0.6.2.
+
+Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
+
+Corrected issue where Pandas ``MutliIndex`` are not converted to ``IndexHierarchy`` in ``Frame.from_pandas()`` or ``Series.from_pandas()``.
+
+
+0.9.20
+----------
+
+Added ``via_str.format()`` for applying Python formatting mini-language strings to elements.
+
+Added ``skip_initial_space``, ``quoting``, ``quote_double``, and ``escape_char`` parameters to ``Frame.from_delimited()`` and related interfaces.
+
+Added ``Frame.from_json_index()``, ``Frame.from_json_columns``, ``Frame.from_json_split()``, ``Frame.from_json_records()``, ``Frame.from_json_values()``.
+
+Added ``Frame.to_json_index()``, ``Frame.to_json_columns``, ``Frame.to_json_split()``, ``Frame.to_json_records()``, ``Frame.to_json_values``.
+
+Added ``axis`` argument to ``Series.count()`` for compatibility with ``Frame`` interface.
+
+
+0.9.19
+----------
+
+``Frame.from_delimited`` now powered by ``arraykit.delimited_to_arrays``, offering vastly improved performance for all delimited file reading.
+
+Added ``Series.from_delimited``.
+
+Added ``WWW`` interface for downloading network resources to provide to constructors.
+
+Added ``columns_select``, ``skip_initial_space``, ``quoting``, ``quote_double``, ``escape_char``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited`` and derived interfaces.
+
+Corrected issue in converting to ``IndexHierarchy`` from Pandas ``MultiIndex`` when the ``MultiIndex`` is bloated.
+
+
+0.9.18
+----------
+
+Improved layout of default ``memory`` display.
+
+Corrected issue where a non matching ``Series`` assignment or reindex might use ``fill_value`` to determine the type of the returned values.
+
+Certain invalid ``Frame`` selections now properly raise ``KeyError``.
+
+
+0.9.17
+----------
+
+Unified implementation of ``IndexBase`` set and concatenation operations.
+
+Added ``IndexHierarchy.from_values_per_depth()`` constructor.
+
+Set ``automap`` version to 0.6.1.
+
+Extended ``Batch.astype`` interface to fully cover ``Frame.astype`` interface.
+
+
 0.9.16
 ----------
 
-Added ``memory`` property to display memory usage.
+Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
+
+Implemented the DataFrame Interchange Protocol export via the ``Frame.__dataframe__()`` interface.
 
 Implemented ``__repr__()`` for ``ILoc``.
 
 Updated ``Batch.__repr__()``.
+
+Added ``name`` parameter to ``Frame.to_frame()``, ``Series.to_frame()``, and related methods.
+
+Improved error reporting for invalid ``IndexHierarchy``.
+
+``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
 
 
 0.9.15
@@ -476,7 +612,7 @@ Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.from_concat_items()``.
 
-Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+Introduced ``IndexDefaultConstructorFactory`` to permit specifying index ``name`` attributes with default index constructors.
 
 
 0.8.16
@@ -872,7 +1008,7 @@ API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatica
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
 
-API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to ``False`` by default.
 
 API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
@@ -1484,7 +1620,7 @@ Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delim
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
-The ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
+The ``DisplayConfig`` parameter ``type_show`` now, if ``False``, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 Added ``Frame.unset_index()``.
 

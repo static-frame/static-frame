@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import numpy as np
 
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
@@ -133,7 +134,6 @@ class MemoryMeasure:
             *,
             format: MeasureFormat = MeasureFormat.REFERENCED,
             seen: tp.Set[int],
-            skip_parent: bool = False,
             ) -> tp.Iterator[tp.Any]:
         '''
         Generates an iterable of all objects the parent object has references to, including nested references. This function considers both the iterable unsized children (based on _iter_iterable) and the sizable
@@ -148,28 +148,24 @@ class MemoryMeasure:
         if obj.__class__ is np.ndarray:
             if format.value.materialized:
                 obj = MaterializedArray(obj, format=format)
-            else:
-                # non-object arrays report included elements
+            else: # non-object arrays report included elements
                 if obj.dtype.kind == DTYPE_OBJECT_KIND:
                     for el in cls._iter_iterable(obj):
                         yield from cls.nested_sizable_elements(el, seen=seen, format=format)
-
                 if not format.value.local_only and obj.base is not None:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
+            yield obj
 
-        if obj.__class__ is np.ndarray or obj.__class__ is MaterializedArray:
-            # classes that naturally report total size without introspection of iterables or slots
-            pass
+        elif obj.__class__ is MaterializedArray:
+            yield obj
+
         else:
-            # elif not format.value.data_only: # not array
             for el in cls._iter_iterable(obj): # will not yield if no __iter__
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
             # arrays do not have slots
             for el in cls._iter_slots(obj):
                 yield from cls.nested_sizable_elements(el, seen=seen, format=format)
-
-        if not skip_parent:
             yield obj
 
 
@@ -178,7 +174,6 @@ def memory_total(
         *,
         format: MeasureFormat = MeasureFormat.REFERENCED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
-        skip_parent: bool = False,
         ) -> int:
     '''
     Returns the total size of the object and its references, including nested refrences
@@ -189,7 +184,6 @@ def memory_total(
         for component in MemoryMeasure.nested_sizable_elements(obj,
                 seen=seen,
                 format=format,
-                skip_parent=skip_parent,
                 ):
             if format.value.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
@@ -198,41 +192,77 @@ def memory_total(
 
     return sum(gen())
 
-
-def memory_display(
-        obj: tp.Any,
-        label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]],
-        *,
-        size_label: bool = True,
-        ) -> 'Frame':
+class MemoryDisplay:
+    '''A simple container for capturing and displaying memory usage in bytes for StaticFrame containers.
     '''
-    Args:
-        label_component_pairs: provide paris of label, attribute component
-    '''
-    from static_frame.core.frame import Frame
 
-    parts = chain(label_component_pairs, (('Total', obj),))
-
-    def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
-        for label, part in parts:
-            sizes = []
-            for format in MeasureFormat:
-                # NOTE: not sharing seen accross evaluations
-                sizes.append(memory_total(part, format=format))
-            yield label, sizes
-
-    if hasattr(obj, 'name') and obj.name is not None:
-        name = f'<{obj.__class__.__name__}: {obj.name}>'
-    else:
-        name = f'<{obj.__class__.__name__}>'
-
-    f = Frame.from_records_items(
-            gen(),
-            columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
-            name=name,
+    __slots__ = (
+            '_frame',
+            '_repr',
             )
-    if size_label:
-        f = f.iter_element().apply(bytes_to_size_label, name=name)
-    return f # type: ignore
 
+    @classmethod
+    def from_any(cls,
+            obj: tp.Any,
+            label_component_pairs: tp.Iterable[tp.Tuple[str, tp.Any]] = (),
+            ) -> 'MemoryDisplay':
+        '''Given any slotted object, return a :obj:`MemoryDisplay` instance.
+
+        '''
+        from static_frame.core.frame import Frame
+
+        parts = chain(label_component_pairs, (('Total', obj),))
+
+        def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, ...], tp.List[int]]]:
+            for label, part in parts:
+                sizes = []
+                for format in MeasureFormat:
+                    # NOTE: not sharing seen accross evaluations
+                    sizes.append(memory_total(part, format=format))
+                yield label, sizes
+
+        if hasattr(obj, 'name') and obj.name is not None:
+            name = f'<{obj.__class__.__name__}: {obj.name}>'
+        else:
+            name = f'<{obj.__class__.__name__}>'
+
+        f = Frame.from_records_items(
+                gen(),
+                columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
+                name=name,
+                )
+        return cls(f)
+
+    def __init__(self, frame: 'Frame'):
+        '''Initialize an instance with a ``Frame`` of byte counts.
+        '''
+        from static_frame.core.frame import Frame
+        self._frame = frame
+
+        f_size = self._frame.iter_element().apply(bytes_to_size_label)
+
+        def gen() -> tp.Iterator[tp.Sequence[str]]:
+            for row_old in f_size.iter_tuple(axis=1):
+                row_new = []
+                for e in row_old:
+                    row_new.extend(e.split(' '))
+                yield row_new
+
+        f = Frame.from_records(gen(), index=f_size.index)
+        columns = [
+                f_size.columns[i//2] if i % 2 == 0
+                else f'{f_size.columns[i//2]}u'.ljust(5)
+                for i in f.columns
+                ]
+        f = f.relabel(columns=columns)
+        dc = DisplayConfig(type_show=False)
+        self._repr: str = f.display(config=dc).__repr__()
+
+    def __repr__(self) -> str:
+        return self._repr
+
+    def to_frame(self) -> 'Frame':
+        '''Return a Frame of byte counts.
+        '''
+        return self._frame
 

@@ -1,8 +1,12 @@
 import datetime
+import json
 import typing as tp
 import unittest
 import warnings
 from enum import Enum
+from functools import partial
+from itertools import chain
+from itertools import repeat
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -16,6 +20,9 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
+from static_frame.core.util import FrozenGenerator
+from static_frame.core.util import JSONFilter
+from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _isin_1d
@@ -37,6 +44,7 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import dtype_from_element
@@ -446,10 +454,10 @@ class TestUnit(TestCase):
         a3 = np.array([3, 2, 1])
         a4 = np.array([3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
     def test_array_set_ufunc_many_b(self) -> None:
@@ -458,10 +466,10 @@ class TestUnit(TestCase):
         a3 = np.array([5, 3, 2, 1])
         a4 = np.array([2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
         self.assertEqual(post.tolist(), [2])
 
-        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), many_to_one_type=ManyToOneType.UNION, assume_unique=True)
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
     def test_array_set_ufunc_many_c(self) -> None:
@@ -469,10 +477,10 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
         a3 = np.array([[10, 20, 30], [1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=False)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [[1, 2, 3]])
 
-        post = ufunc_set_iter((a1, a2, a3), union=True)
+        post = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.UNION)
         self.assertEqual(post.tolist(),
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
@@ -481,14 +489,27 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
 
         with self.assertRaises(Exception):
-            post = ufunc_set_iter((a1, a2), union=False)
+            post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
 
     def test_array_set_ufunc_many_e(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([30, 20])
 
-        post = ufunc_set_iter((a1, a2), union=False)
+        post = ufunc_set_iter((a1, a2), many_to_one_type=ManyToOneType.INTERSECT)
         self.assertEqual(post.tolist(), [])
+
+
+    def test_array_set_ufunc_many_f(self) -> None:
+
+        # this shows that identical arrays return the same ordering
+        a1 = np.array([3, 2, 1])
+        a2 = np.array([3, 2, 1])
+        a3 = np.array([3, 2, 1]).reshape(3, 1)
+
+        with self.assertRaises(RuntimeError):
+            _ = ufunc_set_iter((a1, a2, a3), many_to_one_type=ManyToOneType.INTERSECT, assume_unique=True)
+
+    #---------------------------------------------------------------------------
 
     def test_union1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
@@ -953,11 +974,6 @@ class TestUnit(TestCase):
             _isin_2d(arr_1d, s3)
     #---------------------------------------------------------------------------
 
-    # @unittest.skip('requires network')
-    # def test_read_url(self) -> None:
-    #     url = 'https://jsonplaceholder.typicode.com/todos'
-    #     post = _read_url(url)
-
     def test_slice_to_ascending_slice_a(self) -> None:
 
         a1 = np.arange(10)
@@ -1230,6 +1246,13 @@ class TestUnit(TestCase):
         with self.assertRaises(Exception):
             concat_resolved((a1, a2), axis=None)  # type: ignore
 
+
+    def test_concat_resolved_c(self) -> None:
+        a1 = np.array([3,4,5])
+        a2 = np.array([1.1,2.5,3.1])
+        a3 = concat_resolved((a1, a2), axis=0).round(1)
+        self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
+
     def test_dtype_to_na_a(self) -> None:
 
         self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
@@ -1240,6 +1263,9 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = dtype_to_fill_value(np.dtype('V'))
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -2194,6 +2220,90 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(a2.tolist(), [300, 0])
 
+    def test_array_from_element_method_c(self) -> None:
+
+        a1 = np.array(['bl,ue', 'bl,ack'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='split',
+                args=(),
+                dtype=object,
+                pre_insert=tuple
+                )
+        self.assertEqual(a2.tolist(), [('bl,ue',), ('bl,ack',)])
+
+    def test_array_from_element_method_d(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(), ['BLUE      ', 'BLACK     '])
+
+    def test_array_from_element_method_e(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda s: s.ljust(10)
+                )
+        self.assertEqual(a2.tolist(),
+                [['BLUE      ', 'BLACK     '],  ['RED       ', 'GREEN     ']])
+
+
+
+    def test_array_from_element_method_f(self) -> None:
+
+        a1 = np.array([['blue', 'black'], ['red', 'green']], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(),
+                [[False, True],  [False, False]])
+
+
+
+    def test_array_from_element_method_g(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=str)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='__contains__',
+                args=('e',),
+                dtype=bool,
+                pre_insert=lambda s: not s # just invert
+                )
+        self.assertEqual(a2.tolist(), [False, True])
+
+
+
+    def test_array_from_element_method_h(self) -> None:
+        from datetime import date as d
+        a1 = np.array([[d(2022,1,1), d(1954,1,1)], [d(1985, 3, 1), d(1005, 8, 1)]], dtype=object)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='isoweekday',
+                args=(),
+                dtype=int,
+                pre_insert=lambda d: d*100
+                )
+        self.assertEqual(a2.tolist(),
+                [[600, 500],  [500, 400]])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_logical_skipna_a1(self) -> None:
@@ -2585,6 +2695,13 @@ class TestUnit(TestCase):
         # NOTE: this tests the final fall through
         self.assertIs(ufunc_dtype_to_dtype(np.cumsum, np.dtype(np.datetime64)), None)
 
+    def test_ufunc_dtype_to_dtype_c(self) -> None:
+        func = partial(np.std, ddof=1)
+        self.assertEqual(
+                ufunc_dtype_to_dtype(func, np.dtype(float)),
+                np.dtype(float)
+                )
+
     #---------------------------------------------------------------------------
 
     def test_list_to_tuple_a(self) -> None:
@@ -2782,6 +2899,68 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             validate_depth_selection(None)
+
+    #---------------------------------------------------------------------------
+    def test_bytes_to_size_label(self) -> None:
+        self.assertEqual(bytes_to_size_label(0), '0 B')
+        self.assertEqual(bytes_to_size_label(1), '1 B')
+        self.assertEqual(bytes_to_size_label(1023), '1023 B')
+        self.assertEqual(bytes_to_size_label(1024), '1.0 KB')
+
+    #---------------------------------------------------------------------------
+    def test_json_encoder_numpy_a(self) -> None:
+        post1 = json.dumps(JSONFilter.from_element(dict(a=1, b=2)))
+        self.assertEqual(post1, '{"a": 1, "b": 2}')
+
+        post2 = json.dumps(JSONFilter.from_element(dict(a=np.arange(3))))
+        self.assertEqual(post2, '{"a": [0, 1, 2]}')
+
+        post3 = json.dumps(JSONFilter.from_element(dict(a=datetime.date(2022,1,5))))
+        self.assertEqual(post3, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(JSONFilter.from_element(dict(a=np.datetime64('2022-01-05'))))
+        self.assertEqual(post4, '{"a": "2022-01-05"}')
+
+        post4 = json.dumps(JSONFilter.from_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
+        self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
+
+    def test_json_encoder_numpy_b(self) -> None:
+        post1 = json.dumps(JSONFilter.from_element(dict(a=np.array((complex(1.2), complex(3.5))))))
+        self.assertEqual(post1, '{"a": ["(1.2+0j)", "(3.5+0j)"]}')
+
+        post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
+        self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
+
+    #---------------------------------------------------------------------------
+    def test_frozen_generator_a(self) -> None:
+        fg = FrozenGenerator(chain((3,), repeat(0)))
+
+        self.assertEqual(fg[2], 0)
+        self.assertEqual(fg[0], 3)
+        self.assertEqual(fg[1], 0)
+        self.assertEqual(fg[99], 0)
+
+    def test_frozen_generator_b(self) -> None:
+        fg = FrozenGenerator(('x' for _ in range(3)))
+
+        self.assertEqual(fg[2], 'x')
+        self.assertEqual(fg[0], 'x')
+        self.assertEqual(fg[1], 'x')
+
+        with self.assertRaises(IndexError):
+            _ = fg[4]
+
+    def test_frozen_generator_c(self) -> None:
+        d = {1:100, 2:200, 3:400}
+        fg = FrozenGenerator(d.values())
+        self.assertEqual(fg[2], 400)
+        self.assertEqual(fg[0], 100)
+        self.assertEqual(fg[1], 200)
+
+        with self.assertRaises(IndexError):
+            _ = fg[3]
+
+
 
 if __name__ == '__main__':
     unittest.main()

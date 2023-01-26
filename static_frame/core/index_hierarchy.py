@@ -4,6 +4,7 @@ import typing as tp
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
+from itertools import chain
 
 import numpy as np
 from arraykit import get_new_indexers_and_screen
@@ -12,6 +13,7 @@ from arraykit import name_filter
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -32,6 +34,7 @@ from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 # from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
+from static_frame.core.index_datetime import IndexNanosecond
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
@@ -73,27 +76,22 @@ from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_sample
 from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import intersect2d
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isin
-from static_frame.core.util import isin_array
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import setdiff2d
-from static_frame.core.util import ufunc_is_statistical
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
+    import pandas  # pragma: no cover
     from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover
@@ -253,10 +251,6 @@ class IndexHierarchy(IndexBase):
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
     _INDEX_CONSTRUCTOR: IndexConstructor = Index
-
-    _UFUNC_UNION = union2d
-    _UFUNC_INTERSECTION = intersect2d
-    _UFUNC_DIFFERENCE = setdiff2d
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------
@@ -287,8 +281,8 @@ class IndexHierarchy(IndexBase):
             index_constructors = tuple(index_constructors)
             if len(index_constructors) != depth:
                 raise ErrorInitIndex(
-                    'When providing multiple index constructors, their number must equal the depth of the IndexHierarchy.'
-                )
+                    f'When providing multiple index constructors, their number ({len(index_constructors)}) must equal the depth of the IndexHierarchy ({depth}).'
+                    )
             for ctr in index_constructors:
                 yield constructor_from_optional_constructor(
                         default_constructor=cls._INDEX_CONSTRUCTOR,
@@ -306,6 +300,60 @@ class IndexHierarchy(IndexBase):
         if any(n is None for n in name):
             return None
         return name
+
+
+    @classmethod
+    def from_pandas(cls: tp.Type[IH],
+            value: 'pandas.MultiIndex',
+            ) -> IH:
+        '''
+        Given a Pandas index, return the appropriate IndexBase derived class.
+        '''
+        import pandas
+        if not isinstance(value, pandas.MultiIndex):
+            raise ErrorInitIndex(f'from_pandas must be called with a Pandas MultiIndex object, not: {type(value)}')
+
+
+        if value.has_duplicates:
+            raise ErrorInitIndex(f'cannot create IndexHierarchy from a MultiIndex with duplicates: {value}')
+
+        # Remove bloated labels
+        value = value.remove_unused_levels()
+
+        # iterating over a hierarchical index will iterate over labels
+        name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+
+        # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
+        if all(n is None for n in name): #type: ignore
+            name = None
+
+        def build_index(pd_idx: pandas.Index) -> Index:
+            # NOTE: Newer versions of pandas will not require Python date objects to live inside
+            # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
+            # Only numpy datetime objects are put into a DatetimeIndex.
+            if isinstance(pd_idx, pandas.DatetimeIndex):
+                constructor: tp.Type[Index] = IndexNanosecond
+            else:
+                constructor = Index
+
+            if cls.STATIC:
+                return constructor(pd_idx, name=pd_idx.name)
+            return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
+
+        indices: tp.List[Index] = []
+        indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+
+        for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
+            indexers[i] = codes
+            indices.append(build_index(levels))
+
+        indexers.flags.writeable = False
+
+        return cls(
+                indices=indices,
+                indexers=indexers,
+                name=name,
+                )
 
     @classmethod
     def from_product(cls: tp.Type[IH],
@@ -440,8 +488,8 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_arrays(cls: tp.Type[IH],
-            arrays: tp.Sequence[np.ndarray],
+    def from_values_per_depth(cls: tp.Type[IH],
+            values: tp.Union[np.ndarray, tp.Sequence[tp.Iterable[tp.Hashable    ]]],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -455,20 +503,36 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        if arrays.__class__ is np.ndarray:
-            size, depth = arrays.shape # type: ignore
-            column_iter = arrays.T # type: ignore
+        if values.__class__ is np.ndarray:
+            size, depth = values.shape # type: ignore
+            column_iter = values.T # type: ignore
+            arrays = values
+        elif not len(values):
+            size = 0
+            depth = depth_reference
         else:
-            try:
-                [size] = set(map(len, arrays))
-            except ValueError:
-                raise ErrorInitIndex('All arrays must have the same length') from None
+            arrays = []
+            size = -1
+            for column in values:
+                if column.__class__ is np.ndarray:
+                    arrays.append(column)
+                else:
+                    a, _ = iterable_to_array_1d(column)
+                    arrays.append(a)
+
+                if size == -1:
+                    size = len(arrays[-1])
+                elif size != len(arrays[-1]):
+                    raise ErrorInitIndex('per depth iterables must be the same length')
+
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
         if not size:
-            return cls._from_empty((), name=name, depth_reference=depth_reference)
+            if depth is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth)
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -480,13 +544,24 @@ class IndexHierarchy(IndexBase):
                 index_constructors_iter=index_constructors_iter,
                 )
 
+        # NOTE: some index_constructors will change the dtype of the final array
+        if index_constructors is None:
+            blocks = TypeBlocks.from_blocks(arrays)
+            own_blocks = True
+        else:
+            blocks = None
+            own_blocks = False
+
         if name is None:
             name = cls._build_name_from_indices(indices)
+
 
         return cls(
                 indices=indices,
                 indexers=indexers,
                 name=name,
+                blocks=blocks,
+                own_blocks=own_blocks,
                 )
 
     @classmethod
@@ -512,7 +587,7 @@ class IndexHierarchy(IndexBase):
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
-            :obj:`static_frame.IndexHierarchy`
+            :obj:`IndexHierarchy`
         '''
         labels_iter = iter(labels)
 
@@ -527,7 +602,6 @@ class IndexHierarchy(IndexBase):
             return cls._from_empty(labels, name=name, depth_reference=depth_reference)
 
         depth = len(label_row)
-
         if depth == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
@@ -1051,7 +1125,8 @@ class IndexHierarchy(IndexBase):
 
     def _memory_label_component_pairs(self,
             ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
-        return (('Indices', self._indices),
+        return (('Name', self._name),
+                ('Indices', self._indices),
                 ('Indexers', self._indexers),
                 ('Blocks', self._blocks),
                 ('Values', self._values),
@@ -1150,6 +1225,8 @@ class IndexHierarchy(IndexBase):
         return InterfaceString(
                 blocks=self._blocks._blocks,
                 blocks_to_container=partial(blocks_to_array_2d, shape=self._blocks.shape),
+                ndim=self._NDIM,
+                labels=range(self.depth)
                 )
 
     @property
@@ -1331,84 +1408,6 @@ class IndexHierarchy(IndexBase):
                 sub_display.extend_iterable(col, header=header_sub)
 
         return sub_display # type: ignore
-
-    # --------------------------------------------------------------------------
-    # set operations
-
-    def _ufunc_set(self: IH,
-            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
-            ) -> IH:
-        '''
-        Utility function for preparing and collecting values for Indices to produce a new Index.
-        '''
-        if self.equals(other, compare_dtype=True):
-            # compare dtype as result should be resolved, even if values are the same
-            if (
-                func is self.__class__._UFUNC_INTERSECTION
-                or func is self.__class__._UFUNC_UNION
-            ):
-                # NOTE: this will delegate name attr
-                return self if self.STATIC else self.__deepcopy__({})
-            elif func is self.__class__._UFUNC_DIFFERENCE:
-                # we will no longer have type associations per depth
-                return self._from_empty((), depth_reference=self.depth)
-            else:
-                raise NotImplementedError(f'Unsupported ufunc {func}') # pragma: no cover
-
-        if self._recache:
-            self._update_array_cache()
-
-        if other.__class__ is np.ndarray:
-            operand = other
-            assume_unique = False
-        elif isinstance(other, IndexBase):
-            operand = other.values
-            assume_unique = True # can always assume unique
-        else:
-            operand = iterable_to_array_2d(other)
-            assume_unique = False
-
-        both_sized = len(operand) > 0 and self.__len__() > 0
-
-        if operand.ndim != 2: # type: ignore
-            raise ErrorInitIndex(
-                'operand in IndexHierarchy set operations must ndim of 2'
-            )
-        if both_sized and self.shape[1] != operand.shape[1]: # type: ignore
-            raise ErrorInitIndex(
-                'operands in IndexHierarchy set operations must have matching depth'
-            )
-
-        cls = self.__class__
-
-        # using assume_unique will permit retaining order when operands are identical
-        labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-
-        # derive index_constructors for IndexHierarchy
-        index_constructors: tp.Optional[tp.Sequence[tp.Type[IndexBase]]]
-
-        if both_sized and isinstance(other, IndexHierarchy):
-            index_constructors = []
-            # depth, and length of index_types, must be equal
-            for cls_self, cls_other in zip(
-                    self._index_constructors,
-                    other._index_constructors,
-                    ):
-                if cls_self == cls_other:
-                    index_constructors.append(cls_self)
-                else:
-                    index_constructors.append(Index)
-        else:
-            # if other is not an IndexHierarchy, do not try to propagate types
-            index_constructors = None
-
-        return cls._from_arrays(
-                labels,
-                name=self.name,
-                index_constructors=index_constructors,
-                depth_reference=self.depth,
-                )
 
     # --------------------------------------------------------------------------
     @property
@@ -1765,6 +1764,8 @@ class IndexHierarchy(IndexBase):
 
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
@@ -1776,9 +1777,14 @@ class IndexHierarchy(IndexBase):
                 labels=self._blocks,
                 depth_map=depth_map,
                 )
+
+        if index_constructors is None:
+            # transform the existing index constructors correspondingly
+            index_constructors = self.index_types.values[list(depth_map)]
+
         return self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
-            index_constructors=self._index_constructors,
+            index_constructors=index_constructors,
             own_blocks=True,
             )
 
@@ -1787,10 +1793,13 @@ class IndexHierarchy(IndexBase):
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
             key: tp.Union[np.ndarray, CompoundLabelType],
-            single_depth: bool,
+            available: tp.Optional[np.ndarray],
             ) -> np.ndarray:
         '''
         Determines the indexer mask for `key` at `depth`.
+
+        Args:
+            available: Optional Boolean array denoting with True the subset of region to search for start / end positions of slice values. We only take slices within regions previously selected by already-processed depths. If None, some optimizations are available for working with slices.
         '''
         # This private internal method assumes recache has already been checked for!
 
@@ -1804,11 +1813,17 @@ class IndexHierarchy(IndexBase):
         indexer_at_depth = self._indexers[depth]
 
         if isinstance(key_at_depth, slice):
+            if available is None:
+                multi_depth = False
+            else:
+                multi_depth = True
+                unmatchable = ~available
+
             if key_at_depth.start is not None:
-                if not single_depth:
-                    start: int = index_at_depth.loc_to_iloc(key_at_depth.start) # type: ignore
-                else:
-                    [[start, *_]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start))
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start)
+                if multi_depth:
+                    matched[unmatchable] = False # set all regions unavailable to slice to False
+                [[start, *_]] = np.nonzero(matched)
             else:
                 start = 0
 
@@ -1820,28 +1835,19 @@ class IndexHierarchy(IndexBase):
                     )
 
             if key_at_depth.stop is not None:
-                if not single_depth:
-                    stop: int = index_at_depth.loc_to_iloc(key_at_depth.stop) + 1 # type: ignore
-                else:
-                    [[*_, stop]] = np.nonzero(indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop))
-                    stop += 1
+                # get the last stop value observed
+                matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop)
+                if multi_depth:
+                    matched[unmatchable] = False
+                [[*_, stop]] = np.nonzero(matched)
+                stop += 1
             else:
                 stop = len(indexer_at_depth)
 
-            if key_at_depth.step is None or key_at_depth.step == 1:
-                other = PositionsAllocator.get(stop)[start:]
-            else:
-                other = np.arange(start, stop, key_at_depth.step)
-
-            if single_depth:
-                return other
-
-            return isin_array(
-                    array=indexer_at_depth,
-                    array_is_unique=False,
-                    other=other,
-                    other_is_unique=True
-                    )
+            target = np.arange(start, stop, key_at_depth.step)
+            post = np.full(len(indexer_at_depth), False)
+            post[target] = True
+            return post
 
         key_iloc = index_at_depth.loc_to_iloc(key_at_depth)
 
@@ -1901,12 +1907,13 @@ class IndexHierarchy(IndexBase):
                 depth for depth, k in enumerate(key)
                 if not (k.__class__ is slice and k == NULL_SLICE)
                 ]
+
         if len(meaningful_depths) == 1:
             # Prefer to avoid construction of a 2D mask
             mask = self._build_mask_for_key_at_depth(
                     depth=meaningful_depths[0],
                     key=key,
-                    single_depth=True,
+                    available=None,
                     )
         else:
             # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
@@ -1917,18 +1924,14 @@ class IndexHierarchy(IndexBase):
                 except KeyError:
                     raise KeyError(key) from None
 
-            mask_2d = np.full(self.shape, True, dtype=DTYPE_BOOL)
+            mask = np.full(self._indexers.shape[1], True, dtype=DTYPE_BOOL)
 
             for depth in meaningful_depths:
-                mask = self._build_mask_for_key_at_depth(
+                mask &= self._build_mask_for_key_at_depth(
                         depth=depth,
                         key=key,
-                        single_depth=False,
+                        available=mask,
                         )
-                mask_2d[:, depth] = mask
-
-            mask = mask_2d.all(axis=1)
-            del mask_2d
 
         return self.positions[mask]
 
@@ -1993,7 +1996,6 @@ class IndexHierarchy(IndexBase):
                     raise RuntimeError(
                         f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].'
                     )
-
             else:
                 key = sanitized_key
                 if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
@@ -2007,7 +2009,6 @@ class IndexHierarchy(IndexBase):
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
-
         if any(isinstance(k, tuple) for k in key): # type: ignore
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
@@ -2180,10 +2181,6 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if not ufunc_is_statistical(ufunc):
-            # NOTE: as min and max are label based, it is awkward that statistical functions are calculated as Frames, per depth level; we permit this for sum, prod, cumsum, cumprod for backward compatibility, however they might also raise
-            raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to Frame.')
-
         if ufunc is np.max or ufunc is np.min:
             # max and min are treated per label; thus we do a lexical sort for axis 0
             if axis == 1:
@@ -2201,15 +2198,19 @@ class IndexHierarchy(IndexBase):
             # NOTE: this could return a tuple rather than an array
             return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
 
-        return self._blocks.ufunc_axis_skipna(
-                skipna=skipna,
-                axis=axis,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna,
-                composable=composable,
-                dtypes=dtypes,
-                size_one_unity=size_one_unity,
-                )
+        # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
+
+        # if not ufunc_is_statistical(ufunc):
+        # return self._blocks.ufunc_axis_skipna(
+        #         skipna=skipna,
+        #         axis=axis,
+        #         ufunc=ufunc,
+        #         ufunc_skipna=ufunc_skipna,
+        #         composable=composable,
+        #         dtypes=dtypes,
+        #         size_one_unity=size_one_unity,
+        #         )
 
     def _ufunc_shape_skipna(self, *,
             axis: int,
@@ -2226,16 +2227,18 @@ class IndexHierarchy(IndexBase):
         Returns:
             immutable NumPy array.
         '''
-        if self._recache:
-            self._update_array_cache()
+        raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
 
-        dtype = None if not dtypes else dtypes[0] # only a tuple
-        if skipna:
-            post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
-        else:
-            post = ufunc(self.values, axis=axis, dtype=dtype)
-        post.flags.writeable = False
-        return post
+        # if self._recache:
+        #     self._update_array_cache()
+
+        # dtype = None if not dtypes else dtypes[0] # only a tuple
+        # if skipna:
+        #     post = ufunc_skipna(self.values, axis=axis, dtype=dtype)
+        # else:
+        #     post = ufunc(self.values, axis=axis, dtype=dtype)
+        # post.flags.writeable = False
+        # return post
 
     # --------------------------------------------------------------------------
     # dictionary-like interface
@@ -2250,7 +2253,6 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         # Don't use .values, as that can coerce types
         yield from self._blocks.iter_row_tuples(None)
-        # yield from zip(*map(self.values_at_depth, range(self.depth)))
 
     def __reversed__(self: IH) -> tp.Iterator[SingleLabelType]:
         '''
@@ -2687,6 +2689,22 @@ class IndexHierarchy(IndexBase):
         from static_frame import FrameGO
         return tp.cast(FrameGO, self._to_frame(FrameGO))
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                v,
+                ))
+
+    # --------------------------------------------------------------------------
     def to_pandas(self: IH) -> 'DataFrame':
         '''
         Return a Pandas MultiIndex.
@@ -2704,6 +2722,8 @@ class IndexHierarchy(IndexBase):
         mi.name = self._name
         mi.names = self.names
         return mi
+
+    # --------------------------------------------------------------------------
 
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,
@@ -2938,6 +2958,8 @@ class IndexHierarchyAsType:
 
     def __call__(self: IHAsType,
             dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = False,
             ) -> IndexHierarchy:
         '''
         Entrypoint to `astype` the container
@@ -2955,6 +2977,9 @@ class IndexHierarchyAsType:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a depth selection other than the NULL slice')
             gen = self.container._blocks._astype_blocks(self.depth_key, dtypes)
+
+        if consolidate_blocks:
+            gen = TypeBlocks.consolidate_blocks(gen)
 
         blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 

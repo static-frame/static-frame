@@ -361,9 +361,9 @@ class StoreFilter(metaclass=InterfaceMeta):
                     return value_replace
         return value
 
-    def to_type_filter_iterable(self, iterable: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
-        for value in iterable:
-            yield self.to_type_filter_element(value)
+    # def to_type_filter_iterable(self, iterable: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
+    #     for value in iterable:
+    #         yield self.to_type_filter_element(value)
 
 
 

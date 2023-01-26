@@ -1,10 +1,10 @@
-import typing as tp
-import time
-import sys
-import traceback
-import random
 import argparse
+import random
 import subprocess
+import sys
+import time
+import traceback
+import typing as tp
 
 from static_frame.core.display_color import HexColor
 
@@ -196,9 +196,11 @@ class Animator:
     @classmethod
     def main(cls, func: tp.Callable[[], LineIter]) -> None:
 
-        import static_frame as sf
-        import numpy as np
         from string import ascii_lowercase
+
+        import numpy as np
+
+        import static_frame as sf
 
         for line in func():
             if line is PAUSE_SHORT:

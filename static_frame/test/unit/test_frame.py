@@ -9,8 +9,13 @@ import string
 import typing as tp
 import unittest
 from collections import OrderedDict
+from collections import defaultdict
 from collections import namedtuple
+from functools import partial
+from hashlib import sha256
 from io import StringIO
+from itertools import chain
+from itertools import repeat
 from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
@@ -28,7 +33,7 @@ from static_frame import IndexAutoConstructorFactory
 from static_frame import IndexAutoFactory
 from static_frame import IndexDate
 from static_frame import IndexDateGO
-from static_frame import IndexDefaultFactory
+from static_frame import IndexDefaultConstructorFactory
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
@@ -731,7 +736,6 @@ class TestUnit(TestCase):
                 ((('a', 1), ((0, 0), (1, 4))), (('a', 2), ((0, 1), (1, 5))), (('b', 1), ((0, 2), (1, 6))), (('b', 2), ((0, 3), (1, 7))))
                 )
 
-
         # this index shows itself as having only one level
         pd_idx = pd.MultiIndex([[]], [[]])
         with self.assertRaises(ErrorInitIndex):
@@ -836,6 +840,18 @@ class TestUnit(TestCase):
                 [np.dtype('bool'), np.dtype('bool'), np.dtype('bool')]
                 )
 
+
+    def test_frame_from_pandas_w(self) -> None:
+        import pandas as pd
+
+        f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
+        df = f1.to_pandas()
+        f2 = Frame.from_pandas(df)
+        self.assertEqual(f2.columns.depth, 2)
+        self.assertEqual(f2.index.depth, 2)
+        self.assertEqual(f2.to_pairs(),
+                ((('zZbu', 'zOyq'), (((34715, 105269), False), ((34715, 119909), False))), (('zZbu', 'zIA5'), (((34715, 105269), False), ((34715, 119909), False))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -2242,7 +2258,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
                 )
 
-    def test_frame_insert_b(self) -> None:
+    def test_frame_insert_b1(self) -> None:
         records = (
                 ('a', False, True),
                 ('b', True, False))
@@ -2253,24 +2269,35 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             f1._insert(0, 'a', after=False)
 
-        s1 = sf.Series(())
-
-        f2 = f1.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f_empty = sf.Frame(np.array(()).reshape(2, 0), index=f1.index)
+        f2 = f1.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertNotEqual(id(f1), id(f2))
 
         f3 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('x','y'))
-        f4 = f3.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f4 = f3.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f4))
 
         # matching index but no columns
         f5 = FrameGO(columns=(), index=('x','y'))
         f6 = f3.insert_before('q', f5)
-        self.assertTrue(f3.equals(f6)) # no insertion of an empty container
+        self.assertTrue(f3.equals(f6)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f6))
+
+    def test_frame_insert_b2(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        f_empty = sf.Frame(np.array(()).reshape(0, 2), columns=('s', 't'))
+        f2 = f1.insert_before('q', f_empty)
+        self.assertEqual(f2.columns.values.tolist(), ['p', 's', 't', 'q', 'r'])
 
     def test_frame_insert_c(self) -> None:
         records = (
@@ -2357,7 +2384,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1.insert_after(slice('q', 'r'), s1)
 
-    def test_frame_insert_g(self) -> None:
+    def test_frame_insert_g1(self) -> None:
         f = ff.parse('s(3,3)|v(str)')
         f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(1, index=f.index, name='a'))
 
@@ -2369,6 +2396,21 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))), ('b', ((0, 2), (1, 2), (2, 2))))
                 )
+
+    def test_frame_insert_g2(self) -> None:
+        # a Frame with four columns, no rows; inserting an empty Series will work as with FrameGO
+        empty = sf.Frame.from_records([], columns=list("abcd"))
+        new_column = sf.Series(np.array(()), name='e')
+        f2 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f2.shape, (0, 5))
+        self.assertEqual(f2.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
+        # this works too as we take the intersection index
+        new_column = sf.Series([0,], index=('a',), name='e')
+        f3 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f3.shape, (0, 5))
+        self.assertEqual(f3.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
 
     def test_frame_insert_h(self) -> None:
         f = ff.parse('s(2,3)|v(str)')
@@ -2585,13 +2627,6 @@ class TestUnit(TestCase):
         s2 = f1.loc['x', :'r']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(s2.name, 'x')
 
-    def test_frame_loc_e(self) -> None:
-        fp = self.get_test_input('jph_photos.txt')
-        # using a raw string to avoid unicode decoding issues on windows
-        f = sf.Frame.from_tsv(fp, dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')
-        post = f.loc[f['albumId'] >= 98]
-        self.assertEqual(post.shape, (150, 5))
-
     def test_frame_loc_f(self) -> None:
         f = Frame.from_elements(range(3), index=sf.Index(tuple('abc'), name='index'))
         self.assertEqual(f.loc['b':].index.name, 'index') # type: ignore
@@ -2735,7 +2770,6 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('ab'))
         f2 = f1.assign['a']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2,), (2,1)])
-
         self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('bool')])
 
         self.assertEqual(f2.to_pairs(0),
@@ -2822,6 +2856,110 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(f1.assign.iloc[1,1](3000).iloc[1,1], 3000)
+
+
+    def test_frame_assign_iloc_b(self) -> None:
+
+        f1 = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')),
+                columns=('a', 'b', 'c'),
+                dtypes=dict(c=np.datetime64),
+                name='x')
+        f2 = f1.assign.iloc[2]((-1, False, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, False), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
+
+
+    def test_frame_assign_iloc_c(self) -> None:
+
+        f1 = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')),
+                columns=('a', 'b', 'c'),
+                dtypes=dict(c=np.datetime64),
+                name='x')
+        f2 = f1.assign.iloc[2, [0, 2]]((-1, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, True), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
+
+    def test_frame_assign_iloc_d(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8, 3),
+                (10, 2, 8, 3),
+                (False, True, True, False),
+                (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                dtypes=dict(e=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[2, 2:]((False, False, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, False), (3, False))), ('d', ((0, False), (1, True), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
+                )
+
+    def test_frame_assign_iloc_e(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8, 3),
+                (10, 2, 8, 3),
+                (False, True, True, False),
+                (False, True, True, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30'),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                dtypes=dict(e=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[1:, 3:]((False, np.datetime64('2022-01-10')))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, True), (3, False))), ('d', ((0, False), (1, False), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('2022-01-10')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('2022-01-10')))))
+                )
+
+    def test_frame_assign_iloc_f(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                columns=('a', 'b', 'c', 'd'),
+                dtypes=dict(d=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[0, 0]((100,))
+        self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual(f2.to_pairs(),
+            (('a', ((0, 100), (1, 2), (2, 8))), ('b', ((0, False), (1, False), (2, False))), ('c', ((0, False), (1, False), (2, False))), ('d', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('1517-12-31'))))))
+
+    def test_frame_assign_iloc_h(self) -> None:
+
+        f1 = Frame.from_fields((
+                (10, 2, 8),
+                (False, False, False),
+                (False, False, False),
+                ('1517-01-01', '1517-04-01', '1517-12-31'),
+                ),
+                columns=('a', 'b', 'c', 'd'),
+                dtypes=dict(d=np.datetime64),
+                consolidate_blocks=True,
+                )
+        f2 = f1.assign.iloc[0, 0](())
+        # self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
+        self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                ['O', 'b', 'b', 'M'],
+                )
+        self.assertEqual(f2['a'].values.tolist(), [(), 2, 8])
+
 
     #---------------------------------------------------------------------------
 
@@ -4456,8 +4594,8 @@ class TestUnit(TestCase):
                 columns=range(2),
                 dtype=object,
                 name='foo',
-                index_constructor=IndexDefaultFactory('bar'),
-                columns_constructor=IndexDefaultFactory('baz'),
+                index_constructor=IndexDefaultConstructorFactory('bar'),
+                columns_constructor=IndexDefaultConstructorFactory('baz'),
                 )
 
         self.assertEqual(f1.to_pairs(),
@@ -4688,7 +4826,7 @@ class TestUnit(TestCase):
             # must provide an index
             _ = Frame.from_items(gen())
 
-    def test_frame_from_items_k(self) -> None:
+    def test_frame_from_items_k1(self) -> None:
 
         s1 = Series((2, 3), index=('b', 'c'))
         s2 = Series(('x', 'y'), index=('a',  'c'))
@@ -4701,6 +4839,21 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('x', (('a', 0), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', ''), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
                 )
+
+    def test_frame_from_items_k2(self) -> None:
+
+        s1 = Series((2, 3), index=('b', 'c'))
+        s2 = Series(('x', 'y'), index=('a',  'c'))
+        s3 = Series((True, False), index=('b',  'c'))
+
+        f1 = Frame.from_items(zip(list('xyz'), (s1, s2, s3)),
+                index=tuple('abc'),
+                fill_value=defaultdict(lambda: None, {'z':False}),
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', None), ('b', 2), ('c', 3))), ('y', (('a', 'x'), ('b', None), ('c', 'y'))), ('z', (('a', False), ('b', True), ('c', False))))
+                )
+
 
     def test_frame_from_items_l(self) -> None:
 
@@ -4742,6 +4895,15 @@ class TestUnit(TestCase):
                 name='foo')
         self.assertEqual(f['name'].to_pairs(),
                 ((464, 'Venus'), (-200, 'Neptune')))
+
+    def test_frame_from_structured_array_c(self) -> None:
+        a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
+                dtype=[('name', 'U7'), ('mass', 'f4'), ('temperature', 'i4')])
+        f = sf.Frame.from_structured_array(a,
+                index_depth=1,
+                )
+        self.assertEqual(f.shape, (2, 2))
+        self.assertEqual(f.index.values.tolist(), ['Venus', 'Neptune'])
 
     #---------------------------------------------------------------------------
 
@@ -5506,6 +5668,26 @@ class TestUnit(TestCase):
                  ((200, False), 'new'))))
                 )
 
+    def test_frame_rehierarch_e(self) -> None:
+        f = sf.Frame.from_items(
+            [("price", [2, 3, 4])],
+            index=sf.IndexHierarchy.from_product(
+                ["APPL"],
+                sf.IndexDate(
+                    [
+                        np.datetime64("2022-01-01"),
+                        np.datetime64("2022-01-02"),
+                        np.datetime64("2022-01-03"),
+                    ]
+                ),
+            ),
+        )
+        f.rehierarch((1, 0))
+        self.assertEqual(
+                f.to_pairs(),
+                (('price', ((('APPL', np.datetime64('2022-01-01')), 2), (('APPL', np.datetime64('2022-01-02')), 3), (('APPL', np.datetime64('2022-01-03')), 4))),)
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_get_a(self) -> None:
@@ -6159,7 +6341,6 @@ class TestUnit(TestCase):
         # header, mixed types, no index
 
         s1 = StringIO('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
-
         f1 = Frame.from_csv(s1)
 
         post = f1.iloc[:, :2].sum(axis=0)
@@ -6223,7 +6404,7 @@ class TestUnit(TestCase):
                 (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
 
     def test_frame_from_csv_f(self) -> None:
-        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NAN,3.4,blue\nD,,9.0,black')
 
         f1 = sf.Frame.from_csv(
                 s1,
@@ -6242,7 +6423,7 @@ class TestUnit(TestCase):
             ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
             )
 
-    def test_frame_from_csv_h(self) -> None:
+    def test_frame_from_csv_h1(self) -> None:
         s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
 
         f1 = sf.Frame.from_csv(
@@ -6252,11 +6433,30 @@ class TestUnit(TestCase):
                 dtypes=dict(score=np.float16))
 
         self.assertEqual(f1.dtypes.to_pairs(),
-                (('count', np.dtype('O')),
+                (('count', np.dtype('<U4')),
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
-    @skip_win
+
+    def test_frame_from_csv_h2(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1,
+                store_filter=StoreFilter(),
+                dtypes=(str,str,np.float16,str),
+                )
+        self.assertEqual(f1.dtypes.to_pairs(),
+                (('count', np.dtype('O')),
+                ('score', np.dtype('float16')),
+                ('color', np.dtype('<U5'))))
+        self.assertEqual(
+                f1['count'].astype(str).values.tolist(),
+                ['nan', 'nan', 'nan', 'nan']
+                )
+
     def test_frame_from_csv_i(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
 
@@ -6266,9 +6466,8 @@ class TestUnit(TestCase):
                 columns_depth=0,
                 dtypes=[np.int64, str, np.int64]
                 )
-
         self.assertEqual(f1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64')]
+                [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64')]
                 )
 
     def test_frame_from_csv_j(self) -> None:
@@ -6286,7 +6485,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_csv_k(self) -> None:
-        s1 = StringIO('1\t2\t3\t4\n')
+        s1 = StringIO('1,2,3,4\n')
         f1 = Frame.from_csv(s1, index_depth=0, columns_depth=0)
         self.assertEqual(f1.to_pairs(0),
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, 3),)), (3, ((0, 4),)))
@@ -6335,6 +6534,107 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
             (('a', ((('-', 1), 43), (('X', 2), 1), (('Y', 1), 8), (('Y', 2), 6))), ('b', ((('-', 1), 54), (('X', 2), 3), (('Y', 1), 10), (('Y', 2), 20))))
             )
+
+    def test_frame_from_csv_p(self) -> None:
+        s1 = ['junk', ',x,y', 'a,3,2', 'b,5,1', 'junk', 'junk']
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1,
+                skip_footer=2,
+                skip_header=1
+                )
+        self.assertEqual(f1.to_pairs(),
+                (('x', (('a', 3), ('b', 5))), ('y', (('a', 2), ('b', 1))))
+                )
+
+
+    def test_frame_from_csv_q(self) -> None:
+        s1 = StringIO('x,y,x,y\n1,2,3,10\n4,5,6,20\njunk')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=0,
+                skip_footer=1,
+                skip_header=1,
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((0, 1), (1, 4))), (1, ((0, 2), (1, 5))), (2, ((0, 3), (1, 6))), (3, ((0, 10), (1, 20))))
+                )
+
+    def test_frame_from_csv_r1(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                index_column_first=2,
+                columns_depth=0,
+                )
+        self.assertEqual(f1.to_pairs(),
+            ((0, ((3, 1), (6, 4))), (1, ((3, 2), (6, 5))), (2, ((3, 4), (6, 5))))
+            )
+
+
+    def test_frame_from_csv_r2(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        with self.assertRaises(ErrorInitFrame):
+            f1 = sf.Frame.from_csv(
+                    s1,
+                    index_depth=1,
+                    index_column_first=2,
+                    columns_depth=1,
+                    )
+
+    def test_frame_from_csv_r3(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        with self.assertRaises(ErrorInitFrame):
+            f1 = sf.Frame.from_csv(
+                    s1,
+                    index_depth=1,
+                    index_column_first='foo',
+                    columns_depth=0,
+                    )
+
+    def test_frame_from_csv_s(self) -> None:
+        s1 = StringIO('A,A,B,B\nNone,x,None,y\n1,2,3,4\n4,5,6,5\n')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=2,
+                store_filter=StoreFilter()
+                )
+        self.assertEqual(f1.columns.depth, 2)
+        self.assertEqual(f1.columns.values.tolist(),
+                [['A', None], ['A', 'x'], ['B', None], ['B', 'y']])
+        self.assertEqual(f1.shape, (2, 4))
+
+    def test_frame_from_csv_t(self) -> None:
+        s1 = StringIO('A,-,B\nNone,x,None,y\n1,2,3,4\n4,5,6,5\n')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=2,
+                store_filter=StoreFilter(),
+                columns_continuation_token='-',
+                )
+        self.assertEqual(f1.columns.depth, 2)
+        self.assertEqual(f1.columns.values.tolist(),
+                [['A', None], ['A', 'x'], ['B', None], ['B', 'y']])
+        self.assertEqual(f1.shape, (2, 4))
+
+    def test_frame_from_csv_u(self) -> None:
+        s1 = StringIO('1,2,3,4\n4,5,6,5')
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                consolidate_blocks=True,
+                columns_depth=0,
+                )
+        self.assertTrue(f1._blocks.unified)
 
     #---------------------------------------------------------------------------
 
@@ -6426,7 +6726,7 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
 
             with open(fp, 'w', encoding='utf-8') as file:
-                file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
+                file.write('\n'.join(('index|A|B', 'false|false|true', 'true|true|false')))
                 file.close()
 
             # dtypes are applied to all columns, even those that will become index
@@ -6441,24 +6741,25 @@ class TestUnit(TestCase):
                     (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
 
     def test_frame_from_delimited_c(self) -> None:
+        dtypes = (int, str, int, int)
         msg = 'a|b|c|d\n1940|2021-04-03|3|5\n1492|1743-04-03|-4|9\n'
-        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|').to_pairs(),
+        self.assertEqual(Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes).to_pairs(),
                 (('a', ((0, 1940), (1, 1492))),
                 ('b', ((0, '2021-04-03'), (1, '1743-04-03'))),
                 ('c', ((0, 3), (1, -4))),
                 ('d', ((0, 5), (1, 9))))
                 )
 
-        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=IndexYear, index_depth=1)
+        f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=IndexYear, index_depth=1)
         self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]'))
 
-        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear,), index_depth=1)
+        f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear,), index_depth=1)
         self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]'))
 
         with self.assertRaises(RuntimeError):
-            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=1)
+            _ = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear, IndexDate), index_depth=1)
 
-        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2)
+        f3 = Frame.from_delimited(msg.split('\n'), delimiter='|', index_constructors=(IndexYear, IndexDate), index_depth=2, dtypes=dtypes)
         self.assertEqual(f3.index.depth, 2)
         self.assertEqual(f3.index.index_types.values.tolist(), [IndexYear, IndexDate])
 
@@ -6493,7 +6794,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_delimited_f(self) -> None:
-        msg = 'a|b|c\n0|1|0\n23|1|4\n'
+        msg = 'a|b|c\n0|1|FALSE\n23|1|true\n'
 
         f1 = Frame.from_delimited(msg.split('\n'),
                 delimiter='|',
@@ -6510,6 +6811,202 @@ class TestUnit(TestCase):
                  ('c', ((0, False), (1, True))))
                  )
 
+    def test_frame_from_delimited_g(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w', encoding='utf-8') as file:
+                file.write('\n'.join(('index|A|B', 'false|false|true', 'true|true|false', 'junk')))
+                file.close()
+
+            # dtypes are applied to all columns, even those that will become index
+            f1 = Frame.from_delimited(fp,
+                    index_depth=0,
+                    columns_depth=0,
+                    delimiter='|',
+                    dtypes=bool,
+                    skip_header=1,
+                    skip_footer=1,
+                    )
+            self.assertEqual(f1.to_pairs(),
+                    ((0, ((0, False), (1, True))), (1, ((0, False), (1, True))), (2, ((0, True), (1, False))))
+                    )
+
+    def test_frame_from_delimited_h(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                index_column_first='c',
+                )
+
+    def test_frame_from_delimited_i(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=1,
+            columns_depth=0,
+            index_column_first=2,
+            )
+        self.assertEqual(
+                f1.to_pairs(),
+                ((0, ((0, False), (5, True), (6, False))), (1, ((0, 1), (5, 4), (6, 9))), (2, ((0, 'q'), (5, 'z'), (6, 'w'))))
+                )
+
+    def test_frame_from_delimited_j(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                columns_select=('a', 'd'),
+                )
+        self.assertEqual(
+                f1.to_pairs(),
+                (('a', ((0, False), (1, True), (2, False))), ('d', ((0, 'q'), (1, 'z'), (2, 'w'))))
+                )
+
+    def test_frame_from_delimited_k(self) -> None:
+        msg = 'a|b|c|d\nFalse|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=1,
+                columns_select=('d',),
+                )
+        self.assertEqual(
+                f1.to_pairs(),
+                (('d', ((0, 'q'), (1, 'z'), (2, 'w'))),)
+                )
+
+    def test_frame_from_delimited_l(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                columns_select=(1, 2),
+                )
+        self.assertEqual( f1.to_pairs(),
+                ((0, ((0, 1), (1, 4), (2, 9))), (1, ((0, 0), (1, 5), (2, 6))))
+                )
+
+    def test_frame_from_delimited_m(self) -> None:
+        msg = 'False|1|0|q\nTrue|4|5|z\nFalse|9|6|w'
+
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                columns_select=(1, 2),
+                )
+
+    def test_frame_from_delimited_n(self) -> None:
+        msg = '2021-01-02|1|0|q\n2022-03-05|4|5|z\n1983-08-08|9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=1,
+            columns_depth=0,
+            index_constructors=IndexDate,
+            )
+        self.assertIs(f1.index.__class__, IndexDate)
+        dt64 = np.datetime64
+        self.assertEqual(f1.to_pairs(),
+                ((0, ((dt64('2021-01-02'), 1), (dt64('2022-03-05'), 4), (dt64('1983-08-08'), 9))), (1, ((dt64('2021-01-02'), 0), (dt64('2022-03-05'), 5), (dt64('1983-08-08'), 6))), (2, ((dt64('2021-01-02'), 'q'), (dt64('2022-03-05'), 'z'), (dt64('1983-08-08'), 'w'))))
+                )
+
+    def test_frame_from_delimited_o(self) -> None:
+        msg = '2021-01-02|a|0|q\n2022-01-02|b|5|z\n1983-08-08|a|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+            delimiter='|',
+            index_depth=2,
+            columns_depth=0,
+            index_constructors=(IndexDate, Index),
+            )
+        self.assertEqual(f1.index.index_types.values.tolist(), [IndexDate, Index])
+        dt64 = np.datetime64
+        self.assertEqual(f1.to_pairs(),
+            ((0, (((dt64('2021-01-02'), 'a'), 0), ((dt64('2022-01-02'), 'b'), 5), ((dt64('1983-08-08'), 'a'), 6))), (1, (((dt64('2021-01-02'), 'a'), 'q'), ((dt64('2022-01-02'), 'b'), 'z'), ((dt64('1983-08-08'), 'a'), 'w')))
+            ))
+
+    def test_frame_from_delimited_p(self) -> None:
+        msg = 'a\\||1|0|q\nb\\||4|5|z\nc\\||9|6|w'
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                escape_char='\\'
+                )
+        self.assertEqual(f1.shape, (3, 3))
+        self.assertEqual(f1.index.values.tolist(), ['a|', 'b|', 'c|'])
+        self.assertEqual(f1.to_pairs(),
+                ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
+                )
+
+
+    def test_frame_from_delimited_q(self) -> None:
+        msg = "'a|'|1|0|q\n'b|'|4|5|z\n'c|'|9|6|w"
+
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=1,
+                columns_depth=0,
+                quote_char="'"
+                )
+        self.assertEqual(f1.to_pairs(),
+                ((0, (('a|', 1), ('b|', 4), ('c|', 9))), (1, (('a|', 0), ('b|', 5), ('c|', 6))), (2, (('a|', 'q'), ('b|', 'z'), ('c|', 'w'))))
+                )
+
+    def test_frame_from_delimited_r(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes={1:bool, 2:str},
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'b', 'U']
+                )
+
+    def test_frame_from_delimited_s(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=chain((int,), repeat(str)),
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['i', 'U', 'U']
+                )
+
+    def test_frame_from_delimited_t(self) -> None:
+        msg = '0|1|3\n4|0|6\n'
+        f1 = Frame.from_delimited(msg.split('\n'),
+                delimiter='|',
+                index_depth=0,
+                columns_depth=0,
+                dtypes=defaultdict(lambda: str, {1: int}),
+                )
+        self.assertEqual(
+                [dt.kind for dt in f1.dtypes.values],
+                ['U', 'i', 'U']
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:
@@ -6520,7 +7017,7 @@ class TestUnit(TestCase):
                 file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
                 file.close()
 
-            f = Frame.from_tsv(fp, index_depth=1, dtypes={'a': bool})
+            f = Frame.from_tsv(fp, index_depth=1, dtypes={'A': bool})
             self.assertEqual(
                     f.to_pairs(0),
                     (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3))))
@@ -6629,11 +7126,10 @@ class TestUnit(TestCase):
             f1 = sf.Frame.from_tsv(fp,
                     index_depth=1,
                     columns_depth=1,
-                    dtypes=(None, int, str), # position dtypes include index
+                    dtypes=(None, bool, float), # position dtypes include index
                     )
-
-            self.assertEqual(f1.to_pairs(0),
-                    (('A', (('a', 1), ('b', 0))), ('B', (('a', '20.2'), ('b', '85.3'))))
+            self.assertEqual(f1.astype['B'](str).to_pairs(0),
+                    (('A', (('a', True), ('b', False))), ('B', (('a', '20.2'), ('b', '85.3'))))
                     )
 
     def test_frame_from_tsv_i(self) -> None:
@@ -7082,21 +7578,30 @@ class TestUnit(TestCase):
                 (2, 95, 'c', False, False),
                 (30, 73, 'd', True, True),
                 )
+
+        index = IndexHierarchy.from_product(('A', 'B'), (1, 2),
+                index_constructors=(Index, partial(Index, dtype=np.int64)))
+
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=IndexHierarchy.from_product(('A', 'B'), (1, 2))
+                index=index,
+                dtypes={'p': np.int64, 'q': np.int64},
                 )
-
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2)
             self.assertEqualFrames(f1, f2)
 
     def test_frame_to_tsv_c(self) -> None:
+
+        columns = IndexHierarchy.from_product(
+                ('III', 'IV'), (10, 20),
+                index_constructors=(Index, partial(Index, dtype=np.int64)))
+
         f1 = sf.Frame(
-                np.arange(16).reshape((4,4)),
+                np.arange(16, dtype=np.int64).reshape((4,4)),
                 index=sf.IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                columns=sf.IndexHierarchy.from_product(('III', 'IV'), (10, 20))
+                columns=columns,
                 )
 
         with temp_file('.txt', path=True) as fp:
@@ -7382,8 +7887,8 @@ class TestUnit(TestCase):
 
     @unittest.skip('need to programatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
-        # https://github.com/InvestmentSystems/static-frame/issues/146
-        # https://github.com/InvestmentSystems/static-frame/issues/252
+        # https://github.com/static-frame/static-frame/issues/146
+        # https://github.com/static-frame/static-frame/issues/252
         fp = '/tmp/bad_sheet.xlsx'
         from static_frame.test.test_case import Timer
         t = Timer()
@@ -8403,7 +8908,7 @@ class TestUnit(TestCase):
         b = sf.Frame.from_dict({0:(1,2), 1:(np.nan, np.nan), 2:(False, False)})
 
         # reblock first two columns into integers
-        c = a.astype[[0,1]](int)
+        c = a.astype[[0,1]](int, consolidate_blocks=True)
         self.assertEqual(c._blocks.shapes.tolist(),
                 [(2, 2), (2,)])
 
@@ -8506,7 +9011,10 @@ class TestUnit(TestCase):
         f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
         f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
 
-        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
+        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes),
+                axis=1,
+                name='dtype_diffs',
+                )
         self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
     def test_frame_from_concat_bb(self) -> None:
@@ -8764,7 +9272,7 @@ class TestUnit(TestCase):
 
         f4 = Frame.from_concat_items(dict(A=f1, B=f2).items(),
                 axis=1,
-                columns_constructor=IndexDefaultFactory('foo'),
+                columns_constructor=IndexDefaultConstructorFactory('foo'),
                 )
         self.assertEqual(f4.columns.name, 'foo')
 
@@ -8786,7 +9294,7 @@ class TestUnit(TestCase):
 
         f3 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(),
                 axis=0,
-                index_constructor=IndexDefaultFactory('foo'),
+                index_constructor=IndexDefaultConstructorFactory('foo'),
                 )
         self.assertEqual(f3.index.name, 'foo')
 
@@ -9664,11 +10172,11 @@ class TestUnit(TestCase):
                 name='foo')
 
         f2 = f1.to_frame_go()
-        f3 = f2.to_frame()
+        f3 = f2.to_frame(name='bar')
 
         self.assertTrue(f1.name, 'foo')
         self.assertTrue(f2.name, 'foo')
-        self.assertTrue(f3.name, 'foo')
+        self.assertTrue(f3.name, 'bar')
 
     def test_frame_to_frame_go_c(self) -> None:
         records = (
@@ -9736,6 +10244,13 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_to_frame_a(self) -> None:
+        f1 = Frame(np.array(()), name='foo')
+        f2 = f1.to_frame(name='bar')
+        self.assertEqual(f2.name, 'bar')
 
     #---------------------------------------------------------------------------
 
@@ -10187,6 +10702,30 @@ class TestUnit(TestCase):
 
         f2 = Frame().astype[:](str)
         self.assertEqual(f2.shape, (0, 0))
+
+    def test_frame_astype_i(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float, consolidate_blocks=True)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2, 2), (2, 2)]
+                )
+
+    def test_frame_astype_j(self) -> None:
+        f1 = Frame.from_fields(((10, 20), (30, 40), (50, 60), (70, 80)),
+                columns=('a', 'b', 'c', 'd')
+                )
+        self.assertEqual(len(f1._blocks._blocks), 4)
+
+        f2 = f1.astype[['c', 'd']](float)
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(2,), (2,), (2,), (2,)]
+                )
+
+
 
     #---------------------------------------------------------------------------
 
@@ -10955,8 +11494,8 @@ class TestUnit(TestCase):
 
         a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)),
                 index=tuple('wxyz'),
-                index_constructor=IndexDefaultFactory('foo'),
-                columns_constructor=IndexDefaultFactory('bar'),
+                index_constructor=IndexDefaultConstructorFactory('foo'),
+                columns_constructor=IndexDefaultConstructorFactory('bar'),
                 )
         self.assertEqual(a.index.name, 'foo')
         self.assertEqual(a.columns.name, 'bar')
@@ -11194,7 +11733,7 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 
-        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultFactory('foo'))
+        f = Frame.from_records_items(gen(), index_constructor=IndexDefaultConstructorFactory('foo'))
         self.assertEqual(
                 f.to_pairs(0),
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
@@ -11433,6 +11972,197 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.iloc_max(axis=1).to_pairs(),
                 (('x', 0), ('y', 1), ('z', 0)))
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_loc_notna_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_first().to_pairs(),
+                (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+        self.assertEqual(f1.loc_notna_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notna_b(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notna_first(axis=1).to_pairs(),
+                (('x', 'b'), ('y', 'a'), ('z', 'a'))
+                )
+        self.assertEqual(f1.loc_notna_last(axis=1).to_pairs(),
+                (('x', 'd'), ('y', 'b'), ('z', 'd'))
+                )
+
+    def test_frame_loc_notna_c(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (np.nan, np.nan, np.nan, np.nan),
+                (np.nan, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+        post = f1.loc_notna_first(fill_value=None)
+        self.assertEqual(post.to_pairs(),
+                (('a', None), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notna_d(self) -> None:
+
+        records = (
+                (None, None, None, None),
+                (None, None, None, None),
+                (None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=0).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None)))
+        self.assertEqual(
+                f1.loc_notna_first(fill_value=None, axis=1).to_pairs(),
+                (('x', None), ('y', None), ('z', None)))
+
+    def test_frame_iloc_notna_a(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, np.nan, np.nan, np.nan),
+                (2, np.nan, 3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notna_first().to_pairs(),
+                (('a', 1), ('b', 0), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last().to_pairs(),
+                (('a', 2), ('b', 0), ('c', 2), ('d', 0))
+                )
+
+    def test_frame_iloc_notna_b(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (30, 1, np.nan, np.nan),
+                (2, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notna_first(axis=1).to_pairs(),
+                (('x', 1), ('y', 0), ('z', 0))
+                )
+        self.assertEqual(f1.iloc_notna_last(axis=1).to_pairs(),
+                (('x', 3), ('y', 1), ('z', 3))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_loc_notfalsy_a(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 0, 0, 0),
+                (2, 0, 3, 0),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notfalsy_first().to_pairs(),
+                (('a', 'y'), ('b', 'x'), ('c', 'x'), ('d', 'x'))
+                )
+        self.assertEqual(f1.loc_notfalsy_last().to_pairs(),
+                (('a', 'z'), ('b', 'x'), ('c', 'z'), ('d', 'x'))
+                )
+
+    def test_frame_loc_notfalsy_b(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 1, 0, 0),
+                (2, 0, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_notfalsy_first(axis=1).to_pairs(),
+                (('x', 'b'), ('y', 'a'), ('z', 'a'))
+                )
+        self.assertEqual(f1.loc_notfalsy_last(axis=1).to_pairs(),
+                (('x', 'd'), ('y', 'b'), ('z', 'd'))
+                )
+
+    def test_frame_iloc_notfalsy_a(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 0, 0, 0),
+                (2, 0, 3, 0),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notfalsy_first().to_pairs(),
+                (('a', 1), ('b', 0), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(f1.iloc_notfalsy_last().to_pairs(),
+                (('a', 2), ('b', 0), ('c', 2), ('d', 0))
+                )
+
+    def test_frame_iloc_notfalsy_b(self) -> None:
+
+        records = (
+                (0, 2, 5, 4),
+                (30, 1, 0, 0),
+                (2, 0, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_notfalsy_first(axis=1).to_pairs(),
+                (('x', 1), ('y', 0), ('z', 0))
+                )
+        self.assertEqual(f1.iloc_notfalsy_last(axis=1).to_pairs(),
+                (('x', 3), ('y', 1), ('z', 3))
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -12546,6 +13276,47 @@ class TestUnit(TestCase):
         f3 = f1.via_str[-2:]
         self.assertEqual(f3.to_pairs(),
                 (('x', (('a', 'oo'), ('b', 'az'))), ('y', (('a', 'ar'), ('b', 'az'))))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_str_format_a(self) -> None:
+        f1 = Frame(np.array([[10, 20], [30, 40]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = (f1 / 3).via_str.format('{:.3}')
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', '3.33'), ('b', '10.0'))), ('y', (('a', '6.67'), ('b', '13.3'))))
+                )
+
+    def test_frame_str_format_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(float,float,bool,int)').relabel(
+                columns=list('abcd'))
+        f2 = f1.via_str.format(dict(a='{:.2%}', b='{:.2f}', c='b{:=>4}', d='{:b}'))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, '193040.00%'), (1, '-176034.00%'))), ('b', ((0, '-610.80'), (1, '3243.94'))), ('c', ((0, 'b===1'), (1, 'b===0'))), ('d', ((0, '11111011111111001'), (1, '1000100011001101'))))
+                )
+
+    def test_frame_str_format_c(self) -> None:
+        f1 = ff.parse('s(2,4)|v(str)').relabel(columns=list('abcd'))
+        f2 = f1.via_str.format(dict(c='{:=^12}', d=''))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 'zjZQ'), (1, 'zO5l'))), ('b', ((0, 'zaji'), (1, 'zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, ''), (1, ''))))
+                )
+
+    def test_frame_str_format_d(self) -> None:
+        f1 = ff.parse('s(2,4)|v(str)').relabel(columns=list('abcd'))
+        f2 = f1.via_str.format(defaultdict(lambda: '{:=>6}', dict(c='{:=^12}')))
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, '==zjZQ'), (1, '==zO5l'))), ('b', ((0, '==zaji'), (1, '==zJnC'))), ('c', ((0, '====ztsv===='), (1, '====zUvW===='))), ('d', ((0, '==z2Oo'), (1, '==z5l6'))))
+                )
+
+    def test_frame_str_format_e(self) -> None:
+        f1 = ff.parse('s(2,4)|v(float,float,bool,int)').relabel(
+                columns=IndexAutoFactory)
+        f2 = f1.via_str.format({0:'{:.2%}', 1:'{:.2f}', 2:'b{:=>4}', 3:'{:b}'})
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, '193040.00%'), (1, '-176034.00%'))), (1, ((0, '-610.80'), (1, '3243.94'))), (2, ((0, 'b===1'), (1, 'b===0'))), (3, ((0, '11111011111111001'), (1, '1000100011001101'))))
                 )
 
     #---------------------------------------------------------------------------
@@ -14159,12 +14930,10 @@ class TestUnit(TestCase):
         f2 = f1.drop[0]
         self.assertEqual(f2.shape, (3, 0))
         self.assertEqual(f2.index.values.tolist(), [0, 1, 2])
-
         # slicing by rows should return a Frame of shape (2, 0)
         f3 = f2.loc[1:]
         self.assertEqual(f3.shape, (2, 0))
         self.assertEqual(f3.index.values.tolist(), [1, 2])
-
         self.assertEqual(f2.loc[[0, 2]].index.values.tolist(), [0, 2])
 
     #---------------------------------------------------------------------------
@@ -14251,6 +15020,329 @@ class TestUnit(TestCase):
         self.assertEqual(dfi.num_columns(), 8)
         self.assertEqual(dfi.num_rows(), 4)
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_json_index_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_index()
+        self.assertEqual(post, '{"34715": {"zZbu": false, "ztsv": 162197, "zUvW": 694.3, "zkuW": "z2Oo"}, "-3648": {"zZbu": false, "ztsv": -41157, "zUvW": -72.96, "zkuW": "z5l6"}}')
+
+    def test_frame_to_json_columns_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_columns()
+        self.assertEqual(post, '{"zZbu": {"34715": false, "-3648": false}, "ztsv": {"34715": 162197, "-3648": -41157}, "zUvW": {"34715": 694.3, "-3648": -72.96}, "zkuW": {"34715": "z2Oo", "-3648": "z5l6"}}')
+
+    def test_frame_to_json_split_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_split()
+        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]}')
+
+    def test_frame_to_json_records_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_records()
+        self.assertEqual(post, '[{"zZbu": false, "ztsv": 162197, "zUvW": 694.3, "zkuW": "z2Oo"}, {"zZbu": false, "ztsv": -41157, "zUvW": -72.96, "zkuW": "z5l6"}]')
+
+    def test_frame_to_json_values_a(self) -> None:
+        f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f.to_json_values()
+        self.assertEqual(post, '[[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]]')
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_json_index_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_index()
+        f2 = Frame.from_json_index(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_index_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_index()
+        f2 = Frame.from_json_index(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_columns_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_columns()
+        f2 = Frame.from_json_columns(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_columns_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_columns()
+        f2 = Frame.from_json_columns(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_split_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_split()
+        f2 = Frame.from_json_split(post, index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_split_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
+        post = f1.to_json_split()
+        f2 = Frame.from_json_split(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_records_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|c(I,str)')
+        post = f1.to_json_records()
+        f2 = Frame.from_json_records(post)
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_records_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)|c(I,str)')
+        post = f1.to_json_records()
+        f2 = Frame.from_json_records(StringIO(post))
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_values_a(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)')
+        post = f1.to_json_values()
+        f2 = Frame.from_json_values(post)
+        self.assertTrue(f1.equals(f2))
+
+    def test_frame_from_json_values_b(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int,float,str)')
+        post = f1.to_json_values()
+        f2 = Frame.from_json_values(StringIO(post))
+        self.assertTrue(f1.equals(f2))
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_dict_fields_a1(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=20, c=22), dict(a=120, d=2000)),
+            columns=('x', 'y', 'z'),
+            fill_value=0,
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', 0), ('d', 0))), ('y', (('a', 0), ('c', 22), ('b', 20), ('d', 0))), ('z', (('a', 120), ('c', 0), ('b', 0), ('d', 2000)))))
+
+    def test_frame_from_dict_fields_a2(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=20, c=22), dict(a=120, d=2000)),
+            columns=('x', 'y', 'z'),
+            fill_value=0,
+            consolidate_blocks=True,
+            )
+        self.assertTrue(f._blocks.unified)
+
+    def test_frame_from_dict_fields_b(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            columns=('x', 'y', 'z'),
+            fill_value=[-1, False, ''],
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', -1), ('d', -1))), ('y', (('a', False), ('c', False), ('b', True), ('d', False))), ('z', (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p'))))
+                )
+
+    def test_frame_from_dict_fields_c(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            columns=('x', 'y', 'z'),
+            fill_value=[-1, False, ''],
+            dtypes=[int, bool, str],
+            )
+        self.assertEqual(f.to_pairs(),
+                (('x', (('a', 3), ('c', 4), ('b', -1), ('d', -1))), ('y', (('a', False), ('c', False), ('b', True), ('d', False))), ('z', (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p'))))
+                )
+
+    def test_frame_from_dict_fields_d(self) -> None:
+        f = Frame.from_dict_fields(
+            (dict(a=3, c=4), dict(b=True, c=False), dict(a='w', d='p')),
+            fill_value=[-1, False, ''],
+            dtypes=[int, bool, str],
+            )
+        self.assertEqual( f.to_pairs(),
+            ((0, (('a', 3), ('c', 4), ('b', -1), ('d', -1))), (1, (('a', False), ('c', False), ('b', True), ('d', False))), (2, (('a', 'w'), ('c', ''), ('b', ''), ('d', 'p')))))
+
+    def test_frame_from_dict_fields_e(self) -> None:
+        with self.assertRaises(ErrorInitFrame):
+            _  = Frame.from_dict_fields((),)
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_signature_bytes_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(),
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
+
+        f2 = ff.parse('f(F)|v(int64,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+
+    def test_frame_to_signature_bytes_b(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|c(Ig,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False, include_class=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False, include_class=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_c(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_d(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(3,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_e(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,int)|s(4,8)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_to_signature_bytes_f(self) -> None:
+
+        f1 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)')
+        b1 = f1._to_signature_bytes(include_name=False)
+
+        f2 = ff.parse('f(F)|v(int,bool,str)|c(I,str)|s(4,8)|i(I,int)')
+        b2 = f2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
+
+    def test_frame_via_hashlib_a(self) -> None:
+
+        f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
+        hd = f1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(hd,
+            'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
+            )
+
+    #---------------------------------------------------------------------------
+    def test_frame_consolidate_a(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (False, True, False),
+                (True, False, True)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate[:]
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3, 2), (3, 2)])
+
+    def test_frame_consolidate_b1(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate['a':'c']
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3), (3,)])
+
+    def test_frame_consolidate_b2(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        f2 = f1.consolidate['b':'c']
+        self.assertEqual(f2.to_pairs(), f1.to_pairs())
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3,), (3, 2), (3,)])
+
+    def test_frame_consolidate_c(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate['b':'c']
+        post = f2.consolidate.status
+        self.assertEqual(post.to_pairs(),
+                (('loc', ((0, 'a'), (1, slice('b', 'c', None)), (2, 'd'))), ('iloc', ((0, 0), (1, slice(1, 3, None)), (2, 3))), ('dtype', ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('int64')))), ('shape', ((0, (3,)), (1, (3, 2)), (2, (3,)))), ('ndim', ((0, 1), (1, 2), (2, 1))), ('owndata', ((0, True), (1, True), (2, True))), ('f_contiguous', ((0, True), (1, False), (2, True))), ('c_contiguous', ((0, True), (1, True), (2, True))))
+                )
+
+    def test_frame_consolidate_d(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate['b':'c']
+        f3 = f2.consolidate()
+        self.assertEqual(f3.consolidate.status.to_pairs(),
+                (('loc', ((0, slice('a', 'd', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 4)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
+                )
+
+    def test_frame_consolidate_e(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8),
+                (1, 0, 1),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                )
+        f2 = f1.consolidate[['a', 'c', 'e']]
+        self.assertTrue(f1.consolidate.status.equals(f2.consolidate.status))
+        f3 = f2.consolidate()
+        self.assertEqual(f3.consolidate.status.to_pairs(),
+                (('loc', ((0, slice('a', 'e', None)),)), ('iloc', ((0, slice(0, None, None)),)), ('dtype', ((0, np.dtype('int64')),)), ('shape', ((0, (3, 5)),)), ('ndim', ((0, 2),)), ('owndata', ((0, True),)), ('f_contiguous', ((0, False),)), ('c_contiguous', ((0, True),)))
+        )
+
+    def test_frame_consolidate_f(self) -> None:
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (2, 4, 5),
+                (5, 6, 8),
+                (1, 0, 1),
+                ),
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'),
+                dtypes=np.int64,
+                consolidate_blocks=True,
+                )
+        # NOTE: this will take a consolidated Frame and break it into three such that the target column is consolidated
+        f2 = f1.consolidate['c']
+        self.assertEqual(f2.consolidate.status['shape'].to_pairs(),
+                ((0, (3, 2)), (1, (3,)), (2, (3, 2)))
+                )
+
+        f3 = f1.consolidate[:]
+        self.assertEqual(
+                f3.consolidate.status['shape'].values[0],
+                (3, 5),
+                )
 
 if __name__ == '__main__':
     unittest.main()
