@@ -8507,7 +8507,7 @@ class Frame(ContainerOperand):
         '''
         d = ((k, dict(zip(self._columns, v)))
                 for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
@@ -8518,7 +8518,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
@@ -8528,9 +8528,9 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = dict(columns=JSONFilter.from_iterable(self._columns),
-                index=JSONFilter.from_iterable(self._index),
-                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
+        d = dict(columns=JSONFilter.encode_iterable(self._columns),
+                index=JSONFilter.encode_iterable(self._index),
+                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1))
                 )
         return json.dumps(d, indent=indent)
 
@@ -8544,7 +8544,7 @@ class Frame(ContainerOperand):
         '''
         d = (dict(zip(self._columns, v))
                 for v in self.iter_tuple(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
@@ -8555,7 +8555,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = self.iter_tuple(constructor=tuple, axis=1)
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited

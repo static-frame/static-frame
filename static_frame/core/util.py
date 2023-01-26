@@ -3182,7 +3182,7 @@ class JSONFilter:
     '''
 
     @staticmethod
-    def from_element(obj: tp.Any) -> tp.Any:
+    def encode_element(obj: tp.Any) -> tp.Any:
         '''Convert non-JSON compatible objects to JSON compatible objects or strings.
         '''
         if obj is None:
@@ -3204,29 +3204,32 @@ class JSONFilter:
                 return obj.item()
             return obj.tolist()
 
-        fe = JSONFilter.from_element
         if isinstance(obj, dict):
-            return {fe(k): fe(v) for k, v in obj.items()}
+            ee = JSONFilter.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            return [fe(e) for e in obj]
+            ee = JSONFilter.encode_element
+            return [ee(e) for e in obj]
         # let pass and raise on JSON encoding
         return obj
 
     @classmethod
-    def from_items(cls,
+    def encode_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
         '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
         '''
-        return {cls.from_element(k): cls.from_element(v) for k, v in items}
+        ee = cls.encode_element
+        return {ee(k): ee(v) for k, v in items}
 
     @classmethod
-    def from_iterable(cls,
+    def encode_iterable(cls,
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
         '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
         '''
-        return [cls.from_element(v) for v in iterable]
+        ee = cls.encode_element
+        return [ee(v) for v in iterable]
 
 
 class Reanimate:

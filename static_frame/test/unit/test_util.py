@@ -2896,32 +2896,32 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_json_encoder_numpy_a(self) -> None:
-        post1 = json.dumps(JSONFilter.from_element(dict(a=1, b=2)))
+        post1 = json.dumps(JSONFilter.encode_element(dict(a=1, b=2)))
         self.assertEqual(post1, '{"a": 1, "b": 2}')
 
-        post2 = json.dumps(JSONFilter.from_element(dict(a=np.arange(3))))
+        post2 = json.dumps(JSONFilter.encode_element(dict(a=np.arange(3))))
         self.assertEqual(post2, '{"a": [0, 1, 2]}')
 
-        post3 = json.dumps(JSONFilter.from_element(dict(a=datetime.date(2022,1,5))))
+        post3 = json.dumps(JSONFilter.encode_element(dict(a=datetime.date(2022,1,5))))
         self.assertEqual(post3, '{"a": "2022-01-05"}')
 
-        post4 = json.dumps(JSONFilter.from_element(dict(a=np.datetime64('2022-01-05'))))
+        post4 = json.dumps(JSONFilter.encode_element(dict(a=np.datetime64('2022-01-05'))))
         self.assertEqual(post4, '{"a": "2022-01-05"}')
 
-        post4 = json.dumps(JSONFilter.from_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
+        post4 = json.dumps(JSONFilter.encode_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
         self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
 
     def test_json_encoder_numpy_b(self) -> None:
-        post1 = json.dumps(JSONFilter.from_element(dict(a=np.array((complex(1.2), complex(3.5))))))
+        post1 = json.dumps(JSONFilter.encode_element(dict(a=np.array((complex(1.2), complex(3.5))))))
         self.assertEqual(post1, '{"a": ["(1.2+0j)", "(3.5+0j)"]}')
 
-        post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
+        post2 = json.dumps(JSONFilter.encode_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
         self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
 
     def test_json_encoder_numpy_c(self) -> None:
         x = object()
         with self.assertRaises(TypeError):
-            _ = json.dumps(JSONFilter.from_element(dict(a=x)))
+            _ = json.dumps(JSONFilter.encode_element(dict(a=x)))
 
 
     def test_json_translator_a(self) -> None:
