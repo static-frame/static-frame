@@ -2297,12 +2297,6 @@ class TestUnit(TestCase):
             self.assertEqual(frame.shape, b2.iloc[0].shape)
 
 
-            import ipdb; ipdb.set_trace()
-            pass
-
-
-
-
     #---------------------------------------------------------------------------
     def test_bus_npy_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
