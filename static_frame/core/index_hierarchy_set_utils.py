@@ -2,7 +2,6 @@ import typing as tp
 from functools import partial
 
 import numpy as np
-from arraykit import mloc
 
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
@@ -29,22 +28,6 @@ class ValidationResult(tp.NamedTuple):
     index_constructors: tp.List[IndexConstructor]
 
 
-def get_shallow_copy_key(ih: IndexHierarchy) -> tp.Hashable:
-    # calling id(...) on numpy arrays is not always reliable, so instead,
-    # we will use the underlying array properties to determine the ID for this
-    # index hierarchy, with the desire to encounter duplicate keys for shallow copies
-
-    result: tp.List[tp.Union[int, tp.Tuple[int, ...]]] = []
-
-    for block in ih._blocks._blocks:
-        # You need all three of these to uniquely identify a numpy array
-        result.append(mloc(block))
-        result.append(block.shape)
-        result.append(block.strides)
-
-    return tuple(result)
-
-
 def _validate_and_process_indices(
         indices: tp.Tuple[IndexHierarchy],
         ) -> ValidationResult:
@@ -63,7 +46,7 @@ def _validate_and_process_indices(
     name: tp.Hashable = indices[0].name
     index_constructors = list(indices[0]._index_constructors)
 
-    shallow_copy_keys: tp.Set[tp.Hashable] = set()
+    unique_signatures: tp.Set[tp.Hashable] = set()
     unique_non_empty_indices: tp.List[IndexHierarchy] = []
 
     depth: tp.Optional[int] = None
@@ -87,11 +70,11 @@ def _validate_and_process_indices(
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
 
-        key = tuple(idx._blocks.iter_shallow_keys())
+        signature = tuple(idx._blocks.iter_block_signature())
 
-        if key not in shallow_copy_keys:
+        if signature not in unique_signatures:
             unique_non_empty_indices.append(idx)
-            shallow_copy_keys.add(key)
+            unique_signatures.add(signature)
         else:
             any_shallow_copies = True
 

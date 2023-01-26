@@ -4164,7 +4164,7 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def iter_shallow_keys(self: "TypeBlocks") -> tp.Iterator[tp.Hashable]:
+    def iter_block_signature(self: "TypeBlocks") -> tp.Iterator[tp.Hashable]:
         '''
         Calling id(...) on numpy arrays is not always reliable, so instead,
         we will use the underlying array properties to determine the ID for this
@@ -4181,7 +4181,7 @@ class TypeBlocks(ContainerOperand):
     def is_shallow_copy(self: "TypeBlocks", other: "TypeBlocks") -> bool:
         '''Determine whether or not the underlying blocks are the same.'''
 
-        for key1, key2 in zip_longest(self.iter_shallow_keys(), other.iter_shallow_keys()):
+        for key1, key2 in zip_longest(self.iter_block_signature(), other.iter_block_signature()):
             if key1 != key2:
                 return False
 
@@ -4216,11 +4216,11 @@ class TypeBlocks(ContainerOperand):
         if self._shape != other._shape:
             return False
 
-        if self.is_shallow_copy(other):
-            return True
-
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
+
+        if self.is_shallow_copy(other):
+            return True
 
         for i in range(self._shape[1]):
             if not arrays_equal(
