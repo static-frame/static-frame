@@ -16,8 +16,8 @@ from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
-from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
