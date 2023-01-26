@@ -3276,11 +3276,11 @@ class JSONTranslator(JSONFilter):
         if isinstance(obj, (np.datetime64, datetime.date)):
             return repr(obj) # take repr for encoding / decoding
 
-        if isinstance(obj, dict):
-            fe = JSONTranslator.encode_element #type: ignore
+        if isinstance(obj, dict): # type: ignore
+            fe = JSONTranslator.encode_element
             return {fe(k): fe(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            fe = JSONTranslator.encode_element #type: ignore
+            fe = JSONTranslator.encode_element
             # all iterables must be lists for JSON encoding
             return [fe(e) for e in obj]
 

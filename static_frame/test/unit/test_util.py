@@ -2945,7 +2945,7 @@ class TestUnit(TestCase):
             ('b', datetime.date(1542, 6, 7))])
 
     def test_json_translator_c(self) -> None:
-        # demoonstrate that decoding converts all lists to tuples
+        # demonstrate that decoding converts all lists to tuples
         self.assertEqual(JSONTranslator.decode_element(
                 [3, 4, [None, (10, 20), 'foo']]),
                 (3, 4, (None, (10, 20), 'foo'))
@@ -2954,8 +2954,6 @@ class TestUnit(TestCase):
                 [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
                 (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
                 )
-
-
 
     #---------------------------------------------------------------------------
     def test_frozen_generator_a(self) -> None:
