@@ -3175,6 +3175,8 @@ def array_sample(
     return post
 
 #-------------------------------------------------------------------------------
+# json utils
+
 def list_to_tuple(value: tp.Any) -> tp.Any:
     '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
     '''
@@ -3215,14 +3217,14 @@ class JSONFilter:
             return {fe(k): fe(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
             return [fe(e) for e in obj]
-
+        # let pass and raise on JSON encoding
         return obj
 
     @classmethod
     def from_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
-        '''Return a key-value mapping. This is only useful in that it avoids doing all isinstance checks.
+        '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
         '''
         return {cls.from_element(k): cls.from_element(v) for k, v in items}
 
@@ -3230,13 +3232,17 @@ class JSONFilter:
     def from_iterable(cls,
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
-        '''Return an iterable. Only useful to avoid all isinstance checks in from_element().
+        '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
         '''
         return [cls.from_element(v) for v in iterable]
 
 
 class Reanimate:
-    pass
+    RE: tp.Pattern[str]
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        raise NotImplementedError() #pragma: no cover
 
 class ReanimateDT64(Reanimate):
     RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
@@ -3260,22 +3266,22 @@ class ReanimateDTD(Reanimate):
         return datetime.date(*args)
 
 
-class JSONFilterRepr(JSONFilter):
+class JSONTranslator(JSONFilter):
     '''JSON encoding of select types to permit reanimation. Let fail types that are not specifically handled.
     '''
-    REANIMATABLE = (ReanimateDT64, ReanimateDTD)
+    REANIMATEABLE = (ReanimateDT64, ReanimateDTD)
 
     @staticmethod
     def from_element(obj: tp.Any) -> tp.Any:
-
+        '''From a Python object, pre JSON encoding, replacing any Python objects with discoverale strings.
+        '''
         if isinstance(obj, str):
             return obj
 
-        if isinstance(obj, (datetime.date, np.datetime64)):
-            # take repr, not str
-            return repr(obj)
+        if isinstance(obj, (np.datetime64, datetime.date)):
+            return repr(obj) # take repr for encoding / decoding
 
-        fe = JSONFilterRepr.from_element
+        fe = JSONTranslator.from_element #type: ignore
         if isinstance(obj, dict):
             return {fe(k): fe(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
@@ -3285,23 +3291,23 @@ class JSONFilterRepr(JSONFilter):
 
     @classmethod
     def to_element(cls, obj: tp.Any) -> tp.Any:
-        '''Given a dict post JSON conversion, look for any string and attempt element conversion.
+        '''Given a dict post JSON conversion, check all strings for strings that can be converted to python objects.
         '''
         if isinstance(obj, str):
             # test regular expressions
-            for reanimate in cls.REANIMATABLE:
+            for reanimate in cls.REANIMATEABLE:
                 post = reanimate.filter(obj)
                 if post is not obj:
                     return post
             return obj
 
-        te = JSONFilterRepr.to_element
+        te = cls.to_element
         if isinstance(obj, dict):
             return {te(k): te(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
             return [te(e) for e in obj]
 
-        return e
+        return obj
 
 
 #-------------------------------------------------------------------------------
