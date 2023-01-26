@@ -779,8 +779,12 @@ class ArchiveFrameConverter:
         metadata = archive.read_metadata()
 
         # NOTE: we isolate custom post-JSON decoding to only where it is needed: the name attributes. JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
-        name, name_index, name_columns = (JSONTranslator.decode_element(n)
-                for n in metadata[Label.KEY_NAMES])
+        names = metadata[Label.KEY_NAMES]
+
+        name = JSONTranslator.decode_element(names[0])
+        name_index = JSONTranslator.decode_element(names[1])
+        name_columns = JSONTranslator.decode_element(names[2])
+
 
         block_count, depth_index, depth_columns = metadata[Label.KEY_DEPTHS]
         cls_index, cls_columns = (ContainerMap.str_to_cls(name)

@@ -3277,12 +3277,12 @@ class JSONTranslator(JSONFilter):
             return repr(obj) # take repr for encoding / decoding
 
         if isinstance(obj, dict): # type: ignore
-            fe = JSONTranslator.encode_element
-            return {fe(k): fe(v) for k, v in obj.items()}
+            ee = JSONTranslator.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            fe = JSONTranslator.encode_element
+            ee = JSONTranslator.encode_element
             # all iterables must be lists for JSON encoding
-            return [fe(e) for e in obj]
+            return [ee(e) for e in obj]
 
         return obj
 
@@ -3302,12 +3302,12 @@ class JSONTranslator(JSONFilter):
             return obj
 
         if obj.__class__ is list: # post JSON, only ever be lists
-            te = cls.decode_element
+            de = cls.decode_element
             # realize all things JSON gives as lists to tuples
-            return tuple(te(e) for e in obj)
+            return tuple(de(e) for e in obj)
         if isinstance(obj, dict):
-            te = cls.decode_element
-            return {te(k): te(v) for k, v in obj.items()}
+            de = cls.decode_element
+            return {de(k): de(v) for k, v in obj.items()}
 
         return obj
 
