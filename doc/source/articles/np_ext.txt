@@ -12,11 +12,22 @@ Out-Performing NumPy is Hard: When a C-Extension Might Deliver Better Performanc
 Out-Performing NumPy is Hard: Approaches to Writing C-Extensions
 
 
+Abstract: 100 words
+
+This presentation offers principles to help determine if an array-processing routine, implemented as a C-extension, might outperform NumPy routines called from Python. While the NumPy C API lets write C-code that builds or evaluates arrays, just writing C is often not enough to outperform NumPy.
+
+
+Along the way, how to create a Python project that compiles C-extensions linking to NumPy will be demonstrated, and the basics of the NumPy C API will be introduced. A narrow use-case related to the ``np.nonzero()`` function will be implemented in C as an example.
+
+
+
+Description
+
 While it is well known that C-extensions can improve the performance of Python programs, writing C-extensions that improve the performance of NumPy array operations is different. Most NumPy functions already call highly optimized C routines, some of which take advantage of low-level processor optimizations. Writing C-extensions that out-perform NumPy is challenging: in most cases, just writing Python that calls NumPy is optimal. However, for routines that are of sufficiently narrow scope, there are opportunities.
 
-This presentation offers principles to help determine if a routine, implemented as a C-extension, might outperform NumPy routines called from Python. Along the way, how to create a Python project that compiles C-extensions linking to NumPy will be demonstrated, and the basics of the NumPy C API will be introduced.
+This presentation offers principles to help determine if a routine, implemented as a C-extension, might outperform related NumPy routines called from Python. Along the way, how to create a Python project that compiles C-extensions linking to NumPy will be demonstrated, and the basics of the NumPy C API will be introduced.
 
-A narrow use-case of the ``np.nonzero()`` function will be implemented in C as an example: rather than returning all indices of all non-zero values (for all dtypes and dimensionalities), this new function, ``first_true_1d()``, will return only the index of the first-encountered non-zero value (for one-dimensional Boolean arrays). The performance of this routine, and why it sometimes cannot out-perform ``np.nonzero()``, will be discussed.
+A narrow use-case of the ``np.nonzero()`` function will be implemented in C as an example: rather than returning all indices of all non-zero values (for all dtypes and dimensionalities, as ``np.nonzero()`` does), this new function, ``first_true_1d()``, will return only the index of the first-encountered non-zero value (for one-dimensional Boolean arrays). The performance of this routine, and why it sometimes cannot out-perform ``np.nonzero()`` even though it does less, will be discussed.
 
 
 
