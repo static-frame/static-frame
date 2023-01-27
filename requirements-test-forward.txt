@@ -1,4 +1,4 @@
-numpy==1.23.4
+numpy==1.24.1
 automap==0.6.2
 arraykit==0.2.6
 
@@ -9,12 +9,11 @@ scipy==1.9.3
 invoke==2.0.0
 ipython==7.16.3
 
-pandas==1.5.1
+pandas==1.5.3
 xlsxwriter==1.1.2
-openpyxl==3.0.9
+openpyxl==3.0.10
 xarray==0.21.1
-# tables==3.7.0 # NOTE: does not yet work for Python 3.11
-git+https://github.com/PyTables/PyTables.git@v3.7.0
+tables==3.8.0
 pyarrow==10.0.1
 msgpack==1.0.3
 msgpack-numpy==0.4.7.1
