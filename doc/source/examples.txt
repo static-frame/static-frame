@@ -215,11 +215,11 @@ c
 #start_Series-memory
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16  B     16  B     16  B     16   B     16   B     16  B
-Index  756 B     788 B     564 B     8.83 KB    812  B     588 B
-Values 120 B     136 B     24  B     120  B     136  B     24  B
-Total  932 B     980 B     644 B     9.0  KB    1004 B     668 B
+       L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16  B     16   B     16  B     16   B     16   B     16  B
+Index  780 B     844  B     588 B     8.86 KB    868  B     612 B
+Values 120 B     152  B     24  B     120  B     152  B     24  B
+Total  972 B     1.04 KB    684 B     9.04 KB    1.07 KB    708 B
 #end_Series-memory
 
 #start_Series-name
@@ -362,7 +362,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_Series-corr()
 
 #start_Series-count()
@@ -5506,11 +5506,11 @@ c
 #start_SeriesHE-memory
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16  B     16  B     16  B     16   B     16   B     16  B
-Index  756 B     788 B     564 B     8.83 KB    812  B     588 B
-Values 120 B     136 B     24  B     120  B     136  B     24  B
-Total  940 B     988 B     652 B     9.01 KB    1012 B     676 B
+       L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16  B     16   B     16  B     16   B     16   B     16  B
+Index  780 B     844  B     588 B     8.86 KB    868  B     612 B
+Values 120 B     152  B     24  B     120  B     152  B     24  B
+Total  980 B     1.05 KB    692 B     9.05 KB    1.07 KB    716 B
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -5653,7 +5653,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -11702,10 +11702,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 756  B     788  B     564  B     8.83  KB    812  B     588  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.42 KB    2.52 KB    1.86 KB    10.52 KB    2.57 KB    1.92 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
 #end_Frame-memory
 
 #start_Frame-name
@@ -19814,10 +19814,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 756  B     788  B     564  B     8.83  KB    812  B     588  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.43 KB    2.53 KB    1.87 KB    10.53 KB    2.58 KB    1.92 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.62 KB    2.81 KB    2.06 KB    10.71 KB    2.86 KB    2.11 KB
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -27898,10 +27898,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 1.11 KB    1.14 KB    942  B     9.2   KB    1.16 KB    966  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.77 KB    2.86 KB    2.2  KB    10.86 KB    2.91 KB    2.26 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 1.15 KB    1.21 KB    982  B     9.24  KB    1.23 KB    1006 B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.97 KB    3.16 KB    2.41 KB    11.06 KB    3.21 KB    2.46 KB
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -34992,12 +34992,12 @@ x        <Index>
 #start_Index-memory
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
-Name      50  B     50  B     50  B     50   B     50  B     50  B
-Map       520 B     520 B     520 B     520  B     520 B     520 B
-Labels    116 B     132 B     20  B     116  B     132 B     20  B
-Positions 96  B     112 B     0   B     8.19 KB    152 B     40  B
-Total     878 B     910 B     686 B     8.95 KB    950 B     726 B
+          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      50  B     50  B     50  B     50   B     50   B     50  B
+Map       520 B     520 B     520 B     520  B     520  B     520 B
+Labels    116 B     148 B     20  B     116  B     148  B     20  B
+Positions 96  B     128 B     0   B     8.19 KB    168  B     40  B
+Total     918 B     982 B     726 B     8.99 KB    1022 B     766 B
 #end_Index-memory
 
 #start_Index-name
@@ -36892,12 +36892,12 @@ x        <IndexGO>
 #start_IndexGO-memory
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      50   B     50   B     50   B     50   B     50   B     50   B
-Map       520  B     520  B     520  B     520  B     520  B     520  B
-Labels    116  B     132  B     20   B     116  B     132  B     20   B
-Positions 96   B     112  B     0    B     8.19 KB    152  B     40   B
-Total     1.34 KB    1.37 KB    1.15 KB    9.43 KB    1.41 KB    1.19 KB
+          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM  RMu   RMD  RMDu
+Name      50   B     50   B     50   B     50   B     50  B     50   B
+Map       520  B     520  B     520  B     520  B     520 B     520  B
+Labels    116  B     148  B     20   B     116  B     148 B     20   B
+Positions 96   B     128  B     0    B     8.19 KB    168 B     40   B
+Total     1.39 KB    1.46 KB    1.21 KB    9.49 KB    1.5 KB    1.25 KB
 #end_IndexGO-memory
 
 #start_IndexGO-name
@@ -38840,9 +38840,9 @@ None     <IndexYear>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexYear-memory
 
 #start_IndexYear-name
@@ -40597,12 +40597,12 @@ None     <IndexYearGO>
 #start_IndexYearGO-memory
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
-          L    Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16  B     16  B     16   B     16   B     16  B
-Map       440  B     440 B     440 B     440  B     440  B     440 B
-Labels    120  B     136 B     24  B     120  B     136  B     24  B
-Positions 96   B     112 B     0   B     8.19 KB    136  B     24  B
-Total     1.07 KB    1.1 KB    900 B     9.16 KB    1.12 KB    924 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     152  B     24  B     120  B     152  B     24  B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
+Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -42409,9 +42409,9 @@ None     <IndexYearMonth>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexYearMonth-memory
 
 #start_IndexYearMonth-name
@@ -44188,12 +44188,12 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-memory
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
-          L    Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16  B     16  B     16   B     16   B     16  B
-Map       440  B     440 B     440 B     440  B     440  B     440 B
-Labels    120  B     136 B     24  B     120  B     136  B     24  B
-Positions 96   B     112 B     0   B     8.19 KB    136  B     24  B
-Total     1.07 KB    1.1 KB    900 B     9.16 KB    1.12 KB    924 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     152  B     24  B     120  B     152  B     24  B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
+Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -46046,9 +46046,9 @@ None     <IndexDate>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexDate-memory
 
 #start_IndexDate-name
@@ -47874,12 +47874,12 @@ None     <IndexDateGO>
 #start_IndexDateGO-memory
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16  B     16  B     16   B     16   B     16  B
-Map       440  B     440 B     440 B     440  B     440  B     440 B
-Labels    120  B     136 B     24  B     120  B     136  B     24  B
-Positions 96   B     112 B     0   B     8.19 KB    136  B     24  B
-Total     1.07 KB    1.1 KB    900 B     9.16 KB    1.12 KB    924 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     152  B     24  B     120  B     152  B     24  B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
+Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -49643,9 +49643,9 @@ None     <IndexMinute>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexMinute-memory
 
 #start_IndexMinute-name
@@ -51384,12 +51384,12 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-memory
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    948 B     9.21 KB    1.17 KB    972 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       440  B     440  B     440 B     440  B     440  B     440  B
+Labels    120  B     152  B     24  B     120  B     152  B     24   B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
+Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -53158,9 +53158,9 @@ None     <IndexHour>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexHour-memory
 
 #start_IndexHour-name
@@ -54902,12 +54902,12 @@ None     <IndexHourGO>
 #start_IndexHourGO-memory
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    948 B     9.21 KB    1.17 KB    972 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       440  B     440  B     440 B     440  B     440  B     440  B
+Labels    120  B     152  B     24  B     120  B     152  B     24   B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
+Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -56679,9 +56679,9 @@ None     <IndexSecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexSecond-memory
 
 #start_IndexSecond-name
@@ -58428,12 +58428,12 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-memory
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    948 B     9.21 KB    1.17 KB    972 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       440  B     440  B     440 B     440  B     440  B     440  B
+Labels    120  B     152  B     24  B     120  B     152  B     24   B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
+Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -60210,9 +60210,9 @@ None     <IndexMillisecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexMillisecond-memory
 
 #start_IndexMillisecond-name
@@ -61979,12 +61979,12 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-memory
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    948 B     9.21 KB    1.17 KB    972 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       440  B     440  B     440 B     440  B     440  B     440  B
+Labels    120  B     152  B     24  B     120  B     152  B     24   B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
+Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -63781,9 +63781,9 @@ None     <IndexMicrosecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexMicrosecond-memory
 
 #start_IndexMicrosecond-name
@@ -65552,12 +65552,12 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-memory
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    948 B     9.21 KB    1.17 KB    972 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       440  B     440  B     440 B     440  B     440  B     440  B
+Labels    120  B     152  B     24  B     120  B     152  B     24   B
+Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
+Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -67356,9 +67356,9 @@ None     <IndexNanosecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     768 B     800 B     576 B     8.84 KB    824 B     600 B
+Labels    120 B     152 B     24  B     120  B     152 B     24  B
+Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
+Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
 #end_IndexNanosecond-memory
 
 #start_IndexNanosecond-name
@@ -69126,12 +69126,12 @@ None     <IndexNanosecondGO>
 #start_IndexNanosecondGO-memory
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.08 KB    1.11 KB    912 B     9.17 KB    1.13 KB    936 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16  B     16  B
+Map       440  B     440  B     440 B     440  B     440 B     440 B
+Labels    120  B     152  B     24  B     120  B     152 B     24  B
+Positions 96   B     128  B     0   B     8.19 KB    152 B     24  B
+Total     1.12 KB    1.18 KB    952 B     9.21 KB    1.2 KB    976 B
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -71055,12 +71055,12 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  2.23 KB    2.33 KB    1.67 KB    10.33 KB    2.39 KB    1.73 KB
-Indexers 184  B     184  B     72   B     184   B     184  B     72   B
-Blocks   1.37 KB    1.41 KB    1.09 KB    1.37  KB    1.41 KB    1.09 KB
+Name     230  B     230  B     230  B     230   B     230  B     230  B
+Indices  2.32 KB    2.51 KB    1.76 KB    10.41 KB    2.57 KB    1.82 KB
+Indexers 184  B     200  B     72   B     184   B     200  B     72   B
+Blocks   1.49 KB    1.59 KB    1.21 KB    1.49  KB    1.59 KB    1.21 KB
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.72 KB    4.87 KB    3.67 KB    12.81 KB    4.94 KB    3.73 KB
+Total    4.98 KB    5.3  KB    3.93 KB    13.07 KB    5.37 KB    3.99 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -71164,13 +71164,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fbd501e4310> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7fe829cf5710> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fbd501e43a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7fe829cf57a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -71218,13 +71218,13 @@ False            True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fbdfe7f99d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7fe88cbfea70> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fbdfe7f5f70> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7fe88cbfacb0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -71487,13 +71487,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fbdfe7fd0d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7fe88cc013b0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fbdfe680670> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -71505,7 +71505,7 @@ NotImplementedError('<function median at 0x7fbdfe680670> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fbdfe7f9820> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7fe88cbfe830> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -71620,13 +71620,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fbdfe7fd280>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7fe88cc015f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fbdfe7f5a60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7fe88cbfa5f0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -71652,10 +71652,10 @@ c                   1620-11-21
 >>> ih2 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('b', 1024, True)), name='y')
 >>> ih1.union(ih2)
 <IndexHierarchy>
-a                1024    True
 a                2048    False
-a                2048    True
+a                1024    True
 b                1024    True
+a                2048    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchy-union()
 
@@ -71682,7 +71682,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fbdfe7fd430>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7fe88cc01830>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -73540,12 +73540,12 @@ z        <IndexDateGO>
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  3.14 KB    3.23 KB    2.57 KB    11.23 KB    3.29 KB    2.64 KB
-Indexers 184  B     184  B     72   B     184   B     184  B     72   B
-Blocks   1.37 KB    1.41 KB    1.09 KB    1.37  KB    1.41 KB    1.09 KB
+Name     230  B     230  B     230  B     230   B     230  B     230  B
+Indices  3.27 KB    3.46 KB    2.71 KB    11.36 KB    3.52 KB    2.77 KB
+Indexers 184  B     200  B     72   B     184   B     200  B     72   B
+Blocks   1.49 KB    1.59 KB    1.21 KB    1.49  KB    1.59 KB    1.21 KB
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.28 KB    5.43 KB    4.23 KB    13.37 KB    5.5  KB    4.29 KB
+Total    5.58 KB    5.91 KB    4.53 KB    13.67 KB    5.97 KB    4.6  KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -73649,13 +73649,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fbd501e4310> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7fe829cf5710> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fbd501e43a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7fe829cf57a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -73716,23 +73716,23 @@ False              True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fbdfe7f99d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7fe88cbfea70> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fbdfe7f5f70> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7fe88cbfacb0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
 >>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 >>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('b', 1024, True)), name='y')
 >>> ih1.difference(ih2)
-<IndexHierarchyGO>
-a                  2048    False
-a                  2048    True
-<<U1>              <int64> <bool>
+<IndexHierarchy>
+a                2048    False
+a                2048    True
+<<U1>            <int64> <bool>
 #end_IndexHierarchyGO-difference()
 
 #start_IndexHierarchyGO-dropfalsy()
@@ -73892,9 +73892,9 @@ b
 >>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 >>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('b', 1024, True)), name='y')
 >>> ih1.intersection(ih2)
-<IndexHierarchyGO>
-a                  1024    True
-<<U1>              <int64> <bool>
+<IndexHierarchy>
+a                1024    True
+<<U1>            <int64> <bool>
 #end_IndexHierarchyGO-intersection()
 
 #start_IndexHierarchyGO-isin()
@@ -73993,13 +73993,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fbdfe7fd0d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7fe88cc013b0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fbdfe680670> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -74011,7 +74011,7 @@ NotImplementedError('<function median at 0x7fbdfe680670> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fbdfe7f9820> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7fe88cbfe830> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -74126,13 +74126,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fbdfe7fd280>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7fe88cc015f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fbdfe7f5a60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7fe88cbfa5f0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -74157,12 +74157,12 @@ c                     1620-11-21
 >>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 >>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('b', 1024, True)), name='y')
 >>> ih1.union(ih2)
-<IndexHierarchyGO>
-a                  1024    True
-a                  2048    False
-a                  2048    True
-b                  1024    True
-<<U1>              <int64> <bool>
+<IndexHierarchy>
+a                2048    False
+a                1024    True
+b                1024    True
+a                2048    True
+<<U1>            <int64> <bool>
 #end_IndexHierarchyGO-union()
 
 #start_IndexHierarchyGO-unique()
@@ -74188,7 +74188,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fbdfe7fd430>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7fe88cc01830>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -76146,8 +76146,8 @@ y
 #start_Bus-memory
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 6.02 KB    1.58 KB    1.14 KB    14.12 KB    1.59 KB    1.15 KB
+      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD RMDu
+Total 6.62 KB    1.89 KB    1.39 KB    14.71 KB    1.9 KB    1.4 KB
 #end_Bus-memory
 
 #start_Bus-name
@@ -77325,7 +77325,7 @@ j                w
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
       L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 15.79 KB    4.62 KB    3.42 KB    23.88 KB    4.68 KB    3.48 KB
+Total 17.22 KB    5.05 KB    3.68 KB    25.31 KB    5.11 KB    3.74 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -78504,7 +78504,7 @@ True
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
       L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.24 KB    5.37 KB    4.27 KB    13.34 KB    5.45 KB    4.35 KB
+Total 5.86 KB    6.14 KB    4.89 KB    13.95 KB    6.22 KB    4.97 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -82808,8 +82808,8 @@ c
 #start_Quilt-memory
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
-Total 9.24 KB    5.95 KB    4.42 KB    17.68 KB    6.03 KB    4.5 KB
+      L     Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Total 10.06 KB    6.66 KB    4.91 KB    18.5 KB    6.74 KB    4.99 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -84497,7 +84497,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbd3beb6140>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a7978c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -84557,13 +84557,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbd3beb62c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a7978c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fbd3beb66c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a797dd0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -84581,17 +84581,17 @@ False
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 756  B     788  B     564  B     8.83  KB    812  B     588  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.42 KB    2.52 KB    1.86 KB    10.52 KB    2.57 KB    1.92 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
 #end_MemoryDisplay-__init__()
 
 #start_MemoryDisplay-from_any()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> sf.MemoryDisplay.from_any(f.index)
-      L   Lu    LM  LMu   LMD LMDu  R   Ru    RM  RMu   RMD RMDu
-Total 208 B     224 B     112 B     8.3 KB    256 B     144 B
+      L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Total 232 B     264 B     136 B     8.32 KB    296 B     168 B
 #end_MemoryDisplay-from_any()
 
 #start_MemoryDisplay-to_frame()
@@ -84601,10 +84601,10 @@ Total 208 B     224 B     112 B     8.3 KB    256 B     144 B
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
 Name                50      50      50      50      50      50
-Index               208     224     112     8496    256     144
-Columns             756     788     564     9044    812     588
-Blocks              1436    1484    1148    1436    1484    1148
-Total               2482    2578    1906    10770   2634    1962
+Index               232     264     136     8520    296     168
+Columns             780     844     588     9068    868     612
+Blocks              1564    1660    1276    1564    1660    1276
+Total               2674    2866    2098    10962   2922    2154
 <<U7>               <int64> <int64> <int64> <int64> <int64> <int64>
 #end_MemoryDisplay-to_frame()
 
@@ -84614,10 +84614,10 @@ Total               2482    2578    1906    10770   2634    1962
 >>> repr(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 756  B     788  B     564  B     8.83  KB    812  B     588  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.42 KB    2.52 KB    1.86 KB    10.52 KB    2.57 KB    1.92 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
 #end_MemoryDisplay-__repr__()
 
 #start_MemoryDisplay-__str__()
@@ -84626,9 +84626,9 @@ Total   2.42 KB    2.52 KB    1.86 KB    10.52 KB    2.57 KB    1.92 KB
 >>> str(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   208  B     224  B     112  B     8.3   KB    256  B     144  B
-Columns 756  B     788  B     564  B     8.83  KB    812  B     588  B
-Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
-Total   2.42 KB    2.52 KB    1.86 KB    10.52 KB    2.57 KB    1.92 KB
+Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
+Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
+Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
+Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
 #end_MemoryDisplay-__str__()
 
