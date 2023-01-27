@@ -17,5 +17,6 @@ tables==3.7.0
 pyarrow==6.0.1
 msgpack==1.0.0
 msgpack-numpy==0.4.7
-frame-fixtures==0.2.1
 visidata==2.4
+frame-fixtures==0.2.1
+
