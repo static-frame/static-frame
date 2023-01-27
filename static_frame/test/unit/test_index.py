@@ -1719,7 +1719,83 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_hashlib().sha256().hexdigest(),
             'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
 
+    def test_index_get_argsort_cache_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = IndexGO(('a', 'b', 'c', 'd'), name='')
 
+        unique1, indexers1 = idx1._get_argsort_cache()
+        unique2, indexers2 = idx2._get_argsort_cache()
+
+        # Force re-cache
+        idx2.append("e")
+        unique3, indexers3 = idx2._get_argsort_cache()
+
+        assert (unique1 == unique2).all()
+        assert (indexers1 == indexers2).all()
+
+        assert unique1.size != unique3.size
+        assert indexers1.size != indexers3.size
+
+        assert unique1.size == indexers1.size
+        assert unique3.size == indexers3.size
+
+    def test_index_get_argsort_cache_b(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        unique1, indexers1 = idx1._get_argsort_cache()
+        assert (unique1 == idx1.values).all()
+
+        idx2 = idx1.__deepcopy__({})
+
+        # Force re-cache
+        idx1.append("e")
+
+        idx3 = idx1.__deepcopy__({})
+
+        unique2, indexers2 = idx1._get_argsort_cache()
+        unique3, indexers3 = idx2._get_argsort_cache()
+        unique4, indexers4 = idx3._get_argsort_cache()
+
+        assert (unique2 == idx1.values).all()
+        assert (unique1 == idx2.values).all()
+        assert (unique2 == idx3.values).all()
+
+        assert (unique1 == unique3).all()
+        assert (unique2 == unique4).all()
+
+        assert (indexers1 == indexers3).all()
+        assert (indexers2 == indexers4).all()
+
+        assert len(unique1) == len(unique3) == len(indexers1) == len(indexers3) == 4
+        assert len(unique2) == len(unique4) == len(indexers2) == len(indexers4) == 5
+
+    def test_index_get_argsort_cache_c(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        assert idx1._argsort_cache is None
+
+        idx2 = idx1.__deepcopy__({})
+        assert idx2._argsort_cache is None
+
+        unique1, indexers1 = idx1._get_argsort_cache()
+        assert idx1._argsort_cache is not None
+        idx3 = idx1.__deepcopy__({}) # type: ignore
+        assert idx3._argsort_cache is not None
+
+        unique2, indexers2 = idx2._get_argsort_cache()
+        unique3, indexers3 = idx3._get_argsort_cache()
+
+        assert len(unique1) == len(unique2) == len(indexers1) == len(indexers2) == len(unique3) == len(indexers3) == 4
+
+        assert unique1 is not unique2
+        assert unique1 is not unique3
+        assert unique2 is not unique3
+        assert indexers1 is not indexers2
+        assert indexers1 is not indexers3
+        assert indexers2 is not indexers3
+        assert (unique1 == unique2).all()
+        assert (unique2 == unique3).all()
+        assert (indexers1 == indexers2).all()
+        assert (indexers2 == indexers3).all()
 
 
 if __name__ == '__main__':

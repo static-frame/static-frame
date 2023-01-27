@@ -30,6 +30,7 @@ from static_frame import TypeBlocks
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -2407,11 +2408,15 @@ class TestUnit(TestCase):
 
         post2 = ih1.union(ih2)
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B']])
 
         post3 = ih1.difference(ih2)
         self.assertEqual(post3.values.tolist(),
                 [['I', 'A'], ['I', 'B']])
+
+        post4 = ih1.difference(tuple(ih2))
+        self.assertTrue(post3.equals(post4))
+        self.assertTrue(post4.equals(post3))
 
     def test_hierarchy_set_operators_b(self) -> None:
 
@@ -2451,15 +2456,13 @@ class TestUnit(TestCase):
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
-                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+                [['II', 'B'], ['I', 'B'], ['II', 'A'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         post3 = ih1.difference(ih2)
-        self.assertEqual(post3.values.tolist(),
-                [])
+        self.assertEqual(post3.values.tolist(), [])
 
     def test_hierarchy_set_operators_d(self) -> None:
 
@@ -2478,8 +2481,7 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         ih1.append(('I', 'C'))
 
@@ -2557,6 +2559,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(i2)
+
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(np.arange(4))
 
@@ -2615,7 +2618,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = ih1.intersection(['a', 'b'])
 
-    def test_hierarchy_set_operators_m(self) -> None:
+    def test_hierarchy_set_operators_l(self) -> None:
         labels = (
                 ('I', 'A'),
                 ('I', 'B'),
@@ -2651,10 +2654,10 @@ class TestUnit(TestCase):
         post2 = ih1.union(ih2, ih3)
 
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['IV', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['IV', 'B']]
                 )
 
-    def test_hierarchy_set_operators_l(self) -> None:
+    def test_hierarchy_set_operators_m(self) -> None:
         labels = (
                 ('II', 'B'),
                 ('II', 'A'),
@@ -2666,6 +2669,46 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [['I', 'B'], ['II', 'B']]
                 )
+
+    def test_hierarchy_set_operators_n(self) -> None:
+        # Test the short-circuit optimization for intersections when the result
+        # will be empty
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('II', 'III'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+
+        post = ih1.intersection(ih2, ih3)
+        assert len(post) == 0
+
+    def test_hierarchy_set_operators_o(self) -> None:
+        # Test the short-circuit optimization for differences when all elements are disjoint
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('C', 'D'))
+
+        post = ih1.difference(ih2, ih3)
+        assert post.equals(ih1)
+
+    def test_hierarchy_set_operators_p(self) -> None:
+        # Add edge-case coverage for the generic 2D set approach invoked by IndexBase.
+        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+
+        empty_mask = np.full(len(ih), False)
+
+        post1 = IndexBase.intersection(ih, ih[empty_mask])
+        post2 = IndexBase.intersection(ih, ih.values[empty_mask])
+        post3 = IndexBase.intersection(ih[empty_mask], ih) # type: ignore
+
+        post4 = IndexBase.difference(ih, ih.values[empty_mask])
+        post5 = IndexBase.difference(ih, ih[empty_mask])
+        post6 = IndexBase.difference(ih[empty_mask], ih) # type: ignore
+
+        assert len(post1) == len(post2) == len(post3) == len(post6) == 0
+        assert post4.equals(ih)
+        assert post5.equals(ih)
+
+        with self.assertRaises(RuntimeError):
+            IndexBase.intersection(ih, np.array([[]]))
 
     #---------------------------------------------------------------------------
 

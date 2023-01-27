@@ -1132,8 +1132,6 @@ class IndexHierarchy(IndexBase):
                 ('Values', self._values),
                 )
 
-
-
     # --------------------------------------------------------------------------
     # name interface
 
@@ -2368,6 +2366,9 @@ class IndexHierarchy(IndexBase):
                 if self_index.__class__ != other_index.__class__:
                     return False
 
+        if self._blocks.is_shallow_copy(other._blocks):
+            return True
+
         # indices & indexers are encoded in values_at_depth
         for i in range(self.depth):
             if not arrays_equal(
@@ -2453,6 +2454,33 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 own_blocks=True,
                 )
+
+    # --------------------------------------------------------------------------
+    # utility functions
+
+    def union(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
+
+        if all(isinstance(other, IndexHierarchy) for other in others):
+            return index_hierarchy_union(self, *others) # type: ignore
+
+        return IndexBase.union(self, *others)
+
+    def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
+
+        if all(isinstance(other, IndexHierarchy) for other in others):
+            return index_hierarchy_intersection(self, *others) # type: ignore
+
+        return IndexBase.intersection(self, *others)
+
+    def difference(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
+
+        if all(isinstance(other, IndexHierarchy) for other in others):
+            return index_hierarchy_difference(self, *others) # type: ignore
+
+        return IndexBase.difference(self, *others)
 
     #---------------------------------------------------------------------------
 

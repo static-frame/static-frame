@@ -2508,7 +2508,8 @@ def _ufunc_set_2d(
 
     if is_2d:
         cols = array.shape[1]
-        assert cols == other.shape[1]
+        if cols != other.shape[1]:
+            raise RuntimeError("cannot perform set operation on arrays with different number of columns")
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)

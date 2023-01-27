@@ -229,7 +229,11 @@ class HierarchicalLocMap:
                 num_unique_elements_per_depth=list(map(len, indices))
                 )
         try:
-            self.encoded_indexer_map = self.build_encoded_indexers_map(indexers)
+            self.encoded_indexer_map = self.build_encoded_indexers_map(
+                    encoding_can_overflow=self.encoding_can_overflow,
+                    bit_offset_encoders=self.bit_offset_encoders,
+                    indexers=indexers,
+                    )
         except FirstDuplicatePosition as e:
             duplicate_labels = tuple(
                     index[indexer[e.first_dup]]
@@ -304,14 +308,18 @@ class HierarchicalLocMap:
         # If the last end bit is greater than 64, then it means we cannot encode a label's indexer into a uint64.
         return bit_start_positions, bit_end_positions[-1] > 64
 
-    def build_encoded_indexers_map(self: _HLMap,
+    @staticmethod
+    def build_encoded_indexers_map(
+            *,
+            encoding_can_overflow: bool,
+            bit_offset_encoders: np.ndarray,
             indexers: np.ndarray,
             ) -> FrozenAutoMap:
         '''
         Builds up a mapping from indexers to iloc positions using their encoded values
         '''
         # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
-        if self.encoding_can_overflow:
+        if encoding_can_overflow:
             indexers = indexers.astype(object).T
         else:
             indexers = indexers.astype(DTYPE_UINT_DEFAULT).T
@@ -327,7 +335,7 @@ class HierarchicalLocMap:
         #    [0, 2, 0] => [0, 8,  0]       ([00, 10 00, 00 00 00])
         #    [2, 2, 0] => [2, 8,  0]       ([10, 10 00, 00 00 00])
         #    [1, 0, 1] => [1, 0, 16]       ([01, 00 00, 01 00 00])
-        encoded_indexers = indexers << self.bit_offset_encoders
+        encoded_indexers = indexers << bit_offset_encoders
 
         # Finally, we bitwise OR all them together to encode them into a single, unique uint64 for each iloc
         #  encoded_indexers   bitwise OR   (Bit representation)
@@ -413,13 +421,110 @@ class HierarchicalLocMap:
     def indexers_to_iloc(self: _HLMap,
             indexers: np.ndarray,
             ) -> tp.List[int]:
-        '''Modifies indexers in-place'''
+        '''
+        Encodes indexers, and then remaps them to ilocs using the encoded_indexer_map
+        '''
+        indexers = self.encode(indexers, self.bit_offset_encoders)
+        return list(map(self.encoded_indexer_map.__getitem__, indexers))
+
+    @staticmethod
+    def encode(indexers: np.ndarray, bit_offset_encoders: np.ndarray) -> np.ndarray:
+        '''
+        Encode indexers into a 1-dim array of uint64
+        '''
         # Validate input requirements
         assert indexers.ndim == 2
-        assert indexers.shape[1] == len(self.bit_offset_encoders)
+        assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        indexers <<= self.bit_offset_encoders
+        return np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
 
-        indexers = np.bitwise_or.reduce(indexers, axis=1)
-        return list(map(self.encoded_indexer_map.__getitem__, indexers))
+    @staticmethod
+    def unpack_encoding(
+            encoded_arr: np.ndarray,
+            bit_offset_encoders: np.ndarray,
+            encoding_can_overflow: bool,
+            ) -> np.ndarray:
+        '''
+        Given an encoding, unpack it into its constituent parts
+
+        Ex:
+            bit_offset_encoders = [0, 2, 4]
+
+            Encodings:
+                36  => [0, 4, 32] => [0, 1, 2]
+                 8  => [0, 8,  0] => [0, 2, 0]
+                10  => [2, 8,  0] => [2, 2, 0]
+                17  => [1, 0, 16] => [1, 0, 1]
+
+            Step 1:
+            Expand bit_offset_encoders into something more helpful -> masks
+
+            [0, 2, 4] is where the bit offsets start. They end one bit before the next offset.
+            Thus, the bit offset ends are:
+            [1, 3, 64] # since 64 is the max bit offset
+
+            From here, we build up a list of masks that each have the correct number of up bits
+
+            0 => [11] # 2 bit mask
+            2 => [11] # 2 bit mask
+            4 => [11] # 2 bit mask
+
+            Now, for each component (i.e. the number of bit_offset_encoders), we
+            apply to corresponding mask to the values AFTER they have been shifted backwards
+
+            36 == [10 01 00]
+             8 == [00 10 00]
+            10 == [00 10 10]
+            17 == [01 00 01]
+
+            Depth 0:
+                offset = bit_offset_encoders[0] = 0
+                36 => ([10 01 00] << 0) => [10 01 00] & [11] => [00 00 00] => 0
+                 8 => ([00 10 00] << 0) => [00 10 00] & [11] => [00 00 00] => 0
+                10 => ([00 10 10] << 0) => [00 10 10] & [11] => [00 00 10] => 2
+                17 => ([01 00 01] << 0) => [01 00 01] & [11] => [00 00 01] => 1
+
+            Depth 1:
+                offset = bit_offset_encoders[1] = 2
+                36 => ([10 01 00] << 2) => [10 01] & [11] => [00 01] => 1
+                 8 => ([00 10 00] << 2) => [00 10] & [11] => [00 10] => 2
+                10 => ([00 10 10] << 2) => [00 10] & [11] => [00 10] => 2
+                17 => ([01 00 01] << 2) => [01 00] & [11] => [00 00] => 0
+
+            Depth 2:
+                offset = bit_offset_encoders[2] = 4
+                36 => ([10 01 00] << 4) => [10] & [11] => [10] => 2
+                 8 => ([00 10 00] << 4) => [00] & [11] => [00] => 0
+                10 => ([00 10 10] << 4) => [00] & [11] => [00] => 0
+                17 => ([01 00 01] << 4) => [01] & [11] => [01] => 1
+
+            Result:
+                36 => [0, 1, 2]
+                 8 => [0, 2, 0]
+                10 => [2, 2, 0]
+                17 => [1, 0, 1]
+
+            NOTE: This is the inverse of the documentation in `build_encoded_indexers_map`
+        '''
+        assert bit_offset_encoders.dtype == DTYPE_UINT_DEFAULT
+        assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
+        assert encoded_arr.ndim == 1 # Encodings are always 1D
+
+        dtype = object if encoding_can_overflow else DTYPE_UINT_DEFAULT
+
+        starts = bit_offset_encoders
+        stops = np.empty(len(starts), dtype=dtype)
+        stops[:-1] = starts[1:]
+        stops[-1] = 64
+
+        lens = stops - starts
+        masks = [x for x in (1 << lens) - 1]
+
+        target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=DTYPE_UINT_DEFAULT)
+
+        for depth in range(len(bit_offset_encoders)):
+            target[depth] = (encoded_arr >> starts[depth]) & masks[depth]
+
+        target.flags.writeable = False
+        return target

@@ -1,9 +1,10 @@
 # Always prefer setuptools over distutils
-from setuptools import setup
+import typing as tp
 # To use a consistent encoding
 from codecs import open
 from os import path
-import typing as tp
+
+from setuptools import setup
 
 # https://packaging.python.org/distributing/
 # to deploy:
