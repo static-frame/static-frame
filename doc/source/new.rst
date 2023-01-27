@@ -4,6 +4,8 @@ What is New in StaticFrame
 1.2-dev
 -----------
 
+Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
+
 JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
 
 
