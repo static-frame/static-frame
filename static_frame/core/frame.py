@@ -44,6 +44,7 @@ from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.container_util import is_fill_value_factory_initializer
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -68,7 +69,7 @@ from static_frame.core.index import IndexGO
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_auto import IndexInitOrAutoType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
@@ -85,11 +86,13 @@ from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
@@ -612,9 +615,9 @@ class Frame(ContainerOperand):
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
             # default index construction does not yield elements, but instead yield Index objects for more efficient IndexHierarchy construction
             yield_elements = True
-            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultFactory)):
+            if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultConstructorFactory)):
                 yield_elements = False
-            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultFactory)):
+            elif axis == 1 and (columns_constructor is None or isinstance(columns_constructor, IndexDefaultConstructorFactory)):
                 yield_elements = False
 
             for label, frame in items:
@@ -3523,13 +3526,24 @@ class Frame(ContainerOperand):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType['Frame']:
         '''
-        Retype one or more columns. When used as a function, can provide  retype the entire ``Frame``;  Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
+        Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
         Args:
             {dtype}
         '''
         # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+
+    @property
+    def consolidate(self) -> InterfaceConsolidate['Frame']:
+        '''
+        Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
+
+        '''
+        return InterfaceConsolidate(
+                container=self,
+                func_getitem=self._extract_getitem_consolidate,
+                )
 
     #---------------------------------------------------------------------------
     # via interfaces
@@ -3637,7 +3651,6 @@ class Frame(ContainerOperand):
                 pattern=pattern,
                 flags=flags,
                 )
-
 
     #---------------------------------------------------------------------------
     # iterators
@@ -3826,6 +3839,65 @@ class Frame(ContainerOperand):
                 function_items=partial(self._axis_group_labels_items, as_array=True),
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_LABELS,
+                )
+
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=self._axis_group_other,
+                function_items=self._axis_group_other_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=self._axis_group_other,
+                function_items=self._axis_group_other_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def iter_group_other_array(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
+                )
+
+    @property
+    def iter_group_other_array_items(self) -> IterNodeGroupOther['Frame']:
+        '''
+        Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
+        '''
+        return IterNodeGroupOther(
+                container=self,
+                function_values=partial(self._axis_group_other,
+                        as_array=True),
+                function_items=partial(self._axis_group_other_items,
+                        as_array=True),
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_GROUP_VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -4400,6 +4472,9 @@ class Frame(ContainerOperand):
     def rehierarch(self,
             index: tp.Optional[tp.Iterable[int]] = None,
             columns: tp.Optional[tp.Iterable[int]] = None,
+            *,
+            index_constructors: IndexConstructors = None,
+            columns_constructors: IndexConstructors = None,
             ) -> 'Frame':
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
@@ -4417,6 +4492,7 @@ class Frame(ContainerOperand):
             index_idx, index_iloc = rehierarch_from_index_hierarchy(
                     labels=self._index,
                     depth_map=index,
+                    index_constructors=index_constructors,
                     name=self._index.name
                     )
         else:
@@ -4427,6 +4503,7 @@ class Frame(ContainerOperand):
             columns_idx, columns_iloc = rehierarch_from_index_hierarchy(
                     labels=self._columns,
                     depth_map=columns,
+                    index_constructors=columns_constructors,
                     name=self._columns.name
                     )
             own_columns = True
@@ -5165,6 +5242,16 @@ class Frame(ContainerOperand):
         _, key = self._compound_loc_to_getitem_iloc(key)
         return FrameAsType(self, column_key=key)
 
+    def _extract_getitem_consolidate(self, key: GetItemKeyType) -> 'Frame':
+        _, key = self._compound_loc_to_getitem_iloc(key)
+        blocks = TypeBlocks.from_blocks(self._blocks._consolidate_select_blocks(key))
+        return self.__class__(blocks,
+                index=self._index,
+                columns=self._columns,
+                own_index=True,
+                own_data=True,
+                )
+
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -5477,7 +5564,46 @@ class Frame(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    # grouping methods naturally return their "index" as the group element
+    # grouping methods
+
+    def _axis_group_final_iter(self, *,
+            axis: int,
+            as_array: bool,
+            group_iter: tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray, TypeBlocks]],
+            index: IndexBase,
+            columns: IndexBase,
+            ordering: tp.Optional[np.ndarray],
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+        '''Utility for final iteration of the group_iter, shared by three methods.
+        '''
+        if as_array:
+            yield from ((group, array) for group, _, array in group_iter)
+        else:
+            for group, selection, tb in group_iter:
+                # NOTE: selection can be a Boolean array or a slice
+                if axis == 0:
+                    # axis 0 is a row iter, so need to slice index, keep columns
+                    index_group = (index._extract_iloc(selection) if ordering is None
+                            else index._extract_iloc(ordering[selection])
+                            )
+                    yield group, self.__class__(tb,
+                            index=index_group,
+                            columns=columns,
+                            own_columns=self.STATIC, # own if static
+                            own_index=True,
+                            own_data=True)
+                else:
+                    # axis 1 is a column iterators, so need to slice columns, keep index
+                    columns_group = (columns._extract_iloc(selection) if ordering is None
+                            else columns._extract_iloc(ordering[selection])
+                            )
+                    yield group, self.__class__(tb,
+                            index=index,
+                            columns=columns_group,
+                            own_index=True,
+                            own_columns=True,
+                            own_data=True)
+
 
     def _axis_group_iloc_items(self,
             key: GetItemKeyType,
@@ -5542,33 +5668,14 @@ class Frame(ContainerOperand):
                 index = self._index if not drop else self._index[drop_mask] # type: ignore
                 columns = self._columns
 
-        if as_array:
-            yield from ((group, array) for group, _, array in group_iter)
-        else:
-            for group, selection, tb in group_iter:
-                # NOTE: selection can be a Boolean array or a slice
-                if axis == 0:
-                    # axis 0 is a row iter, so need to slice index, keep columns
-                    index_group = (index._extract_iloc(selection) if ordering is None
-                            else index._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index_group,
-                            columns=columns,
-                            own_columns=self.STATIC, # own if static
-                            own_index=True,
-                            own_data=True)
-                else:
-                    # axis 1 is a column iterators, so need to slice columns, keep index
-                    columns_group = (columns._extract_iloc(selection) if ordering is None
-                            else columns._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index,
-                            columns=columns_group,
-                            own_index=True,
-                            own_columns=True,
-                            own_data=True)
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
 
     def _axis_group_loc_items(self,
             key: GetItemKeyType,
@@ -5680,33 +5787,15 @@ class Frame(ContainerOperand):
                     group_source=group_source,
                     )
 
-        if as_array:
-            yield from ((group, array) for group, _, array in group_iter)
-        else:
-            for group, selection, tb in group_iter:
-                # NOTE: selection can be a Boolean array or a slice
-                if axis == 0:
-                    # axis 0 is a row iter, so need to slice index, keep columns
-                    index_group = (index._extract_iloc(selection) if ordering is None
-                            else index._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index_group,
-                            columns=columns,
-                            own_columns=self.STATIC, # own if static
-                            own_index=True,
-                            own_data=True)
-                else:
-                    # axis 1 is a column iterators, so need to slice columns, keep index
-                    columns_group = (columns._extract_iloc(selection) if ordering is None
-                            else columns._extract_iloc(ordering[selection])
-                            )
-                    yield group, self.__class__(tb,
-                            index=index,
-                            columns=columns_group,
-                            own_index=True,
-                            own_columns=True,
-                            own_data=True)
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
+
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
@@ -5718,6 +5807,81 @@ class Frame(ContainerOperand):
                 depth_level=depth_level,
                 axis=axis,
                 as_array=as_array,
+                ))
+
+    #-----------------------------------------------------------------------
+    def _axis_group_other_items(self,
+            *,
+            axis: int = 0,
+            as_array: bool = False,
+            group_source: np.ndarray,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+
+        blocks = self._blocks
+        index = self._index
+        columns = self._columns
+
+        group_source_ndim = group_source.ndim
+        ordering = None
+        if group_source_ndim > 1:
+            # normalize group_source for lex sorting
+            group_source_cols = [group_source[NULL_SLICE, i]
+                    for i in range(group_source.shape[1])]
+        try:
+            if group_source_ndim > 1:
+                ordering = np.lexsort(list(reversed(group_source_cols)))
+            else:
+                ordering = np.argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
+            use_sorted = True
+        except TypeError:
+            use_sorted = False
+
+        if use_sorted:
+            group_source = group_source[ordering]
+
+        if use_sorted:
+            if axis == 0:
+                blocks = self._blocks._extract(row_key=ordering)
+            else:
+                blocks = self._blocks._extract(column_key=ordering)
+
+            group_iter = group_sorted(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None, # assume this is not used
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
+        else:
+            group_iter = group_match(
+                    blocks=blocks,
+                    axis=axis,
+                    key=None,
+                    drop=False,
+                    as_array=as_array,
+                    group_source=group_source,
+                    )
+
+        yield from self._axis_group_final_iter(
+                axis=axis,
+                as_array=as_array,
+                group_iter=group_iter,
+                index=index,
+                columns=columns,
+                ordering=ordering,
+                )
+
+    def _axis_group_other(self,
+            *,
+            axis: int = 0,
+            as_array: bool = False,
+            group_source: np.ndarray,
+            ) -> tp.Iterator['Frame']:
+        yield from (x for _, x in self._axis_group_other_items(
+                axis=axis,
+                as_array=as_array,
+                group_source=group_source,
                 ))
 
     #---------------------------------------------------------------------------
@@ -7637,8 +7801,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an inner join.
@@ -7651,8 +7816,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7667,8 +7830,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7682,8 +7846,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a left outer join.
@@ -7696,8 +7861,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7712,8 +7875,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7727,8 +7891,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform a right outer join.
@@ -7741,8 +7906,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7757,8 +7920,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     @doc_inject(selector='join')
@@ -7772,8 +7936,9 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
-            composite_index: bool = True,
-            composite_index_fill_value: tp.Hashable = None,
+            include_index: bool = False,
+            # composite_index: bool = True,
+            # composite_index_fill_value: tp.Hashable = None,
             ) -> 'Frame':
         '''
         Perform an outer join.
@@ -7786,8 +7951,6 @@ class Frame(ContainerOperand):
             {left_template}
             {right_template}
             {fill_value}
-            {composite_index}
-            {composite_index_fill_value}
 
         Returns:
             :obj:`Frame`
@@ -7802,8 +7965,9 @@ class Frame(ContainerOperand):
                 left_template=left_template,
                 right_template=right_template,
                 fill_value=fill_value,
-                composite_index=composite_index,
-                composite_index_fill_value=composite_index_fill_value,
+                include_index=include_index,
+                # composite_index=composite_index,
+                # composite_index_fill_value=composite_index_fill_value,
                 )
 
     #---------------------------------------------------------------------------
@@ -7823,7 +7987,7 @@ class Frame(ContainerOperand):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')
 
-        if not len(container.index): # must be empty data, empty index container
+        if container.ndim == 2 and not len(container.columns): # type: ignore
             return self if self.STATIC else self.__class__(self)
 
         # this filter is needed to handle possible invalid ILoc values passed through
@@ -7841,9 +8005,6 @@ class Frame(ContainerOperand):
         labels_insert: tp.Iterable[tp.Hashable]
 
         if isinstance(container, Frame):
-            if not len(container.columns):
-                return self if self.STATIC else self.__class__(self)
-
             labels_insert = container.columns.__iter__()
             blocks_insert = container._blocks._blocks
 
@@ -8010,6 +8171,32 @@ class Frame(ContainerOperand):
         return tuple(
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
+
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
+        v = (a.tobytes('F') for a in self._blocks._blocks)
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._columns._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding)),
+                v))
+
 
     #---------------------------------------------------------------------------
     # exporters: alternate libraries
@@ -8320,7 +8507,7 @@ class Frame(ContainerOperand):
         '''
         d = ((k, dict(zip(self._columns, v)))
                 for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
@@ -8331,7 +8518,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
@@ -8341,9 +8528,9 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = dict(columns=JSONFilter.from_iterable(self._columns),
-                index=JSONFilter.from_iterable(self._index),
-                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
+        d = dict(columns=JSONFilter.encode_iterable(self._columns),
+                index=JSONFilter.encode_iterable(self._index),
+                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1))
                 )
         return json.dumps(d, indent=indent)
 
@@ -8357,7 +8544,7 @@ class Frame(ContainerOperand):
         '''
         d = (dict(zip(self._columns, v))
                 for v in self.iter_tuple(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
@@ -8368,7 +8555,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = self.iter_tuple(constructor=tuple, axis=1)
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited
@@ -9288,7 +9475,7 @@ class FrameAsType:
     def __call__(self,
             dtypes: DtypesSpecifier,
             *,
-            consolidate_blocks: bool = True,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
         '''

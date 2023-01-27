@@ -398,7 +398,7 @@ class IndexBase(ContainerOperand):
         indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
 
         if hasattr(others, '__len__') and len(others) == 1:
-            # NOTE: having only one `other` is far more common than many others; thus, optimzie for that case by not using an iterator
+            # NOTE: having only one `other` is far more common than many others; thus, optimize for that case by not using an iterator
             indices = (self, imtoaf(others[0])) # type: ignore
         else:
             indices = chain((self,), (imtoaf(other) for other in others))
@@ -408,7 +408,6 @@ class IndexBase(ContainerOperand):
                 cls_default=self.__class__,
                 many_to_one_type=many_to_one_type,
                 )
-
 
     def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
@@ -491,4 +490,10 @@ class IndexBase(ContainerOperand):
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+        raise NotImplementedError() #pragma: no cover
 

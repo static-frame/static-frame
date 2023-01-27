@@ -5,14 +5,7 @@ import typing as tp
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
-# useful constructors
-# >>> f = sf.FrameGO.from_records((('Encke', 3.30, '2003-12-28'), ('Giacobini-Zinner', 6.52, '1998-11-21'), ('Tempel-Tuttle', 32.92, '1998-02-28'), ('Wild 2', 6.39, '2003-09-25')), columns=('Name', 'Orbital Period', 'Perihelion Date'))
-
-
-
-
 api_example_str = '''
-
 
 #-------------------------------------------------------------------------------
 # import and setup
@@ -22,66 +15,6 @@ api_example_str = '''
 >>> sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
 >>> import numpy as np
 >>> import static_frame as sf
-
-#-------------------------------------------------------------------------------
-# documentation introduction
-
-#start_immutability
-
->>> import static_frame as sf
->>> import numpy as np
-
->>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
->>> s #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s['Jupiter'] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: 'Series' object does not support item assignment
->>> s.iloc[0] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-TypeError: 'InterfaceGetItem' object does not support item assignment
->>> s.values[0] = 68
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-ValueError: assignment destination is read-only
-
-#end_immutability
-
-#start_assign
->>> s.assign['Jupiter'](69) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  69
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s.assign['Uranus':](s['Uranus':] - 2) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  67
-Saturn   62
-Uranus   25
-Neptune  12
-<<U7>   <int64>
->>> s.assign.iloc[[0, 3]]((68, 11)) #doctest: +NORMALIZE_WHITESPACE
-<Series>
-<Index>
-Jupiter  68
-Saturn   62
-Uranus   27
-Neptune  11
-<<U7>    <int64>
-
-#end_assign
 
 
 #-------------------------------------------------------------------------------
@@ -268,7 +201,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
     @classmethod
     def get_readme_str(cls) -> str:
         # mutate the README
-        fp_alt = cls.get_test_input('jph_photos.txt')
+        fp_alt = cls.get_test_input('iris.csv')
 
         readme_fp = cls.get_readme_fp()
         with open(readme_fp, encoding='utf-8') as f:
@@ -282,10 +215,10 @@ class TestUnit(doctest.DocTestCase, TestCase):
         ''' + readme_str
 
         # inject content from local files
-        src = ">>> frame = sf.Frame.from_json(sf.WWW.from_file('https://jsonplaceholder.typicode.com/photos'), dtypes=dict(albumId=np.int64, id=np.int64))"
+        src = ">>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)"
 
         # using a raw string to avoid unicode decoding issues on windows
-        dst = f">>> frame = sf.Frame.from_tsv(r'{fp_alt}', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')"
+        dst = f">>> data = sf.Frame.from_csv('{fp_alt}', columns_depth=0)"
 
         if src not in readme_str:
             raise RuntimeError('did not find expected string')
@@ -299,14 +232,11 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         return readme_str
 
-    @staticmethod
-    def update_readme(source: object) -> None:
-        target = "sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')"
-
 
     def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
 
         doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
+        # doctest_str = api_example_str
 
         sample = doctest.DocTestParser().get_doctest(
                 doctest_str,
@@ -322,19 +252,3 @@ if __name__ == "__main__":
     import unittest
     unittest.main()
 
-
-
-
-
-# UNUSED
-
-
-# #start_Frame-from_records()
-# >>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
-# <Frame>
-# <Index> temperature distance  <<U11>
-# <Index>
-# Mars    -65         227.9
-# Neptune -200        4495.1
-# <<U7>   <int64>     <float64>
-# #end_Frame-from_records()

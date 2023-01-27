@@ -2309,6 +2309,15 @@ class TestUnit(TestCase):
                 ((0, ((('a', 0), 12), (('a', 1), 4), (('b', 0), 12), (('b', 1), 4))), (1, ((('a', 0), 1), (('a', 1), 9), (('b', 0), 1), (('b', 1), 9))))
                 )
 
+    def test_batch_via_dt_year_month(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.year_month.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), '2210-12'), (('a', 1), '2224-04'), (('b', 0), '2210-12'), (('b', 1), '2224-04'))), (1, ((('a', 0), '2414-01'), (('a', 1), '2082-09'), (('b', 0), '2414-01'), (('b', 1), '2082-09'))))
+                )
+
     def test_batch_via_dt_day(self) -> None:
 
         f1 = ff.parse('s(2,2)|v(dtD)').rename('a')

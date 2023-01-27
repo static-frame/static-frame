@@ -1,6 +1,68 @@
 What is New in StaticFrame
 ===============================
 
+1.2-dev
+-----------
+
+Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
+
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+
+
+1.1.1
+-----------
+
+Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
+Corrected issue with some ``IndexHierarchy`` formations when using slices in an ``HLoc`` with more than one depth selection.
+
+
+1.1.0
+-----------
+
+Added ``Frame.consolidate`` interface, including ``Frame.consolidate[]`` and ``Frame.consolidate.status``.
+
+Added ``Quilt.bus`` property.
+
+``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
+
+Added ``index_constructors`` arguments to ``IndexHierarchy.rehierarch()``, ``Series.rehierarch()``, ``Bus.rehierarch()``, ``Yarn.rehierarch()``.
+
+Added ``index_constructors``, ``columns_constructors`` arguments to ``Frame.rehierarch()``.
+
+
+1.0.1
+-----------
+
+Parameters ``dtypes``, ``fill_value``, and ``format`` (given to ``via_str.format``) now properly work with ``defaultdict``, infinite iterators, and mappings indexed by position (when columns are not defined or created with ``IndexAutoFactory``).
+
+
+1.0.0
+----------
+
+API change: ``IndexHierarchy`` numerical and statistical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, now raise ``NotImplementedError``.
+
+API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False`` by default.
+
+API change: ``composite_index`` and ``composite_index_fill_value`` parameters removed from ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``; added ``include_index`` parameter.
+
+API change: ``IndexDefaultFactory`` renamed ``IndexDefaultConstructorFactory``.
+
+Added ``via_dt.year_month``.
+
+
+0.9.23
+----------
+
+Added ``via_hashlib`` interface to all containers.
+
+Added ``Frame.iter_group_other()``, ``Frame.iter_group_other_items()``, ``Frame.iter_group_other_array()``, ``Frame.iter_group_other_array_items()``.
+
+Added ``Series.iter_group_other()``, ``Series.iter_group_other_items()``, ``Series.iter_group_other_array()``, ``Series.iter_group_other_array_items()``.
+
+Set ``arraykit`` version to 0.2.6.
+
+
 0.9.22
 ----------
 
@@ -558,7 +620,7 @@ Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.from_concat_items()``.
 
-Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+Introduced ``IndexDefaultConstructorFactory`` to permit specifying index ``name`` attributes with default index constructors.
 
 
 0.8.16
@@ -954,7 +1016,7 @@ API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatica
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
 
-API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to ``False`` by default.
 
 API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
@@ -1566,7 +1628,7 @@ Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delim
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
-The ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
+The ``DisplayConfig`` parameter ``type_show`` now, if ``False``, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 Added ``Frame.unset_index()``.
 

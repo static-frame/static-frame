@@ -273,7 +273,7 @@ class BatchAsType:
     def __call__(self,
             dtypes: DtypesSpecifier,
             *,
-            consolidate_blocks: bool = True,
+            consolidate_blocks: bool = False,
             ) -> 'Batch':
         return self._batch_apply(
                 lambda c: c.astype[self._column_key](
@@ -311,3 +311,90 @@ class InterfaceBatchAsType(Interface[TContainer]):
                 batch_apply=self._batch_apply,
                 column_key=NULL_SLICE,
                 )(dtype)
+
+
+#-------------------------------------------------------------------------------
+
+class InterfaceConsolidate(Interface[TContainer]):
+    '''An instance to serve as an interface to __getitem__ extractors.
+    '''
+
+    __slots__ = (
+            '_container',
+            '_func_getitem',
+            )
+
+    INTERFACE = (
+            '__getitem__',
+            '__call__',
+            'status',
+            )
+
+    def __init__(self,
+            container: TContainer,
+            func_getitem: tp.Callable[[GetItemKeyType], 'Frame']
+            ) -> None:
+        '''
+        Args:
+            _func_getitem: a callable that expects a _func_getitem key and returns a Frame interface.
+        '''
+        self._container: TContainer = container
+        self._func_getitem = func_getitem
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> 'Frame':
+        '''Selector of columns by label for consolidation.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._func_getitem(key)
+
+    def __call__(self) -> 'Frame':
+        '''
+        Apply consolidation to all columns.
+        '''
+        return self._func_getitem(NULL_SLICE)
+
+    @property
+    def status(self) -> 'Frame':
+        '''Display consolidation status of this Frame.
+        '''
+        from static_frame.core.frame import Frame
+
+        flag_attrs =('owndata', 'f_contiguous', 'c_contiguous')
+        columns = self._container.columns # type: ignore
+
+        def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
+            iloc_start = 0
+            nonlocal columns
+
+            for b in self._container._blocks._blocks: # type: ignore
+                width = 1 if b.ndim == 1 else b.shape[1]
+
+                iloc_end = iloc_start + width
+                if iloc_end >= len(columns):
+                    iloc_slice = slice(iloc_start, None)
+                else:
+                    iloc_slice = slice(iloc_start, iloc_end)
+
+                sub = columns[iloc_slice] # returns a column
+                iloc: tp.Union[int, slice]
+                if len(sub) == 1:
+                    loc = sub[0] #type: ignore
+                    iloc = iloc_start
+                else: # get inclusive slice
+                    loc = slice(sub[0], sub[-1]) #type: ignore
+                    iloc = iloc_slice
+
+                yield [loc, iloc, b.dtype, b.shape, b.ndim] + [
+                    getattr(b.flags, attr) for attr in flag_attrs]
+
+                iloc_start = iloc_end
+
+        return Frame.from_records(gen(),#type: ignore
+            columns=('loc', 'iloc', 'dtype', 'shape', 'ndim') + flag_attrs
+            )
+
+
+

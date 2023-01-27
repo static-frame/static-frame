@@ -13,6 +13,7 @@ import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import polars as pl
 
 sys.path.append(os.getcwd())
 
@@ -95,6 +96,14 @@ class PandasPyArrowTypeGiven(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
+class PolarsTypeParse(FileIOTest):
+
+    def __call__(self):
+        f = pl.read_csv(self.fp)
+        assert f.shape == self.fixture.shape
+
+
+#-------------------------------------------------------------------------------
 class NumpyGenfromtxtTypeParse(FileIOTest):
 
     def __call__(self):
@@ -142,6 +151,14 @@ FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I
 
 #-------------------------------------------------------------------------------
 
+def seconds_to_display(seconds: float) -> str:
+    seconds /= NUMBER
+    if seconds < 1e-4:
+        return f'{seconds * 1e6: .1f} (µs)'
+    if seconds < 1e-1:
+        return f'{seconds * 1e3: .1f} (ms)'
+    return f'{seconds: .1f} (s)'
+
 
 def plot_performance(frame: sf.Frame):
     fixture_total = len(frame['fixture'].unique())
@@ -166,6 +183,9 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
         NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
+
+        PolarsTypeParse.__name__: 'Polars\n(type parsing)',
+
     }
 
     name_order = {
@@ -183,6 +203,8 @@ def plot_performance(frame: sf.Frame):
 
         NumpyGenfromtxtTypeParse.__name__: 3,
         NumpyLoadtxtTypeParse.__name__: 3,
+
+        PolarsTypeParse.__name__: 4,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -212,8 +234,8 @@ def plot_performance(frame: sf.Frame):
             time_max = fixture['time'].max()
             ax.set_yticks([0, time_max * 0.5, time_max])
             ax.set_yticklabels(['',
-                    f'{time_max * 0.5:.3f} (s)',
-                    f'{time_max:.3f} (s)',
+                    seconds_to_display(time_max * 0.5),
+                    seconds_to_display(time_max),
                     ], fontsize=6)
             # ax.set_xticks(x, names_display, rotation='vertical')
             ax.tick_params(
@@ -235,7 +257,7 @@ def plot_performance(frame: sf.Frame):
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
     fig.text(.05, .90, shape_msg, fontsize=6)
 
-    fp = '/tmp/serialize.png'
+    fp = '/tmp/delimited.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
@@ -305,7 +327,7 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-
+    # PolarsTypeParse,
     # PandasPyArrowTypeParse,
     # PandasPyArrowStr,
     # PandasPyArrowTypeGiven,

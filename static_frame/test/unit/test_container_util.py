@@ -20,6 +20,7 @@ from static_frame.core.container_util import get_block_match
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import get_col_format_factory
+from static_frame.core.container_util import group_from_container
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -639,8 +640,12 @@ class TestUnit(TestCase):
         self.assertEqual(func3(0), None)
         self.assertEqual(func3(1), np.dtype(bool))
 
-        with self.assertRaises(RuntimeError):
-            _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
+    def test_get_col_dtype_factory_b(self) -> None:
+        func = get_col_dtype_factory({1: np.dtype(bool)}, None)
+        self.assertEqual(func(0), None)
+        self.assertEqual(func(1), np.dtype(bool))
+
+
 
     #---------------------------------------------------------------------------
 
@@ -648,10 +653,6 @@ class TestUnit(TestCase):
         func1 = get_col_fill_value_factory({'a':-1, 'b':2}, columns=('b', 'a'))
         self.assertEqual(func1(0, np.dtype(float)), 2)
         self.assertEqual(func1(1, np.dtype(float)), -1)
-
-        with self.assertRaises(RuntimeError):
-            _ = get_col_fill_value_factory({'a':-1, 'b':2}, columns=None)
-
 
     def test_get_col_fill_value_b(self) -> None:
         func1 = get_col_fill_value_factory(('x', 1), columns=('b', 'a'))
@@ -711,10 +712,6 @@ class TestUnit(TestCase):
         self.assertEqual(func(0), '{}')
         self.assertEqual(func(1), 'x{}')
         self.assertEqual(func(2), 'y{}')
-
-    def test_get_col_format_d2(self) -> None:
-        with self.assertRaises(RuntimeError):
-            _ = get_col_format_factory({'b':'x{}', 'c':'y{}'})
 
     def test_get_col_format_e(self) -> None:
         func = get_col_format_factory((f'{{:{i}}}' for i in range(3)), ('a', 'b', 'c'))
@@ -871,6 +868,37 @@ class TestUnit(TestCase):
                 [(2, 3), (2,), (2, 1)])
         self.assertEqual([a.shape for a in stack],
                 [(2, 1)])
+
+    #---------------------------------------------------------------------------
+    def test_group_from_container_a(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(ValueError):
+            group_from_container(idx, np.arange(12).reshape(3, 2, 2), None, 0)
+
+    def test_group_from_container_b(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(ValueError):
+            group_from_container(idx, 'a', None, 0)
+
+    def test_group_from_container_c(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        with self.assertRaises(RuntimeError):
+            group_from_container(idx, (2, 2), None, 0)
+
+    def test_group_from_container_d(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        gs = np.arange(6).reshape(3, 2)
+        group_from_container(idx, gs, None, 0)
+        # if wrong axis does not align
+        with self.assertRaises(RuntimeError):
+            group_from_container(idx, gs, None, 1)
+
+    def test_group_from_container_e(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        s = Frame.from_element(0, index=('a', 'c'), columns=('x',))
+        post = group_from_container(idx, s, None, 0)
+        self.assertEqual(post.tolist(), [[0], [None], [0]])
+
 
 
 if __name__ == '__main__':

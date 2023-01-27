@@ -1,10 +1,12 @@
 import typing as tp
+from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -48,6 +50,7 @@ from static_frame.core.util import ZIP_LONGEST_DEFAULT
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
@@ -695,12 +698,17 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.__class__.from_series(series, config=self._config)
 
     def rehierarch(self,
-            depth_map: tp.Sequence[int]
+            depth_map: tp.Sequence[int],
+            *,
+            index_constructors: IndexConstructors = None,
             ) -> 'Bus':
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        series = self.to_series().rehierarch(depth_map)
+        series = self.to_series().rehierarch(
+                depth_map,
+                index_constructors=index_constructors,
+                )
         return self.__class__.from_series(series, config=self._config)
 
 
@@ -1389,3 +1397,32 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_index=True,
                 name=self._name,
                 )
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        v = (f._to_signature_bytes(
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
+                ) for f in self._axis_element())
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),),
+                v))
+
+
+
+
+
+

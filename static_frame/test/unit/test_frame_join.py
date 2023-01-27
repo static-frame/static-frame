@@ -17,9 +17,9 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
 
-    def test_frame_join_a(self) -> None:
+    def test_frame_join_a1(self) -> None:
 
-        # joiing index to index
+        # joining index to index
 
         f1 = Frame.from_dict(
                 dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
@@ -28,10 +28,7 @@ class TestUnit(TestCase):
                 dict(c=('foo', 'bar'), d=(10, 20)),
                 index=('x', 'y'))
 
-        # df1 = f1.to_pandas()
-        # df2 = f2.to_pandas()
-
-        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, composite_index=False)
+        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, include_index=True)
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
@@ -40,7 +37,8 @@ class TestUnit(TestCase):
         f4 = f1.join_outer(f2,
                 left_depth_level=0,
                 right_depth_level=0,
-                composite_index=False).fillna(None)
+                include_index=True,
+                ).fillna(None)
 
         # NOTE: this indexes ordering after union is not stable, so do an explict selection before testing
         locs4 = [0, 1, 2, 'foo', 'x', 'y']
@@ -53,7 +51,8 @@ class TestUnit(TestCase):
         f5 = f1.join_left(f2,
                 left_depth_level=0,
                 right_depth_level=0,
-                composite_index=False).fillna(None)
+                include_index=True,
+                ).fillna(None)
 
         self.assertEqual(f5.to_pairs(0),
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
@@ -62,9 +61,26 @@ class TestUnit(TestCase):
         f6 = f1.join_right(f2,
                 left_depth_level=0,
                 right_depth_level=0,
-                composite_index=False).fillna(None)
+                include_index=True,
+                ).fillna(None)
         self.assertEqual(f6.to_pairs(0),
                 (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
+                )
+
+    def test_frame_join_a2(self) -> None:
+
+        # joining index to index
+
+        f1 = Frame.from_dict(
+                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
+                index=(0, 1, 2, 'foo', 'x'))
+        f2 = Frame.from_dict(
+                dict(c=('foo', 'bar'), d=(10, 20)),
+                index=('x', 'y'))
+
+        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, include_index=False)
+        self.assertEqual(f3.to_pairs(0),
+                (('a', ((0, 20.0),)), ('b', ((0, 'z'),)), ('c', ((0, 'foo'),)), ('d', ((0, 10),)))
                 )
 
     def test_frame_join_b(self) -> None:
@@ -87,14 +103,12 @@ class TestUnit(TestCase):
             index=range(10, 14),
             )
 
-        df1 = f1.to_pandas()
-        df2 = f2.to_pandas()
-
         f3 = f1.join_outer(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
                 right_template='Department.{}',
+                include_index=True,
                 )
         self.assertEqual(f3.shape, (7, 4))
         self.assertEqual(f3.fillna(None).to_pairs(0),
@@ -107,6 +121,7 @@ class TestUnit(TestCase):
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
                 right_template='Department.{}',
+                include_index=True,
                 )
         self.assertEqual(f4.shape, (5, 4))
 
@@ -120,6 +135,7 @@ class TestUnit(TestCase):
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
                 right_template='Department.{}',
+                include_index=True,
                 )
         self.assertEqual(f5.shape, (6, 4))
         self.assertEqual(f5.fillna(None).to_pairs(0),
@@ -134,6 +150,7 @@ class TestUnit(TestCase):
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
                 right_template='Department.{}',
+                include_index=True,
                 )
 
         self.assertEqual(f6.shape, (6, 4))
@@ -141,14 +158,6 @@ class TestUnit(TestCase):
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), 35))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), ((None, 13), 'Marketing'))))
                 )
 
-        with self.assertRaises(RuntimeError):
-            f1.join_right(f2,
-                    left_columns='DepartmentID',
-                    left_template='Employee.{}',
-                    right_columns='DepartmentID',
-                    right_template='Department.{}',
-                    composite_index=False,
-                    )
 
     def test_frame_join_c(self) -> None:
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
@@ -158,22 +167,22 @@ class TestUnit(TestCase):
             _ = f1.join_left(f2, left_columns=['a', 'b'], right_depth_level=0)
 
 
-        f3 = f1.join_left(f2, left_columns='b', right_depth_level=0)
+        f3 = f1.join_left(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertEqual(f3.fillna(None).to_pairs(0),
                 (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20), ((4, None), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'), ((4, None), 'z'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'), ((4, None), None))), ('d', (((0, 'x'), 10.0), ((1, 'x'), 10.0), ((2, 'y'), 20.0), ((3, 'y'), 20.0), ((4, None), None))))
                 )
 
-        f4 = f1.join_inner(f2, left_columns='b', right_depth_level=0)
+        f4 = f1.join_inner(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertEqual(f4.to_pairs(0),
                 (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'))), ('d', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))))
                 )
 
         # right is same as inner
-        f5 = f1.join_right(f2, left_columns='b', right_depth_level=0)
+        f5 = f1.join_right(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertTrue(f5.equals(f4, compare_dtype=True))
 
         # left is same as outer
-        f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0)
+        f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertTrue(f6.equals(f3, compare_dtype=True))
 
     @skip_win
@@ -184,7 +193,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
         f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
 
-        f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
+        f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0, include_index=True)
 
         self.assertEqual(f3.dtypes.values.tolist(),
                 [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64'), np.dtype('<U1')]
@@ -197,9 +206,9 @@ class TestUnit(TestCase):
                 )
 
         # inner join is equivalent to left, right, outer
-        self.assertTrue(f1.join_inner(f2, left_depth_level=1, right_depth_level=0).equals(f3))
-        self.assertTrue(f1.join_right(f2, left_depth_level=1, right_depth_level=0).equals(f3))
-        self.assertTrue(f1.join_outer(f2, left_depth_level=1, right_depth_level=0).equals(f3))
+        self.assertTrue(f1.join_inner(f2, left_depth_level=1, right_depth_level=0, include_index=True).equals(f3))
+        self.assertTrue(f1.join_right(f2, left_depth_level=1, right_depth_level=0, include_index=True).equals(f3))
+        self.assertTrue(f1.join_outer(f2, left_depth_level=1, right_depth_level=0, include_index=True).equals(f3))
 
     def test_frame_join_e(self) -> None:
 
@@ -216,7 +225,7 @@ class TestUnit(TestCase):
                 left_depth_level=[0, 1],
                 right_depth_level=[0, 1],
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
 
         self.assertEqual(f3.to_pairs(0),
@@ -227,7 +236,7 @@ class TestUnit(TestCase):
                 left_depth_level=[0, 1],
                 right_depth_level=[0, 1],
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
 
         self.assertEqual(f4.to_pairs(0),
@@ -247,22 +256,22 @@ class TestUnit(TestCase):
 
         # case of when a non-index value is joined on, where the right as repeated values; Pandas df1.merge(df2, how='left', left_on='b', right_on='c') will add rows for all unique combinations and drop the resulting index.
 
-        f3 = f1.join_left(f2, left_columns='b', right_columns='c')
+        f3 = f1.join_left(f2, left_columns='b', right_columns='c', include_index=True)
         self.assertEqual(f3.fillna(None).to_pairs(0),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None))), ('d', ((('c', 'q'), 1000.0), (('c', 'p'), 3000.0), (('d', 'q'), 1000.0), (('d', 'p'), 3000.0), (('a', None), None), (('b', None), None), (('e', None), None))))
                 )
 
-        f4 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None)
+        f4 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
         self.assertEqual(f4.fillna(None).to_pairs(0),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), ((None, 'r'), 2000))))
                 )
 
-        f5 = f1.join_inner(f2, left_columns='b', right_columns='c')
+        f5 = f1.join_inner(f2, left_columns='b', right_columns='c', include_index=True)
         self.assertEqual(f5.fillna(None).to_pairs(0),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000))))
                 )
 
-        f6 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None)
+        f6 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
         self.assertEqual(f6.fillna(None).to_pairs(0),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 2000))))
                 )
@@ -300,7 +309,8 @@ class TestUnit(TestCase):
         f4 = f2.join_inner(f3,
                 left_columns='recipe_id',
                 right_columns='recipe_id',
-                right_template='new_{}'
+                right_template='new_{}',
+                include_index=True,
                 )
         self.assertEqual(f4.to_pairs(0),
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'))), ('new_recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('new_ingredient_id', ((('s', 'i'), 1), (('s', 'j'), 5), (('s', 'k'), 7), (('s', 'l'), 8), (('t', 'm'), 6), (('t', 'n'), 2), (('t', 'o'), 1), (('t', 'p'), 3), (('t', 'q'), 4))))
@@ -309,7 +319,8 @@ class TestUnit(TestCase):
         f7 = f2.join_outer(f3,
                 left_columns='recipe_id',
                 right_columns='recipe_id',
-                right_template='new_{}'
+                right_template='new_{}',
+                include_index=True,
                 )
 
         self.assertEqual(f7.fillna(None).to_pairs(0),
@@ -320,7 +331,8 @@ class TestUnit(TestCase):
         f5 = f2.join_right(f3,
                 left_columns='recipe_id',
                 right_columns='recipe_id',
-                right_template='new_{}'
+                right_template='new_{}',
+                include_index=True,
                 )
 
         self.assertEqual(f5.to_pairs(0),
@@ -331,7 +343,8 @@ class TestUnit(TestCase):
         f6 = f2.join_left(f3,
                 left_columns='recipe_id',
                 right_columns='recipe_id',
-                right_template='new_{}'
+                right_template='new_{}',
+                include_index=True,
                 )
 
         self.assertEqual(f6.fillna(None).to_pairs(0),
@@ -356,7 +369,7 @@ class TestUnit(TestCase):
                 left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
         self.assertEqual(f4.to_pairs(0),
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
@@ -366,7 +379,7 @@ class TestUnit(TestCase):
                 left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
         self.assertEqual(f5.to_pairs(0),
                 (('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))), ('a', (('x', None), ('y', None))), ('b', (('x', None), ('y', None))))
@@ -376,7 +389,7 @@ class TestUnit(TestCase):
                 left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
         f6 = f6.loc[[0, 1, 2, 3, 4, 'y', 'x']] # get stable ordering
         self.assertEqual(f6.to_pairs(0),
@@ -403,7 +416,8 @@ class TestUnit(TestCase):
         f3 = f1.join_left(f2, left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
-                composite_index=False)
+                include_index=True,
+                )
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', (('a', 10), ('b', 10), ('c', 20), ('d', 20))), ('b', (('a', 'x'), ('b', 'x'), ('c', 'y'), ('d', 'z'))), ('c', (('a', None), ('b', None), ('c', 'foo'), ('d', 'bar'))), ('d', (('a', None), ('b', None), ('c', 10), ('d', 20))))
@@ -412,7 +426,7 @@ class TestUnit(TestCase):
         f4 = f1.join_inner(f2, left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
-                composite_index=False,
+                include_index=True,
                 )
         self.assertEqual( f4.to_pairs(0),
                 (('a', (('c', 20), ('d', 20))), ('b', (('c', 'y'), ('d', 'z'))), ('c', (('c', 'foo'), ('d', 'bar'))), ('d', (('c', 10), ('d', 20))))
@@ -423,14 +437,11 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
-        with self.assertRaises(RuntimeError):
-            # composite index is required
-            _ = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=False)
-
-        f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=True)
+        f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', include_index=True)
 
         self.assertEqual(f3.to_pairs(0),
-                (('c', ((('x', 0), 'foo'), (('x', 1), 'foo'), (('y', 2), 'bar'), (('y', 3), 'bar'))), ('d', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('a', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('b', ((('x', 0), 'x'), (('x', 1), 'x'), (('y', 2), 'y'), (('y', 3), 'y')))))
+                (('c', ((('x', 0), 'foo'), (('x', 1), 'foo'), (('y', 2), 'bar'), (('y', 3), 'bar'))), ('d', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('a', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('b', ((('x', 0), 'x'), (('x', 1), 'x'), (('y', 2), 'y'), (('y', 3), 'y'))))
+                )
 
     def test_frame_join_k(self) -> None:
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
@@ -451,7 +462,7 @@ class TestUnit(TestCase):
         f2 = f1.join_inner(f2,
                 left_columns='a',
                 right_columns='d',
-                composite_index=False,
+                include_index=True,
                 )
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 10), (1, 20))), ('b', ((0, 'y'), (1, 'z'))), ('c', ((0, 'foo'), (1, 'bar'))), ('d', ((0, 10), (1, 20))))
