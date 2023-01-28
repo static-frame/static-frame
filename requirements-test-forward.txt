@@ -15,8 +15,8 @@ openpyxl==3.0.10
 xarray==0.21.1
 tables==3.8.0
 pyarrow==10.0.1
-msgpack==1.0.3
-msgpack-numpy==0.4.7.1
+msgpack==1.0.4
+msgpack-numpy==0.4.8
 visidata==2.11
 frame-fixtures==0.2.1
 
