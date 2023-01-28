@@ -1,6 +1,5 @@
 import typing as tp
 from collections import abc
-from enum import Enum
 from itertools import chain
 from sys import getsizeof
 from typing import NamedTuple
