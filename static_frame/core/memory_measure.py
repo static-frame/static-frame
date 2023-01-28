@@ -1,6 +1,5 @@
 import typing as tp
 from collections import abc
-from enum import Enum
 from itertools import chain
 from sys import getsizeof
 from typing import NamedTuple
@@ -21,7 +20,12 @@ class MFConfig(NamedTuple):
     materialized: bool # measure byte payload nbytes (regardless of sharing)
     data_only: bool # only array byte payloads, or all objects
 
-class MeasureFormat(Enum):
+
+class MeasureFormatMeta(type):
+    def __iter__(cls) -> tp.Iterator[MFConfig]:
+        return (v for (k, v) in vars(cls).items() if not k.startswith('_'))
+
+class MeasureFormat(metaclass=MeasureFormatMeta):
     LOCAL = MFConfig(
             local_only=True,
             materialized=False,
@@ -77,19 +81,19 @@ class MaterializedArray:
 
     def __init__(self,
             array: np.ndarray,
-            format: MeasureFormat = MeasureFormat.LOCAL,
+            format: MFConfig = MeasureFormat.LOCAL,
             ):
         self._array = array
         self._format = format
 
     def __sizeof__(self) -> int:
         size = 0
-        if self._format.value.local_only and self._array.base is not None:
+        if self._format.local_only and self._array.base is not None:
             pass # all data referenced externally
         else:
             size += self._array.nbytes
 
-        if not self._format.value.data_only:
+        if not self._format.data_only:
             size += self.BASE_ARRAY_BYTES
 
         return size
@@ -132,7 +136,7 @@ class MemoryMeasure:
     def nested_sizable_elements(cls,
             obj: tp.Any,
             *,
-            format: MeasureFormat = MeasureFormat.REFERENCED,
+            format: MFConfig = MeasureFormat.REFERENCED,
             seen: tp.Set[int],
             ) -> tp.Iterator[tp.Any]:
         '''
@@ -146,13 +150,13 @@ class MemoryMeasure:
         seen.add(id(obj))
 
         if obj.__class__ is np.ndarray:
-            if format.value.materialized:
+            if format.materialized:
                 obj = MaterializedArray(obj, format=format)
             else: # non-object arrays report included elements
                 if obj.dtype.kind == DTYPE_OBJECT_KIND:
                     for el in cls._iter_iterable(obj):
                         yield from cls.nested_sizable_elements(el, seen=seen, format=format)
-                if not format.value.local_only and obj.base is not None:
+                if not format.local_only and obj.base is not None:
                     # include the base array for numpy slices / views only if that base has not been seen
                     yield from cls.nested_sizable_elements(obj.base, seen=seen, format=format)
             yield obj
@@ -172,7 +176,7 @@ class MemoryMeasure:
 def memory_total(
         obj: tp.Any,
         *,
-        format: MeasureFormat = MeasureFormat.REFERENCED,
+        format: MFConfig = MeasureFormat.REFERENCED,
         seen: tp.Union[None, tp.Set[tp.Any]] = None,
         ) -> int:
     '''
@@ -185,7 +189,7 @@ def memory_total(
                 seen=seen,
                 format=format,
                 ):
-            if format.value.data_only and component.__class__ is MaterializedArray:
+            if format.data_only and component.__class__ is MaterializedArray:
                 yield component.__sizeof__() # call directly to avoid gc ovehead addition
             else:
                 yield getsizeof(component)

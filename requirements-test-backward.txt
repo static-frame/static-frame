@@ -6,7 +6,8 @@ pytest==7.1.2
 pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.5.4
-invoke==1.4.0
+invoke==2.0.0
+ipython==7.16.3
 
 pandas==0.24.2 # keep pre 1 support
 xlsxwriter==1.1.2
@@ -16,6 +17,6 @@ tables==3.6.1
 pyarrow==0.17.0
 msgpack==1.0.0
 msgpack-numpy==0.4.7
-frame-fixtures==0.2.1
 visidata==2.4
+frame-fixtures==0.2.1
 
