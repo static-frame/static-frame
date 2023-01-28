@@ -8,6 +8,8 @@ Significant performance optimizations to ``IndexHierarchy`` set operations, as w
 
 JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
 
+Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
+
 
 1.1.1
 -----------
