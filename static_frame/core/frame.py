@@ -5522,7 +5522,7 @@ class Frame(ContainerOperand):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            ctor = get_tuple_constructor(labels) # type: ignore
+            ctor = get_tuple_constructor(labels)
         elif isinstance(constructor, type):
             if (issubclass(constructor, tuple) and
                     hasattr(constructor, '_make')):
@@ -5534,7 +5534,7 @@ class Frame(ContainerOperand):
             else: # assume it can take a single arguments
                 ctor = constructor
         else:
-            ctor = constructor
+            ctor = constructor #type: ignore
 
         # NOTE: if all types are the same, it will be faster to use axis_values
         if axis == 1 and not self._blocks.unified_dtypes:
