@@ -4381,13 +4381,13 @@ class Frame(ContainerOperand):
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            # index_opposite = self._columns
-            target_ctor = Index
+            # target_ctor = Index
+            target_ctors = self._index.index_types # Series
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            # index_opposite = self._index
-            target_ctor = self._COLUMNS_CONSTRUCTOR
+            # target_ctor = self._COLUMNS_CONSTRUCTOR
+            target_ctors = self._columns.index_types # Series
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
             raise AxisInvalid(f'invalid axis {axis}')
@@ -4403,13 +4403,17 @@ class Frame(ContainerOperand):
             if index_target._recache:
                 index_target._update_array_cache()
 
-            label_src = index_target.name if index_target._name_is_names() else index_target.names
+            label_src = (index_target.name if index_target._name_is_names()
+                    else index_target.names)
+
             if isinstance(depth_level, INT_TYPES):
                 new_labels = (label_src[depth_level],)
-                remain_labels = tuple(label for i, label in enumerate(label_src) if i != depth_level)
+                remain_labels = tuple(label for i, label
+                        in enumerate(label_src) if i != depth_level)
             else:
                 new_labels = (label_src[i] for i in depth_level)
-                remain_labels = tuple(label for i, label in enumerate(label_src) if i not in depth_level)
+                remain_labels = tuple(label for i, label
+                        in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks # type: ignore
             add_blocks = target_tb._slice_blocks(column_key=depth_level)
@@ -4423,13 +4427,16 @@ class Frame(ContainerOperand):
             if remain_columns == 0:
                 new_target = IndexAutoFactory
             elif remain_columns == 1:
+                target_ctor = target_ctors.drop.iloc[depth_level].iloc[0]
                 new_target = target_ctor( # type: ignore
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:
+                index_constructors = target_ctors.drop.iloc[depth_level].values
                 new_target = target_hctor._from_type_blocks( # type: ignore
                         remain_blocks,
-                        name=remain_labels
+                        name=remain_labels,
+                        index_constructors=index_constructors,
                         )
 
         if axis == 0: # select from index, remove from index
@@ -4453,7 +4460,8 @@ class Frame(ContainerOperand):
                 extend_labels = self._index.flat().__iter__() # type: ignore
             else:
                 extend_labels = self._index.__iter__()
-            index = Index.from_labels(chain(new_labels, extend_labels), # type: ignore
+            index = Index.from_labels(
+                    chain(new_labels, extend_labels), # type: ignore
                     name=self._index.name)
             columns = new_target # type: ignore
 

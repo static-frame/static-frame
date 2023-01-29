@@ -14757,6 +14757,25 @@ class TestUnit(TestCase):
                   ('zUvW', 'ijkl'))))
                 )
 
+    def test_frame_relabel_shift_out_f(self) -> None:
+        msg = ('date,currency,price',
+                '2022-01-01,USD,2.48',
+                '2022-01-02,USD,2.52',
+                '2022-01-03,USD,2.49',
+                '2022-01-04,USD,2.51',
+                )
+        f1 = Frame.from_csv(
+            msg,
+            dtypes=["datetime64[D]", str, float],
+            index_depth=2,
+            index_constructors=[IndexDate, Index],
+        )
+        f2 = f1.relabel_shift_out(1)  # ErrorInitIndex
+
+        self.assertEqual(f2.to_pairs(),
+                (('__index1__', ((np.datetime64('2022-01-01'), 'USD'), (np.datetime64('2022-01-02'), 'USD'), (np.datetime64('2022-01-03'), 'USD'), (np.datetime64('2022-01-04'), 'USD'))), ('price', ((np.datetime64('2022-01-01'), 2.48), (np.datetime64('2022-01-02'), 2.52), (np.datetime64('2022-01-03'), 2.49), (np.datetime64('2022-01-04'), 2.51))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_rank_a(self) -> None:
