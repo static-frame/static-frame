@@ -174,6 +174,7 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import is_dataclass
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isna_array
@@ -5521,18 +5522,26 @@ class Frame(ContainerOperand):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            constructor = get_tuple_constructor(labels) # type: ignore
-        elif (isinstance(constructor, type) and
-                issubclass(constructor, tuple) and
-                hasattr(constructor, '_make')):
-            constructor = constructor._make # type: ignore
+            ctor = get_tuple_constructor(labels) # type: ignore
+        elif isinstance(constructor, type):
+            if (issubclass(constructor, tuple) and
+                    hasattr(constructor, '_make')):
+                # discover named tuples, use _make method for single-value calling
+                ctor = constructor._make # type: ignore
+            elif is_dataclass(constructor):
+                # this will fail if kw_only is true in python 3.10
+                ctor = lambda args: constructor(*args)
+            else: # assume it can take a single arguments
+                ctor = constructor
+        else:
+            ctor = constructor
 
         # NOTE: if all types are the same, it will be faster to use axis_values
         if axis == 1 and not self._blocks.unified_dtypes:
-            yield from self._blocks.iter_row_tuples(key=None, constructor=constructor)
+            yield from self._blocks.iter_row_tuples(key=None, constructor=ctor)
         else: # for columns, slicing arrays from blocks should be cheap
             for axis_values in self._blocks.axis_values(axis):
-                yield constructor(axis_values)
+                yield ctor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,

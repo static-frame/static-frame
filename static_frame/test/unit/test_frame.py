@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import datetime
 import io
 import itertools as it
@@ -17,8 +18,6 @@ from io import StringIO
 from itertools import chain
 from itertools import repeat
 from tempfile import TemporaryDirectory
-import dataclasses
-
 
 import frame_fixtures as ff
 import numpy as np
