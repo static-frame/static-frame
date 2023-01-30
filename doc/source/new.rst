@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-1.2-dev
+1.2.0
 -----------
 
 Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
