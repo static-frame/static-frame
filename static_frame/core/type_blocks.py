@@ -4164,27 +4164,19 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def iter_block_signature(self: "TypeBlocks") -> tp.Iterator[tp.Hashable]:
+    def iter_block_ids(self: "TypeBlocks") -> tp.Iterator[int]:
         '''
-        Calling id(...) on numpy arrays is not always reliable, so instead,
-        we will use the underlying array properties to determine the ID for this
-        index hierarchy, with the desire to encounter duplicate keys for shallow copies.
-
         Yields:
             a hashable key that will only collide with the keys from shallow copies/views
         '''
-        for block in self._blocks:
-            # You need all three of these to uniquely identify a numpy array
-            yield mloc(block), block.shape, block.strides
-
+        yield from (id(b) for b in self._blocks)
 
     def is_shallow_copy(self: "TypeBlocks", other: "TypeBlocks") -> bool:
         '''Determine whether or not the underlying blocks are the same.'''
 
-        for key1, key2 in zip_longest(self.iter_block_signature(), other.iter_block_signature()):
+        for key1, key2 in zip_longest(self.iter_block_ids(), other.iter_block_ids()):
             if key1 != key2:
                 return False
-
         return True
 
     @doc_inject()
