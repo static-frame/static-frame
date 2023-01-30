@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import datetime
 import io
 import itertools as it
@@ -60,7 +61,6 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -9744,9 +9744,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
                 )
 
-    @skip_pylt37
     def test_frame_from_records_r(self) -> None:
-        import dataclasses
         @dataclasses.dataclass
         class Item:
             left: str
