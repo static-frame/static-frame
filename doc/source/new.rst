@@ -12,6 +12,8 @@ Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usa
 
 Corrected issue in ``Frame.relabel_shift_out()`` where ``index_constructors`` are not assigned to subset index.
 
+Extended ``Frame.iter_tuple()`` ``constructor`` argument to support ``dataclass``-created classes.
+
 
 1.1.1
 -----------
