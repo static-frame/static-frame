@@ -10,6 +10,8 @@ JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes an
 
 Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
 
+Corrected issue in ``Frame.relabel_shift_out()`` where ``index_constructors`` are not assigned to subset index.
+
 
 1.1.1
 -----------
