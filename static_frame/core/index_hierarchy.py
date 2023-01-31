@@ -951,8 +951,9 @@ class IndexHierarchy(IndexBase):
         '''
         def gen_blocks() -> tp.Iterator[np.ndarray]:
             for index, indexer in zip(self._indices, self._indexers):
-                yield index.values[indexer]
-
+                array = index.values[indexer]
+                array.flags.writeable = False
+                yield array
         return TypeBlocks.from_blocks(gen_blocks())
 
     # --------------------------------------------------------------------------
