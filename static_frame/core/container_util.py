@@ -985,19 +985,24 @@ def rehierarch_from_type_blocks(*,
 
     # dtype specified here will also ensure that all values in depth_map are int
     depth_map = np.array(depth_map, dtype=DTYPE_INT_DEFAULT)
-    indexers: tp.List[np.ndarray] = []
 
-    for col_idx in range(depth):
+    def get_indexer_at_depth(col_idx: int) -> np.ndarray:
         values_at_depth = labels._extract_array_column(col_idx)
         _, indexer = ufunc_unique1d_indexer(values_at_depth)
-        indexers.append(indexer)
+        return indexer
+
+
+    indexer = get_indexer_at_depth(0)
+    indexers = np.empty((depth, len(indexer)), dtype=DTYPE_INT_DEFAULT)
+    indexers[0] = indexer
+
+    for col_idx in range(depth):
+        indexers[col_idx] = get_indexer_at_depth(col_idx)
 
     # Lexsort
     # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
     # We sort lexsort from right to left (i.e. [::-1])
-    indexers_arr = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
-    del indexers
-    sort_order = np.lexsort(indexers_arr[depth_map][:-1][::-1])
+    sort_order = np.lexsort(indexers[depth_map][:-1][::-1])
 
     return labels._extract(row_key=sort_order, column_key=depth_map), sort_order
 
