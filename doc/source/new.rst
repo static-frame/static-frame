@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.2.1
+-----------
+
+Corrected issue in ``Series.dropna()`` whereby full drops would not retain the index class.
+
+
 1.2.0
 -----------
 
