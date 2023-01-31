@@ -1,8 +1,10 @@
+import ast
 import contextlib
 import datetime
 import math
 import operator
 import os
+import re
 import tempfile
 import typing as tp
 import warnings
@@ -306,6 +308,11 @@ def is_strict_int(value: tp.Any) -> bool:
     if value.__class__ is bool or value.__class__ is np.bool_:
         return False
     return isinstance(value, INT_TYPES)
+
+def is_dataclass(value: tp.Any) -> bool:
+    # avoid module-level import
+    from dataclasses import is_dataclass
+    return is_dataclass(value)
 
 def validate_depth_selection(
         key: GetItemKeyType,
@@ -2506,7 +2513,8 @@ def _ufunc_set_2d(
 
     if is_2d:
         cols = array.shape[1]
-        assert cols == other.shape[1]
+        if cols != other.shape[1]:
+            raise RuntimeError("cannot perform set operation on arrays with different number of columns")
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
@@ -3173,22 +3181,18 @@ def array_sample(
     return post
 
 #-------------------------------------------------------------------------------
-def list_to_tuple(value: tp.Any) -> tp.Any:
-    '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
-    '''
-    # Using `is` here deemed appropriate as objects coming back from json decoder.
-    if value.__class__ is not list:
-        return value
-    return tuple(list_to_tuple(v) for v in value)
+# json utils
 
 class JSONFilter:
+    '''Note: this is filter for encoding NumPy arrays and Python objects in generally readible format by naive consumers. Thus all dates are represented as date strings. This differs from using `__repr__` and attempting to reanimate Python types.
+    '''
 
     @staticmethod
-    def from_element(obj: tp.Any) -> tp.Any:
+    def encode_element(obj: tp.Any) -> tp.Any:
         '''Convert non-JSON compatible objects to JSON compatible objects or strings.
         '''
         if obj is None:
-            return None
+            return obj
         if isinstance(obj, (str, int, float)):
             return obj
         if isinstance(obj, datetime.date):
@@ -3206,23 +3210,115 @@ class JSONFilter:
                 return obj.item()
             return obj.tolist()
 
-        fe = JSONFilter.from_element
         if isinstance(obj, dict):
-            return {fe(k): fe(v) for k, v in obj.items()}
+            ee = JSONFilter.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            return [fe(e) for e in obj]
+            ee = JSONFilter.encode_element
+            return [ee(e) for e in obj]
+        # let pass and raise on JSON encoding
+        return obj
 
     @classmethod
-    def from_items(cls,
+    def encode_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
-        return {cls.from_element(k): cls.from_element(v) for k, v in items}
+        '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
+        '''
+        ee = cls.encode_element
+        return {ee(k): ee(v) for k, v in items}
 
     @classmethod
-    def from_iterable(cls,
+    def encode_iterable(cls,
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
-        return [cls.from_element(v) for v in iterable]
+        '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
+        '''
+        ee = cls.encode_element
+        return [ee(v) for v in iterable]
+
+
+class Reanimate:
+    RE: tp.Pattern[str]
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        raise NotImplementedError() #pragma: no cover
+
+class ReanimateDT64(Reanimate):
+    RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        return np.datetime64(post.group(1))
+
+class ReanimateDTD(Reanimate):
+    RE = re.compile(r"datetime.date\(([ ,0-9]+)\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        args = ast.literal_eval(post.group(1))
+        return datetime.date(*args)
+
+
+class JSONTranslator(JSONFilter):
+    '''JSON encoding of select types to permit reanimation. Let fail types that are not encodable and are not explicitly handled.
+    '''
+    REANIMATEABLE = (ReanimateDT64, ReanimateDTD)
+
+    @staticmethod
+    def encode_element(obj: tp.Any) -> tp.Any:
+        '''From a Python object, pre-JSON encoding, replacing any Python objects with discoverable strings.
+        '''
+        if obj is None:
+            return obj
+
+        if isinstance(obj, str):
+            return obj
+
+        if isinstance(obj, (np.datetime64, datetime.date)):
+            return repr(obj) # take repr for encoding / decoding
+
+        if isinstance(obj, dict): # type: ignore
+            ee = JSONTranslator.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            ee = JSONTranslator.encode_element
+            # all iterables must be lists for JSON encoding
+            return [ee(e) for e in obj]
+
+        return obj
+
+    @classmethod
+    def decode_element(cls, obj: tp.Any) -> tp.Any:
+        '''Given an object post JSON conversion, check all strings for strings that can be converted to python objects. Also, all lists are converted to tuples
+        '''
+        if obj is None:
+            return obj
+
+        if isinstance(obj, str):
+            # test regular expressions
+            for reanimate in cls.REANIMATEABLE:
+                post = reanimate.filter(obj)
+                if post is not obj:
+                    return post
+            return obj
+
+        if obj.__class__ is list: # post JSON, only ever be lists
+            de = cls.decode_element
+            # realize all things JSON gives as lists to tuples
+            return tuple(de(e) for e in obj)
+        if isinstance(obj, dict):
+            de = cls.decode_element
+            return {de(k): de(v) for k, v in obj.items()}
+
+        return obj
 
 #-------------------------------------------------------------------------------
 

@@ -223,6 +223,53 @@ class TestUnit(TestCase):
             (('z', 0), ('x', 0), ('w', None), ('y', 0))
             )
 
+    def test_frame_iter_tuple_i1(self) -> None:
+        from dataclasses import dataclass
+
+        records = (
+                (1,  False, True),
+                (30, True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        @dataclass
+        class Record:
+            p: int
+            q: bool
+            r: bool
+
+        post1 = list(f1.iter_tuple(axis=1, constructor=Record))
+        self.assertTrue(all(isinstance(x, Record) for x in post1))
+        self.assertEqual([x.p for x in post1], [1, 30])
+        self.assertEqual([x.r for x in post1], [True, False])
+
+    def test_frame_iter_tuple_i2(self) -> None:
+        from dataclasses import dataclass
+
+        records = (
+                (1,  False, True),
+                (30, True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        @dataclass
+        class Record:
+            p: int
+            q: bool
+            r: bool
+
+        ctor = lambda args: Record(**dict(zip(('p', 'q', 'r'), args)))
+        post1 = list(f1.iter_tuple(axis=1, constructor=ctor))
+        self.assertTrue(all(isinstance(x, Record) for x in post1))
+        self.assertEqual([x.p for x in post1], [1, 30])
+        self.assertEqual([x.r for x in post1], [True, False])
+
+
+
 
     #---------------------------------------------------------------------------
 

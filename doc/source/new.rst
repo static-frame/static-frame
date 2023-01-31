@@ -1,6 +1,20 @@
 What is New in StaticFrame
 ===============================
 
+1.2.0
+-----------
+
+Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
+
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+
+Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
+
+Corrected issue in ``Frame.relabel_shift_out()`` where ``index_constructors`` are not assigned to subset index.
+
+Extended ``Frame.iter_tuple()`` ``constructor`` argument to support ``dataclass``-created classes.
+
+
 1.1.1
 -----------
 

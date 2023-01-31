@@ -335,6 +335,7 @@ class Features:
         '__dict__',
         '__format__',
         '__getattribute__',
+        '__getstate__',
         '__hash__',
         '__init_sbclass__',
         '__lshift__',

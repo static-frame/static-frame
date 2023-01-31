@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import datetime
 import io
 import itertools as it
@@ -60,7 +61,6 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -9782,9 +9782,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
                 )
 
-    @skip_pylt37
     def test_frame_from_records_r(self) -> None:
-        import dataclasses
         @dataclasses.dataclass
         class Item:
             left: str
@@ -10402,6 +10400,24 @@ class TestUnit(TestCase):
             self.assertTrue(f1.equals(f2))
             self.assertIs(f2.__class__, FrameGO)
 
+    def test_frame_to_npz_l1(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(np.datetime64('2022-02-22'))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
+    def test_frame_to_npz_l2(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(datetime.date(2022, 2, 22))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
     def test_frame_to_npz_empty(self) -> None:
         f1 = Frame()
 
@@ -10414,6 +10430,7 @@ class TestUnit(TestCase):
         from datetime import date
         with temp_file('.npz') as fp:
             with self.assertRaises(ErrorNPYEncode):
+                # fails to being an object array
                 sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npz(fp)
             self.assertFalse(os.path.exists(fp))
 
@@ -14780,6 +14797,25 @@ class TestUnit(TestCase):
                   ('zZbu', 'ijkl'),
                   ('ztsv', 'ijkl'),
                   ('zUvW', 'ijkl'))))
+                )
+
+    def test_frame_relabel_shift_out_f(self) -> None:
+        msg = ('date,currency,price',
+                '2022-01-01,USD,2.48',
+                '2022-01-02,USD,2.52',
+                '2022-01-03,USD,2.49',
+                '2022-01-04,USD,2.51',
+                )
+        f1 = Frame.from_csv(
+            msg,
+            dtypes=["datetime64[D]", str, float],
+            index_depth=2,
+            index_constructors=[IndexDate, Index],
+        )
+        f2 = f1.relabel_shift_out(1)  # ErrorInitIndex
+
+        self.assertEqual(f2.to_pairs(),
+                (('__index1__', ((np.datetime64('2022-01-01'), 'USD'), (np.datetime64('2022-01-02'), 'USD'), (np.datetime64('2022-01-03'), 'USD'), (np.datetime64('2022-01-04'), 'USD'))), ('price', ((np.datetime64('2022-01-01'), 2.48), (np.datetime64('2022-01-02'), 2.52), (np.datetime64('2022-01-03'), 2.49), (np.datetime64('2022-01-04'), 2.51))))
                 )
 
     #---------------------------------------------------------------------------

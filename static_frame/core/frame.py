@@ -174,6 +174,7 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import is_dataclass
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isna_array
@@ -4381,13 +4382,13 @@ class Frame(ContainerOperand):
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            # index_opposite = self._columns
-            target_ctor = Index
+            # target_ctor = Index
+            target_ctors = self._index.index_types # Series
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            # index_opposite = self._index
-            target_ctor = self._COLUMNS_CONSTRUCTOR
+            # target_ctor = self._COLUMNS_CONSTRUCTOR
+            target_ctors = self._columns.index_types # Series
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
             raise AxisInvalid(f'invalid axis {axis}')
@@ -4403,13 +4404,17 @@ class Frame(ContainerOperand):
             if index_target._recache:
                 index_target._update_array_cache()
 
-            label_src = index_target.name if index_target._name_is_names() else index_target.names
+            label_src = (index_target.name if index_target._name_is_names()
+                    else index_target.names)
+
             if isinstance(depth_level, INT_TYPES):
                 new_labels = (label_src[depth_level],)
-                remain_labels = tuple(label for i, label in enumerate(label_src) if i != depth_level)
+                remain_labels = tuple(label for i, label
+                        in enumerate(label_src) if i != depth_level)
             else:
                 new_labels = (label_src[i] for i in depth_level)
-                remain_labels = tuple(label for i, label in enumerate(label_src) if i not in depth_level)
+                remain_labels = tuple(label for i, label
+                        in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks # type: ignore
             add_blocks = target_tb._slice_blocks(column_key=depth_level)
@@ -4423,13 +4428,16 @@ class Frame(ContainerOperand):
             if remain_columns == 0:
                 new_target = IndexAutoFactory
             elif remain_columns == 1:
+                target_ctor = target_ctors.drop.iloc[depth_level].iloc[0]
                 new_target = target_ctor( # type: ignore
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:
+                index_constructors = target_ctors.drop.iloc[depth_level].values
                 new_target = target_hctor._from_type_blocks( # type: ignore
                         remain_blocks,
-                        name=remain_labels
+                        name=remain_labels,
+                        index_constructors=index_constructors,
                         )
 
         if axis == 0: # select from index, remove from index
@@ -4453,7 +4461,8 @@ class Frame(ContainerOperand):
                 extend_labels = self._index.flat().__iter__() # type: ignore
             else:
                 extend_labels = self._index.__iter__()
-            index = Index.from_labels(chain(new_labels, extend_labels), # type: ignore
+            index = Index.from_labels(
+                    chain(new_labels, extend_labels), # type: ignore
                     name=self._index.name)
             columns = new_target # type: ignore
 
@@ -5521,18 +5530,26 @@ class Frame(ContainerOperand):
             else:
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
-            constructor = get_tuple_constructor(labels) # type: ignore
-        elif (isinstance(constructor, type) and
-                issubclass(constructor, tuple) and
-                hasattr(constructor, '_make')):
-            constructor = constructor._make # type: ignore
+            ctor = get_tuple_constructor(labels)
+        elif isinstance(constructor, type):
+            if (issubclass(constructor, tuple) and
+                    hasattr(constructor, '_make')):
+                # discover named tuples, use _make method for single-value calling
+                ctor = constructor._make # type: ignore
+            elif is_dataclass(constructor):
+                # this will fail if kw_only is true in python 3.10
+                ctor = lambda args: constructor(*args)
+            else: # assume it can take a single arguments
+                ctor = constructor
+        else:
+            ctor = constructor #type: ignore
 
         # NOTE: if all types are the same, it will be faster to use axis_values
         if axis == 1 and not self._blocks.unified_dtypes:
-            yield from self._blocks.iter_row_tuples(key=None, constructor=constructor)
+            yield from self._blocks.iter_row_tuples(key=None, constructor=ctor)
         else: # for columns, slicing arrays from blocks should be cheap
             for axis_values in self._blocks.axis_values(axis):
-                yield constructor(axis_values)
+                yield ctor(axis_values)
 
     def _axis_tuple_items(self, *,
             axis: int,
@@ -8507,7 +8524,7 @@ class Frame(ContainerOperand):
         '''
         d = ((k, dict(zip(self._columns, v)))
                 for k, v in self.iter_tuple_items(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
@@ -8518,7 +8535,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = ((k, dict(zip(self._index, v))) for k, v in self.iter_array_items(axis=0))
-        return json.dumps(JSONFilter.from_items(d), indent=indent)
+        return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_split(self, indent: tp.Optional[int] = None) -> str:
@@ -8528,9 +8545,9 @@ class Frame(ContainerOperand):
         Args:
             {indent}
         '''
-        d = dict(columns=JSONFilter.from_iterable(self._columns),
-                index=JSONFilter.from_iterable(self._index),
-                data=JSONFilter.from_iterable(self.iter_tuple(constructor=list, axis=1))
+        d = dict(columns=JSONFilter.encode_iterable(self._columns),
+                index=JSONFilter.encode_iterable(self._index),
+                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1))
                 )
         return json.dumps(d, indent=indent)
 
@@ -8544,7 +8561,7 @@ class Frame(ContainerOperand):
         '''
         d = (dict(zip(self._columns, v))
                 for v in self.iter_tuple(constructor=tuple, axis=1))
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
@@ -8555,7 +8572,7 @@ class Frame(ContainerOperand):
             {indent}
         '''
         d = self.iter_tuple(constructor=tuple, axis=1)
-        return json.dumps(JSONFilter.from_iterable(d), indent=indent)
+        return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited
