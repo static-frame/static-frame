@@ -4171,9 +4171,8 @@ class TypeBlocks(ContainerOperand):
         Yields:
             a hashable key that will match array that share the same data, or share slices from the same underlying data and have the same shape and strides.
         '''
-        for i in range(self._shape[1]):
-            b = self._extract_array_column(i)
-            yield array_signature(b)
+        yield from (array_signature(self._extract_array_column(i))
+                for i in range(self._shape[1]))
 
     @doc_inject()
     def equals(self,
