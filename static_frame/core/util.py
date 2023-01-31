@@ -1996,7 +1996,6 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     # or with NaN observations
     return post | np.not_equal(array, array)
 
-
 def arrays_equal(array: np.ndarray,
         other: np.ndarray,
         *,

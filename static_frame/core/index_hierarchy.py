@@ -996,11 +996,13 @@ class IndexHierarchy(IndexBase):
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
                 ]
+
             self._indexers = indices._indexers
             self._name = name if name is not NAME_DEFAULT else indices._name
-            self._blocks = indices._blocks
+            self._blocks = indices._blocks.copy()
             self._values = indices._values
             self._map = indices._map
+            self._recache = False
             return
 
         if not (indexers.__class__ is np.ndarray and not indexers.flags.writeable):
@@ -2369,7 +2371,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
         if other._recache:
-            self._update_array_cache()
+            other._update_array_cache()
 
         return self._blocks.equals(other._blocks, # type: ignore
                 compare_dtype=compare_dtype,
