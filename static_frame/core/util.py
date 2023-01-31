@@ -2005,6 +2005,9 @@ def arrays_equal(array: np.ndarray,
     '''
     Given two arrays, determine if they are equal; support skipping Na comparisons and handling dt64
     '''
+    if id(array) == id(other):
+        return True
+
     if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
         if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
             # do not permit True result between 2021 and 2021-01-01

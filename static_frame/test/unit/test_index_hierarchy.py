@@ -2022,6 +2022,7 @@ class TestUnit(TestCase):
         ihgo.append(labelF)
 
         expected = IndexHierarchy.from_labels(labelsA + [labelB] + labelsC + [labelD] + labelsE + [labelF])
+
         self.assertTrue(ihgo.equals(expected))
 
     def test_hierarchy_index_go_f(self) -> None:

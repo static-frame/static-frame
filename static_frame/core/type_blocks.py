@@ -4169,15 +4169,9 @@ class TypeBlocks(ContainerOperand):
         Yields:
             a hashable key that will only collide with the keys from shallow copies/views
         '''
-        yield from (id(b) for b in self._blocks)
-
-    def is_shallow_copy(self: "TypeBlocks", other: "TypeBlocks") -> bool:
-        '''Determine whether or not the underlying blocks are the same.'''
-
-        for key1, key2 in zip_longest(self.iter_block_ids(), other.iter_block_ids()):
-            if key1 != key2:
-                return False
-        return True
+        # NOTE: if blocks are full unconsolidated, this will return the object id of each held array; otherwise, the id will be based on a slice
+        yield from (id(self._extract_array_column(i))
+                for i in range(self._shape[1]))
 
     @doc_inject()
     def equals(self,
@@ -4211,13 +4205,12 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
-        if self.is_shallow_copy(other):
-            return True
+        # NOTE: cannot directly compare blocks as we cannot assume the same number of blocks means that the blocks are consolidated in the same way
 
         for i in range(self._shape[1]):
             if not arrays_equal(
-                    self._extract_array(column_key=i),
-                    other._extract_array(column_key=i),
+                    self._extract_array_column(i),
+                    other._extract_array_column(i),
                     skipna=skipna,
                     ):
                 return False

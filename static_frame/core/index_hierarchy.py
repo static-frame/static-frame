@@ -2341,7 +2341,6 @@ class IndexHierarchy(IndexBase):
             {compare_class}
             {skipna}
         '''
-        # NOTE: do not need to udpate array cache, as can compare elements in levels
         if id(other) == id(self):
             return True
 
@@ -2351,7 +2350,7 @@ class IndexHierarchy(IndexBase):
         if not isinstance(other, IndexHierarchy):
             return False
 
-        # same type from here
+        # same type, depth from here
         if self.shape != other.shape:
             return False
 
@@ -2366,19 +2365,16 @@ class IndexHierarchy(IndexBase):
                 if self_index.__class__ != other_index.__class__:
                     return False
 
-        if self._blocks.is_shallow_copy(other._blocks):
-            return True
+        if self._recache:
+            self._update_array_cache()
+        if other._recache:
+            self._update_array_cache()
 
-        # indices & indexers are encoded in values_at_depth
-        for i in range(self.depth):
-            if not arrays_equal(
-                    self.values_at_depth(i),
-                    other.values_at_depth(i),
-                    skipna=skipna,
-                    ):
-                return False
-
-        return True
+        return self._blocks.equals(other._blocks,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                )
 
     @doc_inject(selector='sort')
     def sort(self: IH,
