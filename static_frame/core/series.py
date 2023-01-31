@@ -1273,12 +1273,13 @@ class Series(ContainerOperand):
         count = isna.sum()
 
         if count == length: # all are NaN
-            return self.__class__((), name=self.name)
-        if count == 0: # None are nan
-            return self.__class__(self.values,
-                    index=self._index,
+            return self.__class__((),
                     name=self._name,
-                    own_index=True)
+                    index=self._index[[]],
+                    own_index=True,
+                    )
+        if count == 0: # None are nan
+            return self
 
         sel = np.logical_not(isna)
         values = self.values[sel]
