@@ -996,7 +996,7 @@ def rehierarch_from_type_blocks(*,
     indexers = np.empty((depth, len(indexer)), dtype=DTYPE_INT_DEFAULT)
     indexers[0] = indexer
 
-    for col_idx in range(depth):
+    for col_idx in range(1, depth):
         indexers[col_idx] = get_indexer_at_depth(col_idx)
 
     # Lexsort
