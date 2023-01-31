@@ -954,6 +954,7 @@ class IndexHierarchy(IndexBase):
                 array = index.values[indexer]
                 array.flags.writeable = False
                 yield array
+
         return TypeBlocks.from_blocks(gen_blocks())
 
     # --------------------------------------------------------------------------
@@ -1033,13 +1034,12 @@ class IndexHierarchy(IndexBase):
         # This MUST be set before entering this context
         assert self._pending_extensions is not None
 
-        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT)
-                for _ in range(self.depth)]
-
+        new_indexers = np.empty((self.depth, self.__len__()),
+                dtype=DTYPE_INT_DEFAULT)
         current_size = len(self._blocks)
 
         for depth, indexer in enumerate(self._indexers):
-            new_indexers[depth][:current_size] = indexer
+            new_indexers[depth, :current_size] = indexer
 
         self._indexers = EMPTY_ARRAY_INT # Remove reference to old indexers
 
@@ -1049,7 +1049,7 @@ class IndexHierarchy(IndexBase):
             if pending.__class__ is PendingRow: # type: ignore
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-                    new_indexers[depth][offset] = label_index
+                    new_indexers[depth, offset] = label_index
 
                 offset += 1
             else:
@@ -1063,13 +1063,14 @@ class IndexHierarchy(IndexBase):
                         pending._indexers[depth] # type: ignore
                     ]
 
-                    new_indexers[depth][offset:offset + group_size] = remapped_indexers_ordered
+                    new_indexers[depth, offset: offset + group_size] = remapped_indexers_ordered
 
                 offset += group_size
 
+        new_indexers.flags.writeable = False
+
         self._pending_extensions.clear()
-        self._indexers = np.array(new_indexers)
-        self._indexers.flags.writeable = False
+        self._indexers = new_indexers
         self._blocks = self._to_type_blocks()
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
@@ -2371,7 +2372,7 @@ class IndexHierarchy(IndexBase):
         if other._recache:
             self._update_array_cache()
 
-        return self._blocks.equals(other._blocks,
+        return self._blocks.equals(other._blocks, # type: ignore
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
                 skipna=skipna,
