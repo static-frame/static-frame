@@ -68,6 +68,8 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import array_signature
+from static_frame.core.util import ArraySignature
 
 #---------------------------------------------------------------------------
 
@@ -4164,14 +4166,14 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def iter_block_ids(self: "TypeBlocks") -> tp.Iterator[int]:
+    def iter_block_signatures(self) -> tp.Iterator[ArraySignature]:
         '''
         Yields:
-            a hashable key that will only collide with the keys from shallow copies/views
+            a hashable key that will match array that share the same data, or share slices from the same underlying data and have the same shape and strides.
         '''
-        # NOTE: if blocks are full unconsolidated, this will return the object id of each held array; otherwise, the id will be based on a slice
-        yield from (id(self._extract_array_column(i))
-                for i in range(self._shape[1]))
+        for i in range(self._shape[1]):
+            b = self._extract_array_column(i)
+            yield array_signature(b)
 
     @doc_inject()
     def equals(self,
