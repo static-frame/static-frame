@@ -39,6 +39,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -49,6 +50,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
@@ -68,8 +70,6 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import array_signature
-from static_frame.core.util import ArraySignature
 
 #---------------------------------------------------------------------------
 

@@ -25,8 +25,8 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
-from arraykit import resolve_dtype
 from arraykit import mloc
+from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import InvalidDatetime64Comparison
