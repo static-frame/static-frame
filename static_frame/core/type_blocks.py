@@ -39,6 +39,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -49,6 +50,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
@@ -4164,28 +4166,13 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def iter_block_signature(self: "TypeBlocks") -> tp.Iterator[tp.Hashable]:
+    def iter_block_signatures(self) -> tp.Iterator[ArraySignature]:
         '''
-        Calling id(...) on numpy arrays is not always reliable, so instead,
-        we will use the underlying array properties to determine the ID for this
-        index hierarchy, with the desire to encounter duplicate keys for shallow copies.
-
         Yields:
-            a hashable key that will only collide with the keys from shallow copies/views
+            a hashable key that will match array that share the same data, or share slices from the same underlying data and have the same shape and strides.
         '''
-        for block in self._blocks:
-            # You need all three of these to uniquely identify a numpy array
-            yield mloc(block), block.shape, block.strides
-
-
-    def is_shallow_copy(self: "TypeBlocks", other: "TypeBlocks") -> bool:
-        '''Determine whether or not the underlying blocks are the same.'''
-
-        for key1, key2 in zip_longest(self.iter_block_signature(), other.iter_block_signature()):
-            if key1 != key2:
-                return False
-
-        return True
+        yield from (array_signature(self._extract_array_column(i))
+                for i in range(self._shape[1]))
 
     @doc_inject()
     def equals(self,
@@ -4219,13 +4206,12 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
-        if self.is_shallow_copy(other):
-            return True
+        # NOTE: cannot directly compare blocks as we cannot assume the same number of blocks means that the blocks are consolidated in the same way
 
         for i in range(self._shape[1]):
             if not arrays_equal(
-                    self._extract_array(column_key=i),
-                    other._extract_array(column_key=i),
+                    self._extract_array_column(i),
+                    other._extract_array_column(i),
                     skipna=skipna,
                     ):
                 return False
