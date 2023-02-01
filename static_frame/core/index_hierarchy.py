@@ -74,7 +74,6 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_sample
-from static_frame.core.util import arrays_equal
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
@@ -951,7 +950,9 @@ class IndexHierarchy(IndexBase):
         '''
         def gen_blocks() -> tp.Iterator[np.ndarray]:
             for index, indexer in zip(self._indices, self._indexers):
-                yield index.values[indexer]
+                array = index.values[indexer]
+                array.flags.writeable = False
+                yield array
 
         return TypeBlocks.from_blocks(gen_blocks())
 
@@ -995,11 +996,13 @@ class IndexHierarchy(IndexBase):
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
                 ]
+
             self._indexers = indices._indexers
             self._name = name if name is not NAME_DEFAULT else indices._name
-            self._blocks = indices._blocks
+            self._blocks = indices._blocks.copy()
             self._values = indices._values
             self._map = indices._map
+            self._recache = False
             return
 
         if not (indexers.__class__ is np.ndarray and not indexers.flags.writeable):
@@ -1032,13 +1035,12 @@ class IndexHierarchy(IndexBase):
         # This MUST be set before entering this context
         assert self._pending_extensions is not None
 
-        new_indexers = [np.empty(self.__len__(), DTYPE_INT_DEFAULT)
-                for _ in range(self.depth)]
-
+        new_indexers = np.empty((self.depth, self.__len__()),
+                dtype=DTYPE_INT_DEFAULT)
         current_size = len(self._blocks)
 
         for depth, indexer in enumerate(self._indexers):
-            new_indexers[depth][:current_size] = indexer
+            new_indexers[depth, :current_size] = indexer
 
         self._indexers = EMPTY_ARRAY_INT # Remove reference to old indexers
 
@@ -1048,7 +1050,7 @@ class IndexHierarchy(IndexBase):
             if pending.__class__ is PendingRow: # type: ignore
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-                    new_indexers[depth][offset] = label_index
+                    new_indexers[depth, offset] = label_index
 
                 offset += 1
             else:
@@ -1062,13 +1064,14 @@ class IndexHierarchy(IndexBase):
                         pending._indexers[depth] # type: ignore
                     ]
 
-                    new_indexers[depth][offset:offset + group_size] = remapped_indexers_ordered
+                    new_indexers[depth, offset: offset + group_size] = remapped_indexers_ordered
 
                 offset += group_size
 
+        new_indexers.flags.writeable = False
+
         self._pending_extensions.clear()
-        self._indexers = np.array(new_indexers)
-        self._indexers.flags.writeable = False
+        self._indexers = new_indexers
         self._blocks = self._to_type_blocks()
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
@@ -2341,7 +2344,6 @@ class IndexHierarchy(IndexBase):
             {compare_class}
             {skipna}
         '''
-        # NOTE: do not need to udpate array cache, as can compare elements in levels
         if id(other) == id(self):
             return True
 
@@ -2351,7 +2353,7 @@ class IndexHierarchy(IndexBase):
         if not isinstance(other, IndexHierarchy):
             return False
 
-        # same type from here
+        # same type, depth from here
         if self.shape != other.shape:
             return False
 
@@ -2366,19 +2368,16 @@ class IndexHierarchy(IndexBase):
                 if self_index.__class__ != other_index.__class__:
                     return False
 
-        if self._blocks.is_shallow_copy(other._blocks):
-            return True
+        if self._recache:
+            self._update_array_cache()
+        if other._recache:
+            other._update_array_cache()
 
-        # indices & indexers are encoded in values_at_depth
-        for i in range(self.depth):
-            if not arrays_equal(
-                    self.values_at_depth(i),
-                    other.values_at_depth(i),
-                    skipna=skipna,
-                    ):
-                return False
-
-        return True
+        return self._blocks.equals(other._blocks, # type: ignore
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                )
 
     @doc_inject(selector='sort')
     def sort(self: IH,

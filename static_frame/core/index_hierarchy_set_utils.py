@@ -70,7 +70,7 @@ def _validate_and_process_indices(
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
 
-        signature = tuple(idx._blocks.iter_block_signature())
+        signature = tuple(idx._blocks.iter_block_signatures())
 
         if signature not in unique_signatures:
             unique_non_empty_indices.append(idx)

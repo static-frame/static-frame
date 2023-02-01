@@ -1474,7 +1474,7 @@ class TestUnit(TestCase):
         a = IndexDate([dt64('2021-01-01'), dt64('1954-01-01')])
         b = IndexYear([dt64('2021'), dt64('1954')])
 
-        self.assertFalse(arrays_equal(a, b, skipna=True))
+        self.assertFalse(arrays_equal(a.values, b.values, skipna=True))
 
     def test_index_equals_h(self) -> None:
         a = IndexGO([1, 2, 3])

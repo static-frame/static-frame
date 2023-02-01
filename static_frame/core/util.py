@@ -25,6 +25,7 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import mloc
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
@@ -266,6 +267,11 @@ CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Seri
 ShapeType = tp.Union[int, tp.Tuple[int, int]]
 OptionalArrayList = tp.Optional[tp.List[np.ndarray]]
 
+# mloc, shape, and strides
+ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
+
+def array_signature(value: np.ndarray) -> ArraySignature:
+    return mloc(value), value.shape, value.strides
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
@@ -1996,7 +2002,6 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     # or with NaN observations
     return post | np.not_equal(array, array)
 
-
 def arrays_equal(array: np.ndarray,
         other: np.ndarray,
         *,
@@ -2005,6 +2010,15 @@ def arrays_equal(array: np.ndarray,
     '''
     Given two arrays, determine if they are equal; support skipping Na comparisons and handling dt64
     '''
+    if id(array) == id(other):
+        return True
+
+    if (mloc(array) == mloc(other)
+            and array.shape == other.shape
+            and array.strides == other.strides):
+        # NOTE: this implements an ArraySignature check that will short-circuit. A columnar slice from a 2D array will always have a unique array id(); however, two slices from the same 2D array will have the same mloc, shape, and strides; we can identify those cases here
+        return True
+
     if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
         if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
             # do not permit True result between 2021 and 2021-01-01

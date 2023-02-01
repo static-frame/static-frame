@@ -2022,6 +2022,7 @@ class TestUnit(TestCase):
         ihgo.append(labelF)
 
         expected = IndexHierarchy.from_labels(labelsA + [labelB] + labelsC + [labelD] + labelsE + [labelF])
+
         self.assertTrue(ihgo.equals(expected))
 
     def test_hierarchy_index_go_f(self) -> None:
@@ -3860,6 +3861,12 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, np.dtype(int))
         self.assertEqual(ih1.values_at_depth(2).dtype, np.dtype('<U7'))
 
+    def test_hierarchy_values_at_depth_b(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'),)
+        ih1.append((3, 'c'))
+        post = ih1.values_at_depth(1)
+        self.assertEqual(post.tolist(), ['a', 'b', 'a', 'b', 'c'])
+
     def test_hierarchy_index_at_depth_a(self) -> None:
         ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
         ih1.append((1, 300, '2020-01'))
@@ -4102,6 +4109,14 @@ class TestUnit(TestCase):
 
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
+
+    def test_hierarchy_equals_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'))
+        ih2 = ih1.copy()
+        self.assertTrue(ih1.equals(ih2))
+        ih1.append((3, 'c'))
+        ih2.append((3, 'c'))
+        self.assertTrue(ih1.equals(ih2))
 
     #---------------------------------------------------------------------------
     def test_hierarchy_fillna_a(self) -> None:
