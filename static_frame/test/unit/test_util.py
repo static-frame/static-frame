@@ -3021,6 +3021,18 @@ class TestUnit(TestCase):
         self.assertEqual(v.tolist(), [5, 3, 5, 8])
         self.assertEqual(w.tolist(), [2, 2, 2, 2])
 
+    def test_run_length_1d_h(self) -> None:
+        v, w = run_length_1d(np.array([]))
+        self.assertEqual(v.tolist(), [])
+        self.assertEqual(w.tolist(), [])
+
+    def test_run_length_1d_i(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [4])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
