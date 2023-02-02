@@ -85,6 +85,7 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
+from static_frame.core.util import run_length_1d
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
@@ -2984,6 +2985,41 @@ class TestUnit(TestCase):
         with self.assertRaises(IndexError):
             _ = fg[3]
 
+    #---------------------------------------------------------------------------
+    def test_run_length_1d_a(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 3, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 1])
+        self.assertEqual(w.tolist(), [3, 2, 1])
+
+    def test_run_length_1d_b(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 3, 3]))
+        self.assertEqual(v.tolist(), [5, 3])
+        self.assertEqual(w.tolist(), [3, 2])
+
+    def test_run_length_1d_c(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [3])
+
+    def test_run_length_1d_d(self) -> None:
+        v, w = run_length_1d(np.array([5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [1])
+
+    def test_run_length_1d_e(self) -> None:
+        v, w = run_length_1d(np.array([5, 3, 5, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 5, 3, 1])
+        self.assertEqual(w.tolist(), [1, 1, 1, 1, 1])
+
+    def test_run_length_1d_f(self) -> None:
+        v, w = run_length_1d(np.array([5, 3, 3, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 1])
+        self.assertEqual(w.tolist(), [1, 3, 1])
+
+    def test_run_length_1d_g(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 3, 3, 5, 5, 8, 8]))
+        self.assertEqual(v.tolist(), [5, 3, 5, 8])
+        self.assertEqual(w.tolist(), [2, 2, 2, 2])
 
 
 if __name__ == '__main__':

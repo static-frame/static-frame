@@ -3194,6 +3194,41 @@ def array_sample(
     post.flags.writeable = False
     return post
 
+
+def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''Given an array of values, discover contiguous values and their length.
+
+    Return:
+        np.ndarray: a value per contiguous width
+        np.ndarray: a width per contiguous value
+    '''
+    assert array.ndim == 1
+
+    size = len(array)
+    if size == 0:
+        return EMPTY_ARRAY, EMPTY_ARRAY_INT
+    if size == 1:
+        return array[:1], np.array((size,), dtype=DTYPE_INT_DEFAULT)
+
+    # this provides one True for the start of each region, including the first
+    transitions = np.full(size, True, dtype=DTYPE_BOOL)
+    transitions[1:] = (array != np.roll(array, 1))[1:]
+
+    if not np.any(transitions):
+        return array[:1], np.array((size,), dtype=DTYPE_INT_DEFAULT)
+
+    # get the index at the the transition for each width
+    idx = PositionsAllocator.get(size)[transitions]
+
+    #  e can use the difference in positions to get widths; we need the width from the last transition to the full length in the last position
+    widths = np.full(len(idx), size - idx[-1])
+    widths[:-1] = (idx - np.roll(idx, 1))[1:]
+
+    return array[transitions], widths
+
+
+
+
 #-------------------------------------------------------------------------------
 # json utils
 

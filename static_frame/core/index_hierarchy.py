@@ -83,11 +83,12 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import run_length_1d
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1559,21 +1560,9 @@ class IndexHierarchy(IndexBase):
         indexer = self._indexers[pos]
         index = self._indices[pos]
 
-        size = len(indexer)
-        # this provides one True for the start of each region, including the first
-        transitions = np.full(size, True, dtype=DTYPE_BOOL)
-        transitions[1:] = (indexer != np.roll(indexer, 1))[1:]
+        ilocs, widths = run_length_1d(indexer)
 
-        # get the index at the the transition
-        idx = PositionsAllocator.get(size)[transitions]
-
-        #  we can use the difference in positions to get widths; then we need the width from the last transition to the full length
-
-        counts = chain((idx - np.roll(idx, 1))[1:], (size - idx[-1],))
-
-        values = (index[v] for v in indexer[transitions])
-
-        yield from zip(values, counts)
+        yield from zip(map(index._extract_iloc_by_int, ilocs), widths)
 
 
 
