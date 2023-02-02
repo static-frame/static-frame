@@ -3218,7 +3218,7 @@ def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     # get the index at the the transition for each width
     idx = PositionsAllocator.get(size)[transitions]
 
-    #  e can use the difference in positions to get widths; we need the width from the last transition to the full length in the last position
+    # use the difference in positions to get widths; we need the width from the last transition to the full length in the last position
     widths = np.empty(len(idx), dtype=DTYPE_INT_DEFAULT)
     widths[-1] = size - idx[-1]
     widths[:-1] = (idx - np.roll(idx, 1))[1:]
