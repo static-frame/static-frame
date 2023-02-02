@@ -82,13 +82,12 @@ from static_frame.core.util import isin
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import run_length_1d
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import run_length_1d
-
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover

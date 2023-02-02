@@ -66,6 +66,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
+from static_frame.core.util import run_length_1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import slice_to_ascending_slice
@@ -85,7 +86,6 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
-from static_frame.core.util import run_length_1d
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
