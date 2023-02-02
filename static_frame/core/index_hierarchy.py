@@ -1528,18 +1528,7 @@ class IndexHierarchy(IndexBase):
 
         return self._indexers[depth_level]
 
-    # Could this be memoized?
-    @staticmethod
-    def _extract_counts(
-            arr: np.ndarray,
-            indices: tp.List[Index],
-            pos: int,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-        unique, widths = ufunc_unique1d_counts(arr)
-        labels = indices[pos].values[unique]
-        yield from zip(labels, widths)
 
-    # NOTE: This is much slower than old impl. Not sure how to optimize.
     @doc_inject()
     def label_widths_at_depth(self: IH,
             depth_level: DepthLevelSpecifier = 0
@@ -1547,13 +1536,12 @@ class IndexHierarchy(IndexBase):
         '''
         {}
         '''
-        pos: tp.Optional[int] = None
-
         if depth_level is None:
             raise NotImplementedError('depth_level of None is not supported')
 
         validate_depth_selection(depth_level)
 
+        pos: tp.Optional[int] = None
         if not isinstance(depth_level, INT_TYPES):
             sel = list(depth_level)
             if len(sel) == 1:
@@ -1564,33 +1552,30 @@ class IndexHierarchy(IndexBase):
         if pos is None:
             raise NotImplementedError(
                 'selecting multiple depth levels is not yet implemented'
-            )
+                )
 
         if self._recache:
             self._update_array_cache()
+        indexer = self._indexers[pos]
+        index = self._indices[pos]
 
-        # i.e. depth_level is an int
-        if pos == 0:
-            arr = self._indexers[pos]
-            yield from self._extract_counts(arr, self._indices, pos)
-            return
+        size = len(indexer)
+        # this provides one True for the start of each region, including the first
+        transitions = np.full(size, True, dtype=DTYPE_BOOL)
+        transitions[1:] = (indexer != np.roll(indexer, 1))[1:]
 
-        def gen()-> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            # We need to build up masks for each depth level. This requires the combination of
-            # all depths above it. We do not care about order since we are only determining
-            # counts. As such, we simply walk from 1 -> len(level) for each outer level
-            ranges = tuple(map(range, map(len, self._indices[:pos])))
+        # get the index at the the transition
+        idx = PositionsAllocator.get(size)[transitions]
 
-            for outer_level_idxs in itertools.product(*ranges):
-                screen = np.full(self.__len__(), True, dtype=DTYPE_BOOL)
+        #  we can use the difference in positions to get widths; then we need the width from the last transition to the full length
 
-                for i, outer_level_idx in enumerate(outer_level_idxs):
-                    screen &= self._indexers[i] == outer_level_idx
+        counts = chain((idx - np.roll(idx, 1))[1:], (size - idx[-1],))
 
-                occurrences: np.ndarray = self._indexers[pos][screen]
-                yield from self._extract_counts(occurrences, self._indices, pos)
+        values = (index[v] for v in indexer[transitions])
 
-        yield from gen()
+        yield from zip(values, counts)
+
+
 
     @property
     def index_types(self: IH) -> 'Series':

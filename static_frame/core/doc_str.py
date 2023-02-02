@@ -97,7 +97,7 @@ class DOC_TEMPLATE:
     '''
 
     label_widths_at_depth = '''
-    A generator of pairs, where each pair is the label and the count of that label found at the depth specified by  ``depth_level``.
+    A generator of pairs, where each pair is the label and the contiguous count of that label found at the depth specified by  ``depth_level``.
 
     Args:
         depth_level: a depth level, starting from zero.

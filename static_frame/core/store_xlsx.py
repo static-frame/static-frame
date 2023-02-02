@@ -507,6 +507,7 @@ class StoreXLSX(Store):
                         name=index_name,
                         continuation_token=None, # NOTE: needed
                         )
+
             index, own_index = index_from_optional_constructors(
                     index_values,
                     depth=index_depth,

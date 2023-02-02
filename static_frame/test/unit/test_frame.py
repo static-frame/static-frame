@@ -7802,6 +7802,19 @@ class TestUnit(TestCase):
             self.assertEqual(f3.to_pairs(0),
                     (('a', (('x', ''), ('y', ''))), ('b', (('x', ''), ('y', '')))))
 
+    def test_frame_to_xlsx_g(self) -> None:
+        f1 = sf.Frame.from_dict(
+                dict(a=[8,8,1,3,3,2,2], b=list('ababacd'), c=[0,1,2,3,4,5,6])
+                ).set_index_hierarchy(['a', 'b'])
+
+        lwd = tuple(f1.index.label_widths_at_depth(0))
+        self.assertEqual(lwd, ((8, 2), (1, 1), (3, 2), (2, 2)))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = sf.Frame.from_xlsx(fp, index_depth=2)
+            self.assertTrue(f1.index.equals(f2.index))
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_xlsx_a(self) -> None:

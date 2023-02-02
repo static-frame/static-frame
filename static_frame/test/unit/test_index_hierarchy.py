@@ -3721,17 +3721,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(1)),
                 ((np.datetime64('2019-01-05'), 2),
-                 (np.datetime64('2019-01-06'), 2),
-                 (np.datetime64('2019-01-07'), 2),
-                 (np.datetime64('2019-01-08'), 2),
-                 (np.datetime64('2019-01-05'), 3),
-                 (np.datetime64('2019-01-06'), 2),
-                 (np.datetime64('2019-01-07'), 2),
-                 (np.datetime64('2019-01-08'), 2))
-                )
+                (np.datetime64('2019-01-06'), 2),
+                (np.datetime64('2019-01-07'), 2),
+                (np.datetime64('2019-01-08'), 2),
+                (np.datetime64('2019-01-05'), 2),
+                (np.datetime64('2019-01-06'), 2),
+                (np.datetime64('2019-01-07'), 2),
+                (np.datetime64('2019-01-08'), 2),
+                (np.datetime64('2019-01-05'), 1),
+                ))
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)),
-                ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (3, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1))
+                ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (3, 1))
                 )
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)), tuple(hidx.label_widths_at_depth([2])))
@@ -4370,33 +4371,6 @@ class TestUnit(TestCase):
             [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
         ])
         self.assertTrue(np.array_equal(actual, expected))
-
-    #---------------------------------------------------------------------------
-
-    def test_extract_counts_a(self) -> None:
-        indices = [
-                Index(range(5)),
-                Index(tuple("ABCDE")),
-                Index([True, False]),
-                ]
-
-        post1 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=0)
-        self.assertEqual(tuple(post1), ((0, 3), ))
-
-        post2 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=1)
-        self.assertEqual(tuple(post2), (('A', 3),))
-
-        post3 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=2)
-        self.assertEqual(tuple(post3), ((True, 3),))
-
-        post4 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=0)
-        self.assertEqual(tuple(post4), ((0, 2), (1, 1)))
-
-        post5 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=1)
-        self.assertEqual(tuple(post5), (('A', 2), ('B', 1)))
-
-        post6 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=2)
-        self.assertEqual(tuple(post6), ((True, 2), (False, 1)))
 
     #---------------------------------------------------------------------------
 
