@@ -4,7 +4,7 @@ What is New in StaticFrame
 1.2.2
 -----------
 
-Corrected issue in ``IndexHierarchy.label_widths_at_depth()`` which caused incorrect cell mergin in XLSX output when ``merge_hierarchical_labels`` is True.
+Corrected issue in ``IndexHierarchy.label_widths_at_depth()`` which caused incorrect cell merging in XLSX output when ``merge_hierarchical_labels`` is True.
 
 
 1.2.1
