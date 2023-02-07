@@ -26,6 +26,7 @@ from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
+from static_frame.core.exception import ErrorNotTruthy
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -145,9 +146,9 @@ class ContainerBase(metaclass=InterfaceMeta):
     #---------------------------------------------------------------------------
     def __bool__(self) -> bool:
         '''
-        Raises ValueError to prohibit ambiguous use of truethy evaluation.
+        Raises ValueError to prohibit ambiguous use of truthy evaluation.
         '''
-        raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+        raise ErrorNotTruthy()
 
     def __lt__(self, other: tp.Any) -> tp.Any:
         return NotImplemented #pragma: no cover

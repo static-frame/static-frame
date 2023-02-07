@@ -961,6 +961,12 @@ class TestUnit(TestCase):
         self.assertEqual(s2.index.__class__, IndexDate)
         self.assertEqual(s2.shape, (0,))
 
+    def test_series_dropna_e(self) -> None:
+        f = ff.parse('s(2,2)')
+        s1 = Series((f, np.nan), index=('a', 'b'))
+        s2 = s1.dropna()
+        self.assertEqual(s2.index.values.tolist(), ['a'])
+        self.assertTrue(s2['a'].equals(f))
 
     #---------------------------------------------------------------------------
 

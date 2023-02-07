@@ -27,11 +27,14 @@ import numpy as np
 from arraykit import column_2d_filter
 from arraykit import mloc
 from arraykit import resolve_dtype
+from arraykit import isna_element
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import ErrorNotTruthy
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -1966,9 +1969,30 @@ def isna_array(array: np.ndarray,
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
     # only check for None if we have an object type
     # NOTE: this will not work for Frames contained within a Series
+    if kind != DTYPE_OBJECT_KIND:
+        if include_none:
+            return np.not_equal(array, array) | np.equal(array, None)
+        return np.not_equal(array, array)
+
+    isna: tp.Optional[np.ndarra] = None
+    try:
+        isna = np.not_equal(array, array)
+    except ErrorNotTruthy:
+        pass
+
+    if isna is not None:
+        if include_none:
+            return isna | np.equal(array, None)
+        return isna
+
+    # no other option than to do elementwise comparison
     if include_none:
-        return np.not_equal(array, array) | np.equal(array, None)
-    return np.not_equal(array, array)
+        gen = (isna_element(e) for e in array)
+    else: # TEMP pemnding arraykit update
+        gen = (isna_element(e) and e is not None in array)
+
+    return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))
+
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
     '''
