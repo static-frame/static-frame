@@ -1980,7 +1980,6 @@ def isna_array(array: np.ndarray,
     if include_none:
         gen = (isna_element(e) for e in array)
     else: # TEMP pemnding arraykit update
-        import ipdb; ipdb.set_trace()
         gen = (isna_element(e) and e is not None for e in array)
 
     return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))

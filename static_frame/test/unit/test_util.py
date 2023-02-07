@@ -13,6 +13,7 @@ from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
+import frame_fixtures as ff
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.util import DT64_DAY
@@ -261,7 +262,15 @@ class TestUnit(TestCase):
 
     def test_isna_array_c(self) -> None:
 
-        a1 = np.array([1, None, np.nan, np.array(())], dtype=object)
+        a1 = np.array([1, None, np.nan, np.array((3,))], dtype=object)
+
+        self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
+
+        self.assertEqual(isna_array(a1, include_none=False).tolist(), [False, False, True, False])
+
+    def test_isna_array_d(self) -> None:
+        f = ff.parse('s(2,2)')
+        a1 = np.array([1, None, np.nan, f], dtype=object)
 
         self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
 
