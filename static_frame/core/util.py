@@ -25,16 +25,15 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
-from arraykit import isna_element
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
+from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
-from static_frame.core.exception import ErrorNotTruthy
-
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
