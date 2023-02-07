@@ -1964,16 +1964,11 @@ def isna_array(array: np.ndarray,
     elif kind in DTYPE_NAT_KINDS:
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
-    elif kind != 'O':
+    elif kind != DTYPE_OBJECT_KIND:
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
-    # only check for None if we have an object type
-    # NOTE: this will not work for Frames contained within a Series
-    if kind != DTYPE_OBJECT_KIND:
-        if include_none:
-            return np.not_equal(array, array) | np.equal(array, None)
-        return np.not_equal(array, array)
 
-    isna: tp.Optional[np.ndarra] = None
+    # only check for None if we have an object type
+    isna: tp.Optional[np.ndarray] = None
     try:
         isna = np.not_equal(array, array)
     except ErrorNotTruthy:
@@ -1988,7 +1983,7 @@ def isna_array(array: np.ndarray,
     if include_none:
         gen = (isna_element(e) for e in array)
     else: # TEMP pemnding arraykit update
-        gen = (isna_element(e) and e is not None in array)
+        gen = (isna_element(e) and e is not None for e in array)
 
     return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))
 
