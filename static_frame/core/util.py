@@ -1968,21 +1968,19 @@ def isna_array(array: np.ndarray,
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     # only check for None if we have an object type
-    isna: tp.Optional[np.ndarray] = None
-    try:
-        isna = np.not_equal(array, array)
-    except ErrorNotTruthy:
-        pass
-
-    if isna is not None:
-        if include_none:
-            return isna | np.equal(array, None)
-        return isna
+    with WarningsSilent():
+        try:
+            if include_none:
+                return np.not_equal(array, array) | np.equal(array, None)
+            return np.not_equal(array, array)
+        except ErrorNotTruthy:
+            pass
 
     # no other option than to do elementwise comparison
     if include_none:
         gen = (isna_element(e) for e in array)
     else: # TEMP pemnding arraykit update
+        import ipdb; ipdb.set_trace()
         gen = (isna_element(e) and e is not None for e in array)
 
     return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))
