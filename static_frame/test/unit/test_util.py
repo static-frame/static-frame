@@ -8,12 +8,12 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 
+import frame_fixtures as ff
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
-import frame_fixtures as ff
 
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.util import DT64_DAY
