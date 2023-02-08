@@ -1976,9 +1976,12 @@ def isna_array(array: np.ndarray,
         except ErrorNotTruthy:
             pass
 
-    # no other option than to do elementwise comparison
-    gen = (isna_element(e, include_none) for e in array)
-    return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))
+    # no other option than to do elementwise evaluation
+    return np.fromiter(
+            (isna_element(e, include_none) for e in array), # type: ignore
+            dtype=DTYPE_BOOL,
+            count=len(array),
+            )
 
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
