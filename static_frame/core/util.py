@@ -1977,11 +1977,7 @@ def isna_array(array: np.ndarray,
             pass
 
     # no other option than to do elementwise comparison
-    if include_none:
-        gen = (isna_element(e) for e in array)
-    else: # TEMP pemnding arraykit update
-        gen = (isna_element(e) and e is not None for e in array)
-
+    gen = (isna_element(e, include_none) for e in array)
     return np.fromiter(gen, dtype=DTYPE_BOOL, count=len(array))
 
 

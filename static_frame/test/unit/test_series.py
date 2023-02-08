@@ -968,6 +968,14 @@ class TestUnit(TestCase):
         self.assertEqual(s2.index.values.tolist(), ['a'])
         self.assertTrue(s2['a'].equals(f))
 
+
+    def test_series_dropna_f(self) -> None:
+        import pandas as pd
+        s1 = Series((pd.Timestamp('nat'), np.nan), index=('a', 'b'))
+        s2 = s1.dropna()
+        self.assertEqual(s2.index.values.tolist(), [])
+
+
     #---------------------------------------------------------------------------
 
     def test_series_fillna_a(self) -> None:
