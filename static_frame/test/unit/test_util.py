@@ -8,6 +8,7 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 
+import frame_fixtures as ff
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype
@@ -258,6 +259,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(isna_array(a6).tolist(),
                 [[False, False, True], [False, False, True]])
+
+    def test_isna_array_c(self) -> None:
+
+        a1 = np.array([1, None, np.nan, np.array((3,))], dtype=object)
+
+        self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
+
+        self.assertEqual(isna_array(a1, include_none=False).tolist(), [False, False, True, False])
+
+    def test_isna_array_d(self) -> None:
+        f = ff.parse('s(2,2)')
+        a1 = np.array([1, None, np.nan, f], dtype=object)
+
+        self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
+
+        self.assertEqual(isna_array(a1, include_none=False).tolist(), [False, False, True, False])
+
 
     def test_array_to_duplicated_a(self) -> None:
         a = array_to_duplicated(

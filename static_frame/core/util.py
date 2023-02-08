@@ -25,10 +25,12 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
+from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
@@ -1962,13 +1964,25 @@ def isna_array(array: np.ndarray,
     elif kind in DTYPE_NAT_KINDS:
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
-    elif kind != 'O':
+    elif kind != DTYPE_OBJECT_KIND:
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
+
     # only check for None if we have an object type
-    # NOTE: this will not work for Frames contained within a Series
-    if include_none:
-        return np.not_equal(array, array) | np.equal(array, None)
-    return np.not_equal(array, array)
+    with WarningsSilent():
+        try:
+            if include_none:
+                return np.not_equal(array, array) | np.equal(array, None)
+            return np.not_equal(array, array)
+        except ErrorNotTruthy:
+            pass
+
+    # no other option than to do elementwise evaluation
+    return np.fromiter(
+            (isna_element(e, include_none) for e in array), # type: ignore
+            dtype=DTYPE_BOOL,
+            count=len(array),
+            )
+
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
     '''
