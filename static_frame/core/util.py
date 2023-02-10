@@ -1978,7 +1978,7 @@ def isna_array(array: np.ndarray,
 
     # no other option than to do elementwise evaluation
     return np.fromiter(
-            (isna_element(e, include_none) for e in array), # type: ignore
+            (isna_element(e, include_none) for e in array),
             dtype=DTYPE_BOOL,
             count=len(array),
             )
