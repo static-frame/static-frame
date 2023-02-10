@@ -422,8 +422,8 @@ class Frame(ContainerOperand):
             union: bool = True,
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
-            columns_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             name: NameType = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
@@ -457,7 +457,7 @@ class Frame(ContainerOperand):
                 # hstack, Series will be col, if columns provided, do not evaluate name as columns
                 columns_to_frame = (IndexAutoFactory if
                         (axis == 1 and columns is not None) else None)
-                import ipdb; ipdb.set_trace()
+                # import ipdb; ipdb.set_trace()
                 frame_seq.append(
                         f.to_frame(axis,
                         index = index_to_frame,
