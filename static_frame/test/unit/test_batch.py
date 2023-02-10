@@ -611,7 +611,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(20,2)|v(bool)|i(ID,dtD)')
         f2 = Batch(f1.iter_window_items(size=8)).std().to_frame(index_constructor=IndexDate)
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
