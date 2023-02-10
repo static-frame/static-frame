@@ -1,4 +1,6 @@
 from itertools import product
+import pickle
+import typing as tp
 
 import numpy as np
 
@@ -11,6 +13,8 @@ from static_frame.core.store_config import StoreConfigHE
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.test.test_case import TestCase
 
+class MockStore(Store):
+    _EXT = frozenset({".tst"})
 
 class TestUnit(TestCase):
 
@@ -332,6 +336,19 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap.from_initializer(maps)
         self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
+
+    #---------------------------------------------------------------------------
+
+    def test_store_pickle_excludes_weak_cache(self) -> None:
+        s = MockStore('/test.tst')
+
+        s._weak_cache["abc"] = Frame()
+
+        s_pickle = pickle.dumps(s)
+        s_unpickled = pickle.loads(s_pickle)
+
+        assert "abc" not in s_unpickled._weak_cache
+        assert not s_unpickled._weak_cache
 
 
 if __name__ == '__main__':

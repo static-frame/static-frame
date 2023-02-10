@@ -85,6 +85,8 @@ class Store:
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
 
     def __getstate__(self) -> tp.Tuple[None, tp.Dict[str, tp.Any]]:
+        # https://docs.python.org/3/library/pickle.html#object.__getstate__
+        # staying consistent with __slots__ only objects by using None as first value in tuple
         return (
             None,
             {
@@ -94,7 +96,7 @@ class Store:
             }
         )
 
-    def __setstate__(self, state: tp.Any) -> None:
+    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         for key, value in state[1].items():
             setattr(self, key, value)
         self._weak_cache = WeakValueDictionary()
