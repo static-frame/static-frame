@@ -340,15 +340,14 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_store_pickle_excludes_weak_cache(self) -> None:
-        s = MockStore('/test.tst')
+        s1 = MockStore('/test.tst')
 
-        s._weak_cache["abc"] = Frame()
+        s1._weak_cache["abc"] = Frame()
 
-        s_pickle = pickle.dumps(s)
-        s_unpickled = pickle.loads(s_pickle)
+        s2 = pickle.loads(pickle.dumps(s1))
 
-        assert "abc" not in s_unpickled._weak_cache
-        assert not s_unpickled._weak_cache
+        assert "abc" not in s2._weak_cache
+        assert not s2._weak_cache
 
 
 if __name__ == '__main__':
