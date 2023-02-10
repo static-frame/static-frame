@@ -445,6 +445,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+
         frame_seq: tp.List[Frame] = []
         for f in frames:
             if isinstance(f, Frame):
@@ -456,6 +457,7 @@ class Frame(ContainerOperand):
                 # hstack, Series will be col, if columns provided, do not evaluate name as columns
                 columns_to_frame = (IndexAutoFactory if
                         (axis == 1 and columns is not None) else None)
+                import ipdb; ipdb.set_trace()
                 frame_seq.append(
                         f.to_frame(axis,
                         index = index_to_frame,
