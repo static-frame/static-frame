@@ -1,6 +1,5 @@
 from itertools import product
 import pickle
-import typing as tp
 
 import numpy as np
 
