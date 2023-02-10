@@ -111,6 +111,10 @@ class ErrorNPYDecode(ValueError):
     Error decoding an NPY file.
     '''
 
+class ErrorNotTruthy(ValueError):
+    def __init__(self) -> None:
+        super().__init__('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+
 #-------------------------------------------------------------------------------
 
 def deprecated(message: str = '') -> None:

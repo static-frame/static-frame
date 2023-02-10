@@ -8,6 +8,7 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 
+import frame_fixtures as ff
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype
@@ -22,6 +23,7 @@ from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import JSONFilter
+from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import _array_to_duplicated_sortable
@@ -62,10 +64,10 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import list_to_tuple
 from static_frame.core.util import prepare_iter_for_array
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
+from static_frame.core.util import run_length_1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import slice_to_ascending_slice
@@ -257,6 +259,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(isna_array(a6).tolist(),
                 [[False, False, True], [False, False, True]])
+
+    def test_isna_array_c(self) -> None:
+
+        a1 = np.array([1, None, np.nan, np.array((3,))], dtype=object)
+
+        self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
+
+        self.assertEqual(isna_array(a1, include_none=False).tolist(), [False, False, True, False])
+
+    def test_isna_array_d(self) -> None:
+        f = ff.parse('s(2,2)')
+        a1 = np.array([1, None, np.nan, f], dtype=object)
+
+        self.assertEqual(isna_array(a1).tolist(), [False, True, True, False])
+
+        self.assertEqual(isna_array(a1, include_none=False).tolist(), [False, False, True, False])
+
 
     def test_array_to_duplicated_a(self) -> None:
         a = array_to_duplicated(
@@ -2704,19 +2723,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_list_to_tuple_a(self) -> None:
-        self.assertEqual(list_to_tuple(
-                [3, 4, [None, (10, 20), 'foo']]),
-                (3, 4, (None, (10, 20), 'foo'))
-                )
-
-        self.assertEqual(list_to_tuple(
-                [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
-                (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
-                )
-
-    #---------------------------------------------------------------------------
-
     def test_ufunc_unique1d_positions_a(self) -> None:
         pos, indexer = ufunc_unique1d_positions(np.array([3, 2, 3, 2, 5, 3]))
         self.assertEqual(pos.tolist(), [1, 0, 4])
@@ -2909,27 +2915,64 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_json_encoder_numpy_a(self) -> None:
-        post1 = json.dumps(JSONFilter.from_element(dict(a=1, b=2)))
+        post1 = json.dumps(JSONFilter.encode_element(dict(a=1, b=2)))
         self.assertEqual(post1, '{"a": 1, "b": 2}')
 
-        post2 = json.dumps(JSONFilter.from_element(dict(a=np.arange(3))))
+        post2 = json.dumps(JSONFilter.encode_element(dict(a=np.arange(3))))
         self.assertEqual(post2, '{"a": [0, 1, 2]}')
 
-        post3 = json.dumps(JSONFilter.from_element(dict(a=datetime.date(2022,1,5))))
+        post3 = json.dumps(JSONFilter.encode_element(dict(a=datetime.date(2022,1,5))))
         self.assertEqual(post3, '{"a": "2022-01-05"}')
 
-        post4 = json.dumps(JSONFilter.from_element(dict(a=np.datetime64('2022-01-05'))))
+        post4 = json.dumps(JSONFilter.encode_element(dict(a=np.datetime64('2022-01-05'))))
         self.assertEqual(post4, '{"a": "2022-01-05"}')
 
-        post4 = json.dumps(JSONFilter.from_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
+        post4 = json.dumps(JSONFilter.encode_element(dict(a=np.array(('2022-01-05', '2022-05-01'), dtype=np.datetime64))))
         self.assertEqual(post4, '{"a": ["2022-01-05", "2022-05-01"]}')
 
     def test_json_encoder_numpy_b(self) -> None:
-        post1 = json.dumps(JSONFilter.from_element(dict(a=np.array((complex(1.2), complex(3.5))))))
+        post1 = json.dumps(JSONFilter.encode_element(dict(a=np.array((complex(1.2), complex(3.5))))))
         self.assertEqual(post1, '{"a": ["(1.2+0j)", "(3.5+0j)"]}')
 
-        post2 = json.dumps(JSONFilter.from_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
+        post2 = json.dumps(JSONFilter.encode_element(np.array((complex(1.2), complex(3.5))).reshape(2,1)))
         self.assertEqual(post2, '[["(1.2+0j)"], ["(3.5+0j)"]]')
+
+    def test_json_encoder_numpy_c(self) -> None:
+        x = object()
+        with self.assertRaises(TypeError):
+            _ = json.dumps(JSONFilter.encode_element(dict(a=x)))
+
+
+    def test_json_translator_a(self) -> None:
+        src = dict(a=np.datetime64("2022-01-01"), b=np.datetime64("1542-06-27"))
+        post1 = json.dumps(JSONTranslator.encode_element(src))
+
+        post2 = JSONTranslator.decode_element(json.loads(post1))
+
+        self.assertEqual(list(post2.items()),
+            [('a', np.datetime64('2022-01-01')),
+            ('b', np.datetime64('1542-06-27'))])
+
+    def test_json_translator_b(self) -> None:
+        src = dict(a=datetime.date(2022, 1, 1), b=datetime.date(1542, 6, 7))
+        post1 = json.dumps(JSONTranslator.encode_element(src))
+
+        post2 = JSONTranslator.decode_element(json.loads(post1))
+
+        self.assertEqual(list(post2.items()),
+            [('a', datetime.date(2022, 1, 1)),
+            ('b', datetime.date(1542, 6, 7))])
+
+    def test_json_translator_c(self) -> None:
+        # demonstrate that decoding converts all lists to tuples
+        self.assertEqual(JSONTranslator.decode_element(
+                [3, 4, [None, (10, 20), 'foo']]),
+                (3, 4, (None, (10, 20), 'foo'))
+                )
+        self.assertEqual(JSONTranslator.decode_element(
+                [[[2,], 3, 4], [[[1, 2], [3, 4]], [5, 6]]]),
+                (((2,), 3, 4), (((1, 2), (3, 4)), (5, 6)))
+                )
 
     #---------------------------------------------------------------------------
     def test_frozen_generator_a(self) -> None:
@@ -2959,6 +3002,53 @@ class TestUnit(TestCase):
 
         with self.assertRaises(IndexError):
             _ = fg[3]
+
+    #---------------------------------------------------------------------------
+    def test_run_length_1d_a(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 3, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 1])
+        self.assertEqual(w.tolist(), [3, 2, 1])
+
+    def test_run_length_1d_b(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 3, 3]))
+        self.assertEqual(v.tolist(), [5, 3])
+        self.assertEqual(w.tolist(), [3, 2])
+
+    def test_run_length_1d_c(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [3])
+
+    def test_run_length_1d_d(self) -> None:
+        v, w = run_length_1d(np.array([5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [1])
+
+    def test_run_length_1d_e(self) -> None:
+        v, w = run_length_1d(np.array([5, 3, 5, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 5, 3, 1])
+        self.assertEqual(w.tolist(), [1, 1, 1, 1, 1])
+
+    def test_run_length_1d_f(self) -> None:
+        v, w = run_length_1d(np.array([5, 3, 3, 3, 1]))
+        self.assertEqual(v.tolist(), [5, 3, 1])
+        self.assertEqual(w.tolist(), [1, 3, 1])
+
+    def test_run_length_1d_g(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 3, 3, 5, 5, 8, 8]))
+        self.assertEqual(v.tolist(), [5, 3, 5, 8])
+        self.assertEqual(w.tolist(), [2, 2, 2, 2])
+
+    def test_run_length_1d_h(self) -> None:
+        v, w = run_length_1d(np.array([]))
+        self.assertEqual(v.tolist(), [])
+        self.assertEqual(w.tolist(), [])
+
+    def test_run_length_1d_i(self) -> None:
+        v, w = run_length_1d(np.array([5, 5, 5, 5]))
+        self.assertEqual(v.tolist(), [5])
+        self.assertEqual(w.tolist(), [4])
+
 
 
 

@@ -30,6 +30,7 @@ from static_frame import TypeBlocks
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -312,23 +313,20 @@ class TestUnit(TestCase):
                 slice('2018-01-01', '2018-01-04'),
                 np.array(['x', 'y'])])
 
-        # this will break if we recognize this can be a slice
         self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04', 2),
+                slice('2018-01-01', '2018-01-04', 2), # selects across full region from first start
                 np.array(['x', 'y'])])
 
-        # this will break if we recognize this can be a slice
-        self.assertEqual(list(post), [0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21]) # type: ignore
+        self.assertEqual(list(post), [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
                 ['x', 'y']])
 
-        # this will break if we recognize this can be a slice
         self.assertEqual(list(post), list(range(len(ih)))) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[
@@ -341,7 +339,8 @@ class TestUnit(TestCase):
         post = ih._loc_to_iloc(HLoc['C', '2018-01-03', 'y'])
         self.assertEqual(post, 21)
 
-        post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        post = ih._loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore
+        # NOTE: we assume that the depth 1 selection is independent of 'B' selection
         self.assertEqual(list(post), [13, 15]) # type: ignore
 
         post = ih._loc_to_iloc(HLoc[['B', 'C'], '2018-01-03'])
@@ -2023,6 +2022,7 @@ class TestUnit(TestCase):
         ihgo.append(labelF)
 
         expected = IndexHierarchy.from_labels(labelsA + [labelB] + labelsC + [labelD] + labelsE + [labelF])
+
         self.assertTrue(ihgo.equals(expected))
 
     def test_hierarchy_index_go_f(self) -> None:
@@ -2409,11 +2409,15 @@ class TestUnit(TestCase):
 
         post2 = ih1.union(ih2)
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B']])
 
         post3 = ih1.difference(ih2)
         self.assertEqual(post3.values.tolist(),
                 [['I', 'A'], ['I', 'B']])
+
+        post4 = ih1.difference(tuple(ih2))
+        self.assertTrue(post3.equals(post4))
+        self.assertTrue(post4.equals(post3))
 
     def test_hierarchy_set_operators_b(self) -> None:
 
@@ -2453,15 +2457,13 @@ class TestUnit(TestCase):
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
-                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+                [['II', 'B'], ['I', 'B'], ['II', 'A'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         post3 = ih1.difference(ih2)
-        self.assertEqual(post3.values.tolist(),
-                [])
+        self.assertEqual(post3.values.tolist(), [])
 
     def test_hierarchy_set_operators_d(self) -> None:
 
@@ -2480,8 +2482,7 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
-        self.assertEqual(post2.values.tolist(),
-                [])
+        self.assertEqual(post2.values.tolist(), [])
 
         ih1.append(('I', 'C'))
 
@@ -2559,6 +2560,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(i2)
+
         with self.assertRaises(ErrorInitIndex):
             i3 = i1.union(np.arange(4))
 
@@ -2617,7 +2619,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = ih1.intersection(['a', 'b'])
 
-    def test_hierarchy_set_operators_m(self) -> None:
+    def test_hierarchy_set_operators_l(self) -> None:
         labels = (
                 ('I', 'A'),
                 ('I', 'B'),
@@ -2653,10 +2655,10 @@ class TestUnit(TestCase):
         post2 = ih1.union(ih2, ih3)
 
         self.assertEqual(post2.values.tolist(),
-                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
+                [['I', 'A'], ['II', 'A'], ['III', 'A'], ['IV', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['IV', 'B']]
                 )
 
-    def test_hierarchy_set_operators_l(self) -> None:
+    def test_hierarchy_set_operators_m(self) -> None:
         labels = (
                 ('II', 'B'),
                 ('II', 'A'),
@@ -2668,6 +2670,46 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [['I', 'B'], ['II', 'B']]
                 )
+
+    def test_hierarchy_set_operators_n(self) -> None:
+        # Test the short-circuit optimization for intersections when the result
+        # will be empty
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('II', 'III'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+
+        post = ih1.intersection(ih2, ih3)
+        assert len(post) == 0
+
+    def test_hierarchy_set_operators_o(self) -> None:
+        # Test the short-circuit optimization for differences when all elements are disjoint
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+        ih2 = IndexHierarchy.from_product(('III', 'IV'), ('A', 'B'))
+        ih3 = IndexHierarchy.from_product(('III', 'IV'), ('C', 'D'))
+
+        post = ih1.difference(ih2, ih3)
+        assert post.equals(ih1)
+
+    def test_hierarchy_set_operators_p(self) -> None:
+        # Add edge-case coverage for the generic 2D set approach invoked by IndexBase.
+        ih = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'))
+
+        empty_mask = np.full(len(ih), False)
+
+        post1 = IndexBase.intersection(ih, ih[empty_mask])
+        post2 = IndexBase.intersection(ih, ih.values[empty_mask])
+        post3 = IndexBase.intersection(ih[empty_mask], ih) # type: ignore
+
+        post4 = IndexBase.difference(ih, ih.values[empty_mask])
+        post5 = IndexBase.difference(ih, ih[empty_mask])
+        post6 = IndexBase.difference(ih[empty_mask], ih) # type: ignore
+
+        assert len(post1) == len(post2) == len(post3) == len(post6) == 0
+        assert post4.equals(ih)
+        assert post5.equals(ih)
+
+        with self.assertRaises(RuntimeError):
+            IndexBase.intersection(ih, np.array([[]]))
 
     #---------------------------------------------------------------------------
 
@@ -3679,17 +3721,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(1)),
                 ((np.datetime64('2019-01-05'), 2),
-                 (np.datetime64('2019-01-06'), 2),
-                 (np.datetime64('2019-01-07'), 2),
-                 (np.datetime64('2019-01-08'), 2),
-                 (np.datetime64('2019-01-05'), 3),
-                 (np.datetime64('2019-01-06'), 2),
-                 (np.datetime64('2019-01-07'), 2),
-                 (np.datetime64('2019-01-08'), 2))
-                )
+                (np.datetime64('2019-01-06'), 2),
+                (np.datetime64('2019-01-07'), 2),
+                (np.datetime64('2019-01-08'), 2),
+                (np.datetime64('2019-01-05'), 2),
+                (np.datetime64('2019-01-06'), 2),
+                (np.datetime64('2019-01-07'), 2),
+                (np.datetime64('2019-01-08'), 2),
+                (np.datetime64('2019-01-05'), 1),
+                ))
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)),
-                ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (3, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1))
+                ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (3, 1))
                 )
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)), tuple(hidx.label_widths_at_depth([2])))
@@ -3818,6 +3861,12 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, (8, 2))
         self.assertEqual(post.dtype, np.dtype(int))
         self.assertEqual(ih1.values_at_depth(2).dtype, np.dtype('<U7'))
+
+    def test_hierarchy_values_at_depth_b(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'),)
+        ih1.append((3, 'c'))
+        post = ih1.values_at_depth(1)
+        self.assertEqual(post.tolist(), ['a', 'b', 'a', 'b', 'c'])
 
     def test_hierarchy_index_at_depth_a(self) -> None:
         ih1 = IndexHierarchyGO.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
@@ -4061,6 +4110,14 @@ class TestUnit(TestCase):
 
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
+
+    def test_hierarchy_equals_e(self) -> None:
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'))
+        ih2 = ih1.copy()
+        self.assertTrue(ih1.equals(ih2))
+        ih1.append((3, 'c'))
+        ih2.append((3, 'c'))
+        self.assertTrue(ih1.equals(ih2))
 
     #---------------------------------------------------------------------------
     def test_hierarchy_fillna_a(self) -> None:
@@ -4317,33 +4374,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_extract_counts_a(self) -> None:
-        indices = [
-                Index(range(5)),
-                Index(tuple("ABCDE")),
-                Index([True, False]),
-                ]
-
-        post1 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=0)
-        self.assertEqual(tuple(post1), ((0, 3), ))
-
-        post2 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=1)
-        self.assertEqual(tuple(post2), (('A', 3),))
-
-        post3 = IndexHierarchy._extract_counts(np.array([0, 0, 0]), indices, pos=2)
-        self.assertEqual(tuple(post3), ((True, 3),))
-
-        post4 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=0)
-        self.assertEqual(tuple(post4), ((0, 2), (1, 1)))
-
-        post5 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=1)
-        self.assertEqual(tuple(post5), (('A', 2), ('B', 1)))
-
-        post6 = IndexHierarchy._extract_counts(np.array([1, 0, 0]), indices, pos=2)
-        self.assertEqual(tuple(post6), ((True, 2), (False, 1)))
-
-    #---------------------------------------------------------------------------
-
     def test_hierarchy_ndim(self) -> None:
         ih = IndexHierarchy.from_labels(((1, 2), (2, 3)))
         self.assertEqual(ih.ndim, 2)
@@ -4594,8 +4624,46 @@ class TestUnit(TestCase):
         hd = hidx1.via_hashlib().sha256().hexdigest()
         self.assertEqual(hd, 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
 
+    #---------------------------------------------------------------------------
+    def test_hierarchy_hloc_a(self) -> None:
+        labels = [
+            ('a', 1, 10),
+            ('a', 2, 10),
+            ('b', 1, 10),
+            ('b', 2, 20),
+            ('b', 3, 10),
+            ('b', 4, 20),
+            ('b', 5, 10),
+            ('c', 1, 10),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.loc[HLoc['b', :, 20:]]
+        self.assertEqual(len(ih2), 4)
+        self.assertEqual(ih2.values.tolist(),
+            [['b', 2, 20], ['b', 3, 10], ['b', 4, 20], ['b', 5, 10]]
+            )
 
-
+    def test_hierarchy_hloc_b(self) -> None:
+        labels = [
+            ('a', 1, 70),
+            ('a', 2, 50),
+            ('a', 3, 30),
+            ('a', 4, 10),
+            ('b', 1, 70),
+            ('b', 2, 50),
+            ('b', 3, 30),
+            ('b', 4, 10),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.loc[HLoc['b', :, 30:]]
+        self.assertEqual(ih2.values.tolist(),
+            [['b', 3, 30], ['b', 4, 10]]
+            )
+        # same result
+        ih3 = ih1.loc[HLoc['b']].loc[HLoc[:, :, 30:]]
+        self.assertEqual(ih3.values.tolist(),
+            [['b', 3, 30], ['b', 4, 10]]
+            )
 
 
 if __name__ == '__main__':

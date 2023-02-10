@@ -1,8 +1,10 @@
+import ast
 import contextlib
 import datetime
 import math
 import operator
 import os
+import re
 import tempfile
 import typing as tp
 import warnings
@@ -23,9 +25,12 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import isna_element
+from arraykit import mloc
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
 
+from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
@@ -264,6 +269,11 @@ CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Seri
 ShapeType = tp.Union[int, tp.Tuple[int, int]]
 OptionalArrayList = tp.Optional[tp.List[np.ndarray]]
 
+# mloc, shape, and strides
+ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
+
+def array_signature(value: np.ndarray) -> ArraySignature:
+    return mloc(value), value.shape, value.strides
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
@@ -306,6 +316,11 @@ def is_strict_int(value: tp.Any) -> bool:
     if value.__class__ is bool or value.__class__ is np.bool_:
         return False
     return isinstance(value, INT_TYPES)
+
+def is_dataclass(value: tp.Any) -> bool:
+    # avoid module-level import
+    from dataclasses import is_dataclass
+    return is_dataclass(value)
 
 def validate_depth_selection(
         key: GetItemKeyType,
@@ -1949,13 +1964,25 @@ def isna_array(array: np.ndarray,
     elif kind in DTYPE_NAT_KINDS:
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
-    elif kind != 'O':
+    elif kind != DTYPE_OBJECT_KIND:
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
+
     # only check for None if we have an object type
-    # NOTE: this will not work for Frames contained within a Series
-    if include_none:
-        return np.not_equal(array, array) | np.equal(array, None)
-    return np.not_equal(array, array)
+    with WarningsSilent():
+        try:
+            if include_none:
+                return np.not_equal(array, array) | np.equal(array, None)
+            return np.not_equal(array, array)
+        except ErrorNotTruthy:
+            pass
+
+    # no other option than to do elementwise evaluation
+    return np.fromiter(
+            (isna_element(e, include_none) for e in array), # type: ignore
+            dtype=DTYPE_BOOL,
+            count=len(array),
+            )
+
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
     '''
@@ -1989,7 +2016,6 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     # or with NaN observations
     return post | np.not_equal(array, array)
 
-
 def arrays_equal(array: np.ndarray,
         other: np.ndarray,
         *,
@@ -1998,6 +2024,15 @@ def arrays_equal(array: np.ndarray,
     '''
     Given two arrays, determine if they are equal; support skipping Na comparisons and handling dt64
     '''
+    if id(array) == id(other):
+        return True
+
+    if (mloc(array) == mloc(other)
+            and array.shape == other.shape
+            and array.strides == other.strides):
+        # NOTE: this implements an ArraySignature check that will short-circuit. A columnar slice from a 2D array will always have a unique array id(); however, two slices from the same 2D array will have the same mloc, shape, and strides; we can identify those cases here
+        return True
+
     if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
         if np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]:
             # do not permit True result between 2021 and 2021-01-01
@@ -2506,7 +2541,8 @@ def _ufunc_set_2d(
 
     if is_2d:
         cols = array.shape[1]
-        assert cols == other.shape[1]
+        if cols != other.shape[1]:
+            raise RuntimeError("cannot perform set operation on arrays with different number of columns")
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
@@ -3172,23 +3208,53 @@ def array_sample(
     post.flags.writeable = False
     return post
 
-#-------------------------------------------------------------------------------
-def list_to_tuple(value: tp.Any) -> tp.Any:
-    '''Recursively convert any observed lists into tuples; this is used as a post processor for objects coming back from JSON decoding.
+
+def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+    '''Given an array of values, discover contiguous values and their length.
+
+    Return:
+        np.ndarray: a value per contiguous width
+        np.ndarray: a width per contiguous value
     '''
-    # Using `is` here deemed appropriate as objects coming back from json decoder.
-    if value.__class__ is not list:
-        return value
-    return tuple(list_to_tuple(v) for v in value)
+    assert array.ndim == 1
+
+    size = len(array)
+    if size == 0:
+        return EMPTY_ARRAY, EMPTY_ARRAY_INT
+    if size == 1:
+        return array[:1], np.array((size,), dtype=DTYPE_INT_DEFAULT)
+
+    # this provides one True for the start of each region, including the first
+    transitions = np.empty(size, dtype=DTYPE_BOOL)
+    transitions[0] = True
+    transitions[1:] = (array != np.roll(array, 1))[1:]
+
+    # get the index at the the transition for each width
+    idx = PositionsAllocator.get(size)[transitions]
+
+    # use the difference in positions to get widths; we need the width from the last transition to the full length in the last position
+    widths = np.empty(len(idx), dtype=DTYPE_INT_DEFAULT)
+    widths[-1] = size - idx[-1]
+    widths[:-1] = (idx - np.roll(idx, 1))[1:]
+
+    return array[transitions], widths
+
+
+
+
+#-------------------------------------------------------------------------------
+# json utils
 
 class JSONFilter:
+    '''Note: this is filter for encoding NumPy arrays and Python objects in generally readible format by naive consumers. Thus all dates are represented as date strings. This differs from using `__repr__` and attempting to reanimate Python types.
+    '''
 
     @staticmethod
-    def from_element(obj: tp.Any) -> tp.Any:
+    def encode_element(obj: tp.Any) -> tp.Any:
         '''Convert non-JSON compatible objects to JSON compatible objects or strings.
         '''
         if obj is None:
-            return None
+            return obj
         if isinstance(obj, (str, int, float)):
             return obj
         if isinstance(obj, datetime.date):
@@ -3206,23 +3272,115 @@ class JSONFilter:
                 return obj.item()
             return obj.tolist()
 
-        fe = JSONFilter.from_element
         if isinstance(obj, dict):
-            return {fe(k): fe(v) for k, v in obj.items()}
+            ee = JSONFilter.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):
-            return [fe(e) for e in obj]
+            ee = JSONFilter.encode_element
+            return [ee(e) for e in obj]
+        # let pass and raise on JSON encoding
+        return obj
 
     @classmethod
-    def from_items(cls,
+    def encode_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
             ) -> tp.Any:
-        return {cls.from_element(k): cls.from_element(v) for k, v in items}
+        '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
+        '''
+        ee = cls.encode_element
+        return {ee(k): ee(v) for k, v in items}
 
     @classmethod
-    def from_iterable(cls,
+    def encode_iterable(cls,
             iterable: tp.Iterator[tp.Any],
             ) -> tp.Any:
-        return [cls.from_element(v) for v in iterable]
+        '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
+        '''
+        ee = cls.encode_element
+        return [ee(v) for v in iterable]
+
+
+class Reanimate:
+    RE: tp.Pattern[str]
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        raise NotImplementedError() #pragma: no cover
+
+class ReanimateDT64(Reanimate):
+    RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        return np.datetime64(post.group(1))
+
+class ReanimateDTD(Reanimate):
+    RE = re.compile(r"datetime.date\(([ ,0-9]+)\)")
+
+    @classmethod
+    def filter(cls, value: str) -> tp.Any:
+        post = cls.RE.fullmatch(value)
+        if post is None:
+            return value
+        args = ast.literal_eval(post.group(1))
+        return datetime.date(*args)
+
+
+class JSONTranslator(JSONFilter):
+    '''JSON encoding of select types to permit reanimation. Let fail types that are not encodable and are not explicitly handled.
+    '''
+    REANIMATEABLE = (ReanimateDT64, ReanimateDTD)
+
+    @staticmethod
+    def encode_element(obj: tp.Any) -> tp.Any:
+        '''From a Python object, pre-JSON encoding, replacing any Python objects with discoverable strings.
+        '''
+        if obj is None:
+            return obj
+
+        if isinstance(obj, str):
+            return obj
+
+        if isinstance(obj, (np.datetime64, datetime.date)):
+            return repr(obj) # take repr for encoding / decoding
+
+        if isinstance(obj, dict): # type: ignore
+            ee = JSONTranslator.encode_element
+            return {ee(k): ee(v) for k, v in obj.items()}
+        if hasattr(obj, '__iter__'):
+            ee = JSONTranslator.encode_element
+            # all iterables must be lists for JSON encoding
+            return [ee(e) for e in obj]
+
+        return obj
+
+    @classmethod
+    def decode_element(cls, obj: tp.Any) -> tp.Any:
+        '''Given an object post JSON conversion, check all strings for strings that can be converted to python objects. Also, all lists are converted to tuples
+        '''
+        if obj is None:
+            return obj
+
+        if isinstance(obj, str):
+            # test regular expressions
+            for reanimate in cls.REANIMATEABLE:
+                post = reanimate.filter(obj)
+                if post is not obj:
+                    return post
+            return obj
+
+        if obj.__class__ is list: # post JSON, only ever be lists
+            de = cls.decode_element
+            # realize all things JSON gives as lists to tuples
+            return tuple(de(e) for e in obj)
+        if isinstance(obj, dict):
+            de = cls.decode_element
+            return {de(k): de(v) for k, v in obj.items()}
+
+        return obj
 
 #-------------------------------------------------------------------------------
 

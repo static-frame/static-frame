@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import datetime
 import io
 import itertools as it
@@ -60,7 +61,6 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -2258,7 +2258,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
                 )
 
-    def test_frame_insert_b(self) -> None:
+    def test_frame_insert_b1(self) -> None:
         records = (
                 ('a', False, True),
                 ('b', True, False))
@@ -2269,24 +2269,35 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             f1._insert(0, 'a', after=False)
 
-        s1 = sf.Series(())
-
-        f2 = f1.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f_empty = sf.Frame(np.array(()).reshape(2, 0), index=f1.index)
+        f2 = f1.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertNotEqual(id(f1), id(f2))
 
         f3 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('x','y'))
-        f4 = f3.insert_before('q', s1)
-        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        f4 = f3.insert_before('q', f_empty)
+        self.assertTrue(f1.equals(f2)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f4))
 
         # matching index but no columns
         f5 = FrameGO(columns=(), index=('x','y'))
         f6 = f3.insert_before('q', f5)
-        self.assertTrue(f3.equals(f6)) # no insertion of an empty container
+        self.assertTrue(f3.equals(f6)) # no insertion of no width frame
         self.assertEqual(id(f3), id(f6))
+
+    def test_frame_insert_b2(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        f_empty = sf.Frame(np.array(()).reshape(0, 2), columns=('s', 't'))
+        f2 = f1.insert_before('q', f_empty)
+        self.assertEqual(f2.columns.values.tolist(), ['p', 's', 't', 'q', 'r'])
 
     def test_frame_insert_c(self) -> None:
         records = (
@@ -2373,7 +2384,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1.insert_after(slice('q', 'r'), s1)
 
-    def test_frame_insert_g(self) -> None:
+    def test_frame_insert_g1(self) -> None:
         f = ff.parse('s(3,3)|v(str)')
         f = f.insert_after(sf.ILoc[-1], sf.Series.from_element(1, index=f.index, name='a'))
 
@@ -2385,6 +2396,21 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'))), ('a', ((0, 1), (1, 1), (2, 1))), ('b', ((0, 2), (1, 2), (2, 2))))
                 )
+
+    def test_frame_insert_g2(self) -> None:
+        # a Frame with four columns, no rows; inserting an empty Series will work as with FrameGO
+        empty = sf.Frame.from_records([], columns=list("abcd"))
+        new_column = sf.Series(np.array(()), name='e')
+        f2 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f2.shape, (0, 5))
+        self.assertEqual(f2.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
+        # this works too as we take the intersection index
+        new_column = sf.Series([0,], index=('a',), name='e')
+        f3 = empty.insert_after(sf.ILoc[-1], new_column)
+        self.assertEqual(f3.shape, (0, 5))
+        self.assertEqual(f3.columns.values.tolist(), ['a', 'b', 'c', 'd', 'e'])
+
 
     def test_frame_insert_h(self) -> None:
         f = ff.parse('s(2,3)|v(str)')
@@ -7785,6 +7811,19 @@ class TestUnit(TestCase):
             self.assertEqual(f3.to_pairs(0),
                     (('a', (('x', ''), ('y', ''))), ('b', (('x', ''), ('y', '')))))
 
+    def test_frame_to_xlsx_g(self) -> None:
+        f1 = sf.Frame.from_dict(
+                dict(a=[8,8,1,3,3,2,2], b=list('ababacd'), c=[0,1,2,3,4,5,6])
+                ).set_index_hierarchy(['a', 'b'])
+
+        lwd = tuple(f1.index.label_widths_at_depth(0))
+        self.assertEqual(lwd, ((8, 2), (1, 1), (3, 2), (2, 2)))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = sf.Frame.from_xlsx(fp, index_depth=2)
+            self.assertTrue(f1.index.equals(f2.index))
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_xlsx_a(self) -> None:
@@ -9727,9 +9766,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
                 )
 
-    @skip_pylt37
     def test_frame_from_records_r(self) -> None:
-        import dataclasses
         @dataclasses.dataclass
         class Item:
             left: str
@@ -10347,6 +10384,24 @@ class TestUnit(TestCase):
             self.assertTrue(f1.equals(f2))
             self.assertIs(f2.__class__, FrameGO)
 
+    def test_frame_to_npz_l1(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(np.datetime64('2022-02-22'))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
+    def test_frame_to_npz_l2(self) -> None:
+        f1 = ff.parse('s(10,6)|v(str)').rename(datetime.date(2022, 2, 22))
+
+        with temp_file('.npz') as fp:
+            f1.to_npz(fp)
+            f2 = Frame.from_npz(fp)
+            self.assertEqual(f1.name, f2.name)
+            self.assertTrue(f1.equals(f2))
+
     def test_frame_to_npz_empty(self) -> None:
         f1 = Frame()
 
@@ -10359,6 +10414,7 @@ class TestUnit(TestCase):
         from datetime import date
         with temp_file('.npz') as fp:
             with self.assertRaises(ErrorNPYEncode):
+                # fails to being an object array
                 sf.Series([1, 2, 3], name=date(2022,1,1)).to_frame().to_npz(fp)
             self.assertFalse(os.path.exists(fp))
 
@@ -14719,6 +14775,25 @@ class TestUnit(TestCase):
                   ('zZbu', 'ijkl'),
                   ('ztsv', 'ijkl'),
                   ('zUvW', 'ijkl'))))
+                )
+
+    def test_frame_relabel_shift_out_f(self) -> None:
+        msg = ('date,currency,price',
+                '2022-01-01,USD,2.48',
+                '2022-01-02,USD,2.52',
+                '2022-01-03,USD,2.49',
+                '2022-01-04,USD,2.51',
+                )
+        f1 = Frame.from_csv(
+            msg,
+            dtypes=["datetime64[D]", str, float],
+            index_depth=2,
+            index_constructors=[IndexDate, Index],
+        )
+        f2 = f1.relabel_shift_out(1)  # ErrorInitIndex
+
+        self.assertEqual(f2.to_pairs(),
+                (('__index1__', ((np.datetime64('2022-01-01'), 'USD'), (np.datetime64('2022-01-02'), 'USD'), (np.datetime64('2022-01-03'), 'USD'), (np.datetime64('2022-01-04'), 'USD'))), ('price', ((np.datetime64('2022-01-01'), 2.48), (np.datetime64('2022-01-02'), 2.52), (np.datetime64('2022-01-03'), 2.49), (np.datetime64('2022-01-04'), 2.51))))
                 )
 
     #---------------------------------------------------------------------------

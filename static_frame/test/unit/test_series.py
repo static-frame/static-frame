@@ -955,6 +955,27 @@ class TestUnit(TestCase):
         s2 = s1.dropna()
         self.assertEqual(s2.to_pairs(), ((('A', 1), 1.0), (('B', 1), 2.0)))
 
+    def test_series_dropna_d(self) -> None:
+        s1 = sf.Series([None], index=sf.IndexDate(['202-02-02']))
+        s2 = s1.dropna()
+        self.assertEqual(s2.index.__class__, IndexDate)
+        self.assertEqual(s2.shape, (0,))
+
+    def test_series_dropna_e(self) -> None:
+        f = ff.parse('s(2,2)')
+        s1 = Series((f, np.nan), index=('a', 'b'))
+        s2 = s1.dropna()
+        self.assertEqual(s2.index.values.tolist(), ['a'])
+        self.assertTrue(s2['a'].equals(f))
+
+
+    def test_series_dropna_f(self) -> None:
+        import pandas as pd
+        s1 = Series((pd.Timestamp('nat'), np.nan), index=('a', 'b'))
+        s2 = s1.dropna()
+        self.assertEqual(s2.index.values.tolist(), [])
+
+
     #---------------------------------------------------------------------------
 
     def test_series_fillna_a(self) -> None:

@@ -9,6 +9,7 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
@@ -145,9 +146,9 @@ class ContainerBase(metaclass=InterfaceMeta):
     #---------------------------------------------------------------------------
     def __bool__(self) -> bool:
         '''
-        Raises ValueError to prohibit ambiguous use of truethy evaluation.
+        Raises ValueError to prohibit ambiguous use of truthy evaluation.
         '''
-        raise ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+        raise ErrorNotTruthy()
 
     def __lt__(self, other: tp.Any) -> tp.Any:
         return NotImplemented #pragma: no cover

@@ -1273,12 +1273,13 @@ class Series(ContainerOperand):
         count = isna.sum()
 
         if count == length: # all are NaN
-            return self.__class__((), name=self.name)
-        if count == 0: # None are nan
-            return self.__class__(self.values,
-                    index=self._index,
+            return self.__class__((),
                     name=self._name,
-                    own_index=True)
+                    index=self._index[[]],
+                    own_index=True,
+                    )
+        if count == 0: # None are nan
+            return self
 
         sel = np.logical_not(isna)
         values = self.values[sel]
@@ -3206,20 +3207,6 @@ class Series(ContainerOperand):
 
         if not arrays_equal(self.values, other.values, skipna=skipna):
             return False
-
-        # eq = self.values == other.values
-
-        # # NOTE: will only be False, or an array
-        # if eq is False:
-        #     return eq
-
-        # if skipna:
-        #     isna_both = (isna_array(self.values, include_none=False) &
-        #             isna_array(other.values, include_none=False))
-        #     eq[isna_both] = True
-
-        # if not eq.all():
-        #     return False
 
         return self._index.equals(other._index,
                 compare_name=compare_name,

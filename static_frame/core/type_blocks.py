@@ -39,6 +39,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -49,6 +50,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
@@ -69,8 +71,8 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import view_2d_as_1d
 
-
 #---------------------------------------------------------------------------
+
 def group_match(
         blocks: 'TypeBlocks',
         *,
@@ -160,6 +162,7 @@ def group_match(
                     row_key=row_key,
                     column_key=selection,
                     )
+
 
 def group_sorted(
         blocks: 'TypeBlocks',
@@ -265,6 +268,7 @@ def group_sorted(
             yield tuple(group_source[start]), slc, chunk
         else:
             yield group_source[start], slc, chunk
+
 
 #-------------------------------------------------------------------------------
 
@@ -403,8 +407,8 @@ def assign_inner_from_iloc_by_sequence(
     return value, assigned_target
 
 
-
 #-------------------------------------------------------------------------------
+
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
 
@@ -4162,6 +4166,14 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
+    def iter_block_signatures(self) -> tp.Iterator[ArraySignature]:
+        '''
+        Yields:
+            a hashable key that will match array that share the same data, or share slices from the same underlying data and have the same shape and strides.
+        '''
+        yield from (array_signature(self._extract_array_column(i))
+                for i in range(self._shape[1]))
+
     @doc_inject()
     def equals(self,
             other: tp.Any,
@@ -4190,13 +4202,16 @@ class TypeBlocks(ContainerOperand):
         # same type from here
         if self._shape != other._shape:
             return False
+
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
+        # NOTE: cannot directly compare blocks as we cannot assume the same number of blocks means that the blocks are consolidated in the same way
+
         for i in range(self._shape[1]):
             if not arrays_equal(
-                    self._extract_array(column_key=i),
-                    other._extract_array(column_key=i),
+                    self._extract_array_column(i),
+                    other._extract_array_column(i),
                     skipna=skipna,
                     ):
                 return False

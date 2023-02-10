@@ -16,6 +16,7 @@ from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
@@ -2270,6 +2271,31 @@ class TestUnit(TestCase):
             with self.assertRaises(ErrorNPYEncode):
                 b1.to_zip_npz(fp)
             self.assertFalse(os.path.exists(fp))
+
+    def test_bus_npz_c(self) -> None:
+        frame = Frame(
+            data=np.random.normal(size=(2, 2)),
+            columns=IndexAutoFactory,
+            index=IndexAutoFactory,
+            name=np.datetime64('2000-01-01'),
+            )
+
+        b1 = Bus.from_frames(
+            frames=(frame,),
+            index_constructor=IndexDate,
+            )
+
+        config = StoreConfig(
+            label_encoder=str,
+            label_decoder=np.datetime64,
+            )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp, config=config)
+            b2 = Bus.from_zip_npz(fp, config=config, index_constructor=IndexAutoConstructorFactory)
+            self.assertEqual(frame.name, b2.iloc[0].name)
+            self.assertEqual(frame.shape, b2.iloc[0].shape)
+
 
     #---------------------------------------------------------------------------
     def test_bus_npy_a(self) -> None:

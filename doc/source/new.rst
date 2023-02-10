@@ -1,6 +1,49 @@
 What is New in StaticFrame
 ===============================
 
+1.2.3-dev
+-----------
+
+``Series.isna()``, ``Series.dropna()``, and related functions now properly handle arrays that contain objects such as ``Frame`` or ``np.ndarray`` that raise for usage of ``__bool__()``.
+
+Set ``arraykit`` version to 0.2.8; ``isna_element`` now identifies ``pd.Timestamp('nat')`` as a NA value.
+
+
+1.2.2
+-----------
+
+Corrected issue in ``IndexHierarchy.label_widths_at_depth()`` which caused incorrect cell merging in XLSX output when ``merge_hierarchical_labels`` is True.
+
+
+1.2.1
+-----------
+
+Corrected issue in ``Series.dropna()`` whereby full drops would not retain the index class.
+
+Performance enhancement to ``TypeBlocks.equals()`` and related routines using ``arrays_equal()``.
+
+
+1.2.0
+-----------
+
+Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
+
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+
+Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
+
+Corrected issue in ``Frame.relabel_shift_out()`` where ``index_constructors`` are not assigned to subset index.
+
+Extended ``Frame.iter_tuple()`` ``constructor`` argument to support ``dataclass``-created classes.
+
+
+1.1.1
+-----------
+
+Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
+Corrected issue with some ``IndexHierarchy`` formations when using slices in an ``HLoc`` with more than one depth selection.
+
 
 1.1.0
 -----------
