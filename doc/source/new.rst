@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-1.2.4-dev
+1.2.4
 -----------
 
 ``IndexHierarchy.__setstate__`` now properly sets indexers to be immutable.
