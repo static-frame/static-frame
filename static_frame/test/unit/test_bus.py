@@ -2388,7 +2388,9 @@ class TestUnit(TestCase):
             assert not b2._store._weak_cache
 
             f1_r = b2.iloc[0]
-            b2.iloc[1]
+            f2_r = b2.iloc[1]
+
+            assert b2.iloc[1] is f2_r
 
             assert f1_r in b2._store._weak_cache.values()
             assert b2.iloc[0] is f1_r
