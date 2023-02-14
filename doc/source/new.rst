@@ -1,10 +1,12 @@
 What is New in StaticFrame
 ===============================
 
-1.2.4
+1.2.4-dev
 -----------
 
 ``IndexHierarchy.__setstate__`` now properly sets indexers to be immutable.
+
+``Bus`` with associated ``Store`` instances are now pickleable after removing ``_weak_cache`` in ``Store.__getstate__()``.
 
 
 1.2.3
