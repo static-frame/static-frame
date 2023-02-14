@@ -1,4 +1,5 @@
 import os
+import pickle
 import typing as tp
 from datetime import date
 from datetime import datetime
@@ -2372,6 +2373,32 @@ class TestUnit(TestCase):
         self.assertEqual(d,
                 '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
 
+    #---------------------------------------------------------------------------
+
+    def test_bus_store_pickle_roundtrip(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, max_persist=1)
+
+            assert not b2._store._weak_cache
+
+            f1_r = b2.iloc[0]
+            f2_r = b2.iloc[1]
+
+            assert b2.iloc[1] is f2_r
+
+            assert f1_r in b2._store._weak_cache.values()
+            assert b2.iloc[0] is f1_r
+
+            b3 = pickle.loads(pickle.dumps(b2))
+
+            assert not b3._store._weak_cache
+            assert b3.iloc[0].equals(f1_r)
 
 
 if __name__ == '__main__':
