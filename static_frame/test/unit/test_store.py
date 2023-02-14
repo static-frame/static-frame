@@ -1,5 +1,5 @@
-from itertools import product
 import pickle
+from itertools import product
 
 import numpy as np
 
@@ -11,6 +11,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigHE
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.test.test_case import TestCase
+
 
 class MockStore(Store):
     _EXT = frozenset({".tst"})
