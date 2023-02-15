@@ -1620,9 +1620,9 @@ class TypeBlocks(ContainerOperand):
         # this selects the columns; but need to return all blocks
 
         # block slices must be in ascending order, not key order
-        block_slices = iter(self._key_to_block_slices(
+        block_slices = self._key_to_block_slices(
                 column_key,
-                retain_key_order=False))
+                retain_key_order=False)
         target_block_idx = target_slice = None
         targets_remain = True
 
