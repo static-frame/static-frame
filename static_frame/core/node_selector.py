@@ -362,7 +362,7 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''
         from static_frame.core.frame import Frame
 
-        flag_attrs =('owndata', 'f_contiguous', 'c_contiguous')
+        flag_attrs = ('owndata', 'f_contiguous', 'c_contiguous')
         columns = self._container.columns # type: ignore
 
         def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:

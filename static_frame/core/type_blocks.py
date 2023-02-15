@@ -927,6 +927,7 @@ class TypeBlocks(ContainerOperand):
         # assert len(blocks_norm) >= 2
         rows = blocks_norm[0].shape[0] # all 2D
         array = np.empty((rows, columns), dtype=dtype)
+        # is manual insertion better?
         np.concatenate(blocks_norm, axis=1, out=array)
         return array
 
@@ -955,7 +956,6 @@ class TypeBlocks(ContainerOperand):
                     # NOTE: using pop() here not shown to be faster
                     yield group[0]
                 else: # combine groups
-                    # could pre allocating and assing as necessary for large groups
                     yield cls._concatenate_blocks(group, group_dtype, group_columns)
                 group_dtype = block.dtype
                 group = [block]
@@ -1774,9 +1774,9 @@ class TypeBlocks(ContainerOperand):
         Generator-producer of np.ndarray.
         '''
         # block slices must be in ascending order, not key order
-        block_slices = iter(self._key_to_block_slices(
+        block_slices = self._key_to_block_slices(
                 column_key,
-                retain_key_order=False))
+                retain_key_order=False)
 
         target_slice: tp.Optional[tp.Union[slice, int]]
 
@@ -1791,7 +1791,6 @@ class TypeBlocks(ContainerOperand):
 
         for block_idx, b in enumerate(self._blocks):
             part_start_last = 0 # non-inclusive upper boundary, used to signal if block components have been read
-            # import ipdb; ipdb.set_trace()
 
             while targets_remain:
                 # get target block and slice
@@ -1808,7 +1807,7 @@ class TypeBlocks(ContainerOperand):
                     part_start_last = 1 if b.ndim == 1 else b.shape[1]
                     break # need to advance blocks
 
-                if b.ndim == 1: # given 1D array, our row key is all we need
+                if b.ndim == 1:
                     consolidate.append(b)
                     part_start_last = 1
                     target_block_idx = target_slice = None
@@ -1831,15 +1830,13 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, slice(part_start_last, target_start)]
 
                 consolidate.append(b[NULL_SLICE, target_slice])
-                # import ipdb; ipdb.set_trace()
+
                 part_start_last = target_stop
                 target_block_idx = target_slice = None
                 if part_start_last == b.shape[1]:
                     # NOTE: this might be an optimization for related routines
-                    break # done with this blcok
+                    break # done with this block
 
-            # import ipdb; ipdb.set_trace()
-            # print("block", b, part_start_last, consolidate)
             # if there are columns left in the block that are not targeted
             if b.ndim != 1 and part_start_last < b.shape[1]:
                 yield from consolidate_and_clear()
