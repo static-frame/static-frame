@@ -1678,6 +1678,7 @@ def blocks_to_array_2d(
         # blocks_post is filled; block might be 1d so use filter
         return column_2d_filter(blocks_post[0])
 
+    # NOTE: this is an axis 1 np.concatenate with known shape, dtype
     array = np.empty(shape, dtype=dtype)
     pos = 0
     for b in blocks_post: #type: ignore
