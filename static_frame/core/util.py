@@ -873,17 +873,17 @@ def concat_resolved(
         axis: int = 0,
         ) -> np.ndarray:
     '''
-    Concatenation of 1D or 2D arrays that uses resolved dtypes to avoid truncation.
+    Concatenation of 1D or 2D arrays that uses resolved dtypes to avoid truncation. Both axis are supported.
 
     Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
 
     No shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
     '''
-    #all the input array dimensions except for the concatenation axis must match exactly
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
-    if len(arrays) == 2:
+    if len(arrays) == 2: # assume we have a sequence
+        # faster path when we have two in a sequence
         a1, a2 = arrays
         dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
         size = a1.shape[axis] + a2.shape[axis]
@@ -891,12 +891,9 @@ def concat_resolved(
             shape = size
         else:
             shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
-    else:
-        # first pass to determine shape and resolved type
+    else: # first pass to determine shape and resolved type
         arrays_iter = iter(arrays)
         first = next(arrays_iter)
-
-        # ndim = first.ndim
         dt_resolve = first.dtype
         shape = list(first.shape)
 
@@ -909,6 +906,77 @@ def concat_resolved(
     np.concatenate(arrays, out=out, axis=axis)
     out.flags.writeable = False
     return out
+
+
+def blocks_to_array_2d(
+        blocks: tp.Iterator[np.ndarray],
+        shape: tp.Optional[tp.Tuple[int, int]] = None,
+        dtype: tp.Optional[np.dtype] = None,
+        ) -> np.ndarray:
+    '''
+    Given an iterable of blocks, return a consolidatd array. This is assumed to be an axis 1 style concatenation.
+    This is equivalent but more efficient than:
+        TypeBlocks.from_blocks(blocks).values
+    '''
+    discover_dtype = dtype is None
+    discover_shape = shape is None
+    blocks_is_gen = not hasattr(blocks, '__len__')
+    blocks_post: OptionalArrayList = None
+
+    if discover_shape or discover_dtype:
+        # if we have to discover shape or types, we have to do two iterations, and then must load an iterator of `blocks` into a list
+        if blocks_is_gen:
+            blocks_post = []
+
+        if discover_shape:
+            rows = -1
+            columns = 0
+
+        for b in blocks:
+            if discover_shape:
+                if rows == -1:
+                    rows = len(b) # works for 1D and 2D
+                elif len(b) != rows:
+                    raise RuntimeError(f'Invalid block shape {len(b)}')
+                if b.ndim == 1:
+                    columns += 1
+                else:
+                    columns += b.shape[1]
+            if discover_dtype:
+                if dtype is None:
+                    dtype = b.dtype
+                elif dtype != DTYPE_OBJECT:
+                    dtype = resolve_dtype(dtype, b.dtype)
+            if blocks_post is not None:
+                blocks_post.append(b)
+
+        if discover_shape:
+            shape = (rows, columns) #if discover_shape else shape
+
+    if blocks_post is None:
+        # blocks might be an iterator if we did not need to discover shape or dtype
+        if not blocks_is_gen and len(blocks) == 1:
+            return column_2d_filter(blocks[0]) # type: ignore
+        blocks_post = blocks #type: ignore
+    elif len(blocks_post) == 1:
+        # blocks_post is filled; block might be 1d so use filter
+        return column_2d_filter(blocks_post[0])
+
+    # NOTE: this is an axis 1 np.concatenate with known shape, dtype
+    array = np.empty(shape, dtype=dtype)
+    pos = 0
+    for b in blocks_post: #type: ignore
+        if b.ndim == 1:
+            array[NULL_SLICE, pos] = b
+            pos += 1
+        else:
+            end = pos + b.shape[1]
+            array[NULL_SLICE, pos: end] = b
+            pos = end
+
+    array.flags.writeable = False
+    return array
+
 
 
 def full_for_fill(
@@ -1622,77 +1690,6 @@ def iterable_to_array_nd(
         return array
     # its an element
     return np.array(values)
-
-
-def blocks_to_array_2d(
-        blocks: tp.Iterator[np.ndarray],
-        shape: tp.Optional[tp.Tuple[int, int]] = None,
-        dtype: tp.Optional[np.dtype] = None,
-        ) -> np.ndarray:
-    '''
-    Given an iterable of blocks, return a consolidatd array.
-    This is equivalent but more efficient than:
-        TypeBlocks.from_blocks(blocks).values
-    '''
-    discover_dtype = dtype is None
-    discover_shape = shape is None
-    blocks_is_gen = not hasattr(blocks, '__len__')
-    blocks_post: OptionalArrayList = None
-
-    if discover_shape or discover_dtype:
-        # if we have to discover shape or types, we have to do two iterations, and then must load an iterator of `blocks` into a list
-        if blocks_is_gen:
-            blocks_post = []
-
-        if discover_shape:
-            rows = -1
-            columns = 0
-
-        for b in blocks:
-            if discover_shape:
-                if rows == -1:
-                    rows = len(b) # works for 1D and 2D
-                elif len(b) != rows:
-                    raise RuntimeError(f'Invalid block shape {len(b)}')
-                if b.ndim == 1:
-                    columns += 1
-                else:
-                    columns += b.shape[1]
-            if discover_dtype:
-                if dtype is None:
-                    dtype = b.dtype
-                else:
-                    dtype = resolve_dtype(dtype, b.dtype)
-            if blocks_post is not None:
-                blocks_post.append(b)
-
-        if discover_shape:
-            shape = (rows, columns) #if discover_shape else shape
-
-    if blocks_post is None:
-        # blocks might be an iterator if we did not need to discover shape or dtype
-        if not blocks_is_gen and len(blocks) == 1:
-            return column_2d_filter(blocks[0]) # type: ignore
-        blocks_post = blocks #type: ignore
-    elif len(blocks_post) == 1:
-        # blocks_post is filled; block might be 1d so use filter
-        return column_2d_filter(blocks_post[0])
-
-    # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array = np.empty(shape, dtype=dtype)
-    pos = 0
-    for b in blocks_post: #type: ignore
-        if b.ndim == 1:
-            array[NULL_SLICE, pos] = b
-            pos += 1
-        else:
-            end = pos + b.shape[1]
-            array[NULL_SLICE, pos: end] = b
-            pos = end
-
-    array.flags.writeable = False
-    return array
-
 
 #-------------------------------------------------------------------------------
 
