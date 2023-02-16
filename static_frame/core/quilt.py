@@ -907,7 +907,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 return extractor(self._bus.iloc[0].values)
 
             # NOTE: do not need to call extractor when concatenate is called, as a new array is always allocated.
-            # TODO: modify underlying concat resolved usage to accept a generator
             arrays = [f.values for _, f in self._bus.items()]
             return concat_resolved(
                     arrays,
