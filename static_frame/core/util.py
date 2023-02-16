@@ -2010,7 +2010,7 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     # NOTE: an ArrayKit implementation might out performthis
     post = np.empty(array.shape, dtype=DTYPE_BOOL)
     for coord, v in np.ndenumerate(array):
-        post[coord] = not bool(array[coord])
+        post[coord] = not bool(v)
     # or with NaN observations
     return post | np.not_equal(array, array)
 
