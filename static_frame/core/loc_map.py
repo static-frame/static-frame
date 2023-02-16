@@ -38,9 +38,6 @@ _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
 
-_ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
-_ZERO_PAD_ARRAY.flags.writeable = False
-
 
 class FirstDuplicatePosition(KeyError):
     def __init__(self, first_dup: int) -> None:
