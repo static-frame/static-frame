@@ -84,6 +84,23 @@ class Store:
             # file existed previously and we got a modification time, but now it does not exist
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
 
+    def __getstate__(self) -> tp.Tuple[None, tp.Dict[str, tp.Any]]:
+        # https://docs.python.org/3/library/pickle.html#object.__getstate__
+        # staying consistent with __slots__ only objects by using None as first value in tuple
+        return (
+            None,
+            {
+                attr: getattr(self, attr)
+                for attr in self.__slots__
+                if attr != '_weak_cache'
+            }
+        )
+
+    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
+        for key, value in state[1].items():
+            setattr(self, key, value)
+        self._weak_cache = WeakValueDictionary()
+
     # def __copy__(self) -> 'Store':
     #     '''
     #     Return a new Store instance linked to the same file.

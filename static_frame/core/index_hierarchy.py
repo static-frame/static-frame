@@ -1085,6 +1085,8 @@ class IndexHierarchy(IndexBase):
         '''
         for key, value in state[1].items():
             setattr(self, key, value)
+
+        self._indexers.flags.writeable = False
         if self._values is not None:
             self._values.flags.writeable = False
 

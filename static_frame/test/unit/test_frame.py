@@ -6969,6 +6969,13 @@ class TestUnit(TestCase):
                 ['U', 'i', 'U']
                 )
 
+    def test_frame_from_delimited_u(self) -> None:
+        dtypes = ("datetime64[D]", "datetime64[D]", str, str)
+        msg = 'date_close,balance_open,balance_close\n2017-06-30,0.00,193.33\n2017-07-31,193.33,197.97\n2017-08-31,197.97,203.02\n2017-09-30,203.02,206.44'
+        with self.assertRaises(ValueError):
+            f = Frame.from_delimited(msg.split('\n'), delimiter=',', dtypes=dtypes)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:

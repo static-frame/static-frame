@@ -1239,7 +1239,7 @@ def ufunc_unique(
 
     '''
     if axis is None and array.ndim == 2:
-        return ufunc_unique1d(array.flatten())
+        return ufunc_unique1d(array.reshape(-1)) # reshape over flatten return a view if possible
     elif array.ndim == 1:
         return ufunc_unique1d(array)
     return ufunc_unique2d(array, axis=axis)
@@ -1978,7 +1978,7 @@ def isna_array(array: np.ndarray,
 
     # no other option than to do elementwise evaluation
     return np.fromiter(
-            (isna_element(e, include_none) for e in array), # type: ignore
+            (isna_element(e, include_none) for e in array),
             dtype=DTYPE_BOOL,
             count=len(array),
             )

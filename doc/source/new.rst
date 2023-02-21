@@ -1,12 +1,20 @@
 What is New in StaticFrame
 ===============================
 
-1.2.3-dev
+1.2.4
+-----------
+
+``IndexHierarchy.__setstate__`` now properly sets indexers to be immutable.
+
+``Bus`` with associated ``Store`` instances are now pickleable after removing ``_weak_cache`` in ``Store.__getstate__()``.
+
+
+1.2.3
 -----------
 
 ``Series.isna()``, ``Series.dropna()``, and related functions now properly handle arrays that contain objects such as ``Frame`` or ``np.ndarray`` that raise for usage of ``__bool__()``.
 
-Set ``arraykit`` version to 0.2.8; ``isna_element`` now identifies ``pd.Timestamp('nat')`` as a NA value.
+Set ``arraykit`` version to 0.2.9: ``isna_element`` now identifies ``pd.Timestamp('nat')`` as a NA value, and invalid ``datetime64`` strings given to ``Frame.from_delimited`` and related interfaces now properly raise exceptions.
 
 
 1.2.2
