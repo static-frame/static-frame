@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+1.2.5-dev
+-----------
+
+``Batch.to_frame()`` now exposes ``index_constructor``, ``columns_constructor`` arguments.
+
+Improvements to usage of ``index_constructor`` and ``columns_constructor`` arguments in ``Frame.from_concat`` when ``Series`` are provided as components.
+
+
 1.2.4
 -----------
 
