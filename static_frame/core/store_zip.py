@@ -10,6 +10,7 @@ from static_frame.core.archive_npy import ArchiveFrameConverter
 from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
@@ -260,6 +261,8 @@ class _StoreZip(Store):
         else:
             label_and_bytes = lambda: (self._payload_to_bytes(x) for x in gen())
 
+        labels_encoded = set() # track uniqueness post encoding
+
         try:
             with zipfile.ZipFile(self._fp,
                     mode='w',
@@ -268,7 +271,11 @@ class _StoreZip(Store):
                     ) as zf:
                 for label, frame_bytes in label_and_bytes():
                     label_encoded = config_map.default.label_encode(label)
-                    # this will write it without a container
+
+                    if label_encoded in labels_encoded:
+                        raise StoreLabelNonUnique(label_encoded)
+                    labels_encoded.add(label_encoded)
+
                     zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
         except ErrorNPYEncode:
             # NOTE: catch NPY failures and remove self._fp to not leave a malformed zip
