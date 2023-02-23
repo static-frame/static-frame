@@ -12,11 +12,11 @@ from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_datetime import IndexDate
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
-from static_frame.core.index_datetime import IndexDate
 
 nan = np.nan
 
