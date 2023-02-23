@@ -166,6 +166,9 @@ def get_col_dtype_factory(
     else: # an iterable of types
         is_map = False
         is_element = False
+        # NOTE: dtypes might be a generator
+        if is_frozen_generator_input(dtypes):
+            dtypes = FrozenGenerator(dtypes) #type: ignore
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
         if is_map:
@@ -185,10 +188,7 @@ def get_col_dtype_factory(
             except KeyError:
                 return None
         else:
-            # NOTE: dtypes might be a generator
             # INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
-            if is_frozen_generator_input(dtypes):
-                dtypes = FrozenGenerator(dtypes) #type: ignore
             dt = dtypes[col_idx] #type: ignore
         return validate_dtype_specifier(dt)
 
