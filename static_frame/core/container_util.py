@@ -175,11 +175,8 @@ def get_col_dtype_factory(
             col_idx = col_idx - index_depth
             if col_idx < 0:
                 return None
-
-        nonlocal dtypes # might mutate a generator into a tuple
         if is_element:
-            # already validated
-            return dtypes
+            return dtypes  # already validated
         if is_map:
             # if no columns, assume mapping is an integer mapping
             key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
