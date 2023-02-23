@@ -90,6 +90,8 @@ from static_frame.core.util import validate_depth_selection
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
+from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.util import DTYPE_OBJECT
 
 
 class TestUnit(TestCase):
@@ -3049,7 +3051,13 @@ class TestUnit(TestCase):
         self.assertEqual(v.tolist(), [5])
         self.assertEqual(w.tolist(), [4])
 
+    #---------------------------------------------------------------------------
+    def test_validate_dtype_specifier_a(self) -> None:
+        with self.assertRaises(TypeError):
+            validate_dtype_specifier(list)
 
+        self.assertEqual(validate_dtype_specifier(object), DTYPE_OBJECT)
+        self.assertEqual(validate_dtype_specifier(np.int8), np.dtype(np.int8))
 
 
 if __name__ == '__main__':
