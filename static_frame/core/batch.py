@@ -15,7 +15,6 @@ from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
-from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
@@ -1686,7 +1685,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_series(self, *,
         dtype: DtypeSpecifier = None,
         name: NameType = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
+        index_constructor: IndexConstructor = None
         ) -> Series:
         '''
         Consolidate stored values into a new :obj:`Series` using the stored labels as the index.
@@ -1702,6 +1701,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             union: bool = True,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             columns: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
@@ -1719,7 +1720,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             containers.append(container)
 
         name = name if name is not None else self._name
-
         if ndim1d:
             if axis == 0 and index is None:
                 index = labels
@@ -1731,6 +1731,8 @@ class Batch(ContainerOperand, StoreClientMixin):
                     union=union,
                     index=index,
                     columns=columns,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
                     name=name,
                     fill_value=fill_value,
                     consolidate_blocks=consolidate_blocks,
@@ -1743,9 +1745,12 @@ class Batch(ContainerOperand, StoreClientMixin):
                 name=name,
                 fill_value=fill_value,
                 consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 )
         if index is not None or columns is not None:
             # this relabels, as that is how Frame.from_concat works
+            # NOTE: we need to apply index_constructor, columns_constructors if defined
             f = f.relabel(index=index, columns=columns)
         return f
 

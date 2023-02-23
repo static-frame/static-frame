@@ -3328,6 +3328,7 @@ class Series(ContainerOperand):
             *,
             index_constructor:
             columns_constructor:
+            name:
 
         Returns:
             :obj:`Frame`

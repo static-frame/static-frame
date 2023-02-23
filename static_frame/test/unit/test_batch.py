@@ -12,6 +12,7 @@ from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_datetime import IndexDate
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
 from static_frame.test.test_case import TestCase
@@ -604,6 +605,15 @@ class TestUnit(TestCase):
         f3 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[:2]).to_frame()
         self.assertEqual(f3.to_pairs(0),
                 (('zZbu', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), False), (((False, True), 'zmhG'), False), (((True, False), 'zkuW'), True), (((True, False), 'z2Oo'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), True), (((False, True), 'zmhG'), True), (((True, False), 'zkuW'), False), (((True, False), 'z2Oo'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, False), 'ztsv'), 91301), (((False, True), 'zr4u'), 197228), (((False, True), 'zmhG'), 96520), (((True, False), 'zkuW'), 54020), (((True, False), 'z2Oo'), 35021), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, False), 'ztsv'), 2580.34), (((False, True), 'zr4u'), 3884.48), (((False, True), 'zmhG'), 1699.34), (((True, False), 'zkuW'), 3338.48), (((True, False), 'z2Oo'), 3944.56), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34))))
+                )
+
+    def test_batch_to_frame_d(self) -> None:
+        f1 = ff.parse('s(12,2)|v(bool)|i(ID,dtD)')
+        f2 = Batch(f1.iter_window_items(size=8)).std().to_frame(index_constructor=IndexDate)
+
+        self.assertEqual(f2.index.__class__, IndexDate)
+        self.assertEqual(round(f2, 1).to_pairs(),
+                ((0, ((np.datetime64('2427-01-09'), 0.5), (np.datetime64('2304-09-13'), 0.5), (np.datetime64('2509-12-29'), 0.5), (np.datetime64('2258-03-21'), 0.5), (np.datetime64('2298-04-20'), 0.5))), (1, ((np.datetime64('2427-01-09'), 0.0), (np.datetime64('2304-09-13'), 0.3), (np.datetime64('2509-12-29'), 0.3), (np.datetime64('2258-03-21'), 0.3), (np.datetime64('2298-04-20'), 0.4))))
                 )
 
     #---------------------------------------------------------------------------
