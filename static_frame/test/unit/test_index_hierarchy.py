@@ -3852,6 +3852,14 @@ class TestUnit(TestCase):
         idx3 = idx1.astype((float, np.datetime64, float))
         self.assertEqual([dt.kind for dt in idx3.dtypes.values], ['f', 'M', 'f'])
 
+    def test_hierarchy_astype_i(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        with self.assertRaises(ValueError):
+            _ = ih1.astype(float)
+        with self.assertRaises(TypeError):
+            ih1.astype(IndexDate)
+
     #---------------------------------------------------------------------------
 
     @skip_win

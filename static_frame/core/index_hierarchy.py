@@ -2993,7 +2993,7 @@ class IndexHierarchyAsType:
                     container.STATIC,
                     dtype_post,
                     )
-        else: # dtype_post is a niterable of values of same size dpeth_key selection
+        else: # dtype_post is an iterable of values of same size dpeth_key selection
             index_constructors[self.depth_key] = [
                 dtype_to_index_cls(container.STATIC, dt) for dt in dtype_post
             ]
