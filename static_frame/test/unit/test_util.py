@@ -20,6 +20,7 @@ from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import UFUNC_MAP
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import JSONFilter
@@ -87,11 +88,10 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
+from static_frame.core.util import validate_dtype_specifier
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
-from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.util import DTYPE_OBJECT
 
 
 class TestUnit(TestCase):
