@@ -15,7 +15,6 @@ from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
-from static_frame.core.index_base import IndexBase
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
