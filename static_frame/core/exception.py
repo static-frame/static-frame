@@ -92,11 +92,11 @@ class StoreParameterConflict(RuntimeError):
     pass
 
 class StoreLabelNonUnique(RuntimeError):
-    def __init__(self, label) -> None:
+    def __init__(self, label: str) -> None:
         super().__init__(f'Store label "{label}" is not unique.')
 
 class NotImplementedAxis(NotImplementedError):
-    def __init__(self, label) -> None:
+    def __init__(self) -> None:
         super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 
