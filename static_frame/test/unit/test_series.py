@@ -2749,10 +2749,9 @@ class TestUnit(TestCase):
                 ((0, True), (1, True), (2, True), (3, False)))
         self.assertTrue(s2.dtype == bool)
 
-    def test_series_astype_b(self) -> None:
+    def test_series_astype_c(self) -> None:
 
         s1 = Series([1, 3, 4, 0])
-
         with self.assertRaises(TypeError):
             _ = s1.astype(Series)
 
