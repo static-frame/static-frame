@@ -113,6 +113,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -2372,6 +2373,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        dtype = validate_dtype_specifier(dtype)
         return self.__class__(
                 self.values.astype(dtype),
                 index=self._index,
