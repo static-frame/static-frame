@@ -80,7 +80,6 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import validate_dtype_specifier
 
-
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
 
