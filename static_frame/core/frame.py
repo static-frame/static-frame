@@ -451,19 +451,29 @@ class Frame(ContainerOperand):
             if isinstance(f, Frame):
                 frame_seq.append(f)
             else:
-                # vstack, Series will be row, if index provided, do not evaluate name as an index
-                index_to_frame = (IndexAutoFactory if
-                        (axis == 0 and index is not None) else None)
-                # hstack, Series will be col, if columns provided, do not evaluate name as columns
-                columns_to_frame = (IndexAutoFactory if
-                        (axis == 1 and columns is not None) else None)
-                # import ipdb; ipdb.set_trace()
+                # NOTE: we need to determine if the name attr of the Series is to be used as a label; providing IndexAutoFactory will forbid the usage of the name attr; the name attr is assigned to index if axis is 0, to columns if axis is 1. If index/columns is provided, force Series.to_frame() to not try to use the name attr.
+                index_to_frame = None
+                columns_to_frame = None
+                index_constructor_to_frame = index_constructor
+                columns_constructor_to_frame = columns_constructor
+
+                # vstack, Series will be row
+                if axis == 0:
+                    if index is not None: # if we have an index, do not use name
+                        index_to_frame = IndexAutoFactory
+                        index_constructor_to_frame = None
+                # hstack, Series will be col
+                if axis == 1:
+                    if columns is not None: # if we have columns, do not use name
+                        columns_to_frame = IndexAutoFactory
+                        columns_constructor_to_frame = None
+
                 frame_seq.append(
                         f.to_frame(axis,
                         index = index_to_frame,
-                        index_constructor=index_constructor,
+                        index_constructor=index_constructor_to_frame,
                         columns=columns_to_frame,
-                        columns_constructor=columns_constructor,
+                        columns_constructor=columns_constructor_to_frame,
                         ))
         own_index = False
         own_columns = False

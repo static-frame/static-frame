@@ -608,10 +608,13 @@ class TestUnit(TestCase):
                 )
 
     def test_batch_to_frame_d(self) -> None:
-        f1 = ff.parse('s(20,2)|v(bool)|i(ID,dtD)')
+        f1 = ff.parse('s(12,2)|v(bool)|i(ID,dtD)')
         f2 = Batch(f1.iter_window_items(size=8)).std().to_frame(index_constructor=IndexDate)
 
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(f2.index.__class__, IndexDate)
+        self.assertEqual(round(f2, 1).to_pairs(),
+                ((0, ((np.datetime64('2427-01-09'), 0.5), (np.datetime64('2304-09-13'), 0.5), (np.datetime64('2509-12-29'), 0.5), (np.datetime64('2258-03-21'), 0.5), (np.datetime64('2298-04-20'), 0.5))), (1, ((np.datetime64('2427-01-09'), 0.0), (np.datetime64('2304-09-13'), 0.3), (np.datetime64('2509-12-29'), 0.3), (np.datetime64('2258-03-21'), 0.3), (np.datetime64('2298-04-20'), 0.4))))
+                )
 
     #---------------------------------------------------------------------------
 
