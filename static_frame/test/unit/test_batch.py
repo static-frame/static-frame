@@ -10,6 +10,7 @@ from static_frame.core.batch import normalize_container
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
@@ -1394,6 +1395,23 @@ class TestUnit(TestCase):
         for frame in (f1, f2, f3):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    def test_batch_to_zip_pickle_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f')
+
+        b1 = Batch.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(StoreLabelNonUnique):
+                b1.to_zip_pickle(fp)
+
 
     #---------------------------------------------------------------------------
 

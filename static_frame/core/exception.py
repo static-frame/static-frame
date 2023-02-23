@@ -67,7 +67,7 @@ class RelabelInvalid(RuntimeError):
 
 class BatchIterableInvalid(RuntimeError):
     def __init__(self) -> None:
-        super().__init__('Batch iterable does not yield expected pair of label, Frame.')
+        super().__init__('Batch iterable does not yield expected pair of label, container.')
 
 class InvalidDatetime64Comparison(RuntimeError):
     def __init__(self) -> None:
@@ -89,9 +89,11 @@ class StoreFileMutation(RuntimeError):
     '''
 
 class StoreParameterConflict(RuntimeError):
-    '''
-    A Stores file was mutated in an unexpected way.
-    '''
+    pass
+
+class StoreLabelNonUnique(RuntimeError):
+    def __init__(self, label: str) -> None:
+        super().__init__(f'Store label "{label}" is not unique.')
 
 class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:
