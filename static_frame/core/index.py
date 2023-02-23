@@ -78,6 +78,8 @@ from static_frame.core.util import key_to_str
 from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import validate_dtype_specifier
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -577,7 +579,11 @@ class Index(IndexBase):
             {dtype}
         '''
         from static_frame.core.index_datetime import dtype_to_index_cls
+
+        dtype = validate_dtype_specifier(dtype)
+
         array = self.values.astype(dtype)
+        array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
         return cls(
                 array,

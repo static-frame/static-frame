@@ -2374,8 +2374,10 @@ class Series(ContainerOperand):
             :obj:`Series`
         '''
         dtype = validate_dtype_specifier(dtype)
+        array = self.values.astype(dtype)
+        array.flags.writeable = False
         return self.__class__(
-                self.values.astype(dtype),
+                array,
                 index=self._index,
                 name=self._name
                 )
