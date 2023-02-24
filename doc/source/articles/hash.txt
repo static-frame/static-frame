@@ -1,12 +1,35 @@
 
 
+Improving the Performance of Python DataFrame Operations with Memoization: Hashing DataFrames in Dictionaries and Creating Message Digests
 
-Memoizing DataFrames: Hashing DataFrames in Dictionaries and Caches
 Hashing DataFrames for Usage in Dictionaries, Memoization, and Caching
 
+Memoizing DataFrame Operations: Hashing DataFrames in Dictionaries and Creating Caches
 
 
+--
 
+A well-known technique for improving the run-time performance of a system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is being called multiple times with the same arguments, we can avoid repeating that calculation by storing the arguments in an in-memory mapping or on disk: upon subsequent calls, we can look for the arguments in the mapping and, if found, avoid repeating the computation by simply returning the result of the stored computation.
+
+This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: we have to store previously calculated results either in memory or on disk. The function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the  function arguments. For in-memory memoization, those arguments must be hashable: in order to lookup past results by the arguments, those arguments need to reside in a mapping. For disk-based memoization, arguments must be reduced to a unique string: a cryptographic message digest often provides the best results.
+
+Another challenge with memoization is cache invalidation: as cache storage can grow excessively, at some point caches need to be dropped. The Python standard library provides an excellent in-memory solution to this problem with the `functools.lru_cache()` decorator. This decorator implements memoization with a "least recently used" cache invalidation strategy: after hitting a max count, caches that have least recently been used are first to be dropped.
+
+For Python programmings using Pandas DataFrames as arguments, however, there are challenges. As mutable containers, Pandas DataFrame and Series are not hashable, and cannot be used as keys in dictionaries. The `functools.lru_cache()` will fail if an argument is a Pandas DataFrame.
+
+
+>>> import functools
+>>> @functools.lru_cache
+... def scale_frame(a, b):
+...     return a * b
+...
+>>> df = pd.DataFrame(np.arange(20).reshape(5, 4))
+>>> scale_frame(df, 2)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+TypeError: unhashable type: 'DataFrame'
+
+We can get around this by using a cryptographic hash function to first produce a messsage digest of the DataFrame: the resulting string can serve as key in a dictionary or a file name on disk. Getting the right input into such a function is not trivial. While Pandas provides a ``pd.hash_pandas_object`` utility function possibly for this purpose, the implementation is slow (as will be shown below) and uses a bespoke digest algorithm that shows no evidence of the proven collision resistance of commonly used approaches such as SAH256. Fruthermore, it does not distinguish between all types:
 
 
 
@@ -20,5 +43,4 @@ Hashing DataFrames for Usage in Dictionaries, Memoization, and Caching
 https://stackoverflow.com/questions/49883236/how-to-generate-a-hash-or-checksum-value-on-python-dataframe-created-from-a-fix
 
 
-
-
+https://stackoverflow.com/questions/47707528/save-repeated-calculations-in-python-pandas

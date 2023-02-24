@@ -51,7 +51,7 @@ class PandasHashDigestSHA256(HashingTest):
         x  = hashlib.sha256(post.values.tobytes()).hexdigest()
 
 #-------------------------------------------------------------------------------
-NUMBER = 10
+NUMBER = 100
 
 def scale(v):
     return int(v * .1)
@@ -124,8 +124,7 @@ def plot_performance(frame: sf.Frame):
             post = ax.bar(names_display, results, color=color)
 
             # ax.set_ylabel()
-            cat_io, cat_dtype = cat_label.split(' ')
-            title = f'{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+            title = f'{cat_label.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
             ax.set_title(title, fontsize=8)
             ax.set_box_aspect(0.75) # makes taller tan wide
             time_max = fixture['time'].max()
@@ -241,9 +240,9 @@ def run_test():
             fixture_to_pair('columnar', FF_square_columnar),
             ):
 
-        for cls, category_prefix in zip(CLS_READ, repeat('read')):
+        for cls in CLS_READ:
             runner = cls(fixture)
-            category = f'{category_prefix} {dtype_hetero}'
+            category = f'{dtype_hetero}'
 
             record = [cls.__name__, NUMBER, category, fixture_label]
             print(record)
