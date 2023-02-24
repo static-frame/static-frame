@@ -1,8 +1,20 @@
 
 
 
+Memoizing DataFrames: Hashing DataFrames in Dictionaries and Caches
 Hashing DataFrames for Usage in Dictionaries, Memoization, and Caching
-Memoizing DataFrames: Using DataFrames in Dictionaries and Caches
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 https://stackoverflow.com/questions/49883236/how-to-generate-a-hash-or-checksum-value-on-python-dataframe-created-from-a-fix
