@@ -286,10 +286,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertTrue(HierarchicalLocMap.is_single_element(123))
         self.assertTrue(HierarchicalLocMap.is_single_element(1.0023))
         self.assertTrue(HierarchicalLocMap.is_single_element(np.nan))
+        self.assertTrue(HierarchicalLocMap.is_single_element(()))
+        self.assertTrue(HierarchicalLocMap.is_single_element((1, 2, 3)))
 
         self.assertFalse(HierarchicalLocMap.is_single_element([False]))
         self.assertFalse(HierarchicalLocMap.is_single_element([2.3, 8878.33]))
-        self.assertFalse(HierarchicalLocMap.is_single_element(()))
         self.assertFalse(HierarchicalLocMap.is_single_element(np.arange(5)))
 
     #---------------------------------------------------------------------------

@@ -754,6 +754,20 @@ class TestUnit(TestCase):
         post = ih2._loc_to_iloc(HLoc[:, 4:1])
         self.assertListEqual(list(post), [1, 2])
 
+    def test_hierarchy_loc_to_iloc_t(self) -> None:
+        # https://github.com/static-frame/static-frame/issues/610
+        ih = IndexHierarchy.from_labels(
+            [
+                ("a", ("b", "c")),
+                ("a", "d"),
+            ]
+        )
+        ih.loc_to_iloc(("a", ("b", "c")))  # Raises the following RuntimeError
+        assert 0 == ih.loc_to_iloc(("a", ("b", "c")))
+        assert [0] == ih.loc_to_iloc([("a", ("b", "c"))])
+        assert 1 == ih.loc_to_iloc(("a", "d"))
+        assert [1] == ih.loc_to_iloc([("a", "d")])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:

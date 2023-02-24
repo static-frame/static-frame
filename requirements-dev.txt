@@ -32,5 +32,3 @@ sphinx==5.0.2
 sphinx-jinja==2.0.2
 sphinx_rtd_theme==1.0.0
 sphinxcontrib-napoleon==0.7.0
-
-
