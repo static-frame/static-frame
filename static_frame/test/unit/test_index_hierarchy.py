@@ -762,7 +762,7 @@ class TestUnit(TestCase):
                 ("a", "d"),
             ]
         )
-        ih.loc_to_iloc(("a", ("b", "c")))  # Raises the following RuntimeError
+
         assert 0 == ih.loc_to_iloc(("a", ("b", "c")))
         assert [0] == ih.loc_to_iloc([("a", ("b", "c"))])
         assert 1 == ih.loc_to_iloc(("a", "d"))
