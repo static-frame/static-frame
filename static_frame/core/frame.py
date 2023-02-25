@@ -9536,10 +9536,6 @@ class FrameHE(Frame):
     '''
 
     __slots__ = (
-            # '_blocks',
-            # '_columns',
-            # '_index',
-            # '_name',
             '_hash',
             )
 
