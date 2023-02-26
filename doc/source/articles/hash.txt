@@ -1,5 +1,13 @@
 
 
+
+
+DataFrame Memoization: Using Hashable DataFrames and Cryptographic Message Digests for Optimizing Performance
+
+Improving the Performance of Python DataFrame Operations with Memoization:
+How StaticFrame Permits Hashing DataFrames in Dictionaries and Deriving Cryptographic Message Digests
+
+
 Improving the Performance of Python DataFrame Operations with Memoization: Hashing DataFrames in Dictionaries and Creating Message Digests
 
 Hashing DataFrames for Usage in Dictionaries, Memoization, and Caching
@@ -9,38 +17,38 @@ Memoizing DataFrame Operations: Hashing DataFrames in Dictionaries and Creating 
 
 --
 
-A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is being called multiple times with the same arguments, we can avoid repeating the calculation by storing the results in a mapping (or on disk), keyed (or named) by the arguments: upon subsequent calls, we can look for the arguments in the mapping and, if found, avoid repeating the computation by simply returning the result of the stored computation.
+A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is being called multiple times with the same arguments, we can avoid repeating the calculation by storing the results in a mapping (or on disk), keyed (or named) by the arguments: upon subsequent calls, we can look for the arguments in the mapping and, if found, avoid repeating the computation by simply returning the stored result.
 
-This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: we have to store previously calculated results either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. For in-memory memoization, those arguments must be hashable: in order to key results by arguments in a mapping, those arguments need to hashable. For disk-based memoization, arguments must be reducible to a unique string: here a cryptographic hash message digest often provides the best results.
+This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. For in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. For disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
 
-Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches can be dropped. The Python standard library provides an excellent in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" cache invalidation strategy: after reaching a maximum count, caches that have least recently been used are first to be dropped.
+Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches must be dropped. The Python standard library provides an in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" cache invalidation strategy: after reaching a maximum count, caches that have least-recently been used are dropped.
 
-For Python programmers using Pandas DataFrames as function arguments, there are further challenges. As mutable containers, Pandas ``DataFrame`` and ``Series`` are not hashable. The `functools.lru_cache()` will fail if an argument is a Pandas DataFrame.
+For Python programmers using Pandas DataFrames as function arguments, there are further challenges. As mutable containers, Pandas ``DataFrame`` and ``Series`` are not hashable. The ``functools.lru_cache()`` will fail if an argument is a Pandas DataFrame.
 
 >>> import functools
 >>> @functools.lru_cache
-... def scale_frame(a, b):
-...     return a * b
+... def cube(v):
+...     return v ** 3
 ...
 >>> import pandas as pd
->>> df = pd.DataFrame(np.arange(20).reshape(5, 4))
->>> scale_frame(df, 2)
+>>> df = pd.DataFrame(np.arange(1_000_000).reshape(1000, 1000))
+>>> cube(df)
 Traceback (most recent call last):
   File "<console>", line 1, in <module>
 TypeError: unhashable type: 'DataFrame'
 
 
-StaticFrame is an alternative DataFrame library that offers efficient solutions to this and related problems, both for in-memory and disk based memoization.
+StaticFrame is an alternative DataFrame library that offers efficient solutions to this and related problems, both for in-memory and disk-based memoization.
 
 
 All Hashes Are not Created Equal
 ................................................
 
-Before demonstrating effective DataFrame memoization with StaticFrame, it is important to clarify the sometimes conflicting meanings of "hash", particularly in the context of Python.
+Before demonstrating effective DataFrame memoization with StaticFrame, it is important to distinguish different types of hash functions.
 
-A hashing function converts a variable-sized value into a smaller, fixed-sized value. The results of hashing different inputs might be the same: this is called a collision. For some applications, hash collisions are acceptable; for others, they are a significant problem. Cryptographic hashes aim to eliminate collisions.
+A hashing function converts a variable-sized value into a smaller, (generally) fixed-sized value. The results of hashing different inputs might be the same: this is called a hash collision. For some applications, hash collisions are acceptable; for others, they are a significant problem. Cryptographic hashes aim to eliminate collisions.
 
-In Python, the the built-in ``hash()`` function converts hashable objects into an integer. Arbitrary types can provide support by implementing ``__hash__()``. Many Python users are surprised to learn that the results of ``hash()`` are not collision resistant:
+In Python, the built-in ``hash()`` function converts hashable objects into an integer. Arbitrary types can provide support by implementing the magic method ``__hash__()``. Importantly, the results of ``hash()`` are not collision resistant:
 
 >>> hash('')
 0
@@ -49,10 +57,11 @@ In Python, the the built-in ``hash()`` function converts hashable objects into a
 >>> hash(False)
 0
 
-Python dictionaries use ``hash()`` to transform dictionary keys into storage positions in a low-level C array. Collisions are expected, and if found, are resolved in look-up routines with equality comparisons (using the magic method ``__eq__()``). Thus, for an arbitrary type to be hashable, it needs to implement both ``__hash__()`` and ``__eq__()``.
+Python dictionaries use ``hash()`` to transform dictionary keys into storage positions in a low-level C array. Collisions are expected, and if found, are resolved with equality comparisons (using ``__eq__()``). Thus, for an arbitrary type to be hashable, it needs to implement both ``__hash__()`` and ``__eq__()``.
 
-Cryptographic hashing functions are unlike ``hash()``: they are designed to avoid collisions. Python exposes a collection of cryptographic hashing functions in the ``hashlib`` library. These functions generally consume byte data and return a string of fixed size.
+Cryptographic hashing functions are unlike ``hash()``: they are designed to avoid collisions. Python implements a collection of cryptographic hashing functions in the ``hashlib`` library. These functions consume byte data and return , with the ``hexdigest()`` method, a message digest as a unique string of fixed size.
 
+>>> import hashlib
 >>> hashlib.sha256(b'').hexdigest()
 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 >>> hashlib.sha256(b'0').hexdigest()
@@ -60,68 +69,75 @@ Cryptographic hashing functions are unlike ``hash()``: they are designed to avoi
 >>> hashlib.sha256(b'False').hexdigest()
 '60a33e6cf5151f2d52eddae9685cfa270426aa89d8dbc7dfb854606f1d1a40fe'
 
-In Python, dictionary keys must be hashable. Most in-memory memoization implementations (such as ``functools.lru_cache()``), store function results in dictionaries keyed by arguments. This is why function arguments must be hashasble.
-
-For disk-based memoization and other caching applications, deriving a unique string from function arguments is necessary. Here, a cryptographic hashing algorithm is necessary as collisions are not resolved by any additional equality checks.
 
 
 In-Memory Memoization of DataFrame Processing Functions
 .................................................................
 
-As in-memory memoization requires hashable arguments, we need hashable DataFrames to memoize functions that take DataFrames as arguments.
+To memoize functions that take DataFrames as arguments, an immutable, hashable DataFrame is required. While the StaticFrame ``Frame`` is immutable, it is not hashable. StaticFrame offers the ``FrameHE`` for this purpose, where "HE" stands for "hash, equals," the two required implementations for Python hashability.
 
-StaticFrame offers ``FrameHE`` and ``SeriesHE`` for this purpose, where "HE" stands for "hash, equals," the two required implementations for hashability.
+The implementation of ``FrameHE.__hash__()`` returns the ``hash()`` of the labels of the index and columns. While this will collide with any other ``FrameHE`` with same labels but different values, using just the labels defers the more expensive full-value comparison to ``__eq__()``.
 
-The implementation of ``FrameHE.__hash__()`` returns the ``hash()`` of the labels of the index and columns. While this will collide with any other ``FrameHE`` withe same labels but different values, using just the labels defers full data array comparisons to ``__eq__()``.
+The implementation of ``FrameHE.__eq__()`` simply delegates to ``Frame.equals()``, an interface designed to always return a full-value comparison as a single Boolean result. This contrasts with ``Frame.__eq__()``, which returns an element-wise comparison in a Boolean ``Frame``.
 
-The implementation of ``FrameHE.__eq__()`` simply delegates to ``Frame.equals()``, an interface designed to always return a comparison as a single Boolean result. This contrasts with ``Frame.__eq__()``, which returns an element-wise comparison in a Boolean ``Frame``.
+We can now use the ``cube()`` function, decorated above with the ``functools.lru_cache()`` decorator, with a ``FrameHE`` as an argument. Note that the ``Frame.to_frame_he()`` method can be used to efficiently create a ``FrameHE`` from other StaticFrame containers. As underlying NumPy array data is always immutable, this is light-weight, no-copy operation. If coming from a Pandas DataFrame, ``FrameHE.from_pandas()`` can be used.
 
-We can now use the ``scale_frame()`` function, defined above, with a ``FrameHE`` as an argument. The ``Frame.to_frame_he() method can be used to efficiently provide a ``FrameHE`` from a ``Frame`` or other StaticFrame container. As underlying NumPy array data is immutable, this is light-weight, no-copy operation. If coming from a Pandas DataFrame, ``FrameHE.from_pandas()`` can be used.
-
-In the example below we create a large ``FrameHE``; we see with the IPython ``%time`` results, after being called once, subsequent calls with the same arguments are three orders of magnitude faster (from ms to µs).
+In the example below we create a large ``FrameHE``. The IPython ``%time`` utility shows that, after being called once, subsequent calls with the same argument are three orders of magnitude faster (from ms to µs).
 
 >>> f = sf.FrameHE(np.arange(1_000_000).reshape(1000, 1000))
->>> %time scale_frame(f, 10)
-CPU times: user 1.58 ms, sys: 4.14 ms, total: 5.72 ms
->>> %time scale_frame(f, 10)
-CPU times: user 9 µs, sys: 1e+03 ns, total: 10 µs
+>>> %time cube(f)
+CPU times: user 8.24 ms, sys: 99 µs, total: 8.34 ms
+>>> %time cube(f)
+CPU times: user 5 µs, sys: 4 µs, total: 9 µs
 
-While helpful for in-memory memoization, ``FrameHE`` and ``SeriesHE`` can also be members of sets, offering a novel approach to collecting unique containers.
-
-
+While helpful for in-memory memoization, ``FrameHE`` can also be members of sets, offering a novel approach to collecting unique containers.
 
 
 Disk-Based Memoization of DataFrame Processing Functions
 .................................................................
 
+In-memory memoization offers optimal performance, but consumes system memory and does not persist beyond the life of the process. If function results are large, or caches should persist beyond the life the process, disk-based memoization is appropriate.
+
+In this scenario, hashability of arguments is not important. Instead, a unique file name must be derived from the arguments. Using a cryptographic hash to derive a message digest is ideal for this purpose.
+
+As cryptographic hash functions take bytes as input, inputting a container as complex as a ``Frame`` is not trivial. A naive approach might serialize the ``Frame`` as JSON (or some other string representation), which can then be converted to bytes. This is inefficient, as (non object) NumPy array data is already stored in bytes.
+
+StaticFrame implements an efficient interface to provide inputs to nearly all functions in the standard library ``hashlib`` module. First, ``via_hashlib`` is called, providing options to determine which container components should be included. As the default container ``name`` attribute, ``None``, is not automatically byte encodable, it will be excluded below. Second, we can call a hashlib function to get an instance, and then call ``hexdigest`` to return the message digest as a string.
+
+>>> f.via_hashlib(include_name=False).sha256().hexdigest()
+'b931bd5662bb75949404f3735acf652cf177c5236e9d20342851417325dd026c'
+
+StaticFrame concatenates all underlying byte data, as well as optional container metadata, to create the input to the cryptographic hashing function. The underlying byte representation is available with a ``to_bytes()`` method. This data can be combined with other byte data to create a hash digest based on multiple containers.
+
+>>> len(f.via_hashlib(include_name=False).to_bytes())
+8016017
+
+This approach to creating a hash-digest of a DataFrame is far more efficient than the related ``pd.hash_pandas_object()`` utility function. Not only is this approach slower than StaticFrame (as will be shown below), it uses a bespoke digest algorithm that is unlikely to be as robust as proven collision resistance of commonly used approaches such as SHA-256.
 
 
 
-Conclusion
-.................................................................
+
+
+------------------------
+notes
+
+
+In Python, dictionary keys must be hashable. Most in-memory memoization implementations (such as ``functools.lru_cache()``), store function results in dictionaries keyed by arguments. This is why function arguments must be hashasble.
+
+For disk-based memoization and other caching applications, deriving a unique string from function arguments is necessary. Here, a cryptographic hashing algorithm is necessary as collisions are not resolved by any additional equality checks.
+
+We might avoid this problem by using a cryptographic hash function to first produce a messsage digest of the DataFrame: the resulting string can serve as key in a dictionary or a file name on disk. Getting the right input into such a function is not trivial.
 
 
 
-
-We might avoid this problem by using a cryptographic hash function to first produce a messsage digest of the DataFrame: the resulting string can serve as key in a dictionary or a file name on disk. Getting the right input into such a function is not trivial. While Pandas provides a ``pd.hash_pandas_object`` utility function possibly for this purpose, the implementation is slow (as will be shown below) and uses a bespoke digest algorithm that shows no evidence of the proven collision resistance of commonly used approaches such as SAH256.
-
-
-
-
-
-
-
-
-
-
->>> def cache(f):
-...     store = {}
-...     def wrapped(*args):
-...         if args not in store:
-...             store[args] = f(*args)
-...         return store[args]
+>>> def cache(func):
+...     def wrapped(arg):
+            fn = arg.via_hashlib(include_name=False).sha256().hexdigest() + '.npz'
+...         fp = Path('/tmp') / fn
+...         if not fp.exists():
+...             func(arg).to_npz(fp)
+...         return sf.Frame.from_npz(fp)
 ...     return wrapped
-...
 
 
 https://stackoverflow.com/questions/49883236/how-to-generate-a-hash-or-checksum-value-on-python-dataframe-created-from-a-fix
