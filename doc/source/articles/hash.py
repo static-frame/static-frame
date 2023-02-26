@@ -44,17 +44,17 @@ class PandasHash(HashingTest):
         post = pd.util.hash_pandas_object(self.pdf)
 
 
-class PandasHashDigestSHA256(HashingTest):
+class PandasHashSHA256(HashingTest):
 
     def __call__(self):
         post = pd.util.hash_pandas_object(self.pdf)
         x  = hashlib.sha256(post.values.tobytes()).hexdigest()
 
 #-------------------------------------------------------------------------------
-NUMBER = 100
+NUMBER = 200
 
 def scale(v):
-    return int(v * .1)
+    return int(v * 1)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -93,21 +93,21 @@ def plot_performance(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        SFDigestSHA256.__name__: 'StaticFrame\n(SHA 256 digest)',
-        PandasHash.__name__: 'Pandas\n(hash_pandas_object)',
-        PandasHashDigestSHA256.__name__: 'Pandas\n(SHA 256 digest)',
+        SFDigestSHA256.__name__: 'StaticFrame\nvia_hashlib().sha256()',
+        PandasHash.__name__: 'Pandas\nhash_pandas_object()',
+        PandasHashSHA256.__name__: 'Pandas\nhash_pandas_object()\nhashlib.sha256()',
     }
 
     name_order = {
         SFDigestSHA256.__name__: 0,
         PandasHash.__name__: 1,
-        PandasHashDigestSHA256.__name__: 2,
+        PandasHashSHA256.__name__: 2,
     }
 
     # cmap = plt.get_cmap('terrain')
     cmap = plt.get_cmap('plasma')
-
-    color = cmap(np.arange(name_total) / name_total)
+    color_count = name_total + 1
+    color = cmap(np.arange(color_count) / color_count)
 
     # categories are read, write
     for cat_count, (cat_label, cat) in enumerate(frame.iter_group_items('category')):
@@ -146,7 +146,7 @@ def plot_performance(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .96, f'Hashing Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .96, f'DataFrame to SHA256 Digest Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .90, get_versions(), fontsize=6)
 
     # get fixtures size reference
@@ -220,7 +220,7 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
 CLS_READ = (
     SFDigestSHA256,
     PandasHash,
-    PandasHashDigestSHA256,
+    PandasHashSHA256,
     )
 
 
