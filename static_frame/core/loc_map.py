@@ -368,8 +368,14 @@ class HierarchicalLocMap:
             raise FirstDuplicatePosition(first_duplicate) from None
 
     @staticmethod
-    def is_single_element(element: tp.Hashable) -> bool:
-        return not hasattr(element, '__len__') or isinstance(element, str)
+    def is_single_element(element: tp.Any) -> bool:
+        # By definition, all index labels are hashable. If it's not, then it
+        # means this must be a container of labels.
+        try:
+            hash(element)
+        except TypeError:
+            return False
+        return True
 
     def build_key_indexers(self: _HLMap,
             key: HierarchicalLocMapKey,
