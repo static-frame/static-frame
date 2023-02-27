@@ -1,13 +1,13 @@
 
 
 
+import hashlib
 import os
 import sys
 import tempfile
 import timeit
 import typing as tp
 from itertools import repeat
-import hashlib
 
 import frame_fixtures as ff
 import matplotlib.pyplot as plt
