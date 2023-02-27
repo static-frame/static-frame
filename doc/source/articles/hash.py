@@ -50,11 +50,15 @@ class PandasHashSHA256(HashingTest):
         post = pd.util.hash_pandas_object(self.pdf)
         x  = hashlib.sha256(post.values.tobytes()).hexdigest()
 
+class PandasJsonSHA256(HashingTest):
+    def __call__(self):
+        x  = hashlib.sha256(self.pdf.to_json().encode()).hexdigest()
+
 #-------------------------------------------------------------------------------
-NUMBER = 200
+NUMBER = 100
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -96,17 +100,19 @@ def plot_performance(frame: sf.Frame):
         SFDigestSHA256.__name__: 'StaticFrame\nvia_hashlib().sha256()',
         PandasHash.__name__: 'Pandas\nhash_pandas_object()',
         PandasHashSHA256.__name__: 'Pandas\nhash_pandas_object()\nhashlib.sha256()',
+        PandasJsonSHA256.__name__: 'Pandas\nto_json()\nhashlib.sha256()',
     }
 
     name_order = {
         SFDigestSHA256.__name__: 0,
         PandasHash.__name__: 1,
         PandasHashSHA256.__name__: 2,
+        PandasJsonSHA256.__name__: 3,
     }
 
     # cmap = plt.get_cmap('terrain')
     cmap = plt.get_cmap('plasma')
-    color_count = name_total + 1
+    color_count = name_total
     color = cmap(np.arange(color_count) / color_count)
 
     # categories are read, write
@@ -219,7 +225,8 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
 
 CLS_READ = (
     SFDigestSHA256,
-    PandasHash,
+    # PandasHash,
+    PandasJsonSHA256,
     PandasHashSHA256,
     )
 
