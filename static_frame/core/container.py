@@ -178,11 +178,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def via_hashlib(self,
-            # include_name: bool = True,
-            # include_class: bool = True,
-            # encoding: str = 'utf-8',
-            ) -> InterfaceHashlib:
+    def via_hashlib(self) -> InterfaceHashlib:
         '''
         Interface for deriving cryptographic hashes from this container.
         '''

@@ -96,23 +96,25 @@ While helpful for in-memory memoization, ``FrameHE`` can also be members of sets
 Disk-Based Memoization of DataFrame Processing Functions
 .................................................................
 
-In-memory memoization offers optimal performance, but consumes system memory and does not persist beyond the life of the process. If function results are large, or caches should persist beyond the life the process, disk-based memoization is appropriate.
+While in-memory memoization offers optimal performance, the caches consume system memory and do not persist beyond the life of the process. If function results are large, or caches should persist beyond the life the process, disk-based memoization is an alternative.
 
-In this scenario, hashability of arguments is not important. Instead, a unique file name must be derived from the arguments. Using a cryptographic hash to derive a message digest is ideal for this purpose.
+In this scenario, mutability and hashability of arguments is irrelevant. Instead, cached results can be retreived from a file with a name derived from the function arguments. Using a cryptographic hash to derive a message digest is ideal for this purpose.
 
-As cryptographic hash functions take bytes as input, inputting a container as complex as a ``Frame`` is not trivial. A naive approach might serialize the ``Frame`` as JSON (or some other string representation), which can then be converted to bytes. This is inefficient, as (non object) NumPy array data is already stored in bytes.
+As cryptographic hash functions take bytes as input, inputting a container as complex as a ``Frame`` is not trivial. A naive approach might serialize the ``Frame`` as JSON (or some other string representation), which can then be converted to bytes. This is inefficient, as underlying NumPy array data, while already stored in bytes, must be converted to strings. This also may be incorrect, as JSON does not support the full range of NumPy types.
 
-StaticFrame implements an efficient interface to provide inputs to nearly all functions in the standard library ``hashlib`` module. First, ``via_hashlib`` is called, providing options to determine which container components should be included. As the default container ``name`` attribute, ``None``, is not automatically byte encodable, it will be excluded below. Second, we can call a hashlib function to get an instance, and then call ``hexdigest`` to return the message digest as a string.
+StaticFrame implements an efficient interface to provide input to nearly all cryptographic hash functions in the standard library ``hashlib`` module. An example is given below.
 
 >>> f.via_hashlib(include_name=False).sha256().hexdigest()
 'b931bd5662bb75949404f3735acf652cf177c5236e9d20342851417325dd026c'
 
-StaticFrame concatenates all underlying byte data, as well as optional container metadata, to create the input to the cryptographic hashing function. The underlying byte representation is available with a ``to_bytes()`` method. This data can be combined with other byte data to create a hash digest based on multiple containers.
+First, ``via_hashlib()`` is called, providing options to determine which container components should be included in the hash. As the default container ``name`` attribute, ``None``, is not byte encodable, it is excluded. Second, a hash function is called, returning an instance from the ``hashlib`` module loaded with the appropriate input. Third, the ``hexdigest()`` method is called to return the message digest as a string. The full range of ``hashlib`` instance methods are available.
+
+To create the input to the cryptographic hashing function, StaticFrame concatenates all underlying byte data, as well as optional container metadata. This same byte representation is available with a ``to_bytes()`` method. If necessary, this data can be combined with other byte data to create a hash digest based on multiple components.
 
 >>> len(f.via_hashlib(include_name=False).to_bytes())
 8016017
 
-This approach to creating a hash-digest of a DataFrame is far more efficient than the related ``pd.hash_pandas_object()`` utility function. Not only is this approach slower than StaticFrame (as will be shown below), it uses a bespoke digest algorithm that is unlikely to be as robust as proven collision resistance of commonly used approaches such as SHA-256.
+This approach to creating a hash-digest of a DataFrame is generally more efficient than two common approaches with Pandas. Pandas offers a utilty function, ``pd.hash_pandas_object()``, to derive per-column integer hashes. Not only is this approach slower than StaticFrame (as will be shown below), it uses a bespoke digest algorithm that makes no claim to cryptographic collision resistance. Another approach is provide a ``hashlib`` function a JSON representation of the entire DataFrame. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is slower. The following table summarize performance characteristc of these two approaches compared to StaticFrame's ``via_hashlig``: StaticFrame out-performas in all secenarios except one.
 
 
 
