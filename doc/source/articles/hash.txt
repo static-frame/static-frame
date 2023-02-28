@@ -1,7 +1,7 @@
 
 
 
-Memoizing DataFrame Functions: Using Hashable DataFrames and Cryptographic Message Digests to Optimize Repeated Calculations
+Memoizing DataFrame Functions: Using Hashable DataFrames and Message Digests to Optimize Repeated Calculations
 
 
 DataFrame Memoization: Using Hashable DataFrames and Cryptographic Message Digests to Optimize Performance of Repeated Calculations
@@ -19,11 +19,11 @@ Memoizing DataFrame Operations: Hashing DataFrames in Dictionaries and Creating 
 
 --
 
-A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is being called multiple times with the same arguments, we can avoid repeating the calculation by storing the results in a mapping (or on disk), keyed (or named) by the arguments: upon subsequent calls, we can look for the arguments in the mapping and, if found, avoid repeating the computation by simply returning the stored result.
+A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is called multiple times with the same arguments, repeating the calculation can be avoided by storing the results in a mapping (or on disk), keyed by the arguments. Upon subsequent calls, if the arguments are found, the stored result is returned.
 
-This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. For in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. For disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
+This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. With in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. With disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
 
-Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches must be dropped. The Python standard library provides an in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" cache invalidation strategy: after reaching a maximum count, caches that have least-recently been used are dropped.
+Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches must be dropped. The Python standard library provides an in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" (LRU) cache invalidation strategy: after reaching a maximum count, caches that have least-recently been used are dropped.
 
 For Python programmers using Pandas DataFrames as function arguments, there are further challenges. As mutable containers, Pandas ``DataFrame`` and ``Series`` are not hashable. The ``functools.lru_cache()`` will fail if an argument is a Pandas DataFrame.
 
@@ -40,15 +40,15 @@ Traceback (most recent call last):
 TypeError: unhashable type: 'DataFrame'
 
 
-StaticFrame is an alternative DataFrame library that offers efficient solutions to this problems, both for in-memory and disk-based memoization.
+StaticFrame is an alternative DataFrame library that offers efficient solutions to this problem, both for in-memory and disk-based memoization.
 
 
 All Hashes Are not Created Equal
 ................................................
 
-Before demonstrating effective DataFrame memoization with StaticFrame, it is important to distinguish different types of hash functions.
+Before demonstrating DataFrame memoization with StaticFrame, it is important to distinguish different types of hash functions.
 
-A hashing function converts a variable-sized value into a smaller, (generally) fixed-sized value. The results of hashing different inputs might be the same: this is called a hash collision. For some applications, hash collisions are acceptable; for others, they are a significant problem. Cryptographic hashes aim to eliminate collisions.
+A hashing function converts a variable-sized value into a smaller, (generally) fixed-sized value. The results of hashing different inputs might be the same: this is called a hash collision. For some applications, hash collisions are acceptable; for others, they are a significant problem. Cryptographic hash functions aim to eliminate collisions.
 
 In Python, the built-in ``hash()`` function converts hashable objects into an integer. Arbitrary types can provide support by implementing the magic method ``__hash__()``. Importantly, the results of ``hash()`` are not collision resistant:
 
@@ -59,7 +59,7 @@ In Python, the built-in ``hash()`` function converts hashable objects into an in
 >>> hash(False)
 0
 
-Python dictionaries use ``hash()`` to transform dictionary keys into storage positions in a low-level C array. Collisions are expected, and if found, are resolved with equality comparisons (using ``__eq__()``). Thus, for an arbitrary type to be hashable, it needs to implement both ``__hash__()`` and ``__eq__()``.
+Python dictionaries use ``hash()`` to transform dictionary keys into storage positions in a low-level C array. Collisions are expected, and if found, are resolved with equality comparisons using ``__eq__()``. Thus, for an arbitrary type to be hashable, it needs to implement both ``__hash__()`` and ``__eq__()``.
 
 Cryptographic hashing functions are unlike ``hash()``: they are designed to avoid collisions. Python implements a collection of cryptographic hashing functions in the ``hashlib`` library. These functions consume byte data and return , with the ``hexdigest()`` method, a message digest as a unique string of fixed size.
 
@@ -78,29 +78,35 @@ In-Memory Memoization of DataFrame-Processing Functions
 
 To memoize functions that take DataFrames as arguments, an immutable, hashable DataFrame is required. While the StaticFrame ``Frame`` is immutable, it is not hashable. StaticFrame offers the ``FrameHE`` for this purpose, where "HE" stands for "hash, equals," the two required implementations for Python hashability.
 
-The implementation of ``FrameHE.__hash__()`` returns the ``hash()`` of the labels of the index and columns. While this will collide with any other ``FrameHE`` with same labels but different values, using just the labels defers the more expensive full-value comparison to ``__eq__()``.
+The ``FrameHE.__hash__()`` method returns the ``hash()`` of the labels of the index and columns. While this will collide with any other ``FrameHE`` with same labels but different values, using just the labels defers the more expensive full-value comparison to ``__eq__()``.
 
-The implementation of ``FrameHE.__eq__()`` simply delegates to ``Frame.equals()``, an interface designed to always return a full-value comparison as a single Boolean result. This contrasts with ``Frame.__eq__()``, which returns an element-wise comparison in a Boolean ``Frame``.
+The implementation of ``FrameHE.__eq__()`` simply delegates to ``Frame.equals()``, an interface designed to always return a value comparison as a single Boolean result. This contrasts with ``Frame.__eq__()``, which returns an element-wise comparison in a Boolean ``Frame``.
 
-We can now use the ``cube()`` function, decorated above with the ``functools.lru_cache()`` decorator, with a ``FrameHE`` as an argument. Note that the ``Frame.to_frame_he()`` method can be used to efficiently create a ``FrameHE`` from other StaticFrame containers. As underlying NumPy array data is always immutable, this is light-weight, no-copy operation. If coming from a Pandas DataFrame, ``FrameHE.from_pandas()`` can be used.
+>>> f = sf.FrameHE(np.arange(1_000_000).reshape(1000, 1000))
+>>> hash(f)
+8397108298071051538
+>>> f == f * 2
+False
+
+
+With a ``FrameHE`` as an argument, the ``cube()`` function, decorated with ``functools.lru_cache()``, can be used. If lacking a ``FrameHE``, the ``Frame.to_frame_he()`` method can be used to efficiently create a ``FrameHE`` from other StaticFrame containers. As underlying NumPy array data is immutable and sharable among containers, this is light-weight, no-copy operation. If coming from a Pandas DataFrame, ``FrameHE.from_pandas()`` can be used.
 
 In the example below we create a large ``FrameHE``. The IPython ``%time`` utility shows that, after being called once, subsequent calls with the same argument are three orders of magnitude faster (from ms to µs).
 
->>> f = sf.FrameHE(np.arange(1_000_000).reshape(1000, 1000))
 >>> %time cube(f)
 CPU times: user 8.24 ms, sys: 99 µs, total: 8.34 ms
 >>> %time cube(f)
 CPU times: user 5 µs, sys: 4 µs, total: 9 µs
 
-While helpful for in-memory memoization, ``FrameHE`` can also be members of sets, offering a novel approach to collecting unique containers.
+While helpful for in-memory memoization, ``FrameHE`` instances can also be members of sets, offering a novel approach to collecting unique containers.
 
 
-Creating a Cryptographic Message Digest from a DataFrame
+Creating a Message Digest from a DataFrame
 .................................................................
 
 While in-memory memoization offers optimal performance, the caches consume system memory and do not persist beyond the life of the process. If function results are large, or caches should persist, disk-based memoization is an alternative.
 
-In this scenario, mutability and hashability of arguments is irrelevant. Instead, cached results can be retrieved from a file with a name derived from the function arguments. Using a cryptographic hash function to derive a message digest from the arguments is ideal for this purpose.
+In this scenario, mutability and hashability of arguments is irrelevant. Instead, cached results can be retrieved from a file with a name derived from the arguments. Applying a cryptographic hash function on the arguments is ideal for this purpose.
 
 As cryptographic hash functions generally take byte data as input, a ``Frame`` and all of its components must be converted to a byte representation. A common approach is to serialize the ``Frame`` as JSON (or some other string representation), which can then be converted to bytes. As underlying NumPy array data is already stored in bytes, converting that data to strings is inefficient. As JSON does not support the full range of NumPy types, the JSON input might also be insufficiently unique, leading to collisions.
 
