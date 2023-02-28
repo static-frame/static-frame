@@ -38,9 +38,6 @@ _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
 
-_ZERO_PAD_ARRAY = np.array([0], dtype=DTYPE_UINT_DEFAULT)
-_ZERO_PAD_ARRAY.flags.writeable = False
-
 
 class FirstDuplicatePosition(KeyError):
     def __init__(self, first_dup: int) -> None:
@@ -294,14 +291,17 @@ class HierarchicalLocMap:
         #  - depth 0 ends at bit offset 7.
         #  - depth 1 ends at bit offset 10. (depth 1 needs 3 bits!)
         #  - depth 2 ends at bit offset 14. (depth 2 needs 4 bits!)
-        bit_end_positions = np.cumsum(bit_sizes)
+        bit_end_positions = np.cumsum(bit_sizes, dtype=DTYPE_UINT_DEFAULT)
 
         # However, since we ultimately need these values to bitshift, we want them to offset based on start position, not end.
         # This means:
         #  - depth 0 starts at bit offset 0.
         #  - depth 1 starts at bit offset 7. (depth 0 needed 7 bits!)
         #  - depth 2 starts at bit offset 10. (depth 1 needed 3 bits!)
-        bit_start_positions = np.concatenate((_ZERO_PAD_ARRAY, bit_end_positions))[:-1].astype(DTYPE_UINT_DEFAULT)
+        bit_start_positions = np.zeros(
+                len(bit_end_positions),
+                dtype=DTYPE_UINT_DEFAULT)
+        bit_start_positions[1:] = bit_end_positions[:-1]
         bit_start_positions.flags.writeable = False
 
         # We now return these offsets, and whether or not we have overflow.

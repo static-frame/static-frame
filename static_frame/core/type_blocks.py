@@ -921,15 +921,15 @@ class TypeBlocks(ContainerOperand):
             dtype: DtypeSpecifier,
             columns: int,
             ) -> np.array:
-        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned amonng the provided blocks.
+        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned among the provided blocks.
         '''
         # NOTE: when this is called we always have 2 or more blocks
         blocks_norm = [column_2d_filter(x) for x in blocks]
-        # assert len(blocks_norm) >= 2
         rows = blocks_norm[0].shape[0] # all 2D
+
         array = np.empty((rows, columns), dtype=dtype)
-        # is manual insertion better?
         np.concatenate(blocks_norm, axis=1, out=array)
+        array.flags.writeable = False
         return array
 
     @classmethod
@@ -3065,7 +3065,7 @@ class TypeBlocks(ContainerOperand):
         array = np.empty(shape=size, dtype=dt_resolve)
         np.concatenate(parts, out=array)
 
-        # # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
+        # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
 
         coords_array = np.empty(len(array), dtype=object)
         coords_array[:] = coords # force creation of 1D object array
@@ -3075,6 +3075,7 @@ class TypeBlocks(ContainerOperand):
         array = array[order]
         array.flags.writeable = False
 
+        # NOTE: we do not need to set coords selection to not writable as it is not used to build blocks
         return coords_array[order], array
 
     #---------------------------------------------------------------------------
@@ -3308,15 +3309,17 @@ class TypeBlocks(ContainerOperand):
     def transpose(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that transposes and concatenates all blocks.
         '''
+        dtype = self._row_dtype
         blocks = []
         for b in self._blocks:
             b = column_2d_filter(b).transpose()
-            if b.dtype != self._row_dtype:
-                b = b.astype(self._row_dtype)
+            if b.dtype != dtype:
+                b = b.astype(dtype)
             blocks.append(b)
 
-        array = np.concatenate(blocks)
-        array.flags.writeable = False # keep this array
+        array = np.empty((self._shape[1], self._shape[0]), dtype=dtype)
+        np.concatenate(blocks, axis=0, out=array)
+        array.flags.writeable = False
         return self.from_blocks(array)
 
     #---------------------------------------------------------------------------

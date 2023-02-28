@@ -367,7 +367,6 @@ class InterfaceConsolidate(Interface[TContainer]):
 
         def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
             iloc_start = 0
-            nonlocal columns
 
             for b in self._container._blocks._blocks: # type: ignore
                 width = 1 if b.ndim == 1 else b.shape[1]

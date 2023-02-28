@@ -606,10 +606,13 @@ class Yarn(ContainerBase, StoreClientMixin):
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
 
+        # NOTE: do not load FrameDeferred, so concatenate contained Series's values directly
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        # NOTE: do not load FrameDeferred, so concate contained Series's values directly
-        np.concatenate([b._values_mutable for b in self._series.values], out=array)
+        np.concatenate(
+            [b._values_mutable for b in self._series.values],
+            out=array)
         array.flags.writeable = False
+
         series = Series(array, index=self._index, own_index=True)
 
         return series._display(config,
