@@ -298,6 +298,17 @@ PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterat
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
+    if value is None or isinstance(value, np.dtype):
+        return value
+
+    dt = np.dtype(value)
+    if dt == DTYPE_OBJECT and value != object:
+        # fail on implicit conversion to object dtype
+        raise TypeError(f'Implicit NumPy conversion of a type {value} to an object dtype; use `object` instead.')
+    return dt
+
+
 DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
 
 def is_dtype_specifier(value: tp.Any) -> bool:
@@ -1307,7 +1318,7 @@ def ufunc_unique(
 
     '''
     if axis is None and array.ndim == 2:
-        return ufunc_unique1d(array.flatten())
+        return ufunc_unique1d(array.reshape(-1)) # reshape over flatten return a view if possible
     elif array.ndim == 1:
         return ufunc_unique1d(array)
     return ufunc_unique2d(array, axis=axis)

@@ -112,6 +112,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
@@ -2372,8 +2373,11 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        dtype = validate_dtype_specifier(dtype)
+        array = self.values.astype(dtype)
+        array.flags.writeable = False
         return self.__class__(
-                self.values.astype(dtype),
+                array,
                 index=self._index,
                 name=self._name
                 )
@@ -3328,6 +3332,7 @@ class Series(ContainerOperand):
             *,
             index_constructor:
             columns_constructor:
+            name:
 
         Returns:
             :obj:`Frame`

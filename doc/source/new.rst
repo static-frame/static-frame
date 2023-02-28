@@ -1,6 +1,24 @@
 What is New in StaticFrame
 ===============================
 
+1.2.6
+-----------
+
+Corrected issue when selecting ``IndexHierarchy`` labels that contain tuples.
+
+
+1.2.5
+-----------
+
+Specifiers of dtypes given to ``astype()`` and related interfaces will now raise if NumPy will implicitly convert the argument to ``object``.
+
+``Batch.to_frame()`` now exposes ``index_constructor``, ``columns_constructor`` arguments.
+
+Improvements to usage of ``index_constructor`` and ``columns_constructor`` arguments in ``Frame.from_concat`` when ``Series`` are provided as components.
+
+When using a ``Batch`` to write to an archive, non-unique labels will now raise a ``StoreLabelNonUnique`` exception.
+
+
 1.2.4
 -----------
 

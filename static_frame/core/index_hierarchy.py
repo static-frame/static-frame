@@ -1892,9 +1892,7 @@ class IndexHierarchy(IndexBase):
                     available=None,
                     )
         else:
-            # NOTE: use a faster lookup; only call is_neither_slice_nor_mask if meaningful_depths == self.depth
-            if (len(meaningful_depths) == self.depth
-                    and all(map(is_neither_slice_nor_mask, key))):
+            if (len(meaningful_depths) == self.depth and all(map(is_neither_slice_nor_mask, key))):
                 try:
                     return self._map.loc_to_iloc(key, self._indices)
                 except KeyError:
@@ -1985,7 +1983,7 @@ class IndexHierarchy(IndexBase):
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
-        if any(isinstance(k, tuple) for k in key): # type: ignore
+        if all(isinstance(k, tuple) for k in key): # type: ignore
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
@@ -2993,7 +2991,7 @@ class IndexHierarchyAsType:
                     container.STATIC,
                     dtype_post,
                     )
-        else: # dtype_post is a niterable of values of same size dpeth_key selection
+        else: # dtype_post is an iterable of values of same size dpeth_key selection
             index_constructors[self.depth_key] = [
                 dtype_to_index_cls(container.STATIC, dt) for dt in dtype_post
             ]

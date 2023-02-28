@@ -215,11 +215,11 @@ c
 #start_Series-memory
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16  B     16   B     16  B     16   B     16   B     16  B
-Index  780 B     844  B     588 B     8.86 KB    868  B     612 B
-Values 120 B     152  B     24  B     120  B     152  B     24  B
-Total  972 B     1.04 KB    684 B     9.04 KB    1.07 KB    708 B
+       L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16  B     16  B     16  B     16   B     16   B     16  B
+Index  764 B     796 B     572 B     8.84 KB    820  B     596 B
+Values 120 B     136 B     24  B     120  B     136  B     24  B
+Total  940 B     988 B     652 B     9.01 KB    1012 B     676 B
 #end_Series-memory
 
 #start_Series-name
@@ -271,7 +271,7 @@ c        0
 #start_Series-__bool__()
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Series-__bool__()
 
 #start_Series-__deepcopy__()
@@ -5506,11 +5506,11 @@ c
 #start_SeriesHE-memory
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16  B     16   B     16  B     16   B     16   B     16  B
-Index  780 B     844  B     588 B     8.86 KB    868  B     612 B
-Values 120 B     152  B     24  B     120  B     152  B     24  B
-Total  980 B     1.05 KB    692 B     9.05 KB    1.07 KB    716 B
+       L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16  B     16  B     16  B     16   B     16   B     16  B
+Index  764 B     796 B     572 B     8.84 KB    820  B     596 B
+Values 120 B     136 B     24  B     120  B     136  B     24  B
+Total  948 B     996 B     660 B     9.02 KB    1020 B     684 B
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -5562,7 +5562,7 @@ c          0
 #start_SeriesHE-__bool__()
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_SeriesHE-__bool__()
 
 #start_SeriesHE-__deepcopy__()
@@ -11702,10 +11702,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 764  B     796  B     572  B     8.84  KB    820  B     596  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.44 KB    2.53 KB    1.88 KB    10.53 KB    2.59 KB    1.93 KB
 #end_Frame-memory
 
 #start_Frame-name
@@ -11761,7 +11761,7 @@ r       4       0
 #start_Frame-__bool__()
 >>> f = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> bool(f)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Frame-__bool__()
 
 #start_Frame-__dataframe__()
@@ -19814,10 +19814,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.62 KB    2.81 KB    2.06 KB    10.71 KB    2.86 KB    2.11 KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 764  B     796  B     572  B     8.84  KB    820  B     596  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.45 KB    2.54 KB    1.88 KB    10.54 KB    2.6  KB    1.94 KB
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -19873,7 +19873,7 @@ r         4       0
 #start_FrameHE-__bool__()
 >>> f = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> bool(f)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_FrameHE-__bool__()
 
 #start_FrameHE-__dataframe__()
@@ -27898,10 +27898,10 @@ c           datetime64[D]
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 1.15 KB    1.21 KB    982  B     9.24  KB    1.23 KB    1006 B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.97 KB    3.16 KB    2.41 KB    11.06 KB    3.21 KB    2.46 KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 1.12 KB    1.15 KB    950  B     9.21  KB    1.17 KB    974  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.78 KB    2.88 KB    2.22 KB    10.88 KB    2.93 KB    2.27 KB
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -27957,7 +27957,7 @@ r         4       0
 #start_FrameGO-__bool__()
 >>> f = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> bool(f)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_FrameGO-__bool__()
 
 #start_FrameGO-__dataframe__()
@@ -34992,12 +34992,12 @@ x        <Index>
 #start_Index-memory
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      50  B     50  B     50  B     50   B     50   B     50  B
-Map       520 B     520 B     520 B     520  B     520  B     520 B
-Labels    116 B     148 B     20  B     116  B     148  B     20  B
-Positions 96  B     128 B     0   B     8.19 KB    168  B     40  B
-Total     918 B     982 B     726 B     8.99 KB    1022 B     766 B
+          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name      50  B     50  B     50  B     50   B     50  B     50  B
+Map       520 B     520 B     520 B     520  B     520 B     520 B
+Labels    116 B     132 B     20  B     116  B     132 B     20  B
+Positions 96  B     112 B     0   B     8.19 KB    152 B     40  B
+Total     902 B     934 B     710 B     8.97 KB    974 B     750 B
 #end_Index-memory
 
 #start_Index-name
@@ -35063,7 +35063,7 @@ x
 #start_Index-__bool__()
 >>> s = sf.Index((1024, 2048, 4096), name='y')
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Index-__bool__()
 
 #start_Index-__copy__()
@@ -36892,12 +36892,12 @@ x        <IndexGO>
 #start_IndexGO-memory
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      50   B     50   B     50   B     50   B     50  B     50   B
-Map       520  B     520  B     520  B     520  B     520 B     520  B
-Labels    116  B     148  B     20   B     116  B     148 B     20   B
-Positions 96   B     128  B     0    B     8.19 KB    168 B     40   B
-Total     1.39 KB    1.46 KB    1.21 KB    9.49 KB    1.5 KB    1.25 KB
+          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      50   B     50   B     50   B     50   B     50   B     50   B
+Map       520  B     520  B     520  B     520  B     520  B     520  B
+Labels    116  B     132  B     20   B     116  B     132  B     20   B
+Positions 96   B     112  B     0    B     8.19 KB    152  B     40   B
+Total     1.36 KB    1.39 KB    1.18 KB    9.46 KB    1.43 KB    1.21 KB
 #end_IndexGO-memory
 
 #start_IndexGO-name
@@ -36963,7 +36963,7 @@ x
 #start_IndexGO-__bool__()
 >>> s = sf.IndexGO((1024, 2048, 4096), name='y')
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexGO-__bool__()
 
 #start_IndexGO-__copy__()
@@ -38840,9 +38840,9 @@ None     <IndexYear>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexYear-memory
 
 #start_IndexYear-name
@@ -38907,7 +38907,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[Y]')))
 #start_IndexYear-__bool__()
 >>> s = sf.IndexYear(('1517', '1520', '1518'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexYear-__bool__()
 
 #start_IndexYear-__copy__()
@@ -40600,9 +40600,9 @@ None     <IndexYearGO>
           L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
 Name      16   B     16   B     16  B     16   B     16   B     16  B
 Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     152  B     24  B     120  B     152  B     24  B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
-Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.07 KB    1.11 KB    908 B     9.17 KB    1.13 KB    932 B
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -40667,7 +40667,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[Y]')))
 #start_IndexYearGO-__bool__()
 >>> s = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexYearGO-__bool__()
 
 #start_IndexYearGO-__copy__()
@@ -42409,9 +42409,9 @@ None     <IndexYearMonth>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexYearMonth-memory
 
 #start_IndexYearMonth-name
@@ -42476,7 +42476,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[M]')))
 #start_IndexYearMonth-__bool__()
 >>> s = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexYearMonth-__bool__()
 
 #start_IndexYearMonth-__copy__()
@@ -44191,9 +44191,9 @@ None     <IndexYearMonthGO>
           L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
 Name      16   B     16   B     16  B     16   B     16   B     16  B
 Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     152  B     24  B     120  B     152  B     24  B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
-Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.07 KB    1.11 KB    908 B     9.17 KB    1.13 KB    932 B
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -44258,7 +44258,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[M]')))
 #start_IndexYearMonthGO-__bool__()
 >>> s = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexYearMonthGO-__bool__()
 
 #start_IndexYearMonthGO-__copy__()
@@ -46046,9 +46046,9 @@ None     <IndexDate>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexDate-memory
 
 #start_IndexDate-name
@@ -46113,7 +46113,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[D]')))
 #start_IndexDate-__bool__()
 >>> s = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexDate-__bool__()
 
 #start_IndexDate-__copy__()
@@ -47877,9 +47877,9 @@ None     <IndexDateGO>
           L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
 Name      16   B     16   B     16  B     16   B     16   B     16  B
 Map       440  B     440  B     440 B     440  B     440  B     440 B
-Labels    120  B     152  B     24  B     120  B     152  B     24  B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24  B
-Total     1.11 KB    1.17 KB    940 B     9.2  KB    1.19 KB    964 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.07 KB    1.11 KB    908 B     9.17 KB    1.13 KB    932 B
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -47944,7 +47944,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[D]')))
 #start_IndexDateGO-__bool__()
 >>> s = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexDateGO-__bool__()
 
 #start_IndexDateGO-__copy__()
@@ -49643,9 +49643,9 @@ None     <IndexMinute>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexMinute-memory
 
 #start_IndexMinute-name
@@ -49710,7 +49710,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[m]')))
 #start_IndexMinute-__bool__()
 >>> s = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMinute-__bool__()
 
 #start_IndexMinute-__copy__()
@@ -51384,12 +51384,12 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-memory
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16   B
-Map       440  B     440  B     440 B     440  B     440  B     440  B
-Labels    120  B     152  B     24  B     120  B     152  B     24   B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
-Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.12 KB    1.15 KB    956 B     9.21 KB    1.18 KB    980 B
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -51454,7 +51454,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[m]')))
 #start_IndexMinuteGO-__bool__()
 >>> s = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMinuteGO-__bool__()
 
 #start_IndexMinuteGO-__copy__()
@@ -53158,9 +53158,9 @@ None     <IndexHour>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexHour-memory
 
 #start_IndexHour-name
@@ -53225,7 +53225,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[h]')))
 #start_IndexHour-__bool__()
 >>> s = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexHour-__bool__()
 
 #start_IndexHour-__copy__()
@@ -54902,12 +54902,12 @@ None     <IndexHourGO>
 #start_IndexHourGO-memory
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16   B
-Map       440  B     440  B     440 B     440  B     440  B     440  B
-Labels    120  B     152  B     24  B     120  B     152  B     24   B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
-Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.12 KB    1.15 KB    956 B     9.21 KB    1.18 KB    980 B
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -54972,7 +54972,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[h]')))
 #start_IndexHourGO-__bool__()
 >>> s = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexHourGO-__bool__()
 
 #start_IndexHourGO-__copy__()
@@ -56679,9 +56679,9 @@ None     <IndexSecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexSecond-memory
 
 #start_IndexSecond-name
@@ -56746,7 +56746,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[s]')))
 #start_IndexSecond-__bool__()
 >>> s = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexSecond-__bool__()
 
 #start_IndexSecond-__copy__()
@@ -58428,12 +58428,12 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-memory
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16   B
-Map       440  B     440  B     440 B     440  B     440  B     440  B
-Labels    120  B     152  B     24  B     120  B     152  B     24   B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
-Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.12 KB    1.15 KB    956 B     9.21 KB    1.18 KB    980 B
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -58498,7 +58498,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[s]')))
 #start_IndexSecondGO-__bool__()
 >>> s = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexSecondGO-__bool__()
 
 #start_IndexSecondGO-__copy__()
@@ -60210,9 +60210,9 @@ None     <IndexMillisecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexMillisecond-memory
 
 #start_IndexMillisecond-name
@@ -60278,7 +60278,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[ms]')))
 #start_IndexMillisecond-__bool__()
 >>> s = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMillisecond-__bool__()
 
 #start_IndexMillisecond-__copy__()
@@ -61979,12 +61979,12 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-memory
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16   B
-Map       440  B     440  B     440 B     440  B     440  B     440  B
-Labels    120  B     152  B     24  B     120  B     152  B     24   B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
-Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.12 KB    1.15 KB    956 B     9.21 KB    1.18 KB    980 B
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -62050,7 +62050,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[ms]')))
 #start_IndexMillisecondGO-__bool__()
 >>> s = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMillisecondGO-__bool__()
 
 #start_IndexMillisecondGO-__copy__()
@@ -63781,9 +63781,9 @@ None     <IndexMicrosecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexMicrosecond-memory
 
 #start_IndexMicrosecond-name
@@ -63849,7 +63849,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[us]')))
 #start_IndexMicrosecond-__bool__()
 >>> s = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMicrosecond-__bool__()
 
 #start_IndexMicrosecond-__copy__()
@@ -65552,12 +65552,12 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-memory
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16   B     16   B
-Map       440  B     440  B     440 B     440  B     440  B     440  B
-Labels    120  B     152  B     24  B     120  B     152  B     24   B
-Positions 96   B     128  B     0   B     8.19 KB    152  B     24   B
-Total     1.15 KB    1.21 KB    988 B     9.25 KB    1.24 KB    1012 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.12 KB    1.15 KB    956 B     9.21 KB    1.18 KB    980 B
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -65623,7 +65623,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[us]')))
 #start_IndexMicrosecondGO-__bool__()
 >>> s = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexMicrosecondGO-__bool__()
 
 #start_IndexMicrosecondGO-__copy__()
@@ -67356,9 +67356,9 @@ None     <IndexNanosecond>
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       440 B     440 B     440 B     440  B     440 B     440 B
-Labels    120 B     152 B     24  B     120  B     152 B     24  B
-Positions 96  B     128 B     0   B     8.19 KB    152 B     24  B
-Total     792 B     856 B     600 B     8.87 KB    880 B     624 B
+Labels    120 B     136 B     24  B     120  B     136 B     24  B
+Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
+Total     776 B     808 B     584 B     8.85 KB    832 B     608 B
 #end_IndexNanosecond-memory
 
 #start_IndexNanosecond-name
@@ -67424,7 +67424,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[ns]')))
 #start_IndexNanosecond-__bool__()
 >>> s = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexNanosecond-__bool__()
 
 #start_IndexNanosecond-__copy__()
@@ -69126,12 +69126,12 @@ None     <IndexNanosecondGO>
 #start_IndexNanosecondGO-memory
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16  B
-Map       440  B     440  B     440 B     440  B     440 B     440 B
-Labels    120  B     152  B     24  B     120  B     152 B     24  B
-Positions 96   B     128  B     0   B     8.19 KB    152 B     24  B
-Total     1.12 KB    1.18 KB    952 B     9.21 KB    1.2 KB    976 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16  B
+Map       440  B     440  B     440 B     440  B     440  B     440 B
+Labels    120  B     136  B     24  B     120  B     136  B     24  B
+Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
+Total     1.09 KB    1.12 KB    920 B     9.18 KB    1.14 KB    944 B
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -69197,7 +69197,7 @@ UFuncTypeError(<ufunc 'multiply'>, (dtype('int64'), dtype('<M8[ns]')))
 #start_IndexNanosecondGO-__bool__()
 >>> s = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexNanosecondGO-__bool__()
 
 #start_IndexNanosecondGO-__copy__()
@@ -71055,12 +71055,12 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     230  B     230  B     230  B     230   B     230  B     230  B
-Indices  2.32 KB    2.51 KB    1.76 KB    10.41 KB    2.57 KB    1.82 KB
-Indexers 184  B     200  B     72   B     184   B     200  B     72   B
-Blocks   1.49 KB    1.59 KB    1.21 KB    1.49  KB    1.59 KB    1.21 KB
+Name     214  B     214  B     214  B     214   B     214  B     214  B
+Indices  2.26 KB    2.35 KB    1.7  KB    10.35 KB    2.41 KB    1.76 KB
+Indexers 184  B     184  B     72   B     184   B     184  B     72   B
+Blocks   1.37 KB    1.41 KB    1.09 KB    1.37  KB    1.41 KB    1.09 KB
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.98 KB    5.3  KB    3.93 KB    13.07 KB    5.37 KB    3.99 KB
+Total    4.74 KB    4.9  KB    3.69 KB    12.83 KB    4.96 KB    3.76 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -71130,7 +71130,7 @@ Total    4.98 KB    5.3  KB    3.93 KB    13.07 KB    5.37 KB    3.99 KB
 #start_IndexHierarchy-__bool__()
 >>> s = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexHierarchy-__bool__()
 
 #start_IndexHierarchy-__copy__()
@@ -71164,13 +71164,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fe829cf5710> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f78637053a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fe829cf57a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f7863705430> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -71218,13 +71218,13 @@ False            True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fe88cbfea70> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f78caffd040> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fe88cbfacb0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f78caffa5e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -71411,7 +71411,7 @@ b                   1024    True
 >>> tuple(ih.label_widths_at_depth(1))
 ((1024, 1), (2048, 2), (1024, 1))
 >>> tuple(ih.label_widths_at_depth(2))
-((True, 1), (True, 1), (False, 1), (True, 1))
+((True, 2), (False, 1), (True, 1))
 #end_IndexHierarchy-label_widths_at_depth()
 
 #start_IndexHierarchy-level_add()
@@ -71487,13 +71487,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fe88cc013b0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f78caffd700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -71505,7 +71505,7 @@ NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fe88cbfe830> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f78caffae50> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -71620,13 +71620,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fe88cc015f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f78caffd8b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fe88cbfa5f0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f78caffa0d0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -71682,7 +71682,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fe88cc01830>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f78caffda60>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -73540,12 +73540,12 @@ z        <IndexDateGO>
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     230  B     230  B     230  B     230   B     230  B     230  B
-Indices  3.27 KB    3.46 KB    2.71 KB    11.36 KB    3.52 KB    2.77 KB
-Indexers 184  B     200  B     72   B     184   B     200  B     72   B
-Blocks   1.49 KB    1.59 KB    1.21 KB    1.49  KB    1.59 KB    1.21 KB
+Name     214  B     214  B     214  B     214   B     214  B     214  B
+Indices  3.16 KB    3.25 KB    2.6  KB    11.25 KB    3.32 KB    2.66 KB
+Indexers 184  B     184  B     72   B     184   B     184  B     72   B
+Blocks   1.37 KB    1.41 KB    1.09 KB    1.37  KB    1.41 KB    1.09 KB
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.58 KB    5.91 KB    4.53 KB    13.67 KB    5.97 KB    4.6  KB
+Total    5.3  KB    5.46 KB    4.25 KB    13.39 KB    5.52 KB    4.32 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -73615,7 +73615,7 @@ Total    5.58 KB    5.91 KB    4.53 KB    13.67 KB    5.97 KB    4.6  KB
 #start_IndexHierarchyGO-__bool__()
 >>> s = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> bool(s)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_IndexHierarchyGO-__bool__()
 
 #start_IndexHierarchyGO-__copy__()
@@ -73649,13 +73649,13 @@ ValueError('The truth value of a container is ambiguous. For a truthy indicator 
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fe829cf5710> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f78637053a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fe829cf57a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f7863705430> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -73716,13 +73716,13 @@ False              True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fe88cbfea70> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f78caffd040> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fe88cbfacb0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f78caffa5e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -73917,7 +73917,7 @@ b                     1024    True
 >>> tuple(ih.label_widths_at_depth(1))
 ((1024, 1), (2048, 2), (1024, 1))
 >>> tuple(ih.label_widths_at_depth(2))
-((True, 1), (True, 1), (False, 1), (True, 1))
+((True, 2), (False, 1), (True, 1))
 #end_IndexHierarchyGO-label_widths_at_depth()
 
 #start_IndexHierarchyGO-level_add()
@@ -73993,13 +73993,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fe88cc013b0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f78caffd700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -74011,7 +74011,7 @@ NotImplementedError('<function median at 0x7fe833836680> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fe88cbfe830> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f78caffae50> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -74126,13 +74126,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fe88cc015f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f78caffd8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fe88cbfa5f0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f78caffa0d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -74188,7 +74188,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fe88cc01830>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f78caffda60>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -76146,8 +76146,8 @@ y
 #start_Bus-memory
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD RMDu
-Total 6.62 KB    1.89 KB    1.39 KB    14.71 KB    1.9 KB    1.4 KB
+      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
+Total 6.06 KB    1.58 KB    1.15 KB    14.16 KB    1.6 KB    1.16 KB
 #end_Bus-memory
 
 #start_Bus-name
@@ -76204,7 +76204,7 @@ y       True   6.0       6.0       (3, 2)
 #start_Bus-__bool__()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> bool(b)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Bus-__bool__()
 
 #start_Bus-__len__()
@@ -77324,8 +77324,8 @@ j                w
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
-      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 17.22 KB    5.05 KB    3.68 KB    25.31 KB    5.11 KB    3.74 KB
+      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
+Total 15.89 KB    4.65 KB    3.44 KB    23.99 KB    4.71 KB    3.5 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -77387,7 +77387,7 @@ j                w     True   6.0       6.0       (3, 2)
 >>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
 >>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
 >>> bool(y)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Yarn-__bool__()
 
 #start_Yarn-__len__()
@@ -78503,8 +78503,8 @@ True
 #start_Batch-memory
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.86 KB    6.14 KB    4.89 KB    13.95 KB    6.22 KB    4.97 KB
+      L    Lu    LM  LMu   LMD LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 5.27 KB    5.4 KB    4.3 KB    13.37 KB    5.48 KB    4.38 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -78564,7 +78564,7 @@ j                r     22.0      0.0
 #start_Batch-__bool__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bool(bt)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Batch-__bool__()
 
 #start_Batch-__round__()
@@ -82808,8 +82808,8 @@ c
 #start_Quilt-memory
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.memory
-      L     Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Total 10.06 KB    6.66 KB    4.91 KB    18.5 KB    6.74 KB    4.99 KB
+      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 9.29 KB    5.98 KB    4.45 KB    17.73 KB    6.06 KB    4.53 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -82857,7 +82857,7 @@ x
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q = sf.Quilt(b, retain_labels=True)
 >>> bool(b)
-ValueError('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Quilt-__bool__()
 
 #start_Quilt-equals()
@@ -84497,7 +84497,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a7978c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aa0c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -84557,13 +84557,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a7978c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aad40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fe82a797dd0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aabc0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -84581,17 +84581,17 @@ False
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 764  B     796  B     572  B     8.84  KB    820  B     596  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.44 KB    2.53 KB    1.88 KB    10.53 KB    2.59 KB    1.93 KB
 #end_MemoryDisplay-__init__()
 
 #start_MemoryDisplay-from_any()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> sf.MemoryDisplay.from_any(f.index)
-      L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
-Total 232 B     264 B     136 B     8.32 KB    296 B     168 B
+      L   Lu    LM  LMu   LMD LMDu  R   Ru    RM  RMu   RMD RMDu
+Total 216 B     232 B     120 B     8.3 KB    264 B     152 B
 #end_MemoryDisplay-from_any()
 
 #start_MemoryDisplay-to_frame()
@@ -84601,10 +84601,10 @@ Total 232 B     264 B     136 B     8.32 KB    296 B     168 B
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
 Name                50      50      50      50      50      50
-Index               232     264     136     8520    296     168
-Columns             780     844     588     9068    868     612
-Blocks              1564    1660    1276    1564    1660    1276
-Total               2674    2866    2098    10962   2922    2154
+Index               216     232     120     8504    264     152
+Columns             764     796     572     9052    820     596
+Blocks              1436    1484    1148    1436    1484    1148
+Total               2498    2594    1922    10786   2650    1978
 <<U7>               <int64> <int64> <int64> <int64> <int64> <int64>
 #end_MemoryDisplay-to_frame()
 
@@ -84614,10 +84614,10 @@ Total               2674    2866    2098    10962   2922    2154
 >>> repr(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 764  B     796  B     572  B     8.84  KB    820  B     596  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.44 KB    2.53 KB    1.88 KB    10.53 KB    2.59 KB    1.93 KB
 #end_MemoryDisplay-__repr__()
 
 #start_MemoryDisplay-__str__()
@@ -84626,9 +84626,9 @@ Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
 >>> str(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   232  B     264  B     136  B     8.32  KB    296  B     168  B
-Columns 780  B     844  B     588  B     8.86  KB    868  B     612  B
-Blocks  1.53 KB    1.62 KB    1.25 KB    1.53  KB    1.62 KB    1.25 KB
-Total   2.61 KB    2.8  KB    2.05 KB    10.71 KB    2.85 KB    2.1  KB
+Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
+Columns 764  B     796  B     572  B     8.84  KB    820  B     596  B
+Blocks  1.4  KB    1.45 KB    1.12 KB    1.4   KB    1.45 KB    1.12 KB
+Total   2.44 KB    2.53 KB    1.88 KB    10.53 KB    2.59 KB    1.93 KB
 #end_MemoryDisplay-__str__()
 

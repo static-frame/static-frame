@@ -754,6 +754,20 @@ class TestUnit(TestCase):
         post = ih2._loc_to_iloc(HLoc[:, 4:1])
         self.assertListEqual(list(post), [1, 2])
 
+    def test_hierarchy_loc_to_iloc_t(self) -> None:
+        # https://github.com/static-frame/static-frame/issues/610
+        ih = IndexHierarchy.from_labels(
+            [
+                ("a", ("b", "c")),
+                ("a", "d"),
+            ]
+        )
+
+        assert 0 == ih.loc_to_iloc(("a", ("b", "c")))
+        assert [0] == ih.loc_to_iloc([("a", ("b", "c"))])
+        assert 1 == ih.loc_to_iloc(("a", "d"))
+        assert [1] == ih.loc_to_iloc([("a", "d")])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:
@@ -3851,6 +3865,14 @@ class TestUnit(TestCase):
 
         idx3 = idx1.astype((float, np.datetime64, float))
         self.assertEqual([dt.kind for dt in idx3.dtypes.values], ['f', 'M', 'f'])
+
+    def test_hierarchy_astype_i(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        with self.assertRaises(ValueError):
+            _ = ih1.astype(float)
+        with self.assertRaises(TypeError):
+            ih1.astype(IndexDate)
 
     #---------------------------------------------------------------------------
 

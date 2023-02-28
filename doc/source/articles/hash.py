@@ -1,6 +1,7 @@
 
 
 
+import hashlib
 import os
 import sys
 import tempfile
@@ -12,7 +13,6 @@ import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import polars as pl
 
 sys.path.append(os.getcwd())
 
@@ -21,115 +21,44 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.util import bytes_to_size_label
 
 
-class FileIOTest:
+class HashingTest:
     SUFFIX = '.tmp'
 
     def __init__(self, fixture: str):
-        self.fixture = ff.parse(fixture)
-        _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
-        self.fixture.to_csv(self.fp, include_index=False)
-        self.dtypes_sf = dict(self.fixture.dtypes)
-        self.dtypes_pd = {k: (v if v.kind != 'U' else str) for k, v in self.dtypes_sf.items()}
-        # self.format = list(self.dtypes.items())
+        self.sff = ff.parse(fixture)
+        self.pdf = self.sff.to_pandas()
 
     def __call__(self):
         raise NotImplementedError()
 
 
-#-------------------------------------------------------------------------------``
-class SFTypeParse(FileIOTest):
+class SFDigestSHA256(HashingTest):
 
     def __call__(self):
-        f = sf.Frame.from_csv(self.fp, index_depth=0)
-        assert f.shape == self.fixture.shape
+        post = self.sff.via_hashlib(include_name=False).sha256().hexdigest()
 
-class SFStr(FileIOTest):
 
-    def __call__(self):
-        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=str)
-        assert f.shape == self.fixture.shape
-
-class SFTypeGiven(FileIOTest):
+class PandasHash(HashingTest):
 
     def __call__(self):
-        f = sf.Frame.from_csv(self.fp, index_depth=0, dtypes=self.dtypes_sf)
-        assert f.shape == self.fixture.shape
+        post = pd.util.hash_pandas_object(self.pdf)
+
+
+class PandasHashSHA256(HashingTest):
+
+    def __call__(self):
+        post = pd.util.hash_pandas_object(self.pdf)
+        x  = hashlib.sha256(post.values.tobytes()).hexdigest()
+
+class PandasJsonSHA256(HashingTest):
+    def __call__(self):
+        x  = hashlib.sha256(self.pdf.to_json().encode()).hexdigest()
 
 #-------------------------------------------------------------------------------
-class PandasTypeParse(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='c')
-        assert f.shape == self.fixture.shape
-
-class PandasStr(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='c', dtype=str)
-        assert f.shape == self.fixture.shape
-
-class PandasTypeGiven(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='c', dtype=self.dtypes_pd)
-        assert f.shape == self.fixture.shape
-
-#-------------------------------------------------------------------------------
-class PandasPyArrowTypeParse(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='pyarrow')
-        assert f.shape == self.fixture.shape
-
-class PandasPyArrowStr(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='pyarrow', dtype=str)
-        assert f.shape == self.fixture.shape
-
-class PandasPyArrowTypeGiven(FileIOTest):
-
-    def __call__(self):
-        f = pd.read_csv(self.fp, engine='pyarrow', dtype=self.dtypes_pd)
-        assert f.shape == self.fixture.shape
-
-
-#-------------------------------------------------------------------------------
-class PolarsTypeParse(FileIOTest):
-
-    def __call__(self):
-        f = pl.read_csv(self.fp)
-        assert f.shape == self.fixture.shape
-
-
-#-------------------------------------------------------------------------------
-class NumpyGenfromtxtTypeParse(FileIOTest):
-
-    def __call__(self):
-        f = np.genfromtxt(self.fp, dtype=None, delimiter=',', encoding=None, names=True)
-        assert len(f) == len(self.fixture)
-
-class NumpyLoadtxtTypeParse(FileIOTest):
-
-    # default type parsing does not support Booleans
-    # if given explicit types, cannot convert True / False to Bools,
-    # does not support missing values in floats
-
-    def __init__(self, fixture: str):
-        self.fixture = ff.parse(fixture)
-        _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
-        self.fixture.fillna(0).to_csv(self.fp, include_index=False)
-        # self.dtypes = dict(self.fixture.dtypes)
-        # self.format = list(self.dtypes.items())
-
-    # def __call__(self):
-    #     f = np.loadtxt(self.fp, dtype=self.format, delimiter=',', encoding=None, skiprows=1)
-
-#-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 100
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -168,48 +97,23 @@ def plot_performance(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        SFTypeParse.__name__: 'StaticFrame\n(type parsing)',
-        SFStr.__name__: 'StaticFrame\n(as string)',
-        SFTypeGiven.__name__: 'StaticFrame\n(type given)',
-
-        PandasTypeParse.__name__: 'Pandas\n(type parsing)',
-        PandasStr.__name__: 'Pandas\n(as string)',
-        PandasTypeGiven.__name__: 'Pandas\n(type given)',
-
-        PandasPyArrowTypeParse.__name__: 'Pandas PyArrow\n(type parsing)',
-        PandasPyArrowStr.__name__: 'Pandas PyArrow\n(as string)',
-        PandasPyArrowTypeGiven.__name__: 'Pandas PyArrow\n(type given)',
-
-        NumpyGenfromtxtTypeParse.__name__: 'NumPy genfromtxt\n(type parsing)',
-        NumpyLoadtxtTypeParse.__name__: 'NumPy loadtxt\n(type given)',
-
-        PolarsTypeParse.__name__: 'Polars\n(type parsing)',
-
+        SFDigestSHA256.__name__: 'StaticFrame\nvia_hashlib().sha256()',
+        PandasHash.__name__: 'Pandas\nhash_pandas_object()',
+        PandasHashSHA256.__name__: 'Pandas\nhash_pandas_object()\nhashlib.sha256()',
+        PandasJsonSHA256.__name__: 'Pandas\nto_json()\nhashlib.sha256()',
     }
 
     name_order = {
-        SFTypeParse.__name__: 0,
-        SFStr.__name__: 0,
-        SFTypeGiven.__name__: 0,
-
-        PandasTypeParse.__name__: 1,
-        PandasStr.__name__: 1,
-        PandasTypeGiven.__name__: 1,
-
-        PandasPyArrowTypeParse.__name__: 2,
-        PandasPyArrowStr.__name__: 2,
-        PandasPyArrowTypeGiven.__name__: 2,
-
-        NumpyGenfromtxtTypeParse.__name__: 3,
-        NumpyLoadtxtTypeParse.__name__: 3,
-
-        PolarsTypeParse.__name__: 4,
+        SFDigestSHA256.__name__: 0,
+        PandasHash.__name__: 1,
+        PandasHashSHA256.__name__: 2,
+        PandasJsonSHA256.__name__: 3,
     }
 
     # cmap = plt.get_cmap('terrain')
     cmap = plt.get_cmap('plasma')
-
-    color = cmap(np.arange(name_total) / name_total)
+    color_count = name_total
+    color = cmap(np.arange(color_count) / color_count)
 
     # categories are read, write
     for cat_count, (cat_label, cat) in enumerate(frame.iter_group_items('category')):
@@ -226,8 +130,7 @@ def plot_performance(frame: sf.Frame):
             post = ax.bar(names_display, results, color=color)
 
             # ax.set_ylabel()
-            cat_io, cat_dtype = cat_label.split(' ')
-            title = f'{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+            title = f'{cat_label.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
             ax.set_title(title, fontsize=8)
             ax.set_box_aspect(0.75) # makes taller tan wide
             time_max = fixture['time'].max()
@@ -249,8 +152,9 @@ def plot_performance(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .96, f'Delimited Read Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .96, f'DataFrame to SHA256 Digest Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .90, get_versions(), fontsize=6)
+
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
@@ -320,18 +224,10 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
 CLS_READ = (
-    SFTypeParse,
-    SFStr,
-    SFTypeGiven,
-    PandasTypeParse,
-    PandasStr,
-    PandasTypeGiven,
-    # PolarsTypeParse,
-    # PandasPyArrowTypeParse,
-    # PandasPyArrowStr,
-    # PandasPyArrowTypeGiven,
-    # NumpyGenfromtxtTypeParse,
-    # NumpyLoadtxtTypeParse,
+    SFDigestSHA256,
+    # PandasHash,
+    PandasJsonSHA256,
+    PandasHashSHA256,
     )
 
 
@@ -351,9 +247,9 @@ def run_test():
             fixture_to_pair('columnar', FF_square_columnar),
             ):
 
-        for cls, category_prefix in zip(CLS_READ, repeat('read')):
+        for cls in CLS_READ:
             runner = cls(fixture)
-            category = f'{category_prefix} {dtype_hetero}'
+            category = f'{dtype_hetero}'
 
             record = [cls.__name__, NUMBER, category, fixture_label]
             print(record)

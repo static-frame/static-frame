@@ -54,6 +54,7 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
+from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -157,35 +158,36 @@ def get_col_dtype_factory(
         if isinstance(dtypes, defaultdict):
             # make a copy so as to not mutate
             dtypes = dtypes.copy()
+
     elif is_dtype_specifier(dtypes):
         is_map = False
         is_element = True
+        dtypes = validate_dtype_specifier(dtypes)
     else: # an iterable of types
         is_map = False
         is_element = False
+        # NOTE: dtypes might be a generator
+        if is_frozen_generator_input(dtypes):
+            dtypes = FrozenGenerator(dtypes) #type: ignore
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
         if is_map:
             col_idx = col_idx - index_depth
             if col_idx < 0:
                 return None
-
-        nonlocal dtypes # might mutate a generator into a tuple
         if is_element:
-            return dtypes
+            return dtypes  # already validated
         if is_map:
             # if no columns, assume mapping is an integer mapping
             key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
-                return dtypes[key] #type: ignore
+                dt = dtypes[key] #type: ignore
             except KeyError:
                 return None
-
-        # NOTE: dtypes might be a generator
-        # INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
-        if is_frozen_generator_input(dtypes):
-            dtypes = FrozenGenerator(dtypes) #type: ignore
-        return dtypes[col_idx] #type: ignore
+        else:
+            # INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
+            dt = dtypes[col_idx] #type: ignore
+        return validate_dtype_specifier(dt)
 
     return get_col_dtype
 

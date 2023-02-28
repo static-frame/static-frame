@@ -69,6 +69,7 @@ from static_frame.core.util import roll_1d
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
 
 #---------------------------------------------------------------------------
@@ -1662,6 +1663,8 @@ class TypeBlocks(ContainerOperand):
         Given any column selection, apply a single dtype.
         Generator-producer of np.ndarray.
         '''
+        dtype = validate_dtype_specifier(dtype)
+
         # block slices must be in ascending order, not key order
         block_slices = iter(self._key_to_block_slices(
                 column_key,
