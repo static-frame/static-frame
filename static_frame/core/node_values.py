@@ -102,7 +102,9 @@ class InterfaceValues(Interface[TContainer]):
                     continue
                 args_final.append(arg)
             # [(arg if arg is not self else block) for arg in args]
-            return ufunc(*args_final, **kwargs)
+            array = ufunc(*args_final, **kwargs)
+            array.flags.writeable = False
+            return array
 
         if self._container._NDIM == 2:
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore

@@ -2,7 +2,7 @@
 
 
 
-DataFrame Memoization: Using Hashable DataFrames and Cryptographic Message Digests for Optimizing Performance
+DataFrame Memoization: Using Hashable DataFrames and Cryptographic Message Digests to Optimize Performance of Repeated Calculations
 
 Improving the Performance of Python DataFrame Operations with Memoization:
 How StaticFrame Permits Hashing DataFrames in Dictionaries and Deriving Cryptographic Message Digests
@@ -38,7 +38,7 @@ Traceback (most recent call last):
 TypeError: unhashable type: 'DataFrame'
 
 
-StaticFrame is an alternative DataFrame library that offers efficient solutions to this and related problems, both for in-memory and disk-based memoization.
+StaticFrame is an alternative DataFrame library that offers efficient solutions to this problems, both for in-memory and disk-based memoization.
 
 
 All Hashes Are not Created Equal
@@ -114,7 +114,41 @@ To create the input to the cryptographic hashing function, StaticFrame concatena
 >>> len(f.via_hashlib(include_name=False).to_bytes())
 8016017
 
-This approach to creating a hash-digest of a DataFrame is generally more efficient than two common approaches with Pandas. Pandas offers a utilty function, ``pd.hash_pandas_object()``, to derive per-column integer hashes. Not only is this approach slower than StaticFrame (as will be shown below), it uses a bespoke digest algorithm that makes no claim to cryptographic collision resistance. Another approach is provide a ``hashlib`` function a JSON representation of the entire DataFrame. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is slower. The following table summarize performance characteristc of these two approaches compared to StaticFrame's ``via_hashlig``: StaticFrame out-performas in all secenarios except one.
+This approach to creating a hash digest with StaticFrame is generally more efficient than two common approaches with Pandas. Pandas offers a utilty function, ``pd.hash_pandas_object()``, to derive per-column integer hashes. Not only is this approach slower than StaticFrame (as shown below), it uses a bespoke digest algorithm that makes no claim to cryptographic collision resistance. Another approach is to provide a ``hashlib`` function a JSON representation of the entire DataFrame. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is slower. The following char summarizes performance characteristc of these two approaches compared to StaticFrame's ``via_hashlib``: StaticFrame out-performs Pandas in all scenarios except one.
+
+Provided a means to convert a DataFrame into a cryptographic hash digest, implementing disk-based caching is straight forward. The decorator below implements disk-based memoization for the narrow case of a function that takes and returns a single ``Frame``. Below, caches are stored in ``/tmp``; depending on operating system and other considerations, an alternative directory might be more appropriate.
+
+
+>>> def disk_cache(func):
+...     def wrapped(arg):
+...         fn = func.__name__ + arg.via_hashlib(include_name=False).sha256().hexdigest() + '.npz'
+...         fp = Path('/tmp') / fn
+...         if not fp.exists():
+...             func(arg).to_npz(fp)
+...         return sf.Frame.from_npz(fp)
+...     return wrapped
+
+
+This decorator can be used on a function that iterates over windows of ten rows, sums the columns, and then concatenates the result into a single ``Frame``.
+
+>>> @disk_cache
+... def windowed_sum(v):
+...     return sf.Frame.from_concat(v.iter_window_items(size=10).apply_iter(lambda l, f: f.sum().rename(l)))
+
+
+After first usage, performance is reduced to less than twenty percent of the original run time. While loading a disk-based cache is slower than retrieving an in-memory cache, the benefit for repeated calculation is significant
+
+>>> %time windowed_sum(f)
+CPU times: user 596 ms, sys: 15.6 ms, total: 612 ms
+>>> %time windowed_sum(f)
+CPU times: user 77.3 ms, sys: 24.4 ms, total: 102 ms
+
+
+
+Conclusion
+.................................................................
+
+If pure functions are called multiple times with same arguments, memoization can vastly improve performance. While functions that input and output DataFrames pose special consideration, StaticFrame offers powerful tools to implement both in-memory and disk-based memoization. Great care must be taken to ensure that caches are invalidated and collisions are avoided, as such errors are silent and difficult to debug. Even so, great performance benefits await when repeated work can be eliminated.
 
 
 
