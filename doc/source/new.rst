@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.2.6
+-----------
+
+Corrected issue when selecting ``IndexHierarchy`` labels that contain tuples.
+
+
 1.2.5
 -----------
 
