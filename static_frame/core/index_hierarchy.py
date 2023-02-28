@@ -1581,11 +1581,10 @@ class IndexHierarchy(IndexBase):
 
             labels: NameType
 
-            if (
-                self._name
-                and isinstance(self._name, tuple)
-                and len(self._name) == self.depth
-            ):
+            if (self._name
+                    and isinstance(self._name, tuple)
+                    and len(self._name) == self.depth
+                    ):
                 labels = self._name
             else:
                 labels = None
@@ -3000,4 +2999,5 @@ class IndexHierarchyAsType:
                 blocks=blocks,
                 index_constructors=index_constructors,
                 own_blocks=True,
+                name=self.container._name,
                 )
