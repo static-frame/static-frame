@@ -3874,6 +3874,12 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             ih1.astype(IndexDate)
 
+    def test_hierarchy_astype_j(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), name=('x', 'y'))
+        ih2 = ih1.astype[0](float)
+        self.assertEqual(ih1.names, ih2.names)
+
+
     #---------------------------------------------------------------------------
 
     @skip_win
