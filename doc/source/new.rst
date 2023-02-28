@@ -6,6 +6,10 @@ What is New in StaticFrame
 
 Corrected issue when selecting ``IndexHierarchy`` labels that contain tuples.
 
+``IndexHiearchy.astype()`` now properly delegates the ``name`` attribute.
+
+Better usage of ``np.concatenate`` in ``TypeBlocks.transpose()`` and ``HierarchicalLocMap.build_offsets_and_overflow()``.
+
 
 1.2.5
 -----------
