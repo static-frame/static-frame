@@ -113,11 +113,11 @@ To create the input bytes, StaticFrame concatenates all underlying byte data (bo
 StaticFrame's built-in support for creating message digests is shown to be more efficient than two common approaches with Pandas. The first approach uses the Pandas utilty function ``pd.hash_pandas_object()`` to derive per-column integer hashes. This routine uses a bespoke digest algorithm that makes no claim of cryptographic collision resistance. Per-column integer hashes are given to the ``hashlib`` message digest function. As described above, the second approach provides a JSON representation of the entire DataFrame as input to the ``hashlib`` message digest function. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is often slower. The following chart displays performance characteristics of these two approaches compared to ``via_hashlib()``. Over a range of DataFrame shapes and type mixtures, ``via_hashlib()`` outperforms all except one.
 
 
-<< IMAGE >>
+.. image:: https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/hash/hash-1e6.png
 
 
 Disk-Based Memoization
-.................................................................
+................................
 
 Given a means to convert a DataFrame into a hash digest, a disk-based caching routine can be implemented. The decorator below does this for the narrow case of a function that takes and returns a single ``Frame``. In this routine, a file name is derived from a message digest of the argument. If the file name does not exist, the decorated function is called and the result is written. If the file name does exist, it is loaded and returned. Here, the StaticFrame NPZ file format is used. As demonstrated in a recent PyCon `talk <https://youtu.be/HLH5AwF-jx4>`_, storing a ``Frame`` as an NPZ is often much faster than Parquet and related formats, and provides complete round-trip serialization.
 
