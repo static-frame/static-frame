@@ -7,7 +7,7 @@ Memoizing DataFrame Functions: Using Hashable DataFrames and Message Digests to 
 
 A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is called multiple times with the same arguments, repeating the calculation can be avoided by storing the results in a mapping (or on disk), keyed by the arguments. Upon subsequent calls, if the arguments are found, the stored result is returned.
 
-This opportunity comes with tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. With in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. With disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
+This opportunity comes with tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, not all types of function arguments are suitable. With in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. With disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
 
 Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches must be dropped. The Python standard library provides an in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" (LRU) cache invalidation strategy: after reaching a maximum count, caches that have least-recently been used are dropped.
 
@@ -22,12 +22,10 @@ For Python programmers using Pandas DataFrames as function arguments, there are 
 >>> df = pd.DataFrame(np.arange(1_000_000).reshape(1000, 1000))
 >>> cube(df)
 Traceback (most recent call last):
-  File "<console>", line 1, in <module>
 TypeError: unhashable type: 'DataFrame'
 
 
 `StaticFrame <https://github.com/static-frame/static-frame>`_ is an alternative DataFrame library that offers efficient solutions to this problem, both for in-memory and disk-based memoization.
-
 
 
 
@@ -102,7 +100,7 @@ StaticFrame offers ``via_hashlib()`` to meet this need, providing an efficient w
 >>> f.via_hashlib(include_name=False).sha256().hexdigest()
 'b931bd5662bb75949404f3735acf652cf177c5236e9d20342851417325dd026c'
 
-First, ``via_hashlib()`` is called with options to determine which container components should be included in the input bytes. As the default ``name`` attribute, ``None``, is not byte encodable, it is excluded. Second, a hash function is called, returning an instance loaded with the appropriate input bytes. Third, the ``hexdigest()`` method is called to return the message digest as a string. Alternative cryptographic hash functions, such as ``sha3_256``, ``shake_256``, and ``blake2b`` are available.
+First, ``via_hashlib()`` is called with options to determine which container components should be included in the input bytes. As the default ``name`` attribute, ``None``, is not byte encodable, it is excluded. Second, the hash function constructor ``sha256`` is called, returning an instance loaded with the appropriate input bytes. Third, the ``hexdigest()`` method is called to return the message digest as a string. Alternative cryptographic hash function constructors, such as ``sha3_256``, ``shake_256``, and ``blake2b`` are available.
 
 To create the input bytes, StaticFrame concatenates all underlying byte data (both values and labels), optionally including container metadata (such as ``name`` and ``__class__.__name__`` attributes). This same byte representation is available with the ``via_hashlib().to_bytes()`` method. If necessary, this can be combined with other byte data to create a hash digest based on multiple components.
 
@@ -110,7 +108,7 @@ To create the input bytes, StaticFrame concatenates all underlying byte data (bo
 8016017
 
 
-StaticFrame's built-in support for creating message digests is shown to be more efficient than two common approaches with Pandas. The first approach uses the Pandas utilty function ``pd.hash_pandas_object()`` to derive per-column integer hashes. This routine uses a bespoke digest algorithm that makes no claim of cryptographic collision resistance. Per-column integer hashes are given to the ``hashlib`` message digest function. As described above, the second approach provides a JSON representation of the entire DataFrame as input to the ``hashlib`` message digest function. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is often slower. The following chart displays performance characteristics of these two approaches compared to ``via_hashlib()``. Over a range of DataFrame shapes and type mixtures, ``via_hashlib()`` outperforms all except one.
+StaticFrame's built-in support for creating message digests is shown to be more efficient than two common approaches with Pandas. The first approach uses the Pandas utilty function ``pd.hash_pandas_object()`` to derive per-column integer hashes. This routine uses a bespoke digest algorithm that makes no claim of cryptographic collision resistance. For comparison here, those per-column integer hashes are used as input to a ``hashlib`` message digest function. The second approach provides a JSON representation of the entire DataFrame as input to a ``hashlib`` message digest function. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is often slower. The following chart displays performance characteristics of these two approaches compared to ``via_hashlib()``. Over a range of DataFrame shapes and type mixtures, ``via_hashlib()`` outperforms all except one.
 
 
 .. image:: https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/hash/hash-1e6.png
@@ -119,7 +117,7 @@ StaticFrame's built-in support for creating message digests is shown to be more 
 Disk-Based Memoization
 ................................
 
-Given a means to convert a DataFrame into a hash digest, a disk-based caching routine can be implemented. The decorator below does this for the narrow case of a function that takes and returns a single ``Frame``. In this routine, a file name is derived from a message digest of the argument. If the file name does not exist, the decorated function is called and the result is written. If the file name does exist, it is loaded and returned. Here, the StaticFrame NPZ file format is used. As demonstrated in a recent PyCon `talk <https://youtu.be/HLH5AwF-jx4>`_, storing a ``Frame`` as an NPZ is often much faster than Parquet and related formats, and provides complete round-trip serialization.
+Given a means to convert a DataFrame into a hash digest, a disk-based caching routine can be implemented. The decorator below does this for the narrow case of a function that takes and returns a single ``Frame``. In this routine, a file name is derived from a message digest of the argument, prefixed by the name of the function. If the file name does not exist, the decorated function is called and the result is written. If the file name does exist, it is loaded and returned. Here, the StaticFrame NPZ file format is used. As demonstrated in a recent PyCon `talk <https://youtu.be/HLH5AwF-jx4>`_, storing a ``Frame`` as an NPZ is often much faster than Parquet and related formats, and provides complete round-trip serialization.
 
 >>> def disk_cache(func):
 ...     def wrapped(arg):
@@ -138,7 +136,7 @@ To demonstrate this decorator, it can be applied to a function that iterates ove
 ...     return sf.Frame.from_concat(v.iter_window_items(size=10).apply_iter(lambda l, f: f.sum().rename(l)))
 
 
-After first usage, performance is reduced to less than twenty percent of the original run time. While loading a disk-based cache is slower than retrieving an in-memory cache, the benefit of avoiding repeated calculations is gained without consuming memory, and the cache can persist across processes.
+After first usage, performance is reduced to less than twenty percent of the original run time. While loading a disk-based cache is slower than retrieving an in-memory cache, the benefit of avoiding repeated calculations is gained without consuming memory and the cache can persist across processes.
 
 >>> %time windowed_sum(f)
 CPU times: user 596 ms, sys: 15.6 ms, total: 612 ms
@@ -152,5 +150,5 @@ The ``via_hashlib`` interfaces can be used in other situations as a digital sign
 Conclusion
 .................................................................
 
-If pure functions are called multiple times with the same arguments, memoization can vastly improve performance. While functions that input and output DataFrames require special handling, StaticFrame offers convenient tools to implement both in-memory and disk-based memoization. Great care must be taken to ensure that caches are properly invalidated and collisions are avoided, as such errors are silent. With such care, however, great performance benefits can be realized when repeated work is eliminated.
+If pure functions are called multiple times with the same arguments, memoization can vastly improve performance. While functions that input and output DataFrames require special handling, StaticFrame offers convenient tools to implement both in-memory and disk-based memoization. While care must be taken to ensure that caches are properly invalidated and collisions are avoided, great performance benefits can be realized when repeated work is eliminated.
 
