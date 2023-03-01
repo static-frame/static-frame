@@ -2,26 +2,12 @@
 
 
 Memoizing DataFrame Functions: Using Hashable DataFrames and Message Digests to Optimize Repeated Calculations
+===========================================================================================================================
 
-
-DataFrame Memoization: Using Hashable DataFrames and Cryptographic Message Digests to Optimize Performance of Repeated Calculations
-
-Improving the Performance of Python DataFrame Operations with Memoization:
-How StaticFrame Permits Hashing DataFrames in Dictionaries and Deriving Cryptographic Message Digests
-
-
-Improving the Performance of Python DataFrame Operations with Memoization: Hashing DataFrames in Dictionaries and Creating Message Digests
-
-Hashing DataFrames for Usage in Dictionaries, Memoization, and Caching
-
-Memoizing DataFrame Operations: Hashing DataFrames in Dictionaries and Creating Caches
-
-
---
 
 A well-known technique for improving the run-time performance of a software system (in Python or any language) is function memoization. Memoization is a type of caching applied to a single function. If a function is called multiple times with the same arguments, repeating the calculation can be avoided by storing the results in a mapping (or on disk), keyed by the arguments. Upon subsequent calls, if the arguments are found, the stored result is returned.
 
-This opportunity does not come without tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. With in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. With disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
+This opportunity comes with tradeoffs. Memoization reduces time at the cost of space: previously calculated results must be stored either in memory or on disk. Additionally, the function memoized must be pure: the output must be determined exclusively by its inputs. Finally, there are restrictions on the types of function arguments. With in-memory memoization, where results are stored in a mapping, arguments must be hashable and immutable. With disk-based memoization, where results are stored in a file, arguments must be reducible to a unique file name; a message digest derived from a cryptographic hash function is optimal for this purpose.
 
 Another challenge of memoization is cache invalidation: to avoid excessive cache growth, caches must be dropped. The Python standard library provides an in-memory solution with the ``functools.lru_cache()`` decorator. This decorator implements memoization with a "least recently used" (LRU) cache invalidation strategy: after reaching a maximum count, caches that have least-recently been used are dropped.
 
@@ -40,7 +26,9 @@ Traceback (most recent call last):
 TypeError: unhashable type: 'DataFrame'
 
 
-StaticFrame is an alternative DataFrame library that offers efficient solutions to this problem, both for in-memory and disk-based memoization.
+`StaticFrame <https://github.com/static-frame/static-frame>`_ is an alternative DataFrame library that offers efficient solutions to this problem, both for in-memory and disk-based memoization.
+
+
 
 
 Hash Functions and Hash Collision
@@ -131,7 +119,7 @@ StaticFrame's built-in support for creating message digests is shown to be more 
 Disk-Based Memoization
 .................................................................
 
-Given a means to convert a DataFrame into a hash digest, a disk-based caching routine can be implemented. The decorator below does this for the narrow case of a function that takes and returns a single ``Frame``. In this routine, a file name is derived from a message digest of the argument. If the file name does not exist, the decorated function is called and the result is written. If the file name does exist, it is loaded and returned. Here, the StaticFrame NPZ file format is used. As demonstrated in a recent talk, storing a ``Frame`` as an NPZ is often much faster than Parquet and related formats, and provides complete round-trip serialization.
+Given a means to convert a DataFrame into a hash digest, a disk-based caching routine can be implemented. The decorator below does this for the narrow case of a function that takes and returns a single ``Frame``. In this routine, a file name is derived from a message digest of the argument. If the file name does not exist, the decorated function is called and the result is written. If the file name does exist, it is loaded and returned. Here, the StaticFrame NPZ file format is used. As demonstrated in a recent PyCon `talk <https://youtu.be/HLH5AwF-jx4>`_, storing a ``Frame`` as an NPZ is often much faster than Parquet and related formats, and provides complete round-trip serialization.
 
 >>> def disk_cache(func):
 ...     def wrapped(arg):
