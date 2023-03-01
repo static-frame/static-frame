@@ -29,7 +29,7 @@ TypeError: unhashable type: 'DataFrame'
 
 
 
-Hash Functions and Hash Collision
+Hash Functions and Hash Collisions
 ................................................
 
 Before demonstrating DataFrame memoization with StaticFrame, it is important to distinguish different types of hash functions.
