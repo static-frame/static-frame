@@ -7,7 +7,7 @@ pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.9.3
 invoke==2.0.0
-ipython==7.16.3
+ipython==8.10.0
 
 pandas==1.5.3
 xlsxwriter==1.1.2
