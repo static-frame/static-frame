@@ -154,32 +154,3 @@ Conclusion
 
 If pure functions are called multiple times with the same arguments, memoization can vastly improve performance. While functions that input and output DataFrames require special handling, StaticFrame offers convenient tools to implement both in-memory and disk-based memoization. Great care must be taken to ensure that caches are properly invalidated and collisions are avoided, as such errors are silent. With such care, however, great performance benefits can be realized when repeated work is eliminated.
 
-
-
-------------------------
-notes
-
-
-In Python, dictionary keys must be hashable. Most in-memory memoization implementations (such as ``functools.lru_cache()``), store function results in dictionaries keyed by arguments. This is why function arguments must be hashasble.
-
-For disk-based memoization and other caching applications, deriving a unique string from function arguments is necessary. Here, a cryptographic hashing algorithm is necessary as collisions are not resolved by any additional equality checks.
-
-We might avoid this problem by using a cryptographic hash function to first produce a messsage digest of the DataFrame: the resulting string can serve as key in a dictionary or a file name on disk. Getting the right input into such a function is not trivial.
-
-
-Below, caches are stored in ``/tmp``; depending on operating system and other considerations, an alternative directory might be more appropriate.
-
->>> def cache(func):
-...     def wrapped(arg):
-            fn = arg.via_hashlib(include_name=False).sha256().hexdigest() + '.npz'
-...         fp = Path('/tmp') / fn
-...         if not fp.exists():
-...             func(arg).to_npz(fp)
-...         return sf.Frame.from_npz(fp)
-...     return wrapped
-
-
-https://stackoverflow.com/questions/49883236/how-to-generate-a-hash-or-checksum-value-on-python-dataframe-created-from-a-fix
-
-
-https://stackoverflow.com/questions/47707528/save-repeated-calculations-in-python-pandas
