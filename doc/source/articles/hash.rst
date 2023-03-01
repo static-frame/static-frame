@@ -61,7 +61,7 @@ Cryptographic hashing functions are unlike ``hash()``: they are designed to avoi
 In-Memory Memoization
 .................................................................
 
-To memoize functions that take DataFrames as arguments, an immutable, hashable DataFrame is required. StaticFrame offers the ``FrameHE`` for this purpose, where "HE" stands for "hash, equals," the two required implementations for Python hashability. While the StaticFrame ``Frame`` is immutable, it is not hashable.
+To memoize functions that take DataFrames as arguments, an immutable and hashable DataFrame is required. StaticFrame offers the ``FrameHE`` for this purpose, where "HE" stands for "hash, equals," the two required implementations for Python hashability. While the StaticFrame ``Frame`` is immutable, it is not hashable.
 
 The ``FrameHE.__hash__()`` method returns the ``hash()`` of the labels of the index and columns. While this will collide with any other ``FrameHE`` with the same labels but different values, using just the labels defers the more expensive full-value comparison to ``__eq__()``.
 
@@ -76,7 +76,7 @@ False
 
 With a ``FrameHE`` as an argument, the ``cube()`` function, decorated with ``functools.lru_cache()``, can be used. If lacking a ``FrameHE``, the ``to_frame_he()`` method can be used to efficiently create a ``FrameHE`` from other StaticFrame containers. As underlying NumPy array data is immutable and sharable among containers, this is a light-weight, no-copy operation. If coming from a Pandas DataFrame, ``FrameHE.from_pandas()`` can be used.
 
-In the example below we create a large ``FrameHE``. The IPython ``%time`` utility shows that, after being called once, subsequent calls with the same argument are three orders of magnitude faster (from ms to µs).
+In the example below, ``cube()`` is called with the ``FrameHE`` created above. The IPython ``%time`` utility shows that, after being called once, subsequent calls with the same argument are three orders of magnitude faster (from ms to µs).
 
 >>> %time cube(f)
 CPU times: user 8.24 ms, sys: 99 µs, total: 8.34 ms
@@ -100,7 +100,7 @@ StaticFrame offers ``via_hashlib()`` to meet this need, providing an efficient w
 >>> f.via_hashlib(include_name=False).sha256().hexdigest()
 'b931bd5662bb75949404f3735acf652cf177c5236e9d20342851417325dd026c'
 
-First, ``via_hashlib()`` is called with options to determine which container components should be included in the input bytes. As the default ``name`` attribute, ``None``, is not byte encodable, it is excluded. Second, the hash function constructor ``sha256`` is called, returning an instance loaded with the appropriate input bytes. Third, the ``hexdigest()`` method is called to return the message digest as a string. Alternative cryptographic hash function constructors, such as ``sha3_256``, ``shake_256``, and ``blake2b`` are available.
+First, ``via_hashlib()`` is called with options to determine which container components should be included in the input bytes. As the default ``name`` attribute, ``None``, is not byte encodable, it is excluded. Second, the hash function constructor ``sha256()`` is called, returning an instance loaded with the appropriate input bytes. Third, the ``hexdigest()`` method is called to return the message digest as a string. Alternative cryptographic hash function constructors, such as ``sha3_256``, ``shake_256``, and ``blake2b`` are available.
 
 To create the input bytes, StaticFrame concatenates all underlying byte data (both values and labels), optionally including container metadata (such as ``name`` and ``__class__.__name__`` attributes). This same byte representation is available with the ``via_hashlib().to_bytes()`` method. If necessary, this can be combined with other byte data to create a hash digest based on multiple components.
 
@@ -108,7 +108,7 @@ To create the input bytes, StaticFrame concatenates all underlying byte data (bo
 8016017
 
 
-StaticFrame's built-in support for creating message digests is shown to be more efficient than two common approaches with Pandas. The first approach uses the Pandas utilty function ``pd.hash_pandas_object()`` to derive per-column integer hashes. This routine uses a bespoke digest algorithm that makes no claim of cryptographic collision resistance. For comparison here, those per-column integer hashes are used as input to a ``hashlib`` message digest function. The second approach provides a JSON representation of the entire DataFrame as input to a ``hashlib`` message digest function. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is often slower. The following chart displays performance characteristics of these two approaches compared to ``via_hashlib()``. Over a range of DataFrame shapes and type mixtures, ``via_hashlib()`` outperforms all except one.
+StaticFrame's built-in support for creating message digests is shown to be more efficient than two common approaches with Pandas. The first approach uses the Pandas utility function ``pd.hash_pandas_object()`` to derive per-column integer hashes. This routine uses a bespoke digest algorithm that makes no claim of cryptographic collision resistance. For comparison here, those per-column integer hashes are used as input to a ``hashlib`` message digest function. The second approach provides a JSON representation of the entire DataFrame as input to a ``hashlib`` message digest function. While this may be more collision resistant than ``pd.hash_pandas_object()``, it is often slower. The following chart displays performance characteristics of these two approaches compared to ``via_hashlib()``. Over a range of DataFrame shapes and type mixtures, ``via_hashlib()`` outperforms all except one.
 
 
 .. image:: https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/hash/hash-1e6.png
@@ -136,7 +136,7 @@ To demonstrate this decorator, it can be applied to a function that iterates ove
 ...     return sf.Frame.from_concat(v.iter_window_items(size=10).apply_iter(lambda l, f: f.sum().rename(l)))
 
 
-After first usage, performance is reduced to less than twenty percent of the original run time. While loading a disk-based cache is slower than retrieving an in-memory cache, the benefit of avoiding repeated calculations is gained without consuming memory and the cache can persist across processes.
+After first usage, performance is reduced to less than twenty percent of the original run time. While loading a disk-based cache is slower than retrieving an in-memory cache, the benefit of avoiding repeated calculations is gained without consuming memory and with the opportunity of persistent caches.
 
 >>> %time windowed_sum(f)
 CPU times: user 596 ms, sys: 15.6 ms, total: 612 ms
@@ -144,7 +144,7 @@ CPU times: user 596 ms, sys: 15.6 ms, total: 612 ms
 CPU times: user 77.3 ms, sys: 24.4 ms, total: 102 ms
 
 
-The ``via_hashlib`` interfaces can be used in other situations as a digital signature or checksum of all characteristics of a DataFrame.
+The ``via_hashlib()`` interfaces can be used in other situations as a digital signature or checksum of all characteristics of a DataFrame.
 
 
 Conclusion
