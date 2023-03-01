@@ -34,6 +34,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    :maxdepth: 1
    :caption: Articles
 
+   articles/hash
    articles/no_copy
    articles/uhoc
    articles/fill_value
