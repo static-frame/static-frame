@@ -13,6 +13,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
+from arraykit import first_true_1d
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -3543,14 +3544,13 @@ class TypeBlocks(ContainerOperand):
                     sel_nonzeros = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j) #type: ignore
 
                 for idx, sel_nonzero in sel_nonzeros:
-                    # indices of not-nan values, per column
-                    targets = np.nonzero(~sel_nonzero)[0]
-                    if len(targets):
+                    ft = first_true_1d(~sel_nonzero, forward=sided_leading)
+                    if ft != -1:
                         if sided_leading:
-                            sel_slice = slice(0, targets[0])
-                        else: # trailings
-                            sel_slice = slice(targets[-1]+1, None)
-                    else: # all are NaN
+                            sel_slice = slice(0, ft)
+                        else: # trailing
+                            sel_slice = slice(ft+1, None)
+                    else:
                         sel_slice = NULL_SLICE
 
                     if ndim == 1:
