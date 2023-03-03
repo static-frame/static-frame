@@ -7344,13 +7344,13 @@ class Frame(ContainerOperand):
         if fill_all:
             array = np.full(shape=len(labels_returned), fill_value=fill_value)
         elif return_label:
-            # do an expanding selection to as labels might be found in multiple positions
+            # do an expanding selection to as labels might be found in multiple positions, if missing values (-1) are found, they select the last value
             array = labels_opposite.values[pos]
         else:
             array = pos
 
         if not fill_all and fill_target.any():
-            if fill_value != -1:
+            if return_label or fill_value != -1:
                 dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
                 if dtype != array.dtype:
                     array = array.astype(dtype)
