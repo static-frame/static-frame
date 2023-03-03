@@ -5,9 +5,9 @@ from copy import deepcopy
 from functools import reduce
 
 import numpy as np
+from arraykit import first_true_1d
 from automap import FrozenAutoMap  # pylint: disable = E0611
 from automap import NonUniqueError  # pylint: disable=E0611
-from arraykit import first_true_1d
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
