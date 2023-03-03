@@ -7349,7 +7349,6 @@ class Frame(ContainerOperand):
         else:
             array = pos
 
-        # import ipdb; ipdb.set_trace()
         if not fill_all and fill_target.any():
             if fill_value != -1:
                 dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
