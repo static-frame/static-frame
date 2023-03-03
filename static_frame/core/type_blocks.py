@@ -3630,18 +3630,6 @@ class TypeBlocks(ContainerOperand):
                             sel_slice = NULL_SLICE
                         assigned[idx, sel_slice] = value
 
-                    # for idx, sel_nonzero in sels_nonzero:
-                    #     # indices of not-nan values, per row
-                    #     targets = np.nonzero(~sel_nonzero)[0]
-                    #     if len(targets):
-                    #         if sided_leading:
-                    #             sel_slice = slice(0, targets[0])
-                    #         else: # trailing
-                    #             sel_slice = slice(targets[-1]+1, None)
-                    #     else: # all are NaN
-                    #         sel_slice = NULL_SLICE
-                    #     assigned[idx, sel_slice] = value
-
                 assigned.flags.writeable = False
                 yield assigned
 
@@ -3910,13 +3898,13 @@ class TypeBlocks(ContainerOperand):
                         # get appropriate leading slice to cover nan region
                         for idx, sel_nonzero in sels_nonzero:
                             # indices of not-nan values, per row
-                            targets = np.nonzero(~sel_nonzero)[0]
-                            if len(targets):
+                            ft = first_true_1d(~sel_nonzero, forward=directional_forward)
+                            if ft != -1:
                                 if directional_forward:
-                                    sel_slice = slice(0, targets[0])
-                                else: # backward
-                                    sel_slice = slice(targets[-1]+1, length)
-                            else: # all are NaN
+                                    sel_slice = slice(0, ft)
+                                else: # trailing
+                                    sel_slice = slice(ft+1, None)
+                            else:
                                 sel_slice = slice(0, length)
 
                             # truncate sel_slice by limit-
