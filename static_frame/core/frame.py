@@ -21,6 +21,8 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
+from arraykit import first_true_1d
+from arraykit import first_true_2d
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -7305,14 +7307,15 @@ class Frame(ContainerOperand):
             *,
             axis: int,
             return_label: bool,
-            shift: int,
+            forward: bool,
             fill_value: tp.Hashable = np.nan,
             func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> Series:
         '''
+        For a given axis, return the first or last label observed that is not missing.
         Args:
+            return_label: If True, return the label, else the iloc position.
             func: Array processor such as `isna_array`.
-            pos: 0 or -1
         '''
 
         def blocks() -> tp.Iterator[np.ndarray]:
@@ -7326,45 +7329,37 @@ class Frame(ContainerOperand):
                 shape=self.shape,
                 dtype=DTYPE_BOOL,
                 )
-        # assert len(pos) == len(np.unique(primary))
+
         if axis == 0:
             labels_returned = self._columns
             labels_opposite = self._index
-            primary, secondary = np.nonzero(target.T)
         else:
             labels_returned = self._index
             labels_opposite = self._columns
-            primary, secondary = np.nonzero(target)
 
-        index = immutable_index_filter(labels_returned)
+        pos = first_true_2d(target, axis=axis, forward=forward)
+        fill_target = pos == -1 # test to expected missing
+        fill_all = fill_target.all()
 
-        if not len(primary):
-            return Series.from_element(fill_value,
-                    index=index,
-                    own_index=True,
-                    )
-        pos = np.nonzero(primary != np.roll(primary, shift))[0]
-        if not return_label:
-            post = np.full(shape=len(labels_returned),
-                    fill_value=fill_value,
-                    dtype=DTYPE_INT_DEFAULT,
-                    )
-            for p, s in zip(primary[pos], secondary[pos]):
-                post[p] = s
+        if fill_all:
+            array = np.full(shape=len(labels_returned), fill_value=fill_value)
+        elif return_label:
+            # do an expanding selection to as labels might be found in multiple positions
+            array = labels_opposite.values[pos]
         else:
-            primary_covered = len(labels_returned) == len(np.unique(primary))
+            array = pos
 
-            if primary_covered:
-                post = np.empty(shape=len(labels_returned), dtype=labels_opposite.dtype)
-            else:
+        # import ipdb; ipdb.set_trace()
+        if not fill_all and fill_target.any():
+            if fill_value != -1:
                 dtype = resolve_dtype(labels_opposite.dtype, dtype_from_element(fill_value))
-                post = np.full(shape=len(labels_returned), fill_value=fill_value, dtype=dtype)
+                if dtype != array.dtype:
+                    array = array.astype(dtype)
+                array[fill_target] = fill_value
 
-            for p, s in zip(primary[pos], secondary[pos]):
-                post[p] = labels_opposite[s]
-
-        post.flags.writeable = False
-        return Series(post, index=index, own_index=True)
+        array.flags.writeable = False
+        index = immutable_index_filter(labels_returned)
+        return Series(array, index=index, own_index=True)
 
 
     def iloc_notna_first(self, *,
@@ -7380,7 +7375,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=1,
+                forward=True,
                 return_label=False,
                 fill_value=fill_value,
                 func=isna_array,
@@ -7399,7 +7394,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=-1,
+                forward=False,
                 return_label=False,
                 fill_value=fill_value,
                 func=isna_array,
@@ -7418,7 +7413,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=1,
+                forward=True,
                 return_label=True,
                 fill_value=fill_value,
                 func=isna_array,
@@ -7437,7 +7432,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=-1,
+                forward=False,
                 return_label=True,
                 fill_value=fill_value,
                 func=isna_array,
@@ -7457,7 +7452,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=1,
+                forward=True,
                 return_label=False,
                 fill_value=fill_value,
                 func=isfalsy_array,
@@ -7476,7 +7471,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=-1,
+                forward=False,
                 return_label=False,
                 fill_value=fill_value,
                 func=isfalsy_array,
@@ -7495,7 +7490,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=1,
+                forward=True,
                 return_label=True,
                 fill_value=fill_value,
                 func=isfalsy_array,
@@ -7514,7 +7509,7 @@ class Frame(ContainerOperand):
         '''
         return self._label_not_missing(
                 axis=axis,
-                shift=-1,
+                forward=False,
                 return_label=True,
                 fill_value=fill_value,
                 func=isfalsy_array,
