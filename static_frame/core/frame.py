@@ -17,12 +17,12 @@ from operator import itemgetter
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import delimited_to_arrays
+# from arraykit import first_true_1d
+from arraykit import first_true_2d
 from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
-from arraykit import first_true_1d
-from arraykit import first_true_2d
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.archive_npy import NPYFrameConverter
