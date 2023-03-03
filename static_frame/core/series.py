@@ -12,6 +12,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import first_true_1d
 from numpy.ma import MaskedArray  # type: ignore
 
 from static_frame.core.assign import Assign
@@ -1548,14 +1549,23 @@ class Series(ContainerOperand):
         else:
             assigned = array.astype(assignable_dtype)
 
-        targets = np.nonzero(~sel)[0] # as 1D, can just take index 0 resuilts
-        if len(targets):
+        # targets = np.nonzero(~sel)[0] # as 1D, can just take index 0 resuilts
+        ft = first_true_1d(~sel, forward=sided_leading)
+        if ft != -1:
             if sided_leading:
-                sel_slice = slice(0, targets[0])
+                sel_slice = slice(0, ft)
             else: # trailing
-                sel_slice = slice(targets[-1]+1, None)
-        else: # all are NaN
+                sel_slice = slice(ft+1, None)
+        else:
             sel_slice = NULL_SLICE
+
+        # if len(targets):
+        #     if sided_leading:
+        #         sel_slice = slice(0, targets[0])
+        #     else: # trailing
+        #         sel_slice = slice(targets[-1]+1, None)
+        # else: # all are NaN
+        #     sel_slice = NULL_SLICE
 
         assigned[sel_slice] = value
         assigned.flags.writeable = False
