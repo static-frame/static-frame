@@ -7,9 +7,9 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
+from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
-from arraykit import first_true_1d
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
@@ -1799,7 +1799,6 @@ class IndexHierarchy(IndexBase):
                 matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.start)
                 if multi_depth:
                     matched[unmatchable] = False # set all regions unavailable to slice to False
-                # [[start, *_]] = np.nonzero(matched)
                 start = first_true_1d(matched, forward=True)
             else:
                 start = 0
@@ -1816,7 +1815,6 @@ class IndexHierarchy(IndexBase):
                 matched = indexer_at_depth == index_at_depth.loc_to_iloc(key_at_depth.stop)
                 if multi_depth:
                     matched[unmatchable] = False
-                # [[*_, stop]] = np.nonzero(matched)
                 stop = first_true_1d(matched, forward=False)
                 stop += 1
             else:
