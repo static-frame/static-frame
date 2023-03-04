@@ -2124,7 +2124,7 @@ def binary_transition(
         post = np.empty(dtype=object, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
             post[k] = v
-
+        # TODO: what are we doign here
         return post
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
