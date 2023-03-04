@@ -1235,7 +1235,10 @@ def ufunc_unique1d_counts(array: np.ndarray,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    index_of_last_occurrence = np.concatenate(np.nonzero(mask) + ([mask.size],))
+    pos = np.nonzero(mask)[0] # returns an array
+    index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
+    index_of_last_occurrence[:-1] = pos
+    index_of_last_occurrence[-1] = mask.size
 
     return array[mask], np.diff(index_of_last_occurrence)
 
