@@ -29,6 +29,7 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
+from arraykit import first_true_1d
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -2390,16 +2391,8 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     transitions[0] = False # first value not a transition
     # compare current to previous; do not compare first
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
-    # transition_idx must always contain at least one index from here
-    transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
     # last element must be True, so there will always be one transition, and the last transition will mark the boundary of a contiguous region
-    return transition_idx[-1]
-
-    # NOTE: these checks are not necessary
-    # if array[last_idx:].all():
-    #     return last_idx
-    # return length
-
+    return first_true_1d(transitions, forward=False)
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
