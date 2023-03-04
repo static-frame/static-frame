@@ -3749,10 +3749,7 @@ class TypeBlocks(ContainerOperand):
         for b in blocks:
             sel = func_target(b) # True for is NaN
             ndim = sel.ndim
-
-            if ndim == 1 and not np.any(sel):
-                yield b
-            elif ndim == 2 and not np.any(sel).any():
+            if not np.any(sel):
                 yield b
             else:
                 target_indexes = binary_transition(sel)

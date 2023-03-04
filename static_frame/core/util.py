@@ -25,11 +25,11 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
 from automap import FrozenAutoMap  # pylint: disable = E0611
-from arraykit import first_true_1d
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -2122,10 +2122,9 @@ def binary_transition(
                 indices_by_axis[y].append(x)
 
         # if axis is 0, return column width, else return row height
-        post = np.empty(dtype=object, shape=array.shape[not axis])
+        post = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
             post[k] = v
-        # TODO: what are we doign here
         return post
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
