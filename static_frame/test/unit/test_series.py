@@ -2467,6 +2467,34 @@ class TestUnit(TestCase):
         s2 = Series(['b', 'b', 'c', 'c'], index=('a', 'b', 'c', 'd'), dtype=object)
         self.assertEqual(s2.unique().tolist(), ['b', 'c'])
 
+    #---------------------------------------------------------------------------
+    def test_series_unique_enumerated_a(self) -> None:
+        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
+
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[1, 1, 0, 0], [2, 10]]
+                )
+
+    def test_series_unique_enumerated_b(self) -> None:
+        s1 = Series([2, None, None, 2], index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[0, 1, 1, 0], [2, None]]
+                )
+
+    def test_series_unique_enumerated_c(self) -> None:
+        s1 = Series([2, 'b', 'b', 2, None],
+                index=('a', 'b', 'c', 'd', 'e')
+                )
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[0, 1, 1, 0, 2], [2, 'b', None]]
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_series_duplicated_a(self) -> None:
         s1 = Series([1, 10, 10, 5, 2, 2],
                 index=('a', 'b', 'c', 'd', 'e', 'f'), dtype=np.int64)
