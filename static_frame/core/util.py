@@ -2105,12 +2105,12 @@ def binary_transition(
         # wrap around observation invalid
         if axis == 0:
             # process an entire row
-            target_sel_leading[-1, :] = False
-            target_sel_trailing[0, :] = False
+            target_sel_leading[-1, NULL_SLICE] = False
+            target_sel_trailing[0, NULL_SLICE] = False
         else:
             # process entire column
-            target_sel_leading[:, -1] = False
-            target_sel_trailing[:, 0] = False
+            target_sel_leading[NULL_SLICE, -1] = False
+            target_sel_trailing[NULL_SLICE, 0] = False
 
         # this dictionary could be very sparse compared to axis dimensionality
         indices_by_axis: tp.DefaultDict[int, tp.List[int]] = defaultdict(list)
