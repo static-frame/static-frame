@@ -1265,12 +1265,17 @@ def ufunc_unique_enumerated(
         indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
         indices: tp.Dict[tp.Any, int] = {}
 
-        # NOTE: retain_order on a 2D array will be C-ordered due to array.flat's default iteration
+        if is_2d:
+            # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
+            eiter = ((i, e.item()) for i, e in enumerate(np.nditer(array, order='F')))
+        else:
+            eiter = enumerate(array)
+
         if not func:
-            for i, v in enumerate(array.flat):
+            for i, v in eiter:
                 indexer[i] = indices.setdefault(v, len(indices))
         else:
-            for i, v in enumerate(array.flat):
+            for i, v in eiter:
                 if func(v):
                     indexer[i] = -1
                 else:
