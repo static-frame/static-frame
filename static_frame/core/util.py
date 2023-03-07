@@ -25,6 +25,7 @@ from types import TracebackType
 
 import numpy as np
 from arraykit import column_2d_filter
+from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
@@ -1236,7 +1237,10 @@ def ufunc_unique1d_counts(array: np.ndarray,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    index_of_last_occurrence = np.concatenate(np.nonzero(mask) + ([mask.size],))
+    pos = np.nonzero(mask)[0] # returns an array
+    index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
+    index_of_last_occurrence[:-1] = pos
+    index_of_last_occurrence[-1] = mask.size
 
     return array[mask], np.diff(index_of_last_occurrence)
 
@@ -2102,12 +2106,12 @@ def binary_transition(
         # wrap around observation invalid
         if axis == 0:
             # process an entire row
-            target_sel_leading[-1, :] = False
-            target_sel_trailing[0, :] = False
+            target_sel_leading[-1, NULL_SLICE] = False
+            target_sel_trailing[0, NULL_SLICE] = False
         else:
             # process entire column
-            target_sel_leading[:, -1] = False
-            target_sel_trailing[:, 0] = False
+            target_sel_leading[NULL_SLICE, -1] = False
+            target_sel_trailing[NULL_SLICE, 0] = False
 
         # this dictionary could be very sparse compared to axis dimensionality
         indices_by_axis: tp.DefaultDict[int, tp.List[int]] = defaultdict(list)
@@ -2119,10 +2123,9 @@ def binary_transition(
                 indices_by_axis[y].append(x)
 
         # if axis is 0, return column width, else return row height
-        post = np.empty(dtype=object, shape=array.shape[not axis])
+        post = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
             post[k] = v
-
         return post
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
@@ -2388,16 +2391,8 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     transitions[0] = False # first value not a transition
     # compare current to previous; do not compare first
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
-    # transition_idx must always contain at least one index from here
-    transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
     # last element must be True, so there will always be one transition, and the last transition will mark the boundary of a contiguous region
-    return transition_idx[-1]
-
-    # NOTE: these checks are not necessary
-    # if array[last_idx:].all():
-    #     return last_idx
-    # return length
-
+    return first_true_1d(transitions, forward=False)
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling

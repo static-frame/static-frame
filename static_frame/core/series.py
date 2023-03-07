@@ -8,6 +8,7 @@ from itertools import product
 
 import numpy as np
 from arraykit import delimited_to_arrays
+from arraykit import first_true_1d
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
@@ -1549,13 +1550,13 @@ class Series(ContainerOperand):
         else:
             assigned = array.astype(assignable_dtype)
 
-        targets = np.nonzero(~sel)[0] # as 1D, can just take index 0 resuilts
-        if len(targets):
+        ft = first_true_1d(~sel, forward=sided_leading)
+        if ft != -1:
             if sided_leading:
-                sel_slice = slice(0, targets[0])
+                sel_slice = slice(0, ft)
             else: # trailing
-                sel_slice = slice(targets[-1]+1, None)
-        else: # all are NaN
+                sel_slice = slice(ft+1, None)
+        else:
             sel_slice = NULL_SLICE
 
         assigned[sel_slice] = value
@@ -2802,7 +2803,7 @@ class Series(ContainerOperand):
     def _label_not_missing(self,
             *,
             return_label: bool,
-            pos: int,
+            forward: bool,
             fill_value: tp.Hashable = np.nan,
             func: tp.Callable[[np.ndarray], np.ndarray],
             ) -> tp.Hashable:
@@ -2811,7 +2812,6 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
-            pos: 0 or -1
 
         Returns:
             tp.Hashable
@@ -2820,12 +2820,12 @@ class Series(ContainerOperand):
         if not len(self.values):
             return fill_value
         target = ~func(self.values)
-        post = np.nonzero(target)[0]
-        if len(post) == 0:
+        pos = first_true_1d(target, forward=forward)
+        if pos == -1:
             return fill_value
         if return_label:
-            return self.index[post[pos]]
-        return post[pos] #type: ignore
+            return self._index[pos]
+        return pos
 
     def iloc_notna_first(self,
             *,
@@ -2842,7 +2842,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=False,
-                pos=0,
+                forward=True,
                 fill_value=fill_value,
                 func=isna_array,
                 )
@@ -2862,7 +2862,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=False,
-                pos=-1,
+                forward=False,
                 fill_value=fill_value,
                 func=isna_array,
                 )
@@ -2882,7 +2882,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=True,
-                pos=0,
+                forward=True,
                 fill_value=fill_value,
                 func=isna_array,
                 )
@@ -2902,7 +2902,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=True,
-                pos=-1,
+                forward=False,
                 fill_value=fill_value,
                 func=isna_array,
                 )
@@ -2924,7 +2924,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=True,
-                pos=0,
+                forward=True,
                 fill_value=fill_value,
                 func=isfalsy_array,
                 )
@@ -2944,7 +2944,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=False,
-                pos=0,
+                forward=True,
                 fill_value=fill_value,
                 func=isfalsy_array,
                 )
@@ -2965,7 +2965,7 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=True,
-                pos=-1,
+                forward=False,
                 fill_value=fill_value,
                 func=isfalsy_array,
                 )
@@ -2985,15 +2985,12 @@ class Series(ContainerOperand):
         '''
         return self._label_not_missing(
                 return_label=False,
-                pos=-1,
+                forward=False,
                 fill_value=fill_value,
                 func=isfalsy_array,
                 )
 
-
-
     #---------------------------------------------------------------------------
-
     def cov(self,
             other: tp.Union['Series', np.ndarray],
             *,

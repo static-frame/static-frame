@@ -7,6 +7,7 @@ from itertools import zip_longest
 import numpy as np
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
+from arraykit import first_true_1d
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import resolve_dtype
@@ -2711,11 +2712,9 @@ class TypeBlocks(ContainerOperand):
             if block.ndim == 1:
                 t_end = t_start + 1
                 target_slice = t_start
-                t_width = 1
             else:
                 t_end = t_start + block.shape[1]
                 target_slice = slice(t_start, t_end)
-                t_width = t_end - t_start
 
             # target will only be 1D when block is 1d
             target = bloc_key[NULL_SLICE, target_slice]
@@ -3535,7 +3534,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     assigned = b.astype(assignable_dtype)
 
-                # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
+                # make 2d look like 1D here
                 if ndim == 1:
                     sel_nonzeros = ((0, sel),)
                 else:
@@ -3543,14 +3542,13 @@ class TypeBlocks(ContainerOperand):
                     sel_nonzeros = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j) #type: ignore
 
                 for idx, sel_nonzero in sel_nonzeros:
-                    # indices of not-nan values, per column
-                    targets = np.nonzero(~sel_nonzero)[0]
-                    if len(targets):
+                    ft = first_true_1d(~sel_nonzero, forward=sided_leading)
+                    if ft != -1:
                         if sided_leading:
-                            sel_slice = slice(0, targets[0])
-                        else: # trailings
-                            sel_slice = slice(targets[-1]+1, None)
-                    else: # all are NaN
+                            sel_slice = slice(0, ft)
+                        else: # trailing
+                            sel_slice = slice(ft+1, None)
+                    else:
                         sel_slice = NULL_SLICE
 
                     if ndim == 1:
@@ -3612,24 +3610,23 @@ class TypeBlocks(ContainerOperand):
                     assigned = b.copy()
                 else:
                     assigned = b.astype(assignable_dtype)
+
                 if ndim == 1:
                     # if one dim, we simply fill nan values
                     assigned[isna_entry] = value
                 else:
                     # only collect rows that have a sided NaN
-                    # could use np.nonzero()
                     candidates = (i for i, j in enumerate(isna_entry) if j)
                     sels_nonzero = ((i, sel[i]) for i in candidates)
 
                     for idx, sel_nonzero in sels_nonzero:
-                        # indices of not-nan values, per row
-                        targets = np.nonzero(~sel_nonzero)[0]
-                        if len(targets):
+                        ft = first_true_1d(~sel_nonzero, forward=sided_leading)
+                        if ft != -1:
                             if sided_leading:
-                                sel_slice = slice(0, targets[0])
+                                sel_slice = slice(0, ft)
                             else: # trailing
-                                sel_slice = slice(targets[-1]+1, None)
-                        else: # all are NaN
+                                sel_slice = slice(ft+1, None)
+                        else:
                             sel_slice = NULL_SLICE
                         assigned[idx, sel_slice] = value
 
@@ -3752,10 +3749,7 @@ class TypeBlocks(ContainerOperand):
         for b in blocks:
             sel = func_target(b) # True for is NaN
             ndim = sel.ndim
-
-            if ndim == 1 and not np.any(sel):
-                yield b
-            elif ndim == 2 and not np.any(sel).any():
+            if not np.any(sel):
                 yield b
             else:
                 target_indexes = binary_transition(sel)
@@ -3901,13 +3895,13 @@ class TypeBlocks(ContainerOperand):
                         # get appropriate leading slice to cover nan region
                         for idx, sel_nonzero in sels_nonzero:
                             # indices of not-nan values, per row
-                            targets = np.nonzero(~sel_nonzero)[0]
-                            if len(targets):
+                            ft = first_true_1d(~sel_nonzero, forward=directional_forward)
+                            if ft != -1:
                                 if directional_forward:
-                                    sel_slice = slice(0, targets[0])
-                                else: # backward
-                                    sel_slice = slice(targets[-1]+1, length)
-                            else: # all are NaN
+                                    sel_slice = slice(0, ft)
+                                else: # trailing
+                                    sel_slice = slice(ft+1, None)
+                            else:
                                 sel_slice = slice(0, length)
 
                             # truncate sel_slice by limit-

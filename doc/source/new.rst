@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.2.7-dev
+-----------
+
+Set ``arraykit`` version to 0.3.0: replaced usage of ``np.nonzero()`` with ``first_true_1d()`` and ``first_true_2d()``.
+
+
 1.2.6
 -----------
 
