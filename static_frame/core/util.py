@@ -1258,7 +1258,7 @@ def ufunc_unique_enumerated(
 
     if not retain_order and not func:
         if is_2d:
-            uniques, indexer = ufunc_unique1d_indexer(array.flatten())
+            uniques, indexer = ufunc_unique1d_indexer(array.flatten(order='F'))
         else:
             uniques, indexer = ufunc_unique1d_indexer(array)
     else:
@@ -1267,7 +1267,8 @@ def ufunc_unique_enumerated(
 
         if is_2d:
             # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
-            eiter = ((i, e.item()) for i, e in enumerate(np.nditer(array, order='F')))
+            eiter = ((i, e.item()) for i, e in enumerate(
+                    np.nditer(array, order='F', flags=('refs_ok',))))
         else:
             eiter = enumerate(array)
 
@@ -1287,7 +1288,7 @@ def ufunc_unique_enumerated(
             uniques = np.array(list(indices.keys()), dtype=DTYPE_OBJECT)
 
     if is_2d:
-        indexer = indexer.reshape(array.shape)
+        indexer = indexer.reshape(array.shape, order='F')
 
     return indexer, uniques
 
