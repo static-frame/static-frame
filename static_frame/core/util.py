@@ -1265,6 +1265,7 @@ def ufunc_unique_enumerated(
         indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
         indices: tp.Dict[tp.Any, int] = {}
 
+        # NOTE: retain_order on a 2D array will be C-ordered due to array.flat's default iteration
         if not func:
             for i, v in enumerate(array.flat):
                 indexer[i] = indices.setdefault(v, len(indices))
