@@ -44,8 +44,8 @@ from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import isna_element
 from static_frame import mloc
+from static_frame import isna_element
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -8366,7 +8366,7 @@ class TestUnit(TestCase):
                 )
         x, y = f1.unique_enumerated()
         self.assertEqual(x.tolist(), [[2, 0], [3, 0], [2, 0], [3, 1]])
-        self.assertEqual(y.tolist(), [False, True, 2, 3])
+        self.assertEqual(y.tolist(), [False, True, 2, 30])
 
     def test_frame_unique_enumerated_b(self) -> None:
         records = (
@@ -8397,7 +8397,6 @@ class TestUnit(TestCase):
                 )
 
         x, y = f1.unique_enumerated(func=isna_element)
-        import ipdb; ipdb.set_trace()
         self.assertEqual(x.tolist(), [[0, 1], [2, 1], [0, -1], [2, -1]])
         self.assertEqual(y.tolist(), [2, False, 30])
 
