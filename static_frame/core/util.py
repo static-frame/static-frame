@@ -1248,7 +1248,7 @@ def ufunc_unique_enumerated(
         array: np.ndarray,
         *,
         retain_order: bool = False,
-        func: tp.Callable[[tp.Any], bool] = None,
+        func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     # see doc_str.unique_enumerated
 
