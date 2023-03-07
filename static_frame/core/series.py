@@ -3176,12 +3176,16 @@ class Series(ContainerOperand):
     @doc_inject()
     def unique_enumerated(self, *,
             retain_order: bool = False,
+            func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
             ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
         {doc}
         {args}
         '''
-        return ufunc_unique_enumerated(self.values, retain_order=retain_order)
+        return ufunc_unique_enumerated(self.values,
+                retain_order=retain_order,
+                func=func,
+                )
 
     @doc_inject()
     def equals(self,
