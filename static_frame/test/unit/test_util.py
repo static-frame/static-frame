@@ -1262,6 +1262,14 @@ class TestUnit(TestCase):
                 [[0, 1, 2, 0, 1, 2], ['c', 'b', 'a']]
                 )
 
+    def test_ufunc_unique_enumerated_d(self) -> None:
+        a1 = np.array(['c', 'b', 'a', 'c', 'b', 'a']).reshape(3,2)
+        self.assertEqual(
+                [x.tolist() for x in ufunc_unique_enumerated(a1)],
+                [[[2, 1], [0, 2], [1, 0]], ['a', 'b', 'c']]
+                )
+
+
 
     #---------------------------------------------------------------------------
 

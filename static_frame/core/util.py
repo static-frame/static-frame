@@ -1251,18 +1251,25 @@ def ufunc_unique_enumerated(
         func: tp.Callable[[tp.Any], bool] = None,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     # see doc_str.unique_enumerated
-    if not retain_order and not func:
-        uniques, indexer = ufunc_unique1d_indexer(array)
-    else:
-        indexer = np.empty(len(array), dtype=DTYPE_INT_DEFAULT)
 
+    is_2d = array.ndim == 2
+    if not is_2d and array.ndim != 1:
+        raise ValueError('Only 1D and 2D arrays supported.')
+
+    if not retain_order and not func:
+        if is_2d:
+            uniques, indexer = ufunc_unique1d_indexer(array.flatten())
+        else:
+            uniques, indexer = ufunc_unique1d_indexer(array)
+    else:
+        indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
         indices: tp.Dict[tp.Any, int] = {}
 
         if not func:
-            for i, v in enumerate(array):
+            for i, v in enumerate(array.flat):
                 indexer[i] = indices.setdefault(v, len(indices))
         else:
-            for i, v in enumerate(array):
+            for i, v in enumerate(array.flat):
                 if func(v):
                     indexer[i] = -1
                 else:
@@ -1272,6 +1279,9 @@ def ufunc_unique_enumerated(
             uniques = np.fromiter(indices.keys(), count=len(indices), dtype=array.dtype)
         else:
             uniques = np.array(list(indices.keys()), dtype=DTYPE_OBJECT)
+
+    if is_2d:
+        indexer = indexer.reshape(array.shape)
 
     return indexer, uniques
 
