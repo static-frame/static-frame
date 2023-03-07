@@ -1248,16 +1248,25 @@ def ufunc_unique_enumerated(
         array: np.ndarray,
         *,
         retain_order: bool = False,
+        func: tp.Callable[[tp.Any], bool] = None,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
-    '''Similar to Pandas "factorize".
-    '''
-    if not retain_order:
+    # see doc_str.unique_enumerated
+    if not retain_order and not func:
         uniques, indexer = ufunc_unique1d_indexer(array)
     else:
         indexer = np.empty(len(array), dtype=DTYPE_INT_DEFAULT)
+
         indices: tp.Dict[tp.Any, int] = {}
-        for i, v in enumerate(array):
-            indexer[i] = indices.setdefault(v, len(indices))
+
+        if not func:
+            for i, v in enumerate(array):
+                indexer[i] = indices.setdefault(v, len(indices))
+        else:
+            for i, v in enumerate(array):
+                if func(v):
+                    indexer[i] = -1
+                else:
+                    indexer[i] = indices.setdefault(v, len(indices))
 
         if array.dtype != DTYPE_OBJECT:
             uniques = np.fromiter(indices.keys(), count=len(indices), dtype=array.dtype)

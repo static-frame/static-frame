@@ -1236,12 +1236,32 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_ufunc_unique_enumerated(self) -> None:
+    def test_ufunc_unique_enumerated_a(self) -> None:
         a1 = np.array([2, 'b', 'b', 2, None, 'b'])
         self.assertEqual(
                 [x.tolist() for x in ufunc_unique_enumerated(a1, retain_order=True)],
                 [[0, 1, 1, 0, 2, 1], [2, 'b', None]]
                 )
+
+    def test_ufunc_unique_enumerated_b(self) -> None:
+        a1 = np.array([1, 2, np.nan, 2, 1, np.nan, np.nan])
+        self.assertEqual(
+                [x.tolist() for x in ufunc_unique_enumerated(a1, func=np.isnan)],
+                [[0, 1, -1, 1, 0, -1, -1], [1.0, 2.0]]
+                )
+
+    def test_ufunc_unique_enumerated_c(self) -> None:
+        a1 = np.array(['c', 'b', 'a', 'c', 'b', 'a'])
+        self.assertEqual(
+                [x.tolist() for x in ufunc_unique_enumerated(a1)],
+                [[2, 1, 0, 2, 1, 0], ['a', 'b', 'c']]
+                )
+
+        self.assertEqual(
+                [x.tolist() for x in ufunc_unique_enumerated(a1, retain_order=True)],
+                [[0, 1, 2, 0, 1, 2], ['c', 'b', 'a']]
+                )
+
 
     #---------------------------------------------------------------------------
 

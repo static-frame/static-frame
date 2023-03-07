@@ -3173,14 +3173,13 @@ class Series(ContainerOperand):
         '''
         return ufunc_unique1d(self.values)
 
+    @doc_inject()
     def unique_enumerated(self, *,
             retain_order: bool = False,
             ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
-        Return two NumPy arrays: the first provides index positions to lookup observed values in the second array. Sometimes called "factorize".
-
-        Returns:
-            :obj:`numpy.ndarray`, :obj:`numpy.ndarray`
+        {doc}
+        {args}
         '''
         return ufunc_unique_enumerated(self.values, retain_order=retain_order)
 
