@@ -85,6 +85,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import ufunc_unique2d_indexer
+from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_depth_selection
@@ -1232,6 +1233,14 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(positions.tolist(),
                 [0, 0, 1, 2, 1, 0]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_ufunc_unique_enumerated(self) -> None:
+        a1 = np.array([2, 'b', 'b', 2, None, 'b'])
+        self.assertEqual(
+                [x.tolist() for x in ufunc_unique_enumerated(a1, retain_order=True)],
+                [[0, 1, 1, 0, 2, 1], [2, 'b', None]]
                 )
 
     #---------------------------------------------------------------------------

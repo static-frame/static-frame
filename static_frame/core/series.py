@@ -114,6 +114,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
 
@@ -3173,16 +3174,16 @@ class Series(ContainerOperand):
         '''
         return ufunc_unique1d(self.values)
 
-    def unique_enumerated(self) -> tp.Tuple[np.ndarray, np.ndarray]:
+    def unique_enumerated(self, *,
+            retain_order: bool = False,
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
         '''
         Return two NumPy arrays: the first provides index positions to lookup observed values in the second array. Sometimes called "factorize".
 
         Returns:
             :obj:`numpy.ndarray`, :obj:`numpy.ndarray`
         '''
-        array = self.values
-        uniques, indexer = ufunc_unique1d_indexer(array)
-        return indexer, uniques
+        return ufunc_unique_enumerated(self.values, retain_order=retain_order)
 
     @doc_inject()
     def equals(self,

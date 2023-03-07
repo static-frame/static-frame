@@ -1244,6 +1244,25 @@ def ufunc_unique1d_counts(array: np.ndarray,
 
     return array[mask], np.diff(index_of_last_occurrence)
 
+def ufunc_unique_enumerated(
+        array: np.ndarray,
+        *,
+        retain_order: bool = False,
+        ) -> np.ndarray:
+
+    if not retain_order:
+        uniques, indexer = ufunc_unique1d_indexer(array)
+    else:
+        indexer = np.empty(len(array), dtype=DTYPE_INT_DEFAULT)
+        indices: tp.Dict[tp.Any, int] = {}
+        for i, v in enumerate(array):
+            indexer[i] = indices.setdefault(v, len(indices))
+        if array.dtype != DTYPE_OBJECT:
+            uniques = np.fromiter(indices.keys(), count=len(indices), dtype=array.dtype)
+        else:
+            uniques = np.array(list(indices.keys()), dtype=DTYPE_OBJECT)
+
+    return indexer, uniques
 
 def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     '''Given a 2D array, reshape it as a consolidated 1D arrays
