@@ -304,9 +304,9 @@ def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
         return value
 
     dt = np.dtype(value)
-    if dt == DTYPE_OBJECT and value != object:
+    if dt == DTYPE_OBJECT and value is not object and value != "object":
         # fail on implicit conversion to object dtype
-        raise TypeError(f'Implicit NumPy conversion of a type {value} to an object dtype; use `object` instead.')
+        raise TypeError(f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.')
     return dt
 
 
