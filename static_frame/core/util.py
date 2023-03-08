@@ -1265,6 +1265,7 @@ def ufunc_unique_enumerated(
         indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
         indices: tp.Dict[tp.Any, int] = {}
 
+        eiter: tp.Iterator[tp.Tuple[int, tp.Any]]
         if is_2d:
             # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
             eiter = ((i, e.item()) for i, e in enumerate(
