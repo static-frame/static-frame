@@ -764,6 +764,7 @@ class ExGenSeries(ExGen):
                 'dropna()',
                 'duplicated()',
                 'unique()',
+                'unique_enumerated()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_G)})'
             yield 's'
@@ -1871,7 +1872,10 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_D)})'
             yield 'f'
             yield f"f.{attr_func}()"
-
+        elif attr == 'unique_enumerated()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_D)})'
+            yield 'f'
+            yield f"f.{attr_func}(retain_order=True, func=sf.isna_element)"
         elif attr == 'dropfalsy()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
             yield 'f'
