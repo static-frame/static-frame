@@ -75,7 +75,7 @@ def _bus_to_hierarchy_inner_hierarchies(
         except StopIteration:
             break
 
-    return IndexHierarchy(primary), opposite
+    return IndexHierarchy(primary), opposite # type: ignore
 
 
 def bus_to_hierarchy(
@@ -90,7 +90,7 @@ def bus_to_hierarchy(
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    first = bus.iloc[0]
+    first = tp.cast(Frame, bus.iloc[0])
     if (
         (axis == 0 and isinstance(first.index, IndexHierarchy)) or
         (axis == 1 and isinstance(first.columns, IndexHierarchy))
