@@ -301,7 +301,6 @@ class IndexHierarchy(IndexBase):
             return None
         return name
 
-
     @classmethod
     def from_pandas(cls: tp.Type[IH],
             value: 'pandas.MultiIndex',
@@ -1531,7 +1530,6 @@ class IndexHierarchy(IndexBase):
 
         return self._indexers[depth_level]
 
-
     @doc_inject()
     def label_widths_at_depth(self: IH,
             depth_level: DepthLevelSpecifier = 0
@@ -1565,8 +1563,6 @@ class IndexHierarchy(IndexBase):
         ilocs, widths = run_length_1d(indexer)
 
         yield from zip(map(index._extract_iloc_by_int, ilocs), widths)
-
-
 
     @property
     def index_types(self: IH) -> 'Series':
@@ -2784,16 +2780,15 @@ class IndexHierarchy(IndexBase):
         index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor._MUTABLE_CONSTRUCTOR # type: ignore
 
         if self.STATIC:
-            indices = [index_cls((level,)), *self._indices]
+            indices = [index_cls((level,))] + self._indices
         else:
             indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
 
-        indexers = np.array(
-                [
-                    np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
-                    *self._indexers
-                ],
-                dtype=DTYPE_INT_DEFAULT,
+        indexers = np.vstack(
+            (
+                np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
+                self._indexers,
+            )
         )
         indexers.flags.writeable = False
 

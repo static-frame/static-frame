@@ -1699,6 +1699,21 @@ class TestUnit(TestCase):
         self.assertEqual(b1.index.values.tolist(),
             ['zZbu', 'z2Oo', 'zOyq', 'zjZQ'])
 
+    #------------------------------------------------------------------
+
+    def test_quilt_from_index_hierarchy_bus_consistent_index_a(self) -> None:
+        frame = ff.parse('f(Fg)|v(int,bool,str)|i((I,I),(str,int))|s(12,2)')
+        frame = frame.iloc[np.array([11, 0, 4, 9, 1, 10, 5, 2, 6, 3, 7, 8])]
+
+        f1 = frame.iloc[:6].rename("f1")
+        f2 = frame.iloc[6:].rename("f2")
+
+        bus = Bus.from_frames((f1, f2))
+        quilt = Quilt(bus, retain_labels=False, axis=0)
+
+        selected_index = quilt.loc[HLoc["ztsv"]].index
+
+        assert set(selected_index.values_at_depth(0)) == {"ztsv"}
 
 
 if __name__ == '__main__':

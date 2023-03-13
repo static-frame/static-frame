@@ -4,9 +4,11 @@ from functools import partial
 
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
@@ -32,6 +34,50 @@ def get_extractor(
     return lambda x: x
 
 
+def _bus_to_hierarchy_inner_hierarchies(
+        bus: tp.Union[Bus, 'Yarn'],
+        axis: int,
+        extractor: tp.Callable[[IndexBase], IndexBase],
+        init_exception_cls: tp.Type[Exception],
+        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
+    '''
+    Specialized version of :func:`bus_to_hierarchy` for the case where Bus's frames contains only hierarchical indices on the axis of concatentation
+    '''
+    opposite: tp.Optional[IndexBase] = None
+
+    def get_next(items_iter: tp.Iterator[tp.Tuple[tp.Hashable, Frame]]) -> IndexHierarchy:
+        nonlocal opposite
+        label, frame = next(items_iter)
+
+        if axis == 0:
+            axis0, axis1 = extractor(frame.index), frame.columns
+        elif axis == 1:
+            axis0, axis1 = extractor(frame.columns), frame.index
+        else:
+            raise AxisInvalid(f'invalid axis {axis}')
+
+        if opposite is None:
+            opposite = extractor(axis1)
+        else:
+            if not opposite.equals(axis1):
+                raise init_exception_cls('opposite axis must have equivalent indices')
+
+        assert isinstance(axis0, IndexHierarchy) # true assert
+        return axis0.level_add(label)
+
+    items_iter = iter(bus.items())
+
+    primary = IndexHierarchyGO(get_next(items_iter))
+
+    while True:
+        try:
+            primary.extend(get_next(items_iter))
+        except StopIteration:
+            break
+
+    return IndexHierarchy(primary), opposite
+
+
 def bus_to_hierarchy(
         bus: tp.Union[Bus, 'Yarn'],
         axis: int,
@@ -44,25 +90,26 @@ def bus_to_hierarchy(
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    def tree_extractor(index: IndexBase) -> tp.Union[IndexBase, TreeNodeT]:
-        index = extractor(index)
-        if isinstance(index, IndexHierarchy):
-            return index.to_tree()
-        return index
+    first = bus.iloc[0]
+    if (
+        (axis == 0 and isinstance(first.index, IndexHierarchy)) or
+        (axis == 1 and isinstance(first.columns, IndexHierarchy))
+    ):
+        return _bus_to_hierarchy_inner_hierarchies(bus, axis, extractor, init_exception_cls)
 
     tree: TreeNodeT = {}
     opposite: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():
         if axis == 0:
-            tree[label] = tree_extractor(f.index)
+            tree[label] = extractor(f.index)
             if opposite is None:
                 opposite = extractor(f.columns)
             else:
                 if not opposite.equals(f.columns):
                     raise init_exception_cls('opposite axis must have equivalent indices')
         elif axis == 1:
-            tree[label] = tree_extractor(f.columns)
+            tree[label] = extractor(f.columns)
             if opposite is None:
                 opposite = extractor(f.index)
             else:

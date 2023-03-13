@@ -925,7 +925,6 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(), #type: ignore
                 [['a', 'a'], ['b', 'b'], ['c', 'c']])
 
-
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_getitem_astype_a(self) -> None:
@@ -1617,9 +1616,6 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             (True, False, True, False) in ih #pylint: disable=W0104
-
-        # TODO: This behavior is incorrect!
-        # self.assertNotIn(np.array((True, False, True, False)), ih)
 
     def test_hierarchy_contains_d(self) -> None:
         labels = ((True, 'A'), ('I', 'B'))
@@ -4539,7 +4535,6 @@ class TestUnit(TestCase):
         post19 = str(ihgo)
         self.assertNotEqual(post19, str(original))
         self.assertEqual(post19, str(ihgo))
-
 
     #---------------------------------------------------------------------------
 
