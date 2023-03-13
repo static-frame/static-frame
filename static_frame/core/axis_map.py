@@ -51,10 +51,9 @@ def _bus_to_hierarchy_inner_hierarchies(
 
         if axis == 0:
             axis0, axis1 = extractor(frame.index), frame.columns
-        elif axis == 1:
-            axis0, axis1 = extractor(frame.columns), frame.index
         else:
-            raise AxisInvalid(f'invalid axis {axis}')
+            assert axis == 1
+            axis0, axis1 = extractor(frame.columns), frame.index
 
         if opposite is None:
             opposite = extractor(axis1)
