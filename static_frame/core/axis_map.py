@@ -68,11 +68,8 @@ def _bus_to_hierarchy_inner_hierarchies(
 
     primary = IndexHierarchyGO(get_next(items_iter))
 
-    while True:
-        try:
-            primary.extend(get_next(items_iter))
-        except StopIteration:
-            break
+    for ih in get_next(items_iter):
+        primary.extend(ih)
 
     return IndexHierarchy(primary), opposite # type: ignore
 
