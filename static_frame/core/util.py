@@ -160,10 +160,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
@@ -177,14 +173,12 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
-<<<<<<< HEAD
+
 UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
 UNIT_ARRAY_INT.flags.writeable = False
-=======
+
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
-
->>>>>>> master
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
