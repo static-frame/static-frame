@@ -44,8 +44,8 @@ from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
 from static_frame import Series
 from static_frame import TypeBlocks
-from static_frame import mloc
 from static_frame import isna_element
+from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex

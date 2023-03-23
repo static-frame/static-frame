@@ -1269,7 +1269,10 @@ class TestUnit(TestCase):
                 [[[2, 1], [0, 2], [1, 0]], ['a', 'b', 'c']]
                 )
 
-
+    def test_ufunc_unique_enumerated_e(self) -> None:
+        a1 = np.array(['c', 'b', 'a', 'c', 'b', 'a']).reshape(3,2,1)
+        with self.assertRaises(ValueError):
+            ufunc_unique_enumerated(a1)
 
     #---------------------------------------------------------------------------
 
