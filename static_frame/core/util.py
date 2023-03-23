@@ -160,7 +160,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
-
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
@@ -174,9 +173,12 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+
+UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT.flags.writeable = False
+
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
-
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
@@ -3176,8 +3178,13 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
+    # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
+
     @classmethod
     def get(cls, size: int) -> np.ndarray:
+        if size == 1:
+            return UNIT_ARRAY_INT
+
         if size > cls._size:
             cls._size = size * 2
             cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)

@@ -3066,7 +3066,7 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
 
-        coords_array = np.empty(len(array), dtype=object)
+        coords_array = np.empty(len(array), dtype=DTYPE_OBJECT)
         coords_array[:] = coords # force creation of 1D object array
 
         # NOTE: in this sort there should never be ties, so we can use an unstable sort
