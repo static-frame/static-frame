@@ -2780,7 +2780,7 @@ class IndexHierarchy(IndexBase):
         if index_constructor is None:
             index_cls = self._INDEX_CONSTRUCTOR
         else:
-            index_cls = index_constructor._IMMUTABLE_CONSTRUCTOR if self.STATIC else index_constructor._MUTABLE_CONSTRUCTOR
+            index_cls = index_constructor._IMMUTABLE_CONSTRUCTOR if self.STATIC else index_constructor._MUTABLE_CONSTRUCTOR # type: ignore
 
         if self.STATIC:
             indices = [index_cls((level,)), *self._indices]
