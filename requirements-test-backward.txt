@@ -1,33 +1,22 @@
-numpy==1.17.4
-automap==0.4.8
-arraykit==0.1.8
+numpy==1.18.5
+automap==0.6.2
+arraykit==0.3.0
 
-pytest==3.8.0
-pytest-cov==2.6.0
-codecov>=2.0.15
+pytest==7.1.2
+pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.5.4
-mypy==0.800
-pylint==2.4.4
-invoke==1.4.0
-
-pyinstrument==3.4.1
-Pygments==2.7.4
-gprof2dot==2021.2.21
-line-profiler==3.4.0
+invoke==2.0.0
 ipython==7.16.3
-sphinx==4.3.2
-sphinx-jinja==1.4.0
-sphinx_rtd_theme>=0.5.1
-sphinxcontrib-napoleon==0.7.0
+
 pandas==0.24.2 # keep pre 1 support
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
 tables==3.6.1
-pyarrow==0.16.0
+pyarrow==0.17.0
 msgpack==1.0.0
 msgpack-numpy==0.4.7
-frame-fixtures==0.2.1
 visidata==2.4
+frame-fixtures==0.2.1
 

@@ -1,14 +1,374 @@
-What is New in Static Frame
+What is New in StaticFrame
 ===============================
+
+1.2.7
+-----------
+
+Set ``arraykit`` version to 0.3.0: replaced usage of ``np.nonzero()`` with ``first_true_1d()`` and ``first_true_2d()``.
+
+Specifiers of dtypes given to ``astype()`` and related interfaces will now permit "object" to be used (in addition to ``object``).
+
+
+1.2.6
+-----------
+
+Corrected issue when selecting ``IndexHierarchy`` labels that contain tuples.
+
+``IndexHiearchy.astype()`` now properly delegates the ``name`` attribute.
+
+Better usage of ``np.concatenate`` in ``TypeBlocks.transpose()`` and ``HierarchicalLocMap.build_offsets_and_overflow()``.
+
+
+1.2.5
+-----------
+
+Specifiers of dtypes given to ``astype()`` and related interfaces will now raise if NumPy will implicitly convert the argument to ``object``.
+
+``Batch.to_frame()`` now exposes ``index_constructor``, ``columns_constructor`` arguments.
+
+Improvements to usage of ``index_constructor`` and ``columns_constructor`` arguments in ``Frame.from_concat`` when ``Series`` are provided as components.
+
+When using a ``Batch`` to write to an archive, non-unique labels will now raise a ``StoreLabelNonUnique`` exception.
+
+
+1.2.4
+-----------
+
+``IndexHierarchy.__setstate__`` now properly sets indexers to be immutable.
+
+``Bus`` with associated ``Store`` instances are now pickleable after removing ``_weak_cache`` in ``Store.__getstate__()``.
+
+
+1.2.3
+-----------
+
+``Series.isna()``, ``Series.dropna()``, and related functions now properly handle arrays that contain objects such as ``Frame`` or ``np.ndarray`` that raise for usage of ``__bool__()``.
+
+Set ``arraykit`` version to 0.2.9: ``isna_element`` now identifies ``pd.Timestamp('nat')`` as a NA value, and invalid ``datetime64`` strings given to ``Frame.from_delimited`` and related interfaces now properly raise exceptions.
+
+
+1.2.2
+-----------
+
+Corrected issue in ``IndexHierarchy.label_widths_at_depth()`` which caused incorrect cell merging in XLSX output when ``merge_hierarchical_labels`` is True.
+
+
+1.2.1
+-----------
+
+Corrected issue in ``Series.dropna()`` whereby full drops would not retain the index class.
+
+Performance enhancement to ``TypeBlocks.equals()`` and related routines using ``arrays_equal()``.
+
+
+1.2.0
+-----------
+
+Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
+
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+
+Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
+
+Corrected issue in ``Frame.relabel_shift_out()`` where ``index_constructors`` are not assigned to subset index.
+
+Extended ``Frame.iter_tuple()`` ``constructor`` argument to support ``dataclass``-created classes.
+
+
+1.1.1
+-----------
+
+Corrected handling of 0-sized containers in ``Frame.insert_before()`` and ``Frame.insert_after()``.
+
+Corrected issue with some ``IndexHierarchy`` formations when using slices in an ``HLoc`` with more than one depth selection.
+
+
+1.1.0
+-----------
+
+Added ``Frame.consolidate`` interface, including ``Frame.consolidate[]`` and ``Frame.consolidate.status``.
+
+Added ``Quilt.bus`` property.
+
+``IndexHierarchy.rehierarch()`` and related routines now correctly reorder index constructors by default.
+
+Added ``index_constructors`` arguments to ``IndexHierarchy.rehierarch()``, ``Series.rehierarch()``, ``Bus.rehierarch()``, ``Yarn.rehierarch()``.
+
+Added ``index_constructors``, ``columns_constructors`` arguments to ``Frame.rehierarch()``.
+
+
+1.0.1
+-----------
+
+Parameters ``dtypes``, ``fill_value``, and ``format`` (given to ``via_str.format``) now properly work with ``defaultdict``, infinite iterators, and mappings indexed by position (when columns are not defined or created with ``IndexAutoFactory``).
+
+
+1.0.0
+----------
+
+API change: ``IndexHierarchy`` numerical and statistical methods, such as ``sum()``, ``var()``, ``std()``, ``cumprod()``, ``cumsum()``, now raise ``NotImplementedError``.
+
+API change: ``Frame.astype[]`` calls now set ``consolidate_blocks`` to ``False`` by default.
+
+API change: ``composite_index`` and ``composite_index_fill_value`` parameters removed from ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``; added ``include_index`` parameter.
+
+API change: ``IndexDefaultFactory`` renamed ``IndexDefaultConstructorFactory``.
+
+Added ``via_dt.year_month``.
+
+
+0.9.23
+----------
+
+Added ``via_hashlib`` interface to all containers.
+
+Added ``Frame.iter_group_other()``, ``Frame.iter_group_other_items()``, ``Frame.iter_group_other_array()``, ``Frame.iter_group_other_array_items()``.
+
+Added ``Series.iter_group_other()``, ``Series.iter_group_other_items()``, ``Series.iter_group_other_array()``, ``Series.iter_group_other_array_items()``.
+
+Set ``arraykit`` version to 0.2.6.
+
+
+0.9.22
+----------
+
+``IndexYear`` now accepts selection by integers for years.
+
+Added ``Series.loc_notna_first()``, ``Series.loc_notna_last()``, ``Series.loc_notfalsy_first()``, ``Series.loc_notfalsy_last()``.
+
+Added ``Frame.loc_notna_first()``, ``Frame.loc_notna_last()``, ``Frame.loc_notfalsy_first()``, ``Frame.loc_notfalsy_last()``.
+
+Set ``arraykit`` version to 0.2.4.
+
+
+0.9.21
+----------
+
+Set ``arraykit`` version to 0.2.3.
+
+Set ``automap`` version to 0.6.2.
+
+Improvements to delimited file parsing when ``index_depth`` is greater than zero and quoted fields or escaped characters are used.
+
+Corrected issue where Pandas ``MutliIndex`` are not converted to ``IndexHierarchy`` in ``Frame.from_pandas()`` or ``Series.from_pandas()``.
+
+
+0.9.20
+----------
+
+Added ``via_str.format()`` for applying Python formatting mini-language strings to elements.
+
+Added ``skip_initial_space``, ``quoting``, ``quote_double``, and ``escape_char`` parameters to ``Frame.from_delimited()`` and related interfaces.
+
+Added ``Frame.from_json_index()``, ``Frame.from_json_columns``, ``Frame.from_json_split()``, ``Frame.from_json_records()``, ``Frame.from_json_values()``.
+
+Added ``Frame.to_json_index()``, ``Frame.to_json_columns``, ``Frame.to_json_split()``, ``Frame.to_json_records()``, ``Frame.to_json_values``.
+
+Added ``axis`` argument to ``Series.count()`` for compatibility with ``Frame`` interface.
+
+
+0.9.19
+----------
+
+``Frame.from_delimited`` now powered by ``arraykit.delimited_to_arrays``, offering vastly improved performance for all delimited file reading.
+
+Added ``Series.from_delimited``.
+
+Added ``WWW`` interface for downloading network resources to provide to constructors.
+
+Added ``columns_select``, ``skip_initial_space``, ``quoting``, ``quote_double``, ``escape_char``, ``thousands_char``, and ``decimal_char`` parameters to ``Frame.from_delimited`` and derived interfaces.
+
+Corrected issue in converting to ``IndexHierarchy`` from Pandas ``MultiIndex`` when the ``MultiIndex`` is bloated.
+
+
+0.9.18
+----------
+
+Improved layout of default ``memory`` display.
+
+Corrected issue where a non matching ``Series`` assignment or reindex might use ``fill_value`` to determine the type of the returned values.
+
+Certain invalid ``Frame`` selections now properly raise ``KeyError``.
+
+
+0.9.17
+----------
+
+Unified implementation of ``IndexBase`` set and concatenation operations.
+
+Added ``IndexHierarchy.from_values_per_depth()`` constructor.
+
+Set ``automap`` version to 0.6.1.
+
+Extended ``Batch.astype`` interface to fully cover ``Frame.astype`` interface.
+
+
+0.9.16
+----------
+
+Added ``memory`` property to display memory usage via ``MemoryDisplay`` interfaces.
+
+Implemented the DataFrame Interchange Protocol export via the ``Frame.__dataframe__()`` interface.
+
+Implemented ``__repr__()`` for ``ILoc``.
+
+Updated ``Batch.__repr__()``.
+
+Added ``name`` parameter to ``Frame.to_frame()``, ``Series.to_frame()``, and related methods.
+
+Improved error reporting for invalid ``IndexHierarchy``.
+
+``IndexHierarchy.from_index_items()`` now supports items of ``IndexHierarchy``.
+
+
+0.9.15
+----------
+
+Added ``__repr__()`` for ``HLoc``.
+
+Added ``IndexHierarchy.index_at_depth()``
+
+Added ``IndexHierarchy.indexer_at_depth()``
+
+Added ``depth_level`` and ``order_by_occurrence`` parameters to ``unique()`` on ``IndexBase`` subclasses.
+
+Corrected issue calling ``Frame.to_pandas()`` with an empty ``Frame``.
+
+Implemented argument checking on all ``IndexHierarchy`` depth selection parameters.
+
+``IndexHierarchy.astype()`` now accepts a ``dtypes`` argument to assign dtypes by tuple or mapping.
+
+Corrected return type of ``via_str.contains()`` to return Booleans.
+
+
+0.9.14
+----------
+
+Added ``Frame.corr()``, ``Series.corr()``, and ``Batch.corr()``.
+
+Added ``compression`` argument to ``StoreClientMixin`` exporters that write ZIPs.
+
+Corrected issue with selection on zero-sized ``IndexHierarchy``.
+
+
+0.9.13
+----------
+
+Added ``to_zip_npy()`` and ``from_zip_npy()`` interfaces to ``Bus``, ``Batch``, ``Yarn``, and ``Quilt``.
+
+Added ``test_example_gen.py`` to test and enforce automatic example generation.
+
+Improved usage of ``__slots__`` throughout.
+
+Continuous integration quality checks now using pylint 2.15.0 and isort 5.10.1
+
+Minimum pyarrow set to 0.17.0
+
+
+0.9.12
+----------
+
+``ErrorNPYEncode`` exceptions raised during authoring NPZ files or NPY directories now remove those files or directories.
+
+``ErrorNPYEncode`` exceptions raised during ``to_zip_npz()`` now remove the archive.
+
+Authoring NPYs to a pre-existing directory will now raise a ``RuntimeError``.
+
+
+0.9.11
+----------
+
+Supplying an ``IndexDatetime`` subclass as an ``explicit_constructor`` to an ``IndexAutoFactory`` now raises.
+
+Corrected issue with ``fillna`` and ``fillfalsy`` functions when non-elemental fill values are supplied.
+
+Updated ``arraykit`` to 0.1.13.
+
+
+0.9.10
+----------
+
+Corrected single depth selection issue with ``IndexHierarchy``.
+
+
+0.9.9
+----------
+
+Updated ``arraykit`` to 0.1.12.
+
+Set minimum ``numpy`` to 1.18.5.
+
+Added ``index_constructors`` parameter to ``Frame.relabel_shift_in()``.
+
+Corrected issue when ``Frame.astype()`` called with an empty ``Frame``.
+
+Extended ``via_values`` property to take optional consolidation arguments via ``__call__()`` constructor; usage of ``via_values`` instance returns same-typed, same-sized container.
+
+
+0.9.8
+----------
+
+Added ``via_values`` property to ``Series``, ``Index``, ``Frame``, ``IndexHierarchy`` and ``Batch``; permits applying functions to complete containers with ``apply()`` and supports usage as arguments in arbitrary NumPy functions with ``__array_ufunc__()``.
+
+Corrected usage of ``IterNodeDelegate`` with iterator endpoints that do not iterate hashables; added ``IterNodeDelegateMapable`` for usage with iterators of hashables.
+
+Improved type and dtype preservation in concatenation and set operations on ``IndexHierarchy``.
+
+Normalized ordering of results from ``Frame.bloc[]`` selections to row-major ordering without sorting labels.
+
+Added ``via_str.contains()``.
+
+Corrected issue in ``ArchiveZIP`` when ``__del__`` is called when no archive is set.
+
+``Frame.to_sqlite()`` now requires a named ``Frame`` or an explicit ``label``; ``Frame.from_sqlite()``, ``Frame.from_hdf5()`` now make ``label`` a required argument.
+
+API Documentation re-organized, now using procedurally generated code examples.
+
+
+0.9.7
+----------
+
+Corrected issue in ``Series.from_overlay()`` that prematurely aborted processing all ``Series``
+
+Normalized ordering of results from ``Frame.bloc[]`` selections.
+
+
+0.9.6
+----------
+
+Corrected issue in ``Quilt`` creation when given a ``Bus`` with ``Frame`` with ``datetime64`` indices.
+
+Extended ``IndexAutoConstructorFactory`` to evaluate dtype from arbitrary iterables, not just arrays.
+
+Improvements to consistency and performance of ``loc_to_iloc``.
+
+Implemented ``max`` and ``min`` methods on ``IndexHierarchy``; related statistical methods now raise.
+
+
+0.9.5
+----------
+
+Updated AutoMap to 0.5.1
+
+Removed "performance" package from setup.py
+
 
 0.9.4
 ----------
 
-Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``IndexHierarchy.dropfalsy().
+Enhanced support for ``fill_value`` as a ``FillValueAuto``, a mapping, or a sequence of fill values (per column) where appropriate.
+
+Added ``Index.dropna()``, ``Index.dropfalsy()``, ``IndexHierarchy.dropna()``, ``IndexHierarchy.dropfalsy()``.
 
 Added ``Index.fillfalsy()``, ``IndexHierarchy.fillfalsy()``.
 
-Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+Performance improvements for ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
+
+Fixed usage of ``dtypes`` argument when encountering zero-sized data in ``Frame.from_records()`` and ``Frame.from_pandas()``.
+
+Improved ``Frame.iter_tuple`` to not coerce types through arrays.
+
+Added ``Frame.set_columns()``, ``Frame.set_columns_hierarchy()``, and ``Frame.unset_columns()``.
 
 
 0.9.3
@@ -18,13 +378,15 @@ Added ``apply_element()`` and ``apply_element_items()`` methods to ``FrameAssign
 
 Added implementation of ``__array__()`` and ``__array_ufunc__()`` to all containers for better support with NumPy objects and binary operators.
 
-Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``
+Added ``Series.iter_group_array()``, ``Series.iter_group_array_items()``, ``Series.iter_group_labels_array()``, ``Series.iter_group_labels_array_items()``.
 
-Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``
+Added ``Frame.iter_group_array()``, ``Frame.iter_group_array_items()``, ``Frame.iter_group_labels_array()``, ``Frame.iter_group_labels_array_items()``.
 
-Corrected issue when using binary operators with a `FrameGO` and a `Series`.
+Corrected issue when using binary operators with a ``FrameGO`` and a ``Series``.
 
 Corrected issue and performance of ``name`` assignment when extracting ``Series`` from ``Frame`` with an ``IndexHierarchy``.
+
+Added ``IndexAutoConstructorFactory`` for automatic constructor selection based on NumPy dtype.
 
 
 0.9.2
@@ -94,7 +456,7 @@ Performance enhancements to ``Frame.pivot()``, ``Frame.iter_group()``, and ``Fra
 
 Extended ``Series.from_overlay()`` and ``Frame.from_overlay()`` to support ``func`` and ``fill_value`` arguments; ``func`` can be used to optionally specify what elements are available for assignment in overlay.
 
-Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on :obj:`Series` and :obj:`Frame` for selections that potentially contain new labels filled with the fill value.
+Extended ``via_fill_value()`` interfaces to implement ``__getitem__`` and ``loc`` selection interfaces on ``Series`` and ``Frame`` for selections that potentially contain new labels filled with the fill value.
 
 
 0.8.34
@@ -324,7 +686,7 @@ Added ``index_constructor`` argument to ``Series.from_concat_items()``.
 
 Added ``index_constructor``, ``columns_constructor`` arguments to ``Frame.from_concat_items()``.
 
-Introduced ``IndexDefaultFactory`` to permit specifying index ``name`` attributes with default index constructors.
+Introduced ``IndexDefaultConstructorFactory`` to permit specifying index ``name`` attributes with default index constructors.
 
 
 0.8.16
@@ -720,7 +1082,7 @@ API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatica
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
 
-API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to ``False`` by default.
 
 API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Series.relabel_drop_level`` to ``Series.relabel_level_drop``, ``Frame.relabel_add_level`` to ``Frame.relabel_level_add``, ``Frame.relabel_drop_level`` to ``Frame.relabel_level_drop``, ``Index.add_level`` to ``Index.level_add``, ``IndexHierarchy.add_level`` to ``IndexHierarchy.level_add``, ``IndexHierarchy.drop_level`` to ``IndexHierarchy.level_drop``.
 
@@ -1332,7 +1694,7 @@ Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delim
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
-The ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
+The ``DisplayConfig`` parameter ``type_show`` now, if ``False``, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 Added ``Frame.unset_index()``.
 

@@ -1,14 +1,11 @@
 import timeit
 import typing as tp
-from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
-
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
 import static_frame as sf
-
-
 
 
 class PerfTest:
@@ -118,7 +115,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     run_test()

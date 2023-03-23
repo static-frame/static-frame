@@ -1,15 +1,14 @@
 import numpy as np
 from hypothesis import given
 
+from static_frame.core.archive_npy import HeaderDecodeCacheType
+from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
-from static_frame.core.archive_npy import NPYConverter
-from static_frame.core.archive_npy import HeaderDecodeCacheType
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property import strategies as sfst
-
-from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):

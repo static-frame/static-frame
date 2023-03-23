@@ -1,18 +1,18 @@
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
 import static_frame as sf
-from static_frame import IndexHierarchy
-from static_frame import IndexDate
-from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
 from static_frame import HLoc
-from static_frame.test.test_case import TestCase
+from static_frame import IndexDate
+from static_frame import IndexHierarchy
+from static_frame import Series
+from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
+from static_frame.test.test_case import TestCase
 
 nan = np.nan
 
@@ -186,6 +186,91 @@ class TestUnit(TestCase):
         self.assertEqual(post2,
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
+    def test_frame_iter_tuple_f(self) -> None:
+        f = ff.parse('s(3,2)|v(dtD,dtY)')
+        post = tuple(f.iter_tuple(constructor=tuple, axis=1))
+        self.assertEqual(len(post[0]), 2)
+        self.assertEqual(post[0][1].dtype, f.iloc[0, 1].dtype)
+        self.assertEqual(post[0],
+            (np.datetime64('2210-12-26'), np.datetime64('164167'))
+            )
+
+    def test_frame_iter_tuple_g(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None})
+        self.assertEqual(post.to_pairs(),
+                (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
+                )
+
+    def test_frame_iter_tuple_h(self) -> None:
+        # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
+        columns = tuple('pqrs')
+        index = tuple('zxwy')
+        records = (('A', 1,  False, False),
+                   ('A', 2,  True, False),
+                   ('B', 1,  False, False),
+                   ('B', 2,  True, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill({('w', (False, False)): None}, fill_value=0)
+        self.assertEqual(post.to_pairs(),
+            (('z', 0), ('x', 0), ('w', None), ('y', 0))
+            )
+
+    def test_frame_iter_tuple_i1(self) -> None:
+        from dataclasses import dataclass
+
+        records = (
+                (1,  False, True),
+                (30, True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        @dataclass
+        class Record:
+            p: int
+            q: bool
+            r: bool
+
+        post1 = list(f1.iter_tuple(axis=1, constructor=Record))
+        self.assertTrue(all(isinstance(x, Record) for x in post1))
+        self.assertEqual([x.p for x in post1], [1, 30])
+        self.assertEqual([x.r for x in post1], [True, False])
+
+    def test_frame_iter_tuple_i2(self) -> None:
+        from dataclasses import dataclass
+
+        records = (
+                (1,  False, True),
+                (30, True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        @dataclass
+        class Record:
+            p: int
+            q: bool
+            r: bool
+
+        ctor = lambda args: Record(**dict(zip(('p', 'q', 'r'), args)))
+        post1 = list(f1.iter_tuple(axis=1, constructor=ctor))
+        self.assertTrue(all(isinstance(x, Record) for x in post1))
+        self.assertEqual([x.p for x in post1], [1, 30])
+        self.assertEqual([x.r for x in post1], [True, False])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_series_a(self) -> None:
@@ -223,6 +308,18 @@ class TestUnit(TestCase):
         post5 = f1.iter_series(axis=1).apply(lambda s: int(s.sum()), dtype=object)
         self.assertEqual(post5.dtype, object)
         self.assertEqual(post5.shape, (10,))
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_series_items_a(self) -> None:
+        f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        post1 = tuple(f1.iter_series_items(axis=0))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post1],
+                [('zZbu', [-88017, 92867]), ('ztsv', [162197, -41157]), ('zUvW', [-3648, 91301]), ('zkuW', [129017, 35021]), ('zmVj', [58768, 146284]), ('z2Oo', [84967, 13448]), ('z5l6', [146284, 170440]), ('zCE3', [137759, -62964])])
+
+        post2 = tuple(f1.iter_series_items(axis=1))
+        self.assertEqual([(k, v.values.tolist()) for (k, v) in post2],
+                [('zZbu', [-88017, 162197, -3648, 129017, 58768, 84967, 146284, 137759]), ('ztsv', [92867, -41157, 91301, 35021, 146284, 13448, 170440, -62964])]
+                )
 
     #---------------------------------------------------------------------------
 
@@ -351,6 +448,15 @@ class TestUnit(TestCase):
         f2 = f1.iter_element(axis=1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
+
+    def test_frame_iter_element_f(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3))
+
+        mapping = {x: x*3 for x in range(3)}
+        f2 = f1.iter_element(axis=1).map_fill(mapping, fill_value=-1)
+        self.assertEqual(f2.to_pairs(),
+            ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
+            )
 
     #---------------------------------------------------------------------------
 
@@ -876,6 +982,191 @@ class TestUnit(TestCase):
         self.assertEqual([a[1].__class__ for a in post1], [np.ndarray, np.ndarray])
         self.assertEqual([a[1].shape for a in post1], [(2, 2), (2, 2)])
         self.assertEqual([a[0] for a in post1], ['a', 'b'])
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_group_other_a(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other(axis=0, other=(0, 0, 0, 1)))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'))), ('q', (('z', 1), ('x', 2), ('w', 1))), ('r', (('z', False), ('x', True), ('w', False))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('y', 'B'),)), ('q', (('y', 2),)), ('r', (('y', True),)))
+                )
+
+        post3, post4 = list(f.iter_group_other(axis=1, other=(1, 0, 1)))
+        self.assertEqual(post3.to_pairs(),
+                (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
+                )
+        self.assertEqual(post4.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
+                )
+
+    def test_frame_iter_group_other_b(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # axis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other(axis=0, other=f[['q', 'r']]))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', False), ('w', False))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('x', 'A'), ('y', 'B'))), ('q', (('x', 2), ('y', 2))), ('r', (('x', True), ('y', True))))
+                )
+
+    def test_frame_iter_group_other_c(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = ((1, 1, False),
+                   (1, 1, False),
+                   (5, 1, False),
+                   (8, 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # axis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items(axis=1,
+                other=f.iloc[:2, :2],
+                fill_value = None
+                ))
+        self.assertEqual(g1, (1, 1))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 1), ('x', 1), ('w', 5), ('y', 8))), ('q', (('z', 1), ('x', 1), ('w', 1), ('y', 2))))
+                )
+        self.assertEqual(g2, (None, None))
+        self.assertEqual(post2.to_pairs(),
+                (('r', (('z', False), ('x', False), ('w', False), ('y', True))),)
+                )
+
+    def test_frame_iter_group_other_d(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = ((1, 1, False),
+                   (1, 1, False),
+                   (5, 1, False),
+                   (8, 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        post1, post2 = list(f.iter_group_other(axis=0,
+                other=np.array([[1, 1], [0, 0], [1, 1], [0, 0]]),
+                fill_value = None
+                ))
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('x', 1), ('y', 8))), ('q', (('x', 1), ('y', 2))), ('r', (('x', False), ('y', True))))
+                )
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('z', 1), ('w', 5))), ('q', (('z', 1), ('w', 1))), ('r', (('z', False), ('w', False))))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_items_a(self) -> None:
+        columns = tuple('pqr')
+        index = tuple('zxwy')
+        records = (('A', 1, False),
+                   ('A', 2, True),
+                   ('B', 1, False),
+                   ('B', 2, True))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items(
+                axis=0, other=(0, 0, 0, 1))
+                )
+
+        self.assertEqual(post1.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'))), ('q', (('z', 1), ('x', 2), ('w', 1))), ('r', (('z', False), ('x', True), ('w', False))))
+                )
+        self.assertEqual(g1, 0)
+        self.assertEqual(post2.to_pairs(),
+                (('p', (('y', 'B'),)), ('q', (('y', 2),)), ('r', (('y', True),)))
+                )
+        self.assertEqual(g2, 1)
+
+        (g3, post3), (g4, post4) = list(f.iter_group_other_items(
+                axis=1, other=(1, 0, 1))
+                )
+        self.assertEqual(post3.to_pairs(),
+                (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
+                )
+        self.assertEqual(g3, 0)
+
+        self.assertEqual(post4.to_pairs(),
+                (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'), ('y', 'B'))), ('r', (('z', False), ('x', True), ('w', False), ('y', True))))
+                )
+        self.assertEqual(g4, 1)
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_array_a(self) -> None:
+        columns = tuple('pq')
+        index = tuple('zxwy')
+        records = ((1, 10),
+                   (2, 15),
+                   (1, 20),
+                   (2, 25))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        post1, post2 = list(f.iter_group_other_array(
+                axis=0, other=(1, 0, 0, 1))
+                )
+        self.assertEqual(post1.tolist(),
+                [[2, 15], [1, 20]]
+                )
+        self.assertEqual(post2.tolist(),
+                [[1, 10], [2, 25]]
+                )
+
+        post3, post4 = list(f.iter_group_other_array(
+                axis=1, other=(0, 1))
+                )
+        self.assertEqual(post3.tolist(),
+                [[1], [2], [1], [2]]
+                )
+        self.assertEqual(post4.tolist(),
+                [[10], [15], [20], [25]]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_group_other_array_items_a(self) -> None:
+        columns = tuple('pq')
+        index = tuple('zxwy')
+        records = ((1, 10),
+                   (2, 15),
+                   (1, 20),
+                   (2, 25))
+        f = Frame.from_records(records, columns=columns, index=index)
+        # asxis 0 means for other grouping means that they key is a column key
+        (g1, post1), (g2, post2) = list(f.iter_group_other_array_items(
+                axis=0, other=(1, 0, 0, 1))
+                )
+        self.assertEqual(g1, 0)
+        self.assertEqual(post1.tolist(),
+                [[2, 15], [1, 20]]
+                )
+        self.assertEqual(g2, 1)
+        self.assertEqual(post2.tolist(),
+                [[1, 10], [2, 25]]
+                )
+
+        (g3, post3), (g4, post4) = list(f.iter_group_other_array_items(
+                axis=1, other=(0, 1))
+                )
+        self.assertEqual(g3, 0)
+        self.assertEqual(post3.tolist(),
+                [[1], [2], [1], [2]]
+                )
+        self.assertEqual(g4, 1)
+        self.assertEqual(post4.tolist(),
+                [[10], [15], [20], [25]]
+                )
 
     #---------------------------------------------------------------------------
 

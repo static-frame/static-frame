@@ -1,17 +1,17 @@
 import datetime
-import numpy as np
 
 import frame_fixtures as ff
+import numpy as np
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
-
 from static_frame.test.test_case import TestCase
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultFactory
-from static_frame.core.index_auto import IndexAutoConstructorFactory
+
 
 class TestUnit(TestCase):
 
@@ -49,7 +49,7 @@ class TestUnit(TestCase):
 
     def test_index_auto_factory_from_optional_constructor(self) -> None:
         initializer = 3
-        explicit_constructor = IndexDefaultFactory(name='foo')
+        explicit_constructor = IndexDefaultConstructorFactory(name='foo')
         default_constructor = IndexDate
         post = IndexAutoFactory.from_optional_constructor(
                 initializer=initializer,
@@ -90,6 +90,14 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.name, 'foo')
         self.assertEqual(f.index.__class__, IndexDate)
 
+    #---------------------------------------------------------------------------
+    def test_index_auto_factory_equals_a(self) -> None:
+
+        idx1 = IndexAutoFactory.from_optional_constructor(10_000,
+                default_constructor=Index)
+        idx2 = IndexAutoFactory.from_optional_constructor(10_000,
+                default_constructor=Index)
+        self.assertTrue(idx1.equals(idx2))
 
 
 if __name__ == '__main__':

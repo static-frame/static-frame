@@ -1,35 +1,33 @@
 import typing as tp
-from functools import partial
 from collections import defaultdict
-from itertools import repeat
-from itertools import product
+from functools import partial
 from itertools import chain
+from itertools import product
+from itertools import repeat
 
 import numpy as np
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 
-from static_frame.core.index_base import IndexBase
+from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import NameType
-from static_frame.core.util import iterable_to_array_1d
-
-
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.type_blocks import TypeBlocks
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -384,8 +382,8 @@ def pivot_core(
         ) -> 'Frame':
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
-    from static_frame.core.series import Series
     from static_frame.core.frame import Frame
+    from static_frame.core.series import Series
 
     func_no = func_single is None and func_map == ()
 
@@ -590,7 +588,7 @@ def pivot_outer_index(
         index_inner = index_from_optional_constructor( # type: ignore
                 index_values,
                 default_constructor=partial(
-                        IndexHierarchy._from_arrays,
+                        IndexHierarchy.from_values_per_depth,
                         name=name,
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
@@ -649,7 +647,7 @@ def pivot_index_map(*,
             group_to_dtype[None] = resolve_dtype_iter(dtypes_src)
     else:
         group_to_target_map = defaultdict(dict)
-        targets_unique = dict() # Store targets in order observed
+        targets_unique = {} # Store targets in order observed
 
         for axis_idx, (group, target, dtype) in enumerate(zip(
                 zip(*group_arrays), # get tuples of len 1 to depth

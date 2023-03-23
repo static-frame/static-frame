@@ -1,25 +1,26 @@
 import typing as tp
+from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.test.test_case import TestCase
-
-from static_frame.core.quilt import Quilt
-from static_frame.core.hloc import HLoc
+from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.batch import Batch
+from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.frame import Frame
+from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
-from static_frame.core.frame import Frame
-from static_frame.core.bus import Bus
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexSecond
+from static_frame.core.quilt import Quilt
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
-from static_frame.core.batch import Batch
-from static_frame.core.store import StoreConfig
-
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.axis_map import bus_to_hierarchy
 
 
 class TestUnit(TestCase):
@@ -1203,6 +1204,7 @@ class TestUnit(TestCase):
 
     def test_quilt_iter_window_b1(self) -> None:
         from string import ascii_lowercase
+
         # indexes are heterogenous but columns are not
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
@@ -1237,6 +1239,7 @@ class TestUnit(TestCase):
 
     def test_quilt_iter_window_b2(self) -> None:
         from string import ascii_lowercase
+
         # indexes are heterogenous but columns are not
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
@@ -1539,6 +1542,21 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_quilt_to_zip_npy_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_npy(fp)
+            q2 = Quilt.from_zip_npy(fp, retain_labels=True, axis=1)
+
+            self.assertTrue(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+    #---------------------------------------------------------------------------
+
     def test_quilt_equals_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
@@ -1613,6 +1631,74 @@ class TestUnit(TestCase):
         q2 = Quilt.from_frames((f1, f3), retain_labels=True)
 
         self.assertFalse(q1.equals(q2, compare_class=True, compare_dtype=True, compare_name=True))
+
+    #---------------------------------------------------------------------------
+    def test_quilt_dt64_index_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        self.assertTrue(q1.shape, (8, 4))
+        self.assertIs(q1.index.index_types[1], IndexDate)
+
+    def test_quilt_dt64_index_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(IS,dts)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        self.assertTrue(q1.shape, (8, 4))
+        self.assertIs(q1.index.index_types[1], IndexSecond)
+
+    #---------------------------------------------------------------------------
+    def test_quilt_to_signature_bytes_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        bytes1 = q1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
+
+    def test_quilt_to_signature_bytes_b(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+        bytes1 = q1._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(),
+            '96a4372e4a908a660f149152f5f7d2e099c9c51a1f12384325f7e98faa504006')
+
+    def test_quilt_via_hashlib_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int64)|i(ID,dtD)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|i(ID,dtD)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2))
+        q1 = Quilt(b1, retain_labels=True)
+
+        hd = q1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(hd,
+            'b9caa5a602b91077d278d35f5558f3bad8d268100ec82842849a9c949de441df')
+
+    #------------------------------------------------------------------
+
+    def test_quilt_bus_a(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        b1 = q1.bus
+
+        self.assertEqual(b1.index.values.tolist(),
+            ['zZbu', 'z2Oo', 'zOyq', 'zjZQ'])
+
 
 
 if __name__ == '__main__':

@@ -1,97 +1,93 @@
 import typing as tp
-from itertools import zip_longest
-from copy import deepcopy
 from collections import Counter
+from copy import deepcopy
+from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
-
-from automap import AutoMap
-from automap import FrozenAutoMap
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-
+from automap import AutoMap  # pylint: disable=E0611
+from automap import FrozenAutoMap  # pylint: disable=E0611
+from automap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import matmul
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
+from static_frame.core.container_util import matmul
 from static_frame.core.container_util import sort_index_for_order
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
+from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_re import InterfaceRe
-
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_sample
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import concat_resolved
-
-from static_frame.core.util import dtype_from_element
+from static_frame.core.node_values import InterfaceValues
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
-from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
-from static_frame.core.util import intersect1d
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import slice_to_inclusive_slice
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import UFunc
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import union1d
-from static_frame.core.util import argsort_array
-from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import UFunc
+from static_frame.core.util import argsort_array
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_deepcopy
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import DTYPE_NA_KINDS
-
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.loc_map import LocMap
-
+from static_frame.core.util import array_sample
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import arrays_equal
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import key_to_str
+from static_frame.core.util import pos_loc_slice_to_iloc_slice
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611 #pragma: no cover
-    from static_frame import Series #pylint: disable=W0611 #pragma: no cover
-    from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
+    import pandas  # pylint: disable=W0611 #pragma: no cover
 
-I = tp.TypeVar('I', bound=IndexBase)
+    from static_frame import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
+    from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
+
+I = tp.TypeVar('I', bound='Index')
 
 
 class ILocMeta(type):
@@ -100,6 +96,7 @@ class ILocMeta(type):
             key: GetItemKeyType
             ) -> 'ILoc':
         return cls(key) #type: ignore
+
 
 class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
@@ -113,8 +110,13 @@ class ILoc(metaclass=ILocMeta):
     def __init__(self, key: GetItemKeyType):
         self.key = key
 
+    def __repr__(self) -> str:
+        if isinstance(self.key, tuple):
+            return f'<ILoc[{",".join(map(key_to_str, self.key))}]>'
+        return f'<ILoc[{key_to_str(self.key)}]>'
 
-def immutable_index_filter(index: I) -> IndexBase:
+
+def immutable_index_filter(index: IndexBase) -> IndexBase:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
 
     if index.STATIC:
@@ -124,7 +126,7 @@ def immutable_index_filter(index: I) -> IndexBase:
 
 def mutable_immutable_index_filter(
         target_static: bool,
-        index: I
+        index: IndexBase,
         ) -> IndexBase:
     if target_static:
         return immutable_index_filter(index)
@@ -133,37 +135,50 @@ def mutable_immutable_index_filter(
         return index._MUTABLE_CONSTRUCTOR(index)
     return index.__class__(index) # create new instance
 
+
 #-------------------------------------------------------------------------------
-_INDEX_SLOTS = (
-        '_map',
-        '_labels',
-        '_positions',
-        '_recache',
-        '_name'
-        )
+
+class _ArgsortCache(tp.NamedTuple):
+    arr: np.ndarray
+    key: np.ndarray
+
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> '_ArgsortCache':
+        obj = self.__class__(
+                array_deepcopy(self.arr, memo=memo),
+                array_deepcopy(self.key, memo=memo),
+                )
+
+        memo[id(self)] = obj
+        return obj
+
 
 class Index(IndexBase):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
 
-    __slots__ = _INDEX_SLOTS
+    __slots__ = (
+        '_map',
+        '_labels',
+        '_positions',
+        '_recache',
+        '_name',
+        '_argsort_cache',
+        )
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
-
-    _UFUNC_UNION = union1d
-    _UFUNC_INTERSECTION = intersect1d
-    _UFUNC_DIFFERENCE = setdiff1d
 
     _DTYPE: tp.Optional[np.dtype] = None # for specialized indices requiring a typed labels
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
+    _NDIM: int = 1
 
     _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
     _name: NameType
+    _argsort_cache: tp.Optional[_ArgsortCache]
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
@@ -255,6 +270,7 @@ class Index(IndexBase):
         '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
+        self._argsort_cache: tp.Optional[_ArgsortCache] = None
 
         positions = None
         is_typed = self._DTYPE is not None # only True for datetime64 indices
@@ -331,7 +347,7 @@ class Index(IndexBase):
 
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
-                except ValueError: # Automap will raise ValueError of non-unique values are encountered
+                except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels_for_automap) from None
                 # must take length after map as might be iterator
                 size = len(self._map)
@@ -368,15 +384,25 @@ class Index(IndexBase):
 
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         assert not self._recache # __deepcopy__ is implemented on derived GO class
-        obj = self.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo) #type: ignore
-        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
-        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
+
+        obj = self.__class__.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False
         obj._name = self._name # should be hashable/immutable
+        obj._argsort_cache = deepcopy(self._argsort_cache, memo)
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
+
+    def _memory_label_component_pairs(self,
+            ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+        return (('Name', self._name),
+                ('Map', self._map),
+                ('Labels', self._labels),
+                ('Positions', self._positions),
+                )
 
     def __copy__(self: I) -> I:
         '''
@@ -391,7 +417,7 @@ class Index(IndexBase):
         '''
         Return shallow copy of this Index.
         '''
-        return self.__copy__() #type: ignore
+        return self.__copy__()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -512,52 +538,6 @@ class Index(IndexBase):
         return self._labels.nbytes #type: ignore
 
     #---------------------------------------------------------------------------
-    # set operations
-
-    def _ufunc_set(self: I,
-            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
-            ) -> I:
-        '''
-        Utility function for preparing and collecting values for Indices to produce a new Index.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        if self.equals(other, compare_dtype=True):
-            # compare dtype as result should be resolved, even if values are the same
-            if (func is self.__class__._UFUNC_INTERSECTION or
-                    func is self.__class__._UFUNC_UNION):
-                # NOTE: this will delegate name attr
-                return self if self.STATIC else self.copy()
-            elif func is self.__class__._UFUNC_DIFFERENCE:
-                if self._DTYPE is None: #type: ignore
-                    # an index with a variable dtype accepts a dtype argument
-                    return self.__class__((), dtype=self.dtype) #type: ignore
-                # if self._DTYPE is defined, the default constructor does not take a dtype argument
-                return self.__class__(())
-
-        if other.__class__ is np.ndarray:
-            operand = other
-            assume_unique = False
-        elif isinstance(other, IndexBase):
-            operand = other.values
-            assume_unique = True # can always assume unique
-        else:
-            operand, assume_unique = iterable_to_array_1d(other)
-
-        cls = self.__class__
-
-        # using assume_unique will permit retaining order when operands are identical
-        labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-        if id(labels) == id(self.values):
-            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-            return cls(self)
-
-        return cls.from_labels(labels)
-
-
-    #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the iloc key.
         '''
@@ -603,7 +583,11 @@ class Index(IndexBase):
             {dtype}
         '''
         from static_frame.core.index_datetime import dtype_to_index_cls
+
+        dtype = validate_dtype_specifier(dtype)
+
         array = self.values.astype(dtype)
+        array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
         return cls(
                 array,
@@ -612,6 +596,17 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
+
+    @property
+    def via_values(self) -> InterfaceValues['Index']:
+        '''
+        Interface for applying functions to values (as arrays) in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        return InterfaceValues(self)
+
     @property
     def via_str(self) -> InterfaceString[np.ndarray]:
         '''
@@ -626,6 +621,8 @@ class Index(IndexBase):
         return InterfaceString(
                 blocks=(self._labels,),
                 blocks_to_container=blocks_to_container,
+                ndim=self._NDIM,
+                labels=range(1)
                 )
 
     @property
@@ -733,6 +730,21 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
+    def _get_argsort_cache(self: I) -> _ArgsortCache:
+        '''
+        Return a cached NT containing self.values sorted, along with the argsort key
+
+        This utilizes a lazy instance cache attribute, since sorting is expensive,
+        and this operation is typically called either never, or often.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if self._argsort_cache is None:
+            self._argsort_cache = _ArgsortCache(*ufunc_unique1d_indexer(self.values))
+
+        return self._argsort_cache
+
     def _index_iloc_map(self: I, other: I) -> np.ndarray:
         '''
         Return an array of index locations to map from this array to another
@@ -742,10 +754,9 @@ class Index(IndexBase):
         if self.__len__() == 0:
             return EMPTY_ARRAY
 
-        ar1 = self.values
+        # Equivalent to: ufunc_unique1d_indexer(self.values)
+        ar1, ar1_indexer = self._get_argsort_cache()
         ar2 = other.values
-
-        ar1, ar1_indexer = ufunc_unique1d_indexer(ar1)
 
         aux = concat_resolved((ar1, ar2))
         aux_sort_indices = argsort_array(aux)
@@ -758,9 +769,9 @@ class Index(IndexBase):
         # We want to return these indices to match ar1 before it was sorted
         try:
             indexer = indexer[ar1_indexer]
-        except IndexError:
+        except IndexError as e:
             # Display the first missing element
-            raise KeyError(self.difference(other)[0])
+            raise KeyError(self.difference(other)[0]) from e
 
         indexer.flags.writeable = False
         return indexer
@@ -839,8 +850,6 @@ class Index(IndexBase):
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
-        Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
-
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
@@ -853,14 +862,15 @@ class Index(IndexBase):
 
         if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
-                if key.dtype == bool: #type: ignore
+                if key.dtype == DTYPE_BOOL: #type: ignore
                     return key
                 if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
-                key = slice_to_inclusive_slice(key) #type: ignore
+                # might raise LocInvalid
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
             return key
 
         if key_transform:
@@ -887,30 +897,27 @@ class Index(IndexBase):
             key: a label key.
         '''
         if self._map is None: # loc is iloc
-            is_bool_array = key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL #type: ignore
+            # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            try:
-                result = self._positions[key]
-            except IndexError:
-                # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
-                if is_bool_array:
-                    raise # loc selection on Boolean array selection returns IndexError
-                raise KeyError(key)
-            except TypeError:
-                raise LocInvalid(f'Invalid loc: {key}')
+            if not key.__class__ is slice:
+                if self._recache:
+                    self._update_array_cache()
 
-            if is_bool_array:
+                key = key_from_container_key(self, key)
+                is_array = key.__class__ is np.ndarray
+                try:
+                    # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
+                    result = self._positions[key]
+                except IndexError as e:
+                    # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+                    if is_array and key.dtype == DTYPE_BOOL: #type: ignore
+                        raise # loc selection on Boolean array selection returns IndexError
+                    raise KeyError(key) from e
+
                 return result # return position as array
 
-            if isinstance(key, slice):
-                if key == NULL_SLICE:
-                    return NULL_SLICE
-                if key.stop >= len(self):
-                    # while a valid slice of positions, loc lookups do not permit over-stating boundaries
-                    raise LocInvalid(f'Invalid loc: {key}')
-                key = slice_to_inclusive_slice(key)
-
-            return key
+            # might raise LocInvalid
+            return pos_loc_slice_to_iloc_slice(key, self.__len__())
 
         return self._loc_to_iloc(key)
 
@@ -935,8 +942,7 @@ class Index(IndexBase):
                 labels.flags.writeable = False
                 loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
-            # we assume Booleans have been normalized to integers here
-            # can select directly from _labels[key] if if key is a list
+            # can select directly from _labels[key] if if key is a list, array, or Boolean array
             labels = self._labels[key]
             labels.flags.writeable = False
             loc_is_iloc = False
@@ -992,8 +998,8 @@ class Index(IndexBase):
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
 
         if self._recache:
             self._update_array_cache()
@@ -1048,7 +1054,31 @@ class Index(IndexBase):
                 ufunc_skipna=ufunc_skipna
                 )
 
-    # _ufunc_shape_skipna defined in IndexBase
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
+            ) -> np.ndarray:
+        '''
+        As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        # NOTE: for 1D Index, can use axis for shape ufunc
+        return self._ufunc_axis_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                composable=composable, # shape on axis 1 is never composable
+                dtypes=dtypes,
+                size_one_unity=size_one_unity
+                )
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -1085,13 +1115,15 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: DepthLevelSpecifier = 0,
+            order_by_occurrence: bool = False,
             ) -> np.ndarray:
         '''
         Return a NumPy array of unique values.
 
         Args:
             depth_level: defaults to 0 for for a 1D Index.
+            order_by_occurrence: for 1D indices, this argument is a no-op. Provided for compatibility with IndexHierarchy.
 
         Returns:
             :obj:`numpy.ndarray`
@@ -1135,6 +1167,8 @@ class Index(IndexBase):
             return False
         if compare_name and self.name != other.name:
             return False
+        if self._map is None and other._map is None:
+            return True # have same length must be same integer range and dtype
         if compare_dtype and self.dtype != other.dtype:
             return False
         return arrays_equal(self.values, other.values, skipna=skipna)
@@ -1278,18 +1312,6 @@ class Index(IndexBase):
         values.flags.writeable = False
         return self.__class__(values, name=self._name), key
 
-
-    #---------------------------------------------------------------------------
-    # export
-
-    def to_series(self) -> 'Series':
-        '''Return a Series with values from this Index's labels.
-        '''
-        # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate
-        from static_frame import Series
-        return Series(self.values, name=self._name)
-
-
     def level_add(self,
             level: tp.Hashable,
             *,
@@ -1302,10 +1324,10 @@ class Index(IndexBase):
             *,
             index_constructor:
         '''
-        from static_frame import IndexHierarchy
-        from static_frame import IndexHierarchyGO
         from static_frame import Index
         from static_frame import IndexGO
+        from static_frame import IndexHierarchy
+        from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
         cls_depth = Index if self.STATIC else IndexGO
@@ -1330,33 +1352,48 @@ class Index(IndexBase):
                 name=self._name,
                 )
 
+    #---------------------------------------------------------------------------
+    # export
+
+    def to_series(self) -> 'Series':
+        '''Return a Series with values from this Index's labels.
+        '''
+        # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate
+        from static_frame import Series
+        return Series(self.values, name=self._name)
+
     def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.
         '''
         import pandas
+
         # must copy to remove immutability, decouple reference
         if self._map is None:
             return pandas.RangeIndex(self.__len__(), name=self._name)
         return pandas.Index(self.values.copy(),
                 name=self._name)
 
-#-------------------------------------------------------------------------------
-_INDEX_GO_SLOTS = (
-        '_map',
-        '_labels',
-        '_positions',
-        '_recache',
-        '_name',
-        '_labels_mutable',
-        '_labels_mutable_dtype',
-        '_positions_mutable_count',
-        )
 
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self.values.tobytes(),),
+                ))
+
+#-------------------------------------------------------------------------------
 
 class _IndexGOMixin:
 
     STATIC = False
-    # NOTE: must define in derived class or get TypeError: multiple bases have instance lay-out conflict
+    # NOTE: must define __slots__ in derived class or get TypeError: multiple bases have instance lay-out conflict
     __slots__ = ()
 
     _map: tp.Optional[AutoMap]
@@ -1365,24 +1402,26 @@ class _IndexGOMixin:
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
+    _argsort_cache: tp.Optional[_ArgsortCache]
 
     #---------------------------------------------------------------------------
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I: #type: ignore
         if self._recache:
             self._update_array_cache()
 
-        obj = self.__new__(self.__class__)
-        obj._map = deepcopy(self._map, memo) #type: ignore
-        obj._labels = array_deepcopy(self._labels, memo) #type: ignore
-        obj._positions = PositionsAllocator.get(len(self._labels)) #type: ignore
-        obj._recache = False
-        obj._name = self._name # should be hashable/immutable
+        obj = self.__class__.__new__(self.__class__)
+        obj._map = deepcopy(self._map, memo)
+        obj._labels = array_deepcopy(self._labels, memo)
+        obj._positions = PositionsAllocator.get(len(self._labels))
+        obj._recache = False # pylint: disable=E0237
+        obj._name = self._name # pylint: disable=E0237
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
+        obj._argsort_cache = deepcopy(self._argsort_cache, memo)
 
         memo[id(self)] = obj
-        return obj #type: ignore
+        return obj
 
     #---------------------------------------------------------------------------
     def _extract_labels(self,
@@ -1423,7 +1462,10 @@ class _IndexGOMixin:
                 self._labels_mutable,
                 dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
-        self._recache = False
+        self._recache = False # pylint: disable=E0237
+
+        # clear cache
+        self._argsort_cache = None
 
     #---------------------------------------------------------------------------
     # grow only mutation
@@ -1456,7 +1498,7 @@ class _IndexGOMixin:
             self._map = AutoMap(self._labels_mutable)
 
         self._positions_mutable_count += 1
-        self._recache = True
+        self._recache = True # pylint: disable=E0237
 
     def extend(self, values: KeyIterableTypes) -> None:
         '''Append multiple values
@@ -1467,12 +1509,18 @@ class _IndexGOMixin:
             self.append(value)
 
 
+INDEX_GO_LEAF_SLOTS = (
+        '_labels_mutable',
+        '_labels_mutable_dtype',
+        '_positions_mutable_count',
+        )
+
 class IndexGO(_IndexGOMixin, Index):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
     '''
 
     _IMMUTABLE_CONSTRUCTOR = Index
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 
 # update class attr on Index after class initialziation

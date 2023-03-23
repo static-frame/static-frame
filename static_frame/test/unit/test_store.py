@@ -1,16 +1,20 @@
+import pickle
 from itertools import product
+
 import numpy as np
 
-from static_frame.core.store import Store
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigHE
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.frame import Frame
-
-from static_frame.test.test_case import TestCase
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreParameterConflict
+from static_frame.core.frame import Frame
+from static_frame.core.store import Store
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigHE
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.test.test_case import TestCase
 
+
+class MockStore(Store):
+    _EXT = frozenset({".tst"})
 
 class TestUnit(TestCase):
 
@@ -332,6 +336,18 @@ class TestUnit(TestCase):
 
         sc1m = StoreConfigMap.from_initializer(maps)
         self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
+
+    #---------------------------------------------------------------------------
+
+    def test_store_pickle_excludes_weak_cache(self) -> None:
+        s1 = MockStore('/test.tst')
+
+        s1._weak_cache["abc"] = Frame()
+
+        s2 = pickle.loads(pickle.dumps(s1))
+
+        assert "abc" not in s2._weak_cache
+        assert not s2._weak_cache
 
 
 if __name__ == '__main__':

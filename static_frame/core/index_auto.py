@@ -1,17 +1,22 @@
 
 import typing as tp
+
 import numpy as np
 
+from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.util import PositionsAllocator
 from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
+from static_frame.core.index_datetime import IndexDatetime  # base class
 from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import IndexConstructor
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
-from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import iterable_to_array_1d
+
 
 class IndexConstructorFactoryBase:
     def __call__(self,
@@ -22,11 +27,10 @@ class IndexConstructorFactoryBase:
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
 
-class IndexDefaultFactory(IndexConstructorFactoryBase):
+class IndexDefaultConstructorFactory(IndexConstructorFactoryBase):
     '''
-    Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as a constructor argument. An instance must be created.
+    Token class to be used to provide a ``name`` to a default constructor of an Index. To be used as an index constructor argument. An instance must be created.
     '''
-    # NOTE: rename IndexDefaultConstructorFactory
 
     __slots__ = ('_name',)
 
@@ -46,7 +50,7 @@ class IndexDefaultFactory(IndexConstructorFactoryBase):
 
 class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     '''
-    Token class to be used to automatically determine index type by dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
+    Token class to be used to automatically determine index type by array dtype; can also provide a ``name`` attribute. To be used as a constructor argument. An instance or a class can be used.
     '''
     __slots__ = ('_name',)
 
@@ -54,21 +58,25 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
         self._name = name
 
     @staticmethod
-    def to_index(labels: np.ndarray,
+    def to_index(labels: tp.Iterable[tp.Hashable],
             *,
             default_constructor: tp.Type[IndexBase],
             name: NameType = None,
             ) -> IndexBase:
         '''Create and return the ``Index`` based on the array ``dtype``
         '''
-        # NOTE: not sure what to do if not an array
         from static_frame.core.index_datetime import dtype_to_index_cls
+
+        if labels.__class__ is not np.ndarray:
+            # we can assume that this is 1D; returns an immutable array
+            labels, _ = iterable_to_array_1d(labels)
+
         return dtype_to_index_cls(
                 static=default_constructor.STATIC,
-                dtype=labels.dtype)(labels, name=name)
+                dtype=labels.dtype)(labels, name=name) #type: ignore
 
     def __call__(self,
-            labels: np.ndarray,
+            labels: tp.Iterable[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase] = Index,
@@ -87,10 +95,10 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
 
 IndexAutoInitializer = int
 
-# could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
+# could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow into non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
 
 class IndexAutoFactory:
-    '''NOTE: this class is treated as an ``index`` or ``columns`` argument, not as a constructor.
+    '''Class to be used as an ``index`` or ``columns`` argument (not as a constructor) to specify the creation of an auto-incremented integer index.
     '''
     __slots__ = ('_size', '_name')
 
@@ -99,14 +107,17 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
         labels = PositionsAllocator.get(initializer)
 
         if explicit_constructor:
-            if isinstance(explicit_constructor, IndexDefaultFactory):
+            # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
+            if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime): # type: ignore
+                raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
+            if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
                 return explicit_constructor(labels,
                         default_constructor=default_constructor,
                         # NOTE might just pass name
@@ -132,7 +143,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultFactory]] = None,
+            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''
@@ -146,6 +157,6 @@ class IndexAutoFactory:
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]
 RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
 
-IndexInitOrAutoType = tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]]
+IndexInitOrAutoType = tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType, IndexAutoFactory]]
 
 

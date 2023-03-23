@@ -1,8 +1,6 @@
 import typing as tp
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
 
 import numpy as np
 
@@ -13,49 +11,54 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
+from static_frame.core.node_dt import InterfaceBatchDatetime
+from static_frame.core.node_fill_value import InterfaceBatchFillValue
+from static_frame.core.node_re import InterfaceBatchRe
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_str import InterfaceBatchString
+from static_frame.core.node_transpose import InterfaceBatchTranspose
+from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.series import Series
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import BoolOrBools
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import BoolOrBools
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.exception import BatchIterableInvalid
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.index_base import IndexBase
-from static_frame.core.node_str import InterfaceBatchString
-from static_frame.core.node_fill_value import InterfaceBatchFillValue
-from static_frame.core.node_re import InterfaceBatchRe
-from static_frame.core.node_dt import InterfaceBatchDatetime
-from static_frame.core.node_transpose import InterfaceBatchTranspose
 
+# import multiprocessing as mp
+# mp_context = mp.get_context('spawn')
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
@@ -98,7 +101,7 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
     '''
-    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
+    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter, such as ``to_frame()`` or ``to_series()``.
     '''
 
     __slots__ = (
@@ -200,7 +203,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -223,7 +226,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
-                                )
+                )
 
     @classmethod
     @doc_inject(selector='batch_constructor')
@@ -241,6 +244,29 @@ class Batch(ContainerOperand, StoreClientMixin):
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                )
+
+    @classmethod
+    @doc_inject(selector='batch_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
+            ) -> 'Batch':
+        '''
+        Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 max_workers=max_workers,
@@ -403,14 +429,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''{}'''
         return self._name
 
-    def rename(self, name: NameType) -> 'Batch':
-        '''
-        Return a new Batch with an updated name attribute.
-        '''
-        def gen() -> IteratorFrameItems:
-            yield from self._items
-        return self._derive(gen, name=name)
-
     #---------------------------------------------------------------------------
     @property
     def shapes(self) -> Series:
@@ -450,7 +468,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             header = f'{self.__class__.__name__}: {self._name}'
         else:
             header = self.__class__.__name__
-        return f'<{header} at {hex(id(self))}>'
+        return f'<{header} max_workers={self._max_workers}>'
 
     #---------------------------------------------------------------------------
     # core function application routines
@@ -789,6 +807,12 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # via interfaces
+    @property
+    def via_values(self) -> InterfaceBatchValues:
+        '''
+        Interface for applying a function to values in this container.
+        '''
+        return InterfaceBatchValues(self.apply)
 
     @property
     def via_str(self) -> InterfaceBatchString:
@@ -835,6 +859,29 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
+
+    @property
+    def astype(self) -> InterfaceBatchAsType['Batch']:
+        '''
+        Return a new Batch with astype transformed.
+        '''
+        return InterfaceBatchAsType(self.apply)
+
+    def rename(self,
+            name: NameType = NAME_DEFAULT,
+            *,
+            index: NameType = NAME_DEFAULT,
+            columns: NameType = NAME_DEFAULT,
+            ) -> 'Batch':
+        '''
+        Return a new Batch with an updated name attribute.
+        '''
+        return self._apply_attr(
+                attr='rename',
+                name=name,
+                index=index,
+                columns=columns,
+                )
 
     def sort_index(self,
             *,
@@ -987,6 +1034,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def roll(self,
             index: int = 0,
             columns: int = 0,
+            *,
             include_index: bool = False,
             include_columns: bool = False,
             ) -> 'Batch':
@@ -1454,6 +1502,8 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def count(self, *,
             skipna: bool = True,
+            skipfalsy: bool = False,
+            unique: bool = False,
             axis: int = 0,
             ) -> 'Batch':
         '''Apply count on contained Frames.
@@ -1461,6 +1511,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(
                 attr='count',
                 skipna=skipna,
+                skipfalsy=skipfalsy,
+                unique=unique,
                 axis=axis,
                 )
 
@@ -1598,6 +1650,19 @@ class Batch(ContainerOperand, StoreClientMixin):
                 ddof=ddof,
                 )
 
+    def corr(self, *,
+            axis: int = 1,
+            ) -> 'Batch':
+        '''
+        Compute a correlation matrix.
+
+        Args:
+            axis: if 0, each row represents a variable, with observations as columns; if 1, each column represents a variable, with observations as rows. Defaults to 1.
+        '''
+        return self._apply_attr(
+                attr='corr',
+                axis=axis,
+                )
 
     #---------------------------------------------------------------------------
     # utility function to numpy array
@@ -1620,7 +1685,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_series(self, *,
         dtype: DtypeSpecifier = None,
         name: NameType = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
+        index_constructor: IndexConstructor = None
         ) -> Series:
         '''
         Consolidate stored values into a new :obj:`Series` using the stored labels as the index.
@@ -1636,6 +1701,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             union: bool = True,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             columns: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
@@ -1653,19 +1720,19 @@ class Batch(ContainerOperand, StoreClientMixin):
             containers.append(container)
 
         name = name if name is not None else self._name
-
         if ndim1d:
             if axis == 0 and index is None:
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-            # import ipdb; ipdb.set_trace()
             return Frame.from_concat( #type: ignore
                     containers,
                     axis=axis,
                     union=union,
                     index=index,
                     columns=columns,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
                     name=name,
                     fill_value=fill_value,
                     consolidate_blocks=consolidate_blocks,
@@ -1678,9 +1745,12 @@ class Batch(ContainerOperand, StoreClientMixin):
                 name=name,
                 fill_value=fill_value,
                 consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 )
         if index is not None or columns is not None:
             # this relabels, as that is how Frame.from_concat works
+            # NOTE: we need to apply index_constructor, columns_constructors if defined
             f = f.relabel(index=index, columns=columns)
         return f
 
@@ -1690,10 +1760,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        # series = Series.from_items(
-        #         self.items(),
-        #         name=self._name,
-        #         dtype=DTYPE_OBJECT)
         frames = []
         index = []
         for i, f in self.items():
@@ -1704,4 +1770,17 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index=index,
                 index_constructor=index_constructor,
                 config=self._config,
+                name=self._name,
+                )
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        return self.to_bus()._to_signature_bytes(
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
                 )

@@ -2,11 +2,11 @@ import typing as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
-from static_frame.core.store_hdf5 import StoreHDF5
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfig
 
 
 class TestUnit(TestCase):

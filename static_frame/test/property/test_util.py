@@ -1,16 +1,15 @@
-import typing as tp
 import datetime
 import fractions
+import typing as tp
+
 import numpy as np
-
-from hypothesis import strategies as st
-from hypothesis import given
-
+from arraykit import isna_element
 from arraykit import mloc
-from arraykit import shape_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
-from arraykit import isna_element
+from arraykit import shape_filter
+from hypothesis import given
+from hypothesis import strategies as st
 
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
@@ -101,7 +100,7 @@ class TestUnit(TestCase):
     @given(get_dtype())
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
         post = util.dtype_to_fill_value(dtype)
-        self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
+        self.assertTrue(post in {0, False, None, '', np.nan, util.NAT}) # pylint: disable=W0130
 
     @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
     def test_ufunc_axis_skipna(self, array: np.ndarray) -> None:
@@ -222,7 +221,6 @@ class TestUnit(TestCase):
     def test_binary_transition(self, array: np.ndarray) -> None:
         post = util.binary_transition(array)
 
-        # could be 32 via result of np.nonzero
         self.assertTrue(post.dtype in (np.int32, np.int64))
 
         # if no True in original array, result will be empty
@@ -392,11 +390,13 @@ class TestUnit(TestCase):
 
     @given(get_arrays_2d_aligned_columns(min_size=2))
     def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
+        from static_frame.core.util import ManyToOneType
+
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
 
-        for union in (True, False):
-            post = util.ufunc_set_iter(arrays, union=union)
+        for mtot in (ManyToOneType.INTERSECT, ManyToOneType.UNION):
+            post = util.ufunc_set_iter(arrays, many_to_one_type=mtot)
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------

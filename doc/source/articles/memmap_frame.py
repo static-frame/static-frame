@@ -1,19 +1,19 @@
 
-import zipfile
 import os
-import timeit
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import get_context as get_mp_context
 import shutil
+import timeit
 import typing as tp
+import zipfile
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+from multiprocessing import get_context as get_mp_context
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
+
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-
 
 # COUNT_ARRAY = 100
 CHUNK_SIZE = 20
@@ -51,7 +51,6 @@ class MMapTest:
         partitions = 100
         ref = np.arange(len(self.fixture.columns))
         self.selections = [(ref % partitions) == i for i in range(partitions)]
-        # import ipdb; ipdb.set_trace()
         print(self, 'init complete')
 
     def clear(self) -> None:
@@ -217,7 +216,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 
 

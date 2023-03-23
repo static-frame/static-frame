@@ -1,16 +1,16 @@
 
 
 import os
-import timeit
-import tempfile
-import typing as tp
 import pickle
+import tempfile
+import timeit
+import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
+
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-
 
 FF_wide = 's(10,1_000)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
 FF_tall = 's(1_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,int)'
@@ -143,7 +143,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     run_test()

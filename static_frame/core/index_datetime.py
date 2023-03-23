@@ -1,18 +1,17 @@
-import typing as tp
 import datetime
+import typing as tp
+from functools import partial
 
 import numpy as np
-
 from automap import AutoMap  # pylint: disable = E0611
 
-
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index import _INDEX_SLOTS
-from static_frame.core.index import _IndexGOMixin
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
+from static_frame.core.index import INDEX_GO_LEAF_SLOTS
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.util import DateInitializer
+from static_frame.core.index import _IndexGOMixin
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_H
 from static_frame.core.util import DT64_M
@@ -22,23 +21,24 @@ from static_frame.core.util import DT64_NS
 from static_frame.core.util import DT64_S
 from static_frame.core.util import DT64_US
 from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import to_timedelta64
+from static_frame.core.util import DateInitializer
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
-from static_frame.core.util import NameType
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
-    import pandas  #pylint: disable = W0611 #pragma: no cover
+    import pandas  # pylint: disable = W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexDatetime')
 
@@ -52,7 +52,7 @@ class IndexDatetime(Index):
 
     STATIC = True
     _DTYPE = None # define in derived class
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @doc_inject(selector='index_date_time_init')
     def __init__(self,
@@ -100,7 +100,7 @@ class IndexDatetime(Index):
             other = other.values # operate on labels to labels
             other_is_array = True
         elif isinstance(other, str):
-            # do not pass dtype, as want to coerce to this parsed type, not the type of sled
+            # do not pass dtype, as want to coerce to this parsed type, not the type of self
             other = to_datetime64(other)
             other_is_array = False
         elif other.__class__ is np.ndarray:
@@ -193,8 +193,8 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
         if self._map is not None:
             try:
                 self._map.add(value)
-            except ValueError:
-                raise KeyError(f'duplicate key append attempted: {value}')
+            except ValueError as e:
+                raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)
         self._positions_mutable_count += 1 #pylint: disable=E0237
         self._recache = True #pylint: disable=E0237
@@ -205,7 +205,7 @@ class IndexYear(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_YEAR
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -266,16 +266,47 @@ class IndexYear(IndexDatetime):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
+    # specializations to permit integers as years
+
+    def __contains__(self, value: tp.Any) -> bool:
+        '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
+        '''
+        try:
+            return self._map.__contains__(to_datetime64(value, self._DTYPE)) #type: ignore
+        except InvalidDatetime64Initializer:
+            # if value is a dt64 and not of a the same unit as self._DTYPE, the initializations exception is raised, which means False
+            return False
+
+
+    def _loc_to_iloc(self,  # type: ignore
+            key: GetItemKeyType,
+            *,
+            partial_selection: bool = False,
+            ) -> GetItemKeyType:
+        '''
+        Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
+        '''
+        try:
+            return Index._loc_to_iloc(self,
+                    key=key,
+                    key_transform=partial(key_to_datetime_key, dtype=self._DTYPE),
+                    partial_selection=partial_selection,
+                    )
+        except InvalidDatetime64Initializer as e:
+            raise LocInvalid(e.args[0]) from None
+
+    #---------------------------------------------------------------------------
     def to_pandas(self) -> None:
         '''Return a Pandas Index.
         '''
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
 
 
+
 class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):
 
     _IMMUTABLE_CONSTRUCTOR = IndexYear
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
 
@@ -285,7 +316,7 @@ class IndexYearMonth(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_MONTH
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -357,7 +388,7 @@ class IndexYearMonth(IndexDatetime):
 class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
 
     _IMMUTABLE_CONSTRUCTOR = IndexYearMonth
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
 
@@ -368,7 +399,7 @@ class IndexDate(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_DAY
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -429,7 +460,7 @@ class IndexDate(IndexDatetime):
 class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):
 
     _IMMUTABLE_CONSTRUCTOR = IndexDate
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
@@ -439,12 +470,12 @@ class IndexHour(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_H
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexHourGO(_IndexDatetimeGOMixin, IndexHour):
 
     _IMMUTABLE_CONSTRUCTOR = IndexHour
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
 
@@ -454,12 +485,12 @@ class IndexMinute(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_M
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMinute
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
 
@@ -469,12 +500,12 @@ class IndexSecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_S
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexSecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 
@@ -484,12 +515,12 @@ class IndexMillisecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_MS
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMillisecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 
@@ -499,12 +530,12 @@ class IndexMicrosecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_US
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 
@@ -514,12 +545,12 @@ class IndexNanosecond(IndexDatetime):
     '''
     STATIC = True
     _DTYPE = DT64_NS
-    __slots__ = _INDEX_SLOTS
+    __slots__ = ()
 
 class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
 
     _IMMUTABLE_CONSTRUCTOR = IndexNanosecond
-    __slots__ = _INDEX_GO_SLOTS
+    __slots__ = INDEX_GO_LEAF_SLOTS
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 

@@ -1,17 +1,13 @@
 
 import typing as tp
-from datetime import datetime
 from datetime import date
+from datetime import datetime
 
 import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import array_from_element_attr
-from static_frame.core.util import array_from_element_method
-from static_frame.core.util import array_from_element_apply
-from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_AS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_FS
@@ -29,14 +25,19 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import array_from_element_apply
+from static_frame.core.util import array_from_element_attr
+from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
@@ -45,6 +46,7 @@ ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 INTERFACE_DT = (
             'year',
+            'year_month',
             'month',
             'day',
             'hour',
@@ -179,6 +181,32 @@ class InterfaceDatetime(Interface[TContainer]):
                 yield array
 
         return self._blocks_to_container(blocks())
+
+
+    @property
+    def year_month(self) -> TContainer:
+        '''
+        Return the year and month of each element as string formatted YYYY-MM.
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
+                    array.flags.writeable = False
+                else: # must be object type
+                    array = array_from_element_method(
+                            array=block,
+                            method_name='strftime',
+                            args=('%Y-%m',),
+                            dtype=DTYPE_YEAR_MONTH_STR,
+                            )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
 
     @property
     def day(self) -> TContainer:
@@ -652,6 +680,13 @@ class InterfaceBatchDatetime(InterfaceBatch):
         Return the month of each element, between 1 and 12 inclusive.
         '''
         return self._batch_apply(lambda c: c.via_dt.month)
+
+    @property
+    def year_month(self) -> 'Batch':
+        '''
+        Return the month of each element, between 1 and 12 inclusive.
+        '''
+        return self._batch_apply(lambda c: c.via_dt.year_month)
 
     @property
     def day(self) -> 'Batch':

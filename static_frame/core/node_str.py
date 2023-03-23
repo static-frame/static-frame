@@ -4,25 +4,28 @@ from functools import reduce
 import numpy as np
 from numpy import char as npc
 
+from static_frame.core.container_util import get_col_format_factory
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
-from static_frame.core.util import array_from_element_method
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import UFunc
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import AnyCallable
-
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import UFunc
+from static_frame.core.util import array_from_element_apply
+from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
 BlocksType = tp.Iterable[np.ndarray]
@@ -32,11 +35,13 @@ INTERFACE_STR = (
         '__getitem__',
         'capitalize',
         'center',
+        'contains',
         'count',
         'decode',
         'encode',
         'endswith',
         'find',
+        'format',
         'index',
         'isalnum',
         'isalpha',
@@ -76,15 +81,21 @@ class InterfaceString(Interface[TContainer]):
     __slots__ = (
             '_blocks',
             '_blocks_to_container',
+            '_ndim',
+            '_labels',
             )
     INTERFACE = INTERFACE_STR
 
     def __init__(self,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer]
+            blocks_to_container: ToContainerType[TContainer],
+            ndim: int,
+            labels: tp.Iterable[tp.Hashable],
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._ndim: int = ndim
+        self._labels: tp.Iterable[tp.Hashable] = labels
 
     #---------------------------------------------------------------------------
 
@@ -99,7 +110,7 @@ class InterfaceString(Interface[TContainer]):
         Block-wise processing of blocks after optional string conversion. Non-string conversion is necessary for ``decode``.
         '''
         for block in blocks:
-            if astype_str and block.dtype not in DTYPE_STR_KINDS:
+            if astype_str and block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
             array = func(block, *args)
             array.flags.writeable = False
@@ -116,7 +127,7 @@ class InterfaceString(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KINDS:
+            if block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable
@@ -140,7 +151,7 @@ class InterfaceString(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KINDS:
+            if block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable
@@ -182,6 +193,18 @@ class InterfaceString(Interface[TContainer]):
         Return a container with its elements centered in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
+        return self._blocks_to_container(block_gen)
+
+    def contains(self,  item: str) -> TContainer:
+        '''
+        Return a Boolean container showing True of item is a substring of elements.
+        '''
+        block_gen = self._process_element_blocks(
+                blocks=self._blocks,
+                method_name='__contains__',
+                args=(item,),
+                dtype=DTYPE_BOOL,
+                )
         return self._blocks_to_container(block_gen)
 
     def count(self,
@@ -255,6 +278,45 @@ class InterfaceString(Interface[TContainer]):
         '''
         block_gen = self._process_blocks(self._blocks, npc.find, (sub, start, end))
         return self._blocks_to_container(block_gen)
+
+    def format(self, format: str) -> TContainer:
+        '''
+        For each element, return a string resulting from calling the string ``format`` argument's ``format`` method with the the element. Format strings (given within curly braces) can use Python's format mini language: https://docs.python.org/3/library/string.html#formatspec
+
+        Args:
+            format: A string, an iterable of strings, or a mapping of labels to strings. For 1D containers, an iterable of strings must be of length equal to the container; a mapping can use Index labels (for a Series) or positions (for an Index). For 2D containers, an iterable of strings must be of length equal to the columns (for a Frame) or the depth (for an Index Hierarchy); a mapping can use column labels (for a Frame) or depths (for an IndexHierarchy).
+        '''
+
+        format_factory = get_col_format_factory(format, self._labels)
+
+        if self._ndim == 1:
+            # apply the format per label in series
+            def block_gen() -> tp.Iterator[np.ndarray]:
+                post = []
+                for i, v in enumerate(next(iter(self._blocks))):
+                    func = format_factory(i).format
+                    post.append(func(v))
+                array = np.array(post, dtype=DTYPE_STR)
+                array.flags.writeable = False
+                yield array
+        else:
+            def block_gen() -> tp.Iterator[np.ndarray]:
+                pos = 0
+                for block in self._blocks:
+                    if block.ndim == 1:
+                        func = format_factory(pos).format
+                        yield array_from_element_apply(block, func, DTYPE_STR)
+                        pos += 1
+                    else:
+                        for i in range(block.shape[1]):
+                            func = format_factory(pos).format
+                            yield array_from_element_apply(
+                                    block[NULL_SLICE, i],
+                                    func,
+                                    DTYPE_STR,
+                                    )
+                            pos += 1
+        return self._blocks_to_container(block_gen())
 
     def index(self,
             sub: str,
@@ -592,6 +654,14 @@ class InterfaceBatchString(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_str.count(sub, start, end))
 
+    def contains(self,
+            item: str,
+            ) -> 'Batch':
+        '''
+        Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
+        '''
+        return self._batch_apply(lambda c: c.via_str.contains(item))
+
     def decode(self,
             encoding: tp.Optional[str] = None,
             errors: tp.Optional[str] = None,
@@ -629,6 +699,14 @@ class InterfaceBatchString(InterfaceBatch):
         For each element, return the lowest index in the string where substring ``sub`` is found.
         '''
         return self._batch_apply(lambda c: c.via_str.find(sub, start, end))
+
+    def format(self,
+            format: str,
+            ) -> 'Batch':
+        '''
+        For each element, return a string resulting from calling the `format` argument's `format` method with the values in this container.
+        '''
+        return self._batch_apply(lambda c: c.via_str.format(format))
 
     def index(self,
             sub: str,

@@ -1,49 +1,36 @@
 import datetime
-from  itertools import product
+from itertools import product
 
 import numpy as np
 
-from static_frame import Index
-from static_frame import IndexGO
-
-from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-
-from static_frame import IndexYear
-from static_frame import IndexYearGO
-
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
-
+from static_frame import Index
 from static_frame import IndexDate
 from static_frame import IndexDateGO
-
-from static_frame import IndexSecond
-from static_frame import IndexSecondGO
-
+from static_frame import IndexGO
 from static_frame import IndexHour
 from static_frame import IndexHourGO
-
-from static_frame import IndexMinute
-from static_frame import IndexMinuteGO
-
-from static_frame import IndexMillisecond
-from static_frame import IndexMillisecondGO
-
 from static_frame import IndexMicrosecond
 from static_frame import IndexMicrosecondGO
-
+from static_frame import IndexMillisecond
+from static_frame import IndexMillisecondGO
+from static_frame import IndexMinute
+from static_frame import IndexMinuteGO
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
-
-from static_frame.core.index import _INDEX_SLOTS
-from static_frame.core.index import _INDEX_GO_SLOTS
-from static_frame.core.index_datetime import dtype_to_index_cls
-
-from static_frame.test.test_case import TestCase
-from static_frame.core.exception import LocInvalid
+from static_frame import IndexSecond
+from static_frame import IndexSecondGO
+from static_frame import IndexYear
+from static_frame import IndexYearGO
+from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
+from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import LocInvalid
+from static_frame.core.index_datetime import dtype_to_index_cls
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -63,8 +50,6 @@ class TestUnit(TestCase):
             self.assertEqual(base_go._IMMUTABLE_CONSTRUCTOR, base)
             self.assertEqual(base.STATIC, True)
             self.assertEqual(base_go.STATIC, False)
-            self.assertEqual(len(base.__slots__), len(_INDEX_SLOTS))
-            self.assertEqual(len(base_go.__slots__), len(_INDEX_GO_SLOTS))
 
     #---------------------------------------------------------------------------
 
@@ -366,6 +351,8 @@ class TestUnit(TestCase):
                 [str(d) for d in IndexYearMonth.from_year_range('2010', '2018', 6)],
                 ['2010-01', '2010-07', '2011-01', '2011-07', '2012-01', '2012-07', '2013-01', '2013-07', '2014-01', '2014-07', '2015-01', '2015-07', '2016-01', '2016-07', '2017-01', '2017-07', '2018-01', '2018-07'])
 
+    #---------------------------------------------------------------------------
+
     def test_index_year_from_date_range_a(self) -> None:
 
         index = IndexYear.from_date_range('2014-12-15', '2018-03-15')
@@ -395,17 +382,86 @@ class TestUnit(TestCase):
         self.assertTrue('2020' in index)
         self.assertTrue(len(index.__slots__), 9)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(InvalidDatetime64Initializer):
             index.append(np.datetime64('2009-03-01'))
 
         index.append(np.datetime64('2009'))
 
-        # will strip off year from a datetime object
-        index.append(datetime.date(2021, 3, 15))
+        with self.assertRaises(InvalidDatetime64Initializer):
+            index.append(datetime.date(2021, 3, 15))
 
-        self.assertEqual(index.values.tolist(),
-                [datetime.date(2010, 1, 1), datetime.date(2011, 1, 1), datetime.date(2012, 1, 1), datetime.date(2013, 1, 1), datetime.date(2014, 1, 1), datetime.date(2015, 1, 1), datetime.date(2016, 1, 1), datetime.date(2017, 1, 1), datetime.date(2018, 1, 1), datetime.date(2019, 1, 1), datetime.date(2020, 1, 1), datetime.date(2009, 1, 1), datetime.date(2021, 1, 1)]
+        index.append(2022)
+
+        self.assertEqual(tuple(index.values),
+                (np.datetime64('2010'), np.datetime64('2011'), np.datetime64('2012'), np.datetime64('2013'), np.datetime64('2014'), np.datetime64('2015'), np.datetime64('2016'), np.datetime64('2017'), np.datetime64('2018'), np.datetime64('2019'), np.datetime64('2020'), np.datetime64('2009'), np.datetime64('2022'))
                 )
+
+    def test_index_year_contains_a(self) -> None:
+
+        index = IndexYear.from_year_range(2010, 2012)
+        self.assertEqual(tuple(index.values),
+            (np.datetime64('2010'), np.datetime64('2011'), np.datetime64('2012')))
+
+        self.assertTrue(2011 in index)
+        self.assertTrue('2011' in index)
+        self.assertTrue(np.datetime64('2011') in index)
+
+        self.assertFalse(np.datetime64('2011-01') in index)
+        self.assertFalse(datetime.date(2021,1,1) in index)
+
+
+    def test_index_year_loc_a(self) -> None:
+
+        index = IndexYear.from_year_range(1998, 2008)
+        self.assertEqual(index.loc[2004], np.datetime64('2004'))
+        self.assertEqual(index.loc['2004'], np.datetime64('2004'))
+        self.assertEqual(index.loc[np.datetime64('2004')], np.datetime64('2004'))
+
+        with self.assertRaises(KeyError):
+            index.loc[np.datetime64('2004-01')]
+
+
+    def test_index_year_loc_b(self) -> None:
+
+        idx1 = IndexYear.from_year_range(1998, 2008)
+        idx2 = idx1.loc[2002:2004]
+        self.assertEqual(tuple(idx2.values), # type: ignore
+            (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
+
+        idx3 = idx1.loc['2002':'2004']
+        self.assertEqual(tuple(idx3.values), # type: ignore
+            (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
+
+    def test_index_year_loc_c(self) -> None:
+
+        idx1 = IndexYear.from_year_range(1998, 2008)
+        idx2 = idx1.loc[[2001, 2004, 2005]]
+        self.assertEqual(tuple(idx2.values), # type: ignore
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx3 = idx1.loc[[2001, 2004, 2005]]
+        self.assertEqual(tuple(idx3.values), # type: ignore
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx4 = idx1.loc[(v for v in [2001, 2004, 2005])]
+        self.assertEqual(tuple(idx4.values), # type: ignore
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+        idx5 = idx1.loc[np.array([2001, 2004, 2005])]
+        self.assertEqual(tuple(idx5.values), # type: ignore
+            (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
+
+    def test_index_year_loc_d(self) -> None:
+
+        idx1 = IndexYear.from_year_range(1998, 2008)
+        with self.assertRaises(LocInvalid):
+            idx2 = idx1.loc['2000-01-01': '2003-01-01']
+
+
+    def test_index_year_init_a(self) -> None:
+        idx1 = IndexYear(('1620', 'NaT', '1619'))
+        self.assertEqual([str(x) for x in idx1],
+                ['1620', 'NaT', '1619'])
 
     #---------------------------------------------------------------------------
 

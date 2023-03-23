@@ -1,29 +1,27 @@
 
-import unittest
-import os
-import sys
-from itertools import zip_longest
-import typing as tp
-import itertools as it
-import string
 import cmath
-import sqlite3
 import contextlib
+import datetime
+import itertools as it
+import os
+import sqlite3
+import string
+import sys
 import tempfile
 import time
-import datetime
+import typing as tp
+import unittest
+from itertools import zip_longest
 from pathlib import Path
 
 import numpy as np
 import pytest
-
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import PathSpecifier
-
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -36,10 +34,10 @@ skip_win = pytest.mark.skipif(
         reason='Windows default dtypes'
         )
 
-skip_pylt37 = pytest.mark.skipif(
-        sys.version_info < (3, 7),
-        reason='Python earlier than 3.7'
-        )
+# skip_pylt37 = pytest.mark.skipif(
+#         sys.version_info < (3, 7),
+#         reason='Python earlier than 3.7'
+#         )
 
 skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,

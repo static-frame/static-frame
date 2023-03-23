@@ -1,14 +1,15 @@
 
+import calendar
 import timeit
+import typing as tp
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
-import calendar
-
-import typing as tp
-from static_frame.core.display_color import HexColor
 
 import numpy as np
+
+from static_frame.core.display_color import HexColor
+
 dt64 = np.datetime64
 
 import static_frame as sf
@@ -217,7 +218,6 @@ def run_test():
             include_index=False,
             )
     print(display.display(config))
-    # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     run_test()
@@ -229,8 +229,6 @@ if __name__ == '__main__':
     # ptest = ArrayCreationFromString()
     # post = ptest.dt()
     # post = ptest.dt64()
-
-    # import ipdb; ipdb.set_trace()
 
 
 

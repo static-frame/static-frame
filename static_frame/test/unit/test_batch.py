@@ -1,21 +1,23 @@
-import time
 import datetime
+import time
 import typing as tp
 
-import numpy as np
 import frame_fixtures as ff
+import numpy as np
 
-from static_frame.core.frame import Frame
-from static_frame.core.series import Series
 from static_frame.core.batch import Batch
-from static_frame.test.test_case import TestCase
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.display_config import DisplayConfig
-from static_frame.test.test_case import temp_file
-from static_frame.core.store import StoreConfig
 from static_frame.core.batch import normalize_container
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import StoreLabelNonUnique
+from static_frame.core.frame import Frame
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.series import Series
+from static_frame.core.store_config import StoreConfig
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 nan = np.nan
 
@@ -226,10 +228,10 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='f2')
         b1 = Batch.from_frames((f1, f2))
-        self.assertTrue(repr(b1).startswith('<Batch at '))
+        self.assertEqual(repr(b1), ('<Batch max_workers=None>'))
 
-        b2 = b1.rename('foo')
-        self.assertTrue(repr(b2).startswith('<Batch: foo at '))
+        b2 = Batch.from_frames((f1, f2), max_workers=3)
+        self.assertEqual(repr(b2), ('<Batch max_workers=3>'))
 
     #---------------------------------------------------------------------------
 
@@ -437,10 +439,10 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2), name='foo')
         self.assertEqual(b1.name, 'foo')
+        self.assertTrue(repr(b1).startswith('<Batch: foo'))
 
-        b2 = b1.rename('bar')
-        self.assertEqual(b2.name, 'bar')
-        self.assertEqual(tuple(b2.keys()), ('f1', 'f2'))
+        b2 = b1.rename('bar') # this rename contained Frame
+        self.assertEqual(tuple(f.name for f in b2.values), ('bar', 'bar'))
 
     #---------------------------------------------------------------------------
 
@@ -550,8 +552,15 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
-        post = list(s.values.tolist() for s in b2.values)
-        self.assertEqual(post, [[30, 40, 50], [2, 3, 4, 5, 6]])
+        post = list(s.to_pairs() for s in b2.values)
+
+        self.assertEqual(post,
+            [((('x', 'b'), 30), (('y', 'b'), 40), (('z', 'b'), 50)),
+             ((('x', 'b'), 4),
+              (('y', 'c'), 2),
+              (('y', 'b'), 5),
+              (('z', 'c'), 3),
+              (('z', 'b'), 6))])
 
     #---------------------------------------------------------------------------
 
@@ -597,6 +606,15 @@ class TestUnit(TestCase):
         f3 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[:2]).to_frame()
         self.assertEqual(f3.to_pairs(0),
                 (('zZbu', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), False), (((False, True), 'zmhG'), False), (((True, False), 'zkuW'), True), (((True, False), 'z2Oo'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), True), (((False, True), 'zmhG'), True), (((True, False), 'zkuW'), False), (((True, False), 'z2Oo'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, False), 'ztsv'), 91301), (((False, True), 'zr4u'), 197228), (((False, True), 'zmhG'), 96520), (((True, False), 'zkuW'), 54020), (((True, False), 'z2Oo'), 35021), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, False), 'ztsv'), 2580.34), (((False, True), 'zr4u'), 3884.48), (((False, True), 'zmhG'), 1699.34), (((True, False), 'zkuW'), 3338.48), (((True, False), 'z2Oo'), 3944.56), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34))))
+                )
+
+    def test_batch_to_frame_d(self) -> None:
+        f1 = ff.parse('s(12,2)|v(bool)|i(ID,dtD)')
+        f2 = Batch(f1.iter_window_items(size=8)).std().to_frame(index_constructor=IndexDate)
+
+        self.assertEqual(f2.index.__class__, IndexDate)
+        self.assertEqual(round(f2, 1).to_pairs(),
+                ((0, ((np.datetime64('2427-01-09'), 0.5), (np.datetime64('2304-09-13'), 0.5), (np.datetime64('2509-12-29'), 0.5), (np.datetime64('2258-03-21'), 0.5), (np.datetime64('2298-04-20'), 0.5))), (1, ((np.datetime64('2427-01-09'), 0.0), (np.datetime64('2304-09-13'), 0.3), (np.datetime64('2509-12-29'), 0.3), (np.datetime64('2258-03-21'), 0.3), (np.datetime64('2298-04-20'), 0.4))))
                 )
 
     #---------------------------------------------------------------------------
@@ -742,7 +760,6 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).T.to_frame()
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(f3.to_pairs(0),
                 (('x', ((('f1', 'b'), 0), (('f1', 'a'), 50), (('f2', 'b'), 3), (('f2', 'a'), 6))), ('y', ((('f1', 'b'), 20), (('f1', 'a'), 40), (('f2', 'b'), 1), (('f2', 'a'), 4))), ('z', ((('f1', 'b'), 10), (('f1', 'a'), 30), (('f2', 'b'), 20), (('f2', 'a'), 50))))
         )
@@ -1280,7 +1297,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_batch_iloc_cov_a(self) -> None:
+    def test_batch_cov_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(b=(1,2,3), a=(4,5,6)),
                 index=('z', 'y', 'x'),
@@ -1297,6 +1314,24 @@ class TestUnit(TestCase):
         f4 = Batch.from_frames((f1, f2)).cov(axis=0).to_frame()
         self.assertEqual( f4.to_pairs(),
                 (('x', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 388.0), (('f2', 'x'), 4704.5))), ('y', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 0.0), (('f2', 'x'), 0.0))), ('z', ((('f1', 'z'), 4.5), (('f1', 'y'), 4.5), (('f1', 'x'), 4.5), (('f2', 'y'), 0.0), (('f2', 'z'), 32.0), (('f2', 'x'), 388.0)))))
+
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_corr_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(1,2,3), a=(4,5,6)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,10,100), a=(1,2,3)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).corr().to_frame()
+        self.assertEqual(round(f3, 6).to_pairs(), # type: ignore
+                (('b', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 1.0), (('f2', 'a'), 0.904194))), ('a', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 0.904194), (('f2', 'a'), 1.0))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -1318,6 +1353,14 @@ class TestUnit(TestCase):
             Batch.from_frames((f1, f2)).count(axis=1).to_frame().to_pairs(0),
             (('x', (('f1', 1), ('f2', 2))), ('y', (('f1', 2), ('f2', 2))), ('z', (('f1', 2), ('f2', 1))))
             )
+
+    def test_batch_count_b(self) -> None:
+        s = Series((1, 1, 1, 3, 3, 8, 8, 8, 8))
+        post = Batch(s.iter_group_items()).count().to_series()
+        self.assertEqual(post.to_pairs(), ((1, 3), (3, 2), (8, 4)))
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -1352,6 +1395,23 @@ class TestUnit(TestCase):
         for frame in (f1, f2, f3):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
+
+    def test_batch_to_zip_pickle_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f')
+
+        b1 = Batch.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(StoreLabelNonUnique):
+                b1.to_zip_pickle(fp)
+
 
     #---------------------------------------------------------------------------
 
@@ -1597,6 +1657,58 @@ class TestUnit(TestCase):
             self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
 
     #---------------------------------------------------------------------------
+    def test_batch_to_npy(self) -> None:
+
+        f1 = ff.parse('s(3,2)|v(bool)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,5)|v(bool)|c(I,str)|i(I,int)').rename('b')
+
+        b1 = Batch.from_frames((f1, f2))
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            b2 = Batch.from_zip_npy(fp)
+            frames = dict(b2.items())
+
+            self.assertTrue(frames['a'].equals(f1, compare_name=True, compare_dtype=True, compare_class=True))
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_via_values_a(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_values.apply(np.cos).to_frame()
+        self.assertEqual(round(post, 2).to_pairs(), #type: ignore
+                (('zZbu', ((('a', 0), -0.54), (('a', 1), 0.05), (('b', 0), -0.54), (('b', 1), 0.05))), ('ztsv', ((('a', 0), -0.96), (('a', 1), -0.54), (('b', 0), -0.96), (('b', 1), -0.54))), ('zUvW', ((('a', 0), -0.82), (('a', 1), 1.0), (('b', 0), -0.82), (('b', 1), 1.0))))
+                )
+
+    def test_batch_via_values_b(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = np.sin(Batch.from_frames((f1, f2)).via_values).to_frame()
+        self.assertEqual(round(post, 2).to_pairs(),
+                (('zZbu', ((('a', 0), -0.84), (('a', 1), 1.0), (('b', 0), -0.84), (('b', 1), 1.0))), ('ztsv', ((('a', 0), 0.28), (('a', 1), -0.84), (('b', 0), 0.28), (('b', 1), -0.84))), ('zUvW', ((('a', 0), 0.57), (('a', 1), 0.03), (('b', 0), 0.57), (('b', 1), 0.03))))
+                )
+
+    def test_batch_via_values_c(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(float)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).apply(lambda s: np.sum(s.values)).to_series()
+
+        self.assertEqual(post.to_pairs(),
+            (('a', 213543.0), ('b', 3424.54))
+            )
+
+    def test_batch_via_values_d(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a') % 3
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b') % 3
+        post = np.power(Batch.from_frames((f1, f2)).via_values(dtype=float), 2).to_frame()
+        self.assertEqual([dt.kind for dt in post.dtypes.values], ['f', 'f', 'f'])
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0))), ('ztsv', ((('a', 0), 4.0), (('a', 1), 0.0), (('b', 0), 4.0), (('b', 1), 0.0))), ('zUvW', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0)))))
+
+        # import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
     def test_batch_via_str_getitem(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
@@ -1618,6 +1730,14 @@ class TestUnit(TestCase):
         post = Batch.from_frames((f1, f2)).via_str.center(8, '-').to_frame()
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 34715), '--zjZQ--'), (('a', -3648), '--zO5l--'), (('b', 34715), '--zjZQ--'), (('b', -3648), '--zO5l--'))), ('ztsv', ((('a', 34715), '--zaji--'), (('a', -3648), '--zJnC--'), (('b', 34715), '--zaji--'), (('b', -3648), '--zJnC--'))), ('zUvW', ((('a', 34715), '--ztsv--'), (('a', -3648), '--zUvW--'), (('b', 34715), '--ztsv--'), (('b', -3648), '--zUvW--')))))
+
+    def test_batch_via_str_contains(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_str.contains('zU').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('ztsv', ((('a', 34715), False), (('a', -3648), False), (('b', 34715), False), (('b', -3648), False))), ('zUvW', ((('a', 34715), False), (('a', -3648), True), (('b', 34715), False), (('b', -3648), True))))
+                )
 
     def test_batch_via_str_count(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
@@ -1655,6 +1775,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('ztsv', ((('a', 34715), -1), (('a', -3648), -1), (('b', 34715), -1), (('b', -3648), -1))), ('zUvW', ((('a', 34715), 3), (('a', -3648), 2), (('b', 34715), 3), (('b', -3648), 2)))))
+
+    def test_batch_via_str_format(self) -> None:
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('a') / 3
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)|i(I,int)').rename('b') / 3
+        post = Batch.from_frames((f1, f2)).via_str.format('{:.3}').to_frame()
+        self.assertEqual(post.to_pairs(),
+                (('zZbu', ((('a', 34715), '-2.93e+04'), (('a', -3648), '3.1e+04'), (('b', 34715), '-2.93e+04'), (('b', -3648), '3.1e+04'))), ('ztsv', ((('a', 34715), '5.41e+04'), (('a', -3648), '-1.37e+04'), (('b', 34715), '5.41e+04'), (('b', -3648), '-1.37e+04'))), ('zUvW', ((('a', 34715), '-1.22e+03'), (('a', -3648), '3.04e+04'), (('b', 34715), '-1.22e+03'), (('b', -3648), '3.04e+04'))))
+                )
 
     def test_batch_via_str_index(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
@@ -2209,6 +2337,15 @@ class TestUnit(TestCase):
                 ((0, ((('a', 0), 12), (('a', 1), 4), (('b', 0), 12), (('b', 1), 4))), (1, ((('a', 0), 1), (('a', 1), 9), (('b', 0), 1), (('b', 1), 9))))
                 )
 
+    def test_batch_via_dt_year_month(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.year_month.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), '2210-12'), (('a', 1), '2224-04'), (('b', 0), '2210-12'), (('b', 1), '2224-04'))), (1, ((('a', 0), '2414-01'), (('a', 1), '2082-09'), (('b', 0), '2414-01'), (('b', 1), '2082-09'))))
+                )
+
     def test_batch_via_dt_day(self) -> None:
 
         f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
@@ -2593,6 +2730,18 @@ class TestUnit(TestCase):
         post = (Batch.from_frames((f1, f2)).via_fill_value(0).via_T * Series((1,))).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 0), -88017), (('a', 1), 0), (('b', 0), -88017), (('b', 1), 0))), ('ztsv', ((('a', 0), 162197), (('a', 1), 0), (('b', 0), 162197), (('b', 1), 0))), ('zUvW', ((('a', 0), -3648), (('a', 1), 0), (('b', 0), -3648), (('b', 1), 0))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_astype_a(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+        post = Batch.from_frames((f1, f2)).astype(str).to_frame()
+        self.assertEqual(
+                [dt.kind for dt in post.dtypes.values],
+                ['U', 'U', 'U']
                 )
 
 if __name__ == '__main__':

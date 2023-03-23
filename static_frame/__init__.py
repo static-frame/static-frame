@@ -3,8 +3,8 @@
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
-from arraykit import mloc as mloc
 from arraykit import isna_element as isna_element
+from arraykit import mloc as mloc
 
 from static_frame.core.archive_npy import NPY as NPY
 from static_frame.core.archive_npy import NPZ as NPZ
@@ -28,6 +28,7 @@ from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import StoreFileMutation
+from static_frame.core.fill_value_auto import FillValueAuto as FillValueAuto
 from static_frame.core.frame import Frame as Frame
 from static_frame.core.frame import FrameAssign as FrameAssign
 from static_frame.core.frame import FrameAssignBLoc as FrameAssignBLoc
@@ -38,11 +39,11 @@ from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
+from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
-from static_frame.core.index_auto import IndexDefaultFactory as IndexDefaultFactory
-from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexDefaultConstructorFactory as IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexHour as IndexHour
@@ -64,36 +65,44 @@ from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthG
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
+from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
+from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
-from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
+from static_frame.core.node_iter import IterNodeDelegate
+from static_frame.core.node_iter import IterNodeDelegateMapable
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_transpose import InterfaceTranspose
+from static_frame.core.node_values import InterfaceBatchValues
+from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
-from static_frame.core.yarn import Yarn as Yarn
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
-from static_frame.core.store import StoreConfig as StoreConfig
-from static_frame.core.store import StoreConfigMap as StoreConfigMap
+from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
@@ -106,5 +115,7 @@ from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.www import WWW
+from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '0.9.3' # use -dev for new version in development
+__version__ = '1.2.7'

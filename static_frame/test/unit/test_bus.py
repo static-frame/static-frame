@@ -1,35 +1,35 @@
+import os
+import pickle
+import typing as tp
 from datetime import date
 from datetime import datetime
-# from io import StringIO
-import typing as tp
-import numpy as np
-import frame_fixtures as ff
+from hashlib import sha256
 
-from static_frame.core.frame import Frame
+import frame_fixtures as ff
+import numpy as np
+
 from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred
-
-from static_frame.core.series import Series
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_zip import StoreZipTSV
-
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfig
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.hloc import HLoc
-
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import skip_win
-
-from static_frame.core.index_auto import IndexAutoFactory
-
 from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import StoreFileMutation
+from static_frame.core.frame import Frame
+from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.series import Series
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_zip import StoreZipTSV
+from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -77,7 +77,6 @@ class TestUnit(TestCase):
 
             f3 = b2['bar']
             f4 = b2['foo']
-            # import ipdb; ipdb.set_trace()
             zs = StoreZipTSV(fp)
             zs.write(b1.items())
 
@@ -104,11 +103,13 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
-                name='foo')
+                name='foo',
+                dtypes=np.int64)
         f2 = Frame.from_dict(
                 dict(a=(1,2,3), b=(4,5,6)),
                 index=('x', 'y', 'z'),
-                name='bar')
+                name='bar',
+                dtypes=np.int64)
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
         b1 = Bus.from_frames((f1, f2), config=config)
@@ -260,7 +261,7 @@ class TestUnit(TestCase):
                     (('f1', None), ('f2', (3, 2)), ('f3', (2, 2 )))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_nbytes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -293,7 +294,7 @@ class TestUnit(TestCase):
 
             self.assertEqual(b2.nbytes, 112)
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_dtypes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -328,7 +329,7 @@ class TestUnit(TestCase):
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
-    @skip_win # type: ignore
+    @skip_win
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -1552,7 +1553,7 @@ class TestUnit(TestCase):
             a1 = b2.values
             self.assertNotEqual(id(a1), id(b2._values_mutable))
             self.assertEqual(b2.status['loaded'].sum(), 2)
-            self.assertTrue(all([f.__class__ is Frame for f in a1]))
+            self.assertTrue(all(f.__class__ is Frame for f in a1))
 
     #---------------------------------------------------------------------------
 
@@ -2258,6 +2259,146 @@ class TestUnit(TestCase):
             self.assertEqual(b3['f5'].to_pairs(),
                 ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
                 )
+
+    def test_bus_npz_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3').astype(object)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                b1.to_zip_npz(fp)
+            self.assertFalse(os.path.exists(fp))
+
+    def test_bus_npz_c(self) -> None:
+        frame = Frame(
+            data=np.random.normal(size=(2, 2)),
+            columns=IndexAutoFactory,
+            index=IndexAutoFactory,
+            name=np.datetime64('2000-01-01'),
+            )
+
+        b1 = Bus.from_frames(
+            frames=(frame,),
+            index_constructor=IndexDate,
+            )
+
+        config = StoreConfig(
+            label_encoder=str,
+            label_decoder=np.datetime64,
+            )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp, config=config)
+            b2 = Bus.from_zip_npz(fp, config=config, index_constructor=IndexAutoConstructorFactory)
+            self.assertEqual(frame.name, b2.iloc[0].name)
+            self.assertEqual(frame.shape, b2.iloc[0].shape)
+
+
+    #---------------------------------------------------------------------------
+    def test_bus_npy_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npy(fp, config=config, max_persist=3)
+            b3 = b2['f2':]
+            self.assertEqual(b3['f5'].to_pairs(),
+                ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
+                )
+
+    def test_bus_npy_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3').astype(object)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(ErrorNPYEncode):
+                b1.to_zip_npy(fp)
+            self.assertFalse(os.path.exists(fp))
+
+    #---------------------------------------------------------------------------
+
+    def test_bus_to_signature_bytes_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
+
+        b2 = Bus.from_frames((f1, f2))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+    def test_bus_to_signature_bytes_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,2)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        bytes1 = b1._to_signature_bytes(include_name=False)
+
+        b2 = Bus.from_frames((f1, f2, f4))
+        bytes2 = b2._to_signature_bytes(include_name=False)
+        self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
+
+    def test_bus_via_hashlib_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        d = b1.via_hashlib(include_name=False).sha256().hexdigest()
+        self.assertEqual(d,
+                '29a271e0d800ecaa673c7deded9dd7e8166cc746963c1717298e6af9e4189f23')
+
+    #---------------------------------------------------------------------------
+
+    def test_bus_store_pickle_roundtrip(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, max_persist=1)
+
+            assert not b2._store._weak_cache
+
+            f1_r = b2.iloc[0]
+            f2_r = b2.iloc[1]
+
+            assert b2.iloc[1] is f2_r
+
+            assert f1_r in b2._store._weak_cache.values()
+            assert b2.iloc[0] is f1_r
+
+            b3 = pickle.loads(pickle.dumps(b2))
+
+            assert not b3._store._weak_cache
+            assert b3.iloc[0].equals(f1_r)
 
 
 if __name__ == '__main__':

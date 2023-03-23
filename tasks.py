@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import typing as tp
 
 import invoke
@@ -23,7 +23,6 @@ def clean(context):
     context.run('rm -rf .ipynb_checkpoints')
 
 
-
 @invoke.task()
 def doc(context):
     '''Build docs
@@ -41,13 +40,12 @@ def performance(context):
 
 
 @invoke.task
-def interface(context, container=None):
+def interface(context, container=None, doc=False):
     '''
     Optionally select a container type to discover what API endpoints have examples.
     '''
-    from static_frame.core.container import ContainerBase
     import static_frame as sf
-
+    from static_frame.core.container import ContainerBase
 
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
@@ -64,35 +62,10 @@ def interface(context, container=None):
     else:
         f = getattr(sf, container).interface
 
-    print(f.display_tall())
-
-@invoke.task
-def example(context, container=None):
-    '''
-    Discover API members that have a code example.
-    '''
-    from static_frame.core.display_color import HexColor
-    from doc.source.conf import get_jinja_contexts
-
-    contexts = get_jinja_contexts()
-    defined = contexts['examples_defined']
-    signatures = set()
-
-    # discover all signatures; if it is defined, print in a darker color
-    for name, cls, frames in contexts['interface'].values():
-        for group, frame in frames:
-            for signature, row in frame.iter_tuple_items(axis=1):
-                target = f'{name}-{row.signature_no_args}'
-                signatures.add(target) # accumulate all signatures
-                if container and name != container:
-                    continue
-                if target in defined:
-                    print(HexColor.format_terminal(0x505050, target))
-                else:
-                    print(target)
-
-    for line in sorted(defined - signatures):
-        print(HexColor.format_terminal(0x00ccff, line))
+    if not doc:
+        f = f.drop['doc']
+    dc = sf.DisplayConfig(cell_max_width_leftmost=99, cell_max_width=60, display_rows=99999, display_columns=99)
+    print(f.display(dc))
 
 
 #-------------------------------------------------------------------------------
@@ -109,8 +82,8 @@ def test(context,
     else:
         fp = 'static_frame/test'
 
-    # cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
-    cmd = f'pytest -s --color no --tb=native {fp}'
+    # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
+    cmd = f'pytest -s --tb=native {fp}'
 
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
@@ -124,8 +97,7 @@ def coverage(context):
     '''
     Perform code coverage, and open report HTML.
     '''
-    # cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
-    cmd = 'pytest -s --color no --cov=static_frame/core --cov-report html'
+    cmd = 'pytest -s --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
     import webbrowser
@@ -138,6 +110,11 @@ def mypy(context):
     '''
     context.run('mypy --strict')
 
+@invoke.task
+def isort(context):
+    '''Run isort as a check.
+    '''
+    context.run('isort static_frame doc --check')
 
 @invoke.task
 def lint(context):
@@ -145,10 +122,17 @@ def lint(context):
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, lint))
+@invoke.task(pre=(mypy, lint, isort))
 def quality(context):
     '''Perform all quality checks.
     '''
+
+@invoke.task
+def format(context):
+    '''Run mypy static analysis.
+    '''
+    context.run('isort static_frame doc')
+
 
 #-------------------------------------------------------------------------------
 

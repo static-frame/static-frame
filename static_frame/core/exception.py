@@ -1,4 +1,6 @@
+import typing as tp
 import warnings
+
 
 class ErrorInit(RuntimeError):
     '''Error in Container initialization.
@@ -65,11 +67,18 @@ class RelabelInvalid(RuntimeError):
 
 class BatchIterableInvalid(RuntimeError):
     def __init__(self) -> None:
-        super().__init__('Batch iterable does not yield expected pair of label, Frame.')
+        super().__init__('Batch iterable does not yield expected pair of label, container.')
 
 class InvalidDatetime64Comparison(RuntimeError):
     def __init__(self) -> None:
         super().__init__('Cannot perform set operations on datetime64 of different units; use astype to align units before comparison.')
+
+class InvalidDatetime64Initializer(RuntimeError):
+    pass
+
+class InvalidFillValue(RuntimeError):
+    def __init__(self, fill_value: tp.Any, context: str) -> None:
+        super().__init__(f'{fill_value} not supported in the context of {context}.')
 
 
 #-------------------------------------------------------------------------------
@@ -80,9 +89,11 @@ class StoreFileMutation(RuntimeError):
     '''
 
 class StoreParameterConflict(RuntimeError):
-    '''
-    A Stores file was mutated in an unexpected way.
-    '''
+    pass
+
+class StoreLabelNonUnique(RuntimeError):
+    def __init__(self, label: str) -> None:
+        super().__init__(f'Store label "{label}" is not unique.')
 
 class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:
@@ -101,6 +112,10 @@ class ErrorNPYDecode(ValueError):
     '''
     Error decoding an NPY file.
     '''
+
+class ErrorNotTruthy(ValueError):
+    def __init__(self) -> None:
+        super().__init__('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 
 #-------------------------------------------------------------------------------
 

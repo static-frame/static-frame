@@ -36,7 +36,8 @@ commands = sorted(
         )
 
 try: # This lets us play nicely with IPython:
-    from builtins import __IPYTHON__  #type: ignore
+    from builtins import __IPYTHON__  # type: ignore
+
     from IPython import embed
     from IPython import get_ipython
 

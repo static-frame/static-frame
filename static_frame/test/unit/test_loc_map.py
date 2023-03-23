@@ -1,23 +1,18 @@
 import typing as tp
 from copy import deepcopy
-from types import SimpleNamespace
 
 import numpy as np
 
 from static_frame import IndexHierarchy
-
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
-from static_frame.core.loc_map import LocMap
-from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.index import Index
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import build_indexers_from_product
-
+from static_frame.core.loc_map import HierarchicalLocMap
+from static_frame.core.loc_map import LocMap
 from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
-
 from static_frame.test.test_case import TestCase
 
 
@@ -160,6 +155,27 @@ class TestHierarchicalLocMapUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             HierarchicalLocMap(indices=indices, indexers=indexers)
 
+    def test_init_d(self) -> None:
+        indices = [Index(tuple('ab')), Index(tuple('bc')), Index(tuple('cd'))]
+        indexers = np.array(
+            [
+                [0, 0, 1, 1, 0],
+                [0, 1, 0, 1, 1],
+                [0, 1, 0, 1, 1],
+                #--------------
+                #a, a, b, b, a
+                #b, c, b, c, c
+                #c, d, c, d, d
+            ]
+        )
+
+        try:
+            HierarchicalLocMap(indices=indices, indexers=indexers)
+        except ErrorInitIndexNonUnique as e:
+            assert e.args[0] == ('a', 'c', 'd')
+        else:
+            assert False, 'exception not raised'
+
     #---------------------------------------------------------------------------
 
     def test_build_offsets_and_overflow_a(self) -> None:
@@ -186,11 +202,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(bit_offsets.tolist(), [0, 8, 11])
         self.assertFalse(overflow)
 
-        hlmap = SimpleNamespace(
+        result = HierarchicalLocMap.build_encoded_indexers_map(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=bit_offsets,
+                indexers=indexers,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -213,11 +229,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertListEqual(bit_offsets.tolist(), [0, 21, 42, 63])
         self.assertTrue(overflow)
 
-        hlmap = SimpleNamespace(
+        result = HierarchicalLocMap.build_encoded_indexers_map(
                 encoding_can_overflow=overflow,
                 bit_offset_encoders=bit_offsets,
+                indexers=indexers,
                 )
-        result = HierarchicalLocMap.build_encoded_indexers_map(self=hlmap, indexers=indexers) # type: ignore
         self.assertEqual(len(result), len(indexers[0]))
 
         self.assertEqual(min(result), 0)
@@ -270,10 +286,11 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertTrue(HierarchicalLocMap.is_single_element(123))
         self.assertTrue(HierarchicalLocMap.is_single_element(1.0023))
         self.assertTrue(HierarchicalLocMap.is_single_element(np.nan))
+        self.assertTrue(HierarchicalLocMap.is_single_element(()))
+        self.assertTrue(HierarchicalLocMap.is_single_element((1, 2, 3)))
 
         self.assertFalse(HierarchicalLocMap.is_single_element([False]))
         self.assertFalse(HierarchicalLocMap.is_single_element([2.3, 8878.33]))
-        self.assertFalse(HierarchicalLocMap.is_single_element(()))
         self.assertFalse(HierarchicalLocMap.is_single_element(np.arange(5)))
 
     #---------------------------------------------------------------------------
@@ -343,7 +360,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 
-        self.assertIn(hlmap.nbytes, (720 + 8 + 8 + 25, 721)) # automap + 2 uint64 bit offsets + PyBool
+        self.assertIn(hlmap.nbytes, (720 + 8 + 8 + 25, 721, 705)) # automap + 2 uint64 bit offsets + PyBool
 
     #---------------------------------------------------------------------------
 
@@ -467,6 +484,58 @@ class TestHierarchicalLocMapUnit(TestCase):
         valid_subset = [1, 2, 3, 4, 5, 6, 8, 9]
         post = hlmap.indexers_to_iloc(invalid_indexers[valid_subset].copy())
         self.assertListEqual(post, valid_subset)
+
+    def test_unpack_encoding_a(self) -> None:
+        # Test the docstring!
+        encoded_arr = np.array([36, 8, 10, 17], dtype=np.uint64)
+
+        post = HierarchicalLocMap.unpack_encoding(
+            encoded_arr=encoded_arr,
+            bit_offset_encoders=np.array([0, 2, 4], dtype=np.uint64),
+            encoding_can_overflow=False,
+        )
+        expected = np.array(
+            [
+                [0, 1, 2],
+                [0, 2, 0],
+                [2, 2, 0],
+                [1, 0, 1],
+            ],
+            dtype=np.uint64,
+        ).T
+
+        assert (post == expected).all().all()
+
+    def test_encoding_roundtrip(self) -> None:
+        indexers = np.array(
+            [
+                [0, 2, 1, 1, 4, 5, 6, 7, 8, 9, 0],
+                [1, 0, 2, 0, 5, 4, 5, 8, 9, 0, 7],
+                [0, 9, 4, 2, 1, 3, 1, 4, 5, 6, 7],
+            ],
+            dtype=np.uint64,
+        )
+        indexers.flags.writeable = False
+
+        bit_offset_encoders, can_overflow = HierarchicalLocMap.build_offsets_and_overflow([10, 10, 10])
+        assert not can_overflow
+
+        encodings = HierarchicalLocMap.build_encoded_indexers_map(
+                encoding_can_overflow=can_overflow,
+                bit_offset_encoders=bit_offset_encoders,
+                indexers=indexers,
+                )
+        encoded_arr = np.array(list(encodings), dtype=np.uint64)
+
+        unpacked_indexers = HierarchicalLocMap.unpack_encoding(
+                encoded_arr=encoded_arr,
+                bit_offset_encoders=bit_offset_encoders,
+                encoding_can_overflow=can_overflow,
+                )
+
+        assert unpacked_indexers is not indexers
+        assert id(unpacked_indexers) != id(indexers)
+        assert (unpacked_indexers == indexers).all().all()
 
 
 if __name__ == '__main__':

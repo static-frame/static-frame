@@ -1,23 +1,25 @@
-import typing as tp
+import gc
 import operator
 import os
 import sqlite3
-import gc
+import typing as tp
 
 import numpy as np
-from hypothesis import given
 from arraykit import isna_element
+from hypothesis import given
 
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.interface import UFUNC_BINARY_OPERATORS
 from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.core.series import Series
+from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
+from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -45,8 +47,9 @@ class TestUnit(TestCase):
             func = getattr(operator, op)
             values = f1.values
             # must coerce all blocks to same type to compare to what NP does
-            a = func(f1.astype(values.dtype)).values
-            b = func(values)
+            with WarningsSilent():
+                a = func(f1.astype(values.dtype)).values
+                b = func(values)
             self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
@@ -78,8 +81,9 @@ class TestUnit(TestCase):
             values = f1.values
             # must coerce all blocks to same type to compare to what NP does
             f2 = f1.astype(values.dtype)
-            a = func(f2, f2).values
-            b = func(values, values)
+            with WarningsSilent():
+                a = func(f2, f2).values
+                b = func(values, values)
             self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
@@ -110,8 +114,9 @@ class TestUnit(TestCase):
             ) -> None:
 
         f2 = f1.relabel(columns=f1.index)
-        f3 = f2 @ f1
-        self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
+        with WarningsSilent():
+            f3 = f2 @ f1
+            self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
 
     # from hypothesis import reproduce_failure
     # NOTE: was able to improve many of these, but continued to get compliated type cases, and complications
@@ -130,17 +135,9 @@ class TestUnit(TestCase):
                 values = f1.values
                 # must coerce all blocks to same type to compare to what NP does
                 # f2 = f1.astype(values.dtype)
-
-                a = getattr(f1, attr)(axis=axis).values # call the method
-                b = attrs.ufunc_skipna(values, axis=axis)
-
-    #             if a.dtype != b.dtype:
-    #                 continue
-    #             try:
-    #                 self.assertAlmostEqualArray(a, b)
-    #             except:
-    #                 import ipdb; ipdb.set_trace()
-    #                 raise
+                with WarningsSilent():
+                    a = getattr(f1, attr)(axis=axis).values # call the method
+                    b = attrs.ufunc_skipna(values, axis=axis)
 
     @given(sfst.get_frame())
     def test_frame_isin(self, f1: Frame) -> None:
@@ -256,7 +253,7 @@ class TestUnit(TestCase):
         f2['__new__'] = 10
         self.assertTrue(len(f2.columns) == len(f1.columns) + 1)
 
-    @skip_win  # type: ignore # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
+    @skip_win # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -271,7 +268,7 @@ class TestUnit(TestCase):
             #         columns_depth=f1.columns.depth)
 
 
-    @skip_win  # type: ignore # UnicodeEncodeError
+    @skip_win # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -295,7 +292,7 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
 
             try:
-                f1.to_sqlite(fp)
+                f1.to_sqlite(fp, label='foo')
                 self.assertTrue(os.stat(fp).st_size > 0)
             except (sqlite3.IntegrityError, sqlite3.OperationalError, OverflowError):
                 # some indices, after translation, are not unique
@@ -324,7 +321,7 @@ class TestUnit(TestCase):
         post = f1.to_html()
         self.assertTrue(len(post) > 0)
 
-    @skip_win  # type: ignore # UnicodeEncodeError
+    @skip_win # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go())
     def test_frame_to_html_datatables(self, f1: Frame) -> None:
         post = f1.to_html_datatables(show=False)
@@ -345,9 +342,60 @@ class TestUnit(TestCase):
         post = f1.to_latex()
         self.assertTrue(len(post) > 0)
 
+    #---------------------------------------------------------------------------
+
     @given(sfst.get_frame_or_frame_go())
     def test_frame_blocks_dont_have_reference_cycles(self, f1: Frame) -> None:
         self.assertEqual([f1], gc.get_referrers(f1._blocks))
+
+    #---------------------------------------------------------------------------
+    # NOTE: re-encoding from json strings is difficult here as some string representations result in non-unique indices.
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_to_json_index(self, f1: Frame) -> None:
+        msg = f1.to_json_index()
+        self.assertIsInstance(msg, str)
+        try:
+            f2 = Frame.from_json_index(msg)
+        except ErrorInitIndexNonUnique:
+            pass
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_to_json_columns(self, f1: Frame) -> None:
+        msg = f1.to_json_columns()
+        self.assertIsInstance(msg, str)
+        try:
+            f2 = Frame.from_json_columns(msg)
+        except ErrorInitIndexNonUnique:
+            pass
+
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_to_json_split(self, f1: Frame) -> None:
+        msg = f1.to_json_split()
+        self.assertIsInstance(msg, str)
+        try:
+            f2 = Frame.from_json_split(msg)
+        except ErrorInitIndexNonUnique:
+            pass
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_to_json_records(self, f1: Frame) -> None:
+        msg = f1.to_json_records()
+        self.assertIsInstance(msg, str)
+        try:
+            f2 = Frame.from_json_records(msg)
+        except ErrorInitIndexNonUnique:
+            pass
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_to_json_values(self, f1: Frame) -> None:
+        msg = f1.to_json_values()
+        self.assertIsInstance(msg, str)
+        try:
+            f2 = Frame.from_json_values(msg)
+        except ErrorInitIndexNonUnique:
+            pass
 
 
 if __name__ == '__main__':

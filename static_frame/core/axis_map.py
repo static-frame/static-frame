@@ -1,17 +1,18 @@
 import typing as tp
-from functools import partial
 from copy import deepcopy
+from functools import partial
 
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.bus import Bus
-from static_frame.core.index_base import IndexBase
-from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.yarn import Yarn #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
 
 
 def get_extractor(
@@ -70,7 +71,10 @@ def bus_to_hierarchy(
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-    return IndexHierarchy.from_tree(tree), opposite # type: ignore
+    # NOTE: we could try to collect index constructors by using the index of the Bus and observing the inidices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
+
+    return IndexHierarchy.from_tree(tree,  # type: ignore
+            index_constructors=IndexAutoConstructorFactory), opposite
 
 
 def buses_to_hierarchy(
@@ -88,9 +92,9 @@ def buses_to_hierarchy(
     tree = {}
     for label, bus in zip(labels, buses):
         if not isinstance(bus, Bus):
-            raise init_exception_cls(f'Must provide an interable of Bus.')
+            raise init_exception_cls('Must provide an interable of Bus.')
         if label in tree:
             raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
         tree[label] = extractor(bus._index)
 
-    return IndexHierarchy.from_tree(tree)
+    return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)

@@ -1,35 +1,54 @@
-import unittest
-import pickle
-import datetime
 import copy
+import datetime
+import pickle
 import typing as tp
+import unittest
+from hashlib import sha256
 from io import StringIO
 
 import numpy as np
 from arraykit import mloc
 
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexHierarchy
-from static_frame import Series
-from static_frame import IndexYear
+from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import ILoc
+from static_frame import Index
 from static_frame import IndexAutoFactory
-from static_frame.test.test_case import TestCase
-from static_frame.core.index import _index_initializer_needs_init
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexYear
+from static_frame import Series
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
+from static_frame.core.exception import LocInvalid
+from static_frame.core.index import _index_initializer_needs_init
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
-from static_frame.core.util import NULL_SLICE
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
+
+    def test_iloc_repr(self) -> None:
+        self.assertEqual(repr(ILoc[1]), '<ILoc[1]>')
+        self.assertEqual(repr(ILoc[1,]), '<ILoc[1]>')
+        self.assertEqual(repr(ILoc[1, 2]), '<ILoc[1,2]>')
+        self.assertEqual(repr(ILoc[:, 1]), '<ILoc[:,1]>')
+        self.assertEqual(repr(ILoc[:, 1, 2]), '<ILoc[:,1,2]>')
+        self.assertEqual(repr(ILoc[1:2, :]), '<ILoc[1:2,:]>')
+        self.assertEqual(repr(ILoc[1:2, :2]), '<ILoc[1:2,:2]>')
+        self.assertEqual(repr(ILoc[1:2, :2, :3]), '<ILoc[1:2,:2,:3]>')
+        self.assertEqual(repr(ILoc[::1]), '<ILoc[:]>')
+        self.assertEqual(repr(ILoc[1:, 1:2, 1:2:3, :2, :2:3, ::3]), '<ILoc[1:,1:2,1:2:3,:2,:2:3,::3]>')
+        # self.assertEqual(repr(ILoc[()]), '<ILoc[()]>')
+        self.assertEqual(repr(ILoc[(1,),]), '<ILoc[(1,)]>')
+        self.assertEqual(repr(ILoc[(),]), '<ILoc[()]>')
+        self.assertEqual(repr(ILoc[:]), '<ILoc[:]>')
+        self.assertEqual(repr(ILoc[:, :]), '<ILoc[:,:]>')
+        self.assertEqual(repr(ILoc[:, :, 4]), '<ILoc[:,:,4]>')
 
     def test_positions_allocator_a(self) -> None:
 
@@ -193,13 +212,15 @@ class TestUnit(TestCase):
             _ = idx2.loc_to_iloc(5)
 
         self.assertEqual(idx2.loc_to_iloc(slice(1, 3)), slice(1, 4))
+
         with self.assertRaises(LocInvalid):
             _ = idx2.loc_to_iloc(slice('x', 'y'))
+
         with self.assertRaises(LocInvalid):
             # loc slices are always interpreted as inclusive, so going beyond the inclusive boundary is an error
             _ = idx2.loc_to_iloc(slice(0, 4))
 
-        self.assertEqual(idx2.loc_to_iloc([3, 0]), [3, 0])
+        self.assertEqual(idx2.loc_to_iloc([3, 0]).tolist(), [3, 0]) #type: ignore
         with self.assertRaises(KeyError):
             _ = idx2.loc_to_iloc([3, 20])
 
@@ -265,6 +286,28 @@ class TestUnit(TestCase):
                 default_constructor=Index)
         post = idx1.loc_to_iloc(NULL_SLICE)
         self.assertEqual(post, NULL_SLICE)
+
+    def test_index_loc_to_iloc_k(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+        # for now, lists of Bools only work on indicies without maps
+        post = idx1.loc[[True, False, True, False]]
+        self.assertEqual(post.values.tolist(), [0, 2]) #type: ignore
+
+    def test_index_loc_to_iloc_l(self) -> None:
+        idx1 = Index(range(4), loc_is_iloc=True)
+        self.assertTrue(idx1._map is None)
+
+        post1 = idx1[Series((3, 1), index=('a', 'b'))]
+        post2 = idx1.loc_to_iloc(Series((3, 1), index=('a', 'b')))
+        self.assertEqual(post1.tolist(), post2.tolist()) #type: ignore
+
+    def test_index_loc_to_iloc_m(self) -> None:
+        idx1 = IndexGO(range(4), loc_is_iloc=True)
+        idx1.append(4)
+        self.assertTrue(idx1._map is None)
+        post1 = idx1.loc_to_iloc([3, 0])
+        self.assertEqual(post1.tolist(), [3, 0]) #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -548,7 +591,7 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(len(index.__slots__), 8)
+        self.assertEqual(len(index.__slots__), 3)
         self.assertFalse(index.STATIC)
         self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
         self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
@@ -680,7 +723,6 @@ class TestUnit(TestCase):
             pbytes = pickle.dumps(index)
             index_new = pickle.loads(pbytes)
             for v in index: # iter labels
-                # import ipdb; ipdb.set_trace()
                 # this compares Index objects
                 self.assertFalse(index_new._labels.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
@@ -1307,16 +1349,10 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
-    #---------------------------------------------------------------------------
-
     def test_index_via_str_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
-
-        self.assertEqual(a1.tolist(),
-                ['A', 'B', 'C', 'D', 'E']
-                )
 
     def test_index_via_str_b(self) -> None:
 
@@ -1351,6 +1387,15 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6, 2, 4]
                 )
+
+
+    def test_index_via_values_a(self) -> None:
+
+        idx1 = IndexGO((10, 20, 30))
+        idx1.append(40)
+        idx2 = idx1.via_values.apply(lambda x: (x * .5).astype(int))
+        self.assertEqual(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), [5, 10, 15, 20])
 
     #---------------------------------------------------------------------------
 
@@ -1429,7 +1474,7 @@ class TestUnit(TestCase):
         a = IndexDate([dt64('2021-01-01'), dt64('1954-01-01')])
         b = IndexYear([dt64('2021'), dt64('1954')])
 
-        self.assertFalse(arrays_equal(a, b, skipna=True))
+        self.assertFalse(arrays_equal(a.values, b.values, skipna=True))
 
     def test_index_equals_h(self) -> None:
         a = IndexGO([1, 2, 3])
@@ -1616,7 +1661,142 @@ class TestUnit(TestCase):
         idx2 = idx1.dropfalsy()
         self.assertEqual(idx2.values.tolist(), [2])
 
-        # import ipdb; ipdb.set_trace()
+    #---------------------------------------------------------------------------
+    def test_index_display_a(self) -> None:
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        post = idx.display(DisplayConfig(type_show=False, type_color=False))
+        self.assertEqual(str(post), 'a\nb\nc\nd\ne')
+
+    #---------------------------------------------------------------------------
+    def test_index_hash_bytes_a(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1._to_signature_bytes()
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+        idx2 = Index(('a', 'b', 'c', 'd'), name='')
+        bytes2 = idx2._to_signature_bytes()
+        self.assertEqual(sha256(bytes2).hexdigest(),
+            '108f99787a5b8c8acc45ebfcc934ad1a1eaedda394679c192d3b4be385590d93')
+
+    def test_index_hash_bytes_b(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1._to_signature_bytes(include_class=False)
+
+        idx2 = Index(('a', 'b', 'c', 'd'), name='')
+        bytes2 = idx2._to_signature_bytes(include_class=False)
+
+        self.assertEqual(
+                sha256(bytes1).hexdigest(),
+                sha256(bytes2).hexdigest(),
+                )
+
+    def test_index_hash_bytes_c(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name=None)
+        with self.assertRaises(TypeError):
+            _ = idx1._to_signature_bytes()
+
+        bytes1 = idx1._to_signature_bytes(include_name=False)
+        self.assertEqual(sha256(bytes1).hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+    def test_index_hash_bytes_d(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+        bytes1 = idx1._to_signature_bytes(include_class=False)
+
+        idx2 = Index(('a', 'b', 'c', 'd', 'e'), name='')
+        bytes2 = idx2._to_signature_bytes(include_class=False)
+
+        self.assertNotEqual(
+                sha256(bytes1).hexdigest(),
+                sha256(bytes2).hexdigest(),
+                )
+
+    def test_index_via_hashlib_a(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        self.assertEqual(idx1.via_hashlib().sha256().hexdigest(),
+            'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+    def test_index_get_argsort_cache_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        unique1, indexers1 = idx1._get_argsort_cache()
+        unique2, indexers2 = idx2._get_argsort_cache()
+
+        # Force re-cache
+        idx2.append("e")
+        unique3, indexers3 = idx2._get_argsort_cache()
+
+        assert (unique1 == unique2).all()
+        assert (indexers1 == indexers2).all()
+
+        assert unique1.size != unique3.size
+        assert indexers1.size != indexers3.size
+
+        assert unique1.size == indexers1.size
+        assert unique3.size == indexers3.size
+
+    def test_index_get_argsort_cache_b(self) -> None:
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
+
+        unique1, indexers1 = idx1._get_argsort_cache()
+        assert (unique1 == idx1.values).all()
+
+        idx2 = idx1.__deepcopy__({})
+
+        # Force re-cache
+        idx1.append("e")
+
+        idx3 = idx1.__deepcopy__({})
+
+        unique2, indexers2 = idx1._get_argsort_cache()
+        unique3, indexers3 = idx2._get_argsort_cache()
+        unique4, indexers4 = idx3._get_argsort_cache()
+
+        assert (unique2 == idx1.values).all()
+        assert (unique1 == idx2.values).all()
+        assert (unique2 == idx3.values).all()
+
+        assert (unique1 == unique3).all()
+        assert (unique2 == unique4).all()
+
+        assert (indexers1 == indexers3).all()
+        assert (indexers2 == indexers4).all()
+
+        assert len(unique1) == len(unique3) == len(indexers1) == len(indexers3) == 4
+        assert len(unique2) == len(unique4) == len(indexers2) == len(indexers4) == 5
+
+    def test_index_get_argsort_cache_c(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        assert idx1._argsort_cache is None
+
+        idx2 = idx1.__deepcopy__({})
+        assert idx2._argsort_cache is None
+
+        unique1, indexers1 = idx1._get_argsort_cache()
+        assert idx1._argsort_cache is not None
+        idx3 = idx1.__deepcopy__({}) # type: ignore
+        assert idx3._argsort_cache is not None
+
+        unique2, indexers2 = idx2._get_argsort_cache()
+        unique3, indexers3 = idx3._get_argsort_cache()
+
+        assert len(unique1) == len(unique2) == len(indexers1) == len(indexers2) == len(unique3) == len(indexers3) == 4
+
+        assert unique1 is not unique2
+        assert unique1 is not unique3
+        assert unique2 is not unique3
+        assert indexers1 is not indexers2
+        assert indexers1 is not indexers3
+        assert indexers2 is not indexers3
+        assert (unique1 == unique2).all()
+        assert (unique2 == unique3).all()
+        assert (indexers1 == indexers2).all()
+        assert (indexers2 == indexers3).all()
+
 
 if __name__ == '__main__':
     unittest.main()

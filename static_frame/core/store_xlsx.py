@@ -1,6 +1,6 @@
 
-import typing as tp
 import datetime
+import typing as tp
 from functools import partial
 
 import numpy as np
@@ -14,12 +14,11 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
-from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_BOOL
@@ -28,14 +27,15 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
-from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
-    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
-    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
-    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
+
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
@@ -507,6 +507,7 @@ class StoreXLSX(Store):
                         name=index_name,
                         continuation_token=None, # NOTE: needed
                         )
+
             index, own_index = index_from_optional_constructors(
                     index_values,
                     depth=index_depth,

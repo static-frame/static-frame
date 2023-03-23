@@ -1,57 +1,62 @@
 import typing as tp
+from functools import partial
+from itertools import chain
 from itertools import repeat
 from itertools import zip_longest
-from functools import partial
 
 import numpy as np
 
+from static_frame.core.axis_map import bus_to_hierarchy
+from static_frame.core.axis_map import get_extractor
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import axis_window_items
+from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import ErrorInitQuilt
 from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipNPY
+from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipNPZ
+from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
-from static_frame.core.axis_map import bus_to_hierarchy
-from static_frame.core.axis_map import get_extractor
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -124,7 +129,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if opposite is None:
                         opposite = f.columns
                 elif axis == 1: # along columns
-                    f = frame.iloc[:, start:end]
+                    f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f.columns) #type: ignore
                     axis_map_components[label] = f.columns
                     if opposite is None:
@@ -136,7 +141,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         name = name if name else frame.name
         bus = Bus.from_frames(values(), config=config, name=name)
 
-        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components)
+        axis_hierarchy = IndexHierarchy.from_tree(axis_map_components,
+                index_constructors=IndexAutoConstructorFactory)
 
         return cls(bus,
                 axis=axis,
@@ -257,11 +263,36 @@ class Quilt(ContainerBase, StoreClientMixin):
             max_persist: tp.Optional[int] = None,
             ) -> 'Quilt':
         '''
-        Given a file path to zipped parquet :obj:`Quilt` store, return a :obj:`Quilt` instance.
+        Given a file path to zipped NPZ :obj:`Quilt` store, return a :obj:`Quilt` instance.
 
         {args}
         '''
         store = StoreZipNPZ(fp)
+        return cls._from_store(store,
+                config=config,
+                axis=axis,
+                retain_labels=retain_labels,
+                deepcopy_from_bus=deepcopy_from_bus,
+                max_persist=max_persist,
+                )
+
+    @classmethod
+    @doc_inject(selector='quilt_constructor')
+    def from_zip_npy(cls,
+            fp: PathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            axis: int = 0,
+            retain_labels: bool,
+            deepcopy_from_bus: bool = False,
+            max_persist: tp.Optional[int] = None,
+            ) -> 'Quilt':
+        '''
+        Given a file path to zipped NPY :obj:`Quilt` store, return a :obj:`Quilt` instance.
+
+        {args}
+        '''
+        store = StoreZipNPY(fp)
         return cls._from_store(store,
                 config=config,
                 axis=axis,
@@ -521,8 +552,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
 
-        drop_column_dtype = False
+        config = config or DisplayActive.get()
 
+        drop_column_dtype = False
         if self._axis == 0:
             if not self._retain_labels:
                 index = self.index.rename('Concatenated')
@@ -536,8 +568,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 columns = self._bus.index.rename('Frames')
                 drop_column_dtype = True
-
-        config = config or DisplayConfig()
 
         def placeholder_gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             assert config is not None
@@ -596,6 +626,12 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
         return self._columns
+
+    @property
+    def bus(self) -> tp.Union[Bus, Yarn]:
+        '''The ``Bus`` instance assigned to this ``Quilt``.
+        '''
+        return self._bus
 
     #---------------------------------------------------------------------------
 
@@ -898,7 +934,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) #type: ignore
         else:
-            bus_keys = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
+            bus_keys = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
 
         for key_count, key in enumerate(bus_keys):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
@@ -983,7 +1019,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             frame_labels = (axis_map_sub[0],) #type: ignore
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = axis_map_sub._get_unique_labels_in_occurence_order(depth=0)
+            frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
 
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame
@@ -1390,3 +1426,32 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
         return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        if self._assign_axis:
+            self._update_axis_labels()
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._axis_hierarchy._to_signature_bytes( #type: ignore
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._axis_opposite._to_signature_bytes( #type: ignore
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                self._bus._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),)
+                ))
+

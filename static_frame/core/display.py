@@ -1,30 +1,30 @@
-import sys
-import typing as tp
-import os
 import html
 import inspect
+import os
 import platform
 import re
-from functools import partial
+import sys
+import typing as tp
 from collections import namedtuple
+from functools import partial
 
 import numpy as np
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import CallableToIterType
+from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
+from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
+from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
-from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
-from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
-from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import CallableToIterType
+from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase # pylint: disable=unused-import #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -217,7 +217,7 @@ def terminal_ansi(stream: tp.TextIO = sys.stdout) -> bool:
 _module._display_active = DisplayConfig()  # type: ignore
 
 class DisplayActive:
-    '''Utility interface for setting module-level display configuration.
+    '''Utility interface for setting and storing default display configurations.
     '''
     FILE_NAME = '.static_frame.conf'
 
@@ -227,7 +227,7 @@ class DisplayActive:
 
     @staticmethod
     def get(**kwargs: tp.Union[bool, int, str]) -> DisplayConfig:
-        config: DisplayConfig = _module._display_active  # type: ignore
+        config: DisplayConfig = _module._display_active
         if not kwargs:
             return config
         args = config.to_dict()
@@ -280,7 +280,7 @@ class DisplayHeader:
         Provide string representation before additon of outer delimiters.
         '''
         if self.name is not None:
-            return '{}: {}'.format(self.cls.__name__, self.name)
+            return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
 
@@ -457,10 +457,9 @@ class Display:
                 rows.append([cls.to_cell(row, config=config)])
         else:
             count_max = config.display_rows
-            # print('comparing values to count_max', len(values), count_max)
             if len(values) > config.display_rows:
                 data_half_count = Display.truncate_half_count(count_max)
-                value_gen = partial(_gen_skip_middle,
+                value_gen = partial(gen_skip_middle,
                         forward_iter=values.__iter__,
                         forward_count=data_half_count,
                         reverse_iter=partial(reversed, values),
@@ -533,7 +532,7 @@ class Display:
             # columns as they will look after application of truncation and insertion of ellipsis
             data_half_count = cls.truncate_half_count(config.display_columns)
 
-            column_gen = partial(_gen_skip_middle,
+            column_gen = partial(gen_skip_middle,
                     forward_iter=column_forward_iter,
                     forward_count=data_half_count,
                     reverse_iter=column_reverse_iter,
@@ -725,7 +724,6 @@ class Display:
                         cell_formatted = cell_format_str.format(cell_raw)
                         cell_fill_width = pad_width - len(cell.raw) # this includes margin
 
-                    # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
                     if config.cell_align_left:
                         # must manually add space as color chars make ljust not work
                         msg = cell_formatted + ' ' * cell_fill_width
@@ -849,7 +847,7 @@ class Display:
 
         if len(iterable) > count_max:
             data_half_count = self.truncate_half_count(count_max)
-            value_gen: tp.Callable[[], tp.Iterator[tp.Any]] = partial(_gen_skip_middle,
+            value_gen: tp.Callable[[], tp.Iterator[tp.Any]] = partial(gen_skip_middle,
                     forward_iter=iterable.__iter__,
                     forward_count=data_half_count,
                     reverse_iter=partial(reversed, iterable),
