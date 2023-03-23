@@ -2777,7 +2777,10 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        index_cls = self._INDEX_CONSTRUCTOR if index_constructor is None else index_constructor._MUTABLE_CONSTRUCTOR # type: ignore
+        if index_constructor is None:
+            index_cls = self._INDEX_CONSTRUCTOR
+        else:
+            index_cls = index_constructor._IMMUTABLE_CONSTRUCTOR if self.STATIC else index_constructor._MUTABLE_CONSTRUCTOR
 
         if self.STATIC:
             indices = [index_cls((level,)), *self._indices]
