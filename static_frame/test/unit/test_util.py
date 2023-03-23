@@ -3095,6 +3095,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(validate_dtype_specifier(object), DTYPE_OBJECT)
         self.assertEqual(validate_dtype_specifier(np.int8), np.dtype(np.int8))
+        self.assertEqual(validate_dtype_specifier("object"), DTYPE_OBJECT)
 
 
 if __name__ == '__main__':
