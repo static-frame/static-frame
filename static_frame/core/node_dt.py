@@ -2,10 +2,10 @@
 import typing as tp
 from datetime import date
 from datetime import datetime
-from arraykit import resolve_dtype
-from arraykit import isna_element
 
 import numpy as np
+from arraykit import isna_element
+from arraykit import resolve_dtype
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
@@ -28,11 +28,11 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
-from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import isna_array
 
@@ -270,12 +270,13 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_INT_DEFAULT) % 12 + 1
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='month',
                             dtype=DTYPE_INT_DEFAULT)
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
