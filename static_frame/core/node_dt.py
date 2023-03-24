@@ -26,14 +26,14 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import resolve_dtype
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import isna_array
+from static_frame.core.util import resolve_dtype
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
