@@ -114,13 +114,13 @@ class InterfaceDatetime(Interface[TContainer]):
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
         self._fill_value: tp.Any = fill_value
-        self._fill_value_dtype: tp.Optional(np.dtype) = (None
+        self._fill_value_dtype: tp.Optional[np.dtype] = (None
                 if fill_value is FILL_VALUE_DEFAULT
                 else dtype_from_element(fill_value))
 
     def __call__(self,
             *,
-            fill_value,
+            fill_value: tp.Any,
             ) -> 'InterfaceDatetime[TContainer]':
         '''
         Args:
@@ -162,7 +162,7 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
-    def _fill_missing_dt64(self, array_src, array_dst):
+    def _fill_missing_dt64(self, array_src: np.ndarray, array_dst: np.ndarray) -> np.ndarray:
         '''
         Args:
             array_src: The raw array, before any dytpe conversions; used to identify missing values.
@@ -178,12 +178,12 @@ class InterfaceDatetime(Interface[TContainer]):
         return array_dst
 
     def _fill_missing_object(self,
-            array,
+            array: np.ndarray,
             *,
-            method_name,
-            args,
-            dtype,
-            ):
+            method_name: str,
+            args: tp.Tuple[tp.Any, ...],
+            dtype: np.dtype,
+            ) -> np.ndarray:
         if self._fill_value is FILL_VALUE_DEFAULT: # object dtype
             array = array_from_element_method(
                     array=array,
@@ -194,7 +194,7 @@ class InterfaceDatetime(Interface[TContainer]):
         else: # object dtype
             dt = resolve_dtype(dtype, self._fill_value_dtype)
 
-            def func(e: tp.Any):
+            def func(e: tp.Any) -> tp.Any:
                 if isna_element(e):
                     return self._fill_value
                 return getattr(e, method_name)(*args)
