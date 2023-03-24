@@ -319,15 +319,16 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)
-                    # subtract the first of the month, then shfit
+                    # subtract the first of the month, then shift
                     array = (block - block.astype(DT64_MONTH)).astype(DTYPE_INT_DEFAULT) + 1
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='day',
                             dtype=DTYPE_INT_DEFAULT)
 
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())

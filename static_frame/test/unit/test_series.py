@@ -4396,6 +4396,17 @@ class TestUnit(TestCase):
                 (('x', 12), ('y', 28))
                 )
 
+    def test_series_via_dt_day_b(self) -> None:
+        dt64 = np.datetime64
+        s1 = Series((dt64('2014-02-12'), '', dt64('2013-11-28')), index=('x', 'y', 'z'), dtype=dt64)
+        s2 = s1.via_dt(fill_value=-1).day
+        self.assertEqual(s2.to_pairs(), (('x', 12), ('y', -1), ('z', 28)))
+        self.assertEqual(s1.astype(object).via_dt(fill_value=0).day.to_pairs(), (('x', 12), ('y', 0), ('z', 28)))
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_series_via_dt_isoformat_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
