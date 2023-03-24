@@ -3043,7 +3043,8 @@ def array_from_element_apply(
     '''
     Handle element-wise function application.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT and dtype.kind not in DTYPE_STR_KINDS:
+    if (array.ndim == 1 and dtype != DTYPE_OBJECT
+            and dtype.kind not in DTYPE_STR_KINDS):
         post = np.fromiter(
                 (func(d) for d in array),
                 count=len(array),
@@ -3071,7 +3072,7 @@ def array_from_element_method(*,
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
     Args:
-        pre_insert:
+        pre_insert: A function called on each element after the method is called.
         dtype: dtype of array to be returned.
     '''
     # when we know the type of the element, pre-fetch the Python class

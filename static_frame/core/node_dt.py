@@ -3,6 +3,7 @@ import typing as tp
 from datetime import date
 from datetime import datetime
 from arraykit import resolve_dtype
+from arraykit import isna_element
 
 import numpy as np
 
@@ -176,6 +177,36 @@ class InterfaceDatetime(Interface[TContainer]):
                 array_dst[targets] = self._fill_value
         return array_dst
 
+    def _fill_missing_object(self,
+            array,
+            *,
+            method_name,
+            args,
+            dtype,
+            ):
+        if self._fill_value is FILL_VALUE_DEFAULT: # object dtype
+            array = array_from_element_method(
+                    array=array,
+                    method_name=method_name,
+                    args=args,
+                    dtype=dtype,
+                    )
+        else: # object dtype
+            dt = resolve_dtype(dtype, self._fill_value_dtype)
+
+            def func(e: tp.Any):
+                if isna_element(e):
+                    return self._fill_value
+                return getattr(e, method_name)(*args)
+
+            array = array_from_element_apply(
+                    array=array,
+                    func=func,
+                    dtype=dt,
+                    )
+        return array
+
+
     #---------------------------------------------------------------------------
     # date, datetime attributes
 
@@ -234,14 +265,27 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
                     array = self._fill_missing(block, array)
-                    array.flags.writeable = False
-                else: # must be object type
-                    array = array_from_element_method(
-                            array=block,
+                else:
+                    array = self._fill_missing_object(block,
                             method_name='strftime',
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
                             )
+                # elif self._fill_value is FILL_VALUE_DEFAULT: # object dtype
+                #     array = array_from_element_method(
+                #             array=block,
+                #             method_name='strftime',
+                #             args=('%Y-%m',),
+                #             dtype=DTYPE_YEAR_MONTH_STR,
+                #             )
+                # else: # object dtype
+                #     dt = resolve_dtype(block.dtype, self._fill_value_dtype)
+                #     array = array_from_element_apply(
+                #             array=block,
+                #             func=func,
+                #             dtype=dt,
+                #             )
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
