@@ -4333,12 +4333,13 @@ class TestUnit(TestCase):
                 (('a', '2010-01'), ('b', '2010-01'), ('c', ''), ('d', '2013-04'), ('e', '2013-04'))
                 )
 
-    # def test_series_via_dt_year_month_c2(self) -> None:
-    #     s1 = Series(('2010-01-01', '2010-01-02', '', '2013-04-01', '2013-04-02'),
-    #             index=('a', 'b', 'c', 'd', 'e'),
-    #             dtype=np.datetime64).astype(object)
-    #     post = s1.via_dt(fill_value='x').year_month
-
+    def test_series_via_dt_year_month_c2(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64).astype(object)
+        post = s1.via_dt(fill_value='x').year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', 'x'), ('d', '2013-04'), ('e', '2013-04')))
 
 
     #---------------------------------------------------------------------------

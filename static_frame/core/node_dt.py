@@ -162,7 +162,7 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
-    def _fill_missing(self, array_src, array_dst):
+    def _fill_missing_dt64(self, array_src, array_dst):
         '''
         Args:
             array_src: The raw array, before any dytpe conversions; used to identify missing values.
@@ -264,27 +264,13 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
-                    array = self._fill_missing(block, array)
+                    array = self._fill_missing_dt64(block, array)
                 else:
                     array = self._fill_missing_object(block,
                             method_name='strftime',
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
                             )
-                # elif self._fill_value is FILL_VALUE_DEFAULT: # object dtype
-                #     array = array_from_element_method(
-                #             array=block,
-                #             method_name='strftime',
-                #             args=('%Y-%m',),
-                #             dtype=DTYPE_YEAR_MONTH_STR,
-                #             )
-                # else: # object dtype
-                #     dt = resolve_dtype(block.dtype, self._fill_value_dtype)
-                #     array = array_from_element_apply(
-                #             array=block,
-                #             func=func,
-                #             dtype=dt,
-                #             )
                 array.flags.writeable = False
                 yield array
 
