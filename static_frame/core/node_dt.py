@@ -351,12 +351,14 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_H)
                     # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 24
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='hour',
                             dtype=DTYPE_INT_DEFAULT)
+
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -374,14 +376,14 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_M:
                         block = block.astype(DT64_M)
-                    # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 60
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='minute',
                             dtype=DTYPE_INT_DEFAULT)
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -401,12 +403,13 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_S)
                     # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 60
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='second',
                             dtype=DTYPE_INT_DEFAULT)
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())

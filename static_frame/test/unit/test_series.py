@@ -4620,6 +4620,24 @@ class TestUnit(TestCase):
         self.assertEqual(s2.via_dt.hour.to_pairs(),
                 (('x', 5), ('y', 16), ('z', 23)))
 
+
+    def test_series_via_dt_hour_b(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2020-11-30T23:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).hour.to_pairs(),
+                (('x', 5), ('y', -1), ('z', 23)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).hour.to_pairs(),
+                (('x', 5), ('y', None), ('z', 23)))
+
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_series_via_dt_minute_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:51'),
@@ -4635,6 +4653,25 @@ class TestUnit(TestCase):
                 ).astype(object)
         self.assertEqual(s2.via_dt.minute.to_pairs(),
                 (('x', 2), ('y', 55), ('z', 51)))
+
+
+    def test_series_via_dt_minute_b(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2020-11-30T23:51'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                )
+
+        self.assertEqual(s1.via_dt(fill_value=-1).minute.to_pairs(),
+                (('x', 2), ('y', -1), ('z', 51)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).minute.to_pairs(),
+                (('x', 2), ('y', None), ('z', 51)))
+
+
+
+    #---------------------------------------------------------------------------
+
 
     def test_series_via_dt_second_a(self) -> None:
 
