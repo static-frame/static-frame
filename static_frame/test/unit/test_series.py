@@ -4301,6 +4301,17 @@ class TestUnit(TestCase):
                 (('x', 2014), ('y', 2013))
                 )
 
+    def test_series_via_dt_year_b(self) -> None:
+        dt64 = np.datetime64
+
+        s1 = Series(('2014', '', '2013'), index=('x', 'y', 'z'), dtype=dt64)
+        s2 = s1.via_dt(fill_value=-1).year
+        self.assertEqual(s2.to_pairs(), (('x', 2014), ('y', -1), ('z', 2013)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=-1).year.to_pairs()
+                (('x', 2014), ('y', -1), ('z', 2013))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_year_month_a(self) -> None:

@@ -177,21 +177,21 @@ class InterfaceDatetime(Interface[TContainer]):
                 array_dst[targets] = self._fill_value
         return array_dst
 
-    def _fill_missing_object(self,
+    def _fill_missing_element_apply(self,
             array: np.ndarray,
             *,
             method_name: str,
             args: tp.Tuple[tp.Any, ...],
             dtype: np.dtype,
             ) -> np.ndarray:
-        if self._fill_value is FILL_VALUE_DEFAULT: # object dtype
+        if self._fill_value is FILL_VALUE_DEFAULT:
             array = array_from_element_method(
                     array=array,
                     method_name=method_name,
                     args=args,
                     dtype=dtype,
                     )
-        else: # object dtype
+        else:
             dt = resolve_dtype(dtype, self._fill_value_dtype)
 
             def func(e: tp.Any) -> tp.Any:
@@ -206,6 +206,32 @@ class InterfaceDatetime(Interface[TContainer]):
                     )
         return array
 
+    def _fill_missing_element_attr(self,
+            array: np.ndarray,
+            *,
+            attr_name: str,
+            dtype: np.dtype,
+            ) -> np.ndarray:
+        if self._fill_value is FILL_VALUE_DEFAULT:
+            array = array_from_element_attr(
+                    array=array,
+                    attr_name=attr_name,
+                    dtype=dtype,
+                    )
+        else:
+            dt = resolve_dtype(dtype, self._fill_value_dtype)
+
+            def func(e: tp.Any) -> tp.Any:
+                if isna_element(e):
+                    return self._fill_value
+                return getattr(e, attr_name)
+
+            array = array_from_element_apply(
+                    array=array,
+                    func=func,
+                    dtype=dt,
+                    )
+        return array
 
     #---------------------------------------------------------------------------
     # date, datetime attributes
@@ -220,12 +246,14 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='year',
                             dtype=DTYPE_INT_DEFAULT)
+
+                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -266,7 +294,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
                     array = self._fill_missing_dt64(block, array)
                 else:
-                    array = self._fill_missing_object(block,
+                    array = self._fill_missing_element_apply(block,
                             method_name='strftime',
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
