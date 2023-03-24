@@ -30,6 +30,10 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
+from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import isna_array
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -42,37 +46,38 @@ if tp.TYPE_CHECKING:
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
-#https://docs.python.org/3/library/datetime.html
-
 INTERFACE_DT = (
-            'year',
-            'year_month',
-            'month',
-            'day',
-            'hour',
-            'minute',
-            'second',
-            'weekday',
-            'quarter',
-            'is_month_end',
-            'is_month_start',
-            'is_year_end',
-            'is_year_start',
-            'is_quarter_end',
-            'is_quarter_start',
-            'timetuple',
-            'isoformat',
-            'fromisoformat',
-            'strftime',
-            'strptime',
-            'strpdate',
-            )
+        '__call__',
+        'year',
+        'year_month',
+        'month',
+        'day',
+        'hour',
+        'minute',
+        'second',
+        'weekday',
+        'quarter',
+        'is_month_end',
+        'is_month_start',
+        'is_year_end',
+        'is_year_start',
+        'is_quarter_end',
+        'is_quarter_start',
+        'timetuple',
+        'isoformat',
+        'fromisoformat',
+        'strftime',
+        'strptime',
+        'strpdate',
+        )
 
 class InterfaceDatetime(Interface[TContainer]):
 
     __slots__ = (
             '_blocks', # function that returns iterable of arrays
             '_blocks_to_container', # partialed function that will return a new container
+            '_fill_value',
+            '_fill_value_dtype',
             )
     INTERFACE = INTERFACE_DT
 
@@ -100,11 +105,31 @@ class InterfaceDatetime(Interface[TContainer]):
             ))
 
     def __init__(self,
+            *,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer]
+            blocks_to_container: ToContainerType[TContainer],
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._fill_value: tp.Any = fill_value
+        self._fill_value_dtype: tp.Optional(np.dtype) = (None
+                if fill_value is FILL_VALUE_DEFAULT
+                else dtype_from_element(fill_value))
+
+    def __call__(self,
+            *,
+            fill_value,
+            ) -> 'InterfaceDatetime[TContainer]':
+        '''
+        Args:
+            fill_value: If NAT are encountered, use this value.
+        '''
+        return self.__class__(
+                blocks=self._blocks,
+                blocks_to_container=self._blocks_to_container,
+                fill_value=fill_value,
+                )
 
     @staticmethod
     def _validate_dtype_non_str(
@@ -121,7 +146,6 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for date operation')
 
-
     @staticmethod
     def _validate_dtype_str(
             dtype: np.dtype,
@@ -136,6 +160,21 @@ class InterfaceDatetime(Interface[TContainer]):
                 ):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
+
+    def _fill_missing(self, array_src, array_dst):
+        '''
+        Args:
+            array_src: The raw array, before any dytpe conversions; used to identify missing values.
+            array_dst: The array post any conversions, to be filled with missing values.
+        '''
+        if self._fill_value is not FILL_VALUE_DEFAULT:
+            targets = isna_array(array_src)
+            if targets.any():
+                dt = resolve_dtype(array_dst.dtype, self._fill_value_dtype)
+                if dt != array_dst.dtype:
+                    array_dst = array_dst.astype(dt)
+                array_dst[targets] = self._fill_value
+        return array_dst
 
     #---------------------------------------------------------------------------
     # date, datetime attributes
@@ -182,7 +221,6 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-
     @property
     def year_month(self) -> TContainer:
         '''
@@ -195,6 +233,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
+                    array = self._fill_missing(block, array)
                     array.flags.writeable = False
                 else: # must be object type
                     array = array_from_element_method(
@@ -203,6 +242,7 @@ class InterfaceDatetime(Interface[TContainer]):
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
                             )
+                    array = self._fill_missing(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
