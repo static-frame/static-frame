@@ -77,7 +77,8 @@ SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
 SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U1 = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U2 = dict(values=('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
@@ -1422,11 +1423,14 @@ class ExGenSeries(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
+        if attr == '()':
+            yield f's = {icls}({kwa(SERIES_INIT_U2)})'
+            yield f's.via_dt(fill_value=-1).year'
+        elif attr == 'via_dt.fromisoformat()':
             yield f's = {icls}({kwa(SERIES_INIT_W)})'
             yield f's.{attr}'
         elif attr == 'via_dt.strftime()':
-            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's = {icls}({kwa(SERIES_INIT_U1)})'
             yield f's.{attr_func}("%A | %B")'
         elif attr in (
                 'via_dt.strptime()',
@@ -1435,7 +1439,7 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_V)})'
             yield f's.{attr_func}("%m/%d/%Y")'
         else:
-            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's = {icls}({kwa(SERIES_INIT_U1)})'
             yield f's.{attr}'
 
     @staticmethod
