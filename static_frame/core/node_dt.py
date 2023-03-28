@@ -208,7 +208,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
-        assert array.flags.writeable == False
+        assert array.flags.writeable is False
         return array
 
     def _fill_missing_element_attr(self,
@@ -238,7 +238,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
-        assert array.flags.writeable == False
+        assert array.flags.writeable is False
         return array
 
     #---------------------------------------------------------------------------
