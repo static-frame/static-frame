@@ -780,7 +780,7 @@ class InterfaceBatchDatetime(InterfaceBatch):
     def __call__(self,
             *,
             fill_value: tp.Any,
-            ) -> 'Batch':
+            ) -> 'InterfaceBatchDatetime':
         '''
         Args:
             fill_value: If NAT are encountered, use this value.
