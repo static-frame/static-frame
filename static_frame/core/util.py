@@ -1177,15 +1177,16 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
-    masked_array = array[mask]
-    if len(masked_array) <= 1: # we have only one item
-        return masked_array, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
+
+    values = array[mask] # get unique values
+    if len(values) <= 1: # we have only one item
+        return values, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 
     indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
     indexer.flags.writeable = False
 
-    return masked_array, indexer
+    return values, indexer
 
 
 def ufunc_unique1d_positions(array: np.ndarray,
@@ -1245,6 +1246,54 @@ def ufunc_unique1d_counts(array: np.ndarray,
 
     return array[mask], np.diff(index_of_last_occurrence)
 
+def ufunc_unique_enumerated(
+        array: np.ndarray,
+        *,
+        retain_order: bool = False,
+        func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    # see doc_str.unique_enumerated
+
+    is_2d = array.ndim == 2
+    if not is_2d and array.ndim != 1:
+        raise ValueError('Only 1D and 2D arrays supported.')
+
+    if not retain_order and not func:
+        if is_2d:
+            uniques, indexer = ufunc_unique1d_indexer(array.flatten(order='F'))
+        else:
+            uniques, indexer = ufunc_unique1d_indexer(array)
+    else:
+        indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
+        indices: tp.Dict[tp.Any, int] = {}
+
+        eiter: tp.Iterator[tp.Tuple[int, tp.Any]]
+        if is_2d:
+            # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
+            eiter = ((i, e.item()) for i, e in enumerate(
+                    np.nditer(array, order='F', flags=('refs_ok',))))
+        else:
+            eiter = enumerate(array)
+
+        if not func:
+            for i, v in eiter:
+                indexer[i] = indices.setdefault(v, len(indices))
+        else:
+            for i, v in eiter:
+                if func(v):
+                    indexer[i] = -1
+                else:
+                    indexer[i] = indices.setdefault(v, len(indices))
+
+        if array.dtype != DTYPE_OBJECT:
+            uniques = np.fromiter(indices.keys(), count=len(indices), dtype=array.dtype)
+        else:
+            uniques = np.array(list(indices.keys()), dtype=DTYPE_OBJECT)
+
+    if is_2d:
+        indexer = indexer.reshape(array.shape, order='F')
+
+    return indexer, uniques
 
 def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     '''Given a 2D array, reshape it as a consolidated 1D arrays

@@ -44,6 +44,7 @@ from static_frame import IndexYearGO
 from static_frame import IndexYearMonth
 from static_frame import Series
 from static_frame import TypeBlocks
+from static_frame import isna_element
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
@@ -8300,6 +8301,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.any(axis=1).to_pairs(),
                 (('w', True), ('x', True), ('y', True), ('z', True)))
 
+    #---------------------------------------------------------------------------
     def test_frame_unique_a(self) -> None:
 
         records = (
@@ -8349,6 +8351,73 @@ class TestUnit(TestCase):
         self.assertEqual(len(f1.unique(axis=0)), 2)
 
         self.assertEqual(len(f1.unique(axis=1)), 2)
+
+    #---------------------------------------------------------------------------
+    def test_frame_unique_enumerated_a(self) -> None:
+        records = (
+                (2, False),
+                (30, False),
+                (2, False),
+                (30, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x', 'y', 'z'),
+                )
+        x, y = f1.unique_enumerated()
+        self.assertEqual(x.tolist(), [[2, 0], [3, 0], [2, 0], [3, 1]])
+        self.assertEqual(y.tolist(), [False, True, 2, 30])
+
+    def test_frame_unique_enumerated_b(self) -> None:
+        records = (
+                (2, False),
+                (30, False),
+                (2, None),
+                (30, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        x, y = f1.unique_enumerated()
+        self.assertEqual(x.tolist(), [[0, 2], [1, 2], [0, 3], [1, 3]])
+        self.assertEqual(y.tolist(), [2, 30, False, None])
+
+    def test_frame_unique_enumerated_c(self) -> None:
+        records = (
+                (2, False),
+                (30, False),
+                (2, None),
+                (30, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        x, y = f1.unique_enumerated(func=isna_element)
+        self.assertEqual(x.tolist(), [[0, 2], [1, 2], [0, -1], [1, -1]])
+        self.assertEqual(y.tolist(), [2, 30, False])
+
+    def test_frame_unique_enumerated_d(self) -> None:
+        records = (
+                (2, 0),
+                (30, 0),
+                (2, 0),
+                (30, 0),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        x, y = f1.unique_enumerated()
+        self.assertEqual(x.tolist(), [[1, 0], [2, 0], [1, 0], [2, 0]])
+        self.assertEqual(y.tolist(), [0, 2, 30])
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_duplicated_a(self) -> None:
 

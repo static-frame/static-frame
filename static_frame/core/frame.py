@@ -185,6 +185,7 @@ from static_frame.core.util import key_normalize
 from static_frame.core.util import path_filter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
@@ -8166,9 +8167,23 @@ class Frame(ContainerOperand):
             axis: tp.Optional[int] = None,
             ) -> np.ndarray:
         '''
-        Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
+        Return a NumPy array of unqiue values. If the axis argument is provided, uniqueness is determined by columns or row.
         '''
         return ufunc_unique(self.values, axis=axis)
+
+    def unique_enumerated(self, *,
+            retain_order: bool = False,
+            func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        '''
+        {doc}
+        {args}
+        '''
+        return ufunc_unique_enumerated(self.values,
+                retain_order=retain_order,
+                func=func,
+                )
+
 
     #---------------------------------------------------------------------------
     # exporters
