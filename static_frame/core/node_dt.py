@@ -681,7 +681,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 if array_dt64.dtype in self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO:
                     raise RuntimeError(f'invalid derived dtype ({array_dt64.dtype}) for iso format')
                 array = array_dt64.astype(object)
-                array.flags.writeable = False
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -723,6 +723,7 @@ class InterfaceDatetime(Interface[TContainer]):
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 # permit only string types, or objects types that contain strings
+                # NOTE: no missing handling necessary
                 self._validate_dtype_str(block.dtype)
                 # returns an immutable array
                 array = array_from_element_apply(
