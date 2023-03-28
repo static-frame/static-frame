@@ -175,9 +175,11 @@ class InterfaceDatetime(Interface[TContainer]):
                 if dt != array_dst.dtype:
                     array_dst = array_dst.astype(dt)
                 array_dst[targets] = self._fill_value
+
+        array_dst.flags.writeable = False
         return array_dst
 
-    def _fill_missing_element_apply(self,
+    def _fill_missing_element_method(self,
             array: np.ndarray,
             *,
             method_name: str,
@@ -193,6 +195,8 @@ class InterfaceDatetime(Interface[TContainer]):
                     )
         else:
             dt = resolve_dtype(dtype, self._fill_value_dtype)
+            if dtype.itemsize == 0 and dt.kind == dtype.kind:
+                dt = dtype # set to unsized
 
             def func(e: tp.Any) -> tp.Any:
                 if isna_element(e):
@@ -204,6 +208,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
+        assert array.flags.writeable == False
         return array
 
     def _fill_missing_element_attr(self,
@@ -220,6 +225,8 @@ class InterfaceDatetime(Interface[TContainer]):
                     )
         else:
             dt = resolve_dtype(dtype, self._fill_value_dtype)
+            if dtype.itemsize == 0 and dt.kind == dtype.kind:
+                dt = dtype # set to unsized
 
             def func(e: tp.Any) -> tp.Any:
                 if isna_element(e):
@@ -231,6 +238,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
+        assert array.flags.writeable == False
         return array
 
     #---------------------------------------------------------------------------
@@ -252,8 +260,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='year',
                             dtype=DTYPE_INT_DEFAULT)
-
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -276,7 +282,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='month',
                             dtype=DTYPE_INT_DEFAULT)
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -295,12 +300,11 @@ class InterfaceDatetime(Interface[TContainer]):
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
                     array = self._fill_missing_dt64(block, array)
                 else:
-                    array = self._fill_missing_element_apply(block,
+                    array = self._fill_missing_element_method(block,
                             method_name='strftime',
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
                             )
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -327,8 +331,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='day',
                             dtype=DTYPE_INT_DEFAULT)
-
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -357,8 +359,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='hour',
                             dtype=DTYPE_INT_DEFAULT)
-
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -383,7 +383,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='minute',
                             dtype=DTYPE_INT_DEFAULT)
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -409,7 +408,6 @@ class InterfaceDatetime(Interface[TContainer]):
                             array=block,
                             attr_name='second',
                             dtype=DTYPE_INT_DEFAULT)
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -417,7 +415,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
 
-    # replace: akward to implement, as cannot provide None for the parameters that you do not want to set
+    # replace: awkward to implement, as cannot provide None for the parameters that you do not want to set
 
     def weekday(self) -> TContainer:
         '''
@@ -432,10 +430,10 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_DAY)
                     # shift to set first Monday, then modulo
                     array = (block.astype(DTYPE_INT_DEFAULT) + 3) % 7
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else:
                     # NOTE: might be faster to convert to datetime64 then do shift / modulo
-                    array = array_from_element_method(
+                    array = self._fill_missing_element_method(
                             array=block,
                             method_name='weekday',
                             args=(),
@@ -453,19 +451,22 @@ class InterfaceDatetime(Interface[TContainer]):
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype)
                 # astype object dtypes to month too
-                if block.dtype != DT64_MONTH: # go to day first, then object
-                    block = block.astype(DT64_MONTH)
+                if block.dtype != DT64_MONTH:
+                    b = block.astype(DT64_MONTH)
+                else:
+                    b = block
                 # months will start from 0
-                block = block.astype(DTYPE_INT_DEFAULT) % 12
-                is_q1 = block <= 2 # 0-2
-                is_q4 = block >= 9 # 9-11
-                is_q2 = (block <= 5) & ~is_q1 #3-5
+                b = b.astype(DTYPE_INT_DEFAULT) % 12
+                is_q1 = b <= 2 # 0-2
+                is_q4 = b >= 9 # 9-11
+                is_q2 = (b <= 5) & ~is_q1 #3-5
 
                 array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
                 array[is_q1] = 1
                 array[is_q4] = 4
                 array[is_q2] = 2
-                array.flags.writeable = False
+
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -482,10 +483,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to month, shift to next, convert to day, slide back to eom
-                array = block == ((block.astype(DT64_MONTH) + 1).astype(DT64_DAY) - 1)
-                array.flags.writeable = False
+                array = b == ((b.astype(DT64_MONTH) + 1).astype(DT64_DAY) - 1)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -499,9 +502,11 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
-                array = block == block.astype(DT64_MONTH).astype(DT64_DAY)
-                array.flags.writeable = False
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
+                array = b == b.astype(DT64_MONTH).astype(DT64_DAY)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -516,10 +521,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to year, shift to next, convert to day, slide back to eoy
-                array = block == ((block.astype(DT64_YEAR) + 1).astype(DT64_DAY) - 1)
-                array.flags.writeable = False
+                array = b == ((b.astype(DT64_YEAR) + 1).astype(DT64_DAY) - 1)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -533,10 +540,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to month, shift to next, convert to day, slide back to eom
-                array = block == block.astype(DT64_YEAR).astype(DT64_DAY)
-                array.flags.writeable = False
+                array = b == b.astype(DT64_YEAR).astype(DT64_DAY)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -551,10 +560,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
 
                 # convert to month, shift to next, convert to day, slide back to eom
-                month = block.astype(DT64_MONTH)
+                month = b.astype(DT64_MONTH)
                 eom = (month + 1).astype(DT64_DAY) - 1
                 # months starting from 0
                 month_int = month.astype(DTYPE_INT_DEFAULT) % 12
@@ -563,8 +574,8 @@ class InterfaceDatetime(Interface[TContainer]):
                         | (month_int == 8)
                         | (month_int == 11)
                         )
-                array = (block == eom) & month_valid
-                array.flags.writeable = False
+                array = (b == eom) & month_valid
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -578,10 +589,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
 
                 # convert to month, shift to next, convert to day, slide back to eom
-                month = block.astype(DT64_MONTH)
+                month = b.astype(DT64_MONTH)
                 som = month.astype(DT64_DAY)
                 # months starting from 0
                 month_int = month.astype(DTYPE_INT_DEFAULT) % 12
@@ -590,8 +603,8 @@ class InterfaceDatetime(Interface[TContainer]):
                         | (month_int == 6)
                         | (month_int == 9)
                         )
-                array = (block == som) & month_valid
-                array.flags.writeable = False
+                array = (b == som) & month_valid
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -603,7 +616,6 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
         '''
-
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
 
@@ -614,9 +626,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     block = block.astype(DTYPE_OBJECT)
                 # all object arrays by this point
-
-                # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='timetuple',
                         args=(),
@@ -646,9 +656,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # all object arrays by this point
                 # NOTE: we cannot determine if an Object array has date or datetime objects with a full iteration, so we cannot be sure if we need to pass args or not.
-
-                # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='isoformat',
                         args=args,
@@ -696,7 +704,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 # all object arrays by this point
 
                 # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='strftime',
                         args=(format,),
@@ -748,10 +756,6 @@ class InterfaceDatetime(Interface[TContainer]):
                 yield array
 
         return self._blocks_to_container(blocks())
-
-
-
-
 
 #-------------------------------------------------------------------------------
 
