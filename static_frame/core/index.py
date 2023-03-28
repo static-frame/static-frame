@@ -294,18 +294,20 @@ class Index(IndexBase):
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
                 name = labels.name # immutable, so no copy necessary
-            if isinstance(labels, Index): # not an IndexHierarchy
+
+            if labels.depth == 1: # not an IndexHierarchy
                 if (labels.STATIC and self.STATIC and dtype is None):
                     if not is_typed or (is_typed and self._DTYPE == labels.dtype):
                         # can take the map if static and if types in the dict are the same as those in the labels (or to become the labels after conversion)
-                        self._map = labels._map
+                        self._map = labels._map #type: ignore
                 # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date; for datetime64 indices, we might need to translate to a different type
-                positions = labels._positions
-                loc_is_iloc = labels._map is None
-                labels = labels._labels
+                positions = labels._positions #type: ignore
+                loc_is_iloc = labels._map is None #type: ignore
+                labels = labels._labels # type: ignore
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
                 labels = labels.__iter__()
+
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values
@@ -342,11 +344,14 @@ class Index(IndexBase):
                         labels_for_automap = labels
                 else:
                     labels_for_automap = labels
+
                 try:
                     self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
                 except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels_for_automap) from None
+                # must take length after map as might be iterator
                 size = len(self._map)
+
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore

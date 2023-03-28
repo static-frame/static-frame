@@ -1,10 +1,19 @@
 What is New in StaticFrame
 ===============================
 
-1.2.7-dev
+1.3.0
+-----------
+
+The ``via_dt`` interface now supports usage of a ``fill_value`` argument for handling missing values.
+
+
+
+1.2.7
 -----------
 
 Set ``arraykit`` version to 0.3.0: replaced usage of ``np.nonzero()`` with ``first_true_1d()`` and ``first_true_2d()``.
+
+Specifiers of dtypes given to ``astype()`` and related interfaces will now permit "object" to be used (in addition to ``object``).
 
 
 1.2.6

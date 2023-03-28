@@ -160,7 +160,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
-
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
@@ -174,9 +173,12 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+
+UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT.flags.writeable = False
+
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
-
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
@@ -304,9 +306,9 @@ def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
         return value
 
     dt = np.dtype(value)
-    if dt == DTYPE_OBJECT and value != object:
+    if dt == DTYPE_OBJECT and value is not object and value != "object":
         # fail on implicit conversion to object dtype
-        raise TypeError(f'Implicit NumPy conversion of a type {value} to an object dtype; use `object` instead.')
+        raise TypeError(f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.')
     return dt
 
 
@@ -3090,7 +3092,8 @@ def array_from_element_apply(
     '''
     Handle element-wise function application.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT and dtype.kind not in DTYPE_STR_KINDS:
+    if (array.ndim == 1 and dtype != DTYPE_OBJECT
+            and dtype.kind not in DTYPE_STR_KINDS):
         post = np.fromiter(
                 (func(d) for d in array),
                 count=len(array),
@@ -3118,7 +3121,7 @@ def array_from_element_method(*,
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
     Args:
-        pre_insert:
+        pre_insert: A function called on each element after the method is called.
         dtype: dtype of array to be returned.
     '''
     # when we know the type of the element, pre-fetch the Python class
@@ -3225,8 +3228,13 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
+    # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
+
     @classmethod
     def get(cls, size: int) -> np.ndarray:
+        if size == 1:
+            return UNIT_ARRAY_INT
+
         if size > cls._size:
             cls._size = size * 2
             cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)

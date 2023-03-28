@@ -4,6 +4,8 @@ from datetime import date
 from datetime import datetime
 
 import numpy as np
+from arraykit import isna_element
+from arraykit import resolve_dtype
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
@@ -26,10 +28,13 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
+from static_frame.core.util import dtype_from_element
+from static_frame.core.util import isna_array
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -42,37 +47,38 @@ if tp.TYPE_CHECKING:
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
-#https://docs.python.org/3/library/datetime.html
-
 INTERFACE_DT = (
-            'year',
-            'year_month',
-            'month',
-            'day',
-            'hour',
-            'minute',
-            'second',
-            'weekday',
-            'quarter',
-            'is_month_end',
-            'is_month_start',
-            'is_year_end',
-            'is_year_start',
-            'is_quarter_end',
-            'is_quarter_start',
-            'timetuple',
-            'isoformat',
-            'fromisoformat',
-            'strftime',
-            'strptime',
-            'strpdate',
-            )
+        '__call__',
+        'year',
+        'year_month',
+        'month',
+        'day',
+        'hour',
+        'minute',
+        'second',
+        'weekday',
+        'quarter',
+        'is_month_end',
+        'is_month_start',
+        'is_year_end',
+        'is_year_start',
+        'is_quarter_end',
+        'is_quarter_start',
+        'timetuple',
+        'isoformat',
+        'fromisoformat',
+        'strftime',
+        'strptime',
+        'strpdate',
+        )
 
 class InterfaceDatetime(Interface[TContainer]):
 
     __slots__ = (
             '_blocks', # function that returns iterable of arrays
             '_blocks_to_container', # partialed function that will return a new container
+            '_fill_value',
+            '_fill_value_dtype',
             )
     INTERFACE = INTERFACE_DT
 
@@ -100,11 +106,31 @@ class InterfaceDatetime(Interface[TContainer]):
             ))
 
     def __init__(self,
+            *,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer]
+            blocks_to_container: ToContainerType[TContainer],
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._fill_value: tp.Any = fill_value
+        self._fill_value_dtype: tp.Optional[np.dtype] = (None
+                if fill_value is FILL_VALUE_DEFAULT
+                else dtype_from_element(fill_value))
+
+    def __call__(self,
+            *,
+            fill_value: tp.Any,
+            ) -> 'InterfaceDatetime[TContainer]':
+        '''
+        Args:
+            fill_value: If NAT are encountered, use this value.
+        '''
+        return self.__class__(
+                blocks=self._blocks,
+                blocks_to_container=self._blocks_to_container,
+                fill_value=fill_value,
+                )
 
     @staticmethod
     def _validate_dtype_non_str(
@@ -121,7 +147,6 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for date operation')
 
-
     @staticmethod
     def _validate_dtype_str(
             dtype: np.dtype,
@@ -137,6 +162,84 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
+    def _fill_missing_dt64(self, array_src: np.ndarray, array_dst: np.ndarray) -> np.ndarray:
+        '''
+        Args:
+            array_src: The raw array, before any dytpe conversions; used to identify missing values.
+            array_dst: The array post any conversions, to be filled with missing values.
+        '''
+        if self._fill_value is not FILL_VALUE_DEFAULT:
+            targets = isna_array(array_src)
+            if targets.any():
+                dt = resolve_dtype(array_dst.dtype, self._fill_value_dtype)
+                if dt != array_dst.dtype:
+                    array_dst = array_dst.astype(dt)
+                array_dst[targets] = self._fill_value
+
+        array_dst.flags.writeable = False
+        return array_dst
+
+    def _fill_missing_element_method(self,
+            array: np.ndarray,
+            *,
+            method_name: str,
+            args: tp.Tuple[tp.Any, ...],
+            dtype: np.dtype,
+            ) -> np.ndarray:
+        if self._fill_value is FILL_VALUE_DEFAULT:
+            array = array_from_element_method(
+                    array=array,
+                    method_name=method_name,
+                    args=args,
+                    dtype=dtype,
+                    )
+        else:
+            dt = resolve_dtype(dtype, self._fill_value_dtype)
+            if dtype.itemsize == 0 and dt.kind == dtype.kind:
+                dt = dtype # set to unsized
+
+            def func(e: tp.Any) -> tp.Any:
+                if isna_element(e):
+                    return self._fill_value
+                return getattr(e, method_name)(*args)
+
+            array = array_from_element_apply(
+                    array=array,
+                    func=func,
+                    dtype=dt,
+                    )
+        assert array.flags.writeable is False
+        return array
+
+    def _fill_missing_element_attr(self,
+            array: np.ndarray,
+            *,
+            attr_name: str,
+            dtype: np.dtype,
+            ) -> np.ndarray:
+        if self._fill_value is FILL_VALUE_DEFAULT:
+            array = array_from_element_attr(
+                    array=array,
+                    attr_name=attr_name,
+                    dtype=dtype,
+                    )
+        else:
+            dt = resolve_dtype(dtype, self._fill_value_dtype)
+            assert dtype.itemsize != 0 # expect numeric scalar
+
+            def func(e: tp.Any) -> tp.Any:
+                if isna_element(e):
+                    return self._fill_value
+                return getattr(e, attr_name)
+
+            array = array_from_element_apply(
+                    array=array,
+                    func=func,
+                    dtype=dt,
+                    )
+        assert array.flags.writeable is False
+        return array
+
     #---------------------------------------------------------------------------
     # date, datetime attributes
 
@@ -150,9 +253,9 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='year',
                             dtype=DTYPE_INT_DEFAULT)
@@ -172,16 +275,15 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_INT_DEFAULT) % 12 + 1
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='month',
                             dtype=DTYPE_INT_DEFAULT)
                 yield array
 
         return self._blocks_to_container(blocks())
-
 
     @property
     def year_month(self) -> TContainer:
@@ -195,10 +297,9 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
-                    array.flags.writeable = False
-                else: # must be object type
-                    array = array_from_element_method(
-                            array=block,
+                    array = self._fill_missing_dt64(block, array)
+                else:
+                    array = self._fill_missing_element_method(block,
                             method_name='strftime',
                             args=('%Y-%m',),
                             dtype=DTYPE_YEAR_MONTH_STR,
@@ -221,15 +322,14 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)
-                    # subtract the first of the month, then shfit
+                    # subtract the first of the month, then shift
                     array = (block - block.astype(DT64_MONTH)).astype(DTYPE_INT_DEFAULT) + 1
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='day',
                             dtype=DTYPE_INT_DEFAULT)
-
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -252,9 +352,9 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_H)
                     # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 24
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='hour',
                             dtype=DTYPE_INT_DEFAULT)
@@ -275,11 +375,10 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_M:
                         block = block.astype(DT64_M)
-                    # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 60
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='minute',
                             dtype=DTYPE_INT_DEFAULT)
@@ -302,9 +401,9 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_S)
                     # subtract the first of the month, then shfit
                     array = block.astype(DTYPE_INT_DEFAULT) % 60
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else: # must be object datetime type
-                    array = array_from_element_attr(
+                    array = self._fill_missing_element_attr(
                             array=block,
                             attr_name='second',
                             dtype=DTYPE_INT_DEFAULT)
@@ -315,7 +414,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
 
-    # replace: akward to implement, as cannot provide None for the parameters that you do not want to set
+    # replace: awkward to implement, as cannot provide None for the parameters that you do not want to set
 
     def weekday(self) -> TContainer:
         '''
@@ -330,10 +429,10 @@ class InterfaceDatetime(Interface[TContainer]):
                         block = block.astype(DT64_DAY)
                     # shift to set first Monday, then modulo
                     array = (block.astype(DTYPE_INT_DEFAULT) + 3) % 7
-                    array.flags.writeable = False
+                    array = self._fill_missing_dt64(block, array)
                 else:
                     # NOTE: might be faster to convert to datetime64 then do shift / modulo
-                    array = array_from_element_method(
+                    array = self._fill_missing_element_method(
                             array=block,
                             method_name='weekday',
                             args=(),
@@ -351,19 +450,22 @@ class InterfaceDatetime(Interface[TContainer]):
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype)
                 # astype object dtypes to month too
-                if block.dtype != DT64_MONTH: # go to day first, then object
-                    block = block.astype(DT64_MONTH)
+                if block.dtype != DT64_MONTH:
+                    b = block.astype(DT64_MONTH)
+                else:
+                    b = block
                 # months will start from 0
-                block = block.astype(DTYPE_INT_DEFAULT) % 12
-                is_q1 = block <= 2 # 0-2
-                is_q4 = block >= 9 # 9-11
-                is_q2 = (block <= 5) & ~is_q1 #3-5
+                b = b.astype(DTYPE_INT_DEFAULT) % 12
+                is_q1 = b <= 2 # 0-2
+                is_q4 = b >= 9 # 9-11
+                is_q2 = (b <= 5) & ~is_q1 #3-5
 
                 array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
                 array[is_q1] = 1
                 array[is_q4] = 4
                 array[is_q2] = 2
-                array.flags.writeable = False
+
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -380,10 +482,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to month, shift to next, convert to day, slide back to eom
-                array = block == ((block.astype(DT64_MONTH) + 1).astype(DT64_DAY) - 1)
-                array.flags.writeable = False
+                array = b == ((b.astype(DT64_MONTH) + 1).astype(DT64_DAY) - 1)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -397,9 +501,11 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
-                array = block == block.astype(DT64_MONTH).astype(DT64_DAY)
-                array.flags.writeable = False
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
+                array = b == b.astype(DT64_MONTH).astype(DT64_DAY)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -414,10 +520,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to year, shift to next, convert to day, slide back to eoy
-                array = block == ((block.astype(DT64_YEAR) + 1).astype(DT64_DAY) - 1)
-                array.flags.writeable = False
+                array = b == ((b.astype(DT64_YEAR) + 1).astype(DT64_DAY) - 1)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -431,10 +539,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
                 # convert to month, shift to next, convert to day, slide back to eom
-                array = block == block.astype(DT64_YEAR).astype(DT64_DAY)
-                array.flags.writeable = False
+                array = b == b.astype(DT64_YEAR).astype(DT64_DAY)
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -449,10 +559,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
 
                 # convert to month, shift to next, convert to day, slide back to eom
-                month = block.astype(DT64_MONTH)
+                month = b.astype(DT64_MONTH)
                 eom = (month + 1).astype(DT64_DAY) - 1
                 # months starting from 0
                 month_int = month.astype(DTYPE_INT_DEFAULT) % 12
@@ -461,8 +573,8 @@ class InterfaceDatetime(Interface[TContainer]):
                         | (month_int == 8)
                         | (month_int == 11)
                         )
-                array = (block == eom) & month_valid
-                array.flags.writeable = False
+                array = (b == eom) & month_valid
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -476,10 +588,12 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # astype object dtypes to day too
                 if block.dtype != DT64_DAY:
-                    block = block.astype(DT64_DAY)
+                    b = block.astype(DT64_DAY)
+                else:
+                    b = block
 
                 # convert to month, shift to next, convert to day, slide back to eom
-                month = block.astype(DT64_MONTH)
+                month = b.astype(DT64_MONTH)
                 som = month.astype(DT64_DAY)
                 # months starting from 0
                 month_int = month.astype(DTYPE_INT_DEFAULT) % 12
@@ -488,8 +602,8 @@ class InterfaceDatetime(Interface[TContainer]):
                         | (month_int == 6)
                         | (month_int == 9)
                         )
-                array = (block == som) & month_valid
-                array.flags.writeable = False
+                array = (b == som) & month_valid
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -501,7 +615,6 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
         '''
-
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
 
@@ -512,9 +625,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     block = block.astype(DTYPE_OBJECT)
                 # all object arrays by this point
-
-                # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='timetuple',
                         args=(),
@@ -544,9 +655,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # all object arrays by this point
                 # NOTE: we cannot determine if an Object array has date or datetime objects with a full iteration, so we cannot be sure if we need to pass args or not.
-
-                # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='isoformat',
                         args=args,
@@ -572,7 +681,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 if array_dt64.dtype in self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO:
                     raise RuntimeError(f'invalid derived dtype ({array_dt64.dtype}) for iso format')
                 array = array_dt64.astype(object)
-                array.flags.writeable = False
+                array = self._fill_missing_dt64(block, array)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -594,7 +703,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 # all object arrays by this point
 
                 # returns an immutable array
-                array = array_from_element_method(
+                array = self._fill_missing_element_method(
                         array=block,
                         method_name='strftime',
                         args=(format,),
@@ -614,6 +723,7 @@ class InterfaceDatetime(Interface[TContainer]):
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 # permit only string types, or objects types that contain strings
+                # NOTE: no missing handling necessary
                 self._validate_dtype_str(block.dtype)
                 # returns an immutable array
                 array = array_from_element_apply(
@@ -647,10 +757,6 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-
-
-
-
 #-------------------------------------------------------------------------------
 
 class InterfaceBatchDatetime(InterfaceBatch):
@@ -658,13 +764,30 @@ class InterfaceBatchDatetime(InterfaceBatch):
     '''
     __slots__ = (
             '_batch_apply',
+            '_fill_value',
             )
     INTERFACE = INTERFACE_DT
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            *,
+            fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:
         self._batch_apply = batch_apply
+        self._fill_value = fill_value
+
+
+    def __call__(self,
+            *,
+            fill_value: tp.Any,
+            ) -> 'InterfaceBatchDatetime':
+        '''
+        Args:
+            fill_value: If NAT are encountered, use this value.
+        '''
+        return self.__class__(self._batch_apply,
+                fill_value=fill_value
+                )
 
     #---------------------------------------------------------------------------
     # date, datetime attributes
@@ -672,28 +795,28 @@ class InterfaceBatchDatetime(InterfaceBatch):
     @property
     def year(self) -> 'Batch':
         'Return the year of each element.'
-        return self._batch_apply(lambda c: c.via_dt.year)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).year)
 
     @property
     def month(self) -> 'Batch':
         '''
         Return the month of each element, between 1 and 12 inclusive.
         '''
-        return self._batch_apply(lambda c: c.via_dt.month)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).month)
 
     @property
     def year_month(self) -> 'Batch':
         '''
         Return the month of each element, between 1 and 12 inclusive.
         '''
-        return self._batch_apply(lambda c: c.via_dt.year_month)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).year_month)
 
     @property
     def day(self) -> 'Batch':
         '''
         Return the day of each element, between 1 and the number of days in the given month of the given year.
         '''
-        return self._batch_apply(lambda c: c.via_dt.day)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).day)
 
     #---------------------------------------------------------------------------
     # datetime attributes
@@ -703,21 +826,21 @@ class InterfaceBatchDatetime(InterfaceBatch):
         '''
         Return the hour of each element, between 0 and 24.
         '''
-        return self._batch_apply(lambda c: c.via_dt.hour)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).hour)
 
     @property
     def minute(self) -> 'Batch':
         '''
         Return the minute of each element, between 0 and 60.
         '''
-        return self._batch_apply(lambda c: c.via_dt.minute)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).minute)
 
     @property
     def second(self) -> 'Batch':
         '''
         Return the second of each element, between 0 and 60.
         '''
-        return self._batch_apply(lambda c: c.via_dt.second)
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).second)
 
     #---------------------------------------------------------------------------
 
@@ -727,13 +850,13 @@ class InterfaceBatchDatetime(InterfaceBatch):
         '''
         Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
         '''
-        return self._batch_apply(lambda c: c.via_dt.weekday())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).weekday())
 
     def quarter(self) -> 'Batch':
         '''
         Return the quarter of the year as an integer, where January through March is quarter 1.
         '''
-        return self._batch_apply(lambda c: c.via_dt.quarter())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).quarter())
 
     #---------------------------------------------------------------------------
     # boolean matches
@@ -741,32 +864,32 @@ class InterfaceBatchDatetime(InterfaceBatch):
     def is_month_end(self) -> 'Batch':
         '''Return Boolean indicators if the day is the month end.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_month_end())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_month_end())
 
     def is_month_start(self) -> 'Batch':
         '''Return Boolean indicators if the day is the month start.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_month_start())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_month_start())
 
     def is_year_end(self) -> 'Batch':
         '''Return Boolean indicators if the day is the year end.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_year_end())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_year_end())
 
     def is_year_start(self) -> 'Batch':
         '''Return Boolean indicators if the day is the year start.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_year_start())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_year_start())
 
     def is_quarter_end(self) -> 'Batch':
         '''Return Boolean indicators if the day is the quarter end.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_quarter_end())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_quarter_end())
 
     def is_quarter_start(self) -> 'Batch':
         '''Return Boolean indicators if the day is the quarter start.
         '''
-        return self._batch_apply(lambda c: c.via_dt.is_quarter_start())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).is_quarter_start())
 
     #---------------------------------------------------------------------------
     # time methods
@@ -775,37 +898,37 @@ class InterfaceBatchDatetime(InterfaceBatch):
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
         '''
-        return self._batch_apply(lambda c: c.via_dt.timetuple())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).timetuple())
 
     def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> 'Batch':
         '''
         Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
         '''
-        return self._batch_apply(lambda c: c.via_dt.isoformat(sep, timespec))
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).isoformat(sep, timespec))
 
     def fromisoformat(self) -> 'Batch':
         '''
         Return a :obj:`datetime.date` object from an ISO 8601 format.
         '''
-        return self._batch_apply(lambda c: c.via_dt.fromisoformat())
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).fromisoformat())
 
     def strftime(self, format: str) -> 'Batch':
         '''
         Return a string representing the date, controlled by an explicit ``format`` string.
         '''
-        return self._batch_apply(lambda c: c.via_dt.strftime(format))
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).strftime(format))
 
     def strptime(self, format: str) -> 'Batch':
         '''
         Return a Python datetime object from parsing a string defined with ``format``.
         '''
-        return self._batch_apply(lambda c: c.via_dt.strptime(format))
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).strptime(format))
 
     def strpdate(self, format: str) -> 'Batch':
         '''
         Return a Python date object from parsing a string defined with ``format``.
         '''
-        return self._batch_apply(lambda c: c.via_dt.strpdate(format))
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).strpdate(format))
 
 
 
