@@ -6,6 +6,7 @@ What is New in StaticFrame
 
 The ``via_dt`` interface now supports usage of a ``fill_value`` argument for handling missing values.
 
+Added ``unique_enumerated()`` method to ``Series`` and ``Frame``.
 
 
 1.2.7
