@@ -77,7 +77,8 @@ SERIES_INIT_Q = dict(values=(8, 5, 0, 8), index=('d', 'b', 'a', 'c'))
 SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product((1, 2), ('a', 'b'))")
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
-SERIES_INIT_U = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U1 = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U2 = dict(values=('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
@@ -151,9 +152,12 @@ FRAME_INIT_FROM_FIELDS_R5 = dict(fields=((False, True, True), (True, False, True
 
 FRAME_INIT_FROM_FIELDS_S1 = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
 FRAME_INIT_FROM_FIELDS_S2 = dict(fields=(('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
+FRAME_INIT_FROM_FIELDS_S3 = dict(fields=(('1620-04-01', '1620-12-31', ''), ('', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'))
 
 FRAME_INIT_FROM_FIELDS_T1 = dict(fields=(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
 FRAME_INIT_FROM_FIELDS_T2 = dict(fields=(('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
+FRAME_INIT_FROM_FIELDS_T3 = dict(fields=(('1620-04-01', '', '1620-06-30'), ('1976-04-01', '1954-12-31', '')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=b"np.datetime64")
+
 
 FRAME_INIT_FROM_FIELDS_U1 = dict(fields=(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')), index=('p', 'q', 'r'), columns=('a', 'b'))
 FRAME_INIT_FROM_FIELDS_U2 = dict(fields=(('4/1/1620', '12/31/1620', '6/30/1620'), ('4/1/1976', '12/31/1954', '6/30/1976')), index=('p', 'q', 'r'), columns=('a', 'b'))
@@ -182,7 +186,8 @@ INDEX_INIT_E = dict(labels=('qrs ', 'XYZ', '123', ' wX '))
 
 INDEX_INIT_U = dict(labels=b'(datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59))')
 INDEX_INIT_V = dict(labels=('1/1/1517', '4/1/1517', '6/30/1517'))
-INDEX_INIT_W = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
+INDEX_INIT_W1 = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
+INDEX_INIT_W2 = dict(labels=('1517-01-01', '', '1517-12-31', '1517-06-30'))
 
 #-------------------------------------------------------------------------------
 IH_INIT_FROM_LABELS_A = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
@@ -210,7 +215,8 @@ IH_INIT_FROM_PRODUCT_B = dict(levels=(('a', 'b','c'), (1024, 4096, 2048)), name=
 
 IH_INIT_FROM_LABELS_U = dict(labels=b'((datetime.datetime(1517, 1, 1), datetime.datetime(2022, 4, 1, 8, 30, 59)), (datetime.datetime(1517, 4, 1), datetime.datetime(2022, 12, 31, 8, 30, 59)))')
 IH_INIT_FROM_LABELS_V = dict(labels=(tuple(zip(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')))))
-IH_INIT_FROM_LABELS_W = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))))
+IH_INIT_FROM_LABELS_W1 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))))
+IH_INIT_FROM_LABELS_W2 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', ''), ('2022-04-01', '', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
 IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
@@ -251,7 +257,9 @@ BATCH_INIT_F = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 BATCH_INIT_G = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M2)})'.encode('utf-8'))))
 
 # all dt64
-BATCH_INIT_H = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T2)})'.encode('utf-8'))))
+BATCH_INIT_H1 = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T2)})'.encode('utf-8'))))
+
+BATCH_INIT_H2 = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T3)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T2)})'.encode('utf-8'))))
 
 # dt strings
 BATCH_INIT_I = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S1)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S2)})'.encode('utf-8'))))
@@ -1422,11 +1430,14 @@ class ExGenSeries(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
+        if attr == 'via_dt.__call__()':
+            yield f's = {icls}({kwa(SERIES_INIT_U2)})'
+            yield f's.via_dt(fill_value=-1).year'
+        elif attr == 'via_dt.fromisoformat()':
             yield f's = {icls}({kwa(SERIES_INIT_W)})'
             yield f's.{attr}'
         elif attr == 'via_dt.strftime()':
-            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's = {icls}({kwa(SERIES_INIT_U1)})'
             yield f's.{attr_func}("%A | %B")'
         elif attr in (
                 'via_dt.strptime()',
@@ -1435,7 +1446,7 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_V)})'
             yield f's.{attr_func}("%m/%d/%Y")'
         else:
-            yield f's = {icls}({kwa(SERIES_INIT_U)})'
+            yield f's = {icls}({kwa(SERIES_INIT_U1)})'
             yield f's.{attr}'
 
     @staticmethod
@@ -2870,7 +2881,10 @@ class ExGenFrame(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
+        if attr == 'via_dt.__call__()':
+            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T3)})'
+            yield f's.via_dt(fill_value=-1).year'
+        elif attr == 'via_dt.fromisoformat()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S1)})'
             yield f'f.{attr}'
         elif attr == 'via_dt.strftime()':
@@ -3287,8 +3301,11 @@ class ExGenIndex(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
-            yield f'ix = {icls}({kwa(INDEX_INIT_W)})'
+        if attr == 'via_dt.__call__()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_W2)})'
+            yield f'ix.via_dt(fill_value=-1).day'
+        elif attr == 'via_dt.fromisoformat()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_W1)})'
             yield f'ix.{attr}'
         elif attr == 'via_dt.strftime()':
             yield f'import datetime'
@@ -3683,7 +3700,10 @@ class _ExGenIndexDT64(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
+        if attr == 'via_dt.__call__()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix.via_dt(fill_value=-1).year'
+        elif attr == 'via_dt.fromisoformat()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield f'ix.{attr}'
         elif attr == 'via_dt.strftime()':
@@ -4153,8 +4173,11 @@ class ExGenIndexHierarchy(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_W)})'
+        if attr == 'via_dt.__call__()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_W2)})'
+            yield f'ih.via_dt(fill_value=-1).month'
+        elif attr == 'via_dt.fromisoformat()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_W1)})'
             yield f'ih.{attr}'
         elif attr == 'via_dt.strftime()':
             yield f'import datetime'
@@ -5250,11 +5273,14 @@ class ExGenBatch(ExGen):
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
-        if attr == 'via_dt.fromisoformat()':
+        if attr == 'via_dt.__call__()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_H2)})'
+            yield f'bt.via_dt(fill_value=-1).month.to_frame()'
+        elif attr == 'via_dt.fromisoformat()':
             yield f'bt = {icls}({kwa(BATCH_INIT_I)})'
             yield f'bt.{attr}.to_frame()'
         elif attr == 'via_dt.strftime()':
-            yield f'bt = {icls}({kwa(BATCH_INIT_H)})'
+            yield f'bt = {icls}({kwa(BATCH_INIT_H1)})'
             yield f'bt.{attr_func}("%A | %B").to_frame()'
         elif attr in (
                 'via_dt.strptime()',
@@ -5263,7 +5289,7 @@ class ExGenBatch(ExGen):
             yield f'bt = {icls}({kwa(BATCH_INIT_J)})'
             yield f'bt.{attr_func}("%m/%d/%Y").to_frame()'
         else:
-            yield f'bt = {icls}({kwa(BATCH_INIT_H)})'
+            yield f'bt = {icls}({kwa(BATCH_INIT_H1)})'
             yield f'bt.{attr}.to_frame()'
 
     @staticmethod

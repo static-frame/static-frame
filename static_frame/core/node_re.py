@@ -35,7 +35,6 @@ INTERFACE_RE = (
         )
 
 
-
 class InterfaceRe(Interface[TContainer]):
 
     __slots__ = (
