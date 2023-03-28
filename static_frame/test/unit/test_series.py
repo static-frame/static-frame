@@ -4834,6 +4834,8 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
 
+    #---------------------------------------------------------------------------
+
     def test_series_via_dt_strptime_a(self) -> None:
         s1 = Series(('12/2/2014', '11/28/2013'), index=('x', 'y'), dtype=object)
         post = s1.via_dt.strptime('%m/%d/%Y')
