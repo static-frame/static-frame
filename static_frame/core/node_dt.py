@@ -225,8 +225,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     )
         else:
             dt = resolve_dtype(dtype, self._fill_value_dtype)
-            if dtype.itemsize == 0 and dt.kind == dtype.kind:
-                dt = dtype # set to unsized
+            assert dtype.itemsize != 0 # expect numeric scalar
 
             def func(e: tp.Any) -> tp.Any:
                 if isna_element(e):
