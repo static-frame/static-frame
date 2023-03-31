@@ -5,6 +5,7 @@ from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
@@ -49,7 +50,6 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
