@@ -12,7 +12,6 @@ from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
-from copy import deepcopy
 from enum import Enum
 from fractions import Fraction
 from functools import partial
@@ -2182,28 +2181,28 @@ def binary_transition(
 
 #-------------------------------------------------------------------------------
 
-def array_deepcopy(
-        array: np.ndarray,
-        memo: tp.Optional[tp.Dict[int, tp.Any]],
-        ) -> np.ndarray:
-    '''
-    Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
-    '''
-    ident = id(array)
-    if memo is not None and ident in memo:
-        return memo[ident]
+# def array_deepcopy(
+#         array: np.ndarray,
+#         memo: tp.Optional[tp.Dict[int, tp.Any]],
+#         ) -> np.ndarray:
+#     '''
+#     Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
+#     '''
+#     ident = id(array)
+#     if memo is not None and ident in memo:
+#         return memo[ident]
 
-    if array.dtype == DTYPE_OBJECT:
-        post = deepcopy(array, memo)
-    else:
-        post = array.copy()
+#     if array.dtype == DTYPE_OBJECT:
+#         post = deepcopy(array, memo)
+#     else:
+#         post = array.copy()
 
-    if post.ndim > 0:
-        post.flags.writeable = array.flags.writeable
+#     if post.ndim > 0:
+#         post.flags.writeable = array.flags.writeable
 
-    if memo is not None:
-        memo[ident] = post
-    return post
+#     if memo is not None:
+#         memo[ident] = post
+#     return post
 
 #-------------------------------------------------------------------------------
 # tools for handling duplicates

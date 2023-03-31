@@ -10,6 +10,7 @@ from itertools import repeat
 
 import frame_fixtures as ff
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
@@ -38,7 +39,6 @@ from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import array_sample

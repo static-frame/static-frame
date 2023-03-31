@@ -5,6 +5,7 @@ from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
@@ -63,7 +64,6 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import UFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_sample
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_ufunc_axis_skipna

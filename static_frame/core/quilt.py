@@ -936,7 +936,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             bus_keys = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
 
-        for key_count, key in enumerate(bus_keys):
+        for key in bus_keys:
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
@@ -953,6 +953,10 @@ class Quilt(ContainerBase, StoreClientMixin):
 
             parts.append(component)
 
+        if sel_reduces and opposite_reduces: # we have an element
+            return parts.pop()
+
+        # we call extractor() when we might be referencing data to control if we give a slice or a deepcopy
         if len(parts) == 1:
             return extractor(parts.pop())
 

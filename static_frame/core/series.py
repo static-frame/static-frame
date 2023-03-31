@@ -7,6 +7,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import delimited_to_arrays
 from arraykit import first_true_1d
 from arraykit import immutable_filter
@@ -92,7 +93,6 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
