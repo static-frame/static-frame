@@ -12,7 +12,6 @@ from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
-from copy import deepcopy
 from enum import Enum
 from fractions import Fraction
 from functools import partial
