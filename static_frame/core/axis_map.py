@@ -28,10 +28,9 @@ def get_extractor(
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
     '''
     if deepcopy_from_bus:
-        memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
         if is_array:
-            return partial(array_deepcopy, memo=memo)
-        return partial(deepcopy, memo=memo)
+            return partial(array_deepcopy, memo={})
+        return partial(deepcopy, memo=None if not memo_active else {})
     return lambda x: x
 
 
@@ -69,8 +68,8 @@ def _bus_to_hierarchy_inner_hierarchies(
 
     primary = IndexHierarchyGO(get_next(items_iter))
 
-    for ih in get_next(items_iter):
-        primary.extend(ih)
+    for _ in range(1, len(bus)):
+        primary.extend(get_next(items_iter))
 
     return IndexHierarchy(primary), opposite # type: ignore
 
