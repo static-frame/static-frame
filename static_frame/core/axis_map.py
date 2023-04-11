@@ -2,6 +2,8 @@ import typing as tp
 from copy import deepcopy
 from functools import partial
 
+from arraykit import array_deepcopy
+
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.frame import Frame
@@ -11,7 +13,6 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover

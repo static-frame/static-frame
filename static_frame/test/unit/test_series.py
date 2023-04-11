@@ -2467,6 +2467,34 @@ class TestUnit(TestCase):
         s2 = Series(['b', 'b', 'c', 'c'], index=('a', 'b', 'c', 'd'), dtype=object)
         self.assertEqual(s2.unique().tolist(), ['b', 'c'])
 
+    #---------------------------------------------------------------------------
+    def test_series_unique_enumerated_a(self) -> None:
+        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
+
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[1, 1, 0, 0], [2, 10]]
+                )
+
+    def test_series_unique_enumerated_b(self) -> None:
+        s1 = Series([2, None, None, 2], index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[0, 1, 1, 0], [2, None]]
+                )
+
+    def test_series_unique_enumerated_c(self) -> None:
+        s1 = Series([2, 'b', 'b', 2, None],
+                index=('a', 'b', 'c', 'd', 'e')
+                )
+        self.assertEqual(
+                [x.tolist() for x in s1.unique_enumerated()],
+                [[0, 1, 1, 0, 2], [2, 'b', None]]
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_series_duplicated_a(self) -> None:
         s1 = Series([1, 10, 10, 5, 2, 2],
                 index=('a', 'b', 'c', 'd', 'e', 'f'), dtype=np.int64)
@@ -4301,6 +4329,28 @@ class TestUnit(TestCase):
                 (('x', 2014), ('y', 2013))
                 )
 
+    def test_series_via_dt_year_b(self) -> None:
+        dt64 = np.datetime64
+
+        s1 = Series(('2014', '', '2013'), index=('x', 'y', 'z'), dtype=dt64)
+        s2 = s1.via_dt(fill_value=-1).year
+        self.assertEqual(s2.to_pairs(), (('x', 2014), ('y', -1), ('z', 2013)))
+        self.assertEqual(s1.astype(object).via_dt(fill_value=-1).year.to_pairs(),
+                (('x', 2014), ('y', -1), ('z', 2013))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_month_a(self) -> None:
+        dt64 = np.datetime64
+
+        s1 = Series(('2014-04', '', '2013-08'), index=('x', 'y', 'z'), dtype=dt64)
+        s2 = s1.via_dt(fill_value=-1).month
+        self.assertEqual(s2.to_pairs(), (('x', 4), ('y', -1), ('z', 8)))
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).month.to_pairs(),
+                (('x', 4), ('y', None), ('z', 8))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_year_month_a(self) -> None:
@@ -4322,6 +4372,25 @@ class TestUnit(TestCase):
                 (('a', '2010-01'), ('b', '2010-01'), ('c', '2012-01'), ('d', '2013-04'), ('e', '2013-04'))
                 )
         self.assertEqual(post.dtype, DTYPE_YEAR_MONTH_STR)
+
+    def test_series_via_dt_year_month_c1(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', None, '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+
+        post = s1.via_dt(fill_value='').year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', ''), ('d', '2013-04'), ('e', '2013-04'))
+                )
+
+    def test_series_via_dt_year_month_c2(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64).astype(object)
+        post = s1.via_dt(fill_value='x').year_month
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-01'), ('b', '2010-01'), ('c', 'x'), ('d', '2013-04'), ('e', '2013-04')))
+
 
     #---------------------------------------------------------------------------
 
@@ -4355,6 +4424,17 @@ class TestUnit(TestCase):
                 (('x', 12), ('y', 28))
                 )
 
+    def test_series_via_dt_day_b(self) -> None:
+        dt64 = np.datetime64
+        s1 = Series((dt64('2014-02-12'), '', dt64('2013-11-28')), index=('x', 'y', 'z'), dtype=dt64)
+        s2 = s1.via_dt(fill_value=-1).day
+        self.assertEqual(s2.to_pairs(), (('x', 12), ('y', -1), ('z', 28)))
+        self.assertEqual(s1.astype(object).via_dt(fill_value=0).day.to_pairs(), (('x', 12), ('y', 0), ('z', 28)))
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_series_via_dt_isoformat_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
@@ -4365,6 +4445,30 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
+
+    def test_series_via_dt_isoformat_b(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2013-02-05T16:55'),
+                index=('x', 'y', 'z'),
+                dtype=np.datetime64
+                )
+        self.assertEqual(s1.via_dt(fill_value='').isoformat('*').to_pairs(),
+                (('x', '2014-01-02*05:02:00'), ('y', ''), ('z', '2013-02-05*16:55:00'))
+                )
+
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_strftime_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2013-02-05T16:55'),
+                index=('x', 'y', 'z'),
+                dtype=np.datetime64
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).strftime('%m%Y').to_pairs(),
+                (('x', '012014'), ('y', -1), ('z', '022013'))
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -4394,6 +4498,20 @@ class TestUnit(TestCase):
         self.assertTrue((wd1 == wd3).all())
         self.assertTrue((wd2 == wd3).all())
 
+    def test_series_via_dt_weekday_c(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2013-02-05T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).weekday().to_pairs(),
+                (('x', 3), ('y', -1), ('z', 1)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).weekday().to_pairs(),
+                (('x', 3), ('y', None), ('z', 1)))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_quarter_a(self) -> None:
@@ -4413,6 +4531,19 @@ class TestUnit(TestCase):
         self.assertEqual((s1 == 2).sum(), 2912)
         self.assertEqual((s1 == 3).sum(), 2944)
         self.assertEqual((s1 == 4).sum(), 2944)
+
+
+    def test_series_via_dt_quarter_b(self) -> None:
+        s1 = Series(('2014-01-02T05:02', '', '2013-08-05T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).quarter().to_pairs(),
+                (('x', 1), ('y', -1), ('z', 3)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).quarter().to_pairs(),
+                (('x', 1), ('y', None), ('z', 3)))
+
 
     #---------------------------------------------------------------------------
 
@@ -4434,6 +4565,17 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-01-01'], False)
         self.assertEqual(s1['2021-01-31'], True)
 
+
+    def test_series_via_dt_is_month_end_c(self) -> None:
+        s1 = Series(('2014-01-31T05:02', '', '2013-08-05T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=False).is_month_end().to_pairs(),
+                (('x', True), ('y', False), ('z', False)))
+        self.assertEqual(s1.via_dt(fill_value=-1).is_month_end().to_pairs(),
+                (('x', True), ('y', -1), ('z', False)))
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_is_month_start_a(self) -> None:
@@ -4453,6 +4595,17 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-12-30'], False)
         self.assertEqual(s1['2021-01-01'], True)
         self.assertEqual(s1['2021-01-31'], False)
+
+    def test_series_via_dt_is_month_start_c(self) -> None:
+        s1 = Series(('2014-01-31T05:02', '', '2013-08-01T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=False).is_month_start().to_pairs(),
+                (('x', False), ('y', False), ('z', True)))
+        self.assertEqual(s1.via_dt(fill_value=-1).is_month_start().to_pairs(),
+                (('x', False), ('y', -1), ('z', True)))
+
 
     #---------------------------------------------------------------------------
 
@@ -4474,6 +4627,23 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-01-01'], False)
         self.assertEqual(s1['2021-01-31'], False)
 
+    def test_series_via_dt_is_year_end_c(self) -> None:
+        s1 = Series(('2014-01-31T05:02', '', '2013-12-31T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=False).is_month_end().to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+
+    def test_series_via_dt_is_year_end_d(self) -> None:
+        s1 = Series(('2014-01-31T05:02', '', '2013-12-31T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=None).is_month_end().to_pairs(),
+                (('x', True), ('y', None), ('z', True)))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_is_year_start_a(self) -> None:
@@ -4493,6 +4663,15 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-12-30'], False)
         self.assertEqual(s1['2021-01-01'], True)
         self.assertEqual(s1['2021-01-31'], False)
+
+    def test_series_via_dt_is_year_start_c(self) -> None:
+        s1 = Series(('2014-01-01T05:02', '', '2013-12-31T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).is_year_start().to_pairs(),
+                (('x', True), ('y', -1), ('z', False)))
+
 
     #---------------------------------------------------------------------------
 
@@ -4517,6 +4696,15 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-09-30'], True)
         self.assertEqual(s1['2021-09-29'], False)
         self.assertEqual(s1['2021-12-31'], True)
+
+    def test_series_via_dt_is_quarter_end_c(self) -> None:
+        s1 = Series(('2014-03-31T05:02', '', '2013-12-31T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).is_quarter_end().to_pairs(),
+                (('x', True), ('y', -1), ('z', True)))
+
 
     #---------------------------------------------------------------------------
 
@@ -4550,6 +4738,14 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2021-10-01'], True)
         self.assertEqual(s1['2021-12-31'], False)
 
+    def test_series_via_dt_is_quarter_start_c(self) -> None:
+        s1 = Series(('2014-04-01T05:02', '', '2013-12-31T16:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[m]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).is_quarter_start().to_pairs(),
+                (('x', True), ('y', -1), ('z', False)))
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_hour_a(self) -> None:
@@ -4568,6 +4764,24 @@ class TestUnit(TestCase):
         self.assertEqual(s2.via_dt.hour.to_pairs(),
                 (('x', 5), ('y', 16), ('z', 23)))
 
+
+    def test_series_via_dt_hour_b(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2020-11-30T23:55'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                )
+        self.assertEqual(s1.via_dt(fill_value=-1).hour.to_pairs(),
+                (('x', 5), ('y', -1), ('z', 23)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).hour.to_pairs(),
+                (('x', 5), ('y', None), ('z', 23)))
+
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_series_via_dt_minute_a(self) -> None:
 
         s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55', '2020-11-30T23:51'),
@@ -4583,6 +4797,25 @@ class TestUnit(TestCase):
                 ).astype(object)
         self.assertEqual(s2.via_dt.minute.to_pairs(),
                 (('x', 2), ('y', 55), ('z', 51)))
+
+
+    def test_series_via_dt_minute_b(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '', '2020-11-30T23:51'),
+                index=('x', 'y', 'z'),
+                dtype='datetime64[s]'
+                )
+
+        self.assertEqual(s1.via_dt(fill_value=-1).minute.to_pairs(),
+                (('x', 2), ('y', -1), ('z', 51)))
+
+        self.assertEqual(s1.astype(object).via_dt(fill_value=None).minute.to_pairs(),
+                (('x', 2), ('y', None), ('z', 51)))
+
+
+
+    #---------------------------------------------------------------------------
+
 
     def test_series_via_dt_second_a(self) -> None:
 
@@ -4628,6 +4861,19 @@ class TestUnit(TestCase):
 
         self.assertEqual(post.values.tolist(),
                 [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
+
+    def test_series_via_dt_fromisoformat_d(self) -> None:
+        s1 = Series(('2014-02-12', None, '2013-11-28'), index=('x', 'y', 'z'))
+        post = s1.via_dt(fill_value='x').fromisoformat()
+
+        self.assertEqual(post.to_pairs(),
+            (('x', datetime.date(2014, 2, 12)),
+            ('y', 'x'),
+            ('z', datetime.date(2013, 11, 28)))
+            )
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_via_dt_strptime_a(self) -> None:
         s1 = Series(('12/2/2014', '11/28/2013'), index=('x', 'y'), dtype=object)

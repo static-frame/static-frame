@@ -1508,6 +1508,20 @@ d        8
 [8 5 None]
 #end_Series-unique()
 
+#start_Series-unique_enumerated()
+>>> s = sf.Series((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<Series>
+<Index>
+a        8
+b        5
+c        None
+d        8
+<<U1>    <object>
+>>> s.unique_enumerated()
+(array([0, 1, 2, 0]), array([8, 5, None], dtype=object))
+#end_Series-unique_enumerated()
+
 #start_Series-var()
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.var()
@@ -3722,6 +3736,19 @@ b        2
 c        8
 <<U1>    <int64>
 #end_Series-__pos__()
+
+#start_Series-via_dt.__call__()
+>>> s = sf.Series(('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt(fill_value=-1).year
+<Series>
+<Index>
+a        1517
+b        -1
+c        1517
+d        -1
+e        1517
+<<U1>    <int64>
+#end_Series-via_dt.__call__()
 
 #start_Series-via_dt.year
 >>> s = sf.Series(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
@@ -6799,6 +6826,20 @@ d          8
 [8 5 None]
 #end_SeriesHE-unique()
 
+#start_SeriesHE-unique_enumerated()
+>>> s = sf.SeriesHE((8, 5, None, 8), index=('a', 'b', 'c', 'd'))
+>>> s
+<SeriesHE>
+<Index>
+a          8
+b          5
+c          None
+d          8
+<<U1>      <object>
+>>> s.unique_enumerated()
+(array([0, 1, 2, 0]), array([8, 5, None], dtype=object))
+#end_SeriesHE-unique_enumerated()
+
 #start_SeriesHE-var()
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.var()
@@ -8994,6 +9035,19 @@ c          8
 <<U1>      <int64>
 #end_SeriesHE-__pos__()
 
+#start_SeriesHE-via_dt.__call__()
+>>> s = sf.SeriesHE(('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s.via_dt(fill_value=-1).year
+<SeriesHE>
+<Index>
+a          1517
+b          -1
+c          1517
+d          -1
+e          1517
+<<U1>      <int64>
+#end_SeriesHE-via_dt.__call__()
+
 #start_SeriesHE-via_dt.year
 >>> s = sf.SeriesHE(('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
 >>> s.via_dt.year
@@ -10568,10 +10622,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.Frame.from_arrow(aw, index_depth=1)
 <Frame>
 <Index>  a       b       <<U1>
@@ -11248,10 +11298,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
 #start_Frame-to_clipboard()
@@ -13600,6 +13646,25 @@ b          1       3       5
 [10.0 False datetime.date(1517, 1, 1) 2.0 True datetime.date(1517, 4, 1)
  nan None]
 #end_Frame-unique()
+
+#start_Frame-unique_enumerated()
+>>> f = sf.Frame.from_fields(((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<Frame: x>
+<Index>    a         b        c               <<U1>
+<Index>
+0          10.0      False    1517-01-01
+1          2.0       True     1517-04-01
+2          nan       None     NaT
+3          2.0       True     1517-04-01
+<int64>    <float64> <object> <datetime64[D]>
+>>> f.unique_enumerated(retain_order=True, func=sf.isna_element)
+(array([[ 0,  2,  4],
+       [ 1,  3,  5],
+       [-1, -1, -1],
+       [ 1,  3,  5]]), array([10.0, 2.0, False, True, datetime.date(1517, 1, 1),
+       datetime.date(1517, 4, 1)], dtype=object))
+#end_Frame-unique_enumerated()
 
 #start_Frame-unset_columns()
 >>> f = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -16682,6 +16747,18 @@ s          0       0       12
 <<U1>      <int64> <int64> <int64>
 #end_Frame-__pos__()
 
+#start_Frame-via_dt.__call__()
+>>> s = sf.Frame.from_fields((('1620-04-01', '', '1620-06-30'), ('1976-04-01', '1954-12-31', '')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
+>>> s.via_dt(fill_value=-1).year
+<Frame>
+<Index> a       b       <<U1>
+<Index>
+p       1620    1976
+q       -1      1954
+r       1620    -1
+<<U1>   <int64> <int64>
+#end_Frame-via_dt.__call__()
+
 #start_Frame-via_dt.year
 >>> s = sf.Frame.from_fields((('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
 >>> s.via_dt.year
@@ -18680,10 +18757,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameHE.from_arrow(aw, index_depth=1)
 <FrameHE>
 <Index>   a       b       <<U1>
@@ -19360,10 +19433,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
 #start_FrameHE-to_clipboard()
@@ -21712,6 +21781,25 @@ b            1       3       5
 [10.0 False datetime.date(1517, 1, 1) 2.0 True datetime.date(1517, 4, 1)
  nan None]
 #end_FrameHE-unique()
+
+#start_FrameHE-unique_enumerated()
+>>> f = sf.FrameHE.from_fields(((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a         b        c               <<U1>
+<Index>
+0            10.0      False    1517-01-01
+1            2.0       True     1517-04-01
+2            nan       None     NaT
+3            2.0       True     1517-04-01
+<int64>      <float64> <object> <datetime64[D]>
+>>> f.unique_enumerated(retain_order=True, func=sf.isna_element)
+(array([[ 0,  2,  4],
+       [ 1,  3,  5],
+       [-1, -1, -1],
+       [ 1,  3,  5]]), array([10.0, 2.0, False, True, datetime.date(1517, 1, 1),
+       datetime.date(1517, 4, 1)], dtype=object))
+#end_FrameHE-unique_enumerated()
 
 #start_FrameHE-unset_columns()
 >>> f = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -24766,6 +24854,18 @@ s            0       0       12
 <<U1>        <int64> <int64> <int64>
 #end_FrameHE-__pos__()
 
+#start_FrameHE-via_dt.__call__()
+>>> s = sf.FrameHE.from_fields((('1620-04-01', '', '1620-06-30'), ('1976-04-01', '1954-12-31', '')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
+>>> s.via_dt(fill_value=-1).year
+<FrameHE>
+<Index>   a       b       <<U1>
+<Index>
+p         1620    1976
+q         -1      1954
+r         1620    -1
+<<U1>     <int64> <int64>
+#end_FrameHE-via_dt.__call__()
+
 #start_FrameHE-via_dt.year
 >>> s = sf.FrameHE.from_fields((('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
 >>> s.via_dt.year
@@ -26764,10 +26864,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: int64
-----
-__index0__: [["p","q","r"]]
-a: [[0,2,4]]
-b: [[1,3,5]]
 >>> sf.FrameGO.from_arrow(aw, index_depth=1)
 <FrameGO>
 <IndexGO> a       b       <<U1>
@@ -27444,10 +27540,6 @@ pyarrow.Table
 __index0__: string
 a: int64
 b: string
-----
-__index0__: [["p","q","r","s"]]
-a: [[10,2,8,3]]
-b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
 #start_FrameGO-to_clipboard()
@@ -29823,6 +29915,25 @@ b            1       3       5
 [10.0 False datetime.date(1517, 1, 1) 2.0 True datetime.date(1517, 4, 1)
  nan None]
 #end_FrameGO-unique()
+
+#start_FrameGO-unique_enumerated()
+>>> f = sf.FrameGO.from_fields(((10, 2, np.nan, 2), (False, True, None, True), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a         b        c               <<U1>
+<Index>
+0            10.0      False    1517-01-01
+1            2.0       True     1517-04-01
+2            nan       None     NaT
+3            2.0       True     1517-04-01
+<int64>      <float64> <object> <datetime64[D]>
+>>> f.unique_enumerated(retain_order=True, func=sf.isna_element)
+(array([[ 0,  2,  4],
+       [ 1,  3,  5],
+       [-1, -1, -1],
+       [ 1,  3,  5]]), array([10.0, 2.0, False, True, datetime.date(1517, 1, 1),
+       datetime.date(1517, 4, 1)], dtype=object))
+#end_FrameGO-unique_enumerated()
 
 #start_FrameGO-unset_columns()
 >>> f = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -32905,6 +33016,18 @@ s            0       0       12
 <<U1>        <int64> <int64> <int64>
 #end_FrameGO-__pos__()
 
+#start_FrameGO-via_dt.__call__()
+>>> s = sf.FrameGO.from_fields((('1620-04-01', '', '1620-06-30'), ('1976-04-01', '1954-12-31', '')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
+>>> s.via_dt(fill_value=-1).year
+<FrameGO>
+<IndexGO> a       b       <<U1>
+<Index>
+p         1620    1976
+q         -1      1954
+r         1620    -1
+<<U1>     <int64> <int64>
+#end_FrameGO-via_dt.__call__()
+
 #start_FrameGO-via_dt.year
 >>> s = sf.FrameGO.from_fields((('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)
 >>> s.via_dt.year
@@ -35969,6 +36092,12 @@ e
 [    0  1024 -2048  4096]
 #end_Index-__pos__()
 
+#start_Index-via_dt.__call__()
+>>> ix = sf.Index(('1517-01-01', '', '1517-12-31', '1517-06-30'))
+>>> ix.via_dt(fill_value=-1).day
+RuntimeError('invalid dtype (<U10) for date operation')
+#end_Index-via_dt.__call__()
+
 #start_Index-via_dt.year
 >>> import datetime
 >>> ix = sf.Index((datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59)))
@@ -37898,6 +38027,12 @@ e
 [    0  1024 -2048  4096]
 #end_IndexGO-__pos__()
 
+#start_IndexGO-via_dt.__call__()
+>>> ix = sf.IndexGO(('1517-01-01', '', '1517-12-31', '1517-06-30'))
+>>> ix.via_dt(fill_value=-1).day
+RuntimeError('invalid dtype (<U10) for date operation')
+#end_IndexGO-via_dt.__call__()
+
 #start_IndexGO-via_dt.year
 >>> import datetime
 >>> ix = sf.IndexGO((datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59)))
@@ -39742,6 +39877,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 ['1517' '1520' '1518']
 #end_IndexYear-__pos__()
 
+#start_IndexYear-via_dt.__call__()
+>>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1619]
+#end_IndexYear-via_dt.__call__()
+
 #start_IndexYear-via_dt.year
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.via_dt.year
@@ -41529,6 +41670,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 ['1517' '1520' '1518']
 #end_IndexYearGO-__pos__()
 
+#start_IndexYearGO-via_dt.__call__()
+>>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1619]
+#end_IndexYearGO-via_dt.__call__()
+
 #start_IndexYearGO-via_dt.year
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.via_dt.year
@@ -43310,6 +43457,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 >>> +ix
 ['1517-04' '1517-12' '1517-06']
 #end_IndexYearMonth-__pos__()
+
+#start_IndexYearMonth-via_dt.__call__()
+>>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexYearMonth-via_dt.__call__()
 
 #start_IndexYearMonth-via_dt.year
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
@@ -45119,6 +45272,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 >>> +ix
 ['1517-04' '1517-12' '1517-06']
 #end_IndexYearMonthGO-__pos__()
+
+#start_IndexYearMonthGO-via_dt.__call__()
+>>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexYearMonthGO-via_dt.__call__()
 
 #start_IndexYearMonthGO-via_dt.year
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
@@ -46947,6 +47106,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 >>> +ix
 ['1517-04-01' '1517-12-01' '1517-06-30']
 #end_IndexDate-__pos__()
+
+#start_IndexDate-via_dt.__call__()
+>>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexDate-via_dt.__call__()
 
 #start_IndexDate-via_dt.year
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
@@ -48806,6 +48971,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 ['1517-04-01' '1517-12-01' '1517-06-30']
 #end_IndexDateGO-__pos__()
 
+#start_IndexDateGO-via_dt.__call__()
+>>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexDateGO-via_dt.__call__()
+
 #start_IndexDateGO-via_dt.year
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.via_dt.year
@@ -50546,6 +50717,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 >>> +ix
 ['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
 #end_IndexMinute-__pos__()
+
+#start_IndexMinute-via_dt.__call__()
+>>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMinute-via_dt.__call__()
 
 #start_IndexMinute-via_dt.year
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
@@ -52318,6 +52495,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 ['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
 #end_IndexMinuteGO-__pos__()
 
+#start_IndexMinuteGO-via_dt.__call__()
+>>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMinuteGO-via_dt.__call__()
+
 #start_IndexMinuteGO-via_dt.year
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.via_dt.year
@@ -54065,6 +54248,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 >>> +ix
 ['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
 #end_IndexHour-__pos__()
+
+#start_IndexHour-via_dt.__call__()
+>>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexHour-via_dt.__call__()
 
 #start_IndexHour-via_dt.year
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -55840,6 +56029,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 ['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
 #end_IndexHourGO-__pos__()
 
+#start_IndexHourGO-via_dt.__call__()
+>>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexHourGO-via_dt.__call__()
+
 #start_IndexHourGO-via_dt.year
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.via_dt.year
@@ -57586,6 +57781,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 >>> +ix
 ['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
 #end_IndexSecond-__pos__()
+
+#start_IndexSecond-via_dt.__call__()
+>>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexSecond-via_dt.__call__()
 
 #start_IndexSecond-via_dt.year
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -59366,6 +59567,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 ['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
 #end_IndexSecondGO-__pos__()
 
+#start_IndexSecondGO-via_dt.__call__()
+>>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexSecondGO-via_dt.__call__()
+
 #start_IndexSecondGO-via_dt.year
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.via_dt.year
@@ -61125,6 +61332,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 ['1517-04-01T00:00:00.000' '1517-12-31T00:00:00.000'
  '1517-06-30T00:00:00.000']
 #end_IndexMillisecond-__pos__()
+
+#start_IndexMillisecond-via_dt.__call__()
+>>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMillisecond-via_dt.__call__()
 
 #start_IndexMillisecond-via_dt.year
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -62925,6 +63138,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
  '1517-06-30T00:00:00.000']
 #end_IndexMillisecondGO-__pos__()
 
+#start_IndexMillisecondGO-via_dt.__call__()
+>>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMillisecondGO-via_dt.__call__()
+
 #start_IndexMillisecondGO-via_dt.year
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.via_dt.year
@@ -64696,6 +64915,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 ['1517-04-01T00:00:00.000000' '1517-12-31T00:00:00.000000'
  '1517-06-30T00:00:00.000000']
 #end_IndexMicrosecond-__pos__()
+
+#start_IndexMicrosecond-via_dt.__call__()
+>>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMicrosecond-via_dt.__call__()
 
 #start_IndexMicrosecond-via_dt.year
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -66498,6 +66723,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
  '1517-06-30T00:00:00.000000']
 #end_IndexMicrosecondGO-__pos__()
 
+#start_IndexMicrosecondGO-via_dt.__call__()
+>>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.via_dt(fill_value=-1).year
+[1620   -1 1620]
+#end_IndexMicrosecondGO-via_dt.__call__()
+
 #start_IndexMicrosecondGO-via_dt.year
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.via_dt.year
@@ -68271,6 +68502,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 ['1789-05-05T00:00:00.000000000' '1789-12-31T00:00:00.000000000'
  '1799-11-09T00:00:00.000000000']
 #end_IndexNanosecond-__pos__()
+
+#start_IndexNanosecond-via_dt.__call__()
+>>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.via_dt(fill_value=-1).year
+[1789   -1 1799]
+#end_IndexNanosecond-via_dt.__call__()
 
 #start_IndexNanosecond-via_dt.year
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -70072,6 +70309,12 @@ UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
  '1799-11-09T00:00:00.000000000']
 #end_IndexNanosecondGO-__pos__()
 
+#start_IndexNanosecondGO-via_dt.__call__()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.via_dt(fill_value=-1).year
+[1789   -1 1799]
+#end_IndexNanosecondGO-via_dt.__call__()
+
 #start_IndexNanosecondGO-via_dt.year
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.via_dt.year
@@ -71164,13 +71407,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f78637053a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f410fd67c10> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f7863705430> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f410fd67ca0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -71182,11 +71425,11 @@ a                                 2048    1789-12-31
 b                                 0       1620-11-21
 <<U1>                             <int64> <datetime64[D]>
 >>> ih.astype[1](bool)
-<IndexHierarchy>
-a                True   1517-04-01
-a                True   1789-12-31
-b                False  1620-11-21
-<<U1>            <bool> <datetime64[D]>
+<IndexHierarchy: ('x', 'y', 'z')>
+a                                 True   1517-04-01
+a                                 True   1789-12-31
+b                                 False  1620-11-21
+<<U1>                             <bool> <datetime64[D]>
 #end_IndexHierarchy-astype[]()
 
 #start_IndexHierarchy-astype()
@@ -71198,11 +71441,11 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.astype(str)
-<IndexHierarchy>
-False            True  True
-True             True  True
-False            True  False
-<<U5>            <<U5> <<U5>
+<IndexHierarchy: ('x', 'y', 'z')>
+False                             True  True
+True                              True  True
+False                             True  False
+<<U5>                             <<U5> <<U5>
 #end_IndexHierarchy-astype()
 
 #start_IndexHierarchy-copy()
@@ -71218,13 +71461,13 @@ False            True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f78caffd040> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4146496430> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f78caffa5e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f41464919d0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -71487,13 +71730,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f78caffd700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4146496af0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f41462df3a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -71505,7 +71748,7 @@ NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f78caffae50> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4146496280> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -71620,13 +71863,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f78caffd8b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4146496ca0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f78caffa0d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f41464914c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -71682,7 +71925,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f78caffda60>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4146496e50>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -72121,6 +72364,14 @@ b                   1024    True
  [    1 -2048    32]
  [    1  1024    32]]
 #end_IndexHierarchy-__pos__()
+
+#start_IndexHierarchy-via_dt.__call__()
+>>> ih = sf.IndexHierarchy.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', ''), ('', '2022-06-30')), index_constructors=sf.IndexDate)
+>>> ih.via_dt(fill_value=-1).month
+[[ 4  4]
+ [12 -1]
+ [-1  6]]
+#end_IndexHierarchy-via_dt.__call__()
 
 #start_IndexHierarchy-via_dt.year
 >>> import datetime
@@ -73649,13 +73900,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f78637053a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f410fd67c10> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f7863705430> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f410fd67ca0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -73680,11 +73931,11 @@ a                                   2048    1789-12-31
 b                                   0       1620-11-21
 <<U1>                               <int64> <datetime64[D]>
 >>> ih.astype[1](bool)
-<IndexHierarchyGO>
-a                  True   1517-04-01
-a                  True   1789-12-31
-b                  False  1620-11-21
-<<U1>              <bool> <datetime64[D]>
+<IndexHierarchyGO: ('x', 'y', 'z')>
+a                                   True   1517-04-01
+a                                   True   1789-12-31
+b                                   False  1620-11-21
+<<U1>                               <bool> <datetime64[D]>
 #end_IndexHierarchyGO-astype[]()
 
 #start_IndexHierarchyGO-astype()
@@ -73696,11 +73947,11 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.astype(str)
-<IndexHierarchyGO>
-False              True  True
-True               True  True
-False              True  False
-<<U5>              <<U5> <<U5>
+<IndexHierarchyGO: ('x', 'y', 'z')>
+False                               True  True
+True                                True  True
+False                               True  False
+<<U5>                               <<U5> <<U5>
 #end_IndexHierarchyGO-astype()
 
 #start_IndexHierarchyGO-copy()
@@ -73716,13 +73967,13 @@ False              True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f78caffd040> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4146496430> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f78caffa5e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f41464919d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -73993,13 +74244,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f78caffd700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4146496af0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f41462df3a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -74011,7 +74262,7 @@ NotImplementedError('<function median at 0x7f78caebd670> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f78caffae50> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4146496280> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -74126,13 +74377,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f78caffd8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4146496ca0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f78caffa0d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f41464914c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -74188,7 +74439,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f78caffda60>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4146496e50>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -74627,6 +74878,14 @@ b                     1024    True
  [    1 -2048    32]
  [    1  1024    32]]
 #end_IndexHierarchyGO-__pos__()
+
+#start_IndexHierarchyGO-via_dt.__call__()
+>>> ih = sf.IndexHierarchyGO.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', ''), ('', '2022-06-30')), index_constructors=sf.IndexDate)
+>>> ih.via_dt(fill_value=-1).month
+[[ 4  4]
+ [12 -1]
+ [-1  6]]
+#end_IndexHierarchyGO-via_dt.__call__()
 
 #start_IndexHierarchyGO-via_dt.year
 >>> import datetime
@@ -80341,6 +80600,21 @@ j                r     34.666666666666664 35.0
 <<U1>            <<U1> <float64>          <float64>
 #end_Batch-__pos__()
 
+#start_Batch-via_dt.__call__()
+>>> bt = sf.Batch((('i', sf.Frame.from_fields((('1620-04-01', '', '1620-06-30'), ('1976-04-01', '1954-12-31', '')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)), ('j', sf.Frame.from_fields((('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64))))
+>>> bt.via_dt(fill_value=-1).month.to_frame()
+<Frame>
+<Index>                a       b       <<U1>
+<IndexHierarchy>
+i                p     4       4
+i                q     -1      12
+i                r     6       -1
+j                p     4       4
+j                q     12      12
+j                r     6       6
+<<U1>            <<U1> <int64> <int64>
+#end_Batch-via_dt.__call__()
+
 #start_Batch-via_dt.year
 >>> bt = sf.Batch((('i', sf.Frame.from_fields((('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64)), ('j', sf.Frame.from_fields((('1620-04-01', '1620-12-31', '1620-06-30'), ('1976-04-01', '1954-12-31', '1976-06-30')), index=('p', 'q', 'r'), columns=('a', 'b'), dtypes=np.datetime64))))
 >>> bt.via_dt.year.to_frame()
@@ -84497,7 +84771,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aa0c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f40a23aaf40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -84557,13 +84831,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aad40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f40a23aa940>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f783f3aabc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f40a23aa740>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]

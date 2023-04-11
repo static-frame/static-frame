@@ -1,6 +1,20 @@
 What is New in StaticFrame
 ===============================
 
+1.3.1
+-----------
+
+Set ``arraykit`` version to 0.3.1.
+
+
+1.3.0
+-----------
+
+The ``via_dt`` interface now supports usage of a ``fill_value`` argument for handling missing values.
+
+Added ``unique_enumerated()`` method to ``Series`` and ``Frame``.
+
+
 1.2.7
 -----------
 

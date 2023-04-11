@@ -7,6 +7,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import delimited_to_arrays
 from arraykit import first_true_1d
 from arraykit import immutable_filter
@@ -92,7 +93,6 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
@@ -113,6 +113,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
 
@@ -3171,6 +3172,20 @@ class Series(ContainerOperand):
             :obj:`numpy.ndarray`
         '''
         return ufunc_unique1d(self.values)
+
+    @doc_inject()
+    def unique_enumerated(self, *,
+            retain_order: bool = False,
+            func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
+            ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        '''
+        {doc}
+        {args}
+        '''
+        return ufunc_unique_enumerated(self.values,
+                retain_order=retain_order,
+                func=func,
+                )
 
     @doc_inject()
     def equals(self,

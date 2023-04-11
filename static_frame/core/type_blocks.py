@@ -5,6 +5,7 @@ from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
@@ -49,7 +50,6 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
@@ -3066,7 +3066,7 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: because we iterate by block, the caller will be exposed to block-level organization, which might result in a different label ordering. we sort integer tuples of coords here, and use that sort order to sort array; this is better than trying to sort the labels on the Series (labels that might not be sortable).
 
-        coords_array = np.empty(len(array), dtype=object)
+        coords_array = np.empty(len(array), dtype=DTYPE_OBJECT)
         coords_array[:] = coords # force creation of 1D object array
 
         # NOTE: in this sort there should never be ties, so we can use an unstable sort

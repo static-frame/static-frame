@@ -7,6 +7,7 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
@@ -73,7 +74,6 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d
-from static_frame.core.util import array_deepcopy
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import is_dtype_specifier

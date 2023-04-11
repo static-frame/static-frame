@@ -466,6 +466,14 @@ class DOC_TEMPLATE:
             name=NAME,
             consolidate_blocks=CONSOLIDATE_BLOCKS
     )
+    unique_enumerated = dict(
+            doc = 'Given a collection of values, return two NumPy arrays: the first provides index positions for lookup of observed values; the second provides those observed, unique, values. Sometimes called "factorize".',
+            args = '''
+        Args:
+            retain_order: Boolean. If True, observed order is retained. If False, order may be sorted or observed, depending on the dtype and values. Retaining order may decrease performance.
+            func: A callable that takes an element and returns a Boolean if that element should be treated as missing, excluded from the unique value collection, and given a -1 `indexer` position. The NumPy function `np.isnan` or the StaticFrame `sf.isna_element` are examples of suitable functions.
+        '''
+    )
 
 # NOTE: F here should replace AnyCallable below
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])

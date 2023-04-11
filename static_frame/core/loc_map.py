@@ -5,6 +5,7 @@ from copy import deepcopy
 from functools import reduce
 
 import numpy as np
+from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from automap import FrozenAutoMap  # pylint: disable = E0611
 from automap import NonUniqueError  # pylint: disable=E0611
@@ -28,7 +29,6 @@ from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import array_deepcopy
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover

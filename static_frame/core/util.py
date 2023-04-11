@@ -12,7 +12,6 @@ from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
-from copy import deepcopy
 from enum import Enum
 from fractions import Fraction
 from functools import partial
@@ -160,7 +159,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 ELEMENT_TUPLE = (None,)
-
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
@@ -174,9 +172,12 @@ EMPTY_ARRAY_BOOL.flags.writeable = False
 EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
+
+UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT.flags.writeable = False
+
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
-
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
@@ -1175,15 +1176,16 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
-    masked_array = array[mask]
-    if len(masked_array) <= 1: # we have only one item
-        return masked_array, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
+
+    values = array[mask] # get unique values
+    if len(values) <= 1: # we have only one item
+        return values, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 
     indexer = np.empty(mask.shape, dtype=DTYPE_INT_DEFAULT)
     indexer[positions] = np.cumsum(mask) - 1
     indexer.flags.writeable = False
 
-    return masked_array, indexer
+    return values, indexer
 
 
 def ufunc_unique1d_positions(array: np.ndarray,
@@ -1243,6 +1245,54 @@ def ufunc_unique1d_counts(array: np.ndarray,
 
     return array[mask], np.diff(index_of_last_occurrence)
 
+def ufunc_unique_enumerated(
+        array: np.ndarray,
+        *,
+        retain_order: bool = False,
+        func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
+        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+    # see doc_str.unique_enumerated
+
+    is_2d = array.ndim == 2
+    if not is_2d and array.ndim != 1:
+        raise ValueError('Only 1D and 2D arrays supported.')
+
+    if not retain_order and not func:
+        if is_2d:
+            uniques, indexer = ufunc_unique1d_indexer(array.flatten(order='F'))
+        else:
+            uniques, indexer = ufunc_unique1d_indexer(array)
+    else:
+        indexer = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
+        indices: tp.Dict[tp.Any, int] = {}
+
+        eiter: tp.Iterator[tp.Tuple[int, tp.Any]]
+        if is_2d:
+            # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
+            eiter = ((i, e.item()) for i, e in enumerate(
+                    np.nditer(array, order='F', flags=('refs_ok',))))
+        else:
+            eiter = enumerate(array)
+
+        if not func:
+            for i, v in eiter:
+                indexer[i] = indices.setdefault(v, len(indices))
+        else:
+            for i, v in eiter:
+                if func(v):
+                    indexer[i] = -1
+                else:
+                    indexer[i] = indices.setdefault(v, len(indices))
+
+        if array.dtype != DTYPE_OBJECT:
+            uniques = np.fromiter(indices.keys(), count=len(indices), dtype=array.dtype)
+        else:
+            uniques = np.array(list(indices.keys()), dtype=DTYPE_OBJECT)
+
+    if is_2d:
+        indexer = indexer.reshape(array.shape, order='F')
+
+    return indexer, uniques
 
 def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     '''Given a 2D array, reshape it as a consolidated 1D arrays
@@ -2131,28 +2181,28 @@ def binary_transition(
 
 #-------------------------------------------------------------------------------
 
-def array_deepcopy(
-        array: np.ndarray,
-        memo: tp.Optional[tp.Dict[int, tp.Any]],
-        ) -> np.ndarray:
-    '''
-    Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
-    '''
-    ident = id(array)
-    if memo is not None and ident in memo:
-        return memo[ident]
+# def array_deepcopy(
+#         array: np.ndarray,
+#         memo: tp.Optional[tp.Dict[int, tp.Any]],
+#         ) -> np.ndarray:
+#     '''
+#     Create a deepcopy of an array, handling memo lookup, insertion, and object arrays.
+#     '''
+#     ident = id(array)
+#     if memo is not None and ident in memo:
+#         return memo[ident]
 
-    if array.dtype == DTYPE_OBJECT:
-        post = deepcopy(array, memo)
-    else:
-        post = array.copy()
+#     if array.dtype == DTYPE_OBJECT:
+#         post = deepcopy(array, memo)
+#     else:
+#         post = array.copy()
 
-    if post.ndim > 0:
-        post.flags.writeable = array.flags.writeable
+#     if post.ndim > 0:
+#         post.flags.writeable = array.flags.writeable
 
-    if memo is not None:
-        memo[ident] = post
-    return post
+#     if memo is not None:
+#         memo[ident] = post
+#     return post
 
 #-------------------------------------------------------------------------------
 # tools for handling duplicates
@@ -3041,7 +3091,8 @@ def array_from_element_apply(
     '''
     Handle element-wise function application.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT and dtype.kind not in DTYPE_STR_KINDS:
+    if (array.ndim == 1 and dtype != DTYPE_OBJECT
+            and dtype.kind not in DTYPE_STR_KINDS):
         post = np.fromiter(
                 (func(d) for d in array),
                 count=len(array),
@@ -3069,7 +3120,7 @@ def array_from_element_method(*,
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
     Args:
-        pre_insert:
+        pre_insert: A function called on each element after the method is called.
         dtype: dtype of array to be returned.
     '''
     # when we know the type of the element, pre-fetch the Python class
@@ -3176,8 +3227,13 @@ class PositionsAllocator:
     _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
+    # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
+
     @classmethod
     def get(cls, size: int) -> np.ndarray:
+        if size == 1:
+            return UNIT_ARRAY_INT
+
         if size > cls._size:
             cls._size = size * 2
             cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
