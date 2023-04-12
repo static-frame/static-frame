@@ -629,22 +629,28 @@ class IterNode(tp.Generic[FrameOrSeries]):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
+            columns_constructor: tp.Optional[IndexConstructor]= None,
             axis: int = 0,
             ) -> 'Frame':
         from static_frame.core.frame import Frame
 
-        index_constructor = (self._container._index.from_labels
-                if index_constructor is None else index_constructor)
+        if index_constructor is not None:
+            index = index_constructor(self._container._index)
+        else:
+            index = self._container._index
 
-        assert isinstance(self._container, Frame)
+        if columns_constructor is not None:
+            columns = columns_constructor(self._container._columns)
+        else:
+            columns = self._container._columns
+
         return self._container.__class__.from_element_items(
                 items,
-                index=self._container._index,
-                columns=self._container._columns,
+                index=index,
+                columns=columns,
                 axis=axis,
                 own_index=True,
-                index_constructor=index_constructor,
-                columns_constructor=self._container._columns.from_labels,
+                own_columns=True,
                 name=name,
                 )
 

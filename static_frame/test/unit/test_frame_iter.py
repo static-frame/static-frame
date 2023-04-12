@@ -458,6 +458,12 @@ class TestUnit(TestCase):
             ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
             )
 
+    def test_frame_iter_element_g(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3)).rename(index='a', columns='b')
+        f2 = f1.iter_element().apply(str)
+        self.assertEqual(f1.columns.name, f2.columns.name)
+        self.assertEqual(f1.index.name, f2.index.name)
+
     #---------------------------------------------------------------------------
 
     def test_frame_iter_group_a(self) -> None:
