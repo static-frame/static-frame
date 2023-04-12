@@ -4,7 +4,7 @@ from sys import getsizeof
 
 import frame_fixtures as ff
 import numpy as np
-from automap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame import Bus
 from static_frame import Frame

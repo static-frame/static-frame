@@ -28,7 +28,7 @@ from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
-from automap import FrozenAutoMap  # pylint: disable = E0611
+from arraymap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison

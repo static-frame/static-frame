@@ -10,9 +10,9 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from automap import AutoMap  # pylint: disable=E0611
-from automap import FrozenAutoMap  # pylint: disable=E0611
-from automap import NonUniqueError  # pylint: disable=E0611
+from arraymap import AutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
