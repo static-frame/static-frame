@@ -202,7 +202,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
+            columns_constructor: tp.Optional[IndexConstructor] = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -219,12 +220,25 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         else:
             apply_func = self.apply_iter
 
+        if self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
+            # can always pass columns_constructor
+            return self._apply_constructor(
+                    apply_func(func),
+                    dtype=dtype,
+                    name=name,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
+                    )
+
+        if columns_constructor is not None:
+            raise RuntimeError('Cannot use `columns_constructor` in this type of apply.')
         return self._apply_constructor(
                 apply_func(func),
                 dtype=dtype,
                 name=name,
                 index_constructor=index_constructor,
                 )
+
 
     @doc_inject(selector='apply')
     def apply_pool(self,
@@ -632,6 +646,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
             columns_constructor: tp.Optional[IndexConstructor]= None,
             axis: int = 0,
             ) -> 'Frame':
+        # NOTE: this is only called from `Frame` to produce a new `Frame`
+
         from static_frame.core.frame import Frame
 
         if index_constructor is not None:
@@ -640,7 +656,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
             index = self._container._index
 
         assert isinstance(self._container, Frame) # mypy
-
         if columns_constructor is not None:
             columns = columns_constructor(self._container._columns)
         else:
