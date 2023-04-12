@@ -201,6 +201,9 @@ class TestUnit(TestCase):
         self.assertEqual(s1[:'2019'].shape, (0,)) # type: ignore
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
 
+    def test_index_date_r(self) -> None:
+        IndexDate((0,))
+
     #---------------------------------------------------------------------------
 
     def test_index_datetime_init_a(self) -> None:
