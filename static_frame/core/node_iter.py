@@ -639,6 +639,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
         else:
             index = self._container._index
 
+        assert isinstance(self._container, Frame) # mypy
+
         if columns_constructor is not None:
             columns = columns_constructor(self._container._columns)
         else:
