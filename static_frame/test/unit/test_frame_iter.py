@@ -469,6 +469,14 @@ class TestUnit(TestCase):
         f1 = Frame(np.arange(9).reshape(3, 3), columns=('2021', '1943', '1523')).rename(index='a', columns='b')
         f2 = f1.iter_element().apply(str, columns_constructor=IndexYear)
         self.assertIs(f2.columns.__class__, IndexYear)
+        self.assertIs(f2.columns.name, 'b')
+        self.assertEqual(f1.shape, f2.shape)
+
+    def test_frame_iter_element_g3(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3), index=('2021', '1943', '1523')).rename(index='a', columns='b')
+        f2 = f1.iter_element().apply(str, index_constructor=IndexYear)
+        self.assertIs(f2.index.__class__, IndexYear)
+        self.assertIs(f2.index.name, 'a')
         self.assertEqual(f1.shape, f2.shape)
 
 
