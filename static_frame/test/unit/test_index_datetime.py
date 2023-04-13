@@ -202,7 +202,8 @@ class TestUnit(TestCase):
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
 
     def test_index_date_r(self) -> None:
-        IndexDate((0,))
+        with self.assertRaises(InvalidDatetime64Initializer):
+            _ = IndexDate((0,))
 
     #---------------------------------------------------------------------------
 
