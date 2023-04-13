@@ -327,28 +327,32 @@ class Index(IndexBase):
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
-            labels_for_automap = labels
+            # labels_for_automap = labels
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
-                # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-                if not is_typed:
-                    if labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
-                        labels_for_automap = labels.tolist() #type: ignore
-                    elif isinstance(labels, str):
-                        # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
-                        raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
-                    else:
-                        labels_for_automap = labels
-                else:
-                    labels_for_automap = labels
+                # # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
+                # if not is_typed:
+                #     if labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
+                #         labels_for_automap = labels.tolist() #type: ignore
+                #     elif isinstance(labels, str):
+                #         # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
+                #         raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
+                #     else:
+                #         labels_for_automap = labels
+                # else:
+                #     labels_for_automap = labels
+
+                if isinstance(labels, str):
+                    # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
+                    raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
 
                 try:
-                    self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
+                    self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
                 except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
-                    raise self._error_init_index_non_unique(labels_for_automap) from None
+                    raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
                 size = len(self._map)
 
