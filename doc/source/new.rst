@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1-dev
+-----------
+
+Corrected issue with ``Frame.iter_element().apply()`` whereby ``columns.name`` are not preserved.
+
+
 1.3.1
 -----------
 
