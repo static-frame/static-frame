@@ -1159,9 +1159,9 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
-
-    return array[mask]
-
+    array = array[mask]
+    array.flags.writeable = False
+    return array
 
 def ufunc_unique1d_indexer(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:

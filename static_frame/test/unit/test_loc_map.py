@@ -16,6 +16,11 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.test.test_case import TestCase
 
 
+def np_arange(*args: int) -> np.ndarray:
+    a = np.arange(*args)
+    a.flags.writeable = False
+    return a
+
 class TestLocMapUnit(TestCase):
 
     def test_loc_map_a(self) -> None:
@@ -117,7 +122,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_init_a(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -291,13 +296,13 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         self.assertFalse(HierarchicalLocMap.is_single_element([False]))
         self.assertFalse(HierarchicalLocMap.is_single_element([2.3, 8878.33]))
-        self.assertFalse(HierarchicalLocMap.is_single_element(np.arange(5)))
+        self.assertFalse(HierarchicalLocMap.is_single_element(np_arange(5)))
 
     #---------------------------------------------------------------------------
 
     def test_loc_to_iloc_a(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -323,7 +328,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_loc_to_iloc_b(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -348,7 +353,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_nbytes_a(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -365,7 +370,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_deepcopy_a(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -390,7 +395,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_indexers_to_iloc_invalid_input(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -416,7 +421,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_indexers_to_iloc_a(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -433,7 +438,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_indexers_to_iloc_b(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
@@ -453,7 +458,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_indexers_to_iloc_c(self) -> None:
         indices = [
-                Index(np.arange(5)),
+                Index(np_arange(5)),
                 Index(tuple('ABCDE')),
                 ]
         indexers = np.array(
