@@ -1178,6 +1178,7 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask[1:] = array[1:] != array[:-1]
 
     values = array[mask] # get unique values
+    values.flags.writeable = False
     if len(values) <= 1: # we have only one item
         return values, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 
