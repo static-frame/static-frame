@@ -326,7 +326,7 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-    PolarsTypeParse,
+    # PolarsTypeParse,
     # PandasPyArrowTypeParse,
     # PandasPyArrowStr,
     # PandasPyArrowTypeGiven,
