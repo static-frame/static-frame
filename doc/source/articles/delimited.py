@@ -129,7 +129,7 @@ class NumpyLoadtxtTypeParse(FileIOTest):
 NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
@@ -326,11 +326,11 @@ CLS_READ = (
     PandasTypeParse,
     PandasStr,
     PandasTypeGiven,
-    PolarsTypeParse,
+    # PolarsTypeParse,
     # PandasPyArrowTypeParse,
     # PandasPyArrowStr,
     # PandasPyArrowTypeGiven,
-    # NumpyGenfromtxtTypeParse,
+    NumpyGenfromtxtTypeParse,
     # NumpyLoadtxtTypeParse,
     )
 
