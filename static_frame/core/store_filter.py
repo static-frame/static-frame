@@ -103,7 +103,11 @@ class StoreFilter(metaclass=InterfaceMeta):
         self.from_posinf = from_posinf
         self.from_neginf = from_neginf
 
-        sanitize = lambda c: frozenset(c) if not isinstance(c, frozenset) else c
+        def sanitize(c: tp.Collection[str]) -> tp.FrozenSet[str]:
+            if not isinstance(c, frozenset):
+                return frozenset(c)
+            return c
+
         self.to_nan = sanitize(to_nan)
         self.to_nat = sanitize(to_nat)
         self.to_none = sanitize(to_none)
