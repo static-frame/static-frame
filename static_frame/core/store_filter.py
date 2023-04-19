@@ -97,18 +97,18 @@ class StoreFilter(metaclass=InterfaceMeta):
             value_format_complex_scientific: tp.Optional[str] = None,
             ) -> None:
 
-        sanitize = lambda c: frozenset(c) if not isinstance(c, frozenset) else c
-        self.from_nan = sanitize(from_nan)
-        self.from_nat = sanitize(from_nat)
-        self.from_none = sanitize(from_none)
-        self.from_posinf = sanitize(from_posinf)
-        self.from_neginf = sanitize(from_neginf)
+        self.from_nan = from_nan
+        self.from_nat = from_nat
+        self.from_none = from_none
+        self.from_posinf = from_posinf
+        self.from_neginf = from_neginf
 
-        self.to_nan = to_nan
-        self.to_nat = to_nat
-        self.to_none = to_none
-        self.to_posinf = to_posinf
-        self.to_neginf = to_neginf
+        sanitize = lambda c: frozenset(c) if not isinstance(c, frozenset) else c
+        self.to_nan = sanitize(to_nan)
+        self.to_nat = sanitize(to_nat)
+        self.to_none = sanitize(to_none)
+        self.to_posinf = sanitize(to_posinf)
+        self.to_neginf = sanitize(to_neginf)
 
         self.value_format_float_positional = value_format_float_positional
         self.value_format_float_scientific = value_format_float_scientific
