@@ -224,7 +224,14 @@ class TestUnit(TestCase):
     def test_store_filter_format_inexact_element_c(self) -> None:
         sf1 = StoreFilter(
                 value_format_float_positional='{:.8f}',
-                value_format_float_scientific='{:.8f}')
+                value_format_float_scientific='{:.8f}',
+                # Use non-frozensets to test that they are converted
+                to_nan=('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A'),
+                to_nat=(),
+                to_none=('None',),
+                to_posinf=('inf',),
+                to_neginf=('-inf',),
+                )
 
         self.assertEqual(
                 sf1._format_inexact_element(0.83255500, DTYPE_FLOAT_KIND),
