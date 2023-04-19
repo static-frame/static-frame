@@ -1,4 +1,3 @@
-
 import typing as tp
 
 import numpy as np
@@ -21,7 +20,6 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_STR
 
-# from static_frame.core.util import InexactTypes
 
 class StoreFilter(metaclass=InterfaceMeta):
     '''
@@ -87,11 +85,11 @@ class StoreFilter(metaclass=InterfaceMeta):
             from_posinf: tp.Optional[str] = 'inf',
             from_neginf: tp.Optional[str] = '-inf',
             # str to type
-            to_nan: tp.FrozenSet[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
-            to_nat: tp.FrozenSet[str] = frozenset(()), # do not assume there are NaTs.
-            to_none: tp.FrozenSet[str] = frozenset(('None',)),
-            to_posinf: tp.FrozenSet[str] = frozenset(('inf',)),
-            to_neginf: tp.FrozenSet[str] = frozenset(('-inf',)),
+            to_nan: tp.Collection[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
+            to_nat: tp.Collection[str] = frozenset(()), # do not assume there are NaTs.
+            to_none: tp.Collection[str] = frozenset(('None',)),
+            to_posinf: tp.Collection[str] = frozenset(('inf',)),
+            to_neginf: tp.Collection[str] = frozenset(('-inf',)),
             # from float to str
             value_format_float_positional: tp.Optional[str] = None,
             value_format_float_scientific: tp.Optional[str] = None,
@@ -99,11 +97,12 @@ class StoreFilter(metaclass=InterfaceMeta):
             value_format_complex_scientific: tp.Optional[str] = None,
             ) -> None:
 
-        self.from_nan = from_nan
-        self.from_nat = from_nat
-        self.from_none = from_none
-        self.from_posinf = from_posinf
-        self.from_neginf = from_neginf
+        sanitize = lambda c: frozenset(c) if not isinstance(c, frozenset) else c
+        self.from_nan = sanitize(from_nan)
+        self.from_nat = sanitize(from_nat)
+        self.from_none = sanitize(from_none)
+        self.from_posinf = sanitize(from_posinf)
+        self.from_neginf = sanitize(from_neginf)
 
         self.to_nan = to_nan
         self.to_nat = to_nat
@@ -160,8 +159,7 @@ class StoreFilter(metaclass=InterfaceMeta):
                 )
 
     # --------------------------------------------------------------------------
-    # converting from types (in memory) to datastore
-
+    # converting from types (in memory) to data store
 
     def _format_inexact_element(self,
             value: tp.Any,
@@ -199,7 +197,6 @@ class StoreFilter(metaclass=InterfaceMeta):
         elif self.value_format_complex_positional is not None:
             return self.value_format_complex_positional.format(value)
         return value
-
 
     def _format_inexact_array(self,
             array: np.ndarray,
@@ -348,7 +345,6 @@ class StoreFilter(metaclass=InterfaceMeta):
 
         return array
 
-
     def to_type_filter_element(self,
             value: tp.Any
             ) -> tp.Any:
@@ -364,7 +360,6 @@ class StoreFilter(metaclass=InterfaceMeta):
     # def to_type_filter_iterable(self, iterable: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
     #     for value in iterable:
     #         yield self.to_type_filter_element(value)
-
 
 
 STORE_FILTER_DEFAULT = StoreFilter()
