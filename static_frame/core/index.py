@@ -260,11 +260,11 @@ class Index(IndexBase):
             if labels_duplicated:
                 msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
             elif (labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_NA_KINDS):
+                    and labels.dtype.kind in DTYPE_NA_KINDS): # type: ignore
                 # we might have NaNs that look unique to Counter
                 isna = isna_array(labels)
                 if isna.any():
-                    labels_na = [f'{p!r} ({p.dtype})' for p in labels[isna][:10]]
+                    labels_na = [f'{p!r} ({p.dtype})' for p in labels[isna][:10]] # type: ignore
                     msg = f'Labels have {isna.sum()} NA values, including {", ".join(labels_na)}'
 
         return ErrorInitIndexNonUnique(msg)
