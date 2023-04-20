@@ -9,6 +9,7 @@ from static_frame.core.interface import UFUNC_BINARY_OPERATORS
 from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
+from static_frame.core.util import WarningsSilent
 
 
 class TestUnit(TestCase):
@@ -30,9 +31,10 @@ class TestUnit(TestCase):
             if op == '__invert__': # invalid on non Boolean
                 continue
             func = getattr(operator, op)
-            a = func(s1).values
-            b = func(s1.values)
-            self.assertAlmostEqualArray(a, b)
+            with WarningsSilent():
+                a = func(s1).values
+                b = func(s1.values)
+                self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL, min_size=1))
     def test_unary_operators_boolean(self, s1: Series) -> None:
@@ -40,9 +42,10 @@ class TestUnit(TestCase):
             if op != '__invert__': # valid on Boolean
                 continue
             func = getattr(operator, op)
-            a = func(s1).values
-            b = func(s1.values)
-            self.assertAlmostEqualArray(a, b)
+            with WarningsSilent():
+                a = func(s1).values
+                b = func(s1.values)
+                self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC))
     def test_binary_operators_numeric(self, s1: Series) -> None:
@@ -61,9 +64,10 @@ class TestUnit(TestCase):
                 continue # avoid zero division
             func = getattr(operator, op)
             values = s1.values
-            a = func(s1, s1).values
-            b = func(values, values)
-            self.assertAlmostEqualArray(a, b)
+            with WarningsSilent():
+                a = func(s1, s1).values
+                b = func(values, values)
+                self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, s1: Series) -> None:
@@ -83,10 +87,11 @@ class TestUnit(TestCase):
     @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))
     def test_ufunc_axis(self, s1: Series) -> None:
         for attr, attrs in UFUNC_AXIS_SKIPNA.items():
-            a = getattr(s1, attr)()
-            func = attrs.ufunc_skipna
-            b = func(s1.values)
-            self.assertEqualWithNaN(a, b)
+            with WarningsSilent():
+                a = getattr(s1, attr)()
+                func = attrs.ufunc_skipna
+                b = func(s1.values)
+                self.assertEqualWithNaN(a, b)
 
     @given(sfst.get_series(min_size=1))
     def test_isin(self, s1: Series) -> None:

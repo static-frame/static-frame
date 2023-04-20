@@ -324,15 +324,19 @@ def get_array_from_dtype_group(
     #             return array
     #     return array
 
+    def immutable(a: np.ndarray) -> np.ndarray:
+        a.flags.writeable = False
+        return a
+
     array_object = get_array_object(
             shape=shape,
             unique=unique
-            )
+            ).map(immutable)
     array_non_object = hypo_np.arrays(
             get_dtype(dtype_group),
             shape,
             unique=unique
-            )
+            ).map(immutable)
 
     if dtype_group is DTGroup.OBJECT:
         return array_object
