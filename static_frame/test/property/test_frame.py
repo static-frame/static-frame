@@ -50,7 +50,7 @@ class TestUnit(TestCase):
             with WarningsSilent():
                 a = func(f1.astype(values.dtype)).values
                 b = func(values)
-            self.assertAlmostEqualArray(a, b)
+                self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_unary_operators_boolean(self, f1: Frame) -> None:
@@ -84,7 +84,7 @@ class TestUnit(TestCase):
             with WarningsSilent():
                 a = func(f2, f2).values
                 b = func(values, values)
-            self.assertAlmostEqualArray(a, b)
+                self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, f1: Frame) -> None:
