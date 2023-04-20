@@ -244,14 +244,28 @@ class Index(IndexBase):
 
 
     @staticmethod
-    def _error_init_index_non_unique(labels: tp.Iterable[tp.Hashable]) -> ErrorInitIndexNonUnique:
+    def _error_init_index_non_unique(
+            labels: tp.Iterable[tp.Hashable],
+            ) -> ErrorInitIndexNonUnique:
+        '''Return an exception configured with an informative message.
+        '''
+        msg = f'Labels have non-unique values that cannot be identified.'
+
         labels_counter = Counter(labels)
         if len(labels_counter) == 0: # generator consumed
             msg = 'Labels have non-unique values. Details from iterators not available.'
         else:
             labels_all = sum(labels_counter.values())
             labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
-            msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
+            if labels_duplicated:
+                msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
+            elif (labels.__class__ is np.ndarray
+                    and labels.dtype.kind in DTYPE_NA_KINDS):
+                # we might have NaNs that look unique to Counter
+                isna = isna_array(labels)
+                if isna.any():
+                    labels_na = [f'{p!r} ({p.dtype})' for p in labels[isna][:10]]
+                    msg = f'Labels have {isna.sum()} NA values, including {", ".join(labels_na)}'
 
         return ErrorInitIndexNonUnique(msg)
 
