@@ -36,6 +36,8 @@ from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 
 # from static_frame.core.util import DTYPE_INEXACT_KINDS
@@ -303,6 +305,22 @@ def get_array_object(
             unique=unique
             )
 
+def array_proc(a: np.ndarray,
+        unique: bool,
+        ) -> np.ndarray:
+    if unique:
+        # remove cases where we get mulutple NaNs when requesting unique values
+        isna: tp.Optional[np.ndarray] = None
+        if a.dtype.kind in DTYPE_INEXACT_KINDS:
+            isna = np.isnan(a)
+        elif a.dtype.kind in DTYPE_NAT_KINDS:
+            isna = np.isnat(a)
+        if isna is not None and isna.sum() > 1:
+            isna[0] = False
+            # NOTE: need to fill unique values; just trying to fill in something
+            a[isna] = np.arange(42, 42 + isna.sum())
+    a.flags.writeable = False
+    return a
 
 def get_array_from_dtype_group(
         dtype_group: DTGroup,
@@ -324,19 +342,15 @@ def get_array_from_dtype_group(
     #             return array
     #     return array
 
-    def immutable(a: np.ndarray) -> np.ndarray:
-        a.flags.writeable = False
-        return a
-
     array_object = get_array_object(
             shape=shape,
             unique=unique
-            ).map(immutable)
+            ).map(partial(array_proc, unique=unique))
     array_non_object = hypo_np.arrays(
             get_dtype(dtype_group),
             shape,
             unique=unique
-            ).map(immutable)
+            ).map(partial(array_proc, unique=unique))
 
     if dtype_group is DTGroup.OBJECT:
         return array_object
