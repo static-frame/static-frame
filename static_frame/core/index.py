@@ -40,13 +40,13 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.style_config import StyleConfig
+# from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-# from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
