@@ -86,6 +86,13 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_OBJECT_KIND,
         ))
 
+DTYPE_NAN_NAT_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
+        ))
+
 # this is all kinds except 'V'
 # DTYPE_FALSY_KINDS = frozenset((
 #         DTYPE_FLOAT_KIND,

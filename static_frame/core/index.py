@@ -46,6 +46,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_NAN_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import INT_TYPES
@@ -249,7 +250,7 @@ class Index(IndexBase):
             ) -> ErrorInitIndexNonUnique:
         '''Return an exception configured with an informative message.
         '''
-        msg = f'Labels have non-unique values that cannot be identified.'
+        msg = 'Labels have non-unique values that cannot be identified.'
 
         labels_counter = Counter(labels)
         if len(labels_counter) == 0: # generator consumed
@@ -260,7 +261,7 @@ class Index(IndexBase):
             if labels_duplicated:
                 msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
             elif (labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_NA_KINDS): # type: ignore
+                    and labels.dtype.kind in DTYPE_NAN_NAT_KINDS): # type: ignore
                 # we might have NaNs that look unique to Counter
                 isna = isna_array(labels)
                 if isna.any():
