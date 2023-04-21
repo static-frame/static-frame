@@ -302,13 +302,9 @@ def get_array_object(
             )
 
 def array_map(a: np.ndarray,
-        unique: bool,
         ) -> np.ndarray:
     a.flags.writeable = False
     return a
-
-from numpy import char as npc
-
 
 def array_filter(a: np.ndarray, unique: bool):
     if unique:
@@ -338,13 +334,13 @@ def get_array_from_dtype_group(
             shape=shape,
             unique=unique
             ).filter(partial(array_filter, unique=unique)
-            ).map(partial(array_map, unique=unique))
+            ).map(array_map)
     array_non_object = hypo_np.arrays(
             get_dtype(dtype_group),
             shape,
             unique=unique
             ).filter(partial(array_filter, unique=unique)
-            ).map(partial(array_map, unique=unique))
+            ).map(array_map)
 
     if dtype_group is DTGroup.OBJECT:
         return array_object
