@@ -318,7 +318,10 @@ def array_filter(a: np.ndarray, unique: bool):
             if isna.sum() > 1:
                 return False
         elif a.dtype.kind in DTYPE_STR_KINDS:
-            if (npc.startswith(a, '\x00')).any():
+            # NOTE: npc.startswith(a, '\x00') got many false positives
+            if sum(e.startswith('\x00') for e in a) > 1:
+                # print(a)
+                # import ipdb; ipdb.set_trace()
                 return False
     return True
 
