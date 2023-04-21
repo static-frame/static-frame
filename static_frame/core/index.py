@@ -252,6 +252,8 @@ class Index(IndexBase):
         '''
         msg = ''
         labels_counter = Counter(labels)
+        import ipdb; ipdb.set_trace()
+
         if len(labels_counter) == 0: # generator consumed
             msg = 'Labels have non-unique values. Details from iterators not available.'
         else:

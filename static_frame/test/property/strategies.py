@@ -39,8 +39,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-
-# from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
 
 
 
@@ -305,22 +304,29 @@ def get_array_object(
             unique=unique
             )
 
-def array_proc(a: np.ndarray,
+def array_map(a: np.ndarray,
         unique: bool,
         ) -> np.ndarray:
-    if unique:
-        # remove cases where we get mulutple NaNs when requesting unique values
-        isna: tp.Optional[np.ndarray] = None
-        if a.dtype.kind in DTYPE_INEXACT_KINDS:
-            isna = np.isnan(a)
-        elif a.dtype.kind in DTYPE_NAT_KINDS:
-            isna = np.isnat(a)
-        if isna is not None and isna.sum() > 1:
-            isna[0] = False
-            # NOTE: need to fill unique values; just trying to fill in something
-            a[isna] = np.arange(42, 42 + isna.sum())
     a.flags.writeable = False
     return a
+
+from numpy import char as npc
+
+def array_filter(a: np.ndarray, unique: bool):
+    if unique:
+        # remove cases where we get mulutple NaNs when requesting unique values
+        if a.dtype.kind in DTYPE_INEXACT_KINDS:
+            isna = np.isnan(a)
+            if isna.sum() > 1:
+                return False
+        elif a.dtype.kind in DTYPE_NAT_KINDS:
+            isna = np.isnat(a)
+            if isna.sum() > 1:
+                return False
+        elif a.dtype.kind in DTYPE_STR_KINDS:
+            if (npc.startswith(a, '\x00')).any():
+                return False
+    return True
 
 def get_array_from_dtype_group(
         dtype_group: DTGroup,
@@ -330,27 +336,17 @@ def get_array_from_dtype_group(
     '''
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
-
-    # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
-
-    # def fill_na(array: np.ndarray) -> np.ndarray:
-    #     if array.dtype.kind in DTYPE_INEXACT_KINDS:
-    #         is_nan = np.isnan(array)
-    #         if is_nan.any():
-    #             fill = np.empty(array.shape, dtype=array.dtype)
-    #             array[is_nan] = fill[is_nan]
-    #             return array
-    #     return array
-
     array_object = get_array_object(
             shape=shape,
             unique=unique
-            ).map(partial(array_proc, unique=unique))
+            ).filter(partial(array_filter, unique=unique)
+            ).map(partial(array_map, unique=unique))
     array_non_object = hypo_np.arrays(
             get_dtype(dtype_group),
             shape,
             unique=unique
-            ).map(partial(array_proc, unique=unique))
+            ).filter(partial(array_filter, unique=unique)
+            ).map(partial(array_map, unique=unique))
 
     if dtype_group is DTGroup.OBJECT:
         return array_object
