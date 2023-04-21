@@ -41,9 +41,6 @@ from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 
-
-
-
 MAX_ROWS = 8
 MAX_COLUMNS = 10
 
@@ -311,6 +308,7 @@ def array_map(a: np.ndarray,
     return a
 
 from numpy import char as npc
+
 
 def array_filter(a: np.ndarray, unique: bool):
     if unique:
