@@ -171,13 +171,18 @@ class DTGroup(Enum):
     ALL = (hypo_np.scalar_dtypes,)
 
     NUMERIC = (
-            hypo_np.floating_dtypes,
-            hypo_np.integer_dtypes,
-            hypo_np.complex_number_dtypes
+            partial(hypo_np.floating_dtypes,
+                    endianness='='),
+            partial(hypo_np.integer_dtypes,
+                    endianness='='),
+            partial(hypo_np.complex_number_dtypes,
+                    endianness='='),
             )
 
     BOOL = (partial(st.just, DTYPE_BOOL),)
-    STRING = (hypo_np.unicode_string_dtypes,)
+    STRING = (partial(
+            hypo_np.unicode_string_dtypes,
+            endianness='='),)
 
     YEAR = (partial(hypo_np.datetime64_dtypes, min_period='Y', max_period='Y'),)
     YEAR_MONTH = (partial(hypo_np.datetime64_dtypes, min_period='M', max_period='M'),)
