@@ -317,12 +317,6 @@ def array_filter(a: np.ndarray, unique: bool):
             isna = np.isnat(a)
             if isna.sum() > 1:
                 return False
-        elif a.dtype.kind in DTYPE_STR_KINDS:
-            # NOTE: npc.startswith(a, '\x00') got many false positives
-            if sum(e.startswith('\x00') for e in a) > 1:
-                # print(a)
-                # import ipdb; ipdb.set_trace()
-                return False
     return True
 
 def get_array_from_dtype_group(
