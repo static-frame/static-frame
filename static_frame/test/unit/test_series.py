@@ -1922,7 +1922,7 @@ class TestUnit(TestCase):
         self.assertEqual(post3,
                 (('a', 100), ('b', 30), ('c', 150), ('d', 210), ('e', 280)))
 
-    def test_series_iter_element_d(self) -> None:
+    def test_series_iter_element_d1(self) -> None:
 
         s1 = Series((10, 3, 15, 21),
                 index=('2021', '1564', '1876', '2067'),
@@ -1934,6 +1934,17 @@ class TestUnit(TestCase):
         self.assertTrue(
                 (post.index.values == np.array(['2021', '1564', '1876', '2067'], dtype='datetime64[Y]')).all()
                 )
+
+    def test_series_iter_element_d2(self) -> None:
+        s1 = Series((10, 3, 15, 21),
+                index=('2021', '1564', '1876', '2067'),
+                )
+        # cannot use columns_constructor on Series
+        with self.assertRaises(RuntimeError):
+            _ = s1.iter_element().apply(
+                    lambda x: x*2,
+                    columns_constructor=IndexYear,
+                    )
 
     #---------------------------------------------------------------------------
 
