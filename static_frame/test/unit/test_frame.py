@@ -13052,7 +13052,8 @@ class TestUnit(TestCase):
                 lambda x: x % 3).assign[1].apply(
                 lambda x: x % 3).assign[2].apply(
                 lambda x: x % 3)
-
+        import sys
+        print(f1, file=sys.stderr)
         f2 = f1.pivot(index_fields=2, columns_fields=1, data_fields=[0, 3])
         self.assertEqual([(k, v.kind) for k, v in f2.dtypes.items()],
                 [((0, 0), 'f'), ((0, 3), 'f'), ((1, 0), 'f'), ((1, 3), 'f'), ((2, 0), 'i'), ((2, 3), 'i')])
