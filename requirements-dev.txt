@@ -1,11 +1,6 @@
 numpy==1.19.5
-<<<<<<< HEAD
 arraymap==0.1.5
-arraykit==0.3.1
-=======
-automap==0.6.2
 arraykit==0.3.2
->>>>>>> master
 
 pytest==7.1.2
 pytest-cov==4.0.0
