@@ -13047,7 +13047,6 @@ class TestUnit(TestCase):
                 )
 
 
-    @skip_win
     def test_frame_pivot_y1(self) -> None:
         f1 = ff.parse('s(10,4)|v(int64)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
@@ -13067,6 +13066,8 @@ class TestUnit(TestCase):
                 (((0, 0), ((0, 0), (1, 1), (2, 4))), ((0, 3), ((0, 0), (1, 1), (2, 4))), ((1, 0), ((0, 0), (1, 0), (2, 1))), ((1, 3), ((0, 0), (1, 0), (2, 1))), ((2, 0), ((0, 1), (1, 1), (2, 2))), ((2, 3), ((0, 1), (1, 1), (2, 2))))
                 )
 
+    # NOTE: this is failing on old Python, windows with Windows fatal exception: access violation
+    @skip_win
     def test_frame_pivot_y2(self) -> None:
         f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
