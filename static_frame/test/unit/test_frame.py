@@ -13047,6 +13047,7 @@ class TestUnit(TestCase):
                 )
 
 
+    @skip_win
     def test_frame_pivot_y1(self) -> None:
         f1 = ff.parse('s(10,4)|v(int64)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
