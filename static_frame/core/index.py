@@ -370,8 +370,6 @@ class Index(IndexBase):
                     self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
                 except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels) from None
-                except:
-                    raise Exception(f'Unexpected Exception building index from {labels}')
                 # must take length after map as might be iterator
                 size = len(self._map)
 
