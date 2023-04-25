@@ -13048,7 +13048,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_pivot_y1(self) -> None:
-        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+        f1 = ff.parse('s(10,4)|v(int64)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
                 lambda x: x % 3).assign[2].apply(
                 lambda x: x % 3)
