@@ -155,6 +155,13 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = Index(np.array(('2021-02', '2022-04'), dtype=np.datetime64))
 
+    def test_index_init_n(self) -> None:
+        a1 = np.array((np.nan, np.nan, 3), dtype=np.float64)
+        a2 = a1.astype(np.float16)
+        a2.flags.writeable = False
+        idx = Index(a2)
+        self.assertEqual(idx.loc_to_iloc(3), 2)
+
 
     #---------------------------------------------------------------------------
 

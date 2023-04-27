@@ -252,24 +252,12 @@ class Index(IndexBase):
         '''
         msg = ''
         labels_counter = Counter(labels)
-        # import ipdb; ipdb.set_trace()
-
         if len(labels_counter) == 0: # generator consumed
-            msg = 'Labels have non-unique values. Details from iterators not available.'
+            msg = 'Labels have non-unique values. Examples from iterators not are available.'
         else:
             labels_all = sum(labels_counter.values())
             labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
-            if labels_duplicated:
-                msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
-            elif (labels.__class__ is np.ndarray
-                    and labels.dtype.kind in DTYPE_NAN_NAT_KINDS): # type: ignore
-                # we might have NaNs that look unique to Counter
-                isna = isna_array(labels)
-                if isna.any():
-                    labels_na = [f'{p!r} ({p.dtype})' for p in labels[isna][:10]]
-                    msg = f'Labels have {isna.sum()} NA values, including {", ".join(labels_na)}'
-        if not msg:
-            msg = f'Labels ({", ".join(labels[:10])}) have non-unique values that cannot be identified.'
+            msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
         return ErrorInitIndexNonUnique(msg)
 
     #---------------------------------------------------------------------------
