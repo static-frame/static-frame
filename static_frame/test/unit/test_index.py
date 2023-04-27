@@ -162,6 +162,11 @@ class TestUnit(TestCase):
         idx = Index(a2)
         self.assertEqual(idx.loc_to_iloc(3), 2)
 
+    def test_index_init_o(self) -> None:
+        a1 = np.array((10, 40, 20))
+        idx = Index(a1) # permit a mutable array
+        self.assertEqual(idx.values.tolist(), [10, 40, 20])
+
 
     #---------------------------------------------------------------------------
 

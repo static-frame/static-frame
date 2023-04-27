@@ -203,7 +203,8 @@ class Index(IndexBase):
         if labels.__class__ is np.ndarray:
             if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
-            return immutable_filter(labels)
+            # NOTE: all labels arrays should be made immutable before this call
+            return labels
 
         # labels may be an expired generator, must use the mapping
         labels_src = labels if hasattr(labels, '__len__') else mapping
@@ -291,10 +292,10 @@ class Index(IndexBase):
             dtype_extract = dtype
 
         #-----------------------------------------------------------------------
-        # handle all Index subclasses
         if labels.__class__ is np.ndarray:
-            pass
+            labels = immutable_filter(labels)
         elif isinstance(labels, IndexBase):
+            # handle all Index subclasses
             if labels._recache:
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
@@ -326,13 +327,12 @@ class Index(IndexBase):
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not labels.__class__ is np.ndarray:
-                # for now, assume that if _DTYPE is defined, we have a date
+                # if is_typed, _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
             # coerce to target type
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
-            # labels_for_automap = labels
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
@@ -347,7 +347,6 @@ class Index(IndexBase):
                     raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
                 size = len(self._map)
-
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
@@ -1428,7 +1427,7 @@ class _IndexGOMixin:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
-        self._labels_mutable = labels.tolist()
+        self._labels_mutable = labels.tolist() # must get a fresh list
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
         else: # avoid setting to float default when labels is empty
