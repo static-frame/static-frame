@@ -1,10 +1,13 @@
 What is New in StaticFrame
 ===============================
 
-1-dev
+1.3.2
 -----------
 
 Corrected issue with ``Frame.iter_element().apply()`` whereby ``columns.name`` are not preserved.
+
+Set ``arraykit`` version to 0.3.4.
+
 
 
 1.3.1
