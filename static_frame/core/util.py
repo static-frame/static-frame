@@ -216,7 +216,7 @@ BOOL_TYPES = (bool, np.bool_)
 DICTLIKE_TYPES = (abc.Set, dict, FrozenAutoMap)
 
 
-# iterables that cannot be used in NP array constructors; asumes that dictlike types have already been identified
+# iterables that cannot be used in NP array constructors; assumes that dictlike types have already been identified
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
 NON_STR_TYPES = {int, float, bool}
 
