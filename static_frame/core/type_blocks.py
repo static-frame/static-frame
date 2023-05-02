@@ -2846,14 +2846,17 @@ class TypeBlocks(ContainerOperand):
                 if row_key is None:
                     return b
                 array = b[row_key]
-                array.flags.writeable = False
+                if array.__class__ is np.ndarray:
+                    print(array.flags.writeable)
+                    array.flags.writeable = False
                 return array
 
             if row_key is None:
                 return b[NULL_SLICE, column]
 
             array = b[row_key, column]
-            array.flags.writeable = False
+            if array.__class__ is np.ndarray:
+                array.flags.writeable = False
             return array
 
         # figure out shape from keys so as to not accumulate?
