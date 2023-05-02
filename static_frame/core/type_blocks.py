@@ -2847,7 +2847,6 @@ class TypeBlocks(ContainerOperand):
                     return b
                 array = b[row_key]
                 if array.__class__ is np.ndarray:
-                    print(array.flags.writeable)
                     array.flags.writeable = False
                 return array
 
