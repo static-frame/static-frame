@@ -2683,6 +2683,27 @@ class TestUnit(TestCase):
                 (('mass', ((('lepton', 'tau'), 1.777), (('quark', 'charm'), 1.3))), ('charge', ((('lepton', 'tau'), -1.0), (('quark', 'charm'), 0.666))))
                 )
 
+    def test_frame_loc_l(self) -> None:
+        f1 = Frame.from_records((('a', [1, 2]), ('b', [3, 4])))
+        s1 = f1.loc[0]
+        self.assertEqual(s1.values.tolist(), ['a', [1, 2]])
+
+
+        f3 = Frame.from_records(
+                (('a', [1, 2], [10, 20]), ('b', [3, 4], [30, 40])),
+                consolidate_blocks=True)
+        self.assertEqual(f3.shape, (2, 3))
+        self.assertEqual(f3.consolidate.status['shape'].values.tolist(), [(2,), (2, 2)])
+
+        s2 = f3.loc[1]
+        self.assertEqual(s2.values.tolist(), ['b', [3, 4], [30, 40]])
+
+    def test_frame_loc_m(self) -> None:
+        f1 = Frame.from_records((('a', [1, 2], [10, 20]), ('b', [3, 4], [30, 40])))
+        s1 = f1.loc[0, 1:]
+        self.assertEqual(s1.values.tolist(), [[1, 2], [10, 20]])
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_items_a(self) -> None:

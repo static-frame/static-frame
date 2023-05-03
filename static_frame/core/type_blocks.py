@@ -2784,44 +2784,51 @@ class TypeBlocks(ContainerOperand):
                 yield from self._blocks
             else:
                 for b in self._blocks:
-                    # selection work for both 1D and 2D
-                    block_sliced = b[row_key] # PERF: most time from line profiler
-                    if block_sliced.__class__ is np.ndarray:
-                        if single_row and block_sliced.ndim == 1:
-                            block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
+                    # selection works for both 1D (to an element) and 2D (two a 1D array)
+                    b_row = b[row_key] # PERF: most time from line profiler
+                    if b_row.__class__ is np.ndarray:
+                        if single_row and b_row.ndim == 1:
+                            # reshaping preserves writeable status
+                            b_row = b_row.reshape(1, b_row.shape[0])
+                        yield b_row
                     else: # wrap element back into an array
-                        block_sliced = np.array((block_sliced,), dtype=b.dtype)
-                    yield block_sliced
+                        # If `row_key`` selects a non-array, we have selected an element; if b is an object dtype, we might have selected a list or other iterable that, if naively given to an array constructor, gets "flattened" into arrays. Thus, we create an empty and assign
+                        b_fill = np.empty(1, dtype=b.dtype)
+                        b_fill[0] = b_row
+                        b_fill.flags.writeable = False
+                        yield b_fill
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
             for block_idx, slc in self._key_to_block_slices(column_key): # PERF: most time from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:
-                        block_sliced = b
+                        b_sliced = b
                     else:
-                        block_sliced = b[row_key] # PERF: slow from line profiler
+                        b_sliced = b[row_key] # PERF: slow from line profiler
                 else: # given 2D, use row key and column slice
                     if row_key_null:
-                        block_sliced = b[NULL_SLICE, slc]
+                        b_sliced = b[NULL_SLICE, slc]
                     else:
-                        block_sliced = b[row_key, slc]
+                        b_sliced = b[row_key, slc]
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
-                if block_sliced.__class__ is np.ndarray:
+                if b_sliced.__class__ is np.ndarray:
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
-                    if single_row and block_sliced.ndim == 1:
-                        block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
+                    if single_row and b_sliced.ndim == 1:
+                        b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
                     # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    elif (block_sliced.ndim == 2
-                            and block_sliced.shape[1] == 1
+                    elif (b_sliced.ndim == 2
+                            and b_sliced.shape[1] == 1
                             and not single_row):
-                        block_sliced = block_sliced[NULL_SLICE, 0]
-                else: # a single element, wrap back up in array
-                    # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
-                    block_sliced = np.array((block_sliced,), dtype=b.dtype)
-                yield block_sliced
-
+                        b_sliced = b_sliced[NULL_SLICE, 0]
+                    b_sliced.flags.writeable = False
+                    yield b_sliced
+                else: # a single element, wrap back up in array; assignment handles special cases with lists in object dtypes correctly
+                    b_fill = np.empty(1, dtype=b.dtype)
+                    b_fill[0] = b_sliced
+                    b_fill.flags.writeable = False
+                    yield b_fill
 
     def _extract_array(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -2838,10 +2845,18 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 if row_key is None:
                     return b
-                return b[row_key]
+                array = b[row_key]
+                if array.__class__ is np.ndarray:
+                    array.flags.writeable = False
+                return array
+
             if row_key is None:
                 return b[NULL_SLICE, column]
-            return b[row_key, column]
+
+            array = b[row_key, column]
+            if array.__class__ is np.ndarray:
+                array.flags.writeable = False
+            return array
 
         # figure out shape from keys so as to not accumulate?
         blocks = []
