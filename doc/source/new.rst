@@ -1,13 +1,15 @@
 What is New in StaticFrame
 ===============================
 
+
 1.3.2
 -----------
 
 Corrected issue with ``Frame.iter_element().apply()`` whereby ``columns.name`` are not preserved.
 
-Set ``arraykit`` version to 0.3.4.
+Corrected issue when selecting a single row from a ``Frame`` that has object columns that contain sequences.
 
+Set ``arraykit`` version to 0.3.4.
 
 
 1.3.1
