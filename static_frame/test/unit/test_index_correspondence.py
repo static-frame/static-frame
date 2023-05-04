@@ -18,7 +18,7 @@ class TestUnit(TestCase):
         self.assertEqual(ic.iloc_src.tolist(),
                 [0, 1, 2, 3, 4]
                 )
-        self.assertEqual(ic.iloc_dst,
+        self.assertEqual(ic.iloc_dst.tolist(),
                 [0, 1, 2, 3, 4]
                 )
 
