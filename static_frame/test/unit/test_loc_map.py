@@ -52,7 +52,7 @@ class TestLocMapUnit(TestCase):
                 key=['b', 'd'],
                 partial_selection=False,
                 )
-        self.assertEqual(post1.tolist(), [1, 3])
+        self.assertEqual(post1.tolist(), [1, 3]) #type: ignore
 
     def test_loc_map_slice_a(self) -> None:
         dt64 = np.datetime64

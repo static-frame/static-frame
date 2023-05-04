@@ -140,7 +140,7 @@ class LocMap:
                 return NULL_SLICE
             try:
                 return slice(*cls.map_slice_args(
-                        label_to_pos.get, #type: ignore
+                        label_to_pos.get,
                         key,
                         labels)
                         )
@@ -191,11 +191,8 @@ class LocMap:
                 return label_to_pos.get_any(key)
             return label_to_pos.get_all(key)
 
-            #     return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
-            # return [label_to_pos[k] for k in key] # type: ignore
-
         # if a single element (an integer, string, or date, we just get the integer out of the map
-        return label_to_pos[key] #type: ignore
+        return label_to_pos[key]
 
 
 class HierarchicalLocMap:

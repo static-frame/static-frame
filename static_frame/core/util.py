@@ -247,7 +247,7 @@ GetItemKeyType = tp.Union[
         None,
         'Index',
         'Series',
-        np.ndarray
+        np.ndarray,
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
