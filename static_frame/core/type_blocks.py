@@ -670,7 +670,7 @@ class TypeBlocks(ContainerOperand):
             dt = b.dtype
             if b.ndim == 1:
                 yield dt
-            else: # PERF: repeat much faster than a for loop
+            else: # PERF: repeat is much faster than a for loop
                 yield from repeat(dt, b.shape[1])
 
     @property
