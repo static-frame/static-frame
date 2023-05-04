@@ -119,7 +119,7 @@ class LocMap:
 
     @classmethod
     def loc_to_iloc(cls, *,
-            label_to_pos: tp.Dict[tp.Hashable, int],
+            label_to_pos: FrozenAutoMap,
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
@@ -187,10 +187,12 @@ class LocMap:
 
             # map labels to integer positions, return a list of integer positions
             # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
-            # NOTE: we do more branching here to optimize performance
             if partial_selection:
-                return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
-            return [label_to_pos[k] for k in key] # type: ignore
+                return label_to_pos.get_any(key)
+            return label_to_pos.get_all(key)
+
+            #     return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
+            # return [label_to_pos[k] for k in key] # type: ignore
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
         return label_to_pos[key] #type: ignore

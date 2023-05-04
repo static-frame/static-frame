@@ -185,7 +185,7 @@ class TestUnit(TestCase):
     def test_index_loc_to_iloc_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         post = idx._loc_to_iloc(Series(['b', 'c']))
-        self.assertEqual(post, [1, 2])
+        self.assertEqual(post.tolist(), [1, 2])
 
     def test_index_loc_to_iloc_c(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
@@ -207,7 +207,7 @@ class TestUnit(TestCase):
         with self.assertRaises(LocInvalid):
             _ = idx1.loc_to_iloc(slice('x', 'y'))
 
-        self.assertEqual(idx1.loc_to_iloc(['d', 'a']), [3, 0])
+        self.assertEqual(idx1.loc_to_iloc(['d', 'a']).tolist(), [3, 0])
         with self.assertRaises(KeyError):
             _ = idx1.loc_to_iloc(['d', 'x'])
 
@@ -259,7 +259,7 @@ class TestUnit(TestCase):
             _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)])
 
         post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
-        self.assertEqual(post, [2, 1, 0])
+        self.assertEqual(post.tolist(), [2, 1, 0])
 
     def test_index_loc_to_iloc_g(self) -> None:
         dt = datetime.date
@@ -420,7 +420,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc['b':'d'].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
-        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
+        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']).tolist(), [1, 1, 2])
 
         self.assertEqual(idx.loc['c'], 'c')
 
