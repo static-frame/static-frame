@@ -28,7 +28,7 @@ from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
-from automap import FrozenAutoMap  # pylint: disable = E0611
+from arraymap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -84,6 +84,13 @@ DTYPE_NA_KINDS = frozenset((
         DTYPE_DATETIME_KIND,
         DTYPE_TIMEDELTA_KIND,
         DTYPE_OBJECT_KIND,
+        ))
+
+DTYPE_NAN_NAT_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
         ))
 
 # this is all kinds except 'V'
@@ -240,7 +247,7 @@ GetItemKeyType = tp.Union[
         None,
         'Index',
         'Series',
-        np.ndarray
+        np.ndarray,
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
@@ -1159,9 +1166,9 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
-
-    return array[mask]
-
+    array = array[mask]
+    array.flags.writeable = False
+    return array
 
 def ufunc_unique1d_indexer(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -1178,6 +1185,7 @@ def ufunc_unique1d_indexer(array: np.ndarray,
     mask[1:] = array[1:] != array[:-1]
 
     values = array[mask] # get unique values
+    values.flags.writeable = False
     if len(values) <= 1: # we have only one item
         return values, np.full(mask.shape, 0, dtype=DTYPE_INT_DEFAULT)
 

@@ -479,7 +479,6 @@ class Frame(ContainerOperand):
                         ))
         own_index = False
         own_columns = False
-
         if not frame_seq:
             return cls(
                     index=index,

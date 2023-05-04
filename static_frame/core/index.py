@@ -10,9 +10,9 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from automap import AutoMap  # pylint: disable=E0611
-from automap import FrozenAutoMap  # pylint: disable=E0611
-from automap import NonUniqueError  # pylint: disable=E0611
+from arraymap import AutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -40,13 +40,13 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.style_config import StyleConfig
+# from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -202,7 +202,8 @@ class Index(IndexBase):
         if labels.__class__ is np.ndarray:
             if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
-            return immutable_filter(labels)
+            # NOTE: all labels arrays should be made immutable before this call
+            return labels
 
         # labels may be an expired generator, must use the mapping
         labels_src = labels if hasattr(labels, '__len__') else mapping
@@ -244,15 +245,19 @@ class Index(IndexBase):
 
 
     @staticmethod
-    def _error_init_index_non_unique(labels: tp.Iterable[tp.Hashable]) -> ErrorInitIndexNonUnique:
+    def _error_init_index_non_unique(
+            labels: tp.Sequence[tp.Hashable],
+            ) -> ErrorInitIndexNonUnique:
+        '''Return an exception configured with an informative message.
+        '''
+        msg = ''
         labels_counter = Counter(labels)
         if len(labels_counter) == 0: # generator consumed
-            msg = 'Labels have non-unique values. Details from iterators not available.'
+            msg = 'Labels have non-unique values. Examples from iterators not are available.'
         else:
             labels_all = sum(labels_counter.values())
             labels_duplicated = [repr(p[0]) for p in labels_counter.most_common(10) if p[1] > 1]
             msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
-
         return ErrorInitIndexNonUnique(msg)
 
     #---------------------------------------------------------------------------
@@ -286,10 +291,10 @@ class Index(IndexBase):
             dtype_extract = dtype
 
         #-----------------------------------------------------------------------
-        # handle all Index subclasses
         if labels.__class__ is np.ndarray:
-            pass
+            labels = immutable_filter(labels)
         elif isinstance(labels, IndexBase):
+            # handle all Index subclasses
             if labels._recache:
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
@@ -321,37 +326,26 @@ class Index(IndexBase):
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not labels.__class__ is np.ndarray:
-                # for now, assume that if _DTYPE is defined, we have a date
+                # if is_typed, _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
             # coerce to target type
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False #type: ignore
-            labels_for_automap = labels
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
-                # PERF: calling tolist before initializing AutoMap is shown to be about 2x faster, but can only be done with NumPy dtypes that are equivalent after conversion to Python objects
-                if not is_typed:
-                    if labels.__class__ is np.ndarray and labels.dtype.kind in DTYPE_OBJECTABLE_KINDS: #type: ignore
-                        labels_for_automap = labels.tolist() #type: ignore
-                    elif isinstance(labels, str):
-                        # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
-                        raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
-                    else:
-                        labels_for_automap = labels
-                else:
-                    labels_for_automap = labels
-
+                if isinstance(labels, str):
+                    # NOTE: this is necessary as otherwise a malformed Index will be created, whereby the _map will treat the string as an iterable of chars, while the labels will not and have a single string value. This is consisten as other elements (ints, Booleans) are rejected on instantiation of the AutoMap
+                    raise ErrorInitIndex('Cannot create an Index from a single string; provide an iterable of strings.')
                 try:
-                    self._map = FrozenAutoMap(labels_for_automap) if self.STATIC else AutoMap(labels_for_automap)
+                    self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
                 except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
-                    raise self._error_init_index_non_unique(labels_for_automap) from None
+                    raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
                 size = len(self._map)
-
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
@@ -1432,7 +1426,7 @@ class _IndexGOMixin:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
-        self._labels_mutable = labels.tolist()
+        self._labels_mutable = labels.tolist() # must get a fresh list
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
         else: # avoid setting to float default when labels is empty

@@ -6,6 +6,7 @@ from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -42,7 +43,7 @@ class TestUnit(TestCase):
 
         header_decode_cache: HeaderDecodeCacheType = {}
 
-        with temp_file('.npy') as fp:
+        with temp_file('.npy') as fp, WarningsSilent():
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
 
@@ -67,7 +68,7 @@ class TestUnit(TestCase):
 
         header_decode_cache: HeaderDecodeCacheType = {}
 
-        with temp_file('.npy') as fp:
+        with temp_file('.npy') as fp, WarningsSilent():
             with open(fp, 'wb') as f:
                 NPYConverter.to_npy(f, a1)
 

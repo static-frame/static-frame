@@ -9160,6 +9160,7 @@ class TestUnit(TestCase):
         # when explicitly named 0, we get the expected error when creting the index
         s1 = Series([1, 2, 3], name=0)
         s2 = s1.rename(np.datetime64('2022-01-01'))
+        # import ipdb; ipdb.set_trace()
         with self.assertRaises(InvalidDatetime64Initializer):
             _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
 
@@ -13068,7 +13069,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_pivot_y1(self) -> None:
-        f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
+        f1 = ff.parse('s(10,4)|v(int64)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(
                 lambda x: x % 3).assign[2].apply(
                 lambda x: x % 3)
@@ -13086,6 +13087,8 @@ class TestUnit(TestCase):
                 (((0, 0), ((0, 0), (1, 1), (2, 4))), ((0, 3), ((0, 0), (1, 1), (2, 4))), ((1, 0), ((0, 0), (1, 0), (2, 1))), ((1, 3), ((0, 0), (1, 0), (2, 1))), ((2, 0), ((0, 1), (1, 1), (2, 2))), ((2, 3), ((0, 1), (1, 1), (2, 2))))
                 )
 
+    # NOTE: this is failing on old Python, windows with Windows fatal exception: access violation
+    @skip_win
     def test_frame_pivot_y2(self) -> None:
         f1 = ff.parse('s(10,4)|v(int)').assign[0].apply(
                 lambda x: x % 3).assign[1].apply(

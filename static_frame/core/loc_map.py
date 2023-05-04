@@ -7,8 +7,8 @@ from functools import reduce
 import numpy as np
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
-from automap import FrozenAutoMap  # pylint: disable = E0611
-from automap import NonUniqueError  # pylint: disable=E0611
+from arraymap import FrozenAutoMap  # pylint: disable = E0611
+from arraymap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
@@ -119,7 +119,7 @@ class LocMap:
 
     @classmethod
     def loc_to_iloc(cls, *,
-            label_to_pos: tp.Dict[tp.Hashable, int],
+            label_to_pos: FrozenAutoMap,
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
@@ -140,7 +140,7 @@ class LocMap:
                 return NULL_SLICE
             try:
                 return slice(*cls.map_slice_args(
-                        label_to_pos.get, #type: ignore
+                        label_to_pos.get,
                         key,
                         labels)
                         )
@@ -187,13 +187,12 @@ class LocMap:
 
             # map labels to integer positions, return a list of integer positions
             # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
-            # NOTE: we do more branching here to optimize performance
             if partial_selection:
-                return [label_to_pos[k] for k in key if k in label_to_pos] # type: ignore
-            return [label_to_pos[k] for k in key] # type: ignore
+                return label_to_pos.get_any(key)
+            return label_to_pos.get_all(key)
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
-        return label_to_pos[key] #type: ignore
+        return label_to_pos[key]
 
 
 class HierarchicalLocMap:
