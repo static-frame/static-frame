@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+1.4.0
+-----------
+
+Replaces ``automap`` with ``arraymap`` 0.1.7, offering optimized ``Index`` performance.
+
 
 1.3.2
 -----------
