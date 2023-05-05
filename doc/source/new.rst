@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.4.1
+-----------
+
+Optimizations to reduce ``TypeBlocks`` size and initialization time.
+
+
 1.4.0
 -----------
 
