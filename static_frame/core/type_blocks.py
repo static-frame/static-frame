@@ -2,8 +2,8 @@ import typing as tp
 from copy import deepcopy
 from functools import partial
 from itertools import chain
-from itertools import zip_longest
 from itertools import repeat
+from itertools import zip_longest
 
 import numpy as np
 from arraykit import array_deepcopy
