@@ -10041,7 +10041,7 @@ class TestUnit(TestCase):
         "completed": true
         }]'''
 
-        f1 = Frame.from_json(msg, name=msg)
+        f1 = Frame.from_json_records(msg, name=msg)
         self.assertEqual(sorted(f1.columns.values.tolist()),
                 sorted(['completed', 'id', 'title', 'userId']))
         self.assertEqual(f1['id'].sum(), 10)

@@ -290,7 +290,7 @@ class TestUnit(TestCase):
         }]'''
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, content)
-            post = Frame.from_json_url(url=URL)
+            post = Frame.from_json_records(WWW.from_file(url=URL))
             self.assertEqual(post.shape, (2, 4))
             self.assertEqual([dt.kind for dt in post.dtypes.values], ['i', 'i', 'U', 'b'])
 

@@ -2089,62 +2089,6 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor,
                 )
 
-    @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_json(cls,
-            json_data: tp.Union[str, StringIO],
-            *,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False
-            ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
-
-        Args:
-            json_data: a string of JSON, encoding a table as an array of JSON objects.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :obj:`static_frame.Frame`
-        '''
-        # DEPRECATE for 1.0
-        return cls.from_json_records(json_data, # type: ignore
-                name=name,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks
-                )
-
-    @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_json_url(cls,
-            url: str,
-            *,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False
-            ) -> 'Frame':
-        '''Frame constructor from a JSON documenst provided via a URL.
-
-        Args:
-            url: URL to the JSON resource.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :obj:`static_frame.Frame`
-        '''
-        # DEPRECATE for 1.0
-        from static_frame.core.www import WWW
-        sio = WWW.from_file(url, in_memory=True)
-        return cls.from_json(sio, # type: ignore #pragma: no cover
-                name=name,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks
-                )
-
     #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
