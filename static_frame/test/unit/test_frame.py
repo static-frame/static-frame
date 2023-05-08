@@ -1923,6 +1923,16 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (3, 3))
         self.assertEqual(len(f1.columns), 3)
 
+
+    def test_frame_setitem_l1(self) -> None:
+        f = sf.FrameGO(index=range(3))
+        f['a'] = f.index
+        self.assertEqual(f.to_pairs(), (('a', ((0, 0), (1, 1), (2, 2))),))
+
+        with self.assertRaises(RuntimeError):
+            f['b'] = sf.Series(['a', 'b']).index
+
+
     def test_frame_setitem_m(self) -> None:
         f1 = sf.FrameGO.from_records(np.arange(9).reshape(3,3))
 
