@@ -19,6 +19,7 @@ from static_frame.core.util import EMPTY_SET
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_STR
+from static_frame.core.util import frozenset_filter
 
 
 class StoreFilter(metaclass=InterfaceMeta):
@@ -103,16 +104,11 @@ class StoreFilter(metaclass=InterfaceMeta):
         self.from_posinf = from_posinf
         self.from_neginf = from_neginf
 
-        def sanitize(c: tp.Collection[str]) -> tp.FrozenSet[str]:
-            if not isinstance(c, frozenset):
-                return frozenset(c)
-            return c
-
-        self.to_nan = sanitize(to_nan)
-        self.to_nat = sanitize(to_nat)
-        self.to_none = sanitize(to_none)
-        self.to_posinf = sanitize(to_posinf)
-        self.to_neginf = sanitize(to_neginf)
+        self.to_nan = frozenset_filter(to_nan)
+        self.to_nat = frozenset_filter(to_nat)
+        self.to_none = frozenset_filter(to_none)
+        self.to_posinf = frozenset_filter(to_posinf)
+        self.to_neginf = frozenset_filter(to_neginf)
 
         self.value_format_float_positional = value_format_float_positional
         self.value_format_float_scientific = value_format_float_scientific

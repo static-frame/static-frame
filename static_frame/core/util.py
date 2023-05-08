@@ -298,12 +298,9 @@ CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallabl
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 BoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
-
-
 PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
-
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
@@ -526,6 +523,7 @@ class UFuncCategory(Enum):
     CUMMULATIVE = 3 # go to max size if int, float/complex keep size
     SUMMING = 4 # same except bool goes to max int
 
+
 UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
     all: UFuncCategory.BOOL,
     any: UFuncCategory.BOOL,
@@ -624,7 +622,6 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
 #-------------------------------------------------------------------------------
 FGItemT = tp.TypeVar('FGItemT')
 
-
 class FrozenGenerator:
     '''
     A wrapper of an iterator (or iterable) that stores values iterated for later recall; this never iterates the iterator unbound, but always iterates up to a target.
@@ -653,7 +650,6 @@ class FrozenGenerator:
                     raise IndexError(k) from None
         return self._src[key]
 
-
 #-------------------------------------------------------------------------------
 # join utils
 
@@ -663,11 +659,14 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
+
 class Pair(tuple): #type: ignore
     pass
 
+
 class PairLeft(Pair):
     pass
+
 
 class PairRight(Pair):
     pass
@@ -688,6 +687,14 @@ def bytes_to_size_label(size_bytes: int) -> str:
     return f'{s} {size_name[i]}'
 
 #-------------------------------------------------------------------------------
+
+def frozenset_filter(src: tp.Iterable[tp.Hashable]) -> tp.FrozenSet[tp.Hashable]:
+    '''
+    Return a frozenset of `src` if not already a frozenset.
+    '''
+    if isinstance(src, frozenset):
+        return src
+    return frozenset(src)
 
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
@@ -797,7 +804,6 @@ def gen_skip_middle(
             break
     yield from reversed(values)
 
-
 def dtype_from_element(
         value: tp.Any,
         ) -> np.dtype:
@@ -817,7 +823,6 @@ def dtype_from_element(
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
-
 
 # def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
@@ -886,8 +891,6 @@ def dtype_from_element(
 #             return dt_resolve
 #     return dt_resolve
 
-
-
 def concat_resolved(
         arrays: tp.Iterable[np.ndarray],
         axis: int = 0,
@@ -926,7 +929,6 @@ def concat_resolved(
     np.concatenate(arrays, out=out, axis=axis)
     out.flags.writeable = False
     return out
-
 
 def blocks_to_array_2d(
         blocks: tp.Iterator[np.ndarray],
@@ -997,8 +999,6 @@ def blocks_to_array_2d(
     array.flags.writeable = False
     return array
 
-
-
 def full_for_fill(
         dtype: tp.Optional[np.dtype],
         shape: tp.Union[int, tp.Tuple[int, ...]],
@@ -1035,7 +1035,6 @@ def full_for_fill(
             array[iloc] = fill_value
 
     return array
-
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
     '''Given a dtype, return an appropriate and compatible null value. This is used to provide temporary, "dummy" fill values that reduce type coercions.
@@ -1143,7 +1142,6 @@ def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np
 
     return array.argsort(kind=kind)
 
-
 def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -1195,7 +1193,6 @@ def ufunc_unique1d_indexer(array: np.ndarray,
 
     return values, indexer
 
-
 def ufunc_unique1d_positions(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''
@@ -1214,7 +1211,6 @@ def ufunc_unique1d_positions(array: np.ndarray,
     indexer.flags.writeable = False
 
     return positions[mask], indexer
-
 
 def ufunc_unique1d_counts(array: np.ndarray,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -1312,7 +1308,6 @@ def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
     return array.view(dtype)[NULL_SLICE, 0] # get 1D representation
 
-
 def ufunc_unique2d(array: np.ndarray,
         axis: int = 0,
     ) -> np.ndarray:
@@ -1342,7 +1337,6 @@ def ufunc_unique2d(array: np.ndarray,
         return values.T
     return values
 
-
 def ufunc_unique2d_indexer(array: np.ndarray,
         axis: int = 0,
         ) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -1367,7 +1361,6 @@ def ufunc_unique2d_indexer(array: np.ndarray,
         return values.T, indexer
     return values, indexer
 
-
 def ufunc_unique(
         array: np.ndarray,
         *,
@@ -1384,8 +1377,6 @@ def ufunc_unique(
     elif array.ndim == 1:
         return ufunc_unique1d(array)
     return ufunc_unique2d(array, axis=axis)
-
-
 
 def roll_1d(array: np.ndarray,
             shift: int
@@ -1407,7 +1398,6 @@ def roll_1d(array: np.ndarray,
     post[0:shift] = array[-shift:]
     post[shift:] = array[0:-shift]
     return post
-
 
 def roll_2d(array: np.ndarray,
             shift: int,
@@ -1473,10 +1463,8 @@ def _argminmax_1d(
 
     return ufunc(array)
 
-
 argmin_1d = partial(_argminmax_1d, ufunc=np.argmin, ufunc_skipna=np.nanargmin)
 argmax_1d = partial(_argminmax_1d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
-
 
 def _argminmax_2d(
         array: np.ndarray,
@@ -1512,7 +1500,6 @@ argmax_2d = partial(_argminmax_2d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
 #-------------------------------------------------------------------------------
 # array constructors
 
-
 def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
     '''
     Returns:
@@ -1527,7 +1514,6 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             is_iifa = isinstance(values, INVALID_ITERABLE_FOR_ARRAY)
             copy_values |= is_iifa
     return is_gen, copy_values
-
 
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
@@ -1602,7 +1588,6 @@ def prepare_iter_for_array(
         values_post.extend(v_iter)
         return resolved, has_tuple, values_post
     return resolved, has_tuple, values #type: ignore
-
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
@@ -1706,7 +1691,6 @@ def iterable_to_array_1d(
 
     v.flags.writeable = False
     return v, is_unique
-
 
 def iterable_to_array_2d(
         values: tp.Iterable[tp.Iterable[tp.Any]],
@@ -1830,7 +1814,6 @@ def pos_loc_slice_to_iloc_slice(
         stop = key.stop + 1
     return slice(start, stop, key.step)
 
-
 def key_to_str(key: GetItemKeyType) -> str:
     if key.__class__ is not slice:
         return str(key)
@@ -1923,7 +1906,6 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(operator.add,
         (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
-
 def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
     '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
     '''
@@ -1932,7 +1914,6 @@ def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
     if array_is_dt64 and other_is_dt64:
         return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0] #type: ignore
     return False
-
 
 def _slice_to_datetime_slice_args(key: slice,
         dtype: tp.Optional[np.dtype] = None
@@ -2007,7 +1988,6 @@ def array_to_groups_and_locations(
         return ufunc_unique1d_indexer(array)
     return ufunc_unique2d_indexer(array, axis=unique_axis)
 
-
 # def isna_element(value: tp.Any) -> bool:
 #     '''Return Boolean if value is an NA. This does not yet handle pd.NA
 #     '''
@@ -2053,7 +2033,6 @@ def isna_array(array: np.ndarray,
             dtype=DTYPE_BOOL,
             count=len(array),
             )
-
 
 def isfalsy_array(array: np.ndarray) -> np.ndarray:
     '''
@@ -2272,7 +2251,6 @@ def _array_to_duplicated_hashable(
 
     return is_dupe
 
-
 def _array_to_duplicated_sortable(
         array: np.ndarray,
         axis: int = 0,
@@ -2340,8 +2318,6 @@ def _array_to_duplicated_sortable(
     r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
-
-
 def array_to_duplicated(
         array: np.ndarray,
         axis: int = 0,
@@ -2369,8 +2345,8 @@ def array_to_duplicated(
                 exclude_last=exclude_last
                 )
 
-
 #-------------------------------------------------------------------------------
+
 def array_shift(*,
         array: np.ndarray,
         shift: int,
@@ -2803,7 +2779,6 @@ def setdiff2d(
         other,
         assume_unique=assume_unique)
 
-
 MANY_TO_ONE_MAP = {
         (1, ManyToOneType.UNION): union1d,
         (1, ManyToOneType.INTERSECT): intersect1d,
@@ -2857,7 +2832,6 @@ def ufunc_set_iter(
     result.flags.writeable = False
     return result
 
-
 def _isin_1d(
         array: np.ndarray,
         other: tp.FrozenSet[tp.Any]
@@ -2877,7 +2851,6 @@ def _isin_1d(
     result.flags.writeable = False
     return result
 
-
 def _isin_2d(
         array: np.ndarray,
         other: tp.FrozenSet[tp.Any]
@@ -2896,7 +2869,6 @@ def _isin_2d(
 
     result.flags.writeable = False
     return result
-
 
 def isin_array(*,
         array: np.ndarray,
@@ -2924,7 +2896,6 @@ def isin_array(*,
     result.flags.writeable = False
 
     return result
-
 
 def isin(
         array: np.ndarray,
@@ -2958,6 +2929,7 @@ def isin(
             )
 
 #-------------------------------------------------------------------------------
+
 def _ufunc_logical_skipna(
         array: np.ndarray,
         ufunc: AnyCallable,
@@ -3021,7 +2993,6 @@ def _ufunc_logical_skipna(
     if array.ndim == 1:
         return True
     return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
-
 
 def ufunc_all(array: np.ndarray,
         axis: int = 0,
@@ -3115,7 +3086,6 @@ def array_from_element_apply(
 
     post.flags.writeable = False
     return post
-
 
 def array_from_element_method(*,
         array: np.ndarray,
@@ -3276,7 +3246,6 @@ def array_sample(
     post.flags.writeable = False
     return post
 
-
 def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Given an array of values, discover contiguous values and their length.
 
@@ -3306,9 +3275,6 @@ def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
     widths[:-1] = (idx - np.roll(idx, 1))[1:]
 
     return array[transitions], widths
-
-
-
 
 #-------------------------------------------------------------------------------
 # json utils
@@ -3375,6 +3341,7 @@ class Reanimate:
     def filter(cls, value: str) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
+
 class ReanimateDT64(Reanimate):
     RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
 
@@ -3384,6 +3351,7 @@ class ReanimateDT64(Reanimate):
         if post is None:
             return value
         return np.datetime64(post.group(1))
+
 
 class ReanimateDTD(Reanimate):
     RE = re.compile(r"datetime.date\(([ ,0-9]+)\)")
@@ -3517,8 +3485,6 @@ def slices_from_targets(
 
             yield target_slice, value
 
-
-
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
@@ -3560,7 +3526,6 @@ def write_optional_file(
         f.seek(0)
     return fp #type: ignore
 
-
 @contextlib.contextmanager
 def file_like_manager(
         file_like: PathSpecifierOrFileLikeOrIterator,
@@ -3601,7 +3566,6 @@ def get_tuple_constructor(
         pass
     raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
-
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     '''
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
@@ -3609,7 +3573,6 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
-
 
 def iloc_to_insertion_iloc(key: int, size: int) -> int:
     '''
