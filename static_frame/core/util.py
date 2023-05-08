@@ -688,9 +688,9 @@ def bytes_to_size_label(size_bytes: int) -> str:
 
 #-------------------------------------------------------------------------------
 
-T = tp.TypeVar('T', tp.Hashable)
+_T = tp.TypeVar('_T', bound=tp.Hashable)
 
-def frozenset_filter(src: tp.Iterable[T]) -> tp.FrozenSet[T]:
+def frozenset_filter(src: tp.Iterable[_T]) -> tp.FrozenSet[_T]:
     '''
     Return a frozenset of `src` if not already a frozenset.
     '''
