@@ -4,7 +4,7 @@ from sys import getsizeof
 
 import frame_fixtures as ff
 import numpy as np
-from automap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame import Bus
 from static_frame import Frame
@@ -458,7 +458,6 @@ class TestUnit(TestCase):
             3, 1,
             tb._shape, # (3, 1),
             np.dtype('int64'),
-            tb._dtypes, # [np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
             tb
         )))
@@ -480,7 +479,6 @@ class TestUnit(TestCase):
             3, 2,
             tb._shape, # (3, 2),
             np.dtype('int64'),
-            tb._dtypes, # [np.dtype('int64'), np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
             tb
         )))
@@ -500,7 +498,6 @@ class TestUnit(TestCase):
             3,
             tb._shape, # (2, 3),
             np.dtype('int64'),
-            tb._dtypes, #[np.dtype('int64'), np.dtype('int64'), np.dtype('int64')],
             # _row_dtype, # np.dtype('int64') is already included
             tb
         )))

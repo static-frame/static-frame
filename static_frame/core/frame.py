@@ -479,7 +479,6 @@ class Frame(ContainerOperand):
                         ))
         own_index = False
         own_columns = False
-
         if not frame_seq:
             return cls(
                     index=index,
@@ -5030,7 +5029,6 @@ class Frame(ContainerOperand):
         Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
-
         if blocks.__class__ is not TypeBlocks:
             return blocks # type: ignore # reduced to an element
 

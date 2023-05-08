@@ -2,6 +2,7 @@ import typing as tp
 from copy import deepcopy
 from functools import partial
 from itertools import chain
+from itertools import repeat
 from itertools import zip_longest
 
 import numpy as np
@@ -419,7 +420,6 @@ class TypeBlocks(ContainerOperand):
 
     __slots__ = (
             '_blocks',
-            '_dtypes',
             '_index',
             '_shape',
             '_row_dtype',
@@ -446,7 +446,6 @@ class TypeBlocks(ContainerOperand):
 
         '''
         blocks: tp.List[np.ndarray] = [] # ordered blocks
-        dtypes: tp.List[np.dtype] = [] # column position to dtype
         index: tp.List[tp.Tuple[int, int]] = [] # columns position to blocks key
         block_count = 0
 
@@ -461,14 +460,12 @@ class TypeBlocks(ContainerOperand):
             if column_count == 0:
                 # set shape but do not store array
                 return cls(blocks=blocks,
-                        dtypes=dtypes,
                         index=index,
                         shape=(row_count, column_count) #type: ignore
                         )
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
                 index.append((block_count, i))
-                dtypes.append(raw_blocks.dtype) #type: ignore
 
         else: # an iterable of blocks
             row_count = None
@@ -498,7 +495,6 @@ class TypeBlocks(ContainerOperand):
                 # store position to key of block, block columns
                 for i in range(c):
                     index.append((block_count, i))
-                    dtypes.append(block.dtype)
 
                 column_count += c
                 block_count += 1
@@ -513,7 +509,6 @@ class TypeBlocks(ContainerOperand):
 
         return cls(
                 blocks=blocks,
-                dtypes=dtypes,
                 index=index,
                 shape=(row_count, column_count),
                 )
@@ -559,7 +554,7 @@ class TypeBlocks(ContainerOperand):
             return cls.from_blocks(blocks)
 
         # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
-        return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
+        return cls(blocks=list(), index=list(), shape=shape)
 
     @staticmethod
     def vstack_blocks_to_blocks(
@@ -608,21 +603,18 @@ class TypeBlocks(ContainerOperand):
 
     def __init__(self, *,
             blocks: tp.List[np.ndarray],
-            dtypes: tp.List[np.dtype],
             index: tp.List[tp.Tuple[int, int]],
-            shape: tp.Tuple[int, int]
+            shape: tp.Tuple[int, int],
             ) -> None:
         '''
         Default constructor. We own all lists passed in to this constructor. This instance takes ownership of all lists passed to it.
 
         Args:
             blocks: A list of one or two-dimensional NumPy arrays. The list is owned by this instance.
-            dtypes: list of dtypes per external column. The list is owned by this instance.
             index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
         '''
         self._blocks = blocks
-        self._dtypes = dtypes
         self._index = index # list where index, as column, gets block, offset
         self._shape = shape
 
@@ -648,7 +640,6 @@ class TypeBlocks(ContainerOperand):
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'TypeBlocks':
         obj = self.__class__.__new__(self.__class__)
         obj._blocks = [array_deepcopy(b, memo) for b in self._blocks]
-        obj._dtypes = deepcopy(self._dtypes, memo)
         obj._index = self._index.copy() # list of tuples of ints
         obj._shape = self._shape # immutable, no copy necessary
         obj._row_dtype = deepcopy(self._row_dtype, memo)
@@ -661,7 +652,6 @@ class TypeBlocks(ContainerOperand):
         '''
         return self.__class__(
                 blocks=[b for b in self._blocks],
-                dtypes=self._dtypes.copy(), # list
                 index=self._index.copy(), # list
                 shape=self._shape,
                 )
@@ -675,13 +665,22 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # new properties
 
+    def _iter_dtypes(self) -> tp.Iterator[np.dtype]:
+        for b in self._blocks:
+            dt = b.dtype
+            if b.ndim == 1:
+                yield dt
+            else: # PERF: repeat is much faster than a for loop
+                yield from repeat(dt, b.shape[1])
+
     @property
     def dtypes(self) -> np.ndarray:
         '''
         Return an immutable array that, for each realizable column (not each block), the dtype is given.
         '''
         # this creates a new array every time it is called; could cache
-        a = np.array(self._dtypes, dtype=DTYPE_OBJECT)
+        a = np.empty(self._shape[1], dtype=DTYPE_OBJECT)
+        a[NULL_SLICE] = list(self._iter_dtypes())
         a.flags.writeable = False
         return a
 
@@ -1465,7 +1464,6 @@ class TypeBlocks(ContainerOperand):
         # for now, we do not expose application of rounding on a subset of blocks, but is doable by setting the column_key
         return self.__class__(
                 blocks=list(self._ufunc_blocks(column_key=NULL_SLICE, func=func)),
-                dtypes=self._dtypes.copy(), # list
                 index=self._index.copy(),
                 shape=self._shape
                 )
@@ -2784,44 +2782,51 @@ class TypeBlocks(ContainerOperand):
                 yield from self._blocks
             else:
                 for b in self._blocks:
-                    # selection work for both 1D and 2D
-                    block_sliced = b[row_key] # PERF: most time from line profiler
-                    if block_sliced.__class__ is np.ndarray:
-                        if single_row and block_sliced.ndim == 1:
-                            block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
+                    # selection works for both 1D (to an element) and 2D (two a 1D array)
+                    b_row = b[row_key] # PERF: most time from line profiler
+                    if b_row.__class__ is np.ndarray:
+                        if single_row and b_row.ndim == 1:
+                            # reshaping preserves writeable status
+                            b_row = b_row.reshape(1, b_row.shape[0])
+                        yield b_row
                     else: # wrap element back into an array
-                        block_sliced = np.array((block_sliced,), dtype=b.dtype)
-                    yield block_sliced
+                        # If `row_key`` selects a non-array, we have selected an element; if b is an object dtype, we might have selected a list or other iterable that, if naively given to an array constructor, gets "flattened" into arrays. Thus, we create an empty and assign
+                        b_fill = np.empty(1, dtype=b.dtype)
+                        b_fill[0] = b_row
+                        b_fill.flags.writeable = False
+                        yield b_fill
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
             for block_idx, slc in self._key_to_block_slices(column_key): # PERF: most time from line profiler
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:
-                        block_sliced = b
+                        b_sliced = b
                     else:
-                        block_sliced = b[row_key] # PERF: slow from line profiler
+                        b_sliced = b[row_key] # PERF: slow from line profiler
                 else: # given 2D, use row key and column slice
                     if row_key_null:
-                        block_sliced = b[NULL_SLICE, slc]
+                        b_sliced = b[NULL_SLICE, slc]
                     else:
-                        block_sliced = b[row_key, slc]
+                        b_sliced = b[row_key, slc]
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
-                if block_sliced.__class__ is np.ndarray:
+                if b_sliced.__class__ is np.ndarray:
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
-                    if single_row and block_sliced.ndim == 1:
-                        block_sliced = block_sliced.reshape(1, block_sliced.shape[0])
+                    if single_row and b_sliced.ndim == 1:
+                        b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
                     # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    elif (block_sliced.ndim == 2
-                            and block_sliced.shape[1] == 1
+                    elif (b_sliced.ndim == 2
+                            and b_sliced.shape[1] == 1
                             and not single_row):
-                        block_sliced = block_sliced[NULL_SLICE, 0]
-                else: # a single element, wrap back up in array
-                    # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
-                    block_sliced = np.array((block_sliced,), dtype=b.dtype)
-                yield block_sliced
-
+                        b_sliced = b_sliced[NULL_SLICE, 0]
+                    b_sliced.flags.writeable = False
+                    yield b_sliced
+                else: # a single element, wrap back up in array; assignment handles special cases with lists in object dtypes correctly
+                    b_fill = np.empty(1, dtype=b.dtype)
+                    b_fill[0] = b_sliced
+                    b_fill.flags.writeable = False
+                    yield b_fill
 
     def _extract_array(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -2838,10 +2843,18 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 if row_key is None:
                     return b
-                return b[row_key]
+                array = b[row_key]
+                if array.__class__ is np.ndarray:
+                    array.flags.writeable = False
+                return array
+
             if row_key is None:
                 return b[NULL_SLICE, column]
-            return b[row_key, column]
+
+            array = b[row_key, column]
+            if array.__class__ is np.ndarray:
+                array.flags.writeable = False
+            return array
 
         # figure out shape from keys so as to not accumulate?
         blocks = []
@@ -4200,8 +4213,11 @@ class TypeBlocks(ContainerOperand):
         if self._shape != other._shape:
             return False
 
-        if compare_dtype and self._dtypes != other._dtypes: # these are lists
-            return False
+        if compare_dtype:
+            for d_self, d_other in zip(self._iter_dtypes(), other._iter_dtypes()):
+                # have already validated shape
+                if d_self != d_other:
+                    return False
 
         # NOTE: cannot directly compare blocks as we cannot assume the same number of blocks means that the blocks are consolidated in the same way
 
@@ -4244,7 +4260,6 @@ class TypeBlocks(ContainerOperand):
         # add block, dtypes, index
         for i in range(block_columns):
             self._index.append((block_idx, i))
-            self._dtypes.append(block.dtype)
 
         # make immutable copy if necessary before appending
         self._blocks.append(immutable_filter(block))

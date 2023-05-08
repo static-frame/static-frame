@@ -86,6 +86,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
+from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
@@ -118,4 +119,4 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '1.3.1'
+__version__ = '1.4.1'

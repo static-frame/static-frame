@@ -155,6 +155,18 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = Index(np.array(('2021-02', '2022-04'), dtype=np.datetime64))
 
+    def test_index_init_n(self) -> None:
+        a1 = np.array((np.nan, np.nan, 3), dtype=np.float64)
+        a2 = a1.astype(np.float16)
+        a2.flags.writeable = False
+        idx = Index(a2)
+        self.assertEqual(idx.loc_to_iloc(3), 2)
+
+    def test_index_init_o(self) -> None:
+        a1 = np.array((10, 40, 20))
+        idx = Index(a1) # permit a mutable array
+        self.assertEqual(idx.values.tolist(), [10, 40, 20])
+
 
     #---------------------------------------------------------------------------
 
@@ -173,7 +185,7 @@ class TestUnit(TestCase):
     def test_index_loc_to_iloc_b(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         post = idx._loc_to_iloc(Series(['b', 'c']))
-        self.assertEqual(post, [1, 2])
+        self.assertEqual(post.tolist(), [1, 2]) #type: ignore
 
     def test_index_loc_to_iloc_c(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
@@ -195,7 +207,7 @@ class TestUnit(TestCase):
         with self.assertRaises(LocInvalid):
             _ = idx1.loc_to_iloc(slice('x', 'y'))
 
-        self.assertEqual(idx1.loc_to_iloc(['d', 'a']), [3, 0])
+        self.assertEqual(idx1.loc_to_iloc(['d', 'a']).tolist(), [3, 0]) #type: ignore
         with self.assertRaises(KeyError):
             _ = idx1.loc_to_iloc(['d', 'x'])
 
@@ -247,7 +259,7 @@ class TestUnit(TestCase):
             _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)])
 
         post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
-        self.assertEqual(post, [2, 1, 0])
+        self.assertEqual(post.tolist(), [2, 1, 0]) #type: ignore
 
     def test_index_loc_to_iloc_g(self) -> None:
         dt = datetime.date
@@ -408,7 +420,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc['b':'d'].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
-        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
+        self.assertEqual(idx._loc_to_iloc(['b', 'b', 'c']).tolist(), [1, 1, 2]) #type: ignore
 
         self.assertEqual(idx.loc['c'], 'c')
 

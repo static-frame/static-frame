@@ -201,6 +201,10 @@ class TestUnit(TestCase):
         self.assertEqual(s1[:'2019'].shape, (0,)) # type: ignore
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
 
+    def test_index_date_r(self) -> None:
+        with self.assertRaises(InvalidDatetime64Initializer):
+            _ = IndexDate((0,))
+
     #---------------------------------------------------------------------------
 
     def test_index_datetime_init_a(self) -> None:
@@ -853,7 +857,7 @@ class TestUnit(TestCase):
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
 
-        self.assertEqual(idx.loc_to_iloc(['2020-01-15', '2020-01-29']),
+        self.assertEqual(idx.loc_to_iloc(['2020-01-15', '2020-01-29']).tolist(), #type: ignore
                 [14, 28])
 
         self.assertEqual(idx.loc_to_iloc(idx == dt64('2020-01-13')).tolist(), #type: ignore [union-attr]

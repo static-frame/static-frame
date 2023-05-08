@@ -1137,7 +1137,9 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), np.array((1, 2, 3), dtype=np.int64)))
+        a1 = np.array((1, 2, 3), dtype=np.int64)
+        a1.flags.writeable = False
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), a1))
 
         bytes1 = y1._to_signature_bytes(include_name=False)
         self.assertEqual(sha256(bytes1).hexdigest(),
@@ -1155,7 +1157,9 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), np.array((1, 2, 3), dtype=np.int64)))
+        a1 = np.array((1, 2, 3), dtype=np.int64)
+        a1.flags.writeable = False
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), a1))
         bytes1 = y1._to_signature_bytes(include_name=False)
 
         y2 = Yarn((b1, b2, b3))

@@ -18,7 +18,7 @@ class TestUnit(TestCase):
         self.assertEqual(ic.iloc_src.tolist(),
                 [0, 1, 2, 3, 4]
                 )
-        self.assertEqual(ic.iloc_dst,
+        self.assertEqual(ic.iloc_dst.tolist(), #type: ignore
                 [0, 1, 2, 3, 4]
                 )
 
@@ -31,7 +31,7 @@ class TestUnit(TestCase):
         self.assertTrue(ic.has_common)
         self.assertEqual(ic.size, 1)
         self.assertEqual(ic.iloc_src, [0]) # this is as list in this use case
-        self.assertEqual(ic.iloc_dst.tolist(), [0]) # type: ignore
+        self.assertEqual(ic.iloc_dst.tolist(), [0]) #type: ignore
 
 
 if __name__ == '__main__':

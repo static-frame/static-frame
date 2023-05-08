@@ -60,7 +60,6 @@ class TestUnit(TestCase):
             memory_total(tb._index, seen=seen),
             memory_total(tb._shape, seen=seen),
             memory_total(tb._row_dtype, seen=seen),
-            memory_total(tb._dtypes, seen=seen),
             getsizeof(tb) if id(tb) not in seen else 0,
         )))
 
