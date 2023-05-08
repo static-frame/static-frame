@@ -9153,6 +9153,10 @@ class FrameGO(Frame):
         if isinstance(value, Series):
             # select only the values matching our index
             block = value.reindex(self.index, fill_value=fill_value).values
+        elif isinstance(value, Index):
+            if len(value) != row_count:
+                raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
+            block = value.values
         elif isinstance(value, Frame):
             raise RuntimeError(
                     f'cannot use setitem with a Frame; use {self.__class__.__name__}.extend()')
@@ -9163,7 +9167,7 @@ class FrameGO(Frame):
             if len(value) != row_count:
                 # block may have zero shape if created without columns
                 raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
-            block = value # NOTE: could own_data here with additional argument
+            block = value
 
         else:
             if not hasattr(value, '__iter__') or isinstance(value, str):
