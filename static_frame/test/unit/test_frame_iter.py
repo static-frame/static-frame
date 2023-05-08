@@ -9,6 +9,7 @@ from static_frame import FrameGO
 from static_frame import HLoc
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
+from static_frame import IndexYear
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
@@ -457,6 +458,27 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
             ((0, ((0, 0), (1, -1), (2, -1))), (1, ((0, 3), (1, -1), (2, -1))), (2, ((0, 6), (1, -1), (2, -1))))
             )
+
+    def test_frame_iter_element_g1(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).rename(index='a', columns='b')
+        f2 = f1.iter_element().apply(str)
+        self.assertEqual(f1.columns.name, f2.columns.name)
+        self.assertEqual(f1.index.name, f2.index.name)
+
+    def test_frame_iter_element_g2(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3), columns=('2021', '1943', '1523')).rename(index='a', columns='b')
+        f2 = f1.iter_element().apply(str, columns_constructor=IndexYear)
+        self.assertIs(f2.columns.__class__, IndexYear)
+        self.assertIs(f2.columns.name, 'b')
+        self.assertEqual(f1.shape, f2.shape)
+
+    def test_frame_iter_element_g3(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3), index=('2021', '1943', '1523')).rename(index='a', columns='b')
+        f2 = f1.iter_element().apply(str, index_constructor=IndexYear)
+        self.assertIs(f2.index.__class__, IndexYear)
+        self.assertIs(f2.index.name, 'a')
+        self.assertEqual(f1.shape, f2.shape)
+
 
     #---------------------------------------------------------------------------
 

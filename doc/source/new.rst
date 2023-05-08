@@ -1,6 +1,28 @@
 What is New in StaticFrame
 ===============================
 
+1.4.1
+-----------
+
+Optimizations to reduce ``TypeBlocks`` size and initialization time.
+
+
+1.4.0
+-----------
+
+Replaces ``automap`` with ``arraymap`` 0.1.7, offering optimized ``Index`` performance.
+
+
+1.3.2
+-----------
+
+Corrected issue with ``Frame.iter_element().apply()`` whereby ``columns.name`` are not preserved.
+
+Corrected issue when selecting a single row from a ``Frame`` that has object columns that contain sequences.
+
+Set ``arraykit`` version to 0.3.4.
+
+
 1.3.1
 -----------
 

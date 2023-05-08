@@ -382,11 +382,11 @@ class IndexHierarchy(IndexBase):
                 depth=len(levels),
                 )
 
-        for lvl, constructor in zip(levels, index_constructors_iter):
-            if isinstance(lvl, Index):
-                indices.append(immutable_index_filter(lvl))
+        for level, constructor in zip(levels, index_constructors_iter):
+            if isinstance(level, Index):
+                indices.append(immutable_index_filter(level))
             else:
-                indices.append(constructor(lvl))
+                indices.append(constructor(level))
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -2286,9 +2286,12 @@ class IndexHierarchy(IndexBase):
                 labels = self.values_at_depth(pos)
                 label_indexes = ufunc_unique1d_positions(labels)[0]
                 label_indexes.sort()
-                return labels[label_indexes]
+                array = labels[label_indexes]
+            else:
+                array = self._indices[pos].values
 
-            return self._indices[pos].values
+            array.flags.writeable = False
+            return array
 
         if order_by_occurrence:
             raise NotImplementedError('order_by_occurrence not implemented for multiple depth levels.')

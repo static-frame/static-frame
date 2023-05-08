@@ -36,12 +36,9 @@ from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-
-# from static_frame.core.util import DTYPE_INEXACT_KINDS
-
-
-
 
 MAX_ROWS = 8
 MAX_COLUMNS = 10
@@ -173,13 +170,18 @@ class DTGroup(Enum):
     ALL = (hypo_np.scalar_dtypes,)
 
     NUMERIC = (
-            hypo_np.floating_dtypes,
-            hypo_np.integer_dtypes,
-            hypo_np.complex_number_dtypes
+            partial(hypo_np.floating_dtypes,
+                    endianness='='),
+            partial(hypo_np.integer_dtypes,
+                    endianness='='),
+            partial(hypo_np.complex_number_dtypes,
+                    endianness='='),
             )
 
     BOOL = (partial(st.just, DTYPE_BOOL),)
-    STRING = (hypo_np.unicode_string_dtypes,)
+    STRING = (partial(
+            hypo_np.unicode_string_dtypes,
+            endianness='='),)
 
     YEAR = (partial(hypo_np.datetime64_dtypes, min_period='Y', max_period='Y'),)
     YEAR_MONTH = (partial(hypo_np.datetime64_dtypes, min_period='M', max_period='M'),)
@@ -303,6 +305,23 @@ def get_array_object(
             unique=unique
             )
 
+def array_map(a: np.ndarray,
+        ) -> np.ndarray:
+    a.flags.writeable = False
+    return a
+
+def array_filter(a: np.ndarray, unique: bool):
+    if unique:
+        # remove cases where we get mulutple NaNs when requesting unique values
+        if a.dtype.kind in DTYPE_INEXACT_KINDS:
+            isna = np.isnan(a)
+            if isna.sum() > 1:
+                return False
+        elif a.dtype.kind in DTYPE_NAT_KINDS:
+            isna = np.isnat(a)
+            if isna.sum() > 1:
+                return False
+    return True
 
 def get_array_from_dtype_group(
         dtype_group: DTGroup,
@@ -312,27 +331,17 @@ def get_array_from_dtype_group(
     '''
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
-
-    # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
-
-    # def fill_na(array: np.ndarray) -> np.ndarray:
-    #     if array.dtype.kind in DTYPE_INEXACT_KINDS:
-    #         is_nan = np.isnan(array)
-    #         if is_nan.any():
-    #             fill = np.empty(array.shape, dtype=array.dtype)
-    #             array[is_nan] = fill[is_nan]
-    #             return array
-    #     return array
-
     array_object = get_array_object(
             shape=shape,
             unique=unique
-            )
+            ).filter(partial(array_filter, unique=unique)
+            ).map(array_map)
     array_non_object = hypo_np.arrays(
             get_dtype(dtype_group),
             shape,
             unique=unique
-            )
+            ).filter(partial(array_filter, unique=unique)
+            ).map(array_map)
 
     if dtype_group is DTGroup.OBJECT:
         return array_object
