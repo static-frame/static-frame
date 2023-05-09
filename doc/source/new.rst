@@ -13,7 +13,6 @@ Set ``arraymap`` to 0.1.8.
 Removed deprecated JSON interfaces: ``Frame.from_json()``, ``Frame.from_json_url()``.
 
 
-
 1.4.1
 -----------
 
