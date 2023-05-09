@@ -1574,12 +1574,6 @@ class ExGenFrame(ExGen):
         elif attr == 'from_items':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_ITEMS_A)})'
 
-        elif attr == 'from_json':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_JSON_A)})'
-
-        elif attr == 'from_json_url':
-            pass
-
         elif attr in (
                 'from_json_columns',
                 'from_json_index',
