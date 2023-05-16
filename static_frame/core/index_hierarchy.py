@@ -2790,11 +2790,8 @@ class IndexHierarchy(IndexBase):
         else:
             indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
 
-        indexers = np.vstack(
-            (
-                np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
-                self._indexers,
-            )
+        indexers = np.zeros((len(self._indexers) + 1, self.__len__()), dtype=DTYPE_INT_DEFAULT)
+        indexers[1:] = self._indexers 
         )
         indexers.flags.writeable = False
 
