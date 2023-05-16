@@ -9181,6 +9181,10 @@ class TestUnit(TestCase):
             _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
 
 
+    def test_frame_from_concat_hh(self) -> None:
+        a = sf.Series([1, 2, 3], name='2000-01-01')
+        b = sf.Series([4, 5, 6], name=np.datetime64('2000-01-02'))
+        f1 = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
 
     #---------------------------------------------------------------------------
 
