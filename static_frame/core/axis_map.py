@@ -70,7 +70,7 @@ def _bus_to_hierarchy_inner_hierarchies(
     primary = IndexHierarchyGO(level_add(next(items_iter)))
 
     for level in items_iter:
-        primary.extend(level_add(items_iter))
+        primary.extend(level_add(level))
 
     return IndexHierarchy(primary), opposite # type: ignore
 
