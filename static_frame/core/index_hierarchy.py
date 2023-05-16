@@ -2791,8 +2791,7 @@ class IndexHierarchy(IndexBase):
             indices = [index_cls((level,)), *(idx.copy() for idx in self._indices)]
 
         indexers = np.zeros((len(self._indexers) + 1, self.__len__()), dtype=DTYPE_INT_DEFAULT)
-        indexers[1:] = self._indexers 
-        )
+        indexers[1:] = self._indexers
         indexers.flags.writeable = False
 
         def gen_blocks() -> tp.Iterator[np.ndarray]:

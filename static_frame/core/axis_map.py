@@ -46,9 +46,9 @@ def _bus_to_hierarchy_inner_hierarchies(
     '''
     opposite: tp.Optional[IndexBase] = None
 
-    def get_next(items_iter: tp.Iterator[tp.Tuple[tp.Hashable, Frame]]) -> IndexHierarchy:
+    def level_add(pair: tp.Tuple[tp.Hashable, Frame]) -> IndexHierarchy:
         nonlocal opposite
-        label, frame = next(items_iter)
+        label, frame = pair
 
         if axis == 0:
             axis0, axis1 = extractor(frame.index), frame.columns
@@ -67,10 +67,10 @@ def _bus_to_hierarchy_inner_hierarchies(
 
     items_iter = iter(bus.items())
 
-    primary = IndexHierarchyGO(get_next(items_iter))
+    primary = IndexHierarchyGO(level_add(next(items_iter)))
 
-    for _ in range(1, len(bus)):
-        primary.extend(get_next(items_iter))
+    for level in items_iter:
+        primary.extend(level_add(items_iter))
 
     return IndexHierarchy(primary), opposite # type: ignore
 
