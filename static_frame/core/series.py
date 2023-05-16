@@ -1898,11 +1898,6 @@ class Series(ContainerOperand):
 
         if isinstance(iloc_key, INT_TYPES): # if we have a single element
             # NOTE: cannot check if we have an array as an array might be an element
-            # NOTE: this branch is not encountered and may not be necessary
-            # if isinstance(key, HLoc) and key.has_key_multiple():
-            #     # must return a Series, even though we do not have an array
-            #     values = np.array(values)
-            #     values.flags.writeable = False
             return values #type: ignore
 
         return self.__class__(values,
