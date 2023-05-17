@@ -101,12 +101,17 @@ class InterfaceFillValue(Interface[TContainer]):
             key: GetItemKeyType,
             index: 'IndexBase',
             ) -> tp.Tuple[GetItemKeyType, bool, bool]:
+        from static_frame.core.container_util import key_from_container_key
+
+        key = key_from_container_key(index, key, expand_iloc=True)
         key_is_multiple = isinstance(key, KEY_MULTIPLE_TYPES)
+
         if key.__class__ is slice:
             key_is_null_slice = key == NULL_SLICE
             key = index._extract_loc(key) #type: ignore
         else:
             key_is_null_slice = False
+
         return key, key_is_multiple, key_is_null_slice
 
     def _extract_loc1d(self,
@@ -127,7 +132,7 @@ class InterfaceFillValue(Interface[TContainer]):
             return container.reindex(key if not is_null_slice else None, #type: ignore
                     fill_value=fill_value,
                     )
-
+        # if a single value, return it or the fill value
         fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype) #type: ignore
         return container.get(key, fv) #type: ignore
 
