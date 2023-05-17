@@ -1,6 +1,15 @@
 What is New in StaticFrame
 ===============================
 
+
+1.4.3-dev
+-----------
+
+``via_dt`` will now raise if an NA is encountered and a ``fill_value`` is not provided.
+
+Corrected issue in ``Quilt`` construction when component ``Frame`` have ``IndexHierarchy``.
+
+
 1.4.2
 -----------
 
