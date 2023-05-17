@@ -100,7 +100,7 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.shape, (2, 8))
 
         self.assertEqual(len(tb1), 2)
-        self.assertEqual(tb1._row_dtype, np.object_)
+        self.assertEqual(tb1._index.dtype, np.object_)
 
         slice1 = tb1[2:5]
         self.assertEqual(slice1.shape, (2, 3))
@@ -683,7 +683,7 @@ class TestUnit(TestCase):
 
         post1 = [x for x in tb.element_items()]
 
-        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._row_dtype)
+        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._index.dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
         post2 = tb == tb2
@@ -3435,7 +3435,7 @@ class TestUnit(TestCase):
             [['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x']])
-
+        import ipdb; ipdb.set_trace()
         a3 = next(tb.axis_values(0))
         self.assertEqual(a3.tolist(),
             ['x', 'x', 'x']

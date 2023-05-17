@@ -3285,7 +3285,7 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
 
         # counts can be zero (not None) if _block was created but is empty
-        row_count, col_count = (self._blocks._shape
+        row_count, col_count = (self._blocks.shape
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -4903,7 +4903,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`tp.Tuple[int, int]`
         '''
-        return self._blocks._shape
+        return self._blocks._index.shape
 
     @property
     def ndim(self) -> int:
@@ -5000,7 +5000,7 @@ class Frame(ContainerOperand):
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
-        blocks_shape = blocks._shape
+        blocks_shape = blocks.shape
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
             # return a 0-sized Series, `blocks` is already extracted
