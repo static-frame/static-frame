@@ -9,6 +9,8 @@ What is New in StaticFrame
 
 Corrected issue in ``Quilt`` construction when component ``Frame`` have ``IndexHierarchy``.
 
+Corrected issue when using an ``Index`` as a selector in ``via_fill_value().loc[]``.
+
 
 1.4.2
 -----------
