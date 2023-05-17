@@ -780,7 +780,6 @@ class TypeBlocks(ContainerOperand):
                 block_column_iter = reversed(self._index)
 
             for block_idx, column in block_column_iter:
-                import ipdb; ipdb.set_trace()
                 b = self._blocks[block_idx]
                 if b.ndim == 1:
                     yield b
