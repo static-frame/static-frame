@@ -364,7 +364,7 @@ class Index(IndexBase):
 
         # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument
         if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
-            raise ErrorInitIndex('Cannot create an Index with a datetime64 array; use an Index subclass (e.g. IndexDate) or supply an `index_constructors` argument')
+            raise ErrorInitIndex(f'Cannot create an `Index` with a `datetime64` array (with `dtype` {self._labels.dtype} and including {self._labels[:10]}); use a subclass (e.g. `IndexDate`) directly or as a constructor argument')
 
     #---------------------------------------------------------------------------
 

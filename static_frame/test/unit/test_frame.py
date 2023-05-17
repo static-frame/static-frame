@@ -9184,7 +9184,16 @@ class TestUnit(TestCase):
     def test_frame_from_concat_hh(self) -> None:
         a = sf.Series([1, 2, 3], name='2000-01-01')
         b = sf.Series([4, 5, 6], name=np.datetime64('2000-01-02'))
+        # for axis 1, name will become column label, index will remains
+        # this fails as we end up using default index constructor on dt64 name, which raises
+        f1 = Frame.from_concat((a, b), axis=1, columns_constructor=IndexDate)
+        self.assertEqual(f1.to_pairs(),
+            ((np.datetime64('2000-01-01'), ((0, 1), (1, 2), (2, 3))),
+            (np.datetime64('2000-01-02'), ((0, 4), (1, 5), (2, 6))))
+            )
+
         f1 = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
+
 
     #---------------------------------------------------------------------------
 
