@@ -61,9 +61,9 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid

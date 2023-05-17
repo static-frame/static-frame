@@ -47,6 +47,7 @@ from static_frame import TypeBlocks
 from static_frame import isna_element
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
@@ -9192,7 +9193,8 @@ class TestUnit(TestCase):
             (np.datetime64('2000-01-02'), ((0, 4), (1, 5), (2, 6))))
             )
 
-        f1 = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
+        with self.assertRaises(ErrorInitColumns):
+            _ = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
 
 
     #---------------------------------------------------------------------------
