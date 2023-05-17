@@ -3435,7 +3435,6 @@ class TestUnit(TestCase):
             [['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x']])
-        import ipdb; ipdb.set_trace()
         a3 = next(tb.axis_values(0))
         self.assertEqual(a3.tolist(),
             ['x', 'x', 'x']
