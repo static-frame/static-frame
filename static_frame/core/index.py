@@ -359,12 +359,12 @@ class Index(IndexBase):
         self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
-            raise ErrorInitIndex('Invalid label dtype for this Index', #pragma: no cover
+            raise ErrorInitIndex('Invalid label dtype for this Index.', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
 
         # NOTE: to implement GH # 374; do this after final self._labels creation as user may pass a dtype argument
         if not is_typed and self._labels.dtype.kind == DTYPE_DATETIME_KIND:
-            raise ErrorInitIndex(f'Cannot create an `Index` with a `datetime64` array (with `dtype` {self._labels.dtype} and including {self._labels[:10]}); use a subclass (e.g. `IndexDate`) directly or as a constructor argument')
+            raise ErrorInitIndex(f'Cannot create an `Index` with a `datetime64` array (with `dtype` {self._labels.dtype} and including {self._labels[:10]}); use a subclass (e.g. `IndexDate`) directly or as a constructor argument.')
 
     #---------------------------------------------------------------------------
 
