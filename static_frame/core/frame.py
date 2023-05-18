@@ -5595,7 +5595,7 @@ class Frame(ContainerOperand):
         blocks = self._blocks
 
         if drop:
-            shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
+            shape = blocks._index.columns if axis == 0 else blocks._index.rows
             drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
             drop_mask[key] = False
 
