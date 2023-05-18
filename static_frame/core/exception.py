@@ -1,6 +1,6 @@
 import typing as tp
 import warnings
-from arraykit import ErrorInitBlocks as ErrorInitTypeBlocks
+from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
 
 
 class ErrorInit(RuntimeError):

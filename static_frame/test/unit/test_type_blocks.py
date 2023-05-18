@@ -1810,7 +1810,7 @@ class TestUnit(TestCase):
                 [((0, 0), 1), ((0, 1), 2), ((0, 2), 3), ((0, 3), False), ((0, 4), False), ((0, 5), True), ((0, 6), None), ((0, 7), 'a'), ((0, 8), 'b'), ((1, 0), 4), ((1, 1), 5), ((1, 2), 6), ((1, 3), True), ((1, 4), False), ((1, 5), True), ((1, 6), None), ((1, 7), 'c'), ((1, 8), 'd'), ((2, 0), 0), ((2, 1), 0), ((2, 2), 1), ((2, 3), True), ((2, 4), False), ((2, 5), True), ((2, 6), None), ((2, 7), 'oe'), ((2, 8), 'od')]
                 )
 
-        tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._row_dtype)
+        tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._index.dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
     def test_type_blocks_elements_items_b(self) -> None:
