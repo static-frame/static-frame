@@ -1528,13 +1528,12 @@ class TypeBlocks(ContainerOperand):
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
             # NOTE: this might be internalized in BlockIndex
             yield from ((i, NULL_SLICE) for i in range(len(self._blocks)))
-        else:
-            if isinstance(key, INT_TYPES):
-                # the index has the pair block, column integer
-                yield self._index[key]
-            else: # all cases where we try to get contiguous slices
-                yield from self._index.iter_contiguous(key,
-                        ascending=not retain_key_order)
+        elif isinstance(key, INT_TYPES):
+            # the index has the pair block, column integer
+            yield self._index[key]
+        else: # all cases where we try to get contiguous slices
+            yield from self._index.iter_contiguous(key,
+                    ascending=not retain_key_order)
 
                 # indices: tp.Iterable[tp.Tuple[int, int]]
                 # key_is_array = key.__class__ is np.ndarray
