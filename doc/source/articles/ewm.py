@@ -5,6 +5,19 @@ import pandas as pd
 # https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
 
 
+def get_weights(size: int, alpha: float, adjust: bool) -> np.array:
+    # power of 0 causes start value of 1, then 1-alpha, then reductions
+    assert alpha > 0
+    a = np.power(1. - alpha, np.arange(size))
+    if adjust:
+        return a
+    a[:size-1] = a[size-1] * alpha
+    return a
+
+def get_mean(s, alpha: float, adjust: bool) -> float:
+    w = get_weights(size=len(s), alpha=alpha, adjust=adjust)
+    return np.average(s.values, weights=w)
+
 def pandas():
 
     # Exactly one of com, span, halflife, or alpha must be provided if times is not provided. If times is provided, halflife and one of com, span or alpha may be provided.
@@ -16,18 +29,35 @@ def pandas():
 
     # https://pandas.pydata.org/docs/user_guide/window.html#window-exponentially-weighted
 
+    #  'agg',
+    #  'aggregate',
+
+    # https://pandas.pydata.org/docs/reference/window.html#api-functions-ewm``
+    #  'corr',
+    #  'cov',
+    #  'mean',
+    #  'std',
+    #  'var',
+    #  'sum',
+
+    #  'closed',
+    #  'exclusions',
+    #  'is_datetimelike',
+    #  'method',: single, table: only availael with numba
+    #  'times',: dt64 input
+    #  'win_type',
+    #  'window']
+
     s = pd.Series(np.arange(100))
 
     # raise ValueError("comass, span, halflife, and alpha are mutually exclusive")
-    post1 = s.ewm(com=.5, min_periods=10).mean()
+    post1 = s.ewm(alpha=.5).mean()
     print(post1)
 
-    post2 = s.ewm(halflife=12, min_periods=10).mean()
-    print(post2)
+    # post2 = s.ewm(halflife=12).mean()
+    # print(post2)
 
-    # NOTE: can use var, std, mean,
-
-    # import ipdb; ipdb.set_trace()
+    import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
