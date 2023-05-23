@@ -1526,36 +1526,40 @@ class TypeBlocks(ContainerOperand):
             A generator iterable of pairs, where values are pairs of either a block index and slice or, a block index and column index.
         '''
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
+            # NOTE: this might be internalized in BlockIndex
             yield from ((i, NULL_SLICE) for i in range(len(self._blocks)))
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
                 yield self._index[key]
             else: # all cases where we try to get contiguous slices
-                indices: tp.Iterable[tp.Tuple[int, int]]
-                key_is_array = key.__class__ is np.ndarray
+                yield from self._index.iter_contiguous(key,
+                        ascending=not retain_key_order)
 
-                if key.__class__ is slice:
-                    #  slice the index; null slice already handled
-                    if not retain_key_order:
-                        key = slice_to_ascending_slice(key, self._index.columns)
-                    indices = self._index.iter_select(key) #type: ignore
-                elif key_is_array and key.dtype == bool: #type: ignore
-                    # indices = (self._index[idx] for idx, v in enumerate(key) if v)
-                    indices = self._index.iter_select(key)
-                elif isinstance(key, KEY_ITERABLE_TYPES):
-                    # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
-                    # NOTE: we assume key is a list of integers: if key is a list of Booleans, we will not get the same elementwise selection as if we selected from an array
-                    if not retain_key_order:
-                        if key_is_array:
-                            # NOTE: assume that stable sort does not matter here
-                            key = np.sort(key, kind=DEFAULT_FAST_SORT_KIND)
-                        else:
-                            key = sorted(key)
-                    indices = self._index.iter_select(key)
-                else:
-                    raise KeyError(key)
-                yield from self._indices_to_contiguous_pairs(indices)
+                # indices: tp.Iterable[tp.Tuple[int, int]]
+                # key_is_array = key.__class__ is np.ndarray
+
+                # if key.__class__ is slice:
+                #     #  slice the index; null slice already handled
+                #     if not retain_key_order:
+                #         key = slice_to_ascending_slice(key, self._index.columns)
+                #     indices = self._index.iter_select(key) #type: ignore
+                # elif key_is_array and key.dtype == bool: #type: ignore
+                #     # indices = (self._index[idx] for idx, v in enumerate(key) if v)
+                #     indices = self._index.iter_select(key)
+                # elif isinstance(key, KEY_ITERABLE_TYPES):
+                #     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
+                #     # NOTE: we assume key is a list of integers: if key is a list of Booleans, we will not get the same elementwise selection as if we selected from an array
+                #     if not retain_key_order:
+                #         if key_is_array:
+                #             # NOTE: assume that stable sort does not matter here
+                #             key = np.sort(key, kind=DEFAULT_FAST_SORT_KIND)
+                #         else:
+                #             key = sorted(key)
+                #     indices = self._index.iter_select(key)
+                # else:
+                #     raise KeyError(key)
+                # yield from self._indices_to_contiguous_pairs(indices)
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
