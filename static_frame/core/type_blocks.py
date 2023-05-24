@@ -6,6 +6,7 @@ from itertools import repeat
 from itertools import zip_longest
 
 import numpy as np
+from arraykit import BlockIndex
 from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
@@ -16,7 +17,6 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
-from arraykit import BlockIndex
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -757,7 +757,7 @@ class TypeBlocks(ContainerOperand):
 
         elif axis == 0: # iterate over columns
             if not reverse:
-                block_column_iter = self._index
+                block_column_iter = iter(self._index)
             else:
                 block_column_iter = reversed(self._index)
 

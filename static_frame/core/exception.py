@@ -1,15 +1,12 @@
 import typing as tp
 import warnings
+
 from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
 
 
 class ErrorInit(RuntimeError):
     '''Error in Container initialization.
     '''
-
-# class ErrorInitTypeBlocks(ErrorInit):
-#     '''Error in TypeBlocks initialization.
-#     '''
 
 class ErrorInitSeries(ErrorInit):
     '''Error in Series initialization.
