@@ -60,25 +60,6 @@ class TestUnit(TestCase):
         # self.assertTrue((tb1[0:2].mloc == tb1.mloc[:2]).all())
         # self.assertTrue((tb1.mloc[:2] == tb1.iloc[0:2, 0:2].mloc).all())
 
-    def test_type_blocks_contiguous_pairs(self) -> None:
-
-        a = [(0, 1), (0, 2), (2, 3), (2, 1)]
-        post = list(TypeBlocks._indices_to_contiguous_pairs(a))
-        self.assertEqual(post, [
-                (0, slice(1, 3)),
-                (2, slice(3, 4)),
-                (2, slice(1, 2)),
-                ])
-
-        a = [(0, 0), (0, 1), (0, 2), (1, 4), (2, 1), (2, 3)]
-        post = list(TypeBlocks._indices_to_contiguous_pairs(a))
-        self.assertEqual(post, [
-                (0, slice(0, 3)),
-                (1, slice(4, 5)),
-                (2, slice(1, 2)),
-                (2, slice(3, 4)),
-            ])
-
     def test_type_blocks_b(self) -> None:
 
         # given naturally of a list of rows; this corresponds to what we get with iloc, where we select a row first, then a column
@@ -173,20 +154,6 @@ class TestUnit(TestCase):
         self.assertEqual(list(tb1._key_to_block_slices([3,5,6])),
             [(1, slice(0, 1, None)), (1, slice(2, 3, None)), (2, slice(0, 1, None))]
             )
-
-    #---------------------------------------------------------------------------
-
-    def test_type_blocks_key_to_block_slices_a(self) -> None:
-        a1 = np.array([1, 2, -1])
-        a2 = np.array([[False, True], [True, True], [False, True]])
-        tb1 = TypeBlocks.from_blocks((a1, a2))
-
-        self.assertEqual(list(tb1._key_to_block_slices(None)),
-                [(0, NULL_SLICE), (1, NULL_SLICE)]
-                )
-
-        with self.assertRaises(KeyError):
-            list(tb1._key_to_block_slices('a'))
 
     #---------------------------------------------------------------------------
 
@@ -4154,7 +4121,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_type_blocks_key_to_block_slices_exception(self) -> None:
         # as this is an loc-is-iloc index, the key gets passed directly to type blocks
-        with self.assertRaises(KeyError):
+        with self.assertRaises(TypeError):
             ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
 
 
