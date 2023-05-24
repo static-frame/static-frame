@@ -1460,58 +1460,6 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # extraction utilities
 
-    # @staticmethod
-    # def _cols_to_slice(indices: tp.Sequence[int]) -> slice:
-    #     '''Translate an iterable of contiguous integers into a slice. Integers are assumed to be intentionally ordered and contiguous.
-    #     '''
-    #     start_idx = indices[0]
-    #     # single column as a single slice
-    #     if len(indices) == 1:
-    #         return slice(start_idx, start_idx + 1)
-
-    #     stop_idx = indices[-1]
-    #     if stop_idx > start_idx: # ascending indices
-    #         return slice(start_idx, stop_idx + 1)
-
-    #     if stop_idx == 0:
-    #         return slice(start_idx, None, -1)
-    #     # stop is less than start, need to reduce by 1 to cover range
-    #     return slice(start_idx, stop_idx - 1, -1)
-
-
-    # @classmethod
-    # def _indices_to_contiguous_pairs(cls, indices: tp.Iterable[tp.Tuple[int, int]]
-    #     ) -> tp.Iterator[tp.Tuple[int, slice]]:
-    #     '''Indices are pairs of (block_idx, value); convert these to pairs of (block_idx, slice) when we identify contiguous indices within a block (these are block slices)
-
-    #     Args:
-    #         indices: can be a generator
-    #     '''
-    #     # store pairs of block idx, ascending col list
-    #     last: tp.Optional[tp.Tuple[int, int]] = None
-
-    #     for block_idx, col in indices:
-    #         if not last:
-    #             last = (block_idx, col)
-    #             bundle = [col]
-    #             continue
-    #         if last[0] == block_idx and abs(col - last[1]) == 1:
-    #             # if contiguous, update last, add to bundle
-    #             last = (block_idx, col)
-    #             # do not need to store all col, only the last, however probably easier to just accumulate all
-    #             bundle.append(col)
-    #             continue
-    #         # either new block, or not contiguous on same block
-    #         yield (last[0], cls._cols_to_slice(bundle))
-    #         # start a new bundle
-    #         bundle = [col]
-    #         last = (block_idx, col)
-
-    #     # last can be None
-    #     if last and bundle:
-    #         yield (last[0], cls._cols_to_slice(bundle))
-
-    # NOTE: this might cache its results as it might be frequently called with the same arguments in some scenarios (group)
     def _key_to_block_slices(self,
             key: GetItemKeyTypeCompound,
             retain_key_order: bool = True
@@ -1532,33 +1480,7 @@ class TypeBlocks(ContainerOperand):
             # the index has the pair block, column integer
             yield self._index[key]
         else: # all cases where we try to get contiguous slices
-            yield from self._index.iter_contiguous(key,
-                    ascending=not retain_key_order)
-
-                # indices: tp.Iterable[tp.Tuple[int, int]]
-                # key_is_array = key.__class__ is np.ndarray
-
-                # if key.__class__ is slice:
-                #     #  slice the index; null slice already handled
-                #     if not retain_key_order:
-                #         key = slice_to_ascending_slice(key, self._index.columns)
-                #     indices = self._index.iter_select(key) #type: ignore
-                # elif key_is_array and key.dtype == bool: #type: ignore
-                #     # indices = (self._index[idx] for idx, v in enumerate(key) if v)
-                #     indices = self._index.iter_select(key)
-                # elif isinstance(key, KEY_ITERABLE_TYPES):
-                #     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
-                #     # NOTE: we assume key is a list of integers: if key is a list of Booleans, we will not get the same elementwise selection as if we selected from an array
-                #     if not retain_key_order:
-                #         if key_is_array:
-                #             # NOTE: assume that stable sort does not matter here
-                #             key = np.sort(key, kind=DEFAULT_FAST_SORT_KIND)
-                #         else:
-                #             key = sorted(key)
-                #     indices = self._index.iter_select(key)
-                # else:
-                #     raise KeyError(key)
-                # yield from self._indices_to_contiguous_pairs(indices)
+            yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
