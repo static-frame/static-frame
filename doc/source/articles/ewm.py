@@ -7,20 +7,34 @@ import pandas as pd
 
 def get_weights(size: int, alpha: float, adjust: bool) -> np.array:
     # power of 0 causes start value of 1, then 1-alpha, then reductions
-    assert alpha > 0
-    a = np.power(1. - alpha, np.arange(size))
+    assert 0 < alpha <= 1
+    # get 1 in the rightmost position with exponent of 0
+    a = np.power(1.0 - alpha, np.arange(size - 1, -1, -1))
     if adjust:
         return a
-    a[:size-1] = a[size-1] * alpha
+    a[1:] = a[1:] * alpha # keep the left-most value unchanged
     return a
 
 def get_mean(s, alpha: float, adjust: bool) -> float:
     w = get_weights(size=len(s), alpha=alpha, adjust=adjust)
+    # print('weights', w)
     return np.average(s.values, weights=w)
 
-def pandas():
+def get_series(s, **kwargs):
+    if "span" in kwargs:
+        alpha = 2 / (kwargs['span'] + 1)
+    elif 'alpha' in kwargs:
+        alpha = kwargs['alpha']
 
-    # Exactly one of com, span, halflife, or alpha must be provided if times is not provided. If times is provided, halflife and one of com, span or alpha may be provided.
+    adjust = kwargs['adjust']
+
+    array = np.empty(s.shape, dtype=float)
+    for i in range(len(s)):
+        array[i] = get_mean(s[:i+1], alpha=alpha, adjust=adjust)
+    return pd.Series(array, index=s.index)
+
+
+def pandas():
 
     # Span corresponds to what is commonly called an “N-day EW moving average”.
     # Center of mass has a more physical interpretation and can be thought of in terms of span.
@@ -50,14 +64,20 @@ def pandas():
 
     s = pd.Series(np.arange(100))
 
-    # raise ValueError("comass, span, halflife, and alpha are mutually exclusive")
-    post1 = s.ewm(alpha=.5).mean()
-    print(post1)
+    for kwargs in (
+            {'alpha': .5, 'adjust': True},
+            {'alpha': .5, 'adjust': False},
+            {'span': 10, 'adjust': True},
+            {'span': 10, 'adjust': False},
+            ):
 
-    # post2 = s.ewm(halflife=12).mean()
-    # print(post2)
+        print(kwargs)
+        x = s.ewm(**kwargs).mean()
+        print(x)
+        y = get_series(s, **kwargs)
+        print(y)
+        assert (x.round(10) == y.round(10)).all()
 
-    import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
