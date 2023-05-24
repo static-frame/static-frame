@@ -1,5 +1,4 @@
 import typing as tp
-from copy import deepcopy
 from functools import partial
 from itertools import chain
 from itertools import repeat
@@ -34,7 +33,6 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_OBJECT
@@ -69,7 +67,6 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import roll_1d
-from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
