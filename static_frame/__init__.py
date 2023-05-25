@@ -3,6 +3,7 @@
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
+from arraykit import ErrorInitTypeBlocks
 from arraykit import isna_element as isna_element
 from arraykit import mloc as mloc
 
@@ -24,7 +25,6 @@ from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
-from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import StoreFileMutation

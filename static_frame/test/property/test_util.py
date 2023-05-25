@@ -8,6 +8,7 @@ from arraykit import mloc
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import shape_filter
+from arraykit import slice_to_ascending_slice
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -184,7 +185,7 @@ class TestUnit(TestCase):
     @given(st.slices(10))  #pylint: disable=E1120
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
-        post_key = util.slice_to_ascending_slice(key, size=10)
+        post_key = slice_to_ascending_slice(key, 10)
         self.assertEqual(
             set(range(*key.indices(10))),
             set(range(*post_key.indices(10)))

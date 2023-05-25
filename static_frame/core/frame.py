@@ -737,7 +737,7 @@ class Frame(ContainerOperand):
         container = next(containers_iter)
 
         if fill_value is FILL_VALUE_DEFAULT:
-            fill_value_reindex = dtype_kind_to_na(container._blocks._row_dtype.kind)
+            fill_value_reindex = dtype_kind_to_na(container._blocks._index.dtype.kind)
         else:
             fill_value_reindex = fill_value # just pass along even if FillValueAuto
 
@@ -3287,7 +3287,7 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
 
         # counts can be zero (not None) if _block was created but is empty
-        row_count, col_count = (self._blocks._shape
+        row_count, col_count = (self._blocks.shape
                 if not blocks_constructor else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -4626,7 +4626,7 @@ class Frame(ContainerOperand):
                 )
         # NOTE: we branch based on value type to use more efficient TypeBlock methods when we know we have an element or a 2D array
         if isinstance(value, Frame):
-            fill_value = dtype_to_fill_value(value._blocks._row_dtype)
+            fill_value = dtype_to_fill_value(value._blocks._index.dtype)
             fill = value.reindex(
                     index=self.index,
                     columns=self.columns,
@@ -4829,7 +4829,7 @@ class Frame(ContainerOperand):
     def __len__(self) -> int:
         '''Length of rows in values.
         '''
-        return self._blocks._shape[0]
+        return self._blocks._index.rows
 
     @doc_inject()
     def display(self,
@@ -4909,7 +4909,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`tp.Tuple[int, int]`
         '''
-        return self._blocks._shape
+        return self._blocks._index.shape
 
     @property
     def ndim(self) -> int:
@@ -5006,7 +5006,7 @@ class Frame(ContainerOperand):
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
-        blocks_shape = blocks._shape
+        blocks_shape = blocks.shape
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
             # return a 0-sized Series, `blocks` is already extracted
@@ -5601,7 +5601,7 @@ class Frame(ContainerOperand):
         blocks = self._blocks
 
         if drop:
-            shape = blocks._shape[1] if axis == 0 else blocks._shape[0]
+            shape = blocks._index.columns if axis == 0 else blocks._index.rows
             drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
             drop_mask[key] = False
 
@@ -6844,7 +6844,7 @@ class Frame(ContainerOperand):
         if axis == 1 and is_fill_value_factory_initializer(fill_value):
             raise InvalidFillValue(fill_value, 'axis==1')
 
-        shape = self._blocks._shape
+        shape = self._blocks.shape
         asc_is_element = isinstance(ascending, BOOL_TYPES)
 
         if not asc_is_element:
@@ -7088,7 +7088,7 @@ class Frame(ContainerOperand):
 
         if not skipna and not skipfalsy and not unique:
             array = np.full(len(labels),
-                    self._blocks._shape[axis],
+                    self._blocks.shape[axis],
                     dtype=DTYPE_INT_DEFAULT,
                     )
         else:
@@ -8471,7 +8471,7 @@ class Frame(ContainerOperand):
         array = self._blocks.values.reshape(self._blocks.size)
 
         def labels() -> tp.Iterator[tp.Hashable]:
-            for row, col in np.ndindex(self._blocks._shape):
+            for row, col in np.ndindex(self._blocks.shape):
                 yield index_tuples[row] + columns_tuples[col]
 
         index = index_constructor(labels())
@@ -8601,7 +8601,7 @@ class Frame(ContainerOperand):
                     row.extend(f'{x}' for x in columns_row)
                 yield row
 
-        col_idx_last = self._blocks._shape[1] - 1
+        col_idx_last = self._blocks._index.columns - 1
         # avoid row creation to avoid joining types; avoide creating a list for each row
         row_current_idx: tp.Optional[int] = None
 
@@ -9176,7 +9176,7 @@ class FrameGO(Frame):
             self._blocks.append(container.values)
 
         # this should never happen, and is hard to test!
-        assert len(self._columns) == self._blocks._shape[1] #pragma: no cover
+        assert len(self._columns) == self._blocks._index.columns #pragma: no cover
 
     #---------------------------------------------------------------------------
     def via_fill_value(self,

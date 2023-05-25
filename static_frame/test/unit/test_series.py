@@ -4350,6 +4350,13 @@ class TestUnit(TestCase):
                 (('x', 2014), ('y', -1), ('z', 2013))
                 )
 
+    def test_series_via_dt_year_c(self) -> None:
+        dt64 = np.datetime64
+
+        s1 = Series(('2014', '', '2013'), index=('x', 'y', 'z'), dtype=dt64)
+        with self.assertRaises(RuntimeError):
+            _ = s1.via_dt.year
+
     #---------------------------------------------------------------------------
 
     def test_series_via_dt_month_a(self) -> None:
@@ -4402,6 +4409,12 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('a', '2010-01'), ('b', '2010-01'), ('c', 'x'), ('d', '2013-04'), ('e', '2013-04')))
 
+    def test_series_via_dt_year_month_c3(self) -> None:
+        s1 = Series(('2010-01-01', '2010-01-02', '', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64).astype(object)
+        with self.assertRaises(RuntimeError):
+            _ = s1.via_dt.year_month
 
     #---------------------------------------------------------------------------
 
@@ -4442,6 +4455,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('x', 12), ('y', -1), ('z', 28)))
         self.assertEqual(s1.astype(object).via_dt(fill_value=0).day.to_pairs(), (('x', 12), ('y', 0), ('z', 28)))
 
+
+    def test_series_via_dt_day_c(self) -> None:
+        def todt(date_str: str) -> datetime.date:
+            return datetime.date(*(int(x) for x in date_str.split('-')))
+
+        s1 = Series((todt('2014-02-12'), None, todt('2013-11-28')), index=('x', 'y', 'z'))
+        with self.assertRaises(RuntimeError):
+            _ = s1.via_dt.day
+        self.assertEqual(s1.via_dt(fill_value=-1).day.to_pairs(),
+                (('x', 12), ('y', -1), ('z', 28))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -5558,6 +5582,25 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             s2.via_fill_value(0).via_T * s2
+
+
+    def test_series_via_fill_value_k(self) -> None:
+        s1 = sf.Series(range(4))
+        s2 = s1.via_fill_value(-1).loc[s1.index]
+        self.assertEqual(s2.to_pairs(), ((0, 0), (1, 1), (2, 2), (3, 3)))
+
+        s3 = s1.via_fill_value(-1).loc[s1]
+        self.assertEqual(s3.to_pairs(), ((0, 0), (1, 1), (2, 2), (3, 3)))
+
+
+    def test_series_via_fill_value_l(self) -> None:
+        s1 = sf.Series(range(4), index=tuple('abcd'))
+        s2 = s1.via_fill_value(-1).loc[s1.index]
+        self.assertEqual(s2.to_pairs(), (('a', 0), ('b', 1), ('c', 2), ('d', 3)))
+
+        s3 = s1.via_fill_value(-1).loc[s1]
+        self.assertEqual(s3.to_pairs(), ((0, -1), (1, -1), (2, -1), (3, -1)))
+
 
     #---------------------------------------------------------------------------
 

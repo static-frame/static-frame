@@ -168,9 +168,11 @@ class InterfaceDatetime(Interface[TContainer]):
             array_src: The raw array, before any dytpe conversions; used to identify missing values.
             array_dst: The array post any conversions, to be filled with missing values.
         '''
-        if self._fill_value is not FILL_VALUE_DEFAULT:
-            targets = isna_array(array_src)
-            if targets.any():
+        targets = isna_array(array_src)
+        if targets.any():
+            if self._fill_value is FILL_VALUE_DEFAULT:
+                raise RuntimeError('Cannot convert NaT: provide a `fill_value` to `via_dt()`.')
+            else:
                 dt = resolve_dtype(array_dst.dtype, self._fill_value_dtype)
                 if dt != array_dst.dtype:
                     array_dst = array_dst.astype(dt)
@@ -187,6 +189,9 @@ class InterfaceDatetime(Interface[TContainer]):
             dtype: np.dtype,
             ) -> np.ndarray:
         if self._fill_value is FILL_VALUE_DEFAULT:
+            if isna_array(array).any():
+                raise RuntimeError('Cannot convert NaT: provide a `fill_value` to `via_dt()`.')
+
             array = array_from_element_method(
                     array=array,
                     method_name=method_name,
@@ -208,7 +213,6 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
-        assert array.flags.writeable is False
         return array
 
     def _fill_missing_element_attr(self,
@@ -218,6 +222,9 @@ class InterfaceDatetime(Interface[TContainer]):
             dtype: np.dtype,
             ) -> np.ndarray:
         if self._fill_value is FILL_VALUE_DEFAULT:
+            if isna_array(array).any():
+                raise RuntimeError('Cannot convert NaT: provide a `fill_value` to `via_dt()`.')
+
             array = array_from_element_attr(
                     array=array,
                     attr_name=attr_name,
@@ -237,7 +244,6 @@ class InterfaceDatetime(Interface[TContainer]):
                     func=func,
                     dtype=dt,
                     )
-        assert array.flags.writeable is False
         return array
 
     #---------------------------------------------------------------------------

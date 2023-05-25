@@ -58,8 +58,6 @@ class TestUnit(TestCase):
         self.assertEqual(memory_total(tb), sum((
             memory_total(tb._blocks, seen=seen),
             memory_total(tb._index, seen=seen),
-            memory_total(tb._shape, seen=seen),
-            memory_total(tb._row_dtype, seen=seen),
             getsizeof(tb) if id(tb) not in seen else 0,
         )))
 

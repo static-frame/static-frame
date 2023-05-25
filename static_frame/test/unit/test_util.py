@@ -71,7 +71,6 @@ from static_frame.core.util import roll_2d
 from static_frame.core.util import run_length_1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import setdiff2d
-from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
@@ -995,69 +994,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _isin_2d(arr_1d, s3)
     #---------------------------------------------------------------------------
-
-    def test_slice_to_ascending_slice_a(self) -> None:
-
-        a1 = np.arange(10)
-
-        def compare(slc: slice) -> None:
-            slc_asc = slice_to_ascending_slice(slc, len(a1))
-            self.assertEqual(sorted(a1[slc]), list(a1[slc_asc]))
-
-        compare(slice(4,))
-        compare(slice(6, 1, -1))
-        compare(slice(6, 1, -2))
-        compare(slice(6, None, -3))
-        compare(slice(6, 2, -2))
-        compare(slice(None, 1, -1))
-
-    def test_slice_to_ascending_slice_b(self) -> None:
-        self.assertEqual(
-            slice_to_ascending_slice(slice(3, None, -1), 10),
-            slice(None, 4, 1)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(3, None, -3), 10),
-            slice(0, 4, 3)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-3, 0, -1), 10),
-            slice(1, 8, 1)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-3, None, -1), 10),
-            slice(None, 8, 1)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-3, 0, -2), 10),
-            slice(1, 8, 2)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-3, None, -2), 10),
-            slice(1, 8, 2)
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-3, None, -6), 10),
-            slice(1, 8, 6)
-            )
-
-    def test_slice_to_ascending_slice_c(self) -> None:
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-9, -1, 1), 10),
-            slice(-9, -1, 1) # ascenidng
-            )
-        self.assertEqual(
-            slice_to_ascending_slice(slice(-9, -1, -1), 10),
-            slice(0, 0, None) # ascending start stop, descending
-            )
-
-    def test_slice_to_ascending_slice_d(self) -> None:
-        self.assertEqual(
-            slice_to_ascending_slice(slice(1, -10, -1), 10), # [1]
-            slice(1, 2, 1)
-            )
-
-
 
     def test_array_shift_a(self) -> None:
         a1 = np.arange(6)
