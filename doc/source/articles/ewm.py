@@ -24,8 +24,6 @@ def get_mean(s, alpha: float, adjust: bool, ignore_na: bool) -> float:
         return np.average(snona.values, weights=w)
     # if ignore_na is False, we calculate weights the same; simply remove na values from the final calculation
     notna = s.notna()
-    # if s.isna().any():
-    #     import ipdb; ipdb.set_trace()
     w = get_weights(size=len(s), alpha=alpha, adjust=adjust)
     return np.average(s.values[notna], weights=w[notna])
 
@@ -103,6 +101,8 @@ def pandas_na():
     for kwargs in (
             {'alpha': .5, 'adjust': False, 'ignore_na': True},
             {'span': 10, 'adjust': False, 'ignore_na': True},
+            {'alpha': .5, 'adjust': False, 'ignore_na': False},
+
             # {'com': 10, 'adjust': False, 'ignore_na': False},
             # {'halflife': 20, 'adjust': False, 'ignore_na': False},
             ):
@@ -112,10 +112,17 @@ def pandas_na():
         print(x.tail(2))
         y = get_series(s, **kwargs)
         print(y.tail(2))
-        # import ipdb; ipdb.set_trace()
         assert (x.round(10) == y.round(10)).all()
+
+
+def focus():
+    s = pd.Series([3, np.nan, 5])
+    x1 = s.ewm(alpha=0.5, ignore_na=False).mean()
+    y1 = get_series(s, adjust=True, alpha=0.5, ignore_na=False)
+    import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
     # pandas_no_na()
-    pandas_na()
+    # pandas_na()
+    focus()
