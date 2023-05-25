@@ -2,14 +2,18 @@ What is New in StaticFrame
 ===============================
 
 
-1.4.3-dev
+1.4.3
 -----------
+
+Integrated ``arraykit.BlockIndex`` in ``TypeBlocks``, offering significant ``Frame`` performance improvements.
 
 ``via_dt`` will now raise if an NA is encountered and a ``fill_value`` is not provided.
 
 Corrected issue in ``Quilt`` construction when component ``Frame`` have ``IndexHierarchy``.
 
 Corrected issue when using an ``Index`` as a selector in ``via_fill_value().loc[]``.
+
+Added ``ErrorInitColumns`` to better indicated failures in column ``Index`` construction.
 
 
 1.4.2
