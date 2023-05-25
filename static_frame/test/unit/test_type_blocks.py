@@ -4,6 +4,7 @@ from itertools import zip_longest
 
 import frame_fixtures as ff
 import numpy as np
+from arraykit import ErrorInitTypeBlocks
 from arraykit import immutable_filter
 
 from static_frame import TypeBlocks
@@ -12,7 +13,6 @@ from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.index_correspondence import IndexCorrespondence

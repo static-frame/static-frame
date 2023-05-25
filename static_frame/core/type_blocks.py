@@ -6,6 +6,7 @@ from itertools import zip_longest
 
 import numpy as np
 from arraykit import BlockIndex
+from arraykit import ErrorInitTypeBlocks
 from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
@@ -26,7 +27,6 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.style_config import StyleConfig
