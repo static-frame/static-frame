@@ -61,7 +61,9 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
@@ -3304,14 +3306,18 @@ class Frame(ContainerOperand):
                     explicit_constructor=columns_constructor
                     )
         else:
-            self._columns = index_from_optional_constructor(columns,
-                    default_constructor=self._COLUMNS_CONSTRUCTOR,
-                    explicit_constructor=columns_constructor
-                    )
+            try:
+                self._columns = index_from_optional_constructor(columns,
+                        default_constructor=self._COLUMNS_CONSTRUCTOR,
+                        explicit_constructor=columns_constructor
+                        )
+            except ErrorInitIndex as e: # show this as a column exception
+                raise ErrorInitColumns(str(e)) from None
+
             col_count = len(self._columns)
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
-            raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
+            raise ErrorInitFrame(f'Supplied `columns_constructor` does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
 
         #-----------------------------------------------------------------------
         # index assignment

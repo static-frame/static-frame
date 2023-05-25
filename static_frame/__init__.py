@@ -19,9 +19,9 @@ from static_frame.core.display_config import DisplayFormats as DisplayFormats
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInit
 from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
