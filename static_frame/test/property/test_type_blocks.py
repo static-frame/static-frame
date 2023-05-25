@@ -28,9 +28,8 @@ class TestUnit(TestCase):
         post = TypeBlocks.from_element_items(values(), shape=shape, dtype=object)
         self.assertEqual(post.shape, shape)
 
-    @given(st.integers(max_value=sfst.MAX_COLUMNS))
+    @given(st.integers(max_value=sfst.MAX_COLUMNS, min_value=0))
     def test_from_zero_size_shape(self, value: int) -> None:
-
         for shape in ((0, value), (value, 0)):
             post = TypeBlocks.from_zero_size_shape(shape=shape)
             self.assertEqual(post.shape, shape)
