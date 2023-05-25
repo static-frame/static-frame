@@ -2050,16 +2050,6 @@ def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
             description='Performance testing and profiling',
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog='''Example:
-
-Performance comparison of all dropna tests:
-
-python3 test_performance.py '*dropna' --performance
-
-Profiling outpout for static-frame dropna:
-
-python3 test_performance.py SeriesIntFloat_dropna --profile
-            '''
             )
     choices = sorted(str(x).replace("<class '__main__.",'').replace("'>", '') for x in Perf.__subclasses__())
     p.add_argument('patterns',
