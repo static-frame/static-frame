@@ -1,8 +1,7 @@
 import math
+
 import numpy as np
 import pandas as pd
-
-
 
 # https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
 
