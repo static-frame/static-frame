@@ -28,9 +28,8 @@ class TestUnit(TestCase):
         post = TypeBlocks.from_element_items(values(), shape=shape, dtype=object)
         self.assertEqual(post.shape, shape)
 
-    @given(st.integers(max_value=sfst.MAX_COLUMNS))
+    @given(st.integers(max_value=sfst.MAX_COLUMNS, min_value=0))
     def test_from_zero_size_shape(self, value: int) -> None:
-
         for shape in ((0, value), (value, 0)):
             post = TypeBlocks.from_zero_size_shape(shape=shape)
             self.assertEqual(post.shape, shape)
@@ -54,7 +53,7 @@ class TestUnit(TestCase):
     def test_values(self, tb: TypeBlocks) -> None:
         values = tb.values
         self.assertEqual(values.shape, tb.shape)
-        self.assertEqual(values.dtype, tb._row_dtype)
+        self.assertEqual(values.dtype, tb._index.dtype)
 
     @given(sfst.get_type_blocks())
     def test_axis_values(self, tb: TypeBlocks) -> None:
@@ -70,7 +69,7 @@ class TestUnit(TestCase):
                         self.assertTrue(array.dtype == tb.dtypes[tb.shape[1] - 1 - idx])
                     else:
                         # NOTE: only checking kinde because found cases where byte-order deviates
-                        self.assertTrue(array.dtype.kind == tb._row_dtype.kind)
+                        self.assertTrue(array.dtype.kind == tb._index.dtype.kind)
 
     @given(sfst.get_type_blocks())
     def test_element_items(self, tb: TypeBlocks) -> None:

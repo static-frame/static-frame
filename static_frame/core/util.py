@@ -1752,44 +1752,44 @@ def iterable_to_array_nd(
 
 #-------------------------------------------------------------------------------
 
-def slice_to_ascending_slice(
-        key: slice,
-        size: int
-        ) -> slice:
-    '''
-    Given a slice, return a slice that, with ascending integers, covers the same values.
+# def slice_to_ascending_slice(
+#         key: slice,
+#         size: int
+#         ) -> slice:
+#     '''
+#     Given a slice, return a slice that, with ascending integers, covers the same values.
 
-    Args:
-        size: the length of the container on this axis
-    '''
-    key_step = key.step
-    key_start = key.start
-    key_stop = key.stop
+#     Args:
+#         size: the length of the container on this axis
+#     '''
+#     key_step = key.step
+#     key_start = key.start
+#     key_stop = key.stop
 
-    if key_step is None or key_step > 0:
-        return key
+#     if key_step is None or key_step > 0:
+#         return key
 
-    # will get rid of all negative values greater than the size; but will replace None with an appropriate number for usage in range
-    norm_key_start, norm_key_stop, norm_key_step = key.indices(size)
+#     # will get rid of all negative values greater than the size; but will replace None with an appropriate number for usage in range
+#     norm_key_start, norm_key_stop, norm_key_step = key.indices(size)
 
-    # everything else should be descending, but we might have non-descending start, stop
-    if key_start is not None and key_stop is not None:
-        if norm_key_start <= norm_key_stop: # an ascending range
-            return EMPTY_SLICE
+#     # everything else should be descending, but we might have non-descending start, stop
+#     if key_start is not None and key_stop is not None:
+#         if norm_key_start <= norm_key_stop: # an ascending range
+#             return EMPTY_SLICE
 
-    norm_range = range(norm_key_start, norm_key_stop, norm_key_step)
+#     norm_range = range(norm_key_start, norm_key_stop, norm_key_step)
 
-    # derive stop
-    if key_start is None:
-        stop = None
-    else:
-        stop = norm_range[0] + 1
+#     # derive stop
+#     if key_start is None:
+#         stop = None
+#     else:
+#         stop = norm_range[0] + 1
 
-    if key_step == -1:
-        # gets last realized value, not last range value
-        return slice(None if key_stop is None else norm_range[-1], stop, 1)
+#     if key_step == -1:
+#         # gets last realized value, not last range value
+#         return slice(None if key_stop is None else norm_range[-1], stop, 1)
 
-    return slice(norm_range[-1], stop, key_step * -1)
+#     return slice(norm_range[-1], stop, key_step * -1)
 
 def pos_loc_slice_to_iloc_slice(
         key: slice,

@@ -110,7 +110,7 @@ class InterfaceValues(Interface[TContainer]):
             blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore
 
             if self._unify_blocks:
-                dtype = self._container._blocks._row_dtype if self._dtype is None else self._dtype #type: ignore
+                dtype = self._container._blocks._index.dtype if self._dtype is None else self._dtype #type: ignore
                 tb = TypeBlocks.from_blocks(func(blocks_to_array_2d(
                         blocks=blocks,
                         shape=self._container.shape,
