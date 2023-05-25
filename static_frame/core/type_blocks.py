@@ -456,12 +456,10 @@ class TypeBlocks(ContainerOperand):
 
             # blocks can be empty, and index with no registration has rows as -1
             if index.rows < 0:
-                # import ipdb; ipdb.set_trace()
                 if shape_reference is not None:
                     index.register(EMPTY_ARRAY.reshape(shape_reference[0], 0))
                 else:
                     raise ErrorInitTypeBlocks('cannot derive a row_count from blocks; provide a shape reference')
-
         return cls(
                 blocks=blocks,
                 index=index,
