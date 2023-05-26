@@ -77,6 +77,8 @@ def get_series(s, **kwargs):
     ignore_na = kwargs.get('ignore_na', False) # false is default
     adjust = kwargs['adjust']
 
+    # NOTE: we can calculate the power sequence once for the full length, the slice it as needed
+
     array = np.empty(s.shape, dtype=float)
     for i in range(len(s)):
         # this could return NaN
@@ -114,27 +116,28 @@ def validate_na():
     s = pd.Series(np.arange(20))
     s[(s + 2) % 10 == 0] = np.nan
 
-    # assume the default, ignore_na = False; we do not implemnt ignore_na = True
+    # we can match all cases exceot adjust=False, ignore_na = False
     for kwargs in (
             {'alpha': .5, 'adjust': True},
-            {'alpha': .5, 'adjust': False},
+            {'alpha': .5, 'adjust': True},
             {'span': 10, 'adjust': True},
-            # {'span': 10, 'adjust': False},
             {'com': 10, 'adjust': True},
-            # {'com': 10, 'adjust': False},
             {'halflife': 20, 'adjust': True},
+            # {'span': 10, 'adjust': False},
+            # {'com': 10, 'adjust': False},
             # {'halflife': 20, 'adjust': False},
             ):
-        kwargs['ignore_na'] = False
-        print(kwargs)
-        x = s.ewm(**kwargs).mean()
-        y = get_series(s, **kwargs)
-        try:
-            assert x.fillna(-1).round(10).tolist() == y.fillna(-1).round(10).tolist()
-        except:
-            print(x.tail(2).values.tolist())
-            print(y.tail(2).values.tolist())
-            import ipdb; ipdb.set_trace()
+        for ignore_na in (True, False):
+            kwargs['ignore_na'] = ignore_na
+
+            x = s.ewm(**kwargs).mean()
+            y = get_series(s, **kwargs)
+            try:
+                assert x.fillna(-1).round(10).tolist() == y.fillna(-1).round(10).tolist()
+            except:
+                print(x.tail(2).values.tolist())
+                print(y.tail(2).values.tolist())
+                import ipdb; ipdb.set_trace()
 
 def focus_na():
 
@@ -171,9 +174,9 @@ def focus_na():
 
 
 if __name__ == '__main__':
-    # validate_no_na()
-    # validate_na()
-    focus_na()
+    validate_no_na()
+    validate_na()
+    # focus_na()
 
 
 # adjust is False, ignore_na is False
