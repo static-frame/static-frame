@@ -19,12 +19,21 @@ def get_weights(size: int, alpha: float, adjust: bool) -> np.array:
 def get_mean(s, alpha: float, adjust: bool, ignore_na: bool) -> float:
     if ignore_na: # the same as calling dropna before processing
         snona = s.dropna()
+        if not len(snona):
+            return np.nan
+
         w = get_weights(size=len(snona), alpha=alpha, adjust=adjust)
+        print(f'{adjust=}', w)
+        # import ipdb; ipdb.set_trace()
         return np.average(snona.values, weights=w)
+
     # if ignore_na is False, we calculate weights the same; simply remove na values from the final calculation
     notna = s.notna()
+    if not notna.any():
+        return np.nan
+
     w = get_weights(size=len(s), alpha=alpha, adjust=adjust)
-    return np.average(s.values[notna], weights=w[notna])
+    return np.average(s.values[notna], weights=w[notna]) # this returns one number
 
 LOG05 = math.log(0.5)
 
@@ -42,6 +51,7 @@ def get_series(s, **kwargs):
     adjust = kwargs['adjust']
     array = np.empty(s.shape, dtype=float)
     for i in range(len(s)):
+        # this could return NaN
         array[i] = get_mean(s[:i+1], alpha=alpha, adjust=adjust, ignore_na=ignore_na)
 
     return pd.Series(array, index=s.index)
@@ -74,7 +84,7 @@ def get_series(s, **kwargs):
 #  'win_type',
 #  'window']
 
-def pandas_no_na():
+def validate_no_na():
     s = pd.Series(np.arange(100))
     for kwargs in (
             {'alpha': .5, 'adjust': True},
@@ -94,13 +104,13 @@ def pandas_no_na():
         print(y.tail(2))
         assert (x.round(10) == y.round(10)).all()
 
-def pandas_na():
-    s = pd.Series(np.arange(100))
+def validate_na():
+    s = pd.Series(np.arange(20))
     s[(s + 2) % 10 == 0] = np.nan
     for kwargs in (
             {'alpha': .5, 'adjust': False, 'ignore_na': True},
             {'span': 10, 'adjust': False, 'ignore_na': True},
-            {'alpha': .5, 'adjust': False, 'ignore_na': False},
+            {'alpha': .5, 'adjust': True, 'ignore_na': False},
 
             # {'com': 10, 'adjust': False, 'ignore_na': False},
             # {'halflife': 20, 'adjust': False, 'ignore_na': False},
@@ -111,17 +121,40 @@ def pandas_na():
         print(x.tail(2))
         y = get_series(s, **kwargs)
         print(y.tail(2))
-        assert (x.round(10) == y.round(10)).all()
+        try:
+            assert x.fillna(-1).round(10).tolist() == y.fillna(-1).round(10).tolist()
+        except:
+            import ipdb; ipdb.set_trace()
+
+def focus_na():
+
+    for s in (
+            # pd.Series([3, np.nan, np.nan, 5]), # Passes all four
+            pd.Series([10, np.nan, 10, 0]), # minimal case that fails
+            # pd.Series([np.nan, np.nan, np.nan, 5]),
+            # pd.Series([10, 20, np.nan, 30, 40, np.nan, 50, 60, np.nan, 20, np.nan]),
+            ):
+        print(s)
+        # ignore_na False is the default: weights are spaced along full length
+        # when ignore_na is True, only derive weights for the non-nan values
+        for adjust in (True, False):
+            for ignore_na in (True, False):
+                print(f'{adjust=} {ignore_na=}')
+
+                x1 = s.ewm(alpha=0.5, adjust=adjust, ignore_na=ignore_na).mean()
+                y1 = get_series(s, adjust=adjust, alpha=0.5, ignore_na=ignore_na)
+                try:
+                    assert x1.fillna(-1).tolist() == y1.fillna(-1).tolist()
+                except:
+                    print(x1)
+                    print(y1)
+                    import ipdb; ipdb.set_trace()
 
 
-def focus():
-    s = pd.Series([3, np.nan, 5])
-    x1 = s.ewm(alpha=0.5, ignore_na=False).mean()
-    y1 = get_series(s, adjust=True, alpha=0.5, ignore_na=False)
-    import ipdb; ipdb.set_trace()
+    # NOTE: observing deviation when adjust is False, ignore_na is False
 
 
 if __name__ == '__main__':
-    # pandas_no_na()
-    # pandas_na()
-    focus()
+    # validate_no_na()
+    # validate_na()
+    focus_na()
