@@ -75,13 +75,15 @@ Install StaticFrame via PIP::
 
     pip install static-frame
 
-Or, install StaticFrame via conda::
-
-    conda install -c conda-forge static-frame
-
 To install full support of input and output routines via PIP::
 
     pip install static-frame [extras]
+
+
+Older StaticFrame is available via ``conda-forge``; note, however, that most-recent versions are not available due to ``conda-forge`` slow adoption of new StaticFrame dependencies (``arraymap``). Using ``pip`` with the available pre-built wheels is a better alternative for all platforms ::
+
+    conda install -c conda-forge static-frame
+
 
 
 Dependencies

@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Set ``arraymap`` to 0.1.9.
+
 
 1.4.3
 -----------
