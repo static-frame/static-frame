@@ -75,12 +75,12 @@ Install StaticFrame via PIP::
 
     pip install static-frame
 
-To install full support of input and output routines via PIP::
+To install full support of input and output formats (such as XLSX and HDF5) via PIP::
 
     pip install static-frame [extras]
 
 
-Older StaticFrame is available via ``conda-forge``; note, however, that most-recent versions are not available due to ``conda-forge`` slow adoption of new StaticFrame dependencies (``arraymap``). Using ``pip`` with the available pre-built wheels is a better alternative for all platforms ::
+To install via ``conda-forge`` (Note: pre-built wheels are available through ``pip`` and may offer more flexibility) ::
 
     conda install -c conda-forge static-frame
 
