@@ -68,19 +68,23 @@ Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-fra
 
 
 
-Installation
+Installation via ``pip``
 -------------------------------
 
-Install StaticFrame via PIP::
+Install StaticFrame with ``pip``::
 
     pip install static-frame
 
-To install full support of input and output formats (such as XLSX and HDF5) via PIP::
+To install optional dependencies for full support of input and output formats (such as XLSX and HDF5) via ``pip``::
 
     pip install static-frame [extras]
 
 
-To install via ``conda-forge`` (Note: pre-built wheels are available through ``pip`` and may offer more flexibility) ::
+
+Installation via ``conda``
+-------------------------------
+
+StaticFrame can be installed via ``conda`` with the ``conda-forge`` channel. Note that pre-built wheels of StaticFrame and all compiled dependencies are available through ``pip`` and may offer more flexibility than a ``conda``-based installation ::
 
     conda install -c conda-forge static-frame
 
