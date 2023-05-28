@@ -1,10 +1,13 @@
 What is New in StaticFrame
 ===============================
 
-dev
+
+1.4.4
 -----------
 
 Set ``arraymap`` to 0.1.9.
+
+Updated ``TypeBlocks`` to use ``BlockIndex.iter_block()``.
 
 
 1.4.3
