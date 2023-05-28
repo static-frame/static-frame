@@ -84,7 +84,7 @@ To install optional dependencies for full support of input and output formats (s
 Installation via ``conda``
 -------------------------------
 
-StaticFrame can be installed via ``conda`` with the ``conda-forge`` channel. Note that pre-built wheels of StaticFrame and all compiled dependencies are available through ``pip`` and may offer more flexibility than a ``conda``-based installation ::
+StaticFrame can be installed via ``conda`` with the ``conda-forge`` channel. Note that pre-built wheels of StaticFrame and all compiled dependencies are available through ``pip`` and may offer more compatibility than a ``conda``-based installation ::
 
     conda install -c conda-forge static-frame
 
