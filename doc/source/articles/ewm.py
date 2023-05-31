@@ -116,7 +116,7 @@ def validate_na():
     s = pd.Series(np.arange(20))
     s[(s + 2) % 10 == 0] = np.nan
 
-    # we can match all cases exceot adjust=False, ignore_na = False
+    # we can match all cases except adjust=False, ignore_na = False
     for kwargs in (
             {'alpha': .5, 'adjust': True},
             {'alpha': .5, 'adjust': True},
