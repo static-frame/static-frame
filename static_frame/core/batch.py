@@ -1,6 +1,4 @@
 import typing as tp
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -56,6 +54,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
+from static_frame.core.util import get_concurrent_executor
 
 # import multiprocessing as mp
 # mp_context = mp.get_context('spawn')
@@ -489,7 +488,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             caller: tp.Callable[..., FrameOrSeries],
             ) -> 'Batch':
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+        pool_executor = get_concurrent_executor(use_threads=self._use_threads)
 
         def gen_pool() -> IteratorFrameItems:
             with pool_executor(max_workers=self._max_workers) as executor:
@@ -508,7 +507,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         if self._chunksize != 1:
             raise NotImplementedError('Cannot use apply_except idioms with chunksize other than 1')
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+        pool_executor = get_concurrent_executor(use_threads=self._use_threads)
 
         def gen_pool() -> IteratorFrameItems:
             futures = []
