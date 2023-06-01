@@ -487,7 +487,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         pool_executor = get_concurrent_executor(
                 use_threads=self._use_threads,
-                max_workers=self._max_workers
+                max_workers=self._max_workers,
                 )
 
         def gen_pool() -> IteratorFrameItems:
