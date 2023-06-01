@@ -39,6 +39,7 @@ from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pylint: disable=W0611 #pragma: no cover
+
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
@@ -654,26 +655,22 @@ class FrozenGenerator:
 def get_concurrent_executor(
         *,
         use_threads: bool,
+        max_workers: tp.Optional[int] = None,
         mp_context: tp.Optional[str] = None,
-        ) -> tp.Type[Executor]:
+        ) -> tp.Union[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
     from concurrent.futures import ProcessPoolExecutor
     from concurrent.futures import ThreadPoolExecutor
 
     if use_threads:
         # NOTE: could fail if mp_context is not None
-        exe = ThreadPoolExecutor
-    elif mp_context:
-        exe = partial(ProcessPoolExecutor, mp_context=mp_context)
+        exe = partial(ThreadPoolExecutor,
+                max_workers=max_workers)
     else:
-        exe = ProcessPoolExecutor
+        exe = partial(ProcessPoolExecutor,
+                max_workers=max_workers,
+                mp_context=mp_context)
     return exe
-
-
-
-
-
-
 
 #-------------------------------------------------------------------------------
 # join utils

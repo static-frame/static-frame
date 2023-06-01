@@ -56,9 +56,6 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.util import get_concurrent_executor
 
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
-
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
@@ -488,10 +485,13 @@ class Batch(ContainerOperand, StoreClientMixin):
             caller: tp.Callable[..., FrameOrSeries],
             ) -> 'Batch':
 
-        pool_executor = get_concurrent_executor(use_threads=self._use_threads)
+        pool_executor = get_concurrent_executor(
+                use_threads=self._use_threads,
+                max_workers=self._max_workers
+                )
 
         def gen_pool() -> IteratorFrameItems:
-            with pool_executor(max_workers=self._max_workers) as executor:
+            with pool_executor() as executor:
                 yield from zip(labels,
                         executor.map(caller, arg_iter, chunksize=self._chunksize)
                         )
@@ -507,11 +507,14 @@ class Batch(ContainerOperand, StoreClientMixin):
         if self._chunksize != 1:
             raise NotImplementedError('Cannot use apply_except idioms with chunksize other than 1')
 
-        pool_executor = get_concurrent_executor(use_threads=self._use_threads)
+        pool_executor = get_concurrent_executor(
+                use_threads=self._use_threads,
+                max_workers=self._max_workers,
+                )
 
         def gen_pool() -> IteratorFrameItems:
             futures = []
-            with pool_executor(max_workers=self._max_workers) as executor:
+            with pool_executor() as executor:
                 for args in arg_iter:
                     futures.append(executor.submit(caller, args))
 

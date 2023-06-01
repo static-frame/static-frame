@@ -2,7 +2,6 @@ import os
 import pickle
 import typing as tp
 import zipfile
-from concurrent.futures import ProcessPoolExecutor
 from io import BytesIO
 from io import StringIO
 
@@ -21,9 +20,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
-
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
+from static_frame.core.util import get_concurrent_executor
 
 FrameExporter = AnyCallable # Protocol not supported yet...
 FrameConstructor = tp.Callable[[tp.Any], Frame]
@@ -213,8 +210,12 @@ class _StoreZip(Store):
                             )
 
         chunksize = config_map.default.read_chunksize
+        pool_executor = get_concurrent_executor(
+                use_threads=False,
+                max_workers=config_map.default.read_max_workers,
+                )
 
-        with ProcessPoolExecutor(max_workers=config_map.default.read_max_workers) as executor:
+        with pool_executor() as executor:
             frame_gen = executor.map(self._payload_to_frame, gen(), chunksize=chunksize)
 
             for label, cached_frame in results_items():
@@ -253,8 +254,12 @@ class _StoreZip(Store):
                         )
 
         if multiprocess:
+            pool_executor = get_concurrent_executor(
+                    use_threads=False,
+                    max_workers=config_map.default.write_max_workers,
+                    )
             def label_and_bytes() -> tp.Iterator[LabelAndBytes]:
-                with ProcessPoolExecutor(max_workers=config_map.default.write_max_workers) as executor:
+                with pool_executor() as executor:
                     yield from executor.map(self._payload_to_bytes,
                             gen(),
                             chunksize=config_map.default.write_chunksize)

@@ -3,8 +3,6 @@ Tools for iterators in Series and Frame. These components are imported by both s
 '''
 
 import typing as tp
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from functools import partial
 
@@ -21,14 +19,8 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
-
-# import multiprocessing as mp
-# mp_context = mp.get_context('spawn')
-
-
-# from static_frame.core.util import array_from_iterator
-
 
 if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover
@@ -115,8 +107,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             use_threads: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
-        pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
         if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
 
@@ -135,7 +125,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                     func_keys.append(k)
                     yield k, v
 
-        with pool_executor(max_workers=max_workers) as executor:
+        pool_executor = get_concurrent_executor(
+                use_threads=use_threads,
+                max_workers=max_workers,
+                )
+
+        with pool_executor() as executor:
             yield from zip(func_keys,
                     executor.map(func, arg_gen(), chunksize=chunksize)
                     )
@@ -147,7 +142,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             use_threads: bool = False,
             ) -> tp.Iterator[tp.Any]:
 
-        pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
+
         if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
 
@@ -155,7 +150,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
                 else self._func_items)
 
-        with pool_executor(max_workers=max_workers) as executor:
+        pool_executor = get_concurrent_executor(
+                use_threads=use_threads,
+                max_workers=max_workers,
+                )
+
+        with pool_executor() as executor:
             yield from executor.map(func, arg_gen(), chunksize=chunksize)
 
     #---------------------------------------------------------------------------
