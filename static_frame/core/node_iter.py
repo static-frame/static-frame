@@ -102,9 +102,11 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
     def _apply_iter_items_parallel(self,
             func: AnyCallable,
+            *,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
         if not callable(func): # support array, Series mapping
@@ -128,6 +130,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         pool_executor = get_concurrent_executor(
                 use_threads=use_threads,
                 max_workers=max_workers,
+                mp_context=mp_context,
                 )
 
         with pool_executor() as executor:
@@ -137,11 +140,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
     def _apply_iter_parallel(self,
             func: AnyCallable,
+            *,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> tp.Iterator[tp.Any]:
-
 
         if not callable(func): # support array, Series mapping
             func = getattr(func, '__getitem__')
@@ -153,6 +157,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         pool_executor = get_concurrent_executor(
                 use_threads=use_threads,
                 max_workers=max_workers,
+                mp_context=mp_context,
                 )
 
         with pool_executor() as executor:

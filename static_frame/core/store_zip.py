@@ -213,6 +213,7 @@ class _StoreZip(Store):
         pool_executor = get_concurrent_executor(
                 use_threads=False,
                 max_workers=config_map.default.read_max_workers,
+                mp_context=config_map.default.mp_context,
                 )
 
         with pool_executor() as executor:
@@ -257,6 +258,7 @@ class _StoreZip(Store):
             pool_executor = get_concurrent_executor(
                     use_threads=False,
                     max_workers=config_map.default.write_max_workers,
+                    mp_context=config_map.default.mp_context,
                     )
             def label_and_bytes() -> tp.Iterator[LabelAndBytes]:
                 with pool_executor() as executor:

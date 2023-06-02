@@ -655,8 +655,8 @@ class FrozenGenerator:
 def get_concurrent_executor(
         *,
         use_threads: bool,
-        max_workers: tp.Optional[int] = None,
-        mp_context: tp.Optional[str] = None,
+        max_workers: tp.Optional[int],
+        mp_context: tp.Optional[str],
         ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
     from concurrent.futures import ProcessPoolExecutor
