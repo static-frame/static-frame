@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+1.4.5
+-----------
+
+Imports of ``ThreadPoolExecutor`` and ``ProcessPoolExecutor`` are now deferred until used.
+
+Multiprocessing interfaces that use ``ProcessPoolExecutor`` now accept the ``mp_context`` parameter.
+
 
 1.4.4
 -----------
