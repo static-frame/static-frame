@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 import contextlib
 import datetime
@@ -36,12 +38,15 @@ from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
+    from concurrent.futures import Executor  # pylint: disable=W0611 #pragma: no cover
+
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -470,17 +475,13 @@ UFUNC_TO_REVERSE_OPERATOR: tp.Dict[UFunc, UFunc] = {
     # '__neg__': operator.__neg__,
     # '__abs__': operator.__abs__,
     # '__invert__': operator.__invert__,
-
     np.add: OPERATORS['__radd__'],
     np.subtract: OPERATORS['__rsub__'],
     np.multiply: OPERATORS['__rmul__'],
     np.matmul: OPERATORS['__rmatmul__'],
     np.true_divide: OPERATORS['__rtruediv__'],
     np.floor_divide: OPERATORS['__rfloordiv__'],
-
-
     # '__mod__': operator.__mod__,
-
     # '__pow__': operator.__pow__,
     # '__lshift__': operator.__lshift__,
     # '__rshift__': operator.__rshift__,
@@ -649,6 +650,25 @@ class FrozenGenerator:
                 except StopIteration:
                     raise IndexError(k) from None
         return self._src[key]
+
+#-------------------------------------------------------------------------------
+def get_concurrent_executor(
+        *,
+        use_threads: bool,
+        max_workers: tp.Optional[int],
+        mp_context: tp.Optional[str],
+        ) -> tp.Type[Executor]:
+    # NOTE: these imports are conditional as these modules are not supported in pyodide
+    if use_threads:
+        from concurrent.futures import ThreadPoolExecutor
+        exe = partial(ThreadPoolExecutor,
+                max_workers=max_workers)
+    else:
+        from concurrent.futures import ProcessPoolExecutor
+        exe = partial(ProcessPoolExecutor,
+                max_workers=max_workers,
+                mp_context=mp_context)
+    return exe #type: ignore
 
 #-------------------------------------------------------------------------------
 # join utils
