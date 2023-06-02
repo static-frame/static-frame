@@ -659,14 +659,12 @@ def get_concurrent_executor(
         mp_context: tp.Optional[str],
         ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
-    from concurrent.futures import ProcessPoolExecutor
-    from concurrent.futures import ThreadPoolExecutor
-
     if use_threads:
-        # NOTE: could fail if mp_context is not None
+        from concurrent.futures import ThreadPoolExecutor
         exe = partial(ThreadPoolExecutor,
                 max_workers=max_workers)
     else:
+        from concurrent.futures import ProcessPoolExecutor
         exe = partial(ProcessPoolExecutor,
                 max_workers=max_workers,
                 mp_context=mp_context)
