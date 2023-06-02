@@ -107,6 +107,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             '_max_workers',
             '_chunksize',
             '_use_threads',
+            '_mp_context',
             )
 
     _config: StoreConfigMap
@@ -120,6 +121,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''Return a :obj:`Batch` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
@@ -129,6 +131,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     #---------------------------------------------------------------------------
@@ -142,6 +145,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -153,6 +157,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -164,6 +169,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped TSV :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -176,6 +182,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -187,6 +194,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped CSV :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -199,6 +207,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -210,6 +219,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped pickle :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -222,6 +232,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -233,6 +244,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped NPZ :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -245,6 +257,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -256,6 +269,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -268,6 +282,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     @classmethod
@@ -279,6 +294,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to zipped parquet :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -291,6 +307,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
 
@@ -303,6 +320,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to an XLSX :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -316,6 +334,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
 
@@ -328,6 +347,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to an SQLite :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -340,6 +360,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
 
@@ -352,6 +373,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ) -> 'Batch':
         '''
         Given a file path to a HDF5 :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -364,6 +386,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
+                mp_context=mp_context,
                 )
 
     #---------------------------------------------------------------------------
@@ -376,6 +399,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
+            mp_context: tp.Optional[str] = None,
             ):
         '''
         Default constructor of a :obj:`Batch`.
@@ -390,6 +414,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self._max_workers = max_workers
         self._chunksize = chunksize
         self._use_threads = use_threads
+        self._mp_context = mp_context
 
     #---------------------------------------------------------------------------
     def _derive(self,
@@ -488,6 +513,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         pool_executor = get_concurrent_executor(
                 use_threads=self._use_threads,
                 max_workers=self._max_workers,
+                mp_context=self._mp_context,
                 )
 
         def gen_pool() -> IteratorFrameItems:
@@ -510,6 +536,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         pool_executor = get_concurrent_executor(
                 use_threads=self._use_threads,
                 max_workers=self._max_workers,
+                mp_context=self._mp_context,
                 )
 
         def gen_pool() -> IteratorFrameItems:
