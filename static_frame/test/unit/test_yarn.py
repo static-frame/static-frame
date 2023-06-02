@@ -1109,7 +1109,7 @@ class TestUnit(TestCase):
         y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
         self.assertEqual(
                 y1.iloc[[0,2,4]].rehierarch((1, 0)).status['shape'].to_pairs(),
-                (((1, 'a'), (4, 2)), ((3, 'a'), (2, 2)), ((2, 'b'), (4, 4)))
+                (((1, 'a'), (4, 2)), ((2, 'b'), (2, 2)), ((3, 'a'), (4, 4)))
                 )
 
     def test_yarn_rehierarch_b(self) -> None:

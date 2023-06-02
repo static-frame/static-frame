@@ -25,6 +25,7 @@ from static_frame.core.rank import rank_1d
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
@@ -53,6 +54,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
 
@@ -976,7 +978,6 @@ def rehierarch_from_type_blocks(*,
     Args:
         index_cls: provide a class, from which the constructor will be called.
     '''
-
     depth = labels.shape[1] # number of columns
 
     if depth != len(depth_map):
@@ -984,26 +985,28 @@ def rehierarch_from_type_blocks(*,
     if set(range(depth)) != set(depth_map):
         raise RuntimeError('all depths must be specified')
 
-    labels_post = labels._extract(row_key=NULL_SLICE, column_key=list(depth_map))
-    labels_sort = np.full(labels_post.shape, 0)
+    # dtype specified here will also ensure that all values in depth_map are int
+    depth_map = np.array(depth_map, dtype=DTYPE_INT_DEFAULT)
 
-    # get ordering of values found in each level
-    order: tp.List[tp.Dict[tp.Hashable, int]] = [defaultdict(int) for _ in range(depth)]
+    def get_indexer_at_depth(col_idx: int) -> np.ndarray:
+        values_at_depth = labels._extract_array_column(col_idx)
+        _, indexer = ufunc_unique1d_indexer(values_at_depth)
+        return indexer
 
-    for (idx_row, idx_col), label in labels.element_items():
-        if label not in order[idx_col]:
-            # Map label to an integer representing the observed order.
-            order[idx_col][label] = len(order[idx_col])
-        # Fill array for sorting based on observed order.
-        labels_sort[idx_row, idx_col] = order[idx_col][label]
 
-    # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
-    order_lex = np.lexsort(
-            [labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
+    indexer = get_indexer_at_depth(0)
+    indexers = np.empty((depth, len(indexer)), dtype=DTYPE_INT_DEFAULT)
+    indexers[0] = indexer
 
-    labels_post = labels_post._extract(row_key=order_lex)
+    for col_idx in range(1, depth):
+        indexers[col_idx] = get_indexer_at_depth(col_idx)
 
-    return labels_post, order_lex
+    # Lexsort
+    # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
+    # We sort lexsort from right to left (i.e. [::-1])
+    sort_order = np.lexsort(indexers[depth_map][:-1][::-1])
+
+    return labels._extract(row_key=sort_order, column_key=depth_map), sort_order
 
 
 def rehierarch_from_index_hierarchy(*,

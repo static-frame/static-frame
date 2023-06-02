@@ -5575,8 +5575,27 @@ class TestUnit(TestCase):
 
         f2 = f1.rehierarch(index=(1,0), columns=(1,0))
         self.assertEqual(f2.to_pairs(0),
-                (((1, 'a'), (((True, 100), 1), ((True, 200), 54), ((False, 100), 30), ((False, 200), 65))), ((1, 'b'), (((True, 100), 'a'), ((True, 200), 'c'), ((False, 100), 'b'), ((False, 200), 'd'))), ((2, 'a'), (((True, 100), 2), ((True, 200), 95), ((False, 100), 34), ((False, 200), 73))), ((2, 'b'), (((True, 100), False), ((True, 200), False), ((False, 100), True), ((False, 200), True))))
-                )
+                (((1, 'a'),
+                    (((False, 100), 30),
+                     ((False, 200), 65),
+                     ((True, 100), 1),
+                     ((True, 200), 54))),
+                ((1, 'b'),
+                    (((False, 100), 'b'),
+                     ((False, 200), 'd'),
+                     ((True, 100), 'a'),
+                     ((True, 200), 'c'))),
+                ((2, 'a'),
+                    (((False, 100), 34),
+                     ((False, 200), 73),
+                     ((True, 100), 2),
+                     ((True, 200), 95))),
+                ((2, 'b'),
+                    (((False, 100), True),
+                     ((False, 200), True),
+                     ((True, 100), False),
+                     ((True, 200), False)))
+                ))
 
     def test_frame_rehierarch_b(self) -> None:
 
@@ -5611,8 +5630,27 @@ class TestUnit(TestCase):
 
         f2 = f1.rehierarch(index=(1,0))
         self.assertEqual(f2.to_pairs(0),
-                ((('a', 1), (((True, 100), 1), ((True, 200), 54), ((False, 100), 30), ((False, 200), 65))), (('a', 2), (((True, 100), 2), ((True, 200), 95), ((False, 100), 34), ((False, 200), 73))), (('b', 1), (((True, 100), 'a'), ((True, 200), 'c'), ((False, 100), 'b'), ((False, 200), 'd'))), (('b', 2), (((True, 100), False), ((True, 200), False), ((False, 100), True), ((False, 200), True))))
-                )
+                ((('a', 1),
+                    (((False, 100), 30),
+                     ((False, 200), 65),
+                     ((True, 100), 1),
+                     ((True, 200), 54))),
+                (('a', 2),
+                    (((False, 100), 34),
+                     ((False, 200), 73),
+                     ((True, 100), 2),
+                     ((True, 200), 95))),
+                (('b', 1),
+                    (((False, 100), 'b'),
+                     ((False, 200), 'd'),
+                     ((True, 100), 'a'),
+                     ((True, 200), 'c'))),
+                (('b', 2),
+                    (((False, 100), True),
+                     ((False, 200), True),
+                     ((True, 100), False),
+                     ((True, 200), False)))
+                ))
 
         f3 = f1.rehierarch(columns=(1,0))
         self.assertEqual(f3.to_pairs(0),
@@ -11004,7 +11042,13 @@ class TestUnit(TestCase):
                 reorder_for_hierarchy=True,
                 )
         self.assertEqual(fh.to_pairs(0),
-                ((2, (((1, 'a'), 10), ((1, 'c'), 30), ((1, 'b'), 20), ((2, 'a'), 40), ((2, 'c'), 60), ((2, 'b'), 50))),)
+                ((2, (
+                    ((1, 'a'), 10),
+                    ((1, 'c'), 30),
+                    ((1, 'b'), 20),
+                    ((2, 'c'), 60),
+                    ((2, 'a'), 40),
+                    ((2, 'b'), 50))),)
                 )
 
     def test_frame_set_index_hierarchy_g(self) -> None:

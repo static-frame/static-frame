@@ -2178,7 +2178,7 @@ class TestUnit(TestCase):
 
         s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))
         self.assertEqual(s4.values.tolist(),
-                [5, 4, 3, 2, 1, 0])
+                [2, 1, 0, 5, 4, 3])
 
         with self.assertRaises(RuntimeError):
             _ = s1.sort_index(key=lambda i: i.values_at_depth(0)[:2])
@@ -2361,19 +2361,51 @@ class TestUnit(TestCase):
 
         s2 = s1.rehierarch((2,1,0))
 
+        # Innermost level is not sorted since it doesn't need to be.
         self.assertEqual(s2.to_pairs(),
-                ((('smooth', 'red', 'square'), 0), (('smooth', 'red', 'circle'), 4), (('smooth', 'red', 'triangle'), 8), (('smooth', 'green', 'square'), 2), (('smooth', 'green', 'circle'), 6), (('smooth', 'green', 'triangle'), 10), (('rough', 'red', 'square'), 1), (('rough', 'red', 'circle'), 5), (('rough', 'red', 'triangle'), 9), (('rough', 'green', 'square'), 3), (('rough', 'green', 'circle'), 7), (('rough', 'green', 'triangle'), 11))
+                (
+                    (('rough', 'green', 'square'), 3),
+                    (('rough', 'green', 'circle'), 7),
+                    (('rough', 'green', 'triangle'), 11),
+                    (('rough', 'red', 'square'), 1),
+                    (('rough', 'red', 'circle'), 5),
+                    (('rough', 'red', 'triangle'), 9),
+                    (('smooth', 'green', 'square'), 2),
+                    (('smooth', 'green', 'circle'), 6),
+                    (('smooth', 'green', 'triangle'), 10),
+                    (('smooth', 'red', 'square'), 0),
+                    (('smooth', 'red', 'circle'), 4),
+                    (('smooth', 'red', 'triangle'), 8)
+                )
                 )
 
     def test_series_rehierarch_b(self) -> None:
         s1 = sf.Series(range(8), index=sf.IndexHierarchy.from_product(('B', 'A'), (100, 2), ('iv', 'ii')))
 
         self.assertEqual(s1.rehierarch((2,1,0)).to_pairs(),
-                ((('iv', 100, 'B'), 0), (('iv', 100, 'A'), 4), (('iv', 2, 'B'), 2), (('iv', 2, 'A'), 6), (('ii', 100, 'B'), 1), (('ii', 100, 'A'), 5), (('ii', 2, 'B'), 3), (('ii', 2, 'A'), 7))
+                (
+                    (('ii', 2, 'B'), 3),
+                    (('ii', 2, 'A'), 7),
+                    (('ii', 100, 'B'), 1),
+                    (('ii', 100, 'A'), 5),
+                    (('iv', 2, 'B'), 2),
+                    (('iv', 2, 'A'), 6),
+                    (('iv', 100, 'B'), 0),
+                    (('iv', 100, 'A'), 4)
+                )
                 )
 
         self.assertEqual(s1.rehierarch((1,2,0)).to_pairs(),
-                (((100, 'iv', 'B'), 0), ((100, 'iv', 'A'), 4), ((100, 'ii', 'B'), 1), ((100, 'ii', 'A'), 5), ((2, 'iv', 'B'), 2), ((2, 'iv', 'A'), 6), ((2, 'ii', 'B'), 3), ((2, 'ii', 'A'), 7))
+                (
+                    ((2, 'ii', 'B'), 3),
+                    ((2, 'ii', 'A'), 7),
+                    ((2, 'iv', 'B'), 2),
+                    ((2, 'iv', 'A'), 6),
+                    ((100, 'ii', 'B'), 1),
+                    ((100, 'ii', 'A'), 5),
+                    ((100, 'iv', 'B'), 0),
+                    ((100, 'iv', 'A'), 4)
+                )
                 )
 
     def test_series_rehierarch_c(self) -> None:

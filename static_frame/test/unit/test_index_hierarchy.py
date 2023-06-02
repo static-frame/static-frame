@@ -2349,15 +2349,27 @@ class TestUnit(TestCase):
     def test_hierarchy_rehierarch_a(self) -> None:
         ih1 = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
         ih2 = ih1.rehierarch((1, 0, 2))
-
         self.assertEqual(ih2.values.tolist(),
-                [['B', 'I', 2], ['B', 'I', 1], ['B', 'II', 2], ['B', 'II', 1], ['A', 'I', 2], ['A', 'I', 1], ['A', 'II', 2], ['A', 'II', 1]]
+                [['A', 'I', 2],
+                 ['A', 'I', 1],
+                 ['A', 'II', 2],
+                 ['A', 'II', 1],
+                 ['B', 'I', 2],
+                 ['B', 'I', 1],
+                 ['B', 'II', 2],
+                 ['B', 'II', 1]]
                 )
 
         ih3 = ih1.rehierarch((2, 1, 0))
-        self.assertEqual(
-                ih3.values.tolist(),
-                [[2, 'B', 'I'], [2, 'B', 'II'], [2, 'A', 'I'], [2, 'A', 'II'], [1, 'B', 'I'], [1, 'B', 'II'], [1, 'A', 'I'], [1, 'A', 'II']]
+        self.assertEqual(ih3.values.tolist(),
+                [[1, 'A', 'I'],
+                 [1, 'A', 'II'],
+                 [1, 'B', 'I'],
+                 [1, 'B', 'II'],
+                 [2, 'A', 'I'],
+                 [2, 'A', 'II'],
+                 [2, 'B', 'I'],
+                 [2, 'B', 'II']]
                 )
 
     def test_hierarchy_rehierarch_b(self) -> None:

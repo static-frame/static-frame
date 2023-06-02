@@ -1950,7 +1950,7 @@ class TestUnit(TestCase):
         b2 = b1.relabel_level_add('X')
         b3 = b2.rehierarch([1, 0])
         self.assertEqual(b3.index.values.tolist(),
-                [['f3', 'X'], ['f2', 'X'], ['f1', 'X']])
+                [['f1', 'X'], ['f2', 'X'], ['f3', 'X']])
 
     #---------------------------------------------------------------------------
 
