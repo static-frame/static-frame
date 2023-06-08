@@ -92,7 +92,7 @@ StaticFrame can be installed via ``conda`` with the ``conda-forge`` channel. Not
 Installation via Pyodide
 -------------------------------
 
-Run StaticFrame in the browser via Pyodide, use the ``static_frame_pyodide`` package: https://github.com/static-frame/static-frame-pyodide
+StaticFrame can be run in the browser via Pyodide with the ``static_frame_pyodide`` package: https://github.com/static-frame/static-frame-pyodide
 
 
 Dependencies
