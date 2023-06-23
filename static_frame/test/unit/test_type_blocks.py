@@ -4,6 +4,7 @@ from itertools import zip_longest
 
 import frame_fixtures as ff
 import numpy as np
+from arraykit import ErrorInitTypeBlocks
 from arraykit import immutable_filter
 
 from static_frame import TypeBlocks
@@ -12,7 +13,6 @@ from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.index_correspondence import IndexCorrespondence
@@ -60,25 +60,6 @@ class TestUnit(TestCase):
         # self.assertTrue((tb1[0:2].mloc == tb1.mloc[:2]).all())
         # self.assertTrue((tb1.mloc[:2] == tb1.iloc[0:2, 0:2].mloc).all())
 
-    def test_type_blocks_contiguous_pairs(self) -> None:
-
-        a = [(0, 1), (0, 2), (2, 3), (2, 1)]
-        post = list(TypeBlocks._indices_to_contiguous_pairs(a))
-        self.assertEqual(post, [
-                (0, slice(1, 3)),
-                (2, slice(3, 4)),
-                (2, slice(1, 2)),
-                ])
-
-        a = [(0, 0), (0, 1), (0, 2), (1, 4), (2, 1), (2, 3)]
-        post = list(TypeBlocks._indices_to_contiguous_pairs(a))
-        self.assertEqual(post, [
-                (0, slice(0, 3)),
-                (1, slice(4, 5)),
-                (2, slice(1, 2)),
-                (2, slice(3, 4)),
-            ])
-
     def test_type_blocks_b(self) -> None:
 
         # given naturally of a list of rows; this corresponds to what we get with iloc, where we select a row first, then a column
@@ -100,7 +81,7 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.shape, (2, 8))
 
         self.assertEqual(len(tb1), 2)
-        self.assertEqual(tb1._row_dtype, np.object_)
+        self.assertEqual(tb1._index.dtype, np.object_)
 
         slice1 = tb1[2:5]
         self.assertEqual(slice1.shape, (2, 3))
@@ -173,20 +154,6 @@ class TestUnit(TestCase):
         self.assertEqual(list(tb1._key_to_block_slices([3,5,6])),
             [(1, slice(0, 1, None)), (1, slice(2, 3, None)), (2, slice(0, 1, None))]
             )
-
-    #---------------------------------------------------------------------------
-
-    def test_type_blocks_key_to_block_slices_a(self) -> None:
-        a1 = np.array([1, 2, -1])
-        a2 = np.array([[False, True], [True, True], [False, True]])
-        tb1 = TypeBlocks.from_blocks((a1, a2))
-
-        self.assertEqual(list(tb1._key_to_block_slices(None)),
-                [(0, NULL_SLICE), (1, NULL_SLICE)]
-                )
-
-        with self.assertRaises(KeyError):
-            list(tb1._key_to_block_slices('a'))
 
     #---------------------------------------------------------------------------
 
@@ -683,7 +650,7 @@ class TestUnit(TestCase):
 
         post1 = [x for x in tb.element_items()]
 
-        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._row_dtype)
+        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._index.dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
         post2 = tb == tb2
@@ -1810,7 +1777,7 @@ class TestUnit(TestCase):
                 [((0, 0), 1), ((0, 1), 2), ((0, 2), 3), ((0, 3), False), ((0, 4), False), ((0, 5), True), ((0, 6), None), ((0, 7), 'a'), ((0, 8), 'b'), ((1, 0), 4), ((1, 1), 5), ((1, 2), 6), ((1, 3), True), ((1, 4), False), ((1, 5), True), ((1, 6), None), ((1, 7), 'c'), ((1, 8), 'd'), ((2, 0), 0), ((2, 1), 0), ((2, 2), 1), ((2, 3), True), ((2, 4), False), ((2, 5), True), ((2, 6), None), ((2, 7), 'oe'), ((2, 8), 'od')]
                 )
 
-        tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._row_dtype)
+        tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._index.dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
     def test_type_blocks_elements_items_b(self) -> None:
@@ -3435,7 +3402,6 @@ class TestUnit(TestCase):
             [['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x'],
             ['x', 'x', 'x', 'x']])
-
         a3 = next(tb.axis_values(0))
         self.assertEqual(a3.tolist(),
             ['x', 'x', 'x']
@@ -4155,7 +4121,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_type_blocks_key_to_block_slices_exception(self) -> None:
         # as this is an loc-is-iloc index, the key gets passed directly to type blocks
-        with self.assertRaises(KeyError):
+        with self.assertRaises(TypeError):
             ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
 
 

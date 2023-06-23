@@ -68,20 +68,31 @@ Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-fra
 
 
 
-Installation
+Installation via ``pip``
 -------------------------------
 
-Install StaticFrame via PIP::
+Install StaticFrame with ``pip``::
 
     pip install static-frame
 
-Or, install StaticFrame via conda::
+To install optional dependencies for full support of input and output formats (such as XLSX and HDF5) via ``pip``::
+
+    pip install static-frame [extras]
+
+
+
+Installation via ``conda``
+-------------------------------
+
+StaticFrame can be installed via ``conda`` with the ``conda-forge`` channel. Note that pre-built wheels of StaticFrame and all compiled dependencies are available through ``pip`` and may offer more compatibility than a ``conda``-based installation ::
 
     conda install -c conda-forge static-frame
 
-To install full support of input and output routines via PIP::
 
-    pip install static-frame [extras]
+Installation via Pyodide
+-------------------------------
+
+StaticFrame can be run in the browser via Pyodide with the ``static_frame_pyodide`` package: https://github.com/static-frame/static-frame-pyodide
 
 
 Dependencies
@@ -91,8 +102,8 @@ Core StaticFrame requires the following:
 
 - Python>=3.7
 - NumPy>=1.18.5
-- arraymap==0.1.8
-- arraykit==0.3.4
+- arraymap==0.1.9
+- arraykit==0.4.8
 
 For extended input and output, the following packages are required:
 

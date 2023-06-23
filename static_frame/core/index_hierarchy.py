@@ -1313,7 +1313,7 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             return self.__len__(), self.depth
 
-        return self._blocks._shape
+        return self._blocks.shape
 
     @property
     def ndim(self: IH) -> int:

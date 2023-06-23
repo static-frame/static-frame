@@ -1,15 +1,34 @@
 What is New in StaticFrame
 ===============================
 
-
-1.4.3-dev
+1.4.5
 -----------
+
+Imports of ``ThreadPoolExecutor`` and ``ProcessPoolExecutor`` are now deferred until used.
+
+Multiprocessing interfaces that use ``ProcessPoolExecutor`` now accept the ``mp_context`` parameter.
+
+
+1.4.4
+-----------
+
+Set ``arraymap`` to 0.1.9.
+
+Updated ``TypeBlocks`` to use ``BlockIndex.iter_block()``.
+
+
+1.4.3
+-----------
+
+Integrated ``arraykit.BlockIndex`` in ``TypeBlocks``, offering significant ``Frame`` performance improvements.
 
 ``via_dt`` will now raise if an NA is encountered and a ``fill_value`` is not provided.
 
 Corrected issue in ``Quilt`` construction when component ``Frame`` have ``IndexHierarchy``.
 
 Corrected issue when using an ``Index`` as a selector in ``via_fill_value().loc[]``.
+
+Added ``ErrorInitColumns`` to better indicated failures in column ``Index`` construction.
 
 
 1.4.2

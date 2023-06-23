@@ -12,6 +12,7 @@ from itertools import zip_longest
 import numpy as np
 from arraykit import column_2d_filter
 from arraykit import resolve_dtype_iter
+from arraykit import slice_to_ascending_slice
 from numpy import char as npc
 
 from static_frame.core.container import ContainerBase
@@ -50,7 +51,6 @@ from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
-from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
@@ -938,7 +938,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     from static_frame.core.series import Series
 
     if key.__class__ is slice:
-        return slice_to_ascending_slice(key, size=size) #type: ignore
+        return slice_to_ascending_slice(key, size) #type: ignore
 
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return key

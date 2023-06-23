@@ -36,6 +36,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     read_chunksize: int
     write_max_workers: tp.Optional[int]
     write_chunksize: int
+    mp_context: tp.Optional[str]
     _hash: tp.Optional[int]
 
     __slots__ = (
@@ -60,6 +61,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             'read_chunksize',
             'write_max_workers',
             'write_chunksize',
+            'mp_context',
             '_hash'
             )
 
@@ -90,6 +92,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             read_chunksize: int = 1,
             write_max_workers: tp.Optional[int] = None,
             write_chunksize: int = 1,
+            mp_context: tp.Optional[str] = None,
             ):
         '''
         Args:
@@ -123,7 +126,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         self.read_chunksize = read_chunksize
         self.write_max_workers = write_max_workers
         self.write_chunksize = write_chunksize
-
+        self.mp_context = mp_context
         self._hash = None
 
     def __eq__(self, other: tp.Any) -> bool:
@@ -181,6 +184,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
                     self.read_chunksize, # int
                     self.write_max_workers, # Optional[int]
                     self.write_chunksize, # int
+                    self.mp_context,
             ))
         return self._hash
 
@@ -238,6 +242,7 @@ class StoreConfig(StoreConfigHE):
             read_chunksize: int = 1,
             write_max_workers: tp.Optional[int] = None,
             write_chunksize: int = 1,
+            mp_context: tp.Optional[str] = None,
             ):
         StoreConfigHE.__init__(self,
                 index_depth=index_depth,
@@ -261,6 +266,7 @@ class StoreConfig(StoreConfigHE):
                 read_chunksize=read_chunksize,
                 write_max_workers=write_max_workers,
                 write_chunksize=write_chunksize,
+                mp_context=mp_context,
         )
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder

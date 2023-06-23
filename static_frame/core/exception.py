@@ -6,10 +6,6 @@ class ErrorInit(RuntimeError):
     '''Error in Container initialization.
     '''
 
-class ErrorInitTypeBlocks(ErrorInit):
-    '''Error in TypeBlocks initialization.
-    '''
-
 class ErrorInitSeries(ErrorInit):
     '''Error in Series initialization.
     '''
@@ -22,12 +18,12 @@ class ErrorInitIndex(ErrorInit):
     '''Error in IndexBase (and derived Index) initialization.
     '''
 
-class ErrorInitIndexNonUnique(ErrorInitIndex):
-    '''Error in IndexBase initialization due to non-unique values.
+class ErrorInitColumns(ErrorInitIndex):
+    '''Error in IndexBase (and derived Index) initialization of columns.
     '''
 
-class ErrorInitIndexLevel(ErrorInit):
-    '''Error in IndexBase (and derived Index) initialization.
+class ErrorInitIndexNonUnique(ErrorInitIndex):
+    '''Error in IndexBase initialization due to non-unique values.
     '''
 
 class ErrorInitBus(ErrorInit):
