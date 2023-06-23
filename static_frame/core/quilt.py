@@ -31,7 +31,7 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -1148,12 +1148,12 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Frame']:
-        return InterfaceGetItem(self._extract_loc) #type: ignore
+    def loc(self) -> InterfaceGetItemCompound['Frame']:
+        return InterfaceGetItemCompound(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem['Frame']:
-        return InterfaceGetItem(self._extract_iloc) #type: ignore
+    def iloc(self) -> InterfaceGetItemCompound['Frame']:
+        return InterfaceGetItemCompound(self._extract_iloc) #type: ignore
 
     #---------------------------------------------------------------------------
     # iterators

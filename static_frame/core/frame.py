@@ -96,7 +96,7 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceConsolidate
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -3443,16 +3443,16 @@ class Frame(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Frame']:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemCompound['Frame']:
+        return InterfaceGetItemCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem['Frame']:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemCompound['Frame']:
+        return InterfaceGetItemCompound(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItem['Frame']:
-        return InterfaceGetItem(self._extract_bloc)
+    def bloc(self) -> InterfaceGetItemCompound['Frame']:
+        return InterfaceGetItemCompound(self._extract_bloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Frame']:
