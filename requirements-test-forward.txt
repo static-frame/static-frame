@@ -1,4 +1,4 @@
-numpy==1.24.1
+numpy==1.25.0
 arraymap==0.1.9
 arraykit==0.4.9
 
@@ -9,7 +9,7 @@ scipy==1.9.3
 invoke==2.0.0
 ipython==7.16.3
 
-pandas==1.5.3
+pandas==2.0.2
 xlsxwriter==1.1.2
 openpyxl==3.0.10
 xarray==0.21.1
