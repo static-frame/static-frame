@@ -103,7 +103,7 @@ Core StaticFrame requires the following:
 - Python>=3.7
 - NumPy>=1.18.5
 - arraymap==0.1.9
-- arraykit==0.4.8
+- arraykit==0.4.9
 
 For extended input and output, the following packages are required:
 
