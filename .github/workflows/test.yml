@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-20.04', 'windows-2019', 'macos-11']
-        python-version: ['3.7', '3.8']
+        # this is presently the same as test-backward; updated this and quality to new baseline
+        python-version: ['3.8']
 
     runs-on: ${{ matrix.os }}
 
