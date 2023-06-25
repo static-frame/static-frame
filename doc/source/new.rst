@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.5.0-dev
+-----------
+
+Removed support for Python 3.7
+
+
 1.4.6
 -----------
 
