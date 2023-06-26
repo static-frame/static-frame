@@ -65,6 +65,7 @@ from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
@@ -1190,7 +1191,7 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_exporter(**kwargs)
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
-            elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
+            elif isinstance(obj, (InterfaceGetItem, InterfaceGetItemCompound)) or name == cls.GETITEM:
                 yield from InterfaceRecord.gen_from_getitem(**kwargs)
 
             elif obj.__class__ in INTERFACE_ATTRIBUTE_CLS:
