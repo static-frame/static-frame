@@ -161,7 +161,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> np.ndarray:
         [
             np.tile(
                     np.repeat(PositionsAllocator.get(list_length), repeats=all_index_reps[i]),
-                    reps=np.product(all_group_reps[i])
+                    reps=np.prod(all_group_reps[i])
                     )
             for i, list_length
             in enumerate(list_lengths)
