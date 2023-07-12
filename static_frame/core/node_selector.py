@@ -8,6 +8,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
 
 # from static_frame.core.util import AnyCallable
 
@@ -62,6 +63,19 @@ class InterfaceGetItem(Interface[TContainer]):
         self._func = func #type: ignore
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
+        return self._func(key) #type: ignore
+
+class InterfaceGetItemCompound(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[GetItemKeyTypeCompound], TContainer]
+
+    def __init__(self, func: tp.Callable[[GetItemKeyTypeCompound], TContainer]) -> None:
+        self._func = func #type: ignore
+
+    def __getitem__(self, key: GetItemKeyTypeCompound) -> TContainer:
         return self._func(key) #type: ignore
 
 #-------------------------------------------------------------------------------
