@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from collections import defaultdict
 from functools import partial

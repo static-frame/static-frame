@@ -1,6 +1,8 @@
 '''
 Tools for documenting the SF interface.
 '''
+from __future__ import annotations
+
 import inspect
 import typing as tp
 from collections import namedtuple

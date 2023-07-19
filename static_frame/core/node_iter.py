@@ -1,6 +1,7 @@
 '''
 Tools for iterators in Series and Frame. These components are imported by both series.py and frame.py; these components also need to be able to return Series and Frame, and thus use deferred, function-based imports.
 '''
+from __future__ import annotations
 
 import typing as tp
 from enum import Enum
