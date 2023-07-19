@@ -1329,7 +1329,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).corr().to_frame()
-        self.assertEqual(round(f3, 6).to_pairs(), # type: ignore
+        self.assertEqual(round(f3, 6).to_pairs(),
                 (('b', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 1.0), (('f2', 'a'), 0.904194))), ('a', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 0.904194), (('f2', 'a'), 1.0))))
                 )
 
@@ -1676,7 +1676,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
         post = Batch.from_frames((f1, f2)).via_values.apply(np.cos).to_frame()
-        self.assertEqual(round(post, 2).to_pairs(), #type: ignore
+        self.assertEqual(round(post, 2).to_pairs(),
                 (('zZbu', ((('a', 0), -0.54), (('a', 1), 0.05), (('b', 0), -0.54), (('b', 1), 0.05))), ('ztsv', ((('a', 0), -0.96), (('a', 1), -0.54), (('b', 0), -0.96), (('b', 1), -0.54))), ('zUvW', ((('a', 0), -0.82), (('a', 1), 1.0), (('b', 0), -0.82), (('b', 1), 1.0))))
                 )
 

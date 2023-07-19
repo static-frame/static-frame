@@ -3581,12 +3581,12 @@ class TestUnit(TestCase):
         a3 = np.full(4, .55555)
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        tb2 = round(tb1, 3) #type: ignore
+        tb2 = round(tb1, 3)
         self.assertEqual(
                 tb2.values.tolist(),
                 [[0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556]]
                 )
-        tb3 = round(tb1, 1) #type: ignore
+        tb3 = round(tb1, 1)
         self.assertEqual(
                 tb3.values.tolist(),
                 [[0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6]]
