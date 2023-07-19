@@ -829,7 +829,7 @@ class TestUnit(TestCase):
                 index=('y', 'z', 'x'),
                 name='f2')
 
-        f3 = round(Batch.from_frames((f1, f2)), 1).to_frame() #type: ignore
+        f3 = round(Batch.from_frames((f1, f2)), 1).to_frame()
         self.assertEqual(f3.to_pairs(0),
                 (('b', ((('f1', 'z'), 20.0), (('f1', 'y'), 20.2), (('f1', 'x'), 0.0), (('f2', 'y'), 1.0), (('f2', 'z'), 20.2), (('f2', 'x'), 1.0))), ('a', ((('f1', 'z'), 20.2), (('f1', 'y'), 20.2), (('f1', 'x'), 50.8), (('f2', 'y'), 1.0), (('f2', 'z'), 50.8), (('f2', 'x'), 1.0))))
                 )

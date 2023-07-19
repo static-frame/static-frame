@@ -325,7 +325,7 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

@@ -636,7 +636,7 @@ class TypeBlocks(ContainerOperand):
         a.flags.writeable = False
         return a
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def mloc(self) -> np.ndarray:
         '''{doc_array}

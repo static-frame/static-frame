@@ -464,7 +464,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
-    @property # type: ignore
+    @property
     @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}
@@ -707,7 +707,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # core internal representation
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='values_1d', class_name='Index')
     def values(self) -> np.ndarray:
         '''

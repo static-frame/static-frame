@@ -11,7 +11,7 @@ class InterfaceMeta(type):
     '''Lowest level metaclass for providing interface property on class.
     '''
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def interface(cls) -> 'Frame':
         '''{}'''

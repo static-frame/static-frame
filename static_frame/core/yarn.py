@@ -218,7 +218,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

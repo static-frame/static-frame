@@ -554,7 +554,7 @@ class Series(ContainerOperand):
                     name = values.name # propagate Series.name
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # returned array is already immutable
-                self.values, _ = iterable_to_array_1d(values, dtype=dtype) #type: ignore
+                self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
@@ -662,7 +662,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
@@ -1814,7 +1814,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}

@@ -50,7 +50,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     #---------------------------------------------------------------------------
     # common display functions
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def interface(self) -> 'Frame':
         '''{}'''

@@ -62,10 +62,10 @@ class InterfaceGetItem(Interface[TContainer]):
     _func: tp.Callable[[GetItemKeyType], TContainer]
 
     def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
-        self._func = func #type: ignore
+        self._func = func
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
-        return self._func(key) #type: ignore
+        return self._func(key)
 
 class InterfaceGetItemCompound(Interface[TContainer]):
 
@@ -75,10 +75,10 @@ class InterfaceGetItemCompound(Interface[TContainer]):
     _func: tp.Callable[[GetItemKeyTypeCompound], TContainer]
 
     def __init__(self, func: tp.Callable[[GetItemKeyTypeCompound], TContainer]) -> None:
-        self._func = func #type: ignore
+        self._func = func
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> TContainer:
-        return self._func(key) #type: ignore
+        return self._func(key)
 
 #-------------------------------------------------------------------------------
 

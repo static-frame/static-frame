@@ -446,7 +446,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

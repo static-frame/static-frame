@@ -868,7 +868,7 @@ class Frame(ContainerOperand):
 
         if hasattr(rows, '__getitem__'):
             rows_to_iter = False
-            row_reference = rows[0] # type: ignore
+            row_reference = rows[0]
         else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
             row_reference = next(iter(rows))
@@ -1841,7 +1841,7 @@ class Frame(ContainerOperand):
                         explicit_constructors=index_constructors,
                         )
                 def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in cursor: # type: ignore
+                    for row in cursor:
                         index.append(row[0])
                         yield row[1:]
             else: # > 1
@@ -1869,7 +1869,7 @@ class Frame(ContainerOperand):
                         )
 
                 def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in cursor: # type: ignore
+                    for row in cursor:
                         for i, label in enumerate(row[:index_depth]):
                             index[i].append(label)
                         yield row[index_depth:]
@@ -2174,7 +2174,7 @@ class Frame(ContainerOperand):
                                 yield row_buffer.popleft()
                             row_buffer.append(row)
                 else:
-                    for i, row in enumerate(fp): # type: ignore
+                    for i, row in enumerate(fp):
                         if i >= skip_footer:
                             yield row_buffer.popleft()
                         row_buffer.append(row)
@@ -3488,7 +3488,7 @@ class Frame(ContainerOperand):
             delegate=FrameAssign,
             )
 
-    @property # type: ignore
+    @property
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType['Frame']:
         '''
@@ -3867,7 +3867,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    @property # type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow['Frame']:
         '''
@@ -3885,7 +3885,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property # type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow['Frame']:
         '''
@@ -3903,7 +3903,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property # type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow['Frame']:
         '''
@@ -3921,7 +3921,7 @@ class Frame(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property # type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow['Frame']:
         '''
@@ -4438,7 +4438,7 @@ class Frame(ContainerOperand):
                 name=self._name,
                 own_data=True,
                 own_index=index is not IndexAutoFactory,
-                own_columns=columns is not IndexAutoFactory, # type: ignore
+                own_columns=columns is not IndexAutoFactory,
                 )
 
 
@@ -5499,7 +5499,7 @@ class Frame(ContainerOperand):
             if (issubclass(constructor, tuple) and
                     hasattr(constructor, '_make')):
                 # discover named tuples, use _make method for single-value calling
-                ctor = constructor._make # type: ignore
+                ctor = constructor._make
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
                 ctor = lambda args: constructor(*args)
