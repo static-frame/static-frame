@@ -339,11 +339,6 @@ def is_strict_int(value: tp.Any) -> bool:
         return False
     return isinstance(value, INT_TYPES)
 
-def is_dataclass(value: tp.Any) -> bool:
-    # avoid module-level import
-    from dataclasses import is_dataclass
-    return is_dataclass(value)
-
 def validate_depth_selection(
         key: GetItemKeyType,
         ) -> None:
