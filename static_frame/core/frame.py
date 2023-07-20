@@ -15,6 +15,7 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
+from dataclasses import is_dataclass
 
 import numpy as np
 from arraykit import column_1d_filter
@@ -179,7 +180,6 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import is_dataclass
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import isfalsy_array
 from static_frame.core.util import isna_array
@@ -878,8 +878,8 @@ class Frame(ContainerOperand):
         if isinstance(row_reference, dict):
             raise ErrorInitFrame('Frame.from_records() does not support dictionary records. Use Frame.from_dict_records() instead.')
 
-        is_dataclass = hasattr(row_reference, '__dataclass_fields__')
-        if is_dataclass:
+        is_dc_inst = hasattr(row_reference, '__dataclass_fields__')
+        if is_dc_inst:
             fields_dc = tuple(row_reference.__dataclass_fields__.keys())
 
 
@@ -888,7 +888,7 @@ class Frame(ContainerOperand):
         if columns is None and hasattr(row_reference, '_fields'): # NamedTuple
             column_name_getter = row_reference._fields.__getitem__
             columns = []
-        elif columns is None and is_dataclass:
+        elif columns is None and is_dc_inst:
             column_name_getter = fields_dc.__getitem__
             columns = []
 
@@ -897,12 +897,12 @@ class Frame(ContainerOperand):
         # NOTE: row data by definition does not have Index data, so col count is length of row
         if hasattr(row_reference, '__len__'):
             col_count = len(row_reference)
-        elif is_dataclass:
+        elif is_dc_inst:
             col_count = len(fields_dc) # defined in branch above
         else:
             raise NotImplementedError(f'cannot get col_count from {row_reference}')
 
-        if not is_dataclass:
+        if not is_dc_inst:
             def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (row[col_key] for row in rows_iter)

@@ -51,8 +51,8 @@ class TestUnit(TestCase):
 
         for k, v1 in tree1.items():
             v2 = tree2[k]
-            if isinstance(v1, Index):
-                self.assertTrue(v1.equals(v2))
+            if isinstance(v1, Index):  # type: ignore
+                self.assertTrue(v1.equals(v2)) # type: ignore
             else:
                 self.compare_trees(v1, v2)
 

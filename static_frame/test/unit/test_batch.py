@@ -1119,10 +1119,10 @@ class TestUnit(TestCase):
                 ('b',(b%2==0 for b in i))
             )
         )
-        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        f123 = (f0.iloc[0:3], f0.iloc[3:6], f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_dense()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_dense().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_dense().values.tolist()) # type: ignore
 
     def test_batch_rank_max(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1135,7 +1135,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_max()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_max().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_max().values.tolist()) # type: ignore
 
     def test_batch_rank_mean(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1148,7 +1148,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_mean()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_mean().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_mean().values.tolist()) # type: ignore
 
     def test_batch_rank_min(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1161,7 +1161,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_min()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_min().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_min().values.tolist()) # type: ignore
 
     def test_batch_rank_ordinal(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1174,7 +1174,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_ordinal()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_ordinal().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_ordinal().values.tolist()) # type: ignore
 
     #---------------------------------------------------------------------------
     def test_batch_shift_a(self) -> None:

@@ -267,7 +267,7 @@ class StoreXLSX(Store):
             for depth in range(columns_depth - 1): # never most deep
                 row = depth
                 col = index_depth_effective # start after index
-                for label, width in frame._columns.label_widths_at_depth(depth):
+                for label, width in frame._columns.label_widths_at_depth(depth): # type: ignore
                     # TODO: use store_filter
                     if width > 1:
                         ws.merge_range(row, col, row, col + width - 1, label, format_columns)
@@ -277,7 +277,7 @@ class StoreXLSX(Store):
             for depth in range(index_depth - 1): # never most deep
                 row = columns_depth_effective
                 col = depth
-                for label, width in frame._index.label_widths_at_depth(depth):
+                for label, width in frame._index.label_widths_at_depth(depth): # type: ignore
                     # TODO: use store_filter
                     if width > 1:
                         ws.merge_range(row, col, row + width - 1, col, label, format_index)
