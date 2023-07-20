@@ -8,6 +8,7 @@ import typing as tp
 from collections import deque
 from collections.abc import Set
 from copy import deepcopy
+from dataclasses import is_dataclass
 from functools import partial
 from io import BytesIO
 from io import StringIO
@@ -15,7 +16,6 @@ from itertools import chain
 from itertools import product
 from itertools import zip_longest
 from operator import itemgetter
-from dataclasses import is_dataclass
 
 import numpy as np
 from arraykit import column_1d_filter
