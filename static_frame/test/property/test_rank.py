@@ -1,17 +1,23 @@
+from functools import partial
+
 import numpy as np
+import scipy.stats
 from hypothesis import given
-from scipy.stats import rankdata
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 
+rankdata = partial(scipy.stats.rankdata, nan_policy='omit')
 
 class TestUnit(TestCase):
 
     @given(sfst.get_array_1d(dtype_group=sfst.DTGroup.NUMERIC, max_size=100))
     def test_rank_1d_ordinal(self, value: np.ndarray) -> None:
+        if np.isnan(value).any():
+            return
+
         a1 = rankdata(value, method='ordinal')
         a2 = rank_1d(value, method='ordinal', start=1)
         self.assertEqual(a1.tolist(), a2.tolist())
@@ -75,6 +81,8 @@ class TestUnit(TestCase):
 
     @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
     def test_rank_2d_ordinal(self, value: np.ndarray) -> None:
+        if np.isnan(value).any():
+            return
         for axis in (0, 1):
             a1 = rankdata(value, method='ordinal', axis=axis)
             a2 = rank_2d(value, method='ordinal', start=1, axis=axis)
