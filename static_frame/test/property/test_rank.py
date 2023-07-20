@@ -1,7 +1,8 @@
-import numpy as np
-from hypothesis import given
-import scipy.stats
 from functools import partial
+
+import numpy as np
+import scipy.stats
+from hypothesis import given
 
 from static_frame.core.rank import rank_1d
 from static_frame.core.rank import rank_2d
