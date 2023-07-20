@@ -1,18 +1,7 @@
+from __future__ import annotations
+
 from static_frame.core.display_color import HexColor
 from static_frame.test.test_case import TestCase
-
-# assuming located in the same directory
-# from static_frame import Index
-# from static_frame import IndexGO
-# from static_frame import Series
-# from static_frame import Frame
-# from static_frame import FrameGO
-# from static_frame import TypeBlocks
-# from static_frame import Display
-# from static_frame import mloc
-# from static_frame import DisplayConfig
-# from static_frame import DisplayConfigs
-
 
 class TestUnit(TestCase):
 

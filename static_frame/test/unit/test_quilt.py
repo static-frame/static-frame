@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from hashlib import sha256
 
@@ -35,6 +37,7 @@ class TestUnit(TestCase):
                 name='f1')
         f2 = Frame.from_dict(
                 dict(a=(1,2,3), b=(4,5,6)),
+
                 index=('x', 'y', 'z'),
                 name='f2')
         f3 = Frame.from_dict(

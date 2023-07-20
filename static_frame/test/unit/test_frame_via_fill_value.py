@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import frame_fixtures as ff
 import numpy as np
 

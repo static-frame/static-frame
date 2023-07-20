@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import pickle
 from itertools import zip_longest

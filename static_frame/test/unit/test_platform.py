@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import static_frame as sf
 from static_frame.test.test_case import TestCase
 

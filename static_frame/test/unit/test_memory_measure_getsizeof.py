@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 import unittest
 from sys import getsizeof
