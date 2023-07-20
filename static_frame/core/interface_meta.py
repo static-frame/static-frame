@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 from static_frame.core.doc_str import doc_inject
@@ -9,7 +11,7 @@ class InterfaceMeta(type):
     '''Lowest level metaclass for providing interface property on class.
     '''
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def interface(cls) -> 'Frame':
         '''{}'''

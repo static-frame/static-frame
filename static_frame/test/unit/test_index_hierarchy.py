@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import datetime
 import pickle
@@ -1621,7 +1623,7 @@ class TestUnit(TestCase):
         labels = ((True, 'A'), ('I', 'B'))
         ih = IndexHierarchy.from_labels(labels)
 
-        key = HLoc[:, 'A']
+        key = HLoc[:, 'A'] # type: ignore
 
         ih2 = ih.loc[key]
         self.assertEqual(tuple(ih2), ((True, 'A'),))

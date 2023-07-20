@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from static_frame.core.frame import Frame
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory

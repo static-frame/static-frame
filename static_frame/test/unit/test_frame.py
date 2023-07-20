@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import dataclasses
 import datetime
@@ -9849,7 +9851,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_p(self) -> None:
 
-        records = [('x', 't')] * 10 + [(1, 2)] #type: ignore
+        records = [('x', 't')] * 10 + [(1, 2)]
         f1 = sf.Frame.from_records(records)
         self.assertEqual(f1.to_pairs(0),
                 ((0, ((0, 'x'), (1, 'x'), (2, 'x'), (3, 'x'), (4, 'x'), (5, 'x'), (6, 'x'), (7, 'x'), (8, 'x'), (9, 'x'), (10, 1))), (1, ((0, 't'), (1, 't'), (2, 't'), (3, 't'), (4, 't'), (5, 't'), (6, 't'), (7, 't'), (8, 't'), (9, 't'), (10, 2))))
@@ -10702,7 +10704,7 @@ class TestUnit(TestCase):
             self.assertEqual(f1.shape, (3, 3))
 
             s1 = c.mmap_frame.iloc[0]
-            self.assertEqual(round(s1, 1).to_pairs(), #type: ignore
+            self.assertEqual(round(s1, 1).to_pairs(),
                 ((0, 1930.4), (1, -610.8), (2, 694.3))
                 )
             c.__del__()
@@ -11578,7 +11580,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,6)|v(int,int,int,float,float,float)')
         f2 = ff.parse('s(2,6)|v(int,float)') * 0
         f3 = f1.clip(lower=f2)
-        self.assertEqual(round(f3).to_pairs(), #type: ignore
+        self.assertEqual(round(f3).to_pairs(),
                 ((0, ((0, 0.0), (1, 92867.0))), (1, ((0, 162197.0), (1, 0.0))), (2, ((0, 0.0), (1, 91301.0))), (3, ((0, 1080.0), (1, 2580.0))), (4, ((0, 3512.0), (1, 1175.0))), (5, ((0, 1857.0), (1, 1699.0))))
                 )
 
@@ -13248,13 +13250,13 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
         f1 = Frame(tb1)
-        f2 = round(f1) #type: ignore
+        f2 = round(f1)
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, 0.0), (1, 0.0), (2, 0.0), (3, 0.0))), (1, ((0, 1.0), (1, 1.0), (2, 1.0), (3, 1.0))), (2, ((0, 1.0), (1, 1.0), (2, 1.0), (3, 1.0))), (3, ((0, 1.0), (1, 1.0), (2, 1.0), (3, 1.0))))
                 )
 
-        f3 = round(f1, 2) #type: ignore
+        f3 = round(f1, 2)
         self.assertEqual(f3.to_pairs(0),
                 ((0, ((0, 0.33), (1, 0.33), (2, 0.33), (3, 0.33))), (1, ((0, 0.89), (1, 0.89), (2, 0.89), (3, 0.89))), (2, ((0, 0.89), (1, 0.89), (2, 0.89), (3, 0.89))), (3, ((0, 0.56), (1, 0.56), (2, 0.56), (3, 0.56))))
                 )
@@ -13668,34 +13670,34 @@ class TestUnit(TestCase):
 
         post1 = np.log(abs(f).via_values)
 
-        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
+        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(),
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
         post2 = np.log(abs(f).via_values(unify_blocks=True))
-        self.assertEqual(round(post2.fillna(0)).astype(int).to_pairs(), #type: ignore
+        self.assertEqual(round(post2.fillna(0)).astype(int).to_pairs(),
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
         post3 = np.log(abs(f).via_values(consolidate_blocks=True))
-        self.assertEqual(round(post3.fillna(0)).astype(int).to_pairs(), #type: ignore
+        self.assertEqual(round(post3.fillna(0)).astype(int).to_pairs(),
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
         post4 = np.log(abs(f).via_values(consolidate_blocks=True, dtype=float))
-        self.assertEqual(round(post4.fillna(0)).astype(int).to_pairs(), #type: ignore
+        self.assertEqual(round(post4.fillna(0)).astype(int).to_pairs(),
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
         post1 = np.log(abs(f).via_values(dtype=float))
-        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(), #type: ignore
+        self.assertEqual(round(post1.fillna(0)).astype(int).to_pairs(),
                 (('zZbu', ((0, 11), (1, 11), (2, 11))), ('ztsv', ((0, 6), (1, 8), (2, 7))), ('zUvW', ((0, 8), (1, 11), (2, 10))), ('zkuW', ((0, 7), (1, 8), (2, 7))))
                 )
 
     def test_frame_via_values_b(self) -> None:
         f = ff.parse('s(3,4)|v(bool)|c(I,str)')
         post1 = np.sin(f.via_values)
-        self.assertEqual(round(post1).to_pairs(), #type: ignore
+        self.assertEqual(round(post1).to_pairs(),
                 (('zZbu', ((0, 0.0), (1, 0.0), (2, 0.0))), ('ztsv', ((0, 0.0), (1, 0.0), (2, 0.0))), ('zUvW', ((0, 1.0), (1, 0.0), (2, 0.0))), ('zkuW', ((0, 0.0), (1, 0.0), (2, 1.0))))
                 )
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 from static_frame.core.index_base import IndexBase

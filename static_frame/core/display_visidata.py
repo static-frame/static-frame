@@ -1,5 +1,6 @@
 # This module follows the conventions of the VisiData project for naming and style.
 # This module is excluded from mypy and lint checking
+from __future__ import annotations
 
 import re
 from datetime import date

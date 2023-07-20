@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from static_frame import DisplayConfig
 from static_frame.test.test_case import TestCase
 

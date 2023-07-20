@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from functools import partial
 from itertools import chain
@@ -113,7 +115,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             ends = range(starts[1], vector_len, chunksize)
 
         if label_extractor is None:
-            label_extractor = lambda x: x.iloc[0] #type: ignore
+            label_extractor = lambda x: x.iloc[0]
 
         axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
         opposite = None
@@ -124,13 +126,13 @@ class Quilt(ContainerBase, StoreClientMixin):
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
-                    label = label_extractor(f.index) #type: ignore
+                    label = label_extractor(f.index)
                     axis_map_components[label] = f.index
                     if opposite is None:
                         opposite = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns) #type: ignore
+                    label = label_extractor(f.columns)
                     axis_map_components[label] = f.columns
                     if opposite is None:
                         opposite = f.index
@@ -515,7 +517,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
@@ -601,7 +603,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # accessors
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='values_2d', class_name='Quilt')
     def values(self) -> np.ndarray:
         '''
@@ -1251,7 +1253,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow['Quilt']:
         '''
@@ -1271,7 +1273,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow['Quilt']:
         '''
@@ -1291,7 +1293,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow['Quilt']:
         '''
@@ -1311,7 +1313,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 apply_type=IterNodeApplyType.SERIES_ITEMS,
                 )
 
-    @property #type: ignore
+    @property
     @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow['Quilt']:
         '''

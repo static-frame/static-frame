@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 from hashlib import sha256
 

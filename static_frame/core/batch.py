@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
@@ -444,7 +446,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

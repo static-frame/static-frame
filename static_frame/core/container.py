@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from collections import deque
 from functools import partial
@@ -48,7 +50,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     #---------------------------------------------------------------------------
     # common display functions
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def interface(self) -> 'Frame':
         '''{}'''

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from functools import partial
 from itertools import chain
@@ -323,7 +325,7 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from collections.abc import Set
 from itertools import chain
@@ -216,7 +218,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
