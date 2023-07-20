@@ -3,6 +3,7 @@ from __future__ import annotations
 from static_frame.core.display_color import HexColor
 from static_frame.test.test_case import TestCase
 
+
 class TestUnit(TestCase):
 
     def test_hex_str_to_int_a(self) -> None:
