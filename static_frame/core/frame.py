@@ -1780,7 +1780,7 @@ class Frame(ContainerOperand):
                 # selector function defined below
                 def filter_row(row: tp.Sequence[tp.Any]) -> tp.Sequence[tp.Any]:
                     post = selector(row)
-                    return post if not selector_reduces else (post,)
+                    return post if not selector_reduces else (post,) # type: ignore
 
             if columns_depth > 0 or columns_select:
                 # always need to derive labels if using columns_select
@@ -3248,7 +3248,7 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # blocks assignment
 
-        blocks_constructor = None
+        blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, ...]], None]] = None
 
         if data.__class__ is TypeBlocks: # PERF: no sublcasses supported
             if own_data:

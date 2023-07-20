@@ -636,7 +636,7 @@ class FrozenGenerator:
             self._gen = iter(gen)
         self._src: tp.List[FGItemT] = []
 
-    def __getitem__(self, key: int) -> FGItemT:
+    def __getitem__(self, key: int) -> FGItemT: # type: ignore
         start = len(self._src)
         if key >= start:
             for k in range(start, key + 1):

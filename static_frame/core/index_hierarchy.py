@@ -105,7 +105,7 @@ IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
 IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
 SingleLabelType = tp.Tuple[tp.Hashable, ...]
-TreeNodeT = tp.Dict[tp.Hashable, tp.Union[tp.Sequence[tp.Hashable], 'TreeNodeT']]
+TreeNodeT = tp.Dict[tp.Hashable, tp.Union[Index, 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
@@ -2457,7 +2457,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def _drop_missing(self,
+    def _drop_missing(self: IH,
             func: tp.Callable[[np.ndarray], np.ndarray],
             condition: tp.Callable[[np.ndarray], bool],
             ) -> IH:
@@ -2475,11 +2475,11 @@ class IndexHierarchy(IndexBase):
                 func=func,
                 )
         if self.STATIC and row_key.all(): #type: ignore
-            return self #type: ignore
+            return self
 
         return self._drop_iloc(~row_key) #type: ignore
 
-    def dropna(self, *,
+    def dropna(self: IH, *,
             condition: tp.Callable[[np.ndarray], bool] = np.all,
             ) -> IH:
         '''
@@ -2491,7 +2491,7 @@ class IndexHierarchy(IndexBase):
         '''
         return self._drop_missing(isna_array, condition)
 
-    def dropfalsy(self, *,
+    def dropfalsy(self: IH, *,
             condition: tp.Callable[[np.ndarray], bool] = np.all,
             ) -> IH:
         '''
