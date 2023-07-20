@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from itertools import chain
 from itertools import zip_longest
@@ -545,7 +547,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''

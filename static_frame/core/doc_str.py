@@ -1,7 +1,7 @@
 '''
 Storage for common doc strings and templates shared in non-related classes and methods.
 '''
-
+from __future__ import annotations
 
 import typing as tp
 

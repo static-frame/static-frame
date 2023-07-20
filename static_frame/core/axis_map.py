@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from copy import deepcopy
 from functools import partial

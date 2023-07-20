@@ -6,6 +6,8 @@ What is New in StaticFrame
 
 Removed support for Python 3.7
 
+Improved type hints for ``loc`` and ``iloc`` interfaces on 2D containers.
+
 
 1.4.6
 -----------

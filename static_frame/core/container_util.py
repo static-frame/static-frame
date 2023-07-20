@@ -1,6 +1,7 @@
 '''
 This module us for utilty functions that take as input and / or return Container subclasses such as Index, Series, or Frame, and that need to be shared by multiple such Container classes.
 '''
+from __future__ import annotations
 
 import datetime
 import typing as tp

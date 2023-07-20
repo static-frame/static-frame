@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from functools import partial
 from itertools import chain
@@ -634,7 +636,7 @@ class TypeBlocks(ContainerOperand):
         a.flags.writeable = False
         return a
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def mloc(self) -> np.ndarray:
         '''{doc_array}

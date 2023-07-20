@@ -1,4 +1,5 @@
-# import frame_fixtures as ff
+from __future__ import annotations
+
 import numpy as np
 
 import static_frame as sf

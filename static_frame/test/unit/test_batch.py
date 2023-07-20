@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import time
 import typing as tp
@@ -829,7 +831,7 @@ class TestUnit(TestCase):
                 index=('y', 'z', 'x'),
                 name='f2')
 
-        f3 = round(Batch.from_frames((f1, f2)), 1).to_frame() #type: ignore
+        f3 = round(Batch.from_frames((f1, f2)), 1).to_frame()
         self.assertEqual(f3.to_pairs(0),
                 (('b', ((('f1', 'z'), 20.0), (('f1', 'y'), 20.2), (('f1', 'x'), 0.0), (('f2', 'y'), 1.0), (('f2', 'z'), 20.2), (('f2', 'x'), 1.0))), ('a', ((('f1', 'z'), 20.2), (('f1', 'y'), 20.2), (('f1', 'x'), 50.8), (('f2', 'y'), 1.0), (('f2', 'z'), 50.8), (('f2', 'x'), 1.0))))
                 )
@@ -1119,10 +1121,10 @@ class TestUnit(TestCase):
                 ('b',(b%2==0 for b in i))
             )
         )
-        f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
+        f123 = (f0.iloc[0:3], f0.iloc[3:6], f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_dense()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_dense().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_dense().values.tolist()) # type: ignore
 
     def test_batch_rank_max(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1135,7 +1137,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_max()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_max().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_max().values.tolist()) # type: ignore
 
     def test_batch_rank_mean(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1148,7 +1150,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_mean()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_mean().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_mean().values.tolist()) # type: ignore
 
     def test_batch_rank_min(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1161,7 +1163,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_min()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_min().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_min().values.tolist()) # type: ignore
 
     def test_batch_rank_ordinal(self) -> None:
         i = [1,4,7,2,5,8,3,6,9]
@@ -1174,7 +1176,7 @@ class TestUnit(TestCase):
         f123 = (f0.iloc[0:3],f0.iloc[3:6],f0.iloc[6:9])
         b123 = Batch.from_frames(f123).rank_ordinal()
         for i,(_, f) in enumerate(b123.items()): # type: ignore
-            self.assertEqual(f.values.tolist(), f123[i].rank_ordinal().values.tolist())
+            self.assertEqual(f.values.tolist(), f123[i].rank_ordinal().values.tolist()) # type: ignore
 
     #---------------------------------------------------------------------------
     def test_batch_shift_a(self) -> None:
@@ -1329,7 +1331,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).corr().to_frame()
-        self.assertEqual(round(f3, 6).to_pairs(), # type: ignore
+        self.assertEqual(round(f3, 6).to_pairs(),
                 (('b', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 1.0), (('f2', 'a'), 0.904194))), ('a', ((('f1', 'b'), 1.0), (('f1', 'a'), 1.0), (('f2', 'b'), 0.904194), (('f2', 'a'), 1.0))))
                 )
 
@@ -1676,7 +1678,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
         post = Batch.from_frames((f1, f2)).via_values.apply(np.cos).to_frame()
-        self.assertEqual(round(post, 2).to_pairs(), #type: ignore
+        self.assertEqual(round(post, 2).to_pairs(),
                 (('zZbu', ((('a', 0), -0.54), (('a', 1), 0.05), (('b', 0), -0.54), (('b', 1), 0.05))), ('ztsv', ((('a', 0), -0.96), (('a', 1), -0.54), (('b', 0), -0.96), (('b', 1), -0.54))), ('zUvW', ((('a', 0), -0.82), (('a', 1), 1.0), (('b', 0), -0.82), (('b', 1), 1.0))))
                 )
 

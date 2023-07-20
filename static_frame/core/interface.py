@@ -1,6 +1,8 @@
 '''
 Tools for documenting the SF interface.
 '''
+from __future__ import annotations
+
 import inspect
 import typing as tp
 from collections import namedtuple
@@ -65,6 +67,7 @@ from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
@@ -724,7 +727,7 @@ class InterfaceRecord(tp.NamedTuple):
                 )
         # TypeBlocks as iter_* methods that are just functions
         if hasattr(obj, 'CLS_DELEGATE'):
-            cls_interface = obj.CLS_DELEGATE #type: ignore
+            cls_interface = obj.CLS_DELEGATE
             # IterNodeDelegate or IterNodeDelegateMapable
 
             for field in cls_interface.INTERFACE: # apply, map, etc
@@ -1190,7 +1193,7 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_exporter(**kwargs)
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
-            elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
+            elif isinstance(obj, (InterfaceGetItem, InterfaceGetItemCompound)) or name == cls.GETITEM:
                 yield from InterfaceRecord.gen_from_getitem(**kwargs)
 
             elif obj.__class__ in INTERFACE_ATTRIBUTE_CLS:

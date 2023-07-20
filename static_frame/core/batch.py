@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 import numpy as np
@@ -17,7 +19,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_selector import InterfaceBatchAsType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -444,7 +446,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property #type: ignore
+    @property
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
@@ -718,16 +720,16 @@ class Batch(ContainerOperand, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Batch']:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemCompound['Batch']:
+        return InterfaceGetItemCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem['Batch']:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemCompound['Batch']:
+        return InterfaceGetItemCompound(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItem['Batch']:
-        return InterfaceGetItem(self._extract_bloc)
+    def bloc(self) -> InterfaceGetItemCompound['Batch']:
+        return InterfaceGetItemCompound(self._extract_bloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Batch']:

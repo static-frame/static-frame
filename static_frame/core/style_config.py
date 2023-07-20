@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 
 from static_frame.core.display_color import HexColor

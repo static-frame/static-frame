@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 from itertools import product
 
@@ -85,12 +87,12 @@ class TestUnit(TestCase):
     def test_index_date_d(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
         # selct by year and year month
-        self.assertAlmostEqualValues(index.loc['2017'].values, #type: ignore
+        self.assertAlmostEqualValues(index.loc['2017'].values,
                 np.array(['2017-12-15', '2017-12-17', '2017-12-19', '2017-12-21',
                '2017-12-23', '2017-12-25', '2017-12-27', '2017-12-29',
                '2017-12-31'], dtype='datetime64[D]'))
 
-        self.assertAlmostEqualValues(index.loc['2018-02'].values, #type: ignore
+        self.assertAlmostEqualValues(index.loc['2018-02'].values,
                 np.array(['2018-02-01', '2018-02-03', '2018-02-05', '2018-02-07',
                '2018-02-09', '2018-02-11', '2018-02-13', '2018-02-15',
                '2018-02-17', '2018-02-19', '2018-02-21', '2018-02-23',
@@ -429,30 +431,30 @@ class TestUnit(TestCase):
 
         idx1 = IndexYear.from_year_range(1998, 2008)
         idx2 = idx1.loc[2002:2004]
-        self.assertEqual(tuple(idx2.values), # type: ignore
+        self.assertEqual(tuple(idx2.values),
             (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
 
         idx3 = idx1.loc['2002':'2004']
-        self.assertEqual(tuple(idx3.values), # type: ignore
+        self.assertEqual(tuple(idx3.values),
             (np.datetime64('2002'), np.datetime64('2003'), np.datetime64('2004')))
 
     def test_index_year_loc_c(self) -> None:
 
         idx1 = IndexYear.from_year_range(1998, 2008)
         idx2 = idx1.loc[[2001, 2004, 2005]]
-        self.assertEqual(tuple(idx2.values), # type: ignore
+        self.assertEqual(tuple(idx2.values),
             (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
 
         idx3 = idx1.loc[[2001, 2004, 2005]]
-        self.assertEqual(tuple(idx3.values), # type: ignore
+        self.assertEqual(tuple(idx3.values),
             (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
 
         idx4 = idx1.loc[(v for v in [2001, 2004, 2005])]
-        self.assertEqual(tuple(idx4.values), # type: ignore
+        self.assertEqual(tuple(idx4.values),
             (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
 
         idx5 = idx1.loc[np.array([2001, 2004, 2005])]
-        self.assertEqual(tuple(idx5.values), # type: ignore
+        self.assertEqual(tuple(idx5.values),
             (np.datetime64('2001'), np.datetime64('2004'), np.datetime64('2005')))
 
     def test_index_year_loc_d(self) -> None:
@@ -518,13 +520,13 @@ class TestUnit(TestCase):
                 np.array(['2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
        '2016-05-01T15:25:46.150'], dtype='datetime64[ms]'))
 
-        self.assertAlmostEqualValues(idx.loc['2016-05'].values, #type: ignore
+        self.assertAlmostEqualValues(idx.loc['2016-05'].values,
                 np.array(['2016-05-01T00:00:33.483', '2016-05-01T03:02:03.584',
                '2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
                '2016-05-01T15:25:46.150'], dtype='datetime64[ms]')
                 )
 
-        self.assertEqual(idx.loc['2016-05-01T00'].values, #type: ignore
+        self.assertEqual(idx.loc['2016-05-01T00'].values,
                 np.array(['2016-05-01T00:00:33.483'], dtype='datetime64[ms]'))
 
     def test_index_millisecond_b(self) -> None:

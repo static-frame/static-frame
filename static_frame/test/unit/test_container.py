@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from static_frame.core.container import ContainerOperand
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.interface import UFUNC_SHAPE_SKIPNA

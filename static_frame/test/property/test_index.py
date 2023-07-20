@@ -56,7 +56,7 @@ class TestUnit(TestCase):
             for i, v in enumerate(values):
                 # insure that we get teh same slice going through loc that we would get by direct iloc
                 if v is None:
-                    self.assertEqual(index._loc_to_iloc(slice(v, None)), slice(None)) #type: ignore [unreachable]
+                    self.assertEqual(index._loc_to_iloc(slice(v, None)), slice(None))
                 else:
                     self.assertEqual(index._loc_to_iloc(slice(v, None)), slice(i, None))
 
