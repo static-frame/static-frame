@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-1.5.0-dev
+1.5.0
 -----------
 
 Removed support for Python 3.7.
@@ -11,6 +11,8 @@ Set minimum ``numpy`` to 1.19.5.
 Improved type hints for ``loc`` and ``iloc`` interfaces on 2D containers.
 
 Usage of ``from __future__ import annotations`` in all modules.
+
+Normalized exceptions raised from invalid selections to raise ``KeyError``.
 
 
 1.4.6
