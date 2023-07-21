@@ -1479,7 +1479,11 @@ class TypeBlocks(ContainerOperand):
             except IndexError as e:
                 raise KeyError(key) from e
         else: # all cases where we try to get contiguous slices
-            yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
+            try:
+                yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
+            except TypeError as e:
+                # BlockIndex will raise TypeErrors in a number of cases of bad inputs; some of these are not easy to change
+                raise KeyError(key) from e
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
@@ -2670,7 +2674,7 @@ class TypeBlocks(ContainerOperand):
                         yield b_fill
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-            for block_idx, slc in self._key_to_block_slices(column_key): # PERF: most time from line profiler
+            for block_idx, slc in self._key_to_block_slices(column_key):
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_null:

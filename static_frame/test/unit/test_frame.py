@@ -1699,6 +1699,11 @@ class TestUnit(TestCase):
                 ((('A', 2), (('x', 2), ('y', 50))), (('B', 1), (('x', 'a'), ('y', 'b'))))
                 )
 
+    def test_frame_getitem_e(self) -> None:
+        f = sf.Frame()
+        with self.assertRaises(KeyError):
+            _ = f['a']
+
     #---------------------------------------------------------------------------
 
     def test_frame_length_a(self) -> None:
@@ -2875,7 +2880,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.loc[:, f1.columns % 2 == 0].columns.values.tolist(),
                 [0, 2, 4, 6, 8]
-)
+                )
 
     #---------------------------------------------------------------------------
 
