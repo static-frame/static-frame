@@ -576,6 +576,17 @@ class TestUnit(TestCase):
             ((np.datetime64('1998-10-12'), 1),
             (np.datetime64('1998-10-13'), 2)))
 
+    def test_frame_iter_group_h(self) -> None:
+        f1 = sf.Frame(np.arange(25).reshape(5, 5), index=tuple("ABCDE"))
+
+        with self.assertRaises(KeyError):
+            f1.iter_group(-99).apply(lambda x: x)
+
+        with self.assertRaises(KeyError):
+            s2 = f1.iter_group('z').apply(lambda x: x)
+
+
+
     #---------------------------------------------------------------------------
     def test_frame_iter_group_array_a(self) -> None:
         f1 = ff.parse('s(7,3)|v(int)').assign[1].apply(

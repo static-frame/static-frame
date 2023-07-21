@@ -10848,6 +10848,11 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_astype_k(self) -> None:
+        f1 = Frame(np.arange(12).reshape(3, 4))
+        with self.assertRaises(KeyError):
+            _ = f1.astype[20](float)
+
 
     #---------------------------------------------------------------------------
 
