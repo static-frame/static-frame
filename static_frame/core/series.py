@@ -1896,7 +1896,10 @@ class Series(ContainerOperand):
             Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
         '''
         iloc_key = self._index._loc_to_iloc(key)
-        values = self.values[iloc_key]
+        try:
+            values = self.values[iloc_key]
+        except IndexError as e:
+            raise KeyError(iloc_key) from e
 
         if isinstance(iloc_key, INT_TYPES): # if we have a single element
             # NOTE: cannot check if we have an array as an array might be an element

@@ -2393,6 +2393,13 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_series_get_item_a(self) -> None:
+        s1 = Series(range(4))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+
+    #---------------------------------------------------------------------------
+
     def test_series_all_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
