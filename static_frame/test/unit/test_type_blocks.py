@@ -4123,7 +4123,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_type_blocks_key_to_block_slices_exception(self) -> None:
         # as this is an loc-is-iloc index, the key gets passed directly to type blocks
-        with self.assertRaises(TypeError):
+        with self.assertRaises(KeyError):
             ff.parse('v(bool,str,bool,float)|s(4,8)')["foo"]
 
 
