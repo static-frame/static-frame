@@ -1475,8 +1475,12 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(key, INT_TYPES):
             # the index has the pair block, column integer
             yield self._index[key]
-        else: # all cases where we try to get contiguous slices; will raise KeyError for bad types
-            yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
+        else: # all cases where we try to get contiguous slices
+            try:
+                yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
+            except TypeError as e:
+                # BlockIndex will raise TypeErrors in a number of cases of bad inputs; some of these are not easy to change
+                raise KeyError(key) from e
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
