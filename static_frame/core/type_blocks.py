@@ -1474,7 +1474,10 @@ class TypeBlocks(ContainerOperand):
             yield from self._index.iter_block()
         elif isinstance(key, INT_TYPES):
             # the index has the pair block, column integer
-            yield self._index[key]
+            try:
+                yield self._index[key]
+            except IndexError as e:
+                raise KeyError(key) from e
         else: # all cases where we try to get contiguous slices
             yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
 
@@ -2768,7 +2771,11 @@ class TypeBlocks(ContainerOperand):
             ) -> np.ndarray:
         '''Alternative extractor that returns full-column arrays from single integer selection.
         '''
-        block_idx, column = self._index[key]
+        try:
+            block_idx, column = self._index[key]
+        except IndexError as e:
+            raise KeyError(key) from e
+
         b = self._blocks[block_idx]
         if b.ndim == 1:
             return b
