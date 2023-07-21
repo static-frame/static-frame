@@ -1702,7 +1702,7 @@ class TestUnit(TestCase):
     def test_frame_getitem_e(self) -> None:
         f = sf.Frame()
         with self.assertRaises(KeyError):
-            f['a']
+            _ = f['a']
 
     #---------------------------------------------------------------------------
 
