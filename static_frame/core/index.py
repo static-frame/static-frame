@@ -263,7 +263,7 @@ class Index(IndexBase):
         return ErrorInitIndexNonUnique(msg)
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='index_init')
+    # @doc_inject(selector='index_init')
     def __init__(self,
             labels: IndexInitializer,
             *,
@@ -1127,7 +1127,7 @@ class Index(IndexBase):
         self._depth_level_validate(depth_level)
         return self.values
 
-    @doc_inject()
+    # @doc_inject()
     def equals(self,
             other: tp.Any,
             *,

@@ -16,7 +16,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from numpy.ma import MaskedArray  # type: ignore
+from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -145,7 +145,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @classmethod
-    def from_element(cls,
+    def from_element(cls: tp.Type[Series],
             element: tp.Any,
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactory],
@@ -168,7 +168,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
 
-        length = len(index_final) #type: ignore
+        length = len(index_final)
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -510,7 +510,7 @@ class Series(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='container_init', class_name='Series')
+    # @doc_inject(selector='container_init', class_name='Series')
     def __init__(self,
             values: SeriesInitializer,
             *,
@@ -559,10 +559,10 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
         else: # is numpy array
-            if dtype is not None and dtype != values.dtype: #type: ignore
-                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') #type: ignore
+            if dtype is not None and dtype != values.dtype:
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
 
-            if values.shape == (): #type: ignore
+            if values.shape == ():
                 # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
@@ -576,7 +576,7 @@ class Series(ContainerOperand):
         # index assignment
 
         if own_index:
-            self._index = index #type: ignore
+            self._index = index
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
             if values_constructor:
@@ -706,7 +706,7 @@ class Series(ContainerOperand):
         '''
         Interface for dropping elements from :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio( #type: ignore
+        return InterfaceSelectTrio(
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
                 func_getitem=self._drop_loc
@@ -717,7 +717,7 @@ class Series(ContainerOperand):
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio( #type: ignore
+        return InterfaceSelectTrio(
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
                 func_getitem=self._extract_loc_mask
@@ -740,7 +740,7 @@ class Series(ContainerOperand):
         Interface for doing assignment-like selection and replacement.
         '''
         # NOTE: this is not a InterfaceAssignQuartet, like on Frame
-        return InterfaceAssignTrio( #type: ignore
+        return InterfaceAssignTrio(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign,
@@ -1109,7 +1109,7 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        ic = IndexCorrespondence.from_correspondence(self._index, index) #type: ignore
+        ic = IndexCorrespondence.from_correspondence(self._index, index)
         if not ic.size:
             # NOTE: take slice to ensure same type of index and array
             return self._extract_iloc(EMPTY_SLICE)
@@ -1128,7 +1128,7 @@ class Series(ContainerOperand):
         else:
             fv = fill_value
 
-        values = full_for_fill(self.values.dtype, len(index), fv) #type: ignore
+        values = full_for_fill(self.values.dtype, len(index), fv)
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src]
@@ -1157,13 +1157,13 @@ class Series(ContainerOperand):
         elif index is None:
             index_init = self._index
             own_index = index_constructor is None
-        elif is_callable_or_mapping(index): #type: ignore
+        elif is_callable_or_mapping(index):
             index_init = self._index.relabel(index)
             own_index = index_constructor is None
         elif isinstance(index, Set):
             raise RelabelInvalid()
         else:
-            index_init = index #type: ignore
+            index_init = index
 
         return self.__class__(self.values,
                 index=index_init,
@@ -1230,7 +1230,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
         index, iloc_map = rehierarch_from_index_hierarchy(
-                labels=self._index, #type: ignore
+                labels=self._index,
                 depth_map=depth_map,
                 index_constructors=index_constructors,
                 name=self._index.name,
@@ -1306,7 +1306,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notfalsy(self) -> 'Series':
+    def notfalsy(self) -> Series:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1749,7 +1749,7 @@ class Series(ContainerOperand):
     def __len__(self) -> int:
         '''Length of values.
         '''
-        return self.values.__len__() #type: ignore
+        return self.values.__len__()
 
     def _display(self,
             config: DisplayConfig,
@@ -1859,7 +1859,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.size #type: ignore
+        return self.values.size
 
     @property
     def nbytes(self) -> int:
@@ -1869,7 +1869,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.nbytes #type: ignore
+        return self.values.nbytes
 
     #---------------------------------------------------------------------------
     # extraction
@@ -1926,7 +1926,7 @@ class Series(ContainerOperand):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
-        if key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
+        if key.__class__ is np.ndarray and key.dtype == bool:
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
         else:
@@ -2747,7 +2747,7 @@ class Series(ContainerOperand):
         post = argmin_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post] #type: ignore [unreachable]
+        return self.index[post]
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -2780,7 +2780,7 @@ class Series(ContainerOperand):
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post] #type: ignore [unreachable]
+        return self.index[post]
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
@@ -3039,7 +3039,7 @@ class Series(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values, #type: ignore [no-any-return]
+        return np.searchsorted(self.values,
                 values,
                 'left' if side_left else 'right',
                 )
@@ -3111,7 +3111,7 @@ class Series(ContainerOperand):
 
         index = self._index.__class__.from_labels(chain(
                 labels_prior[:key],
-                container._index.__iter__(), #type: ignore
+                container._index.__iter__(),
                 labels_prior[key:],
                 ))
 
@@ -3224,7 +3224,7 @@ class Series(ContainerOperand):
         if not arrays_equal(self.values, other.values, skipna=skipna):
             return False
 
-        return self._index.equals(other._index,
+        return self._index.equals(other._index, # type: ignore
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
@@ -3380,7 +3380,7 @@ class Series(ContainerOperand):
             :obj:`FrameGO`
         '''
         from static_frame import FrameGO
-        return self._to_frame(constructor=FrameGO, #type: ignore
+        return self._to_frame(constructor=FrameGO,
                 axis=axis,
                 index=index,
                 index_constructor=index_constructor,
@@ -3410,7 +3410,7 @@ class Series(ContainerOperand):
             :obj:`FrameHE`
         '''
         from static_frame import FrameHE
-        return self._to_frame(constructor=FrameHE, #type: ignore
+        return self._to_frame(constructor=FrameHE,
                 axis=axis,
                 index=index,
                 index_constructor=index_constructor,
@@ -3419,7 +3419,7 @@ class Series(ContainerOperand):
                 name=name,
                 )
 
-    def to_series_he(self) -> 'SeriesHE':
+    def to_series_he(self) -> SeriesHE:
         '''
         Return a :obj:`SeriesHE` from this :obj:`Series`.
         '''
@@ -3520,7 +3520,7 @@ class SeriesAssign(Assign):
         Args:
             key: an iloc-style key.
         '''
-        self.container = container
+        self.container: Series = container
         self.key = key
 
     def __call__(self,
