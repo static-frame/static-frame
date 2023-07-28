@@ -65,9 +65,9 @@ if tp.TYPE_CHECKING:
 # https://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.scalars.html
 
 
-DEFAULT_SORT_KIND = 'mergesort'
-DEFAULT_STABLE_SORT_KIND = 'mergesort' # for when results will be in correct if not used
-DEFAULT_FAST_SORT_KIND = 'quicksort' # for when fastest is all that we want
+DEFAULT_SORT_KIND: tp.Literal['mergesort'] = 'mergesort'
+DEFAULT_STABLE_SORT_KIND: tp.Literal['mergesort'] = 'mergesort' # for when results will be in correct if not used
+DEFAULT_FAST_SORT_KIND: tp.Literal['quicksort'] = 'quicksort' # for when fastest is all that we want
 
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
@@ -175,17 +175,17 @@ EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
 # defaults to float64
-EMPTY_ARRAY = np.array((), dtype=None)
+EMPTY_ARRAY: np.ndarray = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
-EMPTY_ARRAY_BOOL = np.array((), dtype=DTYPE_BOOL)
+EMPTY_ARRAY_BOOL: np.ndarray = np.array((), dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT = np.array((), dtype=DTYPE_INT_DEFAULT)
+EMPTY_ARRAY_INT: np.ndarray = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 
-UNIT_ARRAY_INT = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT: np.ndarray = np.array((0,), dtype=DTYPE_INT_DEFAULT)
 UNIT_ARRAY_INT.flags.writeable = False
 
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
@@ -308,6 +308,7 @@ PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+DtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
 
 def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
     if value is None or isinstance(value, np.dtype):
@@ -520,7 +521,7 @@ class UFuncCategory(Enum):
     SUMMING = 4 # same except bool goes to max int
 
 
-UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
+UFUNC_MAP: tp.Dict[AnyCallable, UFuncCategory] = {
     all: UFuncCategory.BOOL,
     any: UFuncCategory.BOOL,
     np.all: UFuncCategory.BOOL,
@@ -555,7 +556,7 @@ UFUNC_MAP: tp.Dict[UFunc, UFuncCategory] = {
 }
 
 def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
-    if func.__class__ is partial: #type: ignore
+    if func.__class__ is partial:
         # std, var partialed
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
@@ -675,7 +676,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tuple): #type: ignore
+class Pair(tuple):
     pass
 
 
@@ -833,13 +834,13 @@ def dtype_from_element(
         return DTYPE_OBJECT
     # we want to match np.array elements; they have __len__ but it raises when called
     if value.__class__ is np.ndarray and value.ndim == 0:
-        return value.dtype
+        return value.dtype # type: ignore
     # all arrays, or SF containers, should be treated as objects when elements
     # NOTE: might check for __iter__?
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
-    return np.array(value).dtype
+    return np.array(value).dtype # type: ignore
 
 # def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
@@ -909,7 +910,7 @@ def dtype_from_element(
 #     return dt_resolve
 
 def concat_resolved(
-        arrays: tp.Iterable[np.ndarray],
+        arrays: tp.Sequence[np.ndarray],
         axis: int = 0,
         ) -> np.ndarray:
     '''
@@ -942,7 +943,7 @@ def concat_resolved(
                 dt_resolve = resolve_dtype(array.dtype, dt_resolve)
             shape[axis] += array.shape[axis]
 
-    out = np.empty(shape=shape, dtype=dt_resolve)
+    out: np.ndarray = np.empty(shape=shape, dtype=dt_resolve)
     np.concatenate(arrays, out=out, axis=axis)
     out.flags.writeable = False
     return out
@@ -1002,7 +1003,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array = np.empty(shape, dtype=dtype)
+    array: np.ndarray = np.empty(shape, dtype=dtype)
     pos = 0
     for b in blocks_post: #type: ignore
         if b.ndim == 1:
@@ -1037,10 +1038,11 @@ def full_for_fill(
 
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
     if dtype_final != DTYPE_OBJECT:
-        return np.full(shape, fill_value, dtype=dtype_final)
+        return np.full(shape, fill_value, dtype=dtype_final) # type: ignore
 
     # for tuples and other objects, better to create and fill
-    array = np.empty(shape, dtype=DTYPE_OBJECT)
+    array: np.ndarray = np.empty(shape, dtype=DTYPE_OBJECT)
+
     if fill_value is None:
         return array # None is already set for empty object arrays
 
@@ -1098,7 +1100,7 @@ def array_ufunc_axis_skipna(
         ufunc: UFunc,
         ufunc_skipna: UFunc,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
     kind = array.dtype.kind
@@ -1155,7 +1157,7 @@ def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np
             array_sortable[i] = indices.setdefault(v, len(indices))
         del indices
 
-        return np.argsort(array_sortable, kind=kind)
+        return np.argsort(array_sortable, kind=kind) # type: ignore
 
     return array.argsort(kind=kind)
 
@@ -1290,7 +1292,7 @@ def ufunc_unique_enumerated(
         eiter: tp.Iterator[tp.Tuple[int, tp.Any]]
         if is_2d:
             # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
-            eiter = ((i, e.item()) for i, e in enumerate(
+            eiter = ((i, e.item()) for i, e in enumerate( # type: ignore
                     np.nditer(array, order='F', flags=('refs_ok',))))
         else:
             eiter = enumerate(array)
@@ -1323,7 +1325,7 @@ def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
         array = np.ascontiguousarray(array)
     # NOTE: this could be cached
     dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
-    return array.view(dtype)[NULL_SLICE, 0] # get 1D representation
+    return array.view(dtype)[NULL_SLICE, 0] # type: ignore
 
 def ufunc_unique2d(array: np.ndarray,
         axis: int = 0,
@@ -1410,8 +1412,7 @@ def roll_1d(array: np.ndarray,
     if shift == 0:
         return array.copy()
 
-    post = np.empty(size, dtype=array.dtype)
-
+    post: np.ndarray = np.empty(size, dtype=array.dtype)
     post[0:shift] = array[-shift:]
     post[shift:] = array[0:-shift]
     return post
@@ -1423,7 +1424,7 @@ def roll_2d(array: np.ndarray,
     '''
     Specialized form of np.roll that, by focusing on the 2D solution
     '''
-    post = np.empty(array.shape, dtype=array.dtype)
+    post: np.ndarray = np.empty(array.shape, dtype=array.dtype)
 
     if axis == 0: # roll rows
         size = array.shape[0]
@@ -1499,7 +1500,7 @@ def _argminmax_2d(
     isna_axis = isna.any(axis=axis)
     if isna_axis.all(): # nan in every axis remaining position
         if not skipna:
-            return np.full(isna_axis.shape, np.nan, dtype=DTYPE_FLOAT_DEFAULT)
+            return np.full(isna_axis.shape, np.nan, dtype=DTYPE_FLOAT_DEFAULT) # type: ignore
 
     if isna_axis.any():
         # always use skipna ufunc if any NaNs are present, as otherwise the wrong indices are returned when a nan is encountered (rather than a nan)
@@ -1721,7 +1722,7 @@ def iterable_to_array_2d(
     if values.__class__ is np.ndarray:
         if values.ndim != 2: #type: ignore
             raise RuntimeError('expected 2d array')
-        return values
+        return values # type: ignore
 
     if hasattr(values, 'values') and hasattr(values, 'index'):
         raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are ignored in this context. Convert to an array.')
@@ -1736,7 +1737,7 @@ def iterable_to_array_2d(
             restrict_copy=True
             )
 
-    array = np.array(values, dtype=dtype)
+    array: np.ndarray = np.array(values, dtype=dtype)
     if array.ndim != 2:
         raise RuntimeError('failed to convert iterable to 2d array')
 
@@ -1763,7 +1764,7 @@ def iterable_to_array_nd(
         array, _ = iterable_to_array_1d(chain((first,), values))
         return array
     # its an element
-    return np.array(values)
+    return np.array(values) # type: ignore
 
 #-------------------------------------------------------------------------------
 
@@ -1929,7 +1930,7 @@ def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
     array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
     other_is_dt64 = other.dtype.kind == DTYPE_DATETIME_KIND
     if array_is_dt64 and other_is_dt64:
-        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0] #type: ignore
+        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]
     return False
 
 def _slice_to_datetime_slice_args(key: slice,
@@ -1950,7 +1951,7 @@ def _slice_to_datetime_slice_args(key: slice,
 
 def key_to_datetime_key(
         key: GetItemKeyType,
-        dtype: np.dtype = np.datetime64,
+        dtype: DtypeOrDT64 = np.datetime64,
         ) -> GetItemKeyType:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
@@ -2028,24 +2029,24 @@ def isna_array(array: np.ndarray,
     kind = array.dtype.kind
     # matches all floating point types
     if kind in DTYPE_INEXACT_KINDS:
-        return np.isnan(array)
+        return np.isnan(array) # type: ignore
     elif kind in DTYPE_NAT_KINDS:
-        return np.isnat(array)
+        return np.isnat(array) # type: ignore
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != DTYPE_OBJECT_KIND:
-        return np.full(array.shape, False, dtype=DTYPE_BOOL)
+        return np.full(array.shape, False, dtype=DTYPE_BOOL) # type: ignore
 
     # only check for None if we have an object type
     with WarningsSilent():
         try:
             if include_none:
-                return np.not_equal(array, array) | np.equal(array, None)
-            return np.not_equal(array, array)
+                return np.not_equal(array, array) | np.equal(array, None) # type: ignore
+            return np.not_equal(array, array) # type: ignore
         except ErrorNotTruthy:
             pass
 
     # no other option than to do elementwise evaluation
-    return np.fromiter(
+    return np.fromiter( # type: ignore
             (isna_element(e, include_none) for e in array),
             dtype=DTYPE_BOOL,
             count=len(array),
@@ -2062,26 +2063,26 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     kind = array.dtype.kind
     # matches all floating point types
     if kind in DTYPE_INEXACT_KINDS:
-        return np.isnan(array) | (array == 0.0)
+        return np.isnan(array) | (array == 0.0) # type: ignore
     elif kind == DTYPE_DATETIME_KIND:
-        return np.isnat(array)
+        return np.isnat(array) # type: ignore
     elif kind == DTYPE_TIMEDELTA_KIND:
-        return np.isnat(array) | (array == EMPTY_TIMEDELTA)
+        return np.isnat(array) | (array == EMPTY_TIMEDELTA) # type: ignore
     elif kind == DTYPE_BOOL_KIND:
-        return ~array # just invert
+        return ~array # type: ignore
     elif kind in DTYPE_STR_KINDS:
-        return array == ''
+        return array == '' # type: ignore
     elif kind in DTYPE_INT_KINDS:
-        return array == 0 # faster to compare to integer
+        return array == 0 # type: ignore
     elif kind != 'O':
-        return np.full(array.shape, False, dtype=DTYPE_BOOL)
+        return np.full(array.shape, False, dtype=DTYPE_BOOL) # type: ignore
 
     # NOTE: an ArrayKit implementation might out performthis
-    post = np.empty(array.shape, dtype=DTYPE_BOOL)
+    post: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
     for coord, v in np.ndenumerate(array):
         post[coord] = not bool(v)
     # or with NaN observations
-    return post | np.not_equal(array, array)
+    return post | np.not_equal(array, array) # type: ignore
 
 def arrays_equal(array: np.ndarray,
         other: np.ndarray,
@@ -2147,7 +2148,7 @@ def binary_transition(
         target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
         target_sel_trailing[0] = False # wrap around observation invalid
 
-        return np.nonzero(target_sel_leading | target_sel_trailing)[0]
+        return np.nonzero(target_sel_leading | target_sel_trailing)[0] # type: ignore
 
     elif array.ndim == 2:
         # if axis == 0, we compare rows going down/up, looking at column values
@@ -2176,7 +2177,7 @@ def binary_transition(
                 indices_by_axis[y].append(x)
 
         # if axis is 0, return column width, else return row height
-        post = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
+        post: np.ndarray = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
             post[k] = v
         return post
@@ -2222,6 +2223,7 @@ def _array_to_duplicated_hashable(
     # np.unique fails under the same conditions that sorting fails, so there is no need to try np.unique: must go to set drectly.
     len_axis = array.shape[axis]
 
+    value_source: tp.Iterable[tp.Hashable]
     if array.ndim == 1:
         value_source = array
         to_hashable = None
@@ -2234,7 +2236,7 @@ def _array_to_duplicated_hashable(
         to_hashable = tuple
 
 
-    is_dupe = np.full(len_axis, False)
+    is_dupe: np.ndarray = np.full(len_axis, False)
 
     # could exit early with a set, but would have to hash all array twice to go to set and dictionary
     # creating a list for each entry and tracking indices would be very expensive
@@ -2309,13 +2311,14 @@ def _array_to_duplicated_sortable(
 
     if not f_flags.any():
         # we always return a 1 dim array
-        return np.full(len(f_flags), False)
+        return np.full(len(f_flags), False) # type: ignore
 
     # The first element of f_flags should always be False.
     # In certain edge cases, this doesn't happen naturally.
     # Index 0 should always exist, due to `.any()` behavior.
     f_flags[0] = np.False_
 
+    dupes: np.ndarray
     if exclude_first and not exclude_last:
         dupes = f_flags
     else:
@@ -2333,7 +2336,7 @@ def _array_to_duplicated_sortable(
 
     # undo the sort: get the indices to extract Booleans from dupes; in some cases r_idx is the same as o_idx, but not all
     r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
-    return dupes[r_idx]
+    return dupes[r_idx] # type: ignore
 
 def array_to_duplicated(
         array: np.ndarray,
@@ -2416,7 +2419,7 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     yield from map(tuple, array)
 
 def array2d_to_array1d(array: np.ndarray) -> np.ndarray:
-    post = np.empty(array.shape[0], dtype=object)
+    post: np.ndarray = np.empty(array.shape[0], dtype=object)
     for i, row in enumerate(array):
         post[i] = tuple(row)
     post.flags.writeable = False
@@ -2484,6 +2487,7 @@ def _ufunc_set_1d(
         raise NotImplementedError('unexpected func', func)
 
     dtype = resolve_dtype(array.dtype, other.dtype)
+    post: np.ndarray
 
     # optimizations for empty arrays
     if is_intersection:
@@ -2601,6 +2605,7 @@ def _ufunc_set_2d(
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
+    post: np.ndarray
 
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
@@ -2895,6 +2900,7 @@ def isin_array(*,
         ) -> np.ndarray:
     '''Core isin processing after other has been converted to an array.
     '''
+    func: UFunc
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
         # both funcs return immutable arrays
         func = _isin_1d if array.ndim == 1 else _isin_2d
@@ -2906,12 +2912,12 @@ def isin_array(*,
     assume_unique = array_is_unique and other_is_unique
     func = np.in1d if array.ndim == 1 else np.isin
 
+    result: np.ndarray
     with WarningsSilent():
         # FutureWarning: elementwise comparison failed;
-        result = func(array, other, assume_unique=assume_unique) #type: ignore
+        result = func(array, other, assume_unique=assume_unique)
 
     result.flags.writeable = False
-
     return result
 
 def isin(
@@ -2930,10 +2936,8 @@ def isin(
         other: The elements being looked for
         array_is_unique: if array is known to be unique
     '''
-    result: tp.Optional[np.ndarray] = None
-
     if hasattr(other, '__len__') and len(other) == 0: #type: ignore
-        result = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
 
@@ -2953,7 +2957,7 @@ def _ufunc_logical_skipna(
         skipna: bool,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     '''
     Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
     '''
@@ -3014,7 +3018,7 @@ def _ufunc_logical_skipna(
 def ufunc_all(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.all,
             skipna=False,
@@ -3026,7 +3030,7 @@ ufunc_all.__doc__ = np.all.__doc__
 def ufunc_any(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.any,
             skipna=False,
@@ -3038,7 +3042,7 @@ ufunc_any.__doc__ = np.any.__doc__
 def ufunc_nanall(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.all,
             skipna=True,
@@ -3048,7 +3052,7 @@ def ufunc_nanall(array: np.ndarray,
 def ufunc_nanany(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
+        ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.any,
             skipna=True,
@@ -3061,10 +3065,11 @@ def array_from_element_attr(*,
         array: np.ndarray,
         attr_name: str,
         dtype: np.dtype
-        ) -> np.array:
+        ) -> np.ndarray:
     '''
     Handle element-wise attribute acesss on arrays of Python date/datetime objects.
     '''
+    post: np.ndarray
     if array.ndim == 1:
         post = np.fromiter(
                 (getattr(d, attr_name) for d in array),
@@ -3083,10 +3088,11 @@ def array_from_element_apply(
         array: np.ndarray,
         func: AnyCallable,
         dtype: np.dtype
-        ) -> np.array:
+        ) -> np.ndarray:
     '''
     Handle element-wise function application.
     '''
+    post: np.ndarray
     if (array.ndim == 1 and dtype != DTYPE_OBJECT
             and dtype.kind not in DTYPE_STR_KINDS):
         post = np.fromiter(
@@ -3110,7 +3116,7 @@ def array_from_element_method(*,
         args: tp.Tuple[tp.Any, ...],
         dtype: np.dtype,
         pre_insert: tp.Optional[AnyCallable] = None,
-        ) -> np.array:
+        ) -> np.ndarray:
     '''
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
@@ -3126,6 +3132,8 @@ def array_from_element_method(*,
         cls_element = bytes
     else:
         cls_element = None
+
+    post: np.ndarray
 
     if dtype == DTYPE_STR:
         # if destination is a string, must build into a list first, then construct array to determine dtype size
@@ -3312,7 +3320,7 @@ class JSONFilter:
             return obj.isoformat()
         if isinstance(obj, (Fraction, complex, np.timedelta64, np.datetime64)):
             return str(obj)
-        if hasattr(obj, 'dtype'): #type: ignore
+        if hasattr(obj, 'dtype'):
             if obj.dtype.kind in ('c', 'M', 'm'):
                 if obj.ndim == 0:
                     return str(obj)
@@ -3400,7 +3408,7 @@ class JSONTranslator(JSONFilter):
         if isinstance(obj, (np.datetime64, datetime.date)):
             return repr(obj) # take repr for encoding / decoding
 
-        if isinstance(obj, dict): # type: ignore
+        if isinstance(obj, dict):
             ee = JSONTranslator.encode_element
             return {ee(k): ee(v) for k, v in obj.items()}
         if hasattr(obj, '__iter__'):

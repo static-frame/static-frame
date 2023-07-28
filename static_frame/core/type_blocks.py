@@ -860,7 +860,7 @@ class TypeBlocks(ContainerOperand):
             blocks: tp.Iterable[np.ndarray],
             dtype: DtypeSpecifier,
             columns: int,
-            ) -> np.array:
+            ) -> np.ndarray:
         '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned among the provided blocks.
         '''
         # NOTE: when this is called we always have 2 or more blocks
