@@ -1268,6 +1268,6 @@ class InterfaceSummary(Features):
 
         if minimized:
             return f[['cls_name', 'group', 'doc']] #type: ignore
-        return f #type: ignore
+        return f
 
 

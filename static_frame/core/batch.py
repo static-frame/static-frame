@@ -392,7 +392,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='batch_init')
+    # @doc_inject(selector='batch_init')
     def __init__(self,
             items: IteratorFrameItems,
             *,
@@ -1756,7 +1756,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-            return Frame.from_concat( #type: ignore
+            return Frame.from_concat(
                     containers,
                     axis=axis,
                     union=union,

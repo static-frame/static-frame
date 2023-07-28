@@ -446,7 +446,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='quilt_init')
+    # @doc_inject(selector='quilt_init')
     def __init__(self,
             bus: tp.Union[Bus, Yarn],
             *,
@@ -521,7 +521,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
-        return self._bus.name #type: ignore
+        return self._bus.name
 
     def rename(self, name: NameType) -> 'Quilt':
         '''
@@ -999,7 +999,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
 
-            return Frame.from_concat( #type: ignore
+            return Frame.from_concat(
                     frames,
                     axis=self._axis,
                     )
@@ -1063,7 +1063,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
-        return Frame.from_concat(parts, axis=self._axis) #type: ignore
+        return Frame.from_concat(parts, axis=self._axis)
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='sample')

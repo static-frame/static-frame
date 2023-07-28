@@ -1140,7 +1140,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         Returns:
             :obj:`int`
         '''
-        return self._values_mutable.size #type: ignore
+        return self._values_mutable.size
 
     #---------------------------------------------------------------------------
 

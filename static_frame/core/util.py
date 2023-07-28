@@ -840,7 +840,7 @@ def dtype_from_element(
     if hasattr(value, '__len__') and not isinstance(value, str):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
-    return np.array(value).dtype # type: ignore
+    return np.array(value).dtype
 
 # def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
@@ -1038,7 +1038,7 @@ def full_for_fill(
 
     # NOTE: we do not make this array immutable as we sometimes need to mutate it before adding it to TypeBlocks
     if dtype_final != DTYPE_OBJECT:
-        return np.full(shape, fill_value, dtype=dtype_final) # type: ignore
+        return np.full(shape, fill_value, dtype=dtype_final)
 
     # for tuples and other objects, better to create and fill
     array: np.ndarray = np.empty(shape, dtype=DTYPE_OBJECT)
@@ -1183,6 +1183,7 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
+
     array = array[mask]
     array.flags.writeable = False
     return array
@@ -1325,7 +1326,7 @@ def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
         array = np.ascontiguousarray(array)
     # NOTE: this could be cached
     dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
-    return array.view(dtype)[NULL_SLICE, 0] # type: ignore
+    return array.view(dtype)[NULL_SLICE, 0]
 
 def ufunc_unique2d(array: np.ndarray,
         axis: int = 0,
@@ -1500,7 +1501,7 @@ def _argminmax_2d(
     isna_axis = isna.any(axis=axis)
     if isna_axis.all(): # nan in every axis remaining position
         if not skipna:
-            return np.full(isna_axis.shape, np.nan, dtype=DTYPE_FLOAT_DEFAULT) # type: ignore
+            return np.full(isna_axis.shape, np.nan, dtype=DTYPE_FLOAT_DEFAULT)
 
     if isna_axis.any():
         # always use skipna ufunc if any NaNs are present, as otherwise the wrong indices are returned when a nan is encountered (rather than a nan)
@@ -1764,7 +1765,7 @@ def iterable_to_array_nd(
         array, _ = iterable_to_array_1d(chain((first,), values))
         return array
     # its an element
-    return np.array(values) # type: ignore
+    return np.array(values)
 
 #-------------------------------------------------------------------------------
 
@@ -2034,19 +2035,19 @@ def isna_array(array: np.ndarray,
         return np.isnat(array) # type: ignore
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != DTYPE_OBJECT_KIND:
-        return np.full(array.shape, False, dtype=DTYPE_BOOL) # type: ignore
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     # only check for None if we have an object type
     with WarningsSilent():
         try:
             if include_none:
                 return np.not_equal(array, array) | np.equal(array, None) # type: ignore
-            return np.not_equal(array, array) # type: ignore
+            return np.not_equal(array, array)
         except ErrorNotTruthy:
             pass
 
     # no other option than to do elementwise evaluation
-    return np.fromiter( # type: ignore
+    return np.fromiter(
             (isna_element(e, include_none) for e in array),
             dtype=DTYPE_BOOL,
             count=len(array),
@@ -2069,13 +2070,13 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     elif kind == DTYPE_TIMEDELTA_KIND:
         return np.isnat(array) | (array == EMPTY_TIMEDELTA) # type: ignore
     elif kind == DTYPE_BOOL_KIND:
-        return ~array # type: ignore
+        return ~array
     elif kind in DTYPE_STR_KINDS:
         return array == '' # type: ignore
     elif kind in DTYPE_INT_KINDS:
         return array == 0 # type: ignore
     elif kind != 'O':
-        return np.full(array.shape, False, dtype=DTYPE_BOOL) # type: ignore
+        return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     # NOTE: an ArrayKit implementation might out performthis
     post: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
@@ -2148,7 +2149,7 @@ def binary_transition(
         target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
         target_sel_trailing[0] = False # wrap around observation invalid
 
-        return np.nonzero(target_sel_leading | target_sel_trailing)[0] # type: ignore
+        return np.nonzero(target_sel_leading | target_sel_trailing)[0]
 
     elif array.ndim == 2:
         # if axis == 0, we compare rows going down/up, looking at column values
@@ -2311,7 +2312,7 @@ def _array_to_duplicated_sortable(
 
     if not f_flags.any():
         # we always return a 1 dim array
-        return np.full(len(f_flags), False) # type: ignore
+        return np.full(len(f_flags), False)
 
     # The first element of f_flags should always be False.
     # In certain edge cases, this doesn't happen naturally.
@@ -2336,7 +2337,7 @@ def _array_to_duplicated_sortable(
 
     # undo the sort: get the indices to extract Booleans from dupes; in some cases r_idx is the same as o_idx, but not all
     r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
-    return dupes[r_idx] # type: ignore
+    return dupes[r_idx]
 
 def array_to_duplicated(
         array: np.ndarray,

@@ -465,7 +465,7 @@ class Index(IndexBase):
     # common attributes from the numpy array
 
     @property
-    @doc_inject()
+    # @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}
         '''
@@ -570,7 +570,7 @@ class Index(IndexBase):
             )
 
 
-    @doc_inject(select='astype')
+    # @doc_inject(select='astype')
     def astype(self, dtype: DtypeSpecifier) -> 'Index':
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
@@ -670,7 +670,7 @@ class Index(IndexBase):
             self._update_array_cache()
         return len(self._labels)
 
-    @doc_inject()
+    # @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
             *,
@@ -708,7 +708,7 @@ class Index(IndexBase):
     # core internal representation
 
     @property
-    @doc_inject(selector='values_1d', class_name='Index')
+    # @doc_inject(selector='values_1d', class_name='Index')
     def values(self) -> np.ndarray:
         '''
         {}
@@ -795,7 +795,7 @@ class Index(IndexBase):
         self._depth_level_validate(depth_level)
         return self.values
 
-    @doc_inject()
+    # @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:

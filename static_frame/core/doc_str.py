@@ -475,18 +475,18 @@ class DOC_TEMPLATE:
         '''
     )
 
-# NOTE: F here should replace AnyCallable below
+# https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,
         **kwargs: object
-        ) -> tp.Callable[[AnyCallable], AnyCallable]:
+        ) -> tp.Callable[[F], F]:
     '''
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
     '''
-    def decorator(f: AnyCallable) -> AnyCallable:
+    def decorator(f: F) -> F:
 
         assert f.__doc__ is not None, f'{f} must have a docstring!'
 
@@ -502,6 +502,6 @@ def doc_inject(*,
             doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
             f.__doc__ = f.__doc__.format(**doc_dict)
 
-        return f
+        return tp.cast(F, f)
 
     return decorator

@@ -25,7 +25,7 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
-from numpy.ma import MaskedArray  # type: ignore
+from numpy.ma import MaskedArray
 
 from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
@@ -195,7 +195,7 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
     import pyarrow  # pylint: disable=W0611 #pragma: no cover
-    from xarray import Dataset  # type: ignore # pylint: disable=W0611 #pragma: no cover
+    from xarray import Dataset # pylint: disable=W0611 #pragma: no cover
 
 
 class Frame(ContainerOperand):
@@ -592,7 +592,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()), #type: ignore
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 name=name,
@@ -679,7 +679,7 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        return cls.from_concat(frames, #type: ignore
+        return cls.from_concat(frames,
                 axis=axis,
                 union=union,
                 name=name,
@@ -769,7 +769,7 @@ class Frame(ContainerOperand):
             for col_count, (col, dtype_at_col) in enumerate(dtypes.items()):
                 if col not in container:
                     # get fill value based on previous container
-                    fill_value = get_col_fill_value(col_count, dtype_at_col) #type: ignore
+                    fill_value = get_col_fill_value(col_count, dtype_at_col)
                     # store fill_arrays for re-use
                     if fill_value not in fill_arrays:
                         array = np.full(len(index), fill_value)
@@ -930,7 +930,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 name=name,
@@ -1027,7 +1027,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 name=name,
@@ -1070,7 +1070,7 @@ class Frame(ContainerOperand):
                 index.append(label)
                 yield values
 
-        return cls.from_records(gen(), # type: ignore
+        return cls.from_records(gen(),
                 index=index,
                 columns=columns,
                 dtypes=dtypes,
@@ -1182,9 +1182,9 @@ class Frame(ContainerOperand):
                                 check_equals=False,
                                 )
                     if column_type is not None:
-                        yield v.values.astype(column_type) # type: ignore
+                        yield v.values.astype(column_type)
                     else:
-                        yield v.values # type: ignore
+                        yield v.values
 
                 elif isinstance(v, Frame):
                     raise ErrorInitFrame('Frames are not supported in from_items constructor.')
@@ -1234,7 +1234,7 @@ class Frame(ContainerOperand):
             columns_constructor:
             {consolidate_blocks}
         '''
-        return cls.from_items(mapping.items(), # type: ignore
+        return cls.from_items(mapping.items(),
                 index=index,
                 fill_value=fill_value,
                 name=name,
@@ -1306,9 +1306,9 @@ class Frame(ContainerOperand):
                                 check_equals=False,
                                 )
                     if column_type is not None:
-                        yield v.values.astype(column_type) # type: ignore
+                        yield v.values.astype(column_type)
                     else:
-                        yield v.values # type: ignore
+                        yield v.values
                 elif isinstance(v, Frame):
                     raise ErrorInitFrame('Frames are not supported in from_fields constructor.')
                 else: # returned array is immutable
@@ -1320,7 +1320,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 name=name,
@@ -1410,7 +1410,7 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()), # type: ignore
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=col_reference.keys(),
                 columns=columns,
                 name=name,
@@ -1698,7 +1698,7 @@ class Frame(ContainerOperand):
                     values.append(v)
                 yield values
 
-            return cls.from_records(records(), # type: ignore
+            return cls.from_records(records(),
                     index=index,
                     columns=columns,
                     name=name,
@@ -1721,7 +1721,7 @@ class Frame(ContainerOperand):
                     values.append(v)
                 yield values
 
-            return cls.from_fields(fields(), # type: ignore
+            return cls.from_fields(fields(),
                     index=index,
                     columns=columns,
                     name=name,
@@ -1875,11 +1875,11 @@ class Frame(ContainerOperand):
                         yield row[index_depth:]
 
             if columns_select:
-                row_gen_final = (filter_row(row) for row in row_gen()) # type: ignore
+                row_gen_final = (filter_row(row) for row in row_gen())
             else:
                 row_gen_final = row_gen() # type: ignore
 
-            return cls.from_records( # type: ignore
+            return cls.from_records(
                     row_gen_final,
                     columns=columns,
                     index=index,
@@ -2007,7 +2007,7 @@ class Frame(ContainerOperand):
         else: # StringIO or open file
             data = json.load(json_data)
 
-        return cls.from_records(data['data'], # type: ignore
+        return cls.from_records(data['data'],
                 index=data['index'],
                 columns=data['columns'],
                 dtypes=dtypes,
@@ -2045,7 +2045,7 @@ class Frame(ContainerOperand):
         else: # StringIO or open file
             data = json.load(json_data)
 
-        return cls.from_dict_records(data, # type: ignore
+        return cls.from_dict_records(data,
                 index=index,
                 dtypes=dtypes,
                 name=name,
@@ -2083,7 +2083,7 @@ class Frame(ContainerOperand):
         else: # StringIO or open file
             data = json.load(json_data)
 
-        return cls.from_records(data, # type: ignore
+        return cls.from_records(data,
                 index=index,
                 columns=columns,
                 dtypes=dtypes,
@@ -2445,7 +2445,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        return cls.from_delimited(fp, # type: ignore
+        return cls.from_delimited(fp,
                 delimiter=',',
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -2507,7 +2507,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        return cls.from_delimited(fp, # type: ignore
+        return cls.from_delimited(fp,
                 delimiter='\t',
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -2579,7 +2579,7 @@ class Frame(ContainerOperand):
         sio = StringIO()
         sio.write(root.clipboard_get())
         sio.seek(0)
-        return cls.from_delimited(sio, # type: ignore
+        return cls.from_delimited(sio,
                 delimiter=delimiter,
                 index_depth=index_depth,
                 index_column_first=index_column_first,
@@ -3128,7 +3128,7 @@ class Frame(ContainerOperand):
                 missing = set(columns_select) - set(table.column_names)
                 raise ErrorInitFrame(f'cannot load all columns in columns_select: missing {missing}')
 
-        return cls.from_arrow(table, # type: ignore
+        return cls.from_arrow(table,
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 index_constructors=index_constructors,
@@ -3215,7 +3215,7 @@ class Frame(ContainerOperand):
         return unpackb(msgpack_data) # type: ignore
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='container_init', class_name='Frame')
+    # @doc_inject(selector='container_init', class_name='Frame')
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
@@ -4009,7 +4009,7 @@ class Frame(ContainerOperand):
             raise RuntimeError(('cannot assign '
                     + value.__class__.__name__
                     + ' with key configuration'), (nm_row, nm_column))
-        return v # type: ignore
+        return v
 
     @doc_inject(selector='reindex', class_name='Frame')
     def reindex(self,
@@ -6078,7 +6078,7 @@ class Frame(ContainerOperand):
             if cfs_is_array:
                 if cfs.ndim == 1:
                     values_for_sort = cfs
-                elif cfs.ndim == 2 and cfs.shape[1] == 1: #type: ignore
+                elif cfs.ndim == 2 and cfs.shape[1] == 1:
                     values_for_sort = cfs[:, 0]
                 else:
                     values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)] #type: ignore
@@ -6087,7 +6087,7 @@ class Frame(ContainerOperand):
             else: #Frame/TypeBlocks from here
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
-                if cfs.shape[1] == 1: # type: ignore
+                if cfs.shape[1] == 1:
                     values_for_sort = cfs._extract_array_column(0) # type: ignore
                 else:
                     values_for_lex = [cfs._extract_array_column(i) # type: ignore
@@ -6372,7 +6372,7 @@ class Frame(ContainerOperand):
             column_loc = list(columns)
             name = columns
         else:
-            column_loc = columns # type: ignore
+            column_loc = columns
             name = None # could be a slice, must get post iloc conversion
 
         column_iloc = self._columns._loc_to_iloc(column_loc)
@@ -6591,7 +6591,7 @@ class Frame(ContainerOperand):
             index_loc = list(index)
             name = index
         else:
-            index_loc = index # type: ignore
+            index_loc = index
             name = None # could be a slice, must get post iloc conversion
 
         index_iloc = self._index._loc_to_iloc(index_loc)
@@ -7678,7 +7678,7 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-        return self.from_records_items( # type: ignore
+        return self.from_records_items(
                 records_items(),
                 index_constructor=pdc.expand_constructor,
                 columns=pdc.contract_dst,
@@ -7754,7 +7754,7 @@ class Frame(ContainerOperand):
                     array.flags.writeable = False
                     yield key, array
 
-        return self.from_items( # type: ignore
+        return self.from_items(
                 items(),
                 index=pdc.contract_dst,
                 index_constructor=pdc.contract_constructor,
@@ -8394,7 +8394,7 @@ class Frame(ContainerOperand):
         data_vars = {k: (index_name, v)
                 for k, v in zip(columns_values, columns_arrays())}
 
-        return xarray.Dataset(data_vars, coords=coords) #type: ignore
+        return xarray.Dataset(data_vars, coords=coords)
 
     def _to_frame(self,
             constructor: tp.Type['Frame'],
@@ -8722,7 +8722,7 @@ class Frame(ContainerOperand):
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp, # type: ignore
+        return self.to_delimited(fp=fp,
                 delimiter=',',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -8771,7 +8771,7 @@ class Frame(ContainerOperand):
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp, # type: ignore
+        return self.to_delimited(fp=fp,
                 delimiter='\t',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9507,7 +9507,7 @@ class FrameHE(Frame):
         '''
         Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
         '''
-        return self.equals(other, #type: ignore [no-any-return]
+        return self.equals(other,
                 compare_name=True,
                 compare_dtype=False,
                 compare_class=False,

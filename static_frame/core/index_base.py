@@ -61,10 +61,11 @@ class IndexBase(ContainerOperand):
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
     dtype: np.dtype
 
-    __pos__: tp.Callable[['IndexBase'], np.ndarray]
-    __neg__: tp.Callable[['IndexBase'], np.ndarray]
-    __abs__: tp.Callable[['IndexBase'], np.ndarray]
-    __invert__: tp.Callable[['IndexBase'], np.ndarray]
+    __pos__: tp.Callable[[], np.ndarray]
+    __neg__: tp.Callable[[], np.ndarray]
+    __abs__: tp.Callable[[], np.ndarray]
+    __invert__: tp.Callable[[], np.ndarray]
+
     __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
@@ -106,7 +107,7 @@ class IndexBase(ContainerOperand):
     @classmethod
     def from_pandas(cls,
             value: 'pandas.Index',
-            ) -> 'IndexBase':
+            ) -> IndexBase:
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
@@ -126,12 +127,12 @@ class IndexBase(ContainerOperand):
                 return cls(value, name=value.name)
 
             if not cls.STATIC:
-                return IndexNanosecondGO(value, name=value.name)
-            return IndexNanosecond(value, name=value.name)
+                return IndexNanosecondGO(value, name=value.name) # type: ignore
+            return IndexNanosecond(value, name=value.name) # type: ignore
 
         if not cls.STATIC:
-            return IndexGO(value, name=value.name)
-        return Index(value, name=value.name)
+            return IndexGO(value, name=value.name) # type: ignore
+        return Index(value, name=value.name) # type: ignore
 
 
     @classmethod
@@ -265,7 +266,7 @@ class IndexBase(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values, #type: ignore [no-any-return]
+        return np.searchsorted(self.values,
                 values,
                 'left' if side_left else 'right',
                 )
@@ -348,7 +349,8 @@ class IndexBase(ContainerOperand):
                 yield str(name)
             # try to use name only if it is a tuple of the right size
             elif name and self._name_is_names():
-                for n in name: #type: ignore [attr-defined]
+                # name is a tuple of length equal to depth
+                for n in name: # type: ignore
                     yield str(n)
             else:
                 for i in range(depth):
@@ -481,13 +483,13 @@ class IndexBase(ContainerOperand):
                 )
         content = repr(self.display(config))
         # path_filter called internally
-        fp = write_optional_file(content=content, fp=fp)
+        fp_post: tp.Optional[str] = write_optional_file(content=content, fp=fp)
 
-        if fp and show:
+        if fp_post is not None and show:
             import webbrowser  # pragma: no cover
-            webbrowser.open_new_tab(fp) #pragma: no cover
+            webbrowser.open_new_tab(fp_post) #pragma: no cover
 
-        return fp
+        return fp_post
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover

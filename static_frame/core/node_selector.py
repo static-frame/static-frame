@@ -407,7 +407,7 @@ class InterfaceConsolidate(Interface[TContainer]):
 
                 iloc_start = iloc_end
 
-        return Frame.from_records(gen(),#type: ignore
+        return Frame.from_records(gen(),
             columns=('loc', 'iloc', 'dtype', 'shape', 'ndim') + flag_attrs
             )
 

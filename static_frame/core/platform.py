@@ -50,6 +50,6 @@ class Platform:
 
     @classmethod
     def display(cls) -> Display:
-        return cls.to_series().display_wide() #type: ignore [no-any-return]
+        return cls.to_series().display_wide()
 
 

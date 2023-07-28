@@ -56,7 +56,7 @@ class IndexDatetime(Index):
     _DTYPE = None # define in derived class
     __slots__ = ()
 
-    @doc_inject(selector='index_date_time_init')
+    # @doc_inject(selector='index_date_time_init')
     def __init__(self,
             labels: IndexInitializer,
             *,

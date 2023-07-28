@@ -121,7 +121,7 @@ class DFIBuffer(Buffer):
 
     @property
     def bufsize(self) -> int:
-        return self._array.nbytes # type: ignore
+        return self._array.nbytes
 
     @property
     def ptr(self) -> int:
@@ -162,7 +162,7 @@ class DFIColumn(Column):
         return self._array.astype(dtype)
 
     def size(self) -> int:
-        return self._array.size # type: ignore
+        return self._array.size
 
     @property
     def offset(self) -> int:

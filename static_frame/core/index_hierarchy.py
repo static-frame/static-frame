@@ -1049,7 +1049,7 @@ class IndexHierarchy(IndexBase):
         offset = current_size
         # For all these extensions, we have already update self._indices - we now need to map indexers
         for pending in self._pending_extensions: # pylint: disable = E1133
-            if pending.__class__ is PendingRow: # type: ignore
+            if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
                     new_indexers[depth, offset] = label_index
@@ -2347,7 +2347,7 @@ class IndexHierarchy(IndexBase):
         if other._recache:
             other._update_array_cache()
 
-        return self._blocks.equals(other._blocks, # type: ignore
+        return self._blocks.equals(other._blocks,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
                 skipna=skipna,

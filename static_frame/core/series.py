@@ -574,6 +574,7 @@ class Series(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # index assignment
+        self._index: IndexBase
 
         if own_index:
             self._index = index
@@ -1074,7 +1075,7 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
-        return value.reindex( #type: ignore
+        return value.reindex(
                 self._index._extract_iloc(iloc_key),
                 fill_value=fill_value
                 )
@@ -1705,7 +1706,7 @@ class Series(ContainerOperand):
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> tp.Any:
         '''
         For a Series, all functions of this type reduce the single axis of the Series to a single element, so Index has no use here.
 
@@ -2512,7 +2513,7 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
         # this will preserve the name
-        return post.reindex(self.index, #type: ignore
+        return post.reindex(self.index,
                 fill_value=fv,
                 check_equals=False, # the index will never be equal
                 )
@@ -3077,7 +3078,7 @@ class Series(ContainerOperand):
         post[:] = self._index.values[sel]
         post[mask] = fill_value
         post.flags.writeable = False
-        return post #type: ignore [no-any-return]
+        return post
 
     #---------------------------------------------------------------------------
     def _insert(self,
@@ -3173,7 +3174,7 @@ class Series(ContainerOperand):
         '''
         return ufunc_unique1d(self.values)
 
-    @doc_inject()
+    # @doc_inject()
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
@@ -3224,7 +3225,7 @@ class Series(ContainerOperand):
         if not arrays_equal(self.values, other.values, skipna=skipna):
             return False
 
-        return self._index.equals(other._index, # type: ignore
+        return self._index.equals(other._index,
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
@@ -3636,7 +3637,7 @@ class SeriesHE(Series):
         '''
         Return True if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
         '''
-        return self.equals(other, #type: ignore
+        return self.equals(other,
                 compare_name=True,
                 compare_dtype=False,
                 compare_class=False,

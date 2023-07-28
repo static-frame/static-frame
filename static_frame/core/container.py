@@ -23,6 +23,7 @@ from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
@@ -195,7 +196,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''Open an interactive VisiData session.
         '''
         from static_frame.core.display_visidata import view_sf  # pragma: no cover
-        view_sf(self) #type: ignore [no-untyped-call] #pragma: no cover
+        view_sf(self) #pragma: no cover
 
 
 class ContainerOperand(ContainerBase):
@@ -319,13 +320,14 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeSpecifier = None) -> np.ndarray:
         '''
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values
-        return self.values.astype(dtype)
+        array: np.ndarray = self.values.astype(dtype)
+        return array
 
     def __array_ufunc__(self,
             ufunc: UFunc,

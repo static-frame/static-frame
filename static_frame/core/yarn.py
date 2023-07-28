@@ -667,7 +667,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         f = Frame.from_concat(
                 (b.status for b in self._series.values),
                 index=IndexAutoFactory)
-        return f.relabel(index=self._index) # type: ignore
+        return f.relabel(index=self._index)
 
 
 
@@ -816,4 +816,4 @@ class Yarn(ContainerBase, StoreClientMixin):
                 name=self._index.name,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index) #type: ignore
+        return self._extract_iloc(iloc_map).relabel(index)

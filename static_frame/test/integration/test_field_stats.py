@@ -84,7 +84,7 @@ def process(
             yield post.iter_element().apply(lambda e: round(e, 3)).T.relabel_level_add(label)
 
     # vertically stack all Frame for each category
-    return sf.Frame.from_concat(field_categories()) # type: ignore
+    return sf.Frame.from_concat(field_categories())
 
 
 class TestUnit(TestCase):

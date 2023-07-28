@@ -479,7 +479,7 @@ def pivot_core(
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
-        return f.relabel(columns=columns_final) #type: ignore
+        return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
     # Second major branch: we are grouping by index and columns fields. This is done with an outer and inner gruop by. The index is calculated ahead of time.
