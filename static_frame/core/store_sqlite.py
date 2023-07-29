@@ -158,7 +158,7 @@ class StoreSQLite(Store):
 
                 query = f'SELECT * from "{label_encoded}"'
 
-                yield tp.cast(Frame, container_type.from_sql(query=query,
+                yield Frame, container_type.from_sql(query=query,
                         connection=conn,
                         index_depth=c.index_depth,
                         index_constructors=c.index_constructors,
@@ -168,7 +168,7 @@ class StoreSQLite(Store):
                         dtypes=c.dtypes,
                         name=name,
                         consolidate_blocks=c.consolidate_blocks
-                        ))
+                        )
 
     @store_coherent_non_write
     def labels(self, *,

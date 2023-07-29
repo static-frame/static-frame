@@ -98,7 +98,7 @@ class StoreHDF5(Store):
                 table = file.get_node(f'/{label_encoded}')
                 colnames = table.cols._v_colnames
 
-                def blocks() -> tp.Iterator[np.ndarray]:
+                def blocks() -> tp.Iterator[np.ndarray[tp.Any, tp.Any]]:
                     for col_idx, colname in enumerate(colnames):
                         # can also do: table.read(field=colname)
                         array = table.col(colname)
