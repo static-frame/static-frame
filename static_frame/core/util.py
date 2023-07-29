@@ -246,6 +246,7 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
         int,
+        str,
         np.integer,
         slice,
         tp.List[tp.Any],
@@ -253,19 +254,25 @@ GetItemKeyType = tp.Union[
         'Index',
         'Series',
         np.ndarray,
+        np.datetime64,
+        datetime.date,
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[
         tp.Tuple[tp.Any, ...],
         int,
+        str,
         np.integer,
         slice,
         tp.List[tp.Any],
         None,
         'Index',
         'Series',
-        np.ndarray]
+        np.ndarray,
+        np.datetime64,
+        datetime.date,
+        ]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
@@ -923,13 +930,14 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
+    shape: tp.Sequence[int]
     if len(arrays) == 2: # assume we have a sequence
         # faster path when we have two in a sequence
         a1, a2 = arrays
         dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
         size = a1.shape[axis] + a2.shape[axis]
         if a1.ndim == 1:
-            shape = size
+            shape = (size,)
         else:
             shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
     else: # first pass to determine shape and resolved type
@@ -1109,7 +1117,7 @@ def array_ufunc_axis_skipna(
     elif kind == 'O':
         # replace None with nan
         if skipna:
-            is_not_none = np.not_equal(array, None)
+            is_not_none = np.not_equal(array, None) # type: ignore
 
         if array.ndim == 1:
             if skipna:
