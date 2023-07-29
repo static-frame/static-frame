@@ -15,6 +15,10 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import WarningsSilent
 
+if tp.TYPE_CHECKING:
+    import pandas  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any]
+
 
 class StoreHDF5(Store):
 
@@ -98,7 +102,7 @@ class StoreHDF5(Store):
                 table = file.get_node(f'/{label_encoded}')
                 colnames = table.cols._v_colnames
 
-                def blocks() -> tp.Iterator[np.ndarray[tp.Any, tp.Any]]:
+                def blocks() -> tp.Iterator[NDArrayAny]:
                     for col_idx, colname in enumerate(colnames):
                         # can also do: table.read(field=colname)
                         array = table.col(colname)
