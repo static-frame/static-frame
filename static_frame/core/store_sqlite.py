@@ -20,6 +20,8 @@ from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 
+if tp.TYPE_CHECKING:
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class StoreSQLite(Store):
 
@@ -28,7 +30,7 @@ class StoreSQLite(Store):
 
     @staticmethod
     def _dtype_to_affinity_type(
-            dtype: np.dtype,
+            dtype: DtypeAny,
             ) -> str:
         '''
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.

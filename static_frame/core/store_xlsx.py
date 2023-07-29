@@ -36,6 +36,7 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
@@ -82,7 +83,7 @@ class StoreXLSX(Store):
 
     @staticmethod
     def _dtype_to_writer_attr(
-            dtype: np.dtype,
+            dtype: DtypeAny,
             ) -> tp.Tuple[str, bool]:
         '''
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
@@ -105,7 +106,7 @@ class StoreXLSX(Store):
 
     @classmethod
     def _get_writer(cls,
-            dtype: np.dtype,
+            dtype: DtypeAny,
             ws: 'Worksheet'
             ) -> AnyCallable: # find better type
         '''
