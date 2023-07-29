@@ -158,7 +158,7 @@ class StoreSQLite(Store):
 
                 query = f'SELECT * from "{label_encoded}"'
 
-                yield Frame, container_type.from_sql(query=query,
+                yield container_type.from_sql(query=query,
                         connection=conn,
                         index_depth=c.index_depth,
                         index_constructors=c.index_constructors,
