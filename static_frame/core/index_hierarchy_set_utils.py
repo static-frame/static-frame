@@ -20,6 +20,9 @@ from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class ValidationResult(tp.NamedTuple):
     indices: tp.List[IndexHierarchy]
@@ -92,7 +95,8 @@ def _validate_and_process_indices(
             )
 
 
-def get_encoding_invariants(indices: tp.List[Index]) -> tp.Tuple[np.ndarray, np.dtype]:
+def get_encoding_invariants(indices: tp.List[Index]
+        ) -> tp.Tuple[NDArrayAny, DtypeAny]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
@@ -138,15 +142,15 @@ def _get_encodings(
         *,
         union_indices: tp.List[Index],
         depth: int,
-        bit_offset_encoders: np.ndarray,
-        encoding_dtype: np.dtype,
-        ) -> np.ndarray:
+        bit_offset_encoders: NDArrayAny,
+        encoding_dtype: DtypeAny,
+        ) -> NDArrayAny:
     '''Encode `ih` based on the union indices'''
-    remapped_indexers: tp.List[np.ndarray] = []
+    remapped_indexers: tp.List[NDArrayAny] = []
 
     union_idx: Index
     idx: Index
-    indexer: np.ndarray
+    indexer: NDArrayAny
     depth_level = list(range(depth))
     for ( # type: ignore
         union_idx,
@@ -169,21 +173,24 @@ def _get_encodings(
 
 def _remove_union_bloat(
         indices: tp.List[Index],
-        indexers: tp.List[np.ndarray],
-        ) -> tp.Tuple[tp.List[Index], np.ndarray]:
+        indexers: tp.List[NDArrayAny],
+        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
     # There is potentially a LOT of leftover bloat from all the unions. Clean up.
     final_indices: tp.List[Index] = []
-    final_indexers: tp.List[np.ndarray] = []
+    final_indexers: tp.List[NDArrayAny] = []
 
-    for index, indexers in zip(indices, indexers):
-        unique, new_indexers = ufunc_unique1d_indexer(indexers)
+    index: Index
+    indexer: NDArrayAny
+
+    for index, indexer in zip(indices, indexers):
+        unique, new_indexer = ufunc_unique1d_indexer(indexer)
 
         if len(unique) == len(index):
             final_indices.append(index)
-            final_indexers.append(indexers)
+            final_indexers.append(indexer)
         else:
             final_indices.append(index._extract_iloc(unique))
-            final_indexers.append(new_indexers)
+            final_indexers.append(new_indexer)
 
     final_indexers_arr = np.array(final_indexers, dtype=DTYPE_UINT_DEFAULT)
     final_indexers_arr.flags.writeable = False
@@ -445,16 +452,16 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
     del filtered_indices
 
     # 4. Build up the union of the encodings (i.e., whatever encodings are unique)
-    union_encodings = ufunc_unique1d(np.hstack(union_encodings))
+    union_array = ufunc_unique1d(np.hstack(union_encodings))
 
-    if len(union_encodings) == len(lhs):
+    if len(union_array) == len(lhs):
         # In unions, nothing can be dropped. If the size didn't change, then it means
         # nothing was added, which means the union is the same as the first index
         return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     # 5. Convert the union encodings back to 2-D indexers
     union_indexers = HierarchicalLocMap.unpack_encoding(
-            encoded_arr=union_encodings,
+            encoded_arr=union_array,
             bit_offset_encoders=bit_offset_encoders,
             encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
             )

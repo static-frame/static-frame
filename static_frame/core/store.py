@@ -19,6 +19,10 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 #-------------------------------------------------------------------------------
 # decorators
 
@@ -118,7 +122,7 @@ class Store:
             include_columns_name: bool,
             force_str_names: bool = False,
             force_brackets: bool = False
-            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[np.dtype]]:
+            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[DtypeAny]]:
 
         index = frame.index
         columns = frame.columns
@@ -130,6 +134,9 @@ class Store:
         if columns.depth > 1:
             # The str() of an array produces a space-delimited representation that includes list brackets; we could trim these brackets here, but need them for SQLite usage; thus, clients will have to trim if necessary.
             columns_values = tuple(str(c) for c in columns_values)
+
+        field_names: tp.Sequence[tp.Hashable]
+        dtypes: tp.Sequence[DtypeAny]
 
         if not include_index:
             if include_columns_name:
@@ -163,8 +170,10 @@ class Store:
             else: # name fields with integers?
                 field_names.extend(range(frame._blocks.shape[1]))
 
+        field_names_post: tp.Sequence[str]
+
         if force_str_names:
-            field_names = [str(n) for n in field_names]
+            field_names_post = [str(n) for n in field_names]
         if force_brackets:
             def gen() -> tp.Iterator[str]:
                 for name in field_names:
@@ -176,9 +185,9 @@ class Store:
                         yield f'[{" ".join((repr(n) for n in name))}]'
                     else:
                         yield f'[{name_str}]'
-            field_names = list(gen())
+            field_names_post = list(gen())
 
-        return field_names, dtypes
+        return field_names_post, dtypes
 
     @staticmethod
     def _get_row_iterator(
@@ -205,7 +214,7 @@ class Store:
     def get_column_iterator(
             frame: Frame,
             include_index: bool
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         if include_index:
             index_depth = frame._index.depth
 
