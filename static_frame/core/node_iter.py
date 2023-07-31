@@ -30,6 +30,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
@@ -683,7 +685,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         # NOTE: name argument is for common interface
         if index_constructor is not None:
             raise RuntimeError('index_constructor not supported with this interface')
@@ -857,7 +859,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            other: tp.Union[np.ndarray, 'Index', 'Series', tp.Iterable[tp.Any]],
+            other: tp.Union[NDArrayAny, 'Index', 'Series', tp.Iterable[tp.Any]],
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0
