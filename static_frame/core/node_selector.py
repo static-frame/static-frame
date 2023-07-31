@@ -42,6 +42,7 @@ TContainer = tp.TypeVar('TContainer',
         # 'Quilt',
         'IndexHierarchy',
         'SeriesAssign',
+        np.ndarray,
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]

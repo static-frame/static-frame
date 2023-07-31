@@ -253,6 +253,7 @@ GetItemKeyType = tp.Union[
         np.integer,
         slice,
         tp.List[tp.Any],
+        tp.Tuple[tp.Any, ...],
         None,
         'Index',
         'Series',
@@ -564,7 +565,7 @@ UFUNC_MAP: tp.Dict[AnyCallable, UFuncCategory] = {
     np.nancumprod: UFuncCategory.CUMMULATIVE,
 }
 
-def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
+def ufunc_to_category(func: tp.Union[UFunc, partial[UFunc]]) -> tp.Optional[UFuncCategory]:
     if func.__class__ is partial:
         # std, var partialed
         func = func.func #type: ignore

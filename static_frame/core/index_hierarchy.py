@@ -1533,7 +1533,7 @@ class IndexHierarchy(IndexBase):
         return self._indexers[depth_level]
 
     @doc_inject()
-    def label_widths_at_depth(self: IH,
+    def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''

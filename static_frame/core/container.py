@@ -198,7 +198,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''Open an interactive VisiData session.
         '''
         from static_frame.core.display_visidata import view_sf  # pragma: no cover
-        view_sf(self) #pragma: no cover
+        view_sf(self) # type: ignore  #pragma: no cover
 
 
 
@@ -209,18 +209,15 @@ class ContainerOperandSequence(ContainerBase):
     __slots__ = ()
 
     interface: 'Frame' # property that returns a Frame
-    values: NDArrayAny
+    # values: NDArrayAny
 
-    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
-        raise NotImplementedError() #pragma: no cover
-
-    def _ufunc_binary_operator(self: T, *,
+    # NOTE: the return type here is intentionally broad as it will get specialized in derived classes
+    def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
             fill_value: object = np.nan,
-            ) -> T:
+            ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
-
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
@@ -653,6 +650,18 @@ class ContainerOperand(ContainerOperandSequence):
 
     def __invert__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
+
+    #---------------------------------------------------------------------------
+
+    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
+        raise NotImplementedError() #pragma: no cover
+
+    def _ufunc_binary_operator(self: T, *,
+            operator: UFunc,
+            other: tp.Any,
+            fill_value: object = np.nan,
+            ) -> T:
+        raise NotImplementedError() #pragma: no cover
 
 
 

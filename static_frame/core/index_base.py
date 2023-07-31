@@ -33,6 +33,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import UFunc
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -56,13 +57,23 @@ class IndexBase(ContainerOperandSequence):
 
     _recache: bool
     _name: NameType
-    values: NDArrayAny
-    positions: NDArrayAny
     depth: int
 
     loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
-    dtype: DtypeAny
+
+    #---------------------------------------------------------------------------
+    def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
+
+
+    @property
+    def dtype(self) -> DtypeAny:
+        raise NotImplementedError()
+
+    @property
+    def values(self) -> NDArrayAny:
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     def __pos__(self) -> NDArrayAny:
@@ -107,7 +118,10 @@ class IndexBase(ContainerOperandSequence):
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
-    label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
+    def label_widths_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy

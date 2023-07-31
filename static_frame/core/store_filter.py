@@ -139,7 +139,7 @@ class StoreFilter(metaclass=InterfaceMeta):
         self._EQUAL_FUNC_TO_FROM = (
                 # NOTE: this using the same heuristic as util.isna_array, which may not be the best choice for non-standard objects
                 (lambda x: np.not_equal(x, x), self.from_nan),
-                (lambda x: np.equal(x, None), self.from_none),
+                (lambda x: np.equal(x, None), self.from_none), # type: ignore
                 (lambda x: np.equal(x, np.inf), self.from_posinf),
                 (lambda x: np.equal(x, -np.inf), self.from_neginf)
                 )

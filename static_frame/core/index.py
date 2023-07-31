@@ -207,7 +207,7 @@ class Index(IndexBase):
             if dtype is not None and dtype != labels.dtype: #type: ignore
                 raise ErrorInitIndex('invalid label dtype for this Index')
             # NOTE: all labels arrays should be made immutable before this call
-            return labels
+            return labels #type: ignore
 
         # labels may be an expired generator, must use the mapping
         labels_src = labels if hasattr(labels, '__len__') else mapping
@@ -229,7 +229,7 @@ class Index(IndexBase):
             positions: tp.Optional[tp.Sequence[int]]
             ) -> NDArrayAny:
         # positions is either None or an ndarray
-        if positions.__class__ is np.ndarray:
+        if positions.__class__ is np.ndarray: # type: ignore
             return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
@@ -292,7 +292,7 @@ class Index(IndexBase):
                 # NOTE: should never get to this branch, as derived Index classes that set _DTYPE remove dtype from __init__
                 raise ErrorInitIndex('invalid dtype argument for this Index', dtype, self._DTYPE) #pragma: no cover
             # self._DTYPE is None, passed dtype is not None, use dtype
-            dtype_extract = dtype
+            dtype_extract = dtype # type: ignore
 
         #-----------------------------------------------------------------------
         if labels.__class__ is np.ndarray:
@@ -319,7 +319,7 @@ class Index(IndexBase):
 
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
-            array = labels.values
+            array = labels.values #type: ignore
             if array.ndim == 1:
                 labels = array
             else:
@@ -359,7 +359,7 @@ class Index(IndexBase):
             size = len(self._map)
 
         # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
-        self._labels = self._extract_labels(self._map, labels, dtype_extract)
+        self._labels: NDArrayAny = self._extract_labels(self._map, labels, dtype_extract)
         self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
@@ -485,7 +485,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.dtype
+        return self._labels.dtype #type: ignore
 
     @property
     def shape(self) -> tp.Tuple[int, ...]:
@@ -549,7 +549,7 @@ class Index(IndexBase):
         elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(self._labels, self._positions[key], axis=0)
+            labels = np.delete(self._labels, self._positions[key], axis=0) # type: ignore
             labels.flags.writeable = False
         else:
             labels = np.delete(self._labels, key, axis=0)
@@ -762,7 +762,7 @@ class Index(IndexBase):
 
         mask = aux[1:] == aux[:-1]
 
-        indexer = aux_sort_indices[1:][mask] - ar1.size
+        indexer: NDArrayAny = aux_sort_indices[1:][mask] - ar1.size
 
         # We want to return these indices to match ar1 before it was sorted
         try:
@@ -797,7 +797,7 @@ class Index(IndexBase):
         self._depth_level_validate(depth_level)
         return self.values
 
-    # @doc_inject()
+    @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
@@ -853,7 +853,7 @@ class Index(IndexBase):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
-        if key.__class__ is ILoc:
+        if key.__class__ is ILoc: #type: ignore
             return key.key #type: ignore
 
         key = key_from_container_key(self, key)
@@ -905,7 +905,7 @@ class Index(IndexBase):
                 is_array = key.__class__ is np.ndarray
                 try:
                     # NOTE: this insures that the returned type will be DTYPE_INT_DEFAULT
-                    result = self._positions[key]
+                    result = self._positions[key] # type: ignore
                 except IndexError as e:
                     # NP gives us: IndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
                     if is_array and key.dtype == DTYPE_BOOL: #type: ignore
@@ -936,7 +936,7 @@ class Index(IndexBase):
                 loc_is_iloc = self._map is None
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
-                labels = self._labels[key]
+                labels = self._labels[key] # type: ignore
                 labels.flags.writeable = False
                 loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
@@ -1015,9 +1015,9 @@ class Index(IndexBase):
             other_is_array = True
 
         if operator.__name__ == 'matmul':
-            return matmul(values, other)
+            return matmul(values, other) # type: ignore
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, values)
+            return matmul(other, values) # type: ignore
 
         return apply_binary_operator(
                 values=values,
@@ -1034,7 +1034,7 @@ class Index(IndexBase):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> tp.Any:
         '''
 
         Args:
@@ -1060,7 +1060,7 @@ class Index(IndexBase):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> tp.Any:
         '''
         As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
 
@@ -1215,7 +1215,7 @@ class Index(IndexBase):
     def _drop_missing(self,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
-            ) -> 'Index':
+            ) -> tp.Self:
         '''
         Args:
             func: UFunc that returns True for missing values
@@ -1441,11 +1441,11 @@ class _IndexGOMixin:
             size: int,
             positions: tp.Optional[tp.Sequence[int]]
             ) -> NDArrayAny:
-        '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
+        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''
-        positions = Index._extract_positions(size, positions)
+        pos = Index._extract_positions(size, positions)
         self._positions_mutable_count = size
-        return positions
+        return pos
 
     def _update_array_cache(self) -> None:
 

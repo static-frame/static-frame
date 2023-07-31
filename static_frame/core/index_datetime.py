@@ -171,7 +171,7 @@ class IndexDatetime(Index):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> NDArrayAny:
         '''
         {doc}
 

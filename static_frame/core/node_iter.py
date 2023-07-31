@@ -573,12 +573,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
             index = index_constructor(index)
 
         # PERF: passing count here permits faster generator realization
-        values, _ = iterable_to_array_1d(
+        array, _ = iterable_to_array_1d(
                 values,
                 count=index.shape[0],
                 dtype=dtype,
                 )
-        return Series(values,
+        return Series(array,
                 name=name,
                 index=index,
                 own_index=own_index,
@@ -741,7 +741,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             apply_constructor = partial(self.to_frame_from_elements, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            apply_constructor = self.to_index_from_labels
+            apply_constructor = self.to_index_from_labels # type: ignore
 
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover

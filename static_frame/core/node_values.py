@@ -86,7 +86,7 @@ class InterfaceValues(Interface[TContainer]):
             *args: tp.Any,
             **kwargs: tp.Any,
             ) -> TContainer:
-        '''Support for applying NumPy functions directly on containers, returning NumPy arrays.
+        '''Support for applying NumPy functions directly on containers.
         '''
         from static_frame.core.frame import Frame
         from static_frame.core.series import Series
@@ -251,8 +251,8 @@ class InterfaceBatchValues(InterfaceBatch):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(c: TContainer) -> NDArrayAny:
-            return c.via_values(
+        def func(c: TContainer) -> TContainer:
+            return c.via_values( # type: ignore
                     consolidate_blocks=self._consolidate_blocks,
                     unify_blocks=self._unify_blocks,
                     dtype=self._dtype,

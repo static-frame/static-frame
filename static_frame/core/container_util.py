@@ -180,7 +180,7 @@ def get_col_dtype_factory(
             if col_idx < 0:
                 return None
         if is_element:
-            return dtypes  # already validated
+            return dtypes  # type: ignore
         if is_map:
             # if no columns, assume mapping is an integer mapping
             key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
@@ -367,6 +367,8 @@ def pandas_to_numpy(
     else:
         dtype = None # resolve below
         is_extension_dtype = True
+
+    array: NDArrayAny
 
     if is_extension_dtype:
         isna = container.isna() # returns a NumPy Boolean type sometimes
@@ -597,10 +599,11 @@ def index_constructor_empty(
 def matmul(
         lhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
         rhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
-        ) -> tp.Any: #tp.Union['Series', 'Frame']:
+        ) -> tp.Union['Series', 'Frame', NDArrayAny]:
     '''
     Implementation of matrix multiplication for Series and Frame
     '''
+    # NOTE: the design of this function makes typing very hard. Recast with overrides or use specialized functions
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 
@@ -620,19 +623,19 @@ def matmul(
     if isinstance(lhs, np.ndarray):
         lhs_type = np.ndarray
     elif isinstance(lhs, Series):
-        lhs_type = Series
+        lhs_type = Series # type: ignore
     else: # normalize subclasses
-        lhs_type = Frame
+        lhs_type = Frame # type: ignore
 
     if isinstance(rhs, np.ndarray):
         rhs_type = np.ndarray
     elif isinstance(rhs, Series):
-        rhs_type = Series
+        rhs_type = Series # type: ignore
     else: # normalize subclasses
-        rhs_type = Frame
+        rhs_type = Frame # type: ignore
 
     if rhs_type == np.ndarray and lhs_type == np.ndarray:
-        return np.matmul(lhs, rhs)
+        return np.matmul(lhs, rhs) # type: ignore
 
 
     own_index = True
@@ -642,86 +645,86 @@ def matmul(
         # result will be 1D or 0D
         columns = None
 
-        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame):
-            aligned = lhs._index.union(rhs._index)
+        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame): # type: ignore
+            aligned = lhs._index.union(rhs._index) # type: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index): # type: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication') #pragma: no cover
 
-        if lhs_type == Series:
+        if lhs_type == Series: # type: ignore
             if rhs_type == np.ndarray:
                 if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
-                left = lhs.values
+                left = lhs.values # type: ignore
                 right = rhs # already np
                 if ndim == 1:
                     index = None # force auto increment integer
                     own_index = False
                     constructor = lhs.__class__
-            elif rhs_type == Series:
+            elif rhs_type == Series: # type: ignore
                 ndim = 0
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(aligned).values
+                left = lhs.reindex(aligned).values # type: ignore
+                right = rhs.reindex(aligned).values # type: ignore
             else: # rhs is Frame
                 ndim = 1
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = rhs._columns
+                left = lhs.reindex(aligned).values # type: ignore
+                right = rhs.reindex(index=aligned).values # type: ignore
+                index = rhs._columns # type: ignore
                 constructor = lhs.__class__
         else: # lhs is 1D array
             left = lhs
-            right = rhs.values
-            if rhs_type == Series:
+            right = rhs.values # type: ignore
+            if rhs_type == Series: # type: ignore
                 ndim = 0
             else: # rhs is Frame, len(lhs) == len(rhs.index)
                 ndim = 1
-                index = rhs._columns
+                index = rhs._columns # type: ignore
                 constructor = Series # cannot get from argument
 
     elif lhs.ndim == 2: # Frame, 2D array
 
-        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame):
-            aligned = lhs._columns.union(rhs._index)
+        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame): # type: ignore
+            aligned = lhs._columns.union(rhs._index) # type: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index): # type: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
-        if lhs_type == Frame:
+        if lhs_type == Frame: # type: ignore
             if rhs_type == np.ndarray:
                 if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim
-                left = lhs.values
+                left = lhs.values # type: ignore
                 right = rhs # already np
-                index = lhs._index
+                index = lhs._index # type: ignore
 
                 if ndim == 1:
                     constructor = Series
                 else:
                     constructor = lhs.__class__
                     columns = None # force auto increment index
-            elif rhs_type == Series:
+            elif rhs_type == Series: # type: ignore
                 # a.columns must align with b.index
                 ndim = 1
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(aligned).values
-                index = lhs._index  # this axis is not changed
+                left = lhs.reindex(columns=aligned).values # type: ignore
+                right = rhs.reindex(aligned).values # type: ignore
+                index = lhs._index  # type: ignore
                 constructor = rhs.__class__
             else: # rhs is Frame
                 # a.columns must align with b.index
                 ndim = 2
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = lhs._index
-                columns = rhs._columns
+                left = lhs.reindex(columns=aligned).values # type: ignore
+                right = rhs.reindex(index=aligned).values # type: ignore
+                index = lhs._index # type: ignore
+                columns = rhs._columns # type: ignore
                 constructor = lhs.__class__ # give left precedence
         else: # lhs is 2D array
             left = lhs
-            right = rhs.values
-            if rhs_type == Series: # returns unindexed Series
+            right = rhs.values # type: ignore
+            if rhs_type == Series: # type: ignore
                 ndim = 1
-                index = None
+                index = None # returns unindexed Series
                 own_index = False
                 constructor = rhs.__class__
             else: # rhs is Frame, lhs.shape[1] == rhs.shape[0]
@@ -730,13 +733,13 @@ def matmul(
                 ndim = 2
                 index = None
                 own_index = False
-                columns = rhs._columns
+                columns = rhs._columns #type: ignore
                 constructor = rhs.__class__
     else:
         raise NotImplementedError(f'no handling for {lhs}')
 
     # NOTE: np.matmul is not the same as np.dot for some arguments
-    data = np.matmul(left, right)
+    data: NDArrayAny = np.matmul(left, right)
 
     if ndim == 0:
         return data
@@ -745,11 +748,11 @@ def matmul(
 
     data.flags.writeable = False
     if ndim == 1:
-        return constructor(data,
+        return constructor(data, # type: ignore
                 index=index,
                 own_index=own_index,
                 )
-    return constructor(data,
+    return constructor(data, # type: ignore
             index=index,
             own_index=own_index,
             columns=columns
@@ -965,7 +968,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 
     if isinstance(key, Frame):
         # for usage in assignment we need columns to be sorted
-        return key.sort_columns()
+        return key.sort_columns() #type: ignore
 
     raise RuntimeError(f'unhandled key {key}')
 
@@ -1005,9 +1008,9 @@ def rehierarch_from_type_blocks(*,
     order_lex = np.lexsort(
             [labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
 
-    labels_post = labels_post._extract(row_key=order_lex)
+    labels_post = labels_post._extract(row_key=order_lex) # type: ignore
 
-    return labels_post, order_lex
+    return labels_post, order_lex # type: ignore
 
 
 def rehierarch_from_index_hierarchy(*,
@@ -1030,7 +1033,7 @@ def rehierarch_from_index_hierarchy(*,
 
     if index_constructors is None:
         # transform the existing index constructors correspondingly
-        index_constructors = labels.index_types.values[list(depth_map)]
+        index_constructors = labels.index_types.values[list(depth_map)] # type: ignore
 
     return labels.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
@@ -1092,6 +1095,8 @@ def apply_binary_operator(*,
     '''
     Utility to handle binary operator application.
     '''
+    result: tp.Any
+
     if (values.dtype.kind in DTYPE_STR_KINDS or
             (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
@@ -1124,7 +1129,7 @@ def apply_binary_operator(*,
             # raise on unaligned shapes as is done for arithmetic operators
 
     result.flags.writeable = False
-    return result
+    return result # type: ignore
 
 def apply_binary_operator_blocks(*,
         values: tp.Iterable[NDArrayAny],
@@ -1229,7 +1234,7 @@ def key_from_container_key(
         else:
             # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
             key = key.values
-    elif expand_iloc and key.__class__ is ILoc:
+    elif expand_iloc and key.__class__ is ILoc: # type: ignore
         # realize as Boolean array
         array = np.full(len(index), False)
         array[key.key] = True #type: ignore
@@ -1399,9 +1404,9 @@ def index_many_to_one(
     from static_frame.core.index import Index
     from static_frame.core.index_auto import IndexAutoFactory
 
-    array_processor: tp.Callable[[tp.Iterable[NDArrayAny]], NDArrayAny]
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
+    array_processor: tp.Callable[..., NDArrayAny]
     if mtot_is_concat:
         array_processor = concat_resolved
     else:
@@ -1448,6 +1453,7 @@ def index_many_to_one(
             )
 
     # collect initial values from `index`
+    arrays: tp.List[NDArrayAny]
     if index.ndim == 2:
         is_ih = True
         index_types_arrays = [index.index_types.values]
@@ -1460,7 +1466,7 @@ def index_many_to_one(
 
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
-            arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
+            arrays = [[index.values_at_depth(d) for d in range(depth_first)]] #type: ignore
         else: # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
     else:
@@ -1496,9 +1502,9 @@ def index_many_to_one(
     # return an index auto if we can; already filtered out difference and concat
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
-            size = max(a.size for a in arrays) #type: ignore
+            size = max(a.size for a in arrays)
         elif many_to_one_type is ManyToOneType.INTERSECT:
-            size = min(a.size for a in arrays) #type: ignore
+            size = min(a.size for a in arrays)
         return IndexAutoFactory(size, name=name).to_index(
                 default_constructor=cls_default,
                 explicit_constructor=explicit_constructor,
@@ -1670,7 +1676,7 @@ def sort_index_for_order(
         if cfs_is_array:
             cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
         else:
-            cfs_depth = cfs.depth
+            cfs_depth = cfs.depth # type: ignore
         if len(cfs) != len(index):
             raise RuntimeError('key function returned a container of invalid length')
     else:
@@ -1679,13 +1685,14 @@ def sort_index_for_order(
         cfs_depth = cfs.depth
 
     asc_is_element: bool
+    order: NDArrayAny
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
             values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)]
         else: # cfs is an IndexHierarchy
-            values_for_lex = [cfs.values_at_depth(i)
-                    for i in range(cfs.depth-1, -1, -1)]
+            values_for_lex = [cfs.values_at_depth(i) #type: ignore
+                    for i in range(cfs.depth-1, -1, -1)] #type: ignore
 
         asc_is_element, values_for_lex = prepare_values_for_lex( #type: ignore
                 ascending=ascending,
@@ -1698,7 +1705,7 @@ def sort_index_for_order(
         if not asc_is_element:
             raise RuntimeError('Multiple ascending values not permitted.')
 
-        v = cfs if cfs_is_array else cfs.values
+        v = cfs if cfs_is_array else cfs.values # type: ignore
         order = np.argsort(v, kind=kind)
 
     if asc_is_element and not ascending:
