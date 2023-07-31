@@ -126,7 +126,7 @@ class Store:
 
         index = frame.index
         columns = frame.columns
-        columns_values = columns.values
+        columns_values: tp.Sequence[tp.Hashable] = columns.values # type: ignore
 
         if include_index_name and include_columns_name:
             raise StoreParameterConflict('cannot include_index_name and include_columns_name with this Store')
@@ -136,7 +136,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         field_names: tp.Sequence[tp.Hashable]
-        dtypes: tp.Sequence[DtypeAny]
+        dtypes: tp.List[DtypeAny]
 
         if not include_index:
             if include_columns_name:
@@ -171,12 +171,14 @@ class Store:
                 field_names.extend(range(frame._blocks.shape[1]))
 
         field_names_post: tp.Sequence[str]
-
         if force_str_names:
             field_names_post = [str(n) for n in field_names]
+        else:
+            field_names_post = field_names
+
         if force_brackets:
             def gen() -> tp.Iterator[str]:
-                for name in field_names:
+                for name in field_names_post:
                     name_str = str(name)
                     if name_str.startswith('[') and name_str.endswith(']'):
                         yield name_str

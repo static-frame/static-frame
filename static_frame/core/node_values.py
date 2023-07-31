@@ -19,6 +19,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
@@ -93,7 +95,7 @@ class InterfaceValues(Interface[TContainer]):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(block: np.ndarray, normalize_2d: bool = True) -> np.ndarray:
+        def func(block: NDArrayAny, normalize_2d: bool = True) -> NDArrayAny:
             if normalize_2d:
                 block = column_2d_filter(block)
 
@@ -109,7 +111,7 @@ class InterfaceValues(Interface[TContainer]):
             return array
 
         if self._container._NDIM == 2:
-            blocks: tp.Iterable[np.ndarray] = self._container._blocks._blocks #type: ignore
+            blocks: tp.Iterable[NDArrayAny] = self._container._blocks._blocks #type: ignore
 
             if self._unify_blocks:
                 dtype = self._container._blocks._index.dtype if self._dtype is None else self._dtype #type: ignore
@@ -249,7 +251,7 @@ class InterfaceBatchValues(InterfaceBatch):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(c: TContainer) -> np.ndarray:
+        def func(c: TContainer) -> NDArrayAny:
             return c.via_values(
                     consolidate_blocks=self._consolidate_blocks,
                     unify_blocks=self._unify_blocks,

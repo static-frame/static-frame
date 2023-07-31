@@ -4020,7 +4020,7 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False,
             check_equals: bool = True,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         {doc}
 

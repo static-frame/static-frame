@@ -88,6 +88,8 @@ if tp.TYPE_CHECKING:
     from static_frame import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
     from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='Index')
 
@@ -141,8 +143,8 @@ def mutable_immutable_index_filter(
 #-------------------------------------------------------------------------------
 
 class _ArgsortCache(tp.NamedTuple):
-    arr: np.ndarray
-    key: np.ndarray
+    arr: NDArrayAny
+    key: NDArrayAny
 
     def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> '_ArgsortCache':
         obj = self.__class__(
@@ -169,15 +171,15 @@ class Index(IndexBase):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
-    _DTYPE: tp.Optional[np.dtype] = None # for specialized indices requiring a typed labels
+    _DTYPE: tp.Optional[DtypeAny] = None # for specialized indices requiring a typed labels
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
     _NDIM: int = 1
 
     _map: tp.Optional[FrozenAutoMap]
-    _labels: np.ndarray
-    _positions: np.ndarray
+    _labels: NDArrayAny
+    _positions: NDArrayAny
     _recache: bool
     _name: NameType
     _argsort_cache: tp.Optional[_ArgsortCache]
@@ -188,8 +190,8 @@ class Index(IndexBase):
     def _extract_labels(
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
             labels: tp.Iterable[tp.Hashable],
-            dtype: tp.Optional[np.dtype] = None
-            ) -> np.ndarray:
+            dtype: tp.Optional[DtypeAny] = None
+            ) -> NDArrayAny:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -225,7 +227,7 @@ class Index(IndexBase):
     def _extract_positions(
             size: int,
             positions: tp.Optional[tp.Sequence[int]]
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         # positions is either None or an ndarray
         if positions.__class__ is np.ndarray:
             return immutable_filter(positions)
@@ -474,7 +476,7 @@ class Index(IndexBase):
         return mloc(self._labels)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 
@@ -604,14 +606,14 @@ class Index(IndexBase):
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString[np.ndarray]:
+    def via_str(self) -> InterfaceString[NDArrayAny]:
         '''
         Interface for applying string methods to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> NDArrayAny:
             return next(blocks)
 
         return InterfaceString(
@@ -622,14 +624,14 @@ class Index(IndexBase):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+    def via_dt(self) -> InterfaceDatetime[NDArrayAny]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> NDArrayAny:
             return next(blocks)
 
         return InterfaceDatetime(
@@ -640,14 +642,14 @@ class Index(IndexBase):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[np.ndarray]:
+            ) -> InterfaceRe[NDArrayAny]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> NDArrayAny:
             return next(blocks)
 
         return InterfaceRe(
@@ -709,7 +711,7 @@ class Index(IndexBase):
 
     @property
     # @doc_inject(selector='values_1d', class_name='Index')
-    def values(self) -> np.ndarray:
+    def values(self) -> NDArrayAny:
         '''
         {}
         '''
@@ -718,7 +720,7 @@ class Index(IndexBase):
         return self._labels
 
     @property
-    def positions(self) -> np.ndarray:
+    def positions(self) -> NDArrayAny:
         '''Return the immutable positions array.
         '''
         # This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
@@ -741,7 +743,7 @@ class Index(IndexBase):
 
         return self._argsort_cache
 
-    def _index_iloc_map(self: I, other: I) -> np.ndarray:
+    def _index_iloc_map(self: I, other: I) -> NDArrayAny:
         '''
         Return an array of index locations to map from this array to another
 
@@ -788,7 +790,7 @@ class Index(IndexBase):
 
     def values_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Return an NP array for the `depth_level` specified.
         '''
@@ -976,7 +978,7 @@ class Index(IndexBase):
 
     def _ufunc_unary_operator(self,
             operator: UFunc
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''Always return an NP array.
         '''
         if self._recache:
@@ -990,7 +992,7 @@ class Index(IndexBase):
             operator: UFunc,
             other: tp.Any,
             fill_value: object = np.nan,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
@@ -1030,9 +1032,9 @@ class Index(IndexBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
 
         Args:
@@ -1056,9 +1058,9 @@ class Index(IndexBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
 
@@ -1113,7 +1115,7 @@ class Index(IndexBase):
     def unique(self,
             depth_level: DepthLevelSpecifier = 0,
             order_by_occurrence: bool = False,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Return a NumPy array of unique values.
 
@@ -1174,7 +1176,7 @@ class Index(IndexBase):
     def sort(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['Index'], tp.Union[np.ndarray, 'Index']]] = None,
+            key: tp.Optional[tp.Callable[['Index'], tp.Union[NDArrayAny, 'Index']]] = None,
             ) -> 'Index':
         '''Return a new Index with the labels sorted.
 
@@ -1187,7 +1189,7 @@ class Index(IndexBase):
 
         return self._extract_iloc(order) #type: ignore [return-value]
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+    def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
         '''
         Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
         '''
@@ -1211,7 +1213,7 @@ class Index(IndexBase):
     # falsy handling
 
     def _drop_missing(self,
-            func: tp.Callable[[np.ndarray], np.ndarray],
+            func: tp.Callable[[NDArrayAny], NDArrayAny],
             dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
             ) -> 'Index':
         '''
@@ -1240,13 +1242,13 @@ class Index(IndexBase):
                 name=self._name,
                 )
 
-    def dropna(self) -> 'Index':
+    def dropna(self) -> tp.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
         return self._drop_missing(isna_array, DTYPE_NA_KINDS)
 
-    def dropfalsy(self) -> 'Index':
+    def dropfalsy(self) -> tp.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
@@ -1255,7 +1257,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
 
     def _fill_missing(self,
-            func: tp.Callable[[np.ndarray], np.ndarray],
+            func: tp.Callable[[NDArrayAny], NDArrayAny],
             value: tp.Any,
             ) -> 'Index':
         values = self.values # force usage of property for cache update
@@ -1298,7 +1300,7 @@ class Index(IndexBase):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple['Index', np.ndarray]:
+            ) -> tp.Tuple[tp.Self, NDArrayAny]:
         # NOTE: base class defines pubic method
         # force usage of property for cache update
         # sort positions to avoid uncomparable objects
@@ -1393,10 +1395,10 @@ class _IndexGOMixin:
     __slots__ = ()
 
     _map: tp.Optional[AutoMap]
-    _labels: np.ndarray
-    _positions: np.ndarray
+    _labels: NDArrayAny
+    _positions: NDArrayAny
     _labels_mutable: tp.List[tp.Hashable]
-    _labels_mutable_dtype: np.dtype
+    _labels_mutable_dtype: DtypeAny
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
 
@@ -1422,9 +1424,9 @@ class _IndexGOMixin:
     #---------------------------------------------------------------------------
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
-            labels: np.ndarray,
-            dtype: tp.Optional[np.dtype] = None
-            ) -> np.ndarray:
+            labels: NDArrayAny,
+            dtype: tp.Optional[DtypeAny] = None
+            ) -> NDArrayAny:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
@@ -1438,7 +1440,7 @@ class _IndexGOMixin:
     def _extract_positions(self,
             size: int,
             positions: tp.Optional[tp.Sequence[int]]
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
         positions = Index._extract_positions(size, positions)

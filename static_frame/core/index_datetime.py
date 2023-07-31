@@ -41,6 +41,10 @@ from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+
 
 I = tp.TypeVar('I', bound='IndexDatetime')
 
@@ -53,7 +57,7 @@ class IndexDatetime(Index):
     '''
 
     STATIC = True
-    _DTYPE = None # define in derived class
+    _DTYPE: DtypeAny # define in derived class
     __slots__ = ()
 
     # @doc_inject(selector='index_date_time_init')
@@ -88,9 +92,9 @@ class IndexDatetime(Index):
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable[..., tp.Any],
-            other: object,
-            fill_value: object = np.nan,
-            ) -> np.ndarray:
+            other: tp.Any,
+            fill_value: tp.Any = np.nan,
+            ) -> NDArrayAny:
 
         if self._recache:
             self._update_array_cache()
@@ -110,6 +114,7 @@ class IndexDatetime(Index):
         else:
             other_is_array = False
 
+        result: NDArrayAny
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
             result = operator(self._labels.astype(other.dtype), other)
@@ -122,7 +127,7 @@ class IndexDatetime(Index):
         # NOTE: similar branching as in container_util.apply_binary_operator
         # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
         if result is False: # will never be True
-            if not other_is_array and hasattr(other, '__len__') and len(other) == len(self):
+            if not other_is_array and hasattr(other, '__len__') and len(other) == len(self): # type: ignore
                 # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
             elif other_is_array and other.size == 1:
@@ -175,7 +180,7 @@ class IndexDatetime(Index):
             {side_left}
         '''
         # permit variable forms of date specification
-        return Index.iloc_searchsorted(self, #type: ignore [no-any-return]
+        return Index.iloc_searchsorted(self,
                 key_to_datetime_key(values),
                 side_left=side_left,
                 )
@@ -184,7 +189,7 @@ class IndexDatetime(Index):
 #-------------------------------------------------------------------------------
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
-    _DTYPE: tp.Optional[np.dtype]
+    _DTYPE: DtypeAny
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
@@ -259,7 +264,7 @@ class IndexYear(IndexDatetime):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
-        labels = np.arange(
+        labels: NDArrayAny = np.arange(
                 to_datetime64(start, DT64_YEAR),
                 to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'Y'),
@@ -414,7 +419,7 @@ class IndexDate(IndexDatetime):
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
-        labels = np.arange(
+        labels: NDArrayAny = np.arange(
                 to_datetime64(start, DT64_DAY),
                 to_datetime64(stop, DT64_DAY) + TD64_DAY,
                 np.timedelta64(step, 'D'))
@@ -559,7 +564,7 @@ IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 
 
 #-------------------------------------------------------------------------------
-_DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
+_DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index]] = {cls._DTYPE: cls for cls in (
         IndexYear,
         IndexYearMonth,
         IndexDate,
@@ -571,12 +576,12 @@ _DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
         IndexNanosecond
         )}
 
-def dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
+def dtype_to_index_cls(static: bool, dtype: DtypeAny) -> tp.Type[Index]:
     '''
     Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''
 
-    resolved_static = _DTYPE_TO_CLASS.get(dtype)
+    resolved_static: tp.Type[Index] | None = _DTYPE_TO_CLASS.get(dtype)
     if resolved_static is not None:
         if static:
             return resolved_static

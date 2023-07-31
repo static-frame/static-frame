@@ -39,6 +39,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -53,44 +55,44 @@ class IndexBase(ContainerOperand):
 
     _recache: bool
     _name: NameType
-    values: np.ndarray
-    positions: np.ndarray
+    values: NDArrayAny
+    positions: NDArrayAny
     depth: int
 
     loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
-    dtype: np.dtype
+    dtype: DtypeAny
 
-    __pos__: tp.Callable[[], np.ndarray]
-    __neg__: tp.Callable[[], np.ndarray]
-    __abs__: tp.Callable[[], np.ndarray]
-    __invert__: tp.Callable[[], np.ndarray]
+    __pos__: tp.Callable[[], NDArrayAny]
+    __neg__: tp.Callable[[], NDArrayAny]
+    __abs__: tp.Callable[[], NDArrayAny]
+    __invert__: tp.Callable[[], NDArrayAny]
 
-    __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __floordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __mod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    # __divmod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __pow__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __lshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __and__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __xor__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __or__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __lt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __le__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __eq__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __ne__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __gt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __ge__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __radd__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rsub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __add__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __sub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __mul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __matmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __truediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __floordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __mod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    # __divmod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __pow__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __lshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __and__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __xor__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __or__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __lt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __le__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __eq__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __ne__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __gt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __ge__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __radd__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rsub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
     # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
@@ -171,7 +173,7 @@ class IndexBase(ContainerOperand):
 
     def values_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -201,7 +203,7 @@ class IndexBase(ContainerOperand):
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+    def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     def roll(self: I, shift: int) -> I:
@@ -214,7 +216,7 @@ class IndexBase(ContainerOperand):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[I, np.ndarray]:
+            ) -> tp.Tuple[I, NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def level_add(self,
@@ -435,17 +437,17 @@ class IndexBase(ContainerOperand):
     # via interfaces
 
     @property
-    def via_str(self) -> InterfaceString[np.ndarray]:
+    def via_str(self) -> InterfaceString[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+    def via_dt(self) -> InterfaceDatetime[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[np.ndarray]:
+            ) -> InterfaceRe[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------

@@ -76,7 +76,7 @@ def join(frame: 'Frame',
 
     is_many = False # one to many or many to many
 
-    map_iloc = {}
+    map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
     seen = set() # this stores
 
     # NOTE: this could be optimized by always iterating over the shorter target
@@ -167,17 +167,17 @@ def join(frame: 'Frame',
 
     #-----------------------------------------------------------------------
     # construct final frame
-
+    final: FrameGO
     if not is_many:
         final = FrameGO(index=final_index)
-        left_columns = (left_template.format(c) for c in frame.columns)
-        final.extend(frame.relabel(columns=left_columns), fill_value=fill_value)
+        left_column_labels = (left_template.format(c) for c in frame.columns)
+        final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
         # build up a Series for each new column
         for idx_col, col in enumerate(other.columns):
             values = []
             for loc in final_index:
                 # what if loc is in both left and rihgt?
-                if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
+                if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc: # type: ignore
                     iloc = map_iloc[left_index._loc_to_iloc(loc)] #type: ignore
                     assert len(iloc) == 1 # not is_many, so all have to be length 1
                     values.append(other._extract_iloc((iloc[0], idx_col)))
@@ -189,7 +189,7 @@ def join(frame: 'Frame',
 
         if include_index:
             return final.to_frame()
-        return final.to_frame().relabel(IndexAutoFactory) # type: ignore
+        return final.to_frame().relabel(IndexAutoFactory)
 
     # From here, is_many is True
     row_key = []
@@ -205,11 +205,11 @@ def join(frame: 'Frame',
 
     # extract potentially repeated rows
     tb = frame._blocks._extract(row_key=row_key)
-    left_columns = (left_template.format(c) for c in frame.columns)
+    left_column_labels = (left_template.format(c) for c in frame.columns)
 
     final = FrameGO(tb,
             index=Index(final_index_left),
-            columns=left_columns,
+            columns=left_column_labels,
             own_data=True)
 
     # only do this if we have PairRight above
@@ -242,7 +242,7 @@ def join(frame: 'Frame',
 
     if include_index:
         return final.to_frame()
-    return final.to_frame().relabel(IndexAutoFactory) # type: ignore
+    return final.to_frame().relabel(IndexAutoFactory)
 
 
 
