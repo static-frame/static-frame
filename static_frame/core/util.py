@@ -47,6 +47,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -126,7 +129,7 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         'D', 'h', 'm', 's', 'ms', 'us',
         ))
 
-def is_objectable_dt64(array: np.ndarray) -> bool:
+def is_objectable_dt64(array: NDArrayAny) -> bool:
     if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
         return False
     years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
@@ -175,17 +178,17 @@ EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 EMPTY_TUPLE: tp.Tuple[()] = ()
 
 # defaults to float64
-EMPTY_ARRAY: np.ndarray = np.array((), dtype=None)
+EMPTY_ARRAY: NDArrayAny = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
-EMPTY_ARRAY_BOOL: np.ndarray = np.array((), dtype=DTYPE_BOOL)
+EMPTY_ARRAY_BOOL: NDArrayAny = np.array((), dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT: np.ndarray = np.array((), dtype=DTYPE_INT_DEFAULT)
+EMPTY_ARRAY_INT: NDArrayAny = np.array((), dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 
-UNIT_ARRAY_INT: np.ndarray = np.array((0,), dtype=DTYPE_INT_DEFAULT)
+UNIT_ARRAY_INT: NDArrayAny = np.array((0,), dtype=DTYPE_INT_DEFAULT)
 UNIT_ARRAY_INT.flags.writeable = False
 
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
@@ -288,12 +291,11 @@ Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
 ShapeType = tp.Union[int, tp.Tuple[int, int]]
-OptionalArrayList = tp.Optional[tp.List[np.ndarray]]
 
 # mloc, shape, and strides
 ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
 
-def array_signature(value: np.ndarray) -> ArraySignature:
+def array_signature(value: NDArrayAny) -> ArraySignature:
     return mloc(value), value.shape, value.strides
 
 def is_mapping(value: tp.Any) -> bool:
@@ -568,7 +570,7 @@ def ufunc_to_category(func: UFunc) -> tp.Optional[UFuncCategory]:
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
-def ufunc_dtype_to_dtype(func: UFunc, dtype: np.dtype) -> tp.Optional[np.dtype]:
+def ufunc_dtype_to_dtype(func: UFunc, dtype: DtypeAny) -> tp.Optional[DtypeAny]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''
     rt = ufunc_to_category(func)
@@ -683,7 +685,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tuple):
+class Pair(tuple[int, int]):
     pass
 
 
@@ -831,7 +833,7 @@ def gen_skip_middle(
 
 def dtype_from_element(
         value: tp.Any,
-        ) -> np.dtype:
+        ) -> DtypeAny:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
@@ -917,9 +919,9 @@ def dtype_from_element(
 #     return dt_resolve
 
 def concat_resolved(
-        arrays: tp.Sequence[np.ndarray],
+        arrays: tp.Sequence[NDArrayAny],
         axis: int = 0,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Concatenation of 1D or 2D arrays that uses resolved dtypes to avoid truncation. Both axis are supported.
 
@@ -951,16 +953,16 @@ def concat_resolved(
                 dt_resolve = resolve_dtype(array.dtype, dt_resolve)
             shape[axis] += array.shape[axis]
 
-    out: np.ndarray = np.empty(shape=shape, dtype=dt_resolve)
+    out: NDArrayAny = np.empty(shape=shape, dtype=dt_resolve)
     np.concatenate(arrays, out=out, axis=axis)
     out.flags.writeable = False
     return out
 
 def blocks_to_array_2d(
-        blocks: tp.Iterator[np.ndarray],
+        blocks: tp.Iterator[NDArrayAny],
         shape: tp.Optional[tp.Tuple[int, int]] = None,
-        dtype: tp.Optional[np.dtype] = None,
-        ) -> np.ndarray:
+        dtype: tp.Optional[DtypeAny] = None,
+        ) -> NDArrayAny:
     '''
     Given an iterable of blocks, return a consolidatd array. This is assumed to be an axis 1 style concatenation.
     This is equivalent but more efficient than:
@@ -1011,7 +1013,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: np.ndarray = np.empty(shape, dtype=dtype)
+    array: NDArrayAny = np.empty(shape, dtype=dtype)
     pos = 0
     for b in blocks_post: #type: ignore
         if b.ndim == 1:
@@ -1026,11 +1028,11 @@ def blocks_to_array_2d(
     return array
 
 def full_for_fill(
-        dtype: tp.Optional[np.dtype],
+        dtype: tp.Optional[DtypeAny],
         shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object,
         resolve_fill_value_dtype: bool = True,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Return a "full" NP array for the given fill_value
     Args:
@@ -1049,7 +1051,7 @@ def full_for_fill(
         return np.full(shape, fill_value, dtype=dtype_final)
 
     # for tuples and other objects, better to create and fill
-    array: np.ndarray = np.empty(shape, dtype=DTYPE_OBJECT)
+    array: NDArrayAny = np.empty(shape, dtype=DTYPE_OBJECT)
 
     if fill_value is None:
         return array # None is already set for empty object arrays
@@ -1101,13 +1103,13 @@ def dtype_kind_to_na(kind: str) -> tp.Any:
     return None
 
 def array_ufunc_axis_skipna(
-        array: np.ndarray,
+        array: NDArrayAny,
         *,
         skipna: bool,
         axis: int,
         ufunc: UFunc,
         ufunc_skipna: UFunc,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
@@ -1150,7 +1152,7 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np.ndarray:
+def argsort_array(array: NDArrayAny, kind: str = DEFAULT_STABLE_SORT_KIND) -> NDArrayAny:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:
@@ -1169,7 +1171,7 @@ def argsort_array(array: np.ndarray, kind: str = DEFAULT_STABLE_SORT_KIND) -> np
 
     return array.argsort(kind=kind)
 
-def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
+def ufunc_unique1d(array: NDArrayAny) -> NDArrayAny:
     '''
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
     '''
@@ -1196,8 +1198,8 @@ def ufunc_unique1d(array: np.ndarray) -> np.ndarray:
     array.flags.writeable = False
     return array
 
-def ufunc_unique1d_indexer(array: np.ndarray,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+def ufunc_unique1d_indexer(array: NDArrayAny,
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
     '''
@@ -1221,8 +1223,8 @@ def ufunc_unique1d_indexer(array: np.ndarray,
 
     return values, indexer
 
-def ufunc_unique1d_positions(array: np.ndarray,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+def ufunc_unique1d_positions(array: NDArrayAny,
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
     '''
@@ -1240,8 +1242,8 @@ def ufunc_unique1d_positions(array: np.ndarray,
 
     return positions[mask], indexer
 
-def ufunc_unique1d_counts(array: np.ndarray,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+def ufunc_unique1d_counts(array: NDArrayAny,
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
     '''
@@ -1278,11 +1280,11 @@ def ufunc_unique1d_counts(array: np.ndarray,
     return array[mask], np.diff(index_of_last_occurrence)
 
 def ufunc_unique_enumerated(
-        array: np.ndarray,
+        array: NDArrayAny,
         *,
         retain_order: bool = False,
         func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     # see doc_str.unique_enumerated
 
     is_2d = array.ndim == 2
@@ -1326,7 +1328,7 @@ def ufunc_unique_enumerated(
 
     return indexer, uniques
 
-def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
+def view_2d_as_1d(array: NDArrayAny) -> NDArrayAny:
     '''Given a 2D array, reshape it as a consolidated 1D arrays
     '''
     assert array.ndim == 2
@@ -1336,9 +1338,9 @@ def view_2d_as_1d(array: np.ndarray) -> np.ndarray:
     dtype = [(f'f{i}', array.dtype) for i in range(array.shape[1])]
     return array.view(dtype)[NULL_SLICE, 0]
 
-def ufunc_unique2d(array: np.ndarray,
+def ufunc_unique2d(array: NDArrayAny,
         axis: int = 0,
-    ) -> np.ndarray:
+    ) -> NDArrayAny:
     '''
     Optimized from NumPy implementation.
     '''
@@ -1365,9 +1367,9 @@ def ufunc_unique2d(array: np.ndarray,
         return values.T
     return values
 
-def ufunc_unique2d_indexer(array: np.ndarray,
+def ufunc_unique2d_indexer(array: NDArrayAny,
         axis: int = 0,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''
     Find the unique elements of an array and provide an indexer that shows their locations in the original.
     '''
@@ -1390,10 +1392,10 @@ def ufunc_unique2d_indexer(array: np.ndarray,
     return values, indexer
 
 def ufunc_unique(
-        array: np.ndarray,
+        array: NDArrayAny,
         *,
         axis: tp.Optional[int] = None,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a heterogenous object type.
 
@@ -1406,9 +1408,9 @@ def ufunc_unique(
         return ufunc_unique1d(array)
     return ufunc_unique2d(array, axis=axis)
 
-def roll_1d(array: np.ndarray,
+def roll_1d(array: NDArrayAny,
             shift: int
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
     '''
     Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
     '''
@@ -1421,19 +1423,19 @@ def roll_1d(array: np.ndarray,
     if shift == 0:
         return array.copy()
 
-    post: np.ndarray = np.empty(size, dtype=array.dtype)
+    post: NDArrayAny = np.empty(size, dtype=array.dtype)
     post[0:shift] = array[-shift:]
     post[shift:] = array[0:-shift]
     return post
 
-def roll_2d(array: np.ndarray,
+def roll_2d(array: NDArrayAny,
             shift: int,
             axis: int
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
     '''
     Specialized form of np.roll that, by focusing on the 2D solution
     '''
-    post: np.ndarray = np.empty(array.shape, dtype=array.dtype)
+    post: NDArrayAny = np.empty(array.shape, dtype=array.dtype)
 
     if axis == 0: # roll rows
         size = array.shape[0]
@@ -1468,7 +1470,7 @@ def roll_2d(array: np.ndarray,
 #-------------------------------------------------------------------------------
 
 def _argminmax_1d(
-        array: np.ndarray,
+        array: NDArrayAny,
         ufunc: UFunc,
         ufunc_skipna: UFunc,
         skipna: bool = True,
@@ -1494,12 +1496,12 @@ argmin_1d = partial(_argminmax_1d, ufunc=np.argmin, ufunc_skipna=np.nanargmin)
 argmax_1d = partial(_argminmax_1d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
 
 def _argminmax_2d(
-        array: np.ndarray,
+        array: NDArrayAny,
         ufunc: UFunc,
         ufunc_skipna: UFunc,
         skipna: bool = True,
         axis: int = 0
-        ) -> np.ndarray: # int or float array
+        ) -> NDArrayAny: # int or float array
     '''
     Perform argmin or argmax, handling NaN as needed.
     '''
@@ -1620,7 +1622,7 @@ def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
         dtype: DtypeSpecifier = None,
         count: tp.Optional[int] = None,
-        ) -> tp.Tuple[np.ndarray, bool]:
+        ) -> tp.Tuple[NDArrayAny, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
 
@@ -1721,7 +1723,7 @@ def iterable_to_array_1d(
 
 def iterable_to_array_2d(
         values: tp.Iterable[tp.Iterable[tp.Any]],
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Convert an arbitrary Python iterable of iterables to a 2D NumPy array without any undesirable type coercion. Useful IndexHierarchy construction.
 
@@ -1746,7 +1748,7 @@ def iterable_to_array_2d(
             restrict_copy=True
             )
 
-    array: np.ndarray = np.array(values, dtype=dtype)
+    array: NDArrayAny = np.array(values, dtype=dtype)
     if array.ndim != 2:
         raise RuntimeError('failed to convert iterable to 2d array')
 
@@ -1755,7 +1757,7 @@ def iterable_to_array_2d(
 
 def iterable_to_array_nd(
         values: tp.Any,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Attempt to determine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
     '''
@@ -1888,7 +1890,7 @@ DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
-        dtype: tp.Optional[np.dtype] = None
+        dtype: tp.Optional[DtypeAny] = None
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
@@ -1933,7 +1935,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(operator.add,
         (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
-def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
+def datetime64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
     '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
     '''
     array_is_dt64 = array.dtype.kind == DTYPE_DATETIME_KIND
@@ -1943,7 +1945,7 @@ def datetime64_not_aligned(array: np.ndarray, other: np.ndarray) -> bool:
     return False
 
 def _slice_to_datetime_slice_args(key: slice,
-        dtype: tp.Optional[np.dtype] = None
+        dtype: tp.Optional[DtypeAny] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
@@ -2004,9 +2006,9 @@ def key_to_datetime_key(
 #-------------------------------------------------------------------------------
 
 def array_to_groups_and_locations(
-        array: np.ndarray,
+        array: NDArrayAny,
         unique_axis: int = 0,
-        ) -> tp.Tuple[np.ndarray, np.ndarray]:
+        ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''Locations are index positions for each group.
     Args:
         unique_axis: only used if ndim > 1
@@ -2028,9 +2030,9 @@ def array_to_groups_and_locations(
 #         pass
 #     return value is None
 
-def isna_array(array: np.ndarray,
+def isna_array(array: NDArrayAny,
         include_none: bool = True,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''Given an np.ndarray, return a Boolean array setting True for missing values.
 
     Note: the returned array is not made immutable.
@@ -2038,9 +2040,9 @@ def isna_array(array: np.ndarray,
     kind = array.dtype.kind
     # matches all floating point types
     if kind in DTYPE_INEXACT_KINDS:
-        return np.isnan(array) # type: ignore
+        return np.isnan(array)
     elif kind in DTYPE_NAT_KINDS:
-        return np.isnat(array) # type: ignore
+        return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != DTYPE_OBJECT_KIND:
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
@@ -2061,7 +2063,7 @@ def isna_array(array: np.ndarray,
             count=len(array),
             )
 
-def isfalsy_array(array: np.ndarray) -> np.ndarray:
+def isfalsy_array(array: NDArrayAny) -> NDArrayAny:
     '''
     Return a Boolean array indicating the presence of Falsy or NA values.
 
@@ -2074,7 +2076,7 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
     if kind in DTYPE_INEXACT_KINDS:
         return np.isnan(array) | (array == 0.0) # type: ignore
     elif kind == DTYPE_DATETIME_KIND:
-        return np.isnat(array) # type: ignore
+        return np.isnat(array)
     elif kind == DTYPE_TIMEDELTA_KIND:
         return np.isnat(array) | (array == EMPTY_TIMEDELTA) # type: ignore
     elif kind == DTYPE_BOOL_KIND:
@@ -2087,14 +2089,14 @@ def isfalsy_array(array: np.ndarray) -> np.ndarray:
         return np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     # NOTE: an ArrayKit implementation might out performthis
-    post: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
+    post: NDArrayAny = np.empty(array.shape, dtype=DTYPE_BOOL)
     for coord, v in np.ndenumerate(array):
         post[coord] = not bool(v)
     # or with NaN observations
     return post | np.not_equal(array, array) # type: ignore
 
-def arrays_equal(array: np.ndarray,
-        other: np.ndarray,
+def arrays_equal(array: NDArrayAny,
+        other: NDArrayAny,
         *,
         skipna: bool,
         ) -> bool:
@@ -2133,9 +2135,9 @@ def arrays_equal(array: np.ndarray,
     return True
 
 def binary_transition(
-        array: np.ndarray,
+        array: NDArrayAny,
         axis: int = 0
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Given a Boolean 1D array, return the index positions (integers) at False values where that False was previously True, or will be True
 
@@ -2186,7 +2188,7 @@ def binary_transition(
                 indices_by_axis[y].append(x)
 
         # if axis is 0, return column width, else return row height
-        post: np.ndarray = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
+        post: NDArrayAny = np.empty(dtype=DTYPE_OBJECT, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
             post[k] = v
         return post
@@ -2222,10 +2224,10 @@ def binary_transition(
 # tools for handling duplicates
 
 def _array_to_duplicated_hashable(
-        array: np.ndarray,
+        array: NDArrayAny,
         axis: int = 0,
         exclude_first: bool = False,
-        exclude_last: bool = False) -> np.ndarray:
+        exclude_last: bool = False) -> NDArrayAny:
     '''
     Algorithm for finding duplicates in unsortable arrays for hashables. This will always be an object array.
     '''
@@ -2245,7 +2247,7 @@ def _array_to_duplicated_hashable(
         to_hashable = tuple
 
 
-    is_dupe: np.ndarray = np.full(len_axis, False)
+    is_dupe: NDArrayAny = np.full(len_axis, False)
 
     # could exit early with a set, but would have to hash all array twice to go to set and dictionary
     # creating a list for each entry and tracking indices would be very expensive
@@ -2280,10 +2282,10 @@ def _array_to_duplicated_hashable(
     return is_dupe
 
 def _array_to_duplicated_sortable(
-        array: np.ndarray,
+        array: NDArrayAny,
         axis: int = 0,
         exclude_first: bool = False,
-        exclude_last: bool = False) -> np.ndarray:
+        exclude_last: bool = False) -> NDArrayAny:
     '''
     Algorithm for finding duplicates in sortable arrays. This may or may not be an object array, as some object arrays (those of compatible types) are sortable.
     '''
@@ -2327,7 +2329,7 @@ def _array_to_duplicated_sortable(
     # Index 0 should always exist, due to `.any()` behavior.
     f_flags[0] = np.False_
 
-    dupes: np.ndarray
+    dupes: NDArrayAny
     if exclude_first and not exclude_last:
         dupes = f_flags
     else:
@@ -2348,11 +2350,11 @@ def _array_to_duplicated_sortable(
     return dupes[r_idx]
 
 def array_to_duplicated(
-        array: np.ndarray,
+        array: NDArrayAny,
         axis: int = 0,
         exclude_first: bool = False,
         exclude_last: bool = False,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:
@@ -2377,11 +2379,11 @@ def array_to_duplicated(
 #-------------------------------------------------------------------------------
 
 def array_shift(*,
-        array: np.ndarray,
+        array: NDArrayAny,
         shift: int,
         axis: int, # 0 is rows, 1 is columns
         wrap: bool,
-        fill_value: tp.Any = np.nan) -> np.ndarray:
+        fill_value: tp.Any = np.nan) -> NDArrayAny:
     '''
     Apply an np-style roll to a 1D or 2D array; if wrap is False, fill values out-shifted values with fill_value.
 
@@ -2424,17 +2426,17 @@ def array_shift(*,
 
     return result
 
-def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+def array2d_to_tuples(array: NDArrayAny) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     yield from map(tuple, array)
 
-def array2d_to_array1d(array: np.ndarray) -> np.ndarray:
-    post: np.ndarray = np.empty(array.shape[0], dtype=object)
+def array2d_to_array1d(array: NDArrayAny) -> NDArrayAny:
+    post: NDArrayAny = np.empty(array.shape[0], dtype=object)
     for i, row in enumerate(array):
         post[i] = tuple(row)
     post.flags.writeable = False
     return post
 
-def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
+def array1d_to_last_contiguous_to_edge(array: NDArrayAny) -> int:
     '''
     Given a Boolean array, return the start index where of the last range, through to the end, of contiguous True values.
     '''
@@ -2467,12 +2469,12 @@ class ManyToOneType(Enum):
 
 
 def _ufunc_set_1d(
-        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
-        array: np.ndarray,
-        other: np.ndarray,
+        func: tp.Callable[[NDArrayAny, NDArrayAny], NDArrayAny],
+        array: NDArrayAny,
+        other: NDArrayAny,
         *,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Peform 1D set operations. When possible, short-circuit comparison and return array with original order.
 
@@ -2496,7 +2498,7 @@ def _ufunc_set_1d(
         raise NotImplementedError('unexpected func', func)
 
     dtype = resolve_dtype(array.dtype, other.dtype)
-    post: np.ndarray
+    post: NDArrayAny
 
     # optimizations for empty arrays
     if is_intersection:
@@ -2580,12 +2582,12 @@ def _ufunc_set_1d(
     return post
 
 def _ufunc_set_2d(
-        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
-        array: np.ndarray,
-        other: np.ndarray,
+        func: tp.Callable[[NDArrayAny, NDArrayAny], NDArrayAny],
+        array: NDArrayAny,
+        other: NDArrayAny,
         *,
         assume_unique: bool=False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Peform 2D set operations. When possible, short-circuit comparison and return array with original order.
 
@@ -2614,7 +2616,7 @@ def _ufunc_set_2d(
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
-    post: np.ndarray
+    post: NDArrayAny
 
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
@@ -2733,10 +2735,10 @@ def _ufunc_set_2d(
     post.flags.writeable = False
     return post
 
-def union1d(array: np.ndarray,
-        other: np.ndarray,
+def union1d(array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Union on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
@@ -2746,10 +2748,10 @@ def union1d(array: np.ndarray,
             assume_unique=assume_unique)
 
 def intersect1d(
-        array: np.ndarray,
-        other: np.ndarray,
+        array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Intersect on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
@@ -2759,10 +2761,10 @@ def intersect1d(
             assume_unique=assume_unique)
 
 def setdiff1d(
-        array: np.ndarray,
-        other: np.ndarray,
+        array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Difference on 1D array, handling diverse types and short-circuiting to preserve order where appropriate
     '''
@@ -2772,10 +2774,10 @@ def setdiff1d(
         assume_unique=assume_unique)
 
 def union2d(
-        array: np.ndarray,
-        other: np.ndarray,
+        array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Union on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
@@ -2785,10 +2787,10 @@ def union2d(
             assume_unique=assume_unique)
 
 def intersect2d(
-        array: np.ndarray,
-        other: np.ndarray,
+        array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Intersect on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
@@ -2798,10 +2800,10 @@ def intersect2d(
             assume_unique=assume_unique)
 
 def setdiff2d(
-        array: np.ndarray,
-        other: np.ndarray,
+        array: NDArrayAny,
+        other: NDArrayAny,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Difference on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
@@ -2820,10 +2822,10 @@ MANY_TO_ONE_MAP = {
         }
 
 def ufunc_set_iter(
-        arrays: tp.Iterable[np.ndarray],
+        arrays: tp.Iterable[NDArrayAny],
         many_to_one_type: ManyToOneType,
         assume_unique: bool = False
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Iteratively apply a set operation ufunc to 1D or 2D arrays; if all are equal, no operation is performed and order is retained.
 
@@ -2864,9 +2866,9 @@ def ufunc_set_iter(
     return result
 
 def _isin_1d(
-        array: np.ndarray,
+        array: NDArrayAny,
         other: tp.FrozenSet[tp.Any]
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Iterate over an 1D array to build a 1D Boolean ndarray representing whether or not the original element is in the set
 
@@ -2874,7 +2876,7 @@ def _isin_1d(
         array: The source array
         other: The set of elements being looked for
     '''
-    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
+    result: NDArrayAny = np.empty(array.shape, dtype=DTYPE_BOOL)
 
     for i, element in enumerate(array):
         result[i] = element in other
@@ -2883,9 +2885,9 @@ def _isin_1d(
     return result
 
 def _isin_2d(
-        array: np.ndarray,
+        array: NDArrayAny,
         other: tp.FrozenSet[tp.Any]
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Iterate over an 2D array to build a 2D, immutable, Boolean ndarray representing whether or not the original element is in the set
 
@@ -2893,7 +2895,7 @@ def _isin_2d(
         array: The source array
         other: The set of elements being looked for
     '''
-    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
+    result: NDArrayAny = np.empty(array.shape, dtype=DTYPE_BOOL)
 
     for (i, j), v in np.ndenumerate(array):
         result[i, j] = v in other
@@ -2902,11 +2904,11 @@ def _isin_2d(
     return result
 
 def isin_array(*,
-        array: np.ndarray,
+        array: NDArrayAny,
         array_is_unique: bool,
-        other: np.ndarray,
+        other: NDArrayAny,
         other_is_unique: bool,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''Core isin processing after other has been converted to an array.
     '''
     func: UFunc
@@ -2921,7 +2923,7 @@ def isin_array(*,
     assume_unique = array_is_unique and other_is_unique
     func = np.in1d if array.ndim == 1 else np.isin
 
-    result: np.ndarray
+    result: NDArrayAny
     with WarningsSilent():
         # FutureWarning: elementwise comparison failed;
         result = func(array, other, assume_unique=assume_unique)
@@ -2930,10 +2932,10 @@ def isin_array(*,
     return result
 
 def isin(
-        array: np.ndarray,
+        array: NDArrayAny,
         other: tp.Iterable[tp.Any],
         array_is_unique: bool = False,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Builds a same-size, immutable, Boolean ndarray representing whether or not the original element is in another ndarray
 
@@ -2946,7 +2948,7 @@ def isin(
         array_is_unique: if array is known to be unique
     '''
     if hasattr(other, '__len__') and len(other) == 0: #type: ignore
-        result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        result: NDArrayAny = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
 
@@ -2961,11 +2963,11 @@ def isin(
 #-------------------------------------------------------------------------------
 
 def _ufunc_logical_skipna(
-        array: np.ndarray,
+        array: NDArrayAny,
         ufunc: AnyCallable,
         skipna: bool,
         axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     '''
     Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
@@ -3024,9 +3026,9 @@ def _ufunc_logical_skipna(
         return True
     return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
 
-def ufunc_all(array: np.ndarray,
+def ufunc_all(array: NDArrayAny,
         axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.all,
@@ -3036,9 +3038,9 @@ def ufunc_all(array: np.ndarray,
 
 ufunc_all.__doc__ = np.all.__doc__
 
-def ufunc_any(array: np.ndarray,
+def ufunc_any(array: NDArrayAny,
         axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.any,
@@ -3048,9 +3050,9 @@ def ufunc_any(array: np.ndarray,
 
 ufunc_any.__doc__ = np.any.__doc__
 
-def ufunc_nanall(array: np.ndarray,
+def ufunc_nanall(array: NDArrayAny,
         axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.all,
@@ -3058,9 +3060,9 @@ def ufunc_nanall(array: np.ndarray,
             axis=axis,
             out=out)
 
-def ufunc_nanany(array: np.ndarray,
+def ufunc_nanany(array: NDArrayAny,
         axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
+        out: tp.Optional[NDArrayAny] = None
         ) -> tp.Any:
     return _ufunc_logical_skipna(array,
             ufunc=np.any,
@@ -3071,14 +3073,14 @@ def ufunc_nanany(array: np.ndarray,
 #-------------------------------------------------------------------------------
 
 def array_from_element_attr(*,
-        array: np.ndarray,
+        array: NDArrayAny,
         attr_name: str,
-        dtype: np.dtype
-        ) -> np.ndarray:
+        dtype: DtypeAny
+        ) -> NDArrayAny:
     '''
     Handle element-wise attribute acesss on arrays of Python date/datetime objects.
     '''
-    post: np.ndarray
+    post: NDArrayAny
     if array.ndim == 1:
         post = np.fromiter(
                 (getattr(d, attr_name) for d in array),
@@ -3094,14 +3096,14 @@ def array_from_element_attr(*,
     return post
 
 def array_from_element_apply(
-        array: np.ndarray,
+        array: NDArrayAny,
         func: AnyCallable,
-        dtype: np.dtype
-        ) -> np.ndarray:
+        dtype: DtypeAny
+        ) -> NDArrayAny:
     '''
     Handle element-wise function application.
     '''
-    post: np.ndarray
+    post: NDArrayAny
     if (array.ndim == 1 and dtype != DTYPE_OBJECT
             and dtype.kind not in DTYPE_STR_KINDS):
         post = np.fromiter(
@@ -3120,12 +3122,12 @@ def array_from_element_apply(
     return post
 
 def array_from_element_method(*,
-        array: np.ndarray,
+        array: NDArrayAny,
         method_name: str,
         args: tp.Tuple[tp.Any, ...],
-        dtype: np.dtype,
+        dtype: DtypeAny,
         pre_insert: tp.Optional[AnyCallable] = None,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.
 
@@ -3142,7 +3144,7 @@ def array_from_element_method(*,
     else:
         cls_element = None
 
-    post: np.ndarray
+    post: NDArrayAny
 
     if dtype == DTYPE_STR:
         # if destination is a string, must build into a list first, then construct array to determine dtype size
@@ -3236,13 +3238,13 @@ class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
     _size: int = 1024 # 1048576
-    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
+    _array: NDArrayAny = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
     # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
 
     @classmethod
-    def get(cls, size: int) -> np.ndarray:
+    def get(cls, size: int) -> NDArrayAny:
         if size == 1:
             return UNIT_ARRAY_INT
 
@@ -3255,11 +3257,11 @@ class PositionsAllocator:
 
 
 def array_sample(
-        array: np.ndarray,
+        array: NDArrayAny,
         count: int,
         seed: tp.Optional[int] = None,
         sort: bool = False,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Given an array 1D or 2D array, randomly sample ``count`` components of that array. Sampling is always done "without replacment", meaning that the resulting array will never have duplicates. For 2D array, selection happens along axis 0.
     '''
@@ -3280,7 +3282,7 @@ def array_sample(
     post.flags.writeable = False
     return post
 
-def run_length_1d(array: np.ndarray) -> tp.Tuple[np.ndarray, np.ndarray]:
+def run_length_1d(array: NDArrayAny) -> tp.Tuple[NDArrayAny, NDArrayAny]:
     '''Given an array of values, discover contiguous values and their length.
 
     Return:
@@ -3588,7 +3590,7 @@ def file_like_manager(
 # trivial, non NP util
 
 def get_tuple_constructor(
-        fields: np.ndarray,
+        fields: NDArrayAny,
         ) -> TupleConstructorType:
     '''
     Given fields, try to create a Namedtuple and return the `_make` method

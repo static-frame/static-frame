@@ -199,7 +199,7 @@ def get_col_dtype_factory(
 def get_col_fill_value_factory(
         fill_value: tp.Any,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int, np.dtype], tp.Any]:
+        ) -> tp.Callable[[int, DtypeAny], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
@@ -232,7 +232,7 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[DtypeAny]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
@@ -336,7 +336,7 @@ def pandas_to_numpy(
         container: tp.Union['pd.Index', 'pd.Series', 'pd.DataFrame'],
         own_data: bool,
         fill_value: tp.Any = np.nan
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''Convert Pandas container to a numpy array in pandas 1.0, where we might have Pandas extension dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
 
     If coming from a Pandas extension type, will convert pd.NA to `fill_value` in the resulting object array. For object dtypes, pd.NA may pass on into SF; the only way to find them is an expensive iteration and `is` comparison, which we are not sure we want to do at this time.
@@ -416,10 +416,10 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
         pdvu1: bool,
         own_data: bool,
-        ) -> tp.Iterator[np.ndarray]:
+        ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a slice of a DataFrame, extract an array and optionally convert dtypes. If dtypes are provided, they are read with iloc positions given by `columns_ilocs`.
     '''
@@ -503,7 +503,7 @@ def constructor_from_optional_constructor(
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
-            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
             ) -> 'IndexBase':
         return index_from_optional_constructor(value,
                 default_constructor=default_constructor,
@@ -512,7 +512,7 @@ def constructor_from_optional_constructor(
     return func
 
 def index_from_optional_constructors(
-        value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+        value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -557,13 +557,13 @@ def constructor_from_optional_constructors(
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
         ) -> tp.Callable[
-                [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
+                [tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]]],
                 tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
-            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
             ) -> tp.Optional['IndexBase']:
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
@@ -595,8 +595,8 @@ def index_constructor_empty(
 
 #---------------------------------------------------------------------------
 def matmul(
-        lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
-        rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
+        lhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
+        rhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
         ) -> tp.Any: #tp.Union['Series', 'Frame']:
     '''
     Implementation of matrix multiplication for Series and Frame
@@ -786,7 +786,7 @@ def axis_window_items( *,
         raise RuntimeError('window step cannot be less than than 0')
 
     source_ndim = source.ndim
-    values: tp.Optional[np.ndarray] = None
+    values: tp.Optional[NDArrayAny] = None
 
     if source_ndim == 1:
         assert isinstance(source, Series) # for mypy
@@ -867,8 +867,8 @@ def axis_window_items( *,
 
 def get_block_match(
         width: int,
-        values_source: tp.List[np.ndarray],
-        ) -> tp.Iterator[np.ndarray]:
+        values_source: tp.List[NDArrayAny],
+        ) -> tp.Iterator[NDArrayAny]:
     '''Utility method for assignment. Draw from values to provide as many columns as specified by width. Use `values_source` as a stack to draw and replace values.
     '''
     # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
@@ -905,7 +905,7 @@ def get_block_match(
 def bloc_key_normalize(
         key: Bloc2DKeyType,
         container: 'Frame'
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Normalize and validate a bloc key. Return a same sized Boolean array.
     '''
@@ -973,7 +973,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        ) -> tp.Tuple['TypeBlocks', np.ndarray]:
+        ) -> tp.Tuple['TypeBlocks', NDArrayAny]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
@@ -1015,7 +1015,7 @@ def rehierarch_from_index_hierarchy(*,
         depth_map: tp.Sequence[int],
         index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
-        ) -> tp.Tuple['IndexBase', np.ndarray]:
+        ) -> tp.Tuple['IndexBase', NDArrayAny]:
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
     '''
@@ -1042,9 +1042,9 @@ def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
         row_count: int,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Return a single array given keys and collections.
 
@@ -1084,11 +1084,11 @@ def array_from_value_iter(
 # utilities for binary operator applications with type blocks
 
 def apply_binary_operator(*,
-        values: np.ndarray,
+        values: NDArrayAny,
         other: tp.Any,
         other_is_array: bool,
         operator: UFunc,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Utility to handle binary operator application.
     '''
@@ -1127,11 +1127,11 @@ def apply_binary_operator(*,
     return result
 
 def apply_binary_operator_blocks(*,
-        values: tp.Iterable[np.ndarray],
-        other: tp.Iterable[np.ndarray],
+        values: tp.Iterable[NDArrayAny],
+        other: tp.Iterable[NDArrayAny],
         operator: UFunc,
         apply_column_2d_filter: bool,
-    ) -> tp.Iterator[np.ndarray]:
+    ) -> tp.Iterator[NDArrayAny]:
     '''
     Application from iterators of arrays, to iterators of arrays.
     '''
@@ -1148,10 +1148,10 @@ def apply_binary_operator_blocks(*,
                 )
 
 def apply_binary_operator_blocks_columnar(*,
-        values: tp.Iterable[np.ndarray],
-        other: np.ndarray,
+        values: tp.Iterable[NDArrayAny],
+        other: NDArrayAny,
         operator: UFunc,
-    ) -> tp.Iterator[np.ndarray]:
+    ) -> tp.Iterator[NDArrayAny]:
     '''
     Application from iterators of arrays, to iterators of arrays. Will return iterator of all 1D arrays, as we will break down larger blocks in values into 1D arrays.
 
@@ -1182,7 +1182,7 @@ def arrays_from_index_frame(
         container: 'Frame',
         depth_level: tp.Optional[DepthLevelSpecifier],
         columns: GetItemKeyType
-        ) -> tp.Iterator[np.ndarray]:
+        ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
     '''
@@ -1243,7 +1243,7 @@ def group_from_container(
         group_source: tp.Any,
         fill_value: tp.Any,
         axis: int,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Unpack group_source values from another Index, Series, or ILoc selection.
     '''
@@ -1251,7 +1251,7 @@ def group_from_container(
     from static_frame.core.index import Index
     from static_frame.core.series import Series
 
-    key: np.ndarray
+    key: NDArrayAny
 
     if isinstance(group_source, np.ndarray):
         if group_source.ndim > 2:
@@ -1301,7 +1301,7 @@ def group_from_container(
 class IMTOAdapterSeries:
     __slots__ = ('values',)
 
-    def __init__(self, values: np.ndarray) -> None:
+    def __init__(self, values: NDArrayAny) -> None:
         self.values = values
 
 class IMTOAdapter:
@@ -1319,7 +1319,7 @@ class IMTOAdapter:
     _map = object() # not None
 
     def __init__(self,
-            values: np.ndarray,
+            values: NDArrayAny,
             name: NameType,
             depth: int,
             ndim: int,
@@ -1399,7 +1399,7 @@ def index_many_to_one(
     from static_frame.core.index import Index
     from static_frame.core.index_auto import IndexAutoFactory
 
-    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+    array_processor: tp.Callable[[tp.Iterable[NDArrayAny]], NDArrayAny]
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
     if mtot_is_concat:
@@ -1633,8 +1633,8 @@ def frame_to_frame(
 def prepare_values_for_lex(
         *,
         ascending: BoolOrBools = True,
-        values_for_lex: tp.Optional[tp.Iterable[np.ndarray]],
-        ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[np.ndarray]]]:
+        values_for_lex: tp.Optional[tp.Iterable[NDArrayAny]],
+        ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[NDArrayAny]]]:
     '''Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
     '''
     asc_is_element = isinstance(ascending, BOOL_TYPES)
@@ -1659,8 +1659,8 @@ def sort_index_for_order(
         index: 'IndexBase',
         ascending: BoolOrBools,
         kind: str,
-        key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[np.ndarray, 'IndexBase']]],
-        ) -> np.ndarray:
+        key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[NDArrayAny, 'IndexBase']]],
+        ) -> NDArrayAny:
     '''Return an integer array defing the new ordering.
     '''
     # cfs is container_for_sort

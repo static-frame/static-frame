@@ -33,6 +33,8 @@ from static_frame.core.util import ufunc_nanany
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
 
@@ -205,7 +207,7 @@ class ContainerOperand(ContainerBase):
     __slots__ = ()
 
     interface: 'Frame' # property that returns a Frame
-    values: np.ndarray
+    values: NDArrayAny
 
     def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
         raise NotImplementedError() #pragma: no cover
@@ -320,13 +322,13 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: DtypeSpecifier = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeSpecifier = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values
-        array: np.ndarray = self.values.astype(dtype)
+        array: NDArrayAny = self.values.astype(dtype)
         return array
 
     def __array_ufunc__(self,
@@ -359,9 +361,9 @@ class ContainerOperand(ContainerBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Args:
             dtypes: iterable of valid dtypes that can be returned; first is default of not match
@@ -376,7 +378,7 @@ class ContainerOperand(ContainerBase):
     def all(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``and`` over values along the specified axis.
 
@@ -396,7 +398,7 @@ class ContainerOperand(ContainerBase):
     def any(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``or`` over values along the specified axis.
 
@@ -416,7 +418,7 @@ class ContainerOperand(ContainerBase):
     def sum(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Sum values along the specified axis.
 
@@ -436,7 +438,7 @@ class ContainerOperand(ContainerBase):
     def min(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the minimum along the specified axis.
 
@@ -475,7 +477,7 @@ class ContainerOperand(ContainerBase):
     def mean(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the mean along the specified axis.
 
@@ -495,7 +497,7 @@ class ContainerOperand(ContainerBase):
     def median(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the median along the specified axis.
 
@@ -516,7 +518,7 @@ class ContainerOperand(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the standard deviaton along the specified axis.
 
@@ -537,7 +539,7 @@ class ContainerOperand(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the variance along the specified axis.
 
@@ -557,7 +559,7 @@ class ContainerOperand(ContainerBase):
     def prod(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the product along the specified axis.
 
@@ -581,9 +583,9 @@ class ContainerOperand(ContainerBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 

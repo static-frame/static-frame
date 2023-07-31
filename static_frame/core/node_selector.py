@@ -26,6 +26,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 #-------------------------------------------------------------------------------
 
 TContainer = tp.TypeVar('TContainer',
@@ -262,7 +265,7 @@ class InterfaceAsType(Interface[TContainer]):
         return self._func_getitem(key)
 
     def __call__(self,
-            dtype: np.dtype,
+            dtype: DtypeAny,
             *,
             consolidate_blocks: bool = False,
             ) -> 'Frame':
@@ -319,7 +322,7 @@ class InterfaceBatchAsType(Interface[TContainer]):
         '''
         return BatchAsType(batch_apply=self._batch_apply, column_key=key)
 
-    def __call__(self, dtype: np.dtype) -> 'Batch':
+    def __call__(self, dtype: DtypeAny) -> 'Batch':
         '''
         Apply a single ``dtype`` to all columns.
         '''
@@ -381,7 +384,7 @@ class InterfaceConsolidate(Interface[TContainer]):
         flag_attrs = ('owndata', 'f_contiguous', 'c_contiguous')
         columns = self._container.columns # type: ignore
 
-        def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
+        def gen() -> tp.Tuple[DtypeAny, tp.Tuple[int, ...], int]:
             iloc_start = 0
 
             for b in self._container._blocks._blocks: # type: ignore
