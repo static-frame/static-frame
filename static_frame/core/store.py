@@ -173,12 +173,9 @@ class Store:
         field_names_post: tp.Sequence[str]
         if force_str_names:
             field_names_post = [str(n) for n in field_names]
-        else:
-            field_names_post = field_names
-
-        if force_brackets:
+        elif force_brackets:
             def gen() -> tp.Iterator[str]:
-                for name in field_names_post:
+                for name in field_names:
                     name_str = str(name)
                     if name_str.startswith('[') and name_str.endswith(']'):
                         yield name_str
@@ -188,6 +185,8 @@ class Store:
                     else:
                         yield f'[{name_str}]'
             field_names_post = list(gen())
+        else:
+            field_names_post = field_names
 
         return field_names_post, dtypes
 

@@ -89,7 +89,7 @@ def test(context,
         cmd += ' --cov=static_frame --cov-report=xml'
 
     print(cmd)
-    context.run(cmd)
+    context.run(cmd, pty=True)
 
 
 @invoke.task
@@ -108,7 +108,7 @@ def coverage(context):
 def mypy(context):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict')
+    context.run('mypy --strict', pty=True)
 
 @invoke.task
 def isort(context):
