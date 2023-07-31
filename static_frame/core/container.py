@@ -314,8 +314,8 @@ class ContainerOperandSequence(ContainerBase):
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
-            return self.values
-        array: NDArrayAny = self.values.astype(dtype)
+            return self.values # type: ignore
+        array: NDArrayAny = self.values.astype(dtype) # type: ignore
         return array
 
     def __array_ufunc__(self,
@@ -323,7 +323,7 @@ class ContainerOperandSequence(ContainerBase):
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> 'ContainerOperand':
+            ) -> tp.Any:
         '''Support for NumPy elements or arrays on the left hand of binary operators.
         '''
         if len(args) == 2 and args[1] is self and method == '__call__':

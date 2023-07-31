@@ -178,6 +178,7 @@ class InterfaceFillValue(Interface[TContainer]):
             if row_key in container._index: #type: ignore
                 s = container.loc[row_key]
                 return s.reindex(column_key, fill_value=fill_value) #type: ignore
+
             fv = get_col_fill_value_factory(fill_value, None)(0, None)
             return Series.from_element(fv,
                     index=column_key,
