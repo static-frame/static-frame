@@ -217,7 +217,7 @@ class Index(IndexBase):
                 labels = EMPTY_ARRAY
             else:
                 labels = np.empty(0, dtype=dtype)
-                labels.flags.writeable = False #type: ignore
+                labels.flags.writeable = False
         else: # resolving the dtype is expensive, pass if possible
             labels, _ = iterable_to_array_1d(labels_src, dtype=dtype) #type: ignore
 
@@ -335,7 +335,7 @@ class Index(IndexBase):
             # coerce to target type
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
-                labels.flags.writeable = False #type: ignore
+                labels.flags.writeable = False
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
@@ -497,7 +497,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.shape #type: ignore
+        return self._labels.shape
 
     @property
     def ndim(self) -> int:
@@ -509,7 +509,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.ndim #type: ignore
+        return self._labels.ndim
 
     @property
     def size(self) -> int:
@@ -521,7 +521,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.size #type: ignore
+        return self._labels.size
 
     @property
     def nbytes(self) -> int:
@@ -533,7 +533,7 @@ class Index(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.nbytes #type: ignore
+        return self._labels.nbytes
 
     #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
@@ -1105,7 +1105,7 @@ class Index(IndexBase):
         if self._map is None: # loc_is_iloc
             if isinstance(value, INT_TYPES):
                 return value >= 0 and value < len(self) #type: ignore
-            return False #type: ignore [unreachable]
+            return False
         return self._map.__contains__(value) #type: ignore
 
 
@@ -1398,7 +1398,7 @@ class _IndexGOMixin:
     _labels: NDArrayAny
     _positions: NDArrayAny
     _labels_mutable: tp.List[tp.Hashable]
-    _labels_mutable_dtype: DtypeAny
+    _labels_mutable_dtype: tp.Optional[DtypeAny]
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
 

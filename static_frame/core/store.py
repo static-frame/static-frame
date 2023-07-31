@@ -186,7 +186,7 @@ class Store:
                         yield f'[{name_str}]'
             field_names_post = list(gen())
         else:
-            field_names_post = field_names
+            field_names_post = field_names # type: ignore
 
         return field_names_post, dtypes
 

@@ -201,8 +201,10 @@ class ContainerBase(metaclass=InterfaceMeta):
         view_sf(self) #pragma: no cover
 
 
-class ContainerOperand(ContainerBase):
-    '''Base class of all containers that support opperators.'''
+
+
+class ContainerOperandSequence(ContainerBase):
+    '''Base class of all sequence-like containers that support opperators. IndexBase inherits from this class.'''
 
     __slots__ = ()
 
@@ -219,18 +221,6 @@ class ContainerOperand(ContainerBase):
             ) -> T:
         raise NotImplementedError() #pragma: no cover
 
-    #---------------------------------------------------------------------------
-    def __pos__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__pos__'])
-
-    def __neg__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__neg__'])
-
-    def __abs__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__abs__'])
-
-    def __invert__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
@@ -643,14 +633,37 @@ class ContainerOperand(ContainerBase):
         # modify the active display to be for HTML
         return repr(self.display(config))
 
+
+
+
+class ContainerOperand(ContainerOperandSequence):
+    '''Base class of all mapping-like containers that support opperators. Series and Frame inherit from this class.'''
+
+    __slots__ = ()
+
+    #---------------------------------------------------------------------------
+    def __pos__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
+
+    def __neg__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
+
+    def __abs__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
+    def __invert__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
+
+
+
 #-------------------------------------------------------------------------------
 # TODO: replace usage with ContainerMap; use this in a test to validate
 
-def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperand]]:
-    '''Return a mapping of ContainerOperand types, from name to cls. Note that other modules must be loaded before this returns usable results.
+def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperandSequence]]:
+    '''Return a mapping of ContainerOperandSequence types, from name to cls. Note that other modules must be loaded before this returns usable results.
     '''
-    def collector() -> tp.Iterator[tp.Type[ContainerOperand]]:
-        targets = deque((ContainerOperand,))
+    def collector() -> tp.Iterator[tp.Type[ContainerOperandSequence]]:
+        targets = deque((ContainerOperandSequence,))
         while targets:
             target = targets.popleft()
             for part in target.__subclasses__():

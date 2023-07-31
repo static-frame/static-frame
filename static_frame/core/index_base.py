@@ -7,7 +7,7 @@ from itertools import chain
 import numpy as np
 from arraykit import resolve_dtype
 
-from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import IMTOAdapter
 from static_frame.core.container_util import imto_adapter_factory
 from static_frame.core.container_util import index_many_to_one
@@ -23,6 +23,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.util import OPERATORS
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
@@ -44,7 +45,7 @@ if tp.TYPE_CHECKING:
 
 I = tp.TypeVar('I', bound='IndexBase')
 
-class IndexBase(ContainerOperand):
+class IndexBase(ContainerOperandSequence):
     '''
     All indices are derived from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
     '''
@@ -63,10 +64,18 @@ class IndexBase(ContainerOperand):
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
     dtype: DtypeAny
 
-    __pos__: tp.Callable[[], NDArrayAny]
-    __neg__: tp.Callable[[], NDArrayAny]
-    __abs__: tp.Callable[[], NDArrayAny]
-    __invert__: tp.Callable[[], NDArrayAny]
+    #---------------------------------------------------------------------------
+    def __pos__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
+
+    def __neg__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
+
+    def __abs__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
+    def __invert__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     __add__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
     __sub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
@@ -129,12 +138,12 @@ class IndexBase(ContainerOperand):
                 return cls(value, name=value.name)
 
             if not cls.STATIC:
-                return IndexNanosecondGO(value, name=value.name) # type: ignore
-            return IndexNanosecond(value, name=value.name) # type: ignore
+                return IndexNanosecondGO(value, name=value.name)
+            return IndexNanosecond(value, name=value.name)
 
         if not cls.STATIC:
-            return IndexGO(value, name=value.name) # type: ignore
-        return Index(value, name=value.name) # type: ignore
+            return IndexGO(value, name=value.name)
+        return Index(value, name=value.name)
 
 
     @classmethod
@@ -257,7 +266,7 @@ class IndexBase(ContainerOperand):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> NDArrayAny:
         '''
         {doc}
 
@@ -268,7 +277,7 @@ class IndexBase(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values,
+        return np.searchsorted(self.values, # type: ignore
                 values,
                 'left' if side_left else 'right',
                 )
@@ -296,7 +305,7 @@ class IndexBase(ContainerOperand):
 
         mask = sel == length
         if not mask.any():
-            return self.values[sel] #type: ignore [no-any-return]
+            return self.values[sel]
 
         post = np.empty(len(sel),
                 dtype=resolve_dtype(self.dtype,
@@ -306,7 +315,7 @@ class IndexBase(ContainerOperand):
         post[:] = self.values[sel]
         post[mask] = fill_value
         post.flags.writeable = False
-        return post #type: ignore [no-any-return]
+        return post
 
     #---------------------------------------------------------------------------
 
