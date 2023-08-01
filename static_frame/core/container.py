@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as tp
-from collections import deque
 from functools import partial
 
 import numpy as np
