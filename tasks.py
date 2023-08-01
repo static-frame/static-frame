@@ -5,13 +5,6 @@ import typing as tp
 import invoke
 
 #-------------------------------------------------------------------------------
-try:
-    import pty
-    PTY = True
-except ImportError:
-    PTY = False
-
-
 @invoke.task
 def clean(context):
     '''Clean doc and build artifacts
@@ -80,6 +73,7 @@ def interface(context, container=None, doc=False):
 def test(context,
         unit=False,
         cov=False,
+        pty=False,
         ):
     '''Run tests.
     '''
@@ -94,12 +88,13 @@ def test(context,
         cmd += ' --cov=static_frame --cov-report=xml'
 
     print(cmd)
-    context.run(cmd, pty=PTY)
+    context.run(cmd, pty=pty)
 
 
 @invoke.task
 def testex(context,
         cov=False,
+        pty=False,
         ):
     '''Test example generation
     '''
@@ -108,7 +103,7 @@ def testex(context,
         cmd += ' --cov=static_frame --cov-report=xml'
 
     print(cmd)
-    context.run(cmd, pty=PTY)
+    context.run(cmd, pty=pty)
 
 
 @invoke.task
@@ -124,10 +119,12 @@ def coverage(context):
 
 
 @invoke.task
-def mypy(context):
+def mypy(context,
+        pty=False,
+         ):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict', pty=PTY)
+    context.run('mypy --strict', pty=pty)
 
 @invoke.task
 def isort(context):
