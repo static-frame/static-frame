@@ -87,7 +87,7 @@ FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerBase]]] = None
+    _map: tp.Dict[str, tp.Type[ContainerBase]]
 
     @classmethod
     def _update_map(cls) -> None:
@@ -133,18 +133,20 @@ class ContainerMap:
 
     @classmethod
     def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
-        if cls._map is None:
+        if not hasattr(cls, '_map'):
             cls._update_map()
-        return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
+        return cls._map[name] #pylint: disable=unsubscriptable-object
 
     @classmethod
     def keys(cls) -> tp.Iterator[str]:
-        if cls._map is None:
+        if not hasattr(cls, '_map'):
             cls._update_map()
-        return cls._map.keys()
+        yield from cls._map.keys()
 
     @classmethod
-    def get(cls, key: str) -> ContainerBase:
+    def get(cls, key: str) -> tp.Type[ContainerBase]:
+        if not hasattr(cls, '_map'):
+            cls._update_map()
         return cls._map[key]
 
 
