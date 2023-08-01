@@ -148,7 +148,7 @@ class Store:
                 field_names = range(frame._blocks.shape[1])
         else:
             if index.depth == 1:
-                dtypes = [index.dtype]
+                dtypes = [index.dtype] # type: ignore
             else:
                 dtypes = index.dtypes.values.tolist() #type: ignore [attr-defined]
             # Get a list to mutate.

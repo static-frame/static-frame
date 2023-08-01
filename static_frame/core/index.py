@@ -306,7 +306,7 @@ class Index(IndexBase):
 
             if labels.depth == 1: # not an IndexHierarchy
                 if (labels.STATIC and self.STATIC and dtype is None):
-                    if not is_typed or (is_typed and self._DTYPE == labels.dtype):
+                    if not is_typed or (is_typed and self._DTYPE == labels.dtype): # type: ignore
                         # can take the map if static and if types in the dict are the same as those in the labels (or to become the labels after conversion)
                         self._map = labels._map #type: ignore
                 # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date; for datetime64 indices, we might need to translate to a different type
@@ -1309,6 +1309,63 @@ class Index(IndexBase):
         values = self.values[key]
         values.flags.writeable = False
         return self.__class__(values, name=self._name), key
+
+
+    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
+    def iloc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            ) -> NDArrayAny:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+        '''
+        if not isinstance(values, str) and hasattr(values, '__len__'):
+            if not values.__class__ is np.ndarray:
+                values, _ = iterable_to_array_1d(values)
+        return np.searchsorted(self.values, # type: ignore
+                values,
+                'left' if side_left else 'right',
+                )
+
+    @doc_inject(selector='searchsorted', label_type='loc (label)')
+    def loc_searchsorted(self,
+            values: tp.Any,
+            *,
+            side_left: bool = True,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+        '''
+        {doc}
+
+        Args:
+            {values}
+            {side_left}
+            {fill_value}
+        '''
+        sel = self.iloc_searchsorted(values, side_left=side_left)
+
+        length = self.__len__()
+        if sel.ndim == 0 and sel == length: # an element:
+            return fill_value #type: ignore [no-any-return]
+
+        mask = sel == length
+        if not mask.any():
+            return self.values[sel]
+
+        post = np.empty(len(sel),
+                dtype=resolve_dtype(self.dtype,
+                dtype_from_element(fill_value))
+                )
+        sel[mask] = 0 # set out of range values to zero
+        post[:] = self.values[sel]
+        post[mask] = fill_value
+        post.flags.writeable = False
+        return post
 
     def level_add(self,
             level: tp.Hashable,
