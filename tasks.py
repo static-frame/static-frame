@@ -5,7 +5,11 @@ import typing as tp
 import invoke
 
 #-------------------------------------------------------------------------------
-PTY = ~sys.platform.startswith('win')
+try:
+    import pty
+    PTY = True
+except ImportError:
+    PTY = False
 
 
 @invoke.task
