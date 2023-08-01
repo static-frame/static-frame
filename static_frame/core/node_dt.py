@@ -45,8 +45,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
-BlocksType = tp.Iterable[np.ndarray]
-ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+BlocksType = tp.Iterable[NDArrayAny]
+ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer]
 
 INTERFACE_DT = (
         '__call__',
@@ -115,7 +118,7 @@ class InterfaceDatetime(Interface[TContainer]):
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
         self._fill_value: tp.Any = fill_value
-        self._fill_value_dtype: tp.Optional[np.dtype] = (None
+        self._fill_value_dtype: tp.Optional[DtypeAny] = (None
                 if fill_value is FILL_VALUE_DEFAULT
                 else dtype_from_element(fill_value))
 
@@ -135,8 +138,8 @@ class InterfaceDatetime(Interface[TContainer]):
 
     @staticmethod
     def _validate_dtype_non_str(
-            dtype: np.dtype,
-            exclude: tp.Iterable[np.dtype] = (),
+            dtype: DtypeAny,
+            exclude: tp.Iterable[DtypeAny] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) datetime64 types. This is because most conversions from string can be done simply with astype().
@@ -150,8 +153,8 @@ class InterfaceDatetime(Interface[TContainer]):
 
     @staticmethod
     def _validate_dtype_str(
-            dtype: np.dtype,
-            exclude: tp.Iterable[np.dtype] = (),
+            dtype: DtypeAny,
+            exclude: tp.Iterable[DtypeAny] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) strings.
@@ -163,7 +166,7 @@ class InterfaceDatetime(Interface[TContainer]):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
-    def _fill_missing_dt64(self, array_src: np.ndarray, array_dst: np.ndarray) -> np.ndarray:
+    def _fill_missing_dt64(self, array_src: NDArrayAny, array_dst: NDArrayAny) -> NDArrayAny:
         '''
         Args:
             array_src: The raw array, before any dytpe conversions; used to identify missing values.
@@ -183,12 +186,12 @@ class InterfaceDatetime(Interface[TContainer]):
         return array_dst
 
     def _fill_missing_element_method(self,
-            array: np.ndarray,
+            array: NDArrayAny,
             *,
             method_name: str,
             args: tp.Tuple[tp.Any, ...],
-            dtype: np.dtype,
-            ) -> np.ndarray:
+            dtype: DtypeAny,
+            ) -> NDArrayAny:
         if self._fill_value is FILL_VALUE_DEFAULT:
             if isna_array(array).any():
                 raise RuntimeError('Cannot convert NaT: provide a `fill_value` to `via_dt()`.')
@@ -217,11 +220,11 @@ class InterfaceDatetime(Interface[TContainer]):
         return array
 
     def _fill_missing_element_attr(self,
-            array: np.ndarray,
+            array: NDArrayAny,
             *,
             attr_name: str,
-            dtype: np.dtype,
-            ) -> np.ndarray:
+            dtype: DtypeAny,
+            ) -> NDArrayAny:
         if self._fill_value is FILL_VALUE_DEFAULT:
             if isna_array(array).any():
                 raise RuntimeError('Cannot convert NaT: provide a `fill_value` to `via_dt()`.')
@@ -254,7 +257,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def year(self) -> TContainer:
         'Return the year of each element.'
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype)
 
@@ -276,7 +279,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return the month of each element, between 1 and 12 inclusive.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
@@ -298,7 +301,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return the year and month of each element as string formatted YYYY-MM.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
@@ -322,7 +325,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return the day of each element, between 1 and the number of days in the given month of the given year.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -330,7 +333,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)
                     # subtract the first of the month, then shift
-                    array = (block - block.astype(DT64_MONTH)).astype(DTYPE_INT_DEFAULT) + 1
+                    array = (block - block.astype(DT64_MONTH)).astype(DTYPE_INT_DEFAULT) + 1 # type: ignore
                     array = self._fill_missing_dt64(block, array)
                 else: # must be object type
                     array = self._fill_missing_element_attr(
@@ -349,7 +352,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the hour of each element, between 0 and 24.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit all dt64 types
                 self._validate_dtype_non_str(block.dtype)
@@ -374,7 +377,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the minute of each element, between 0 and 60.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit all dt64 types
                 self._validate_dtype_non_str(block.dtype)
@@ -398,7 +401,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the second of each element, between 0 and 60.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit all dt64 types
                 self._validate_dtype_non_str(block.dtype)
@@ -427,7 +430,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -453,7 +456,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return the quarter of the year as an integer, where January through March is quarter 1.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype)
                 # astype object dtypes to month too
@@ -462,10 +465,10 @@ class InterfaceDatetime(Interface[TContainer]):
                 else:
                     b = block
                 # months will start from 0
-                b = b.astype(DTYPE_INT_DEFAULT) % 12
-                is_q1 = b <= 2 # 0-2
-                is_q4 = b >= 9 # 9-11
-                is_q2 = (b <= 5) & ~is_q1 #3-5
+                bint = b.astype(DTYPE_INT_DEFAULT) % 12
+                is_q1 = bint <= 2 # 0-2
+                is_q4 = bint >= 9 # 9-11
+                is_q2 = (bint <= 5) & ~is_q1 # 3-5
 
                 array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
                 array[is_q1] = 1
@@ -483,7 +486,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_month_end(self) -> TContainer:
         '''Return Boolean indicators if the day is the month end.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -502,7 +505,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_month_start(self) -> TContainer:
         '''Return Boolean indicators if the day is the month start.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -521,7 +524,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_year_end(self) -> TContainer:
         '''Return Boolean indicators if the day is the year end.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -540,7 +543,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_year_start(self) -> TContainer:
         '''Return Boolean indicators if the day is the year start.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -560,7 +563,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_quarter_end(self) -> TContainer:
         '''Return Boolean indicators if the day is the quarter end.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -589,7 +592,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def is_quarter_start(self) -> TContainer:
         '''Return Boolean indicators if the day is the quarter start.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
@@ -622,7 +625,7 @@ class InterfaceDatetime(Interface[TContainer]):
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
 
                 # NOTE: nanosecond and lower will return integers; should exclude
@@ -647,7 +650,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
 
                 self._validate_dtype_non_str(block.dtype,
@@ -677,7 +680,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return a :obj:`datetime.date` object from an ISO 8601 format.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit only string types, or objects types that contain strings
                 self._validate_dtype_str(block.dtype)
@@ -698,7 +701,7 @@ class InterfaceDatetime(Interface[TContainer]):
         Return a string representing the date, controlled by an explicit ``format`` string.
         '''
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
 
                 # NOTE: nanosecond and lower will return integers; should exclud
@@ -727,7 +730,7 @@ class InterfaceDatetime(Interface[TContainer]):
         def func(s: str) -> datetime:
             return datetime.strptime(s, format)
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit only string types, or objects types that contain strings
                 # NOTE: no missing handling necessary
@@ -750,7 +753,7 @@ class InterfaceDatetime(Interface[TContainer]):
         def func(s: str) -> date:
             return datetime.strptime(s, format).date()
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for block in self._blocks:
                 # permit only string types, or objects types that contain strings
                 self._validate_dtype_str(block.dtype)
