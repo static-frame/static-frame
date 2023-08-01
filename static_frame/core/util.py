@@ -686,7 +686,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tuple[int, int]):
+class Pair(tp.Tuple[int, int]):
     pass
 
 
