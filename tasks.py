@@ -86,7 +86,6 @@ def test(context,
 
     # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
     cmd = f'pytest -s --tb=native {fp}'
-
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
@@ -95,10 +94,15 @@ def test(context,
 
 
 @invoke.task
-def testex(context):
+def testex(context,
+        cov=False,
+        ):
     '''Test example generation
     '''
     cmd = f'pytest -s --tb=native doc/test_example_gen.py'
+    if cov:
+        cmd += ' --cov=static_frame --cov-report=xml'
+
     print(cmd)
     context.run(cmd, pty=PTY)
 
