@@ -15,8 +15,8 @@ from static_frame.core.archive_npy import NPZ
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig

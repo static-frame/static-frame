@@ -19,12 +19,11 @@ import pytest
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-
 from static_frame.core.util import PathSpecifier
 
 # for running with coverage

@@ -14,6 +14,7 @@ from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexSecond
 from static_frame import Series
+from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import bloc_key_normalize
@@ -31,13 +32,12 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
-from static_frame.core.container_util import ContainerMap
-
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
 from static_frame.core.util import ManyToOneType
 from static_frame.test.test_case import TestCase
+
 
 class TestUnit(TestCase):
 
