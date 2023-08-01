@@ -1,10 +1,11 @@
+import os
 import sys
 import typing as tp
 
 import invoke
 
 #-------------------------------------------------------------------------------
-pty = ~sys.platform.startswith('win')
+PTY = ~sys.platform.startswith('win')
 
 
 @invoke.task
@@ -90,7 +91,7 @@ def test(context,
         cmd += ' --cov=static_frame --cov-report=xml'
 
     print(cmd)
-    context.run(cmd, pty=pty)
+    context.run(cmd, pty=PTY)
 
 
 @invoke.task
@@ -99,7 +100,7 @@ def testex(context):
     '''
     cmd = f'pytest -s --tb=native doc/test_example_gen.py'
     print(cmd)
-    context.run(cmd, pty=pty)
+    context.run(cmd, pty=PTY)
 
 
 @invoke.task
@@ -118,7 +119,7 @@ def coverage(context):
 def mypy(context):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict', pty=pty)
+    context.run('mypy --strict', pty=PTY)
 
 @invoke.task
 def isort(context):

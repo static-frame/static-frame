@@ -6,7 +6,7 @@ pytest==7.1.2
 pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.10.0
-invoke==2.0.0
+invoke==2.2.0
 ipython==8.14.0
 
 pandas==1.5.3 # could be any > 1.0
