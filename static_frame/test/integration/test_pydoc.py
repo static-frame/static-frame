@@ -9,7 +9,6 @@ class TestUnit(TestCase):
     def test_interface_help_a(self) -> None:
 
         for target in self.get_containers():
-            print(target)
             post = pydoc.render_doc(target, renderer=pydoc.plaintext) # type: ignore
             self.assertTrue(len(post) > 0)
 
