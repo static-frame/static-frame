@@ -95,6 +95,15 @@ def test(context,
 
 
 @invoke.task
+def testex(context):
+    '''Test example generation
+    '''
+    cmd = f'pytest -s --tb=native doc/test_example_gen.py'
+    print(cmd)
+    context.run(cmd, pty=pty)
+
+
+@invoke.task
 def coverage(context):
     '''
     Perform code coverage, and open report HTML.
