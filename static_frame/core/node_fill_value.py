@@ -114,7 +114,7 @@ class InterfaceFillValue(Interface[TContainer]):
         else:
             key_is_null_slice = False
 
-        return key, key_is_multiple, key_is_null_slice
+        return key, key_is_multiple, key_is_null_slice # type: ignore
 
     def _extract_loc1d(self,
             key: GetItemKeyType = NULL_SLICE,
@@ -186,7 +186,7 @@ class InterfaceFillValue(Interface[TContainer]):
                     )
         # columns is an element, return Series indexed by index
         if column_key in container._columns: #type: ignore
-            s = container[column_key]
+            s = container[column_key] # type: ignore
             return s.reindex(row_key, fill_value=fill_value) #type: ignore
 
         fv = get_col_fill_value_factory(fill_value, None)(0, None)

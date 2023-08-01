@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import SeriesAssign  # pylint: disable = W0611 #pragma: no cover
@@ -30,7 +31,6 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
-
 TContainer = tp.TypeVar('TContainer',
         'Index',
         'Series',
@@ -42,11 +42,13 @@ TContainer = tp.TypeVar('TContainer',
         # 'Quilt',
         'IndexHierarchy',
         'SeriesAssign',
-        np.ndarray,
+         # cannot be NDArrayAny as not available in old NumPy
+        np.ndarray, # type: ignore
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
         )
+
 
 
 class Interface(tp.Generic[TContainer]):
@@ -382,8 +384,8 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''
         from static_frame.core.frame import Frame
 
-        flag_attrs = ('owndata', 'f_contiguous', 'c_contiguous')
-        columns = self._container.columns # type: ignore
+        flag_attrs: tp.Tuple[str, ...] = ('owndata', 'f_contiguous', 'c_contiguous')
+        columns: IndexBase = self._container.columns # type: ignore
 
         def gen() -> tp.Tuple[DtypeAny, tp.Tuple[int, ...], int]:
             iloc_start = 0

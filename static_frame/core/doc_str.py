@@ -502,6 +502,6 @@ def doc_inject(*,
             doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
             f.__doc__ = f.__doc__.format(**doc_dict)
 
-        return tp.cast(F, f)
+        return f
 
     return decorator

@@ -186,16 +186,16 @@ class LocMap:
                     key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key)) # type: ignore
 
             if is_array and key.dtype == DTYPE_BOOL: #type: ignore
-                return positions[key]
+                return positions[key] # type: ignore
 
             # map labels to integer positions, return a list of integer positions
             # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
             if partial_selection:
-                return label_to_pos.get_any(key)
-            return label_to_pos.get_all(key)
+                return label_to_pos.get_any(key) # type: ignore
+            return label_to_pos.get_all(key) # type: ignore
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
-        return label_to_pos[key]
+        return label_to_pos[key] # type: ignore
 
 
 class HierarchicalLocMap:
@@ -446,7 +446,8 @@ class HierarchicalLocMap:
         assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        return np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
+        array: NDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
+        return array
 
     @staticmethod
     def unpack_encoding(
@@ -520,10 +521,10 @@ class HierarchicalLocMap:
         assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
         assert encoded_arr.ndim == 1 # Encodings are always 1D
 
-        dtype = object if encoding_can_overflow else DTYPE_UINT_DEFAULT
+        dtype = DTYPE_OBJECT if encoding_can_overflow else DTYPE_UINT_DEFAULT
 
         starts = bit_offset_encoders
-        stops = np.empty(len(starts), dtype=dtype)
+        stops: NDArrayAny = np.empty(len(starts), dtype=dtype)
         stops[:-1] = starts[1:]
         stops[-1] = 64
 
