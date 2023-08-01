@@ -5,8 +5,6 @@ from __future__ import annotations
 
 import typing as tp
 
-from static_frame.core.util import AnyCallable
-
 #-------------------------------------------------------------------------------
 # common strings
 #NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.

@@ -5,7 +5,6 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
-from arraykit import resolve_dtype
 
 from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import IMTOAdapter
@@ -30,8 +29,6 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 
