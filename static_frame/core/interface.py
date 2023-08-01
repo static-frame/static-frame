@@ -15,6 +15,7 @@ from static_frame.core.archive_npy import NPZ
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1022,7 +1023,7 @@ class InterfaceRecord(tp.NamedTuple):
                     )
         elif name in UFUNC_BINARY_OPERATORS or name in RIGHT_OPERATOR_MAP:
             # NOTE: as all classes have certain binary operators by default, we need to only show binary operators for ContainerOperand subclasses
-            if issubclass(cls_target, ContainerOperand):
+            if issubclass(cls_target, ContainerOperandSequence):
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.OperatorBinary,
                         signature,

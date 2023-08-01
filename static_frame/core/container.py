@@ -634,7 +634,7 @@ class ContainerOperandSequence(ContainerBase):
 
 
 class ContainerOperand(ContainerOperandSequence):
-    '''Base class of all mapping-like containers that support opperators. Series and Frame inherit from this class.'''
+    '''Base class of all mapping-like containers that support operators. Series and Frame inherit from this class. These containers preserve the type in unary and binary operations.'''
 
     __slots__ = ()
 
