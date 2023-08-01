@@ -87,7 +87,7 @@ FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerOperand]]] = None
+    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerBase]]] = None
 
     @classmethod
     def _update_map(cls) -> None:
@@ -126,15 +126,26 @@ class ContainerMap:
         from static_frame.core.quilt import Quilt
         from static_frame.core.series import Series
         from static_frame.core.series import SeriesHE
+        from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.yarn import Yarn
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type[ContainerOperand]:
+    def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
         if cls._map is None:
             cls._update_map()
         return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
+
+    @classmethod
+    def keys(cls) -> tp.Iterator[str]:
+        if cls._map is None:
+            cls._update_map()
+        return cls._map.keys()
+
+    @classmethod
+    def get(cls, key: str) -> ContainerBase:
+        return cls._map[key]
 
 
 def is_frozen_generator_input(value: tp.Any) -> bool:

@@ -662,21 +662,3 @@ class ContainerOperand(ContainerOperandSequence):
             fill_value: object = np.nan,
             ) -> T:
         raise NotImplementedError() #pragma: no cover
-
-
-
-#-------------------------------------------------------------------------------
-# TODO: replace usage with ContainerMap; use this in a test to validate
-
-def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperandSequence]]:
-    '''Return a mapping of ContainerOperandSequence types, from name to cls. Note that other modules must be loaded before this returns usable results.
-    '''
-    def collector() -> tp.Iterator[tp.Type[ContainerOperandSequence]]:
-        targets = deque((ContainerOperandSequence,))
-        while targets:
-            target = targets.popleft()
-            for part in target.__subclasses__():
-                targets.append(part)
-                yield part
-
-    return {cls.__name__: cls for cls in collector()}

@@ -31,7 +31,6 @@ from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
-from static_frame.core.container import container_opperand_map
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import array_from_value_iter
@@ -57,6 +56,8 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.container_util import ContainerMap
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -3158,11 +3159,9 @@ class Frame(ContainerOperand):
                 chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
                 ) -> object:
 
-            cls_map = container_opperand_map()
-
             if b'sf' in obj:
-                clsname = obj[b'sf']
-                cls = cls_map[clsname]
+                cls_name = obj[b'sf']
+                cls = ContainerMap.get(cls_name)
 
                 if issubclass(cls, Frame):
                     blocks = unpackb(obj[b'blocks'])
@@ -3175,7 +3174,7 @@ class Frame(ContainerOperand):
                             )
                 elif issubclass(cls, IndexHierarchy):
                     index_constructors=[
-                            cls_map[clsname] for clsname in unpackb(
+                            ContainerMap.get(cls_name) for cls_name in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
                     return cls._from_type_blocks(

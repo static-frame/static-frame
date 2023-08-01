@@ -31,12 +31,13 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import ContainerMap
+
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
 from static_frame.core.util import ManyToOneType
 from static_frame.test.test_case import TestCase
-
 
 class TestUnit(TestCase):
 
@@ -901,6 +902,16 @@ class TestUnit(TestCase):
         post = group_from_container(idx, s, None, 0)
         self.assertEqual(post.tolist(), [[0], [None], [0]])
 
+
+    def test_get_containers(self) -> None:
+        keys_gc = set(cls.__name__ for cls in TestCase.get_containers())
+        keys_cm = set(ContainerMap.keys())
+
+        # these two different utilities have slightly different constituents as they are used for different purposes
+        self.assertEqual(keys_gc - keys_cm, {'ContainerOperand', 'ContainerOperandSequence'})
+        self.assertEqual(keys_cm - keys_gc, {'FillValueAuto', 'ILoc', 'HLoc', 'MemoryDisplay'})
+
+        self.assertEqual(keys_cm & keys_gc, {'FrameHE', 'IndexSecondGO', 'IndexSecond', 'IndexDateGO', 'Bus', 'IndexMinute', 'Index', 'Frame', 'IndexDate', 'IndexYearMonth', 'IndexYearGO', 'IndexMicrosecondGO', 'Yarn', 'IndexNanosecond', 'IndexYearMonthGO', 'IndexNanosecondGO', 'IndexHourGO', 'Batch', 'Quilt', 'IndexMinuteGO', 'FrameGO', 'IndexHour', 'Series', 'IndexGO', 'IndexHierarchy', 'IndexMillisecondGO', 'TypeBlocks', 'IndexYear', 'SeriesHE', 'IndexMicrosecond', 'IndexMillisecond', 'IndexHierarchyGO'})
 
 
 if __name__ == '__main__':

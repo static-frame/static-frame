@@ -18,9 +18,13 @@ import numpy as np
 import pytest
 
 from static_frame import TypeBlocks
+from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container import ContainerOperand
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_datetime import IndexDatetime
+
 from static_frame.core.util import PathSpecifier
 
 # for running with coverage
@@ -150,16 +154,23 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_containers() -> tp.Iterator[tp.Type[ContainerOperand]]:
-
-        def yield_sub(cls: tp.Type[ContainerOperand]) -> tp.Iterator[tp.Type[ContainerOperand]]:
+    def get_containers() -> tp.Iterator[tp.Type[ContainerBase]]:
+        '''This function is a dynamic search of containers, to only be used in testing. For a declaritive alternative, use container_util.ContainerMap.
+        '''
+        def yield_sub(cls: tp.Type[ContainerBase]) -> tp.Iterator[tp.Type[ContainerBase]]:
             for cls in cls.__subclasses__():
-                if cls is not IndexBase:
+                if cls is not IndexBase and cls is not IndexDatetime:
                     yield cls
-                if issubclass(cls, ContainerOperand):
+
+                if (issubclass(cls, ContainerBase)
+                        or issubclass(cls, ContainerOperandSequence)
+                        or issubclass(cls, ContainerOperand)
+                        ):
+                    yield from yield_sub(cls)
+                elif issubclass(cls, ContainerOperand):
                     yield from yield_sub(cls)
 
-        yield from yield_sub(ContainerOperand)
+        yield from yield_sub(ContainerBase)
 
     @staticmethod
     def get_test_db_a() -> sqlite3.Connection:

@@ -1047,6 +1047,7 @@ class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
     _CLS_INIT_SIMPLE = frozenset((
+                    ContainerOperandSequence,
                     ContainerOperand,
                     ContainerBase,
                     IndexBase,
