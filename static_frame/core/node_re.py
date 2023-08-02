@@ -24,8 +24,8 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-    BlocksType = tp.Iterable[NDArrayAny]
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer]
+    BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer] # pylint: disable=W0611 #pragma: no cover
 
 
 INTERFACE_RE = (
