@@ -65,7 +65,7 @@ class IndexBase(ContainerOperandSequence):
 
     @property
     def values(self) -> NDArrayAny:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     def __pos__(self) -> NDArrayAny:

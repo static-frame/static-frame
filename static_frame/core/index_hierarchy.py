@@ -184,9 +184,9 @@ def construct_indices_and_indexers_from_column_arrays(
         *,
         column_iter: tp.Iterable[NDArrayAny],
         index_constructors_iter: tp.Iterable[IndexConstructor],
-        ) -> tp.Tuple[tp.List[Index], np.ndarray]:
+        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
     indices: tp.List[Index] = []
-    indexers: tp.List[NDArrayAny] = []
+    indexers_coll: tp.List[NDArrayAny] = []
 
     for column, constructor in zip(column_iter, index_constructors_iter):
         # Alternative approach that retains order
@@ -200,12 +200,11 @@ def construct_indices_and_indexers_from_column_arrays(
 
         # we call the constructor on all lvl, even if it is already an Index
         indices.append(constructor(unique_values))
-        indexers.append(indexer)
+        indexers_coll.append(indexer)
 
-    indexers = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
-    indexers.flags.writeable = False # type: ignore
-
-    return indices, indexers
+    array = np.array(indexers_coll, dtype=DTYPE_INT_DEFAULT)
+    array.flags.writeable = False
+    return indices, array
 
 
 class PendingRow:
@@ -346,7 +345,7 @@ class IndexHierarchy(IndexBase):
             return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
         indices: tp.List[Index] = []
-        indexers: np.ndarray = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+        indexers: NDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
             indexers[i] = codes
@@ -612,12 +611,12 @@ class IndexHierarchy(IndexBase):
 
         # A mapping for each depth level, of label to index
         hash_maps: HashableToIntMapsT = [{} for _ in range(depth)]
-        indexers: GrowableIndexersT = [[] for _ in range(depth)]
+        indexers_coll: GrowableIndexersT = [[] for _ in range(depth)]
 
         prev_row: tp.Sequence[tp.Hashable] = ()
 
         while True:
-            for hash_map, indexer, val in zip(hash_maps, indexers, label_row):
+            for hash_map, indexer, val in zip(hash_maps, indexers_coll, label_row):
                 # The equality check is heavy, so we short circuit when possible on an `is` check
                 if (
                     continuation_token is not CONTINUATION_TOKEN_INACTIVE
@@ -647,15 +646,15 @@ class IndexHierarchy(IndexBase):
                 raise ErrorInitIndex('All labels must have the same depth.')
 
         # Convert to numpy array
-        indexers = np.array(indexers, dtype=DTYPE_INT_DEFAULT)
+        indexers = np.array(indexers_coll, dtype=DTYPE_INT_DEFAULT)
 
         if reorder_for_hierarchy:
             # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
             # We sort lexsort from right to left (i.e. [::-1])
             sort_order = np.lexsort(indexers[:-1][::-1])
-            indexers = indexers[:, sort_order] # type: ignore
+            indexers = indexers[:, sort_order]
 
-        indexers.flags.writeable = False # type: ignore
+        indexers.flags.writeable = False
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -711,7 +710,7 @@ class IndexHierarchy(IndexBase):
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
-        indexers: np.ndarray = np.array(
+        indexers: NDArrayAny = np.array(
                 [
                     np.hstack([np.repeat(val, repeats=reps) for val, reps in enumerate(repeats)]),
                     np.hstack(indexers_inner),
@@ -966,7 +965,7 @@ class IndexHierarchy(IndexBase):
     def __init__(self: IH,
             indices: tp.Union[IH, tp.List[Index]],
             *,
-            indexers: np.ndarray = EMPTY_ARRAY_INT,
+            indexers: NDArrayAny = EMPTY_ARRAY_INT,
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
@@ -2028,7 +2027,7 @@ class IndexHierarchy(IndexBase):
                     )
 
         new_indices: tp.List[Index] = []
-        new_indexers: np.ndarray = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
+        new_indexers: NDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             selection = indexer[key]
@@ -2194,7 +2193,7 @@ class IndexHierarchy(IndexBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
             ) -> NDArrayAny:
         '''
@@ -2462,7 +2461,7 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     def _drop_missing(self: IH,
-            func: tp.Callable[[NDArrayAny], np.ndarray],
+            func: tp.Callable[[NDArrayAny], NDArrayAny],
             condition: tp.Callable[[NDArrayAny], bool],
             ) -> IH:
         '''
@@ -2559,7 +2558,7 @@ class IndexHierarchy(IndexBase):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[IH, np.ndarray]:
+            ) -> tp.Tuple[IH, NDArrayAny]:
         '''
         Selects a deterministically random sample from this IndexHierarchy.
 
@@ -2625,7 +2624,7 @@ class IndexHierarchy(IndexBase):
                 )
             values_for_match[i] = label
 
-        post: np.ndarray = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
+        post: NDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
             return tp.cast(tp.Hashable, post[0])
         return tp.cast(tp.Sequence[tp.Hashable], post)
@@ -2657,7 +2656,7 @@ class IndexHierarchy(IndexBase):
         if not mask.any():
             return flat[sel]
 
-        post = np.empty(len(sel), dtype=object)
+        post: NDArrayAny = np.empty(len(sel), dtype=object)
         sel[mask] = 0 # set out of range values to zero
         post[:] = flat[sel]
         post[mask] = fill_value
@@ -2732,7 +2731,7 @@ class IndexHierarchy(IndexBase):
 
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,
-            mask: np.ndarray,
+            mask: NDArrayAny,
             ) -> tp.Union[TreeNodeT, Index]:
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`

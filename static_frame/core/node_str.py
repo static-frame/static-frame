@@ -23,11 +23,6 @@ from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
