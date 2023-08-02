@@ -1821,7 +1821,7 @@ class IndexHierarchy(IndexBase):
             else:
                 stop = len(indexer_at_depth)
 
-            target = np.arange(start, stop, key_at_depth.step)
+            target: NDArrayAny = np.arange(start, stop, key_at_depth.step)
             post = np.full(len(indexer_at_depth), False)
             post[target] = True
             return post
@@ -1853,7 +1853,7 @@ class IndexHierarchy(IndexBase):
         if key._recache:
             key._update_array_cache()
 
-        remapped_indexers: tp.List[np.ndaray] = []
+        remapped_indexers: tp.List[NDArrayAny] = []
         for key_index, self_index, key_indexer in zip(
                 key._indices,
                 self._indices,
@@ -1872,7 +1872,7 @@ class IndexHierarchy(IndexBase):
 
     def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[NDArrayAny, CompoundLabelType],
-            ) -> tp.Union[int, np.ndarray]:
+            ) -> tp.Union[int, NDArrayAny]:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
 
@@ -1938,7 +1938,7 @@ class IndexHierarchy(IndexBase):
 
         if key.__class__ is np.ndarray and key.ndim == 2: # type: ignore
             if key.dtype != DTYPE_OBJECT: # type: ignore
-                return np.intersect1d(
+                return np.intersect1d( # type: ignore
                         view_2d_as_1d(self.values),
                         view_2d_as_1d(key),
                         assume_unique=False,
@@ -2585,7 +2585,7 @@ class IndexHierarchy(IndexBase):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Sequence[tp.Hashable]]:
+            ) -> NDArrayAny:
         '''
         {doc}
 
@@ -2626,8 +2626,8 @@ class IndexHierarchy(IndexBase):
 
         post: NDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
-            return tp.cast(tp.Hashable, post[0])
-        return tp.cast(tp.Sequence[tp.Hashable], post)
+            return post[0]
+        return post
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self: IH,
@@ -2645,13 +2645,13 @@ class IndexHierarchy(IndexBase):
             {fill_value}
         '''
         # will return an integer or an array of integers
-        sel = self.iloc_searchsorted(values, side_left=side_left)
+        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value
 
-        flat = self.flat().values
+        flat: NDArrayAny = self.flat().values
         mask = sel == length
         if not mask.any():
             return flat[sel]
