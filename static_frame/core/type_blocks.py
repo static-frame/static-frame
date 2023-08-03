@@ -88,8 +88,8 @@ def group_match(
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
-        group_source: tp.Optional[np.ndarray] = None,
-        ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+        group_source: tp.Optional[NDArrayAny] = None,
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
     '''
     Args:
         key: iloc selector on opposite axis
@@ -135,8 +135,8 @@ def group_match(
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
-    column_key: tp.Union[int, np.ndarray, None]
-    row_key: tp.Union[int, np.ndarray, None]
+    column_key: tp.Union[int, NDArrayAny, None]
+    row_key: tp.Union[int, NDArrayAny, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
 
     func = blocks._extract_array if as_array else blocks._extract
@@ -179,8 +179,8 @@ def group_sorted(
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
-        group_source: tp.Optional[np.ndarray] = None,
-        ) -> tp.Iterator[tp.Tuple[np.ndarray, slice, tp.Union['TypeBlocks', np.ndarray]]]:
+        group_source: tp.Optional[NDArrayAny] = None,
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, slice, tp.Union['TypeBlocks', NDArrayAny]]]:
     '''
     This method must be called on sorted TypeBlocks instance.
 
@@ -222,8 +222,8 @@ def group_sorted(
         drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
-    column_key: tp.Union[int, np.ndarray, None]
-    row_key: tp.Union[int, np.ndarray, None]
+    column_key: tp.Union[int, NDArrayAny, None]
+    row_key: tp.Union[int, NDArrayAny, None]
 
     func = blocks._extract_array if as_array else blocks._extract
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
@@ -282,14 +282,14 @@ def group_sorted(
 def assign_inner_from_iloc_by_unit(
         *,
         value: tp.Any,
-        block: np.ndarray,
+        block: NDArrayAny,
         row_target: GetItemKeyType,
         target_key: GetItemKeyType,
         t_shape: ShapeType,
         target_is_slice: bool,
         block_is_column: bool,
         row_key_is_null_slice: bool,
-        ) -> tp.Tuple[tp.Any, np.ndarray]:
+        ) -> tp.Tuple[tp.Any, NDArrayAny]:
 
     if value.__class__ is np.ndarray:
         value_dtype = value.dtype
@@ -346,7 +346,7 @@ def assign_inner_from_iloc_by_unit(
 def assign_inner_from_iloc_by_sequence(
         *,
         value: tp.Any,
-        block: np.ndarray,
+        block: NDArrayAny,
         row_target: GetItemKeyType,
         target_key: GetItemKeyType,
         t_shape: ShapeType,
@@ -434,7 +434,7 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray],
+            raw_blocks: tp.Iterable[NDArrayAny],
             shape_reference: tp.Optional[tp.Tuple[int, int]] = None
             ) -> 'TypeBlocks':
         '''
@@ -447,7 +447,7 @@ class TypeBlocks(ContainerOperand):
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns, or columns and no rows.
 
         '''
-        blocks: tp.List[np.ndarray] = [] # ordered blocks
+        blocks: tp.List[NDArrayAny] = [] # ordered blocks
         index = BlockIndex()
 
         # if a single block, no need to loop
@@ -475,7 +475,7 @@ class TypeBlocks(ContainerOperand):
     def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]],
             shape: tp.Tuple[int, ...],
-            dtype: np.dtype,
+            dtype: DtypeAny,
             fill_value: object = FILL_VALUE_DEFAULT
             ) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype. This permits only uniformly typed data, as we have to create a single empty array first, then populate it.
@@ -492,7 +492,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_zero_size_shape(cls,
             shape: tp.Tuple[int, int] = (0, 0),
-            get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]] = None,
+            get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
@@ -519,7 +519,7 @@ class TypeBlocks(ContainerOperand):
             type_blocks: tp.Sequence['TypeBlocks'],
             block_compatible: tp.Optional[bool] = None,
             reblock_compatible: tp.Optional[bool] = None,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given a sequence of TypeBlocks with shape[1] equal to this TB's shape[1], return an iterator of consolidated arrays.
         '''
@@ -536,7 +536,7 @@ class TypeBlocks(ContainerOperand):
                 previous_tb = tb
 
         if block_compatible or reblock_compatible:
-            tb_proto: tp.Sequence[np.ndarray]
+            tb_proto: tp.Sequence[NDArrayAny]
             if not block_compatible and reblock_compatible:
                 # after reblocking, will be compatible
                 tb_proto = [tb.consolidate() for tb in type_blocks]
@@ -715,7 +715,7 @@ class TypeBlocks(ContainerOperand):
     def axis_values(self,
             axis: int = 0,
             reverse: bool = False,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
 
         Args:
@@ -861,7 +861,7 @@ class TypeBlocks(ContainerOperand):
 
     @staticmethod
     def _concatenate_blocks(
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             dtype: DtypeSpecifier,
             columns: int,
             ) -> NDArrayAny:
@@ -878,8 +878,8 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def consolidate_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray],
-            ) -> tp.Iterator[np.ndarray]:
+            raw_blocks: tp.Iterable[NDArrayAny],
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
 
@@ -918,8 +918,8 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def contiguous_columnar_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray],
-            ) -> tp.Iterator[np.ndarray]:
+            raw_blocks: tp.Iterable[NDArrayAny],
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator consumer, generator producer of np.ndarray, ensuring that blocks are contiguous in columnar access.
 
@@ -935,7 +935,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield b
 
-    def _reblock(self) -> tp.Iterator[np.ndarray]:
+    def _reblock(self) -> tp.Iterator[NDArrayAny]:
         '''Generator of new block that consolidate adjacent types that are the same.
         '''
         yield from self.consolidate_blocks(raw_blocks=self._blocks)
@@ -955,7 +955,7 @@ class TypeBlocks(ContainerOperand):
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
             fill_value: tp.Any
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
@@ -1054,8 +1054,8 @@ class TypeBlocks(ContainerOperand):
     def resize_blocks_by_callable(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
-            fill_value: tp.Callable[[int, np.dtype], tp.Any]
-            ) -> tp.Iterator[np.ndarray]:
+            fill_value: tp.Callable[[int, DtypeAny], tp.Any]
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
@@ -1179,7 +1179,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             axis: 0 orders columns by row(s) given by ``key``; 1 orders rows by column(s) given by ``key``.
         '''
-        values_for_sort: tp.Optional[np.ndarray] = None
+        values_for_sort: tp.Optional[NDArrayAny] = None
         values_for_lex: OptionalArrayList = None
 
         if axis == 0: # get a column ordering based on one or more rows
@@ -1220,7 +1220,7 @@ class TypeBlocks(ContainerOperand):
             key: GetItemKeyType,
             drop: bool = False,
             kind: str = DEFAULT_SORT_KIND,
-            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
+            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
         '''
         Axis 0 groups on column values, axis 1 groups on row values
 
@@ -1244,7 +1244,7 @@ class TypeBlocks(ContainerOperand):
             key: int,
             extract: int,
             kind: str = DEFAULT_SORT_KIND,
-            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, NDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
 
@@ -1284,7 +1284,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Sequence[np.dtype],
+            dtypes: tp.Sequence[DtypeAny],
             size_one_unity: bool
             ) -> NDArrayAny:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
@@ -1492,7 +1492,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[NDArrayAny]:
         '''Return Boolean blocks of the same size and shape, where key selection sets values to True.
         '''
 
@@ -1536,7 +1536,7 @@ class TypeBlocks(ContainerOperand):
     def _astype_blocks(self,
             column_key: GetItemKeyType,
             dtype: DtypeSpecifier
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given any column selection, apply a single dtype.
         Generator-producer of np.ndarray.
@@ -1608,8 +1608,8 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Optional[tp.Callable[[int], np.dtype]],
-            ) -> tp.Iterator[np.ndarray]:
+            dtype_factory: tp.Optional[tp.Callable[[int], DtypeAny]],
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray.
 
@@ -1649,7 +1649,7 @@ class TypeBlocks(ContainerOperand):
 
     def _consolidate_select_blocks(self,
             column_key: GetItemKeyType,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given any column selection, consolidate when possible within that region.
         Generator-producer of np.ndarray.
@@ -1664,9 +1664,9 @@ class TypeBlocks(ContainerOperand):
         target_block_idx = target_slice = None
         targets_remain = True
 
-        consolidate: tp.List[np.ndarray] = []
+        consolidate: tp.List[NDArrayAny] = []
 
-        def consolidate_and_clear() -> tp.Iterator[np.ndarray]:
+        def consolidate_and_clear() -> tp.Iterator[NDArrayAny]:
             yield from self.consolidate_blocks(consolidate)
             consolidate.clear()
 
@@ -1732,7 +1732,7 @@ class TypeBlocks(ContainerOperand):
     def _ufunc_blocks(self,
             column_key: GetItemKeyType,
             func: UFunc
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Return a new blocks after processing each columnar block with the passed ufunc. It is assumed the ufunc will retain the shape of the input 1D or 2D array. All blocks must be processed, which is different than _astype_blocks, which can check the type and skip processing some blocks.
 
@@ -1805,7 +1805,7 @@ class TypeBlocks(ContainerOperand):
     def _drop_blocks(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
 
@@ -1904,7 +1904,7 @@ class TypeBlocks(ContainerOperand):
             column_shift: int = 0,
             wrap: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
 
@@ -1918,8 +1918,8 @@ class TypeBlocks(ContainerOperand):
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
 
-        block_head_iter: tp.Iterable[np.ndarray]
-        block_tail_iter: tp.Iterable[np.ndarray]
+        block_head_iter: tp.Iterable[NDArrayAny]
+        block_tail_iter: tp.Iterable[NDArrayAny]
 
         # possibly be truthy
         # index is columns here
@@ -1980,8 +1980,8 @@ class TypeBlocks(ContainerOperand):
             row_shift: int,
             column_shift: int,
             wrap: bool,
-            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
-            ) -> tp.Iterator[np.ndarray]:
+            get_col_fill_value: tp.Callable[[int, DtypeAny], tp.Any],
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``get_col_fill_value``.
         '''
@@ -1992,8 +1992,8 @@ class TypeBlocks(ContainerOperand):
         index_start_pos = -(column_shift % column_count)
         row_start_pos = -(row_shift % row_count)
 
-        block_head_iter: tp.Iterable[np.ndarray]
-        block_tail_iter: tp.Iterable[np.ndarray]
+        block_head_iter: tp.Iterable[NDArrayAny]
+        block_tail_iter: tp.Iterable[NDArrayAny]
 
         # possibly be truthy
         # index is columns here
@@ -2060,10 +2060,10 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _assign_from_iloc_by_blocks(self,
-            values: tp.Iterable[np.ndarray],
+            values: tp.Iterable[NDArrayAny],
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
         '''
@@ -2148,15 +2148,15 @@ class TypeBlocks(ContainerOperand):
             value: tp.Any = None,
             assign_inner: tp.Callable[[
                     tp.Any,
-                    np.ndarray,
+                    NDArrayAny,
                     GetItemKeyType,
                     GetItemKeyType,
                     ShapeType,
                     bool,
                     bool,
                     bool],
-                    tp.Tuple[tp.Any, np.ndarray]],
-            ) -> tp.Iterator[np.ndarray]:
+                    tp.Tuple[tp.Any, NDArrayAny]],
+            ) -> tp.Iterator[NDArrayAny]:
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = self._key_to_block_slices(
@@ -2241,7 +2241,7 @@ class TypeBlocks(ContainerOperand):
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
             value: object = None
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''Assign a single value (a tuple, array, or element) into all blocks, returning blocks of the same size and shape.
 
         Args:
@@ -2267,7 +2267,7 @@ class TypeBlocks(ContainerOperand):
             value: tp.Sequence[tp.Any],
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''Assign an iterable of appropriate size (a tuple) into all blocks, returning blocks of the same size and shape. If row-key is a multiple, the values will be replicated in all rows.
 
         '''
@@ -2282,10 +2282,10 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def _assign_from_boolean_blocks_by_unit(self,
-            targets: tp.Iterable[np.ndarray],
+            targets: tp.Iterable[NDArrayAny],
             value: object,
-            value_valid: tp.Optional[np.ndarray]
-            ) -> tp.Iterator[np.ndarray]:
+            value_valid: tp.Optional[NDArrayAny]
+            ) -> tp.Iterator[NDArrayAny]:
         '''Assign value (a single element or a matching array) into all blocks based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
@@ -2343,9 +2343,9 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
 
     def _assign_from_boolean_blocks_by_callable(self,
-            targets: tp.Iterable[np.ndarray],
-            get_col_fill_value: tp.Callable[[int, np.dtype], tp.Any],
-            ) -> tp.Iterator[np.ndarray]:
+            targets: tp.Iterable[NDArrayAny],
+            get_col_fill_value: tp.Callable[[int, DtypeAny], tp.Any],
+            ) -> tp.Iterator[NDArrayAny]:
         '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
 
         Args:
@@ -2396,9 +2396,9 @@ class TypeBlocks(ContainerOperand):
                     col += 1
 
     def _assign_from_boolean_blocks_by_blocks(self,
-            targets: tp.Iterable[np.ndarray],
-            values: tp.Sequence[np.ndarray],
-            ) -> tp.Iterator[np.ndarray]:
+            targets: tp.Iterable[NDArrayAny],
+            values: tp.Sequence[NDArrayAny],
+            ) -> tp.Iterator[NDArrayAny]:
         '''Assign values (derived from an iterable of arrays) into all blocks based on a Boolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
 
         This approach minimizes type coercion by reducing assigned values to columnar types.
@@ -2452,9 +2452,9 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def _assign_from_bloc_by_unit(self,
-            bloc_key: np.ndarray,
+            bloc_key: NDArrayAny,
             value: tp.Any # an array, or element for single assignment
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Given an Boolean array of targets, fill targets from value, where value is either a single value or an array. Unlike with _assign_from_boolean_blocks_by_unit, this method takes a single block_key.
 
@@ -2503,9 +2503,9 @@ class TypeBlocks(ContainerOperand):
             t_start = t_end # always update start
 
     def _assign_from_bloc_by_blocks(self,
-            bloc_key: np.ndarray,
-            values: tp.Sequence[np.ndarray],
-            ) -> tp.Iterator[np.ndarray]:
+            bloc_key: NDArrayAny,
+            values: tp.Sequence[NDArrayAny],
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         A given a single Boolean array bloc-key, assign with `value`, a sequence of appropriately sized arrays.
         '''
@@ -2574,10 +2574,10 @@ class TypeBlocks(ContainerOperand):
 
 
     def _assign_from_bloc_by_coordinate(self,
-            bloc_key: np.ndarray,
+            bloc_key: NDArrayAny,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
             values_dtype: np.dtype,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         For assignment from a Series of coordinate/value pairs, as extracted via a bloc selection.
 
@@ -2626,7 +2626,7 @@ class TypeBlocks(ContainerOperand):
     def _slice_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
@@ -2843,7 +2843,7 @@ class TypeBlocks(ContainerOperand):
             for i in range(array.shape[1]):
                 yield constructor(array[NULL_SLICE, i])
         else:
-            def chainer() -> tp.Iterator[np.ndarray]:
+            def chainer() -> tp.Iterator[NDArrayAny]:
                 for a in arrays:
                     if a.ndim == 1:
                         yield a
@@ -2910,15 +2910,15 @@ class TypeBlocks(ContainerOperand):
         return TypeBlocks.from_blocks(self._mask_blocks(row_key=key))
 
     def extract_bloc(self,
-            bloc_key: np.ndarray,
-            ) -> tp.Tuple[np.ndarray, np.ndarray]:
+            bloc_key: NDArrayAny,
+            ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
         '''
         Extract a 1D array from TypeBlocks, doing minimal type coercion. This returns results in row-major ordering.
         '''
         parts = []
         coords = []
 
-        dt_resolve: tp.Optional[np.dtype] = None
+        dt_resolve: tp.Optional[DtypeAny] = None
         size: int = 0
         target_slice: tp.Union[int, slice]
 
@@ -3006,7 +3006,7 @@ class TypeBlocks(ContainerOperand):
 
     def extract_iloc_assign_by_blocks(self,
             key: tp.Tuple[GetItemKeyType, GetItemKeyType],
-            values: tp.Iterable[np.ndarray],
+            values: tp.Iterable[NDArrayAny],
             ) -> 'TypeBlocks':
         '''
         Assign with value via an iterable of blocks.
@@ -3019,7 +3019,7 @@ class TypeBlocks(ContainerOperand):
                 ))
 
     def extract_bloc_assign_by_unit(self,
-            key: np.ndarray,
+            key: NDArrayAny,
             value: tp.Any
             ) -> 'TypeBlocks':
         return TypeBlocks.from_blocks(self._assign_from_bloc_by_unit(
@@ -3028,7 +3028,7 @@ class TypeBlocks(ContainerOperand):
                 ))
 
     def extract_bloc_assign_by_blocks(self,
-            key: np.ndarray,
+            key: NDArrayAny,
             values: tp.Any
             ) -> 'TypeBlocks':
         return TypeBlocks.from_blocks(self._assign_from_bloc_by_blocks(
@@ -3037,9 +3037,9 @@ class TypeBlocks(ContainerOperand):
                 ))
 
     def extract_bloc_assign_by_coordinate(self,
-            key: np.ndarray,
+            key: NDArrayAny,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
-            values_dtype: np.dtype,
+            values_dtype: DtypeAny,
             ) -> 'TypeBlocks':
         return TypeBlocks.from_blocks(self._assign_from_bloc_by_coordinate(
                 bloc_key=key,
@@ -3086,7 +3086,7 @@ class TypeBlocks(ContainerOperand):
             operator: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> 'TypeBlocks':
         # for now, do no reblocking; though, in many cases, operating on a unified block will be faster
-        def operation() -> tp.Iterator[np.ndarray]:
+        def operation() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 result = operator(b)
                 result.flags.writeable = False
@@ -3191,7 +3191,7 @@ class TypeBlocks(ContainerOperand):
 
         other, other_is_unique = iterable_to_array_1d(other)
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 # yields immutable arrays
                 yield isin_array(array=b,
@@ -3235,7 +3235,7 @@ class TypeBlocks(ContainerOperand):
     def isna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is NaN or None.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 bool_block = isna_array(b, include_none)
                 bool_block.flags.writeable = False
@@ -3246,7 +3246,7 @@ class TypeBlocks(ContainerOperand):
     def notna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not NaN or None.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 bool_block = np.logical_not(isna_array(b, include_none))
                 bool_block.flags.writeable = False
@@ -3260,7 +3260,7 @@ class TypeBlocks(ContainerOperand):
     def isfalsy(self) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is falsy.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 bool_block = isfalsy_array(b)
                 bool_block.flags.writeable = False
@@ -3271,7 +3271,7 @@ class TypeBlocks(ContainerOperand):
     def notfalsy(self) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not falsy.
         '''
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             for b in self._blocks:
                 bool_block = np.logical_not(isfalsy_array(b))
                 bool_block.flags.writeable = False
@@ -3281,8 +3281,8 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def clip(self,
-            lower: tp.Union[None, float, tp.Iterable[np.ndarray]],
-            upper: tp.Union[None, float, tp.Iterable[np.ndarray]],
+            lower: tp.Union[None, float, tp.Iterable[NDArrayAny]],
+            upper: tp.Union[None, float, tp.Iterable[NDArrayAny]],
             ) -> 'TypeBlocks':
         '''
         Apply clip to blocks. If clipping is not supported for a dtype, we will raise instead of silently returning the block unchanged.
@@ -3313,7 +3313,7 @@ class TypeBlocks(ContainerOperand):
                 start: int, # relative to total size
                 end: int, # exclusive
                 ndim: int,
-                source: tp.Union[None, float, np.ndarray, tp.List[np.ndarray]],
+                source: tp.Union[None, float, NDArrayAny, tp.List[NDArrayAny]],
                 is_element: bool,
                 is_array: bool,
                 ) -> NDArrayAny:
@@ -3365,7 +3365,7 @@ class TypeBlocks(ContainerOperand):
                 # width < width_target
                 parts.append(block)
 
-        def blocks() -> tp.Iterator[np.ndarray]:
+        def blocks() -> tp.Iterator[NDArrayAny]:
             start = end = 0
             for b in self._blocks:
                 end += shape_filter(b)[1]
@@ -3395,11 +3395,11 @@ class TypeBlocks(ContainerOperand):
 
     @staticmethod
     def _fill_missing_sided_axis_0(
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             value: tp.Any,
             func_target: UFunc,
             sided_leading: bool,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
 
         Args:
@@ -3461,10 +3461,10 @@ class TypeBlocks(ContainerOperand):
 
     @staticmethod
     def _fill_missing_sided_axis_1(
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             value: tp.Any,
             func_target: UFunc,
-            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+            sided_leading: bool) -> tp.Iterator[NDArrayAny]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1. Leading axis 1 fills rows, going from left to right.
 
         NOTE: blocks are generated in reverse order when sided_leading is False.
@@ -3632,11 +3632,11 @@ class TypeBlocks(ContainerOperand):
 
     @staticmethod
     def _fill_missing_directional_axis_0(
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             directional_forward: bool,
             func_target: UFunc,
             limit: int = 0
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Do a directional fill along axis 0, meaning filling vertically, going top/bottom or bottom/top.
 
@@ -3707,11 +3707,11 @@ class TypeBlocks(ContainerOperand):
 
     @staticmethod
     def _fill_missing_directional_axis_1(
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             directional_forward: bool,
             func_target: UFunc,
             limit: int = 0
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Do a directional fill along axis 1, or horizontally, going left to right or right to left.
 
@@ -3724,9 +3724,9 @@ class TypeBlocks(ContainerOperand):
         # will need to re-reverse blocks coming out of this
         block_iter = blocks if directional_forward else reversed(blocks) # type: ignore
 
-        bridging_values: tp.Optional[np.ndarray] = None
-        bridging_count: tp.Optional[np.ndarray] = None
-        bridging_isna: tp.Optional[np.ndarray] = None # Boolean array describing isna of bridging values
+        bridging_values: tp.Optional[NDArrayAny] = None
+        bridging_count: tp.Optional[NDArrayAny] = None
+        bridging_isna: tp.Optional[NDArrayAny] = None # Boolean array describing isna of bridging values
 
         for b in block_iter:
             sel = func_target(b) # True for is NaN
@@ -3972,7 +3972,7 @@ class TypeBlocks(ContainerOperand):
             condition: tp.Callable[..., bool] = np.all,
             *,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
+            ) -> tp.Tuple[tp.Optional[NDArrayAny], tp.Optional[NDArrayAny]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 
@@ -4003,7 +4003,7 @@ class TypeBlocks(ContainerOperand):
 
     def fill_missing_by_unit(self,
             value: object,
-            value_valid: tp.Optional[np.ndarray] = None,
+            value_valid: tp.Optional[NDArrayAny] = None,
             *,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> 'TypeBlocks':
@@ -4044,7 +4044,7 @@ class TypeBlocks(ContainerOperand):
                 )
 
     def fill_missing_by_values(self,
-            values: tp.Sequence[np.ndarray],
+            values: tp.Sequence[NDArrayAny],
             *,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> 'TypeBlocks':
@@ -4118,7 +4118,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # mutate
 
-    def append(self, block: np.ndarray) -> None:
+    def append(self, block: NDArrayAny) -> None:
         '''Add a block; an array copy will not be made unless the passed in block is not immutable'''
         # NOTE: shape can be 0, 0 if empty, or any one dimension can be 0. if columns is 0 and rows is non-zero, that row count is binding for appending (though the array need no tbe appended); if columns is > 0 and rows is zero, that row is binding for appending (and the array should be appended).
         if self._index.register(block):
@@ -4126,7 +4126,7 @@ class TypeBlocks(ContainerOperand):
 
 
     def extend(self,
-            other: tp.Union['TypeBlocks', tp.Iterable[np.ndarray]]
+            other: tp.Union['TypeBlocks', tp.Iterable[NDArrayAny]]
             ) -> None:
         '''Extend this TypeBlock with the contents of another TypeBlocks instance, or an iterable of arrays. Note that an iterable of TypeBlocks is not currently supported.
         '''
