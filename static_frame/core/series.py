@@ -561,10 +561,10 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
         else: # is numpy array
-            if dtype is not None and dtype != values.dtype:
-                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
+            if dtype is not None and dtype != values.dtype: # type: ignore
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') # type: ignore
 
-            if values.shape == ():
+            if values.shape == (): # type: ignore
                 # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
@@ -1731,7 +1731,7 @@ class Series(ContainerOperand):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         NumPy ufunc proccessors that retain the shape of the processed.
 
@@ -1832,7 +1832,8 @@ class Series(ContainerOperand):
         Returns:
             :obj:`numpy.dtype`
         '''
-        return self.values.dtype
+        dt: DtypeAny = self.values.dtype
+        return dt
 
     @property
     def shape(self) -> tp.Tuple[int]:
@@ -1882,7 +1883,7 @@ class Series(ContainerOperand):
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
         # iterable selection should be handled by NP
-        values = self.values[key]
+        values = self.values[key] # type: ignore
 
         if isinstance(key, INT_TYPES): # if we have a single element
             # NOTE: cannot check if we have an array as an array might be an element
@@ -1900,7 +1901,7 @@ class Series(ContainerOperand):
         '''
         iloc_key = self._index._loc_to_iloc(key)
         try:
-            values = self.values[iloc_key]
+            values = self.values[iloc_key] # type: ignore
         except IndexError as e:
             raise KeyError(iloc_key) from e
 
@@ -1929,9 +1930,9 @@ class Series(ContainerOperand):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
-        if key.__class__ is np.ndarray and key.dtype == bool:
+        if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
-            values = np.delete(self.values, self._index.positions[key])
+            values = np.delete(self.values, self._index.positions[key]) # type: ignore
         else:
             values = np.delete(self.values, key)
         values.flags.writeable = False
@@ -1969,7 +1970,7 @@ class Series(ContainerOperand):
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
         mask = self._extract_iloc_mask(key=key)
-        return MaskedArray(data=self.values, mask=mask.values)
+        return MaskedArray(data=self.values, mask=mask.values) # type: ignore
 
     def _extract_loc_masked_array(self, key: GetItemKeyType) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
@@ -2007,7 +2008,7 @@ class Series(ContainerOperand):
 
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, func(selection)
+            yield g, func(selection) # type: ignore
 
 
     def _axis_group(self, *,
@@ -2054,7 +2055,7 @@ class Series(ContainerOperand):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, func(selection)
+            yield g, func(selection) # type: ignore
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
@@ -2182,7 +2183,7 @@ class Series(ContainerOperand):
         '''
         if key not in self._index:
             return default
-        return self.__getitem__(key)
+        return self.__getitem__(key) # type: ignore
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
@@ -2240,7 +2241,7 @@ class Series(ContainerOperand):
         '''
         if key:
             cfs = key(self)
-            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
+            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
         else:
             cfs_values = self.values
 
@@ -2327,7 +2328,7 @@ class Series(ContainerOperand):
     def duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False,
-            ) -> NDArrayAny:
+            ) -> tp.Self:
         '''
         Return a same-sized Boolean Series that shows True for all values that are duplicated.
 
@@ -3032,7 +3033,7 @@ class Series(ContainerOperand):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> NDArrayAny: # might be 0 dim scalar
         '''
         {doc}
 
@@ -3043,10 +3044,11 @@ class Series(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values,
+        post: NDArrayAny = np.searchsorted(self.values,
                 values,
                 'left' if side_left else 'right',
                 )
+        return post
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
@@ -3080,7 +3082,7 @@ class Series(ContainerOperand):
         if self._index.ndim == 1:
             post = np.full(len(sel),
                     fill_value,
-                    dtype=resolve_dtype(self._index.dtype,
+                    dtype=resolve_dtype(self._index.dtype, # type: ignore
                     dtype_from_element(fill_value))
                     )
             post[found] = self._index.values[sel[found]]

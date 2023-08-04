@@ -67,6 +67,10 @@ class IndexBase(ContainerOperandSequence):
     def values(self) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
+    @property
+    def positions(self) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
+
     #---------------------------------------------------------------------------
     def __pos__(self) -> NDArrayAny:
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
