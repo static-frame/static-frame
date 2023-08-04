@@ -353,7 +353,7 @@ def assign_inner_from_iloc_by_sequence(
         target_is_slice: bool,
         block_is_column: bool,
         row_key_is_null_slice: bool,
-        ) -> tp.Tuple[tp.Any, np.ndarray]:
+        ) -> tp.Tuple[tp.Any, NDArrayAny]:
 
     if value.__class__ is np.ndarray:
         # NOTE: might support object arrays...
@@ -536,7 +536,7 @@ class TypeBlocks(ContainerOperand):
                 previous_tb = tb
 
         if block_compatible or reblock_compatible:
-            tb_proto: tp.Sequence[NDArrayAny]
+            tb_proto: tp.Sequence[TypeBlocks]
             if not block_compatible and reblock_compatible:
                 # after reblocking, will be compatible
                 tb_proto = [tb.consolidate() for tb in type_blocks]
@@ -560,7 +560,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
-            blocks: tp.List[np.ndarray],
+            blocks: tp.List[NDArrayAny],
             index: BlockIndex,
             ) -> None:
         '''
@@ -611,7 +611,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # new properties
 
-    def _iter_dtypes(self) -> tp.Iterator[np.dtype]:
+    def _iter_dtypes(self) -> tp.Iterator[DtypeAny]:
         for b in self._blocks:
             dt = b.dtype
             if b.ndim == 1:
@@ -796,12 +796,12 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
-    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[np.dtype, int]]:
+    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[DtypeAny, int]]:
         '''For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
 
         This is a generator to permit lazy pairwise comparison.
         '''
-        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[DtypeAny] = None # store type found along contiguous blocks
         group_cols = 0
         for block in self._blocks:
             if group_dtype is None: # first block of a type
@@ -885,7 +885,7 @@ class TypeBlocks(ContainerOperand):
 
         Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
         '''
-        group_dtype: tp.Optional[np.dtype] = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[DtypeAny] = None # store type found along contiguous blocks
         group = []
 
         for block in raw_blocks:
@@ -1173,7 +1173,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: GetItemKeyTypeCompound,
             kind: str = DEFAULT_SORT_KIND,
-            ) -> tp.Tuple['TypeBlocks', np.ndarray]:
+            ) -> tp.Tuple[TypeBlocks, NDArrayAny]:
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
 
         Args:
@@ -2576,7 +2576,7 @@ class TypeBlocks(ContainerOperand):
     def _assign_from_bloc_by_coordinate(self,
             bloc_key: NDArrayAny,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
-            values_dtype: np.dtype,
+            values_dtype: DtypeAny,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         For assignment from a Series of coordinate/value pairs, as extracted via a bloc selection.
@@ -2856,7 +2856,7 @@ class TypeBlocks(ContainerOperand):
     def _extract(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None
-            ) -> tp.Union['TypeBlocks', np.ndarray]: # but sometimes an element
+            ) -> tp.Any:
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.
 
@@ -2871,7 +2871,7 @@ class TypeBlocks(ContainerOperand):
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]
-            b = self._blocks[block_idx]
+            b: NDArrayAny = self._blocks[block_idx]
             row_key_null = row_key is None or (row_key.__class__ is slice
                     and row_key == NULL_SLICE)
             if b.ndim == 1:
@@ -2879,13 +2879,13 @@ class TypeBlocks(ContainerOperand):
                     return TypeBlocks.from_blocks(b)
                 elif isinstance(row_key, INT_TYPES):
                     return b[row_key] # return single item
-                return TypeBlocks.from_blocks(b[row_key])
+                return TypeBlocks.from_blocks(b[row_key]) # type: ignore
 
             if row_key_null:
                 return TypeBlocks.from_blocks(b[:, column])
             elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column]
-            return TypeBlocks.from_blocks(b[row_key, column])
+            return TypeBlocks.from_blocks(b[row_key, column]) # type: ignore
 
         # pass a generator to from_block; will return a TypeBlocks or a single element
         return self.from_blocks(
@@ -2897,7 +2897,7 @@ class TypeBlocks(ContainerOperand):
 
     def _extract_iloc(self,
             key: GetItemKeyTypeCompound
-            ) -> 'TypeBlocks':
+            ) -> tp.Any:
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
@@ -3070,7 +3070,7 @@ class TypeBlocks(ContainerOperand):
     def __iter__(self) -> tp.Iterator['TypeBlocks']:
         raise NotImplementedError('Amibigous whether or not to return np array or TypeBlocks')
 
-    def __getitem__(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+    def __getitem__(self, key: GetItemKeyTypeCompound) -> tp.Any:
         '''
         Returns a column, or a column slice.
         '''
@@ -3316,12 +3316,12 @@ class TypeBlocks(ContainerOperand):
                 source: tp.Union[None, float, NDArrayAny, tp.List[NDArrayAny]],
                 is_element: bool,
                 is_array: bool,
-                ) -> NDArrayAny:
+                ) -> tp.Union[None, float, NDArrayAny]:
             '''
             Handle extraction of clip boundaries from multiple different types of sources. NOTE: ndim is the target ndim, and is only relevant when width is 1
             '''
             if is_element:
-                return source
+                return source # type: ignore
 
             width_target = end - start # 1 is lowest value
 
@@ -3364,9 +3364,12 @@ class TypeBlocks(ContainerOperand):
                     return concat_resolved(parts, axis=1)
                 # width < width_target
                 parts.append(block)
+            raise RuntimeError('Unexepcted exit')
 
         def blocks() -> tp.Iterator[NDArrayAny]:
             start = end = 0
+            lb: tp.Union[None, float, NDArrayAny]
+            ub: tp.Union[None, float, NDArrayAny]
             for b in self._blocks:
                 end += shape_filter(b)[1]
                 lb = get_block_match(
@@ -3969,7 +3972,7 @@ class TypeBlocks(ContainerOperand):
 
     def drop_missing_to_keep_locations(self,
             axis: int = 0,
-            condition: tp.Callable[..., bool] = np.all,
+            condition: tp.Callable[..., NDArrayAny] = np.all,
             *,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> tp.Tuple[tp.Optional[NDArrayAny], tp.Optional[NDArrayAny]]:
@@ -3984,6 +3987,7 @@ class TypeBlocks(ContainerOperand):
         unified = next(self.consolidate_blocks(func(b) for b in self._blocks))
 
         # flip axis to condition funcion
+        to_drop: NDArrayAny
         if unified.ndim == 2:
             condition_axis = 0 if axis else 1
             to_drop = condition(unified, axis=condition_axis)
@@ -4073,6 +4077,7 @@ class TypeBlocks(ContainerOperand):
     def equals(self,
             other: tp.Any,
             *,
+            compare_name: bool = False,
             compare_dtype: bool = False,
             compare_class: bool = False,
             skipna: bool = True,
@@ -4085,6 +4090,7 @@ class TypeBlocks(ContainerOperand):
             {compare_class}
             {skipna}
         '''
+        # NOTE: we include `name` such that all instances have the same interface
         if id(other) == id(self):
             return True
 
