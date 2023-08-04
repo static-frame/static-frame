@@ -1704,7 +1704,7 @@ class Series(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any:
         '''
@@ -1727,7 +1727,7 @@ class Series(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
             ) -> 'Series':
         '''
