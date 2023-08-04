@@ -3691,6 +3691,33 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 4), datetime.date(2020, 1, 7), None]
                 )
 
+    def test_series_loc_searchsorted_c(self) -> None:
+
+        s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+        post = s1.loc_searchsorted(4)
+        self.assertEqual(post, ('b', 2))
+
+    def test_series_loc_searchsorted_d(self) -> None:
+
+        s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        post1 = s1.loc_searchsorted([2, 5])
+        self.assertEqual(post1.tolist(), [('a', 3), ('b', 3)])
+
+        post2 = s1.loc_searchsorted([2, 5, 12], fill_value=None)
+        self.assertEqual(post2.tolist(), [('a', 3), ('b', 3), None])
+
+        post3 = s1.loc_searchsorted([12, 2, 5], fill_value=None)
+        self.assertEqual(post3.tolist(), [None, ('a', 3), ('b', 3)])
+
+    def test_series_loc_searchsorted_e(self) -> None:
+
+        s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
+
+        post = s1.loc_searchsorted([20, 2], fill_value=None)
+        self.assertEqual(post.tolist(), [None, ('a', 3)])
+
+
     #---------------------------------------------------------------------------
 
     def test_series_from_concat_items_a(self) -> None:

@@ -129,6 +129,8 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    FrameType = tp.TypeVar('FrameType', bound='Frame')
+
 
 #-------------------------------------------------------------------------------
 class Series(ContainerOperand):
@@ -3067,17 +3069,28 @@ class Series(ContainerOperand):
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value #type: ignore [no-any-return]
 
-        mask: NDArrayAny = sel == length
-        if not mask.any():
-            return self._index.values[sel] #type: ignore [no-any-return]
+        # sel and mask might be zero-dimensional
+        found: NDArrayAny = sel != length
+        if found.all(): # if all matches within series
+            if self._index.ndim == 1:
+                return self._index.values[sel]
+            elif found.sum() == 1:
+                return self._index._extract_iloc(sel)
 
-        post = np.empty(len(sel),
-                dtype=resolve_dtype(self._index.dtype,
-                dtype_from_element(fill_value))
-                )
-        sel[mask] = 0 # set out of range values to zero
-        post[:] = self._index.values[sel]
-        post[mask] = fill_value
+        if self._index.ndim == 1:
+            post = np.full(len(sel),
+                    fill_value,
+                    dtype=resolve_dtype(self._index.dtype,
+                    dtype_from_element(fill_value))
+                    )
+            post[found] = self._index.values[sel[found]]
+        else:
+            # build object array of tuples
+            post = np.full(len(sel), fill_value, dtype=object)
+            for i, (j, assign) in enumerate(zip(sel, found)):
+                if assign:
+                    post[i] = self._index._extract_iloc(j)
+
         post.flags.writeable = False
         return post
 
@@ -3243,6 +3256,7 @@ class Series(ContainerOperand):
         Returns:
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
+        index_values: tp.Iterable[tp.Hashable]
         if isinstance(self._index, IndexHierarchy):
             index_values = self._index.__iter__()
         else:
@@ -3252,14 +3266,14 @@ class Series(ContainerOperand):
 
     def _to_frame(self,
             *,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[FrameType],
             axis: int = 1,
             index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> FrameType:
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
         '''
