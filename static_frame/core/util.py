@@ -291,7 +291,7 @@ AnyCallable = tp.Callable[..., tp.Any]
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
-ShapeType = tp.Union[int, tp.Tuple[int, int]]
+ShapeType = tp.Union[int, tp.Tuple[int, ...]]
 
 # mloc, shape, and strides
 ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]

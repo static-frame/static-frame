@@ -116,6 +116,7 @@ def group_match(
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
+    groups: tp.Iterable[tp.Any]
     groups, locations = array_to_groups_and_locations(
             group_source,
             axis,
@@ -326,7 +327,7 @@ def assign_inner_from_iloc_by_unit(
         if block_is_column:
             assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
         else:
-            assigned_target_pre = block[NULL_SLICE, target_key]
+            assigned_target_pre = block[NULL_SLICE, target_key] # type: ignore
         if block.dtype == assigned_dtype:
             assigned_target = assigned_target_pre.copy()
         else:
@@ -360,7 +361,7 @@ def assign_inner_from_iloc_by_sequence(
         raise ValueError('an array cannot be used as a value')
 
     # match sliceable, when target_key is a slice (can be an element)
-    value_piece: tp.Sequence[tp.Any]
+    value_piece: tp.Sequence[tp.Any] | NDArrayAny
     if target_is_slice:
         if block_is_column:
             v_width = 1
@@ -377,7 +378,7 @@ def assign_inner_from_iloc_by_sequence(
 
         if hasattr(value_piece, '__len__') and not isinstance(value_piece, str):
             value_piece, _ = iterable_to_array_1d(value_piece)
-            value_dtype = resolve_dtype(value_piece.dtype, block.dtype) #type: ignore
+            value_dtype = resolve_dtype(value_piece.dtype, block.dtype)
         else:
             value_dtype = resolve_dtype(dtype_from_element(value_piece), block.dtype)
     elif len(value) == 1:
@@ -398,7 +399,7 @@ def assign_inner_from_iloc_by_sequence(
         if block_is_column:
             assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
         else:
-            assigned_target_pre = block[NULL_SLICE, target_key]
+            assigned_target_pre = block[NULL_SLICE, target_key] # type: ignore
         if block.dtype == assigned_dtype:
             assigned_target = assigned_target_pre.copy()
         else:
@@ -503,6 +504,7 @@ class TypeBlocks(ContainerOperand):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
 
         # as types are organized vertically, storing an array with 0 rows but > 0 columns is appropriate as it takes type space
+        blocks: NDArrayAny | tp.Iterable[NDArrayAny]
         if rows == 0 and columns > 0:
             if get_col_dtype is None:
                 blocks = np.empty(shape)
@@ -966,12 +968,12 @@ class TypeBlocks(ContainerOperand):
             for b in self._blocks:
                 if index_ic.is_subset:
                     # works for both 1d and 2s arrays
-                    yield b[index_ic.iloc_src]
+                    yield b[index_ic.iloc_src] # type: ignore
                 else:
                     shape: ShapeType = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
                     values.flags.writeable = False
                     yield values
 
@@ -986,7 +988,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src]
+                    yield b[:, columns_ic.iloc_src] # type: ignore
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1016,9 +1018,9 @@ class TypeBlocks(ContainerOperand):
             elif self.unified and index_ic.is_subset and columns_ic.is_subset:
                 b = self._blocks[0]
                 if b.ndim == 1:
-                    yield b[index_ic.iloc_src]
+                    yield b[index_ic.iloc_src] # type: ignore
                 else:
-                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src] # type: ignore
             else:
                 columns_dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1031,17 +1033,17 @@ class TypeBlocks(ContainerOperand):
                         if index_ic.is_subset:
                             if b.ndim == 1:
                                 # NOTE: iloc_src is in the right order for dst
-                                yield b[index_ic.iloc_src]
+                                yield b[index_ic.iloc_src] # type: ignore
                             else:
-                                yield b[index_ic.iloc_src, block_col]
+                                yield b[index_ic.iloc_src, block_col] # type: ignore
                         else: # need an empty to fill, compatible with this block
                             values = full_for_fill(b.dtype,
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
                             else:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col] # type: ignore
                             values.flags.writeable = False
                             yield values
                     else:
@@ -1067,13 +1069,13 @@ class TypeBlocks(ContainerOperand):
             for b in self._blocks:
                 if index_ic.is_subset: # no rows added
                     # works for both 1d and 2d arrays
-                    yield b[index_ic.iloc_src]
+                    yield b[index_ic.iloc_src] # type: ignore
                     col_src += (1 if b.ndim == 1 else b.shape[1])
                 elif b.ndim == 1:
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
                     if index_ic.has_common: # if we have some overlap
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
                     values.flags.writeable = False
                     yield values
                     col_src += 1
@@ -1082,7 +1084,7 @@ class TypeBlocks(ContainerOperand):
                         fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
                         if index_ic.has_common: # if we have some overlap
-                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
+                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos] # type: ignore
                         values.flags.writeable = False
                         yield values
                         col_src += 1
@@ -1101,7 +1103,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src]
+                    yield b[:, columns_ic.iloc_src] # type: ignore
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1134,9 +1136,9 @@ class TypeBlocks(ContainerOperand):
                     b = self._blocks[0]
                     if b.ndim == 1:
                         # NOTE: iloc_src is in the right order for dst
-                        yield b[index_ic.iloc_src]
+                        yield b[index_ic.iloc_src] #type: ignore
                     else:
-                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src] #type: ignore
                     col_src += 1
                 else:
                     columns_dst_to_src = dict(
@@ -1148,17 +1150,17 @@ class TypeBlocks(ContainerOperand):
                             b = self._blocks[block_idx]
                             if index_ic.is_subset:
                                 if b.ndim == 1:
-                                    yield b[index_ic.iloc_src]
+                                    yield b[index_ic.iloc_src] # type: ignore
                                 else:
                                     # NOTE: this is not using iloc_dst if iloc_src is a different order
-                                    yield b[index_ic.iloc_src, block_col]
+                                    yield b[index_ic.iloc_src, block_col] # type: ignore
                             else: # need an empty to fill, compatible with this
                                 fv = fill_value(col_src, b.dtype)
                                 values = full_for_fill(b.dtype, index_ic.size, fv)
                                 if b.ndim == 1:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
                                 else:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col] # type: ignore
                                 values.flags.writeable = False
                                 yield values
                         else:
@@ -1183,19 +1185,19 @@ class TypeBlocks(ContainerOperand):
         values_for_lex: OptionalArrayList = None
 
         if axis == 0: # get a column ordering based on one or more rows
-            cfs = self._extract_array(row_key=key)
-            if cfs.ndim == 1:
-                values_for_sort = cfs
-            elif cfs.ndim == 2 and cfs.shape[0] == 1:
-                values_for_sort = cfs[0]
+            cfsa: NDArrayAny = self._extract_array(row_key=key)
+            if cfsa.ndim == 1:
+                values_for_sort = cfsa
+            elif cfsa.ndim == 2 and cfsa.shape[0] == 1:
+                values_for_sort = cfsa[0]
             else:
-                values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+                values_for_lex = [cfsa[i] for i in range(cfsa.shape[0]-1, -1, -1)]
 
         elif axis == 1: # get a row ordering based on one or more columns
             if isinstance(key, INT_TYPES):
                 values_for_sort = self._extract_array_column(key)
             else: #TypeBlocks from here
-                cfs = self._extract(column_key=key) # get TypeBlocks
+                cfs: TypeBlocks = self._extract(column_key=key) # get TypeBlocks
                 if cfs.shape[1] == 1:
                     values_for_sort = cfs._extract_array_column(0)
                 else:
@@ -1299,19 +1301,19 @@ class TypeBlocks(ContainerOperand):
         if axis < 0 or axis > 1:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        func = partial(array_ufunc_axis_skipna,
+        func: tp.Callable[..., NDArrayAny] = partial(array_ufunc_axis_skipna,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
                 )
 
+        result: NDArrayAny
         if self.unified:
             result = func(array=column_2d_filter(self._blocks[0]), axis=axis)
             result.flags.writeable = False
             return result
 
         shape: ShapeType
-
         if axis == 0:
             # reduce all rows to 1d with column width
             shape = self._index.columns
@@ -1330,6 +1332,7 @@ class TypeBlocks(ContainerOperand):
             result.flags.writeable = False
             return result
 
+        dtype: None | DtypeAny
         if dtypes:
             # If dtypes were specified, we know we have specific targets in mind for output
             # Favor row_dtype's kind if it is in dtypes, else take first of passed dtypes
@@ -1347,10 +1350,11 @@ class TypeBlocks(ContainerOperand):
             if dtype is None:
                 # if we do not have a mapping for this function and row dtype, try to get a compatible type for the result of the function applied to each block
                 block_dtypes = []
+                dtf: None | DtypeAny
                 for b in self._blocks:
-                    dt = ufunc_dtype_to_dtype(ufunc_selected, b.dtype)
-                    if dt is not None:
-                        block_dtypes.append(dt)
+                    dtf = ufunc_dtype_to_dtype(ufunc_selected, b.dtype)
+                    if dtf is not None:
+                        block_dtypes.append(dtf)
                 if len(block_dtypes) == len(self._blocks): # if all resolved
                     dtype = resolve_dtype_iter(block_dtypes)
                 else: # assume row_dtype is appropriate
@@ -1479,7 +1483,7 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(key, INT_TYPES):
             # the index has the pair block, column integer
             try:
-                yield self._index[key]
+                yield self._index[key] # type: ignore
             except IndexError as e:
                 raise KeyError(key) from e
         else: # all cases where we try to get contiguous slices
@@ -2202,6 +2206,7 @@ class TypeBlocks(ContainerOperand):
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
 
                 # add empty components for the assignment region
+                t_shape: ShapeType
                 if target_is_slice and not block_is_column:
                     if target_is_null_slice:
                         t_width = b.shape[1]
@@ -2658,13 +2663,13 @@ class TypeBlocks(ContainerOperand):
                 column_key.__class__ is slice and column_key == NULL_SLICE
                 ):
             if self._index.columns == 0:
-                yield EMPTY_ARRAY.reshape(self._index.shape)[row_key]
+                yield EMPTY_ARRAY.reshape(self._index.shape)[row_key] # type: ignore
             elif row_key_null: # when column_key is full
                 yield from self._blocks
             else:
                 for b in self._blocks:
                     # selection works for both 1D (to an element) and 2D (two a 1D array)
-                    b_row = b[row_key] # PERF: most time from line profiler
+                    b_row = b[row_key] # type: ignore
                     if b_row.__class__ is np.ndarray:
                         if single_row and b_row.ndim == 1:
                             # reshaping preserves writeable status
@@ -2684,12 +2689,12 @@ class TypeBlocks(ContainerOperand):
                     if row_key_null:
                         b_sliced = b
                     else:
-                        b_sliced = b[row_key] # PERF: slow from line profiler
+                        b_sliced = b[row_key] # type: ignore
                 else: # given 2D, use row key and column slice
                     if row_key_null:
                         b_sliced = b[NULL_SLICE, slc]
                     else:
-                        b_sliced = b[row_key, slc]
+                        b_sliced = b[row_key, slc] # type: ignore
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
@@ -2719,12 +2724,12 @@ class TypeBlocks(ContainerOperand):
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, INT_TYPES):
-            block_idx, column = self._index[column_key]
+            block_idx, column = self._index[column_key] # type: ignore
             b = self._blocks[block_idx]
             if b.ndim == 1:
                 if row_key is None:
                     return b
-                array = b[row_key]
+                array = b[row_key] # type: ignore
                 if array.__class__ is np.ndarray:
                     array.flags.writeable = False
                 return array
@@ -2732,7 +2737,7 @@ class TypeBlocks(ContainerOperand):
             if row_key is None:
                 return b[NULL_SLICE, column]
 
-            array = b[row_key, column]
+            array = b[row_key, column] # type: ignore
             if array.__class__ is np.ndarray:
                 array.flags.writeable = False
             return array
@@ -2870,7 +2875,7 @@ class TypeBlocks(ContainerOperand):
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, INT_TYPES):
-            block_idx, column = self._index[column_key]
+            block_idx, column = self._index[column_key] # type: ignore
             b: NDArrayAny = self._blocks[block_idx]
             row_key_null = row_key is None or (row_key.__class__ is slice
                     and row_key == NULL_SLICE)

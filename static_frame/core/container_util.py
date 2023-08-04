@@ -1021,9 +1021,9 @@ def rehierarch_from_type_blocks(*,
     order_lex = np.lexsort(
             [labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
 
-    labels_post = labels_post._extract(row_key=order_lex) # type: ignore
+    labels_post = labels_post._extract(row_key=order_lex)
 
-    return labels_post, order_lex # type: ignore
+    return labels_post, order_lex
 
 
 def rehierarch_from_index_hierarchy(*,
