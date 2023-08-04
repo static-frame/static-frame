@@ -1823,7 +1823,7 @@ class Series(ContainerOperand):
         return mloc(self.values)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 
@@ -2287,17 +2287,18 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        args = [lower, upper]
-        for idx, arg in enumerate(args):
+        args: tp.List[NDArrayAny | float | None] = []
+        for idx, arg in enumerate((lower, upper)):
             # arg = args[idx]
             if isinstance(arg, Series):
                 # after reindexing, strip away the index
                 # NOTE: using the bound forces going to a float type; this may not be the best approach
                 bound = -np.inf if idx == 0 else np.inf
-                args[idx] = arg.reindex(self.index).fillna(bound).values
+                args.append(arg.reindex(self.index).fillna(bound).values)
             elif hasattr(arg, '__iter__'):
                 raise RuntimeError('only Series are supported as iterable lower/upper arguments')
-            # assume single value otherwise, no change necessary
+            else:
+                args.append(arg)
 
         array = np.clip(self.values, *args)
         array.flags.writeable = False
@@ -3060,13 +3061,13 @@ class Series(ContainerOperand):
             {side_left}
             {fill_value}
         '''
-        sel = self.iloc_searchsorted(values, side_left=side_left)
+        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value #type: ignore [no-any-return]
 
-        mask = sel == length
+        mask: NDArrayAny = sel == length
         if not mask.any():
             return self._index.values[sel] #type: ignore [no-any-return]
 
@@ -3178,7 +3179,7 @@ class Series(ContainerOperand):
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
-            ) -> tp.Tuple[np.ndarray, NDArrayAny]:
+            ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
         '''
         {doc}
         {args}
