@@ -36,12 +36,12 @@ from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
-
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-
-HeaderType = tp.Tuple[np.dtype, bool, tp.Tuple[int, ...]]
-HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
+    HeaderType = tp.Tuple[DtypeAny, bool, tp.Tuple[int, ...]]
+    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
 
 #-------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ class NPYConverter:
         return prefix + center + postfix
 
     @classmethod
-    def to_npy(cls, file: tp.IO[bytes], array: np.ndarray) -> None:
+    def to_npy(cls, file: tp.IO[bytes], array: NDArrayAny) -> None:
         '''Write an NPY 1.0 file to the open, writeable, binary file given by ``file``. NPY 1.0 is used as structured arrays are not supported.
         '''
         dtype = array.dtype
@@ -119,7 +119,7 @@ class NPYConverter:
                     buffersize=buffersize,
                     order='F',
                     ):
-                file.write(chunk.tobytes('C'))
+                file.write(chunk.tobytes('C')) # type: ignore
         else:
             for chunk in np.nditer(
                     array,
@@ -127,7 +127,7 @@ class NPYConverter:
                     buffersize=buffersize,
                     order='C',
                     ):
-                file.write(chunk.tobytes('C'))
+                file.write(chunk.tobytes('C')) # type: ignore
 
     @classmethod
     def _header_decode(cls,
@@ -164,7 +164,7 @@ class NPYConverter:
             file: tp.IO[bytes],
             header_decode_cache: HeaderDecodeCacheType,
             memory_map: bool = False,
-            ) -> tp.Tuple[np.ndarray, tp.Optional[mmap.mmap]]:
+            ) -> tp.Tuple[NDArrayAny, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -196,7 +196,7 @@ class NPYConverter:
                     offset=offset_mmap,
                     )
             # will always be immutable
-            array = np.ndarray(shape,
+            array: NDArrayAny = np.ndarray(shape,
                     dtype=dtype,
                     buffer=mm,
                     offset=offset_array,
@@ -254,10 +254,10 @@ class Archive:
     def labels(self) -> tp.Iterator[str]:
         raise NotImplementedError() # pragma: no cover
 
-    def write_array(self, name: str, array: np.ndarray) -> None:
+    def write_array(self, name: str, array: NDArrayAny) -> None:
         raise NotImplementedError() #pragma: no cover
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     def read_array_header(self, name: str) -> HeaderType:
@@ -294,7 +294,7 @@ class ArchiveZip(Archive):
             memory_map: bool,
             ):
 
-        mode = 'w' if writeable else 'r'
+        mode: tp.Literal['w', 'r'] = 'w' if writeable else 'r'
         self._archive = ZipFile(fp, # pylint: disable=R1732
                 mode=mode,
                 compression=ZIP_STORED,
@@ -323,7 +323,7 @@ class ArchiveZip(Archive):
     def labels(self) -> tp.Iterator[str]:
         yield from self._archive.namelist()
 
-    def write_array(self, name: str, array: np.ndarray) -> None:
+    def write_array(self, name: str, array: NDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
         f = self._archive.open(name, 'w', force_zip64=True) # pylint: disable=R1732
@@ -332,7 +332,7 @@ class ArchiveZip(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str) -> NDArrayAny:
         f = self._archive.open(name) # pylint: disable=R1732
         try:
             array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
@@ -404,7 +404,7 @@ class ArchiveDirectory(Archive):
         fp = os.path.join(self._archive, name)
         return os.path.exists(fp)
 
-    def write_array(self, name: str, array: np.ndarray) -> None:
+    def write_array(self, name: str, array: NDArrayAny) -> None:
         fp = os.path.join(self._archive, name)
         f = open(fp, 'wb') # pylint: disable=R1732
         try:
@@ -412,7 +412,7 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str) -> NDArrayAny:
         fp = os.path.join(self._archive, name)
         if self._memory_map:
             if not hasattr(self, '_closable'):
@@ -526,7 +526,7 @@ class ArchiveZipWrapper(Archive):
             return False
         return True
 
-    def write_array(self, name: str, array: np.ndarray) -> None:
+    def write_array(self, name: str, array: NDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
         name = f'{self.prefix}{self._delimiter}{name}'
@@ -536,7 +536,7 @@ class ArchiveZipWrapper(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> np.ndarray:
+    def read_array(self, name: str) -> NDArrayAny:
         name = f'{self.prefix}{self._delimiter}{name}'
         f = self._archive.open(name)
         try:
@@ -624,7 +624,7 @@ class ArchiveIndexConverter:
             *,
             metadata: tp.Dict[str, tp.Hashable],
             archive: Archive,
-            array: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            array: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
             key_template_values: str,
             ) -> None:
         '''
@@ -951,7 +951,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 columns=('name', 'size', 'dtype', 'fortran', 'shape'),
                 name=str(self._archive._archive),
                 )
-        return f.set_index('name', drop=True) #type: ignore
+        return f.set_index('name', drop=True)
 
     @property
     def nbytes(self) -> int:
@@ -972,7 +972,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         return sum(gen())
 
     def from_arrays(self,
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Iterable[NDArrayAny],
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -1145,7 +1145,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
 
-            def blocks() -> tp.Iterator[np.ndarray]:
+            def blocks() -> tp.Iterator[NDArrayAny]:
                 for f in frames:
                     if len(f.index) != len(index) or (f.index != index).any():
                         f = f.reindex(index=index, fill_value=fill_value)
@@ -1170,7 +1170,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')
 
-            def blocks() -> tp.Iterator[np.ndarray]:
+            def blocks() -> tp.Iterator[NDArrayAny]:
                 type_blocks = []
                 previous_f: tp.Optional[Frame] = None
                 block_compatible = True
