@@ -118,6 +118,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import EMPTY_ARRAY
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -388,6 +389,7 @@ class Series(ContainerOperand):
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index)
+        values: NDArrayAny
         try:
             # populates array_values as side
             ih = index_from_optional_constructor(
@@ -401,7 +403,7 @@ class Series(ContainerOperand):
         except StopIteration:
             # Default to empty when given an empty iterable
             ih = None
-            values = ()
+            values = EMPTY_ARRAY
             own_index = False
 
         return cls(values, index=ih, own_index=own_index, name=name)
@@ -1118,7 +1120,7 @@ class Series(ContainerOperand):
             return self._extract_iloc(EMPTY_SLICE)
 
         if ic.is_subset: # must have some common
-            values = self.values[ic.iloc_src]
+            values = self.values[ic.iloc_src] # type: ignore
             values.flags.writeable = False
             return self.__class__(
                     values,
@@ -1134,7 +1136,7 @@ class Series(ContainerOperand):
         values = full_for_fill(self.values.dtype, len(index), fv)
         # if some intersection of values
         if ic.has_common:
-            values[ic.iloc_dst] = self.values[ic.iloc_src]
+            values[ic.iloc_dst] = self.values[ic.iloc_src] # type: ignore
         values.flags.writeable = False
 
         return self.__class__(values,
