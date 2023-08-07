@@ -1157,6 +1157,7 @@ class Series(ContainerOperand):
             index: {relabel_input}
         '''
         own_index = False
+        index_init: IndexInitializer | None
         if index is IndexAutoFactory:
             index_init = None
         elif index is None:
@@ -1168,7 +1169,7 @@ class Series(ContainerOperand):
         elif isinstance(index, Set):
             raise RelabelInvalid()
         else:
-            index_init = index
+            index_init = index # type: ignore
 
         return self.__class__(self.values,
                 index=index_init,
