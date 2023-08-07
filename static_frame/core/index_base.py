@@ -252,6 +252,59 @@ class IndexBase(ContainerOperandSequence):
             ) -> Display:
         raise NotImplementedError()
 
+    # ufunc shape skipna methods -----------------------------------------------
+
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[DtypeAny, ...],
+            size_one_unity: bool
+            ) -> NDArrayAny:
+        # not sure if these make sense on TypeBlocks, as they reduce dimensionality
+        raise NotImplementedError() #pragma: no cover
+
+    @doc_inject(selector='ufunc_skipna')
+    def cumsum(self,
+            axis: int = 0,
+            skipna: bool = True,
+            ) -> NDArrayAny:
+        '''Return the cumulative sum over the specified axis.
+
+        {args}
+        '''
+        return self._ufunc_shape_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=np.cumsum,
+                ufunc_skipna=np.nancumsum,
+                composable=False,
+                dtypes=(),
+                size_one_unity=True
+                )
+
+    @doc_inject(selector='ufunc_skipna')
+    def cumprod(self,
+            axis: int = 0,
+            skipna: bool = True,
+            ) -> NDArrayAny:
+        '''Return the cumulative product over the specified axis.
+
+        {args}
+        '''
+        return self._ufunc_shape_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=np.cumprod,
+                ufunc_skipna=np.nancumprod,
+                composable=False,
+                dtypes=(),
+                size_one_unity=True
+                )
+
+
     #---------------------------------------------------------------------------
 
     @doc_inject(selector='sample')

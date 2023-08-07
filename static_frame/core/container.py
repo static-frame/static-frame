@@ -203,7 +203,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
 
 class ContainerOperandSequence(ContainerBase):
-    '''Base class of all sequence-like containers that support opperators. IndexBase inherits from this class.'''
+    '''Base class of all sequence-like containers that support operators but tend to decay to NumPy array, not specialized container subclasses. IndexBase inherits from this class.'''
 
     __slots__ = ()
 
@@ -561,6 +561,57 @@ class ContainerOperandSequence(ContainerBase):
                 size_one_unity=True
                 )
 
+    #---------------------------------------------------------------------------
+    def _repr_html_(self) -> str:
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # NOTE: We observe that Jupyter will window big content into scrollable component, so do not limit output and introduce ellipsis.
+
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False,
+                display_columns=np.inf,
+                display_rows=np.inf,
+                )
+        # modify the active display to be for HTML
+        return repr(self.display(config))
+
+
+
+
+class ContainerOperand(ContainerOperandSequence):
+    '''Base class of all mapping-like containers that support operators. Series, TypeBlocks, and Frame inherit from this class. These containers preserve the type in unary and binary operations.'''
+
+    __slots__ = ()
+
+    #---------------------------------------------------------------------------
+    def __pos__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
+
+    def __neg__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
+
+    def __abs__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
+    def __invert__(self) -> 'ContainerOperand':
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
+
+    #---------------------------------------------------------------------------
+
+    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
+        raise NotImplementedError() #pragma: no cover
+
+    def _ufunc_binary_operator(self: T, *,
+            operator: UFunc,
+            other: tp.Any,
+            fill_value: object = np.nan,
+            ) -> T:
+        raise NotImplementedError() #pragma: no cover
+
+
+
     # ufunc shape skipna methods -----------------------------------------------
 
     def _ufunc_shape_skipna(self, *,
@@ -571,7 +622,7 @@ class ContainerOperandSequence(ContainerBase):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> tp.Any:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 
@@ -612,52 +663,3 @@ class ContainerOperandSequence(ContainerBase):
                 dtypes=(),
                 size_one_unity=True
                 )
-
-    #---------------------------------------------------------------------------
-    def _repr_html_(self) -> str:
-        '''
-        Provide HTML representation for Jupyter Notebooks.
-        '''
-        # NOTE: We observe that Jupyter will window big content into scrollable component, so do not limit output and introduce ellipsis.
-
-        config = DisplayActive.get(
-                display_format=DisplayFormats.HTML_TABLE,
-                type_show=False,
-                display_columns=np.inf,
-                display_rows=np.inf,
-                )
-        # modify the active display to be for HTML
-        return repr(self.display(config))
-
-
-
-
-class ContainerOperand(ContainerOperandSequence):
-    '''Base class of all mapping-like containers that support operators. Series and Frame inherit from this class. These containers preserve the type in unary and binary operations.'''
-
-    __slots__ = ()
-
-    #---------------------------------------------------------------------------
-    def __pos__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__pos__'])
-
-    def __neg__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__neg__'])
-
-    def __abs__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__abs__'])
-
-    def __invert__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__invert__'])
-
-    #---------------------------------------------------------------------------
-
-    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
-        raise NotImplementedError() #pragma: no cover
-
-    def _ufunc_binary_operator(self: T, *,
-            operator: UFunc,
-            other: tp.Any,
-            fill_value: object = np.nan,
-            ) -> T:
-        raise NotImplementedError() #pragma: no cover
