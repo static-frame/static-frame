@@ -404,10 +404,10 @@ class InterfaceConsolidate(Interface[TContainer]):
                 sub = columns[iloc_slice] # returns a column
                 iloc: tp.Union[int, slice]
                 if len(sub) == 1:
-                    loc = sub[0] #type: ignore
+                    loc = sub[0]
                     iloc = iloc_start
                 else: # get inclusive slice
-                    loc = slice(sub[0], sub[-1]) #type: ignore
+                    loc = slice(sub[0], sub[-1])
                     iloc = iloc_slice
 
                 yield [loc, iloc, b.dtype, b.shape, b.ndim] + [

@@ -116,7 +116,7 @@ def join(frame: 'Frame',
     left_loc = left_index[list(map_iloc.keys())]
 
     # iter over idx_left, matched_idx in right, left loc labels
-    for (k, v), left_loc_element in zip(map_iloc.items(), left_loc): # type: ignore
+    for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
         left_loc_set.add(left_loc_element)
 
         right_loc_part = right_index.values[v]

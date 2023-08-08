@@ -66,12 +66,15 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
+from static_frame.core.util import CompoundLabelType
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
+from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import UFunc
@@ -91,8 +94,6 @@ from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import IntegerLocType
-from static_frame.core.util import CompoundLabelType
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1788,6 +1789,7 @@ class IndexHierarchy(IndexBase):
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
+        post: NDArrayAny
 
         if isinstance(key_at_depth, slice):
             if available is None:
@@ -1832,7 +1834,8 @@ class IndexHierarchy(IndexBase):
             # Cases where the key is a list of labels
             return isin(indexer_at_depth, key_iloc)
 
-        return indexer_at_depth == key_iloc
+        post = indexer_at_depth == key_iloc
+        return post
 
     def _loc_to_iloc_index_hierarchy(self: IH,
             key: IH,
@@ -1862,17 +1865,17 @@ class IndexHierarchy(IndexBase):
             indexer_remap = key_index._index_iloc_map(self_index)
             remapped_indexers.append(indexer_remap[key_indexer])
 
-        remapped_indexers = np.array(remapped_indexers, dtype=DTYPE_UINT_DEFAULT).T
+        indexers = np.array(remapped_indexers, dtype=DTYPE_UINT_DEFAULT).T
 
         try:
-            return self._map.indexers_to_iloc(remapped_indexers)
+            return self._map.indexers_to_iloc(indexers)
         except KeyError:
             # Display the first missing element
             raise KeyError(key.difference(self)[0]) from None
 
     def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[NDArrayAny, CompoundLabelType],
-            ) -> tp.Union[int, NDArrayAny]:
+            ) -> IntegerLocType:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
 
@@ -1911,7 +1914,7 @@ class IndexHierarchy(IndexBase):
         return self.positions[mask]
 
     def _loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: GetItemKeyType | ILoc | HLoc,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
             ) -> IntegerLocType:
@@ -1930,7 +1933,7 @@ class IndexHierarchy(IndexBase):
             return self._loc_to_iloc_index_hierarchy(key)
 
         if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
-            return self.positions[key]
+            return self.positions[key] # type: ignore
 
         if isinstance(key, slice):
             return slice(*LocMap.map_slice_args(self._loc_to_iloc, key))
@@ -1977,7 +1980,7 @@ class IndexHierarchy(IndexBase):
                 key = sanitized_key
                 if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
                     # When the key is a series with boolean values
-                    return self.positions[key]
+                    return self.positions[key] # type: ignore
 
                 key = tuple(key)
 
@@ -2004,9 +2007,9 @@ class IndexHierarchy(IndexBase):
         # NOTE: the public method is the same as the private method for IndexHierarchy, but not for Index
         return self._loc_to_iloc(key)
 
-    def _extract_iloc(self: IH,
-            key: IntegerLocType,
-            ) -> ExtractionType:
+    def _extract_iloc(self,
+            key: IntegerLocType | None,
+            ) -> tp.Any:
         '''
         Extract a new index given an iloc key
         '''
@@ -2066,11 +2069,11 @@ class IndexHierarchy(IndexBase):
         '''
         Extract a new index given an loc key
         '''
-        return self._extract_iloc(self._loc_to_iloc(key))
+        return self._extract_iloc(self._loc_to_iloc(key)) # type: ignore
 
-    def __getitem__(self: IH,
-            key: IntegerLocType,
-            ) -> ExtractionType:
+    def __getitem__(self,
+            key: GetItemKeyType,
+            ) -> tp.Any:
         '''
         Extract a new index given a key.
         '''
@@ -2120,9 +2123,9 @@ class IndexHierarchy(IndexBase):
             raise ValueError('cannot use labelled container as an operand.')
 
         if operator.__name__ == 'matmul':
-            return matmul(self.values, other)
+            return matmul(self.values, other) # type: ignore
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, self.values)
+            return matmul(other, self.values) # type: ignore
 
         if self._recache:
             self._update_array_cache()
@@ -2173,7 +2176,7 @@ class IndexHierarchy(IndexBase):
             # if skipna, drop rows with any NaNs
             blocks = self._blocks._extract(row_key=order)
             # NOTE: this could return a tuple rather than an array
-            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
+            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0)) # type: ignore
 
         # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
         raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
@@ -2628,7 +2631,7 @@ class IndexHierarchy(IndexBase):
 
         post: NDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
-            return post[0]
+            return post[0] # type: ignore
         return post
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')

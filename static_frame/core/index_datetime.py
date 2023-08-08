@@ -31,6 +31,7 @@ from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import DateInitializer
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer

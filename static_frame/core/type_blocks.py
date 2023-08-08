@@ -47,6 +47,7 @@ from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import UFunc
@@ -2901,10 +2902,10 @@ class TypeBlocks(ContainerOperand):
                 )
 
     def _extract_iloc(self,
-            key: GetItemKeyTypeCompound
+            key: IntegerLocType | None
             ) -> tp.Any:
         if isinstance(key, tuple):
-            return self._extract(*key)
+            return self._extract(*key) # type: ignore # NOTE: needs specialization for 2D input
         return self._extract(row_key=key)
 
     def extract_iloc_mask(self,

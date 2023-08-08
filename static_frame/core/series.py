@@ -74,6 +74,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FLOAT_TYPES
@@ -88,6 +89,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -118,7 +120,6 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import EMPTY_ARRAY
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -1117,7 +1118,7 @@ class Series(ContainerOperand):
         ic = IndexCorrespondence.from_correspondence(self._index, index)
         if not ic.size:
             # NOTE: take slice to ensure same type of index and array
-            return self._extract_iloc(EMPTY_SLICE)
+            return self._extract_iloc(EMPTY_SLICE) # type: ignore
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src] # type: ignore
@@ -1884,13 +1885,13 @@ class Series(ContainerOperand):
     # def _extract_array(self, key: GetItemKeyType) -> NDArrayAny:
     #     return self.values[key]
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
+    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         # iterable selection should be handled by NP
-        values = self.values[key] # type: ignore
+        values = self.values[key]
 
         if isinstance(key, INT_TYPES): # if we have a single element
             # NOTE: cannot check if we have an array as an array might be an element
-            return values #type: ignore
+            return values
 
         return self.__class__(
                 values,
@@ -2755,7 +2756,7 @@ class Series(ContainerOperand):
         post = argmin_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] # type: ignore
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -2788,7 +2789,7 @@ class Series(ContainerOperand):
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post]
+        return self.index[post] # type: ignore
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
@@ -2832,7 +2833,7 @@ class Series(ContainerOperand):
         if pos == -1:
             return fill_value
         if return_label:
-            return self._index[pos]
+            return self._index[pos] # type: ignore
         return pos
 
     def iloc_notna_first(self,
@@ -3080,7 +3081,7 @@ class Series(ContainerOperand):
             if self._index.ndim == 1:
                 return self._index.values[sel]
             elif found.sum() == 1:
-                return self._index._extract_iloc(sel)
+                return self._index._extract_iloc(sel) # type: ignore
 
         if self._index.ndim == 1:
             post = np.full(len(sel),

@@ -26,12 +26,13 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IntegerLocType
+from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import IntegerLocType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -202,7 +203,7 @@ class IndexBase(ContainerOperandSequence):
         from static_frame.core.series import Series
         return Series(()) # pragma: no cover
 
-    def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
+    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
@@ -339,7 +340,7 @@ class IndexBase(ContainerOperandSequence):
 
     def __getitem__(self: I,
             key: GetItemKeyType
-            ) -> tp.Union[I, tp.Hashable]:
+            ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------

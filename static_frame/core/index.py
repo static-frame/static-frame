@@ -59,6 +59,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
@@ -434,7 +435,7 @@ class Index(IndexBase):
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc) #type: ignore
+        return InterfaceGetItem(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
@@ -861,7 +862,7 @@ class Index(IndexBase):
         if self._map is None: # loc_is_iloc
             if key.__class__ is np.ndarray:
                 if key.dtype == DTYPE_BOOL: #type: ignore
-                    return key
+                    return key # type: ignore
                 if key.dtype != DTYPE_INT_DEFAULT: #type: ignore
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
@@ -869,7 +870,7 @@ class Index(IndexBase):
             elif key.__class__ is slice:
                 # might raise LocInvalid
                 key = pos_loc_slice_to_iloc_slice(key, self.__len__())
-            return key
+            return key # type: ignore
 
         if key_transform:
             key = key_transform(key)
@@ -888,7 +889,7 @@ class Index(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> GetItemKeyType:
+            ) -> IntegerLocType:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
         Args:
@@ -920,8 +921,8 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: GetItemKeyType,
-            ) -> tp.Union['Index', tp.Hashable]:
+            key: IntegerLocType | None,
+            ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
         if self._recache:
@@ -936,7 +937,7 @@ class Index(IndexBase):
                 loc_is_iloc = self._map is None
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
-                labels = self._labels[key] # type: ignore
+                labels = self._labels[key]
                 labels.flags.writeable = False
                 loc_is_iloc = False
         elif isinstance(key, KEY_ITERABLE_TYPES):
@@ -945,7 +946,7 @@ class Index(IndexBase):
             labels.flags.writeable = False
             loc_is_iloc = False
         else: # select a single label value
-            return self._labels[key] #type: ignore
+            return self._labels[key]
 
         return self.__class__(labels=labels,
                 loc_is_iloc=loc_is_iloc,
@@ -954,21 +955,21 @@ class Index(IndexBase):
 
     def _extract_iloc_by_int(self,
             key: int,
-            ) -> tp.Hashable:
+            ) -> tp.Any:
         '''Extract an element given an iloc integer key.
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels[key] #type: ignore
+        return self._labels[key]
 
     def _extract_loc(self: I,
             key: GetItemKeyType
-            ) -> tp.Union['Index', tp.Hashable]:
+            ) -> tp.Any:
         return self._extract_iloc(self._loc_to_iloc(key))
 
-    def __getitem__(self: I,
+    def __getitem__(self,
             key: GetItemKeyType
-            ) -> tp.Union['Index', tp.Hashable]:
+            ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -1177,7 +1178,7 @@ class Index(IndexBase):
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Index'], tp.Union[NDArrayAny, 'Index']]] = None,
-            ) -> 'Index':
+            ) -> tp.Self:
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -1186,8 +1187,7 @@ class Index(IndexBase):
             {key}
         '''
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
-
-        return self._extract_iloc(order) #type: ignore [return-value]
+        return self._extract_iloc(order) #type: ignore
 
     def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
         '''

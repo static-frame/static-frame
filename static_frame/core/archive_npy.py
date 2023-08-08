@@ -36,6 +36,7 @@ from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
