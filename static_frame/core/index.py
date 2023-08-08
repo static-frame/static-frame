@@ -781,7 +781,7 @@ class Index(IndexBase):
         Handle all variety of depth_level specifications for a 1D index: only 0, -1, and lists of the same are valid.
         '''
         if not isinstance(depth_level, INT_TYPES):
-            depth_level = tuple(depth_level)
+            depth_level = list(depth_level)
             if len(depth_level) != 1:
                 raise RuntimeError('invalid depth_level', depth_level)
             depth_level = depth_level[0]

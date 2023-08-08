@@ -1203,7 +1203,7 @@ class IndexHierarchy(IndexBase):
 
     @property
     @doc_inject(select='astype')
-    def astype(self: IH) -> InterfaceAsType[TContainer]:
+    def astype(self: IH) -> InterfaceAsType[IndexHierarchy]:
         '''
         Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
 
@@ -1214,7 +1214,7 @@ class IndexHierarchy(IndexBase):
 
     # --------------------------------------------------------------------------
     @property
-    def via_values(self) -> InterfaceValues[NDArrayAny]:
+    def via_values(self) -> InterfaceValues[IndexHierarchy]:
         '''
         Interface for applying functions to values (as arrays) in this container.
         '''
@@ -1758,15 +1758,13 @@ class IndexHierarchy(IndexBase):
 
         if index_constructors is None:
             # transform the existing index constructors correspondingly
-            index_constructors = self.index_types.values[list(depth_map)]
+            index_constructors = self.index_types.values[list(depth_map)] # type: ignore
 
         return self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
             index_constructors=index_constructors,
             own_blocks=True,
             )
-
-    # -------------------------------------------------------NDArrayAny---------
 
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
@@ -1785,7 +1783,7 @@ class IndexHierarchy(IndexBase):
 
         # Key is already a mask!
         if key_at_depth.__class__ is np.ndarray and key_at_depth.dtype == DTYPE_BOOL: # type: ignore
-            return key_at_depth
+            return key_at_depth # type: ignore
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]

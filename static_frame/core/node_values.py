@@ -252,7 +252,7 @@ class InterfaceBatchValues(InterfaceBatch):
             return NotImplemented #pragma: no cover
 
         def func(c: TContainer) -> TContainer:
-            return c.via_values( # type: ignore
+            return c.via_values(
                     consolidate_blocks=self._consolidate_blocks,
                     unify_blocks=self._unify_blocks,
                     dtype=self._dtype,

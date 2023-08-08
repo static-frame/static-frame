@@ -397,7 +397,7 @@ DtypesSpecifier = tp.Optional[tp.Union[
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
 
-DepthLevelSpecifier = tp.Union[int, tp.Iterable[int]]
+DepthLevelSpecifier = tp.Union[int, tp.List[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
