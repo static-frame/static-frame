@@ -846,7 +846,7 @@ class Index(IndexBase):
             key: GetItemKeyType,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
-            ) -> GetItemKeyType:
+            ) -> IntegerLocType:
         '''
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.

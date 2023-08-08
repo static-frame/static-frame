@@ -1904,7 +1904,7 @@ class Series(ContainerOperand):
         '''
         iloc_key = self._index._loc_to_iloc(key)
         try:
-            values = self.values[iloc_key] # type: ignore
+            values = self.values[iloc_key]
         except IndexError as e:
             raise KeyError(iloc_key) from e
 

@@ -45,6 +45,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
+key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
 
 I = tp.TypeVar('I', bound='IndexDatetime')
 
@@ -142,7 +143,7 @@ class IndexDatetime(Index):
 
     def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
-            *,
+            key_transform: KeyTransformType = key_to_datetime_key,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
@@ -151,7 +152,7 @@ class IndexDatetime(Index):
         # not passing self.dtype to key_to_datetime_key so as to allow translation to a foreign datetime; slice comparison will be handled by map_slice_args
         return Index._loc_to_iloc(self,
                 key=key,
-                key_transform=key_to_datetime_key,
+                key_transform=key_transform,
                 partial_selection=partial_selection,
                 )
 
@@ -287,7 +288,7 @@ class IndexYear(IndexDatetime):
 
     def _loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
-            *,
+            key_transform: KeyTransformType = key_to_datetime_key_year,
             partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
@@ -296,7 +297,7 @@ class IndexYear(IndexDatetime):
         try:
             return Index._loc_to_iloc(self,
                     key=key,
-                    key_transform=partial(key_to_datetime_key, dtype=self._DTYPE),
+                    key_transform=key_transform,
                     partial_selection=partial_selection,
                     )
         except InvalidDatetime64Initializer as e:

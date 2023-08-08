@@ -91,6 +91,8 @@ from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import IntegerLocType
+from static_frame.core.util import CompoundLabelType
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -113,17 +115,15 @@ TreeNodeT = tp.Dict[tp.Hashable, tp.Union[Index, 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
-CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
-LocKeyType = tp.Union[
-    'IndexHierarchy',
-    HLoc,
-    ILoc,
-    CompoundLabelType,
-    np.ndarray,
-    tp.List[CompoundLabelType],
-    slice,
-]
-IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
+# GetItemKeyType = tp.Union[
+#     'IndexHierarchy',
+#     HLoc,
+#     ILoc,
+#     CompoundLabelType,
+#     np.ndarray,
+#     tp.List[CompoundLabelType],
+#     slice,
+# ]
 ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
 
 HashableToIntMapsT = tp.List[tp.Dict[tp.Hashable, int]]
@@ -1910,8 +1910,10 @@ class IndexHierarchy(IndexBase):
 
         return self.positions[mask]
 
-    def _loc_to_iloc(self: IH,
-            key: LocKeyType,
+    def _loc_to_iloc(self,
+            key: GetItemKeyType,
+            key_transform: KeyTransformType = None,
+            partial_selection: bool = False,
             ) -> IntegerLocType:
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
@@ -1990,8 +1992,8 @@ class IndexHierarchy(IndexBase):
 
         return self._loc_per_depth_to_iloc(key)
 
-    def loc_to_iloc(self: IH,
-            key: LocKeyType,
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
             ) -> IntegerLocType:
         '''
         Given a label (loc) style key (either a label, a list of labels, a slice, an HLoc object, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
@@ -2059,7 +2061,7 @@ class IndexHierarchy(IndexBase):
         return tuple(self._blocks.iter_row_elements(key))
 
     def _extract_loc(self: IH,
-            key: LocKeyType,
+            key: GetItemKeyType,
             ) -> ExtractionType:
         '''
         Extract a new index given an loc key
@@ -2146,7 +2148,7 @@ class IndexHierarchy(IndexBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool,
             ) -> NDArrayAny:
         '''
@@ -2987,7 +2989,8 @@ class IndexHierarchyAsType:
 
         # update index_constructors based on dtype
         index_constructors = container.index_types.values.copy()
-        dtype_post = blocks.dtypes[self.depth_key] # can select element or array
+        # can select element or array
+        dtype_post: DtypeAny | NDArrayAny = blocks.dtypes[self.depth_key] # type: ignore
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,

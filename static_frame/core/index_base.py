@@ -31,6 +31,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import IntegerLocType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -326,12 +327,14 @@ class IndexBase(ContainerOperandSequence):
 
     def _loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> GetItemKeyType:
+            key_transform: KeyTransformType = None,
+            partial_selection: bool = False,
+            ) -> IntegerLocType:
         raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> GetItemKeyType:
+            ) -> IntegerLocType:
         raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,

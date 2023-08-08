@@ -246,6 +246,8 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # for type hinting
+CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
+
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
         int,
@@ -253,7 +255,7 @@ GetItemKeyType = tp.Union[
         np.integer,
         slice,
         tp.List[tp.Any],
-        tp.Tuple[tp.Any, ...],
+        tp.Tuple[tp.Any, ...], # might be CompoundLabelType
         None,
         'IndexBase',
         'Series',
@@ -277,6 +279,8 @@ GetItemKeyTypeCompound = tp.Union[
         np.datetime64,
         datetime.date,
         ]
+
+IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
