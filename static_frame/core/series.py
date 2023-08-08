@@ -2307,7 +2307,7 @@ class Series(ContainerOperand):
             else:
                 args.append(arg)
 
-        array = np.clip(self.values, *args)
+        array = np.clip(self.values, *args) # pylint: disable=E1120
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 

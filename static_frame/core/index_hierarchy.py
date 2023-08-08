@@ -48,7 +48,6 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
