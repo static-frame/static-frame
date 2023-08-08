@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import typing as tp
 import zipfile
 from io import StringIO
 from io import UnsupportedOperation
