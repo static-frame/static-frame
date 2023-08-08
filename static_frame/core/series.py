@@ -581,7 +581,7 @@ class Series(ContainerOperand):
         self._index: IndexBase
 
         if own_index:
-            self._index = index
+            self._index = index # type: ignore
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
             if values_constructor:
@@ -711,7 +711,7 @@ class Series(ContainerOperand):
         '''
         Interface for dropping elements from :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
                 func_getitem=self._drop_loc
@@ -722,7 +722,7 @@ class Series(ContainerOperand):
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
                 func_getitem=self._extract_loc_mask
@@ -733,7 +733,7 @@ class Series(ContainerOperand):
         '''
         Interface for extracting NumPy Masked Arrays.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
                 func_getitem=self._extract_loc_masked_array
@@ -745,7 +745,7 @@ class Series(ContainerOperand):
         Interface for doing assignment-like selection and replacement.
         '''
         # NOTE: this is not a InterfaceAssignQuartet, like on Frame
-        return InterfaceAssignTrio(
+        return InterfaceAssignTrio( # type: ignore
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign,

@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as tp
 
 import numpy as np
+from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
@@ -44,6 +45,7 @@ TContainer = tp.TypeVar('TContainer',
         'SeriesAssign',
          # cannot be NDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
+        MaskedArray, # type: ignore
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
