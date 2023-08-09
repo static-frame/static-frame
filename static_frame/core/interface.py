@@ -1132,8 +1132,10 @@ class InterfaceSummary(Features):
             if name_attr in selectors:
                 selectors_found.add(name_attr)
                 continue
-            yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
-
+            try:
+                yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
+            except NotImplementedError: # base class properties that are not implemented
+                pass
 
         for name_attr in selectors:
             if name_attr in selectors_found:

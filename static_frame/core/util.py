@@ -41,7 +41,6 @@ if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pylint: disable=W0611 #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameAsType  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
@@ -427,9 +426,9 @@ ZIP_LONGEST_DEFAULT = object()
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
         np.ndarray,
-        TypeBlocks,
-        Frame,
-        Series,
+        'TypeBlocks',
+        'Frame',
+        'Series',
         ]
 
 DateInitializer = tp.Union[int, str, datetime.date, np.datetime64]
