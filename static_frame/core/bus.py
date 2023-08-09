@@ -57,6 +57,9 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -91,7 +94,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '_max_persist',
         )
 
-    _values_mutable: np.ndarray
+    _values_mutable: NDArrayAny
     _index: IndexBase
     _store: tp.Optional[Store]
     _config: StoreConfigMap
@@ -415,7 +418,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            frames: tp.Optional[tp.Iterable[tp.Union[Frame, tp.Type[FrameDeferred]]]],
+            frames: NDArrayAny | tp.Iterable[Frame | tp.Type[FrameDeferred]] | None,
             *,
             index: IndexInitializer,
             index_constructor: IndexConstructor = None,
@@ -444,7 +447,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     explicit_constructor=index_constructor
                     )
         count = len(self._index)
-        frames_array: np.ndarray
+        frames_array: NDArrayAny
+        self._loaded: NDArrayAny
+        load_array: bool | np.bool_
+        self._loaded_all: bool | np.bool_
 
         if frames is None:
             if store is None:
@@ -457,7 +463,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 if frames.dtype != DTYPE_OBJECT: #type: ignore
                     raise ErrorInitBus(
                             f'Series passed to initializer must have dtype object, not {frames.dtype}') #type: ignore
-                frames_array = frames
+                frames_array = frames # type: ignore
                 load_array = False
             else:
                 if own_data:
@@ -761,11 +767,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         max_persist_active = self._max_persist is not None
 
-        load = False if self._loaded_all else not self._loaded[key].all()
+        load = False if self._loaded_all else not self._loaded[key].all() # type: ignore
         if not load and not max_persist_active:
             return
 
         index = self._index
+        label: tp.Hashable
+
         if not load and max_persist_active: # must update LRU position
             labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
             for label in labels: # update LRU position
@@ -778,22 +786,22 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values = array[key]
-        target_labels = self._index.iloc[key]
+        target_values: NDArrayAny | Frame = array[key] # type: ignore
+        target_labels: IndexBase | tp.Hashable = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
         store_reader: FrameIterType
         targets_items: BusItemsType
 
-        if not isinstance(target_values, np.ndarray):
-            targets_items = ((target_labels, target_values),) # present element as items
+        if not target_values.__class__ is np.ndarray:
+            targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1))
         else: # more than one Frame
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
-                    labels=(label for label, f in zip(target_labels, target_values)
+                    labels=(label for label, f in zip(target_labels, target_values) # type: ignore
                             if f is FrameDeferred),
                     max_persist=self._max_persist,
                     )
@@ -824,7 +832,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
 
-        self._loaded_all = self._loaded.all()
+        self._loaded_all: bool = self._loaded.all() # type: ignore
 
     def unpersist(self) -> None:
         '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
@@ -860,7 +868,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
-        values = self._values_mutable[key]
+        values: tp.Any = self._values_mutable[key] # type: ignore
 
         # NOTE: Bus only stores Frame and FrameDeferred, can rely on check with values
         if not values.__class__ is np.ndarray: # if we have a single element
@@ -962,7 +970,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     _items_store = items
 
     @property
-    def values(self) -> np.ndarray:
+    def values(self) -> NDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
         # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy
@@ -1056,7 +1064,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._index, fill_value=None)
-        return tp.cast(Frame, f)
+        return f
 
     @property
     def shapes(self) -> Series:
@@ -1096,14 +1104,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                         else missing for f in self._values_mutable)
                 yield Series(values, index=self._index, dtype=dtype, name=attr)
 
-        return tp.cast(Frame, Frame.from_concat(gen(), axis=1))
+        return Frame.from_concat(gen(), axis=1)
 
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 
@@ -1297,7 +1305,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> 'Bus':
         '''
         Return a new Bus ordered by the sorted Index.
@@ -1323,7 +1331,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']],
+            key: tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']],
             ) -> 'Bus':
         '''
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
