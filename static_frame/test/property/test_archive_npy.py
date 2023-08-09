@@ -1,4 +1,4 @@
-import typing as tp # pylint: disable=W0611
+import typing as tp  # pylint: disable=W0611
 
 import numpy as np
 from hypothesis import given
@@ -13,7 +13,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.archive_npy import HeaderDecodeCacheType # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.archive_npy import HeaderDecodeCacheType  # pylint: disable=W0611 #pragma: no cover
 
 class TestUnit(TestCase):
 
