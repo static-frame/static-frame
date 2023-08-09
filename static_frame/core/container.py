@@ -218,6 +218,10 @@ class ContainerOperandSequence(ContainerBase):
             ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
+    @property
+    def values(self) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
+
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
@@ -313,8 +317,8 @@ class ContainerOperandSequence(ContainerBase):
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
-            return self.values # type: ignore
-        array: NDArrayAny = self.values.astype(dtype) # type: ignore
+            return self.values
+        array: NDArrayAny = self.values.astype(dtype)
         return array
 
     def __array_ufunc__(self,
@@ -339,8 +343,6 @@ class ContainerOperandSequence(ContainerBase):
 
     # --------------------------------------------------------------------------
     # ufunc axis skipna methods: applied along an axis, reducing dimensionality.
-    # NOTE: as argmin and argmax have iloc/loc interetaions, they are implemented on derived containers
-
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
@@ -349,7 +351,7 @@ class ContainerOperandSequence(ContainerBase):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> tp.Any: # usually a Series
         '''
         Args:
             dtypes: iterable of valid dtypes that can be returned; first is default of not match
@@ -609,8 +611,6 @@ class ContainerOperand(ContainerOperandSequence):
             fill_value: object = np.nan,
             ) -> T:
         raise NotImplementedError() #pragma: no cover
-
-
 
     # ufunc shape skipna methods -----------------------------------------------
 

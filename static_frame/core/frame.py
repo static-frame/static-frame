@@ -1454,7 +1454,7 @@ class Frame(ContainerOperand):
             # must be a 2D array
             names = tuple(range(array.shape[1]))
 
-        index_start_pos = -1 # will be ignored
+        index_start_pos: int | np.integer[tp.Any] = -1 # will be ignored
         index_end_pos = -1
         if index_column_first is not None:
             if index_depth <= 0:
@@ -1550,6 +1550,7 @@ class Frame(ContainerOperand):
                 explicit_constructors=columns_constructors, # cannot supply name
                 )
 
+        index_values: tp.Iterable[tp.Any]
         if index_depth == 1:
             index_values = index_arrays[0]
             index_default_constructor = Index
@@ -1777,7 +1778,7 @@ class Frame(ContainerOperand):
         own_columns = False
 
         # We cannot assume the cursor object returned by DBAPI Connection to have a context manager, thus all cursor usage needs to be wrapped in a try/finally to insure that the cursor is closed.
-        cursor = None
+        cursor: sqlite3.Cursor | None = None
         try:
             cursor = connection.cursor()
             cursor.execute(query, parameters)
@@ -1834,9 +1835,10 @@ class Frame(ContainerOperand):
                         [col for (col, *_) in cursor.description],
                         )
 
+            row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]]
             if index_depth == 0:
                 index = None
-                row_gen = lambda: cursor
+                row_gen = lambda: cursor # type: ignore
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
@@ -2374,6 +2376,7 @@ class Frame(ContainerOperand):
                 axis=0,
                 axis_depth=index_depth)
 
+        index_values: tp.Iterable[tp.Any]
         if index_depth == 1:
             if not index_arrays:
                 index_values = () # assume an empty Frame
@@ -2389,7 +2392,7 @@ class Frame(ContainerOperand):
                     )
         elif index_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
             # expect all index_arrays to have the same length
-            index_values = zip(*index_arrays) # type: ignore
+            index_values = zip(*index_arrays)
             index_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
@@ -3222,7 +3225,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # @doc_inject(selector='container_init', class_name='Frame')
     def __init__(self,
-            data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
+            data: FrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
             *,
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
@@ -3255,7 +3258,7 @@ class Frame(ContainerOperand):
 
         blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, ...]], None]] = None
 
-        if data.__class__ is TypeBlocks: # PERF: no sublcasses supported
+        if data.__class__ is TypeBlocks:
             if own_data:
                 self._blocks = data # type: ignore
             else:
@@ -3477,7 +3480,7 @@ class Frame(ContainerOperand):
 
     @property
     def masked_array(self) -> InterfaceSelectTrio['Frame']:
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
             func_getitem=self._extract_getitem_masked_array)
@@ -3988,7 +3991,7 @@ class Frame(ContainerOperand):
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
-        v = None
+        v: None | Series | Frame = None
 
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
@@ -4006,14 +4009,12 @@ class Frame(ContainerOperand):
                 target_column_index = self._columns._extract_iloc(column_key)
                 target_row_index = self._index._extract_iloc(row_key)
                 # this will use the default fillna type, which may or may not be what is wanted
-                v = value.reindex(
+                v = value.reindex( # type: ignore
                         index=target_row_index,
                         columns=target_column_index,
                         fill_value=fill_value)
         if v is None:
-            raise RuntimeError(('cannot assign '
-                    + value.__class__.__name__
-                    + ' with key configuration'), (nm_row, nm_column))
+            raise RuntimeError(f'cannot assign {value.__class__.__name__} with key configuration: {nm_row}, {nm_column}')
         return v
 
     @doc_inject(selector='reindex', class_name='Frame')
@@ -4269,6 +4270,7 @@ class Frame(ContainerOperand):
             index_opposite = self._index
             target_default_ctr = self._COLUMNS_CONSTRUCTOR
 
+        name_prior: tp.Tuple[NameType, ...]
         if index_target.depth == 1:
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
@@ -4277,7 +4279,7 @@ class Frame(ContainerOperand):
             # No recache is needed as it's not possible for an index to be GO
             ih_blocks = index_target._blocks.copy() # type: ignore # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
-            name_prior = index_target.name if index_target._name_is_names() else index_target.names
+            name_prior = index_target.name if index_target._name_is_names() else index_target.names # type: ignore
             ih_index_constructors = index_target.index_types.values.tolist()
 
         iloc_key = index_opposite._loc_to_iloc(key)
@@ -4374,7 +4376,7 @@ class Frame(ContainerOperand):
             if index_target._recache:
                 index_target._update_array_cache()
 
-            label_src: tp.Tuple[NameType] = (index_target.name if index_target._name_is_names()
+            label_src: tp.Tuple[NameType] = (index_target.name if index_target._name_is_names() # type: ignore
                     else index_target.names)
 
             if isinstance(depth_level, INT_TYPES):
@@ -4962,8 +4964,8 @@ class Frame(ContainerOperand):
 
     @staticmethod
     def _extract_axis_not_multi(
-                row_key: tp.Hashable,
-                column_key: tp.Hashable,
+                row_key: tp.Any,
+                column_key: tp.Any,
                 ) -> tp.Tuple[bool, bool]:
         '''
         If either row or column is given with a non-multiple type of selection (a single scalar), reduce dimensionality.
@@ -5185,7 +5187,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     def _extract_iloc_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray[tp.Any, tp.Any]:
         masked_blocks = self._blocks.extract_iloc_mask(key)
-        return MaskedArray(data=self.values, mask=masked_blocks.values)
+        return MaskedArray(data=self.values, mask=masked_blocks.values) # type: ignore
 
     def _extract_loc_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray[tp.Any, tp.Any]:
         key = self._compound_loc_to_iloc(key)
@@ -5555,7 +5557,7 @@ class Frame(ContainerOperand):
     def _axis_group_final_iter(self, *,
             axis: int,
             as_array: bool,
-            group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice, tp.Union['TypeBlocks', NDArrayAny]]],
+            group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]],
             index: IndexBase,
             columns: IndexBase,
             ordering: tp.Optional[NDArrayAny],
@@ -5624,7 +5626,7 @@ class Frame(ContainerOperand):
         columns: IndexBase
         index: IndexBase
 
-        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice, tp.Union['TypeBlocks', NDArrayAny]]]
+        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, tp.Union['TypeBlocks', NDArrayAny]]]
         if use_sorted:
             group_iter = group_sorted(
                     blocks=blocks,
@@ -5751,6 +5753,7 @@ class Frame(ContainerOperand):
             if use_sorted:
                 group_source = group_source[ordering]
 
+        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -5826,6 +5829,7 @@ class Frame(ContainerOperand):
         if use_sorted:
             group_source = group_source[ordering]
 
+        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -6039,7 +6043,7 @@ class Frame(ContainerOperand):
             {kind}
             {key}
         '''
-        values_for_sort: tp.Optional[NDArrayAny] = None
+        values_for_sort: NDArrayAny | tp.List[NDArrayAny] | None = None
         values_for_lex: OptionalArrayList = None
         cfs: NDArrayAny | Series | Frame | TypeBlocks
 
@@ -6056,13 +6060,13 @@ class Frame(ContainerOperand):
 
             if cfs_is_array:
                 if cfs.ndim == 1:
-                    values_for_sort = cfs
+                    values_for_sort = cfs # type: ignore
                 elif cfs.ndim == 2 and cfs.shape[0] == 1:
-                    values_for_sort = cfs[0]
+                    values_for_sort = cfs[0] # type: ignore
                 else:
                     values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
             elif cfs.ndim == 1: # Series
-                values_for_sort = cfs.values
+                values_for_sort = cfs.values # type: ignore
             elif isinstance(cfs, Frame):
                 cfs = cfs._blocks
                 if cfs.shape[0] == 1:
@@ -6082,16 +6086,15 @@ class Frame(ContainerOperand):
                 cfs = self._blocks._extract(column_key=iloc_key) # get TypeBlocks
                 cfs_is_array = False
 
-            values_for_sort: NDArrayAny | tp.List[NDArrayAny]
             if cfs_is_array:
                 if cfs.ndim == 1:
-                    values_for_sort = cfs
+                    values_for_sort = cfs # type: ignore
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:
-                    values_for_sort = cfs[:, 0]
+                    values_for_sort = cfs[:, 0] # type: ignore
                 else:
                     values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)] #type: ignore
             elif cfs.ndim == 1: # Series
-                values_for_sort = cfs.values
+                values_for_sort = cfs.values # type: ignore
             else: #Frame/TypeBlocks from here
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
@@ -6174,11 +6177,7 @@ class Frame(ContainerOperand):
                     name=self._name
                     )
 
-        args: tp.List[
-                int | NDArrayAny | ContainerOperand,
-                int | NDArrayAny | ContainerOperand
-                ] = [lower, upper]
-
+        args: tp.List[float | NDArrayAny | ContainerOperand | None] = [lower, upper]
         for idx, arg in enumerate(args):
             if arg is None:
                 continue
@@ -6191,13 +6190,13 @@ class Frame(ContainerOperand):
                 values = arg.reindex(target).fillna(bound).values
                 if axis == 0: # duplicate the same column over the width
                     # NOTE: extracting array, then scaling in a list, assuming we are just multiply references, not creating copies
-                    args[idx] = [values] * self.shape[1]
+                    args[idx] = [values] * self.shape[1] # type: ignore
                 else:
                     # create a list of row-length arrays for maximal type preservation
-                    args[idx] = [np.full(self.shape[0], v) for v in values]
+                    args[idx] = [np.full(self.shape[0], v) for v in values] # type: ignore
 
             elif isinstance(arg, Frame):
-                args[idx] = arg.reindex(
+                args[idx] = arg.reindex( # type: ignore
                         index=self._index,
                         columns=self._columns).fillna(bound)._blocks._blocks
 

@@ -427,7 +427,10 @@ ZIP_LONGEST_DEFAULT = object()
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
         np.ndarray,
-        ] # need to add FRAME_INITIALIZER_DEFAULT
+        TypeBlocks,
+        Frame,
+        Series,
+        ]
 
 DateInitializer = tp.Union[int, str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[int, str, datetime.date, np.datetime64]

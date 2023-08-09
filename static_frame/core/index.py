@@ -320,7 +320,7 @@ class Index(IndexBase):
 
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
-            array = labels.values #type: ignore
+            array = labels.values
             if array.ndim == 1:
                 labels = array
             else:
