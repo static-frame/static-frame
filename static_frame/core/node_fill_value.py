@@ -114,7 +114,7 @@ class InterfaceFillValue(Interface[TContainer]):
         else:
             key_is_null_slice = False
 
-        return key, key_is_multiple, key_is_null_slice # type: ignore
+        return key, key_is_multiple, key_is_null_slice
 
     def _extract_loc1d(self,
             key: GetItemKeyType = NULL_SLICE,

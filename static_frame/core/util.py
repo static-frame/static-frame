@@ -253,6 +253,7 @@ GetItemKeyType = tp.Union[
         str,
         np.integer,
         slice,
+        tp.Hashable,
         tp.List[tp.Any],
         tp.Tuple[tp.Any, ...], # might be CompoundLabelType
         None,
@@ -270,6 +271,7 @@ GetItemKeyTypeCompound = tp.Union[
         str,
         np.integer,
         slice,
+        tp.Hashable,
         tp.List[tp.Any],
         None,
         'IndexBase',

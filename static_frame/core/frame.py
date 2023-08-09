@@ -9469,7 +9469,7 @@ class FrameAssignBLoc(FrameAssign):
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
         # use the Boolean key for a bloc selection, which always returns a Series
-        value = func(self.container.bloc[self.key]) # type: ignore
+        value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
 #-------------------------------------------------------------------------------

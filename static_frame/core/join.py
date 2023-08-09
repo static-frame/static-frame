@@ -177,7 +177,7 @@ def join(frame: 'Frame',
             values = []
             for loc in final_index:
                 # what if loc is in both left and rihgt?
-                if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc: # type: ignore
+                if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
                     iloc = map_iloc[left_index._loc_to_iloc(loc)] #type: ignore
                     assert len(iloc) == 1 # not is_many, so all have to be length 1
                     values.append(other._extract_iloc((iloc[0], idx_col)))

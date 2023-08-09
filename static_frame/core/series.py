@@ -2187,7 +2187,7 @@ class Series(ContainerOperand):
         '''
         if key not in self._index:
             return default
-        return self.__getitem__(key) # type: ignore
+        return self.__getitem__(key)
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality

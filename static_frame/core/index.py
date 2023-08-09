@@ -42,7 +42,6 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.style_config import StyleConfig
-# from static_frame.core.util import DTYPE_OBJECTABLE_KINDS
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -854,8 +853,8 @@ class Index(IndexBase):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
-        if key.__class__ is ILoc: #type: ignore
-            return key.key #type: ignore
+        if key.__class__ is ILoc:
+            return key.key # type: ignore
 
         key = key_from_container_key(self, key)
 
