@@ -90,7 +90,7 @@ def group_match(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union['TypeBlocks', NDArrayAny]]]:
     '''
     Args:
         key: iloc selector on opposite axis

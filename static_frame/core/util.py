@@ -280,7 +280,7 @@ GetItemKeyTypeCompound = tp.Union[
         datetime.date,
         ]
 
-IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice]
+IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]

@@ -57,6 +57,7 @@ class IndexBase(ContainerOperandSequence):
     _recache: bool
     _name: NameType
     depth: int
+    _NDIM: int
 
     loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
