@@ -44,6 +44,10 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import is_callable_or_mapping
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
@@ -293,7 +297,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the realized NumPy array.
 
@@ -399,7 +403,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     _items_store = items
 
     @property
-    def values(self) -> np.ndarray:
+    def values(self) -> NDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
@@ -637,11 +641,10 @@ class Yarn(ContainerBase, StoreClientMixin):
     def dtypes(self) -> Frame:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
-        f = Frame.from_concat(
+        return Frame.from_concat(
                 frames=(f.dtypes for f in self._series.values),
                 fill_value=None,
                 ).relabel(index=self._index)
-        return tp.cast(Frame, f)
 
     @property
     def shapes(self) -> Series:
