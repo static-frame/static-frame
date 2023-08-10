@@ -58,7 +58,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = WWW.from_file(URL, encoding='utf-8', in_memory=True)
+            post: io.StringIO = WWW.from_file(URL, encoding='utf-8', in_memory=True) # type: ignore
             self.assertTrue(isinstance(post, io.StringIO))
             self.assertEqual(post.read(), 'foo')
 
@@ -66,7 +66,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = WWW.from_file(URL, encoding='utf-8', in_memory=False)
+            post: io.StringIO = WWW.from_file(URL, encoding='utf-8', in_memory=False) # type: ignore
             self.assertTrue(isinstance(post, StringIOTemporaryFile))
             self.assertEqual('bar', post.read())
 
@@ -74,7 +74,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'bar')
 
-            post = WWW.from_file(URL, encoding=None, in_memory=True)
+            post: io.BytesIO = WWW.from_file(URL, encoding=None, in_memory=True) # type: ignore
             self.assertTrue(isinstance(post, io.BytesIO))
             self.assertEqual(post.read(), b'bar')
 
@@ -82,7 +82,7 @@ class TestUnit(TestCase):
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, 'foo')
 
-            post = WWW.from_file(URL, encoding=None, in_memory=False)
+            post: io.BytesIO = WWW.from_file(URL, encoding=None, in_memory=False) # type: ignore
 
             self.assertTrue(isinstance(post, BytesIOTemporaryFile))
             self.assertEqual(b'foo', post.read())
@@ -203,7 +203,7 @@ class TestUnit(TestCase):
 
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, archive.read())
-            post = WWW.from_zip(URL, component='foo')
+            post: io.StringIO = WWW.from_zip(URL, component='foo') # type: ignore
             self.assertEqual(post.read(), content1)
 
     def test_www_from_zip_c(self) -> None:
@@ -212,7 +212,7 @@ class TestUnit(TestCase):
 
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, archive.read())
-            post = WWW.from_zip(URL)
+            post: io.StringIO = WWW.from_zip(URL) # type: ignore
             self.assertEqual(post.read(), content2)
 
     def test_www_from_zip_d(self) -> None:
@@ -221,7 +221,7 @@ class TestUnit(TestCase):
 
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, archive.read())
-            post = WWW.from_zip(URL, encoding=None)
+            post: io.BytesIO = WWW.from_zip(URL, encoding=None) # type: ignore
             self.assertEqual(post.read(), content2)
 
     def test_www_from_zip_e(self) -> None:
@@ -235,7 +235,7 @@ class TestUnit(TestCase):
                 with self.assertRaises(RuntimeError):
                     _ = WWW.from_zip(URL, fp=fp, in_memory=True)
 
-                post = WWW.from_zip(URL, fp=fp)
+                post: Path = WWW.from_zip(URL, fp=fp) # type: ignore
                 self.assertEqual(str(post), fp)
 
                 with open(post, encoding='utf-8') as postf:
@@ -248,7 +248,7 @@ class TestUnit(TestCase):
 
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, archive.read())
-            post = WWW.from_gzip(URL)
+            post: io.StringIO = WWW.from_gzip(URL) # type: ignore
             self.assertEqual(post.read(), content)
 
     def test_www_from_gzip_b(self) -> None:
@@ -257,7 +257,7 @@ class TestUnit(TestCase):
 
         with patch('urllib.request.urlopen') as mock:
             prepare_mock(mock, archive.read())
-            post = WWW.from_gzip(URL, encoding=None)
+            post: io.BytesIO = WWW.from_gzip(URL, encoding=None) # type: ignore
             self.assertEqual(post.read(), content)
 
     def test_www_from_gzip_c(self) -> None:

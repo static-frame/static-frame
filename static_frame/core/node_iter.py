@@ -63,7 +63,7 @@ class IterNodeApplyType(Enum):
         return True
 
 
-
+# NOTE: the generic type here is the type returned from calls to apply()
 class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
     Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.

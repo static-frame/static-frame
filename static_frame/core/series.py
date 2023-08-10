@@ -3647,6 +3647,7 @@ class SeriesAssign(Assign):
                 )
 
 #-------------------------------------------------------------------------------
+
 class SeriesHE(Series):
     '''
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.

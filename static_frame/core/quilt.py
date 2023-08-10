@@ -1155,11 +1155,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     def loc(self) -> InterfaceGetItemCompound['Frame']:
-        return InterfaceGetItemCompound(self._extract_loc) #type: ignore
+        return InterfaceGetItemCompound(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItemCompound['Frame']:
-        return InterfaceGetItemCompound(self._extract_iloc) #type: ignore
+        return InterfaceGetItemCompound(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators

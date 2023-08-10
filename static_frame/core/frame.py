@@ -3154,7 +3154,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='constructor_frame')
     def from_msgpack(
             msgpack_data: bytes
-            ) -> tp.Self:
+            ) -> 'Frame':
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
@@ -3487,7 +3487,7 @@ class Frame(ContainerOperand):
 
     # NOTE: the typing needs work as it does not return `Frame`, but FrameAssignILoc
     @property
-    def assign(self) -> InterfaceAssignQuartet['Frame']:
+    def assign(self) -> InterfaceAssignQuartet[FrameAssignILoc]:
         return InterfaceAssignQuartet( # type: ignore
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,

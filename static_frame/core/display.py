@@ -804,7 +804,7 @@ class Display:
         # use mostly for debugging; strings in rows already have space / padding
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 
-    def to_rows(self) -> tp.Iterable[str]:
+    def to_rows(self) -> tp.Sequence[str]:
         '''
         Alternate output method for observing rows as strings within a list. Useful for testing.
         '''

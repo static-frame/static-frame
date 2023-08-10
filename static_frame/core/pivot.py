@@ -17,6 +17,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
@@ -315,7 +316,7 @@ def pivot_items_to_frame(*,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
         data_field_iloc: tp.Hashable,
-        func_single: tp.Optional[UFunc],
+        func_single: tp.Optional[AnyCallable],
         frame_cls: tp.Type['Frame'],
         name: NameType,
         dtype: DtypeAny | None,

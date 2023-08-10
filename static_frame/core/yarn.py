@@ -267,7 +267,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Yarn']:
+    def iter_element(self) -> IterNodeNoArg['Frame']:
         '''
         Iterator of elements.
         '''
@@ -280,7 +280,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArg['Frame']:
         '''
         Iterator of label, element pairs.
         '''
@@ -502,7 +502,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Yarn':
+    def _extract_iloc(self, key: GetItemKeyType) -> Yarn | Frame:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -548,14 +548,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Yarn':
+    def _extract_loc(self, key: GetItemKeyType) -> Yarn | Frame:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Yarn':
+    def __getitem__(self, key: GetItemKeyType) -> Yarn | Frame:
         '''Selector of values by label.
 
         Args:
@@ -569,7 +569,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
         invalid = np.full(len(self._index), True)
         invalid[key] = False
-        return self._extract_iloc(invalid)
+        return self._extract_iloc(invalid) # type: ignore
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
         return self._drop_iloc(self._index._loc_to_iloc(key))
@@ -819,4 +819,4 @@ class Yarn(ContainerBase, StoreClientMixin):
                 name=self._index.name,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index)
+        return self._extract_iloc(iloc_map).relabel(index) # type: ignore

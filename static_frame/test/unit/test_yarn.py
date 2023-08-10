@@ -390,9 +390,9 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         y2 = y1['f2':'f6'] #type: ignore
-        self.assertEqual(y2.shapes.to_pairs(),
+        self.assertEqual(y2.shapes.to_pairs(), #type: ignore
                 (('f2', (4, 4)), ('f3', (4, 4)), ('f4', (4, 4)), ('f5', (4, 4)), ('f6', (2, 4))))
-        self.assertEqual(y2['f5'].to_pairs(),
+        self.assertEqual(y2['f5'].to_pairs(), #type: ignore
                 ((0, ((0, 'zjZQ'), (1, 'zO5l'), (2, 'zEdH'), (3, 'zB7E'))), (1, ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (3, 'zuVU'))), (2, ((0, 'ztsv'), (1, 'zUvW'), (2, 'zkuW'), (3, 'zmVj'))), (3, ((0, 'z2Oo'), (1, 'z5l6'), (2, 'zCE3'), (3, 'zr4u')))))
 
     def test_yarn_loc_f(self) -> None:
@@ -1000,7 +1000,7 @@ class TestUnit(TestCase):
             y1.relabel({3,4,5})
 
         self.assertEqual(
-                y1.relabel(tuple('abcdef'))['d':].status['shape'].to_pairs(),
+                y1.relabel(tuple('abcdef'))['d':].status['shape'].to_pairs(), #type: ignore
                 (('d', (2, 8)), ('e', (4, 4)), ('f', (6, 4)))
                 )
 
@@ -1026,7 +1026,7 @@ class TestUnit(TestCase):
         y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
         self.assertEqual(
-                y1.relabel_flat()[('a', 3):].status['shape'].to_pairs(),
+                y1.relabel_flat()[('a', 3):].status['shape'].to_pairs(), # type: ignore
                 ((('a', 3), (2, 2)), (('b', 1), (2, 8)), (('b', 2), (4, 4)), (('b', 3), (6, 4)))
                 )
 

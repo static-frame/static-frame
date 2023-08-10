@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAssignILoc # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
@@ -43,6 +44,7 @@ TContainer = tp.TypeVar('TContainer',
         # 'Quilt',
         'IndexHierarchy',
         'SeriesAssign',
+        'FrameAssignILoc',
          # cannot be NDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
