@@ -59,6 +59,9 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -605,7 +608,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='values_2d', class_name='Quilt')
-    def values(self) -> np.ndarray:
+    def values(self) -> NDArrayAny:
         '''
         {}
         '''
@@ -749,7 +752,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # axis iterators
 
-    def _axis_array(self, axis: int) -> tp.Iterator[np.ndarray]:
+    def _axis_array(self, axis: int) -> tp.Iterator[NDArrayAny]:
         '''Generator of arrays across an axis
 
         Args:
@@ -778,7 +781,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             raise AxisInvalid(f'no support for axis {axis}')
 
-    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
@@ -809,7 +812,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         assert constructor is not None
 
         for axis_values in self._axis_array(axis):
-            yield constructor(axis_values)
+            yield constructor(axis_values) # type: ignore
 
     def _axis_tuple_items(self, *,
             axis: int,
@@ -826,7 +829,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         for label, axis_values in self._axis_array_items(axis):
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -889,13 +892,13 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _extract_array(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Extract a consolidated array based on iloc selection.
         '''
         assert self._axis_hierarchy is not None #mypy
 
-        extractor = get_extractor(
+        extractor: tp.Callable[..., NDArrayAny] = get_extractor(
                 self._deepcopy_from_bus,
                 is_array=True,
                 memo_active=False,
@@ -915,7 +918,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     axis=self._axis,
                     )
 
-        parts: tp.List[np.ndarray] = []
+        parts: tp.List[NDArrayAny] = []
         bus_keys: tp.Iterable[tp.Hashable]
 
         if self._axis == 0:
@@ -1027,6 +1030,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             # get the outer level, or just the unique frame labels needed
             frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
 
+        component: tp.Any
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
