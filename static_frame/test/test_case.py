@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import cmath
 import contextlib
@@ -25,6 +26,10 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.util import PathSpecifier
+
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -94,7 +99,7 @@ class TestCase(unittest.TestCase):
     '''
 
     @staticmethod
-    def get_arrays_a() -> tp.Iterator[np.ndarray]:
+    def get_arrays_a() -> tp.Iterator[NDArrayAny]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Unique values required.
         '''
@@ -116,7 +121,7 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_arrays_b() -> tp.Iterator[np.ndarray]:
+    def get_arrays_b() -> tp.Iterator[NDArrayAny]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Many NaNs.
         '''
@@ -160,13 +165,7 @@ class TestCase(unittest.TestCase):
             for cls in cls.__subclasses__():
                 if cls is not IndexBase and cls is not IndexDatetime:
                     yield cls
-
-                if (issubclass(cls, ContainerBase)
-                        or issubclass(cls, ContainerOperandSequence)
-                        or issubclass(cls, ContainerOperand)
-                        ):
-                    yield from yield_sub(cls)
-                elif issubclass(cls, ContainerOperand):
+                if issubclass(cls, ContainerBase):
                     yield from yield_sub(cls)
 
         yield from yield_sub(ContainerBase)
@@ -276,7 +275,7 @@ class TestCase(unittest.TestCase):
         return self.assertEqual(v1, v2)
 
 
-    def assertAlmostEqualArray(self, a1: np.ndarray, a2: np.ndarray) -> None:
+    def assertAlmostEqualArray(self, a1: NDArrayAny, a2: NDArrayAny) -> None:
         # NaNs are treated as equal
         np.testing.assert_allclose(a1, a2)
         # np.testing.assert_array_almost_equal(a1, a2, decimal=5)
@@ -284,7 +283,7 @@ class TestCase(unittest.TestCase):
     def assertTypeBlocksArrayEqual(self,
             tb: TypeBlocks,
             match: tp.Iterable[object],
-            match_dtype: tp.Optional[tp.Union[type, np.dtype, str]] = None) -> None:
+            match_dtype: tp.Optional[tp.Union[type, DtypeAny, str]] = None) -> None:
         '''
         Args:
             tb: a TypeBlocks instance

@@ -229,7 +229,7 @@ class Frame(ContainerOperand):
             *,
             name: tp.Hashable = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Frame constructor from a Series:
 
@@ -259,7 +259,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a zero-sized Frame based on ``index`` or ``columns`` (though not both of size).
         '''
@@ -308,7 +308,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a Frame from an element, i.e., a single value stored in a single cell. Both ``index`` and ``columns`` are required, and cannot be specified with ``IndexAutoFactory``.
         '''
@@ -358,7 +358,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
         '''
@@ -616,7 +616,7 @@ class Frame(ContainerOperand):
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Produce a :obj:`Frame` with a hierarchical index from an iterable of pairs of labels, :obj:`Frame`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Frame`.
 
@@ -700,7 +700,7 @@ class Frame(ContainerOperand):
             name: NameType = None,
             func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Return a new :obj:`Frame` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
@@ -818,7 +818,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Construct a :obj:`Frame` from an iterable of rows, where rows are defined as iterables, including tuples, lists, and arrays. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields.
 
         Supplying ``dtypes`` will significantly improve performance, as otherwise columnar array types must be derived by element-wise examination.
@@ -958,7 +958,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a row; column names will be derived from the union of all row dictionary keys.
 
         Args:
@@ -1054,7 +1054,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_columns: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
 
         Args:
@@ -1093,7 +1093,7 @@ class Frame(ContainerOperand):
             *,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False) -> 'Frame':
+            consolidate_blocks: bool = False) -> tp.Self:
         '''Frame constructor from iterable of pairs of index label, row, where row is a dictionary. Column names will be derived from the union of all row dictionary keys.
 
         Args:
@@ -1132,7 +1132,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
@@ -1225,7 +1225,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a Frame from a dictionary (or any object that has an items() method) where keys are column labels and values are columns values (either sequence types or :obj:`Series`).
 
@@ -1265,7 +1265,7 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False,
             consolidate_blocks: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied. This constructor is similar to ``from_items()``, though here columns are provided through an independent ``columns`` argument.
 
         Args:
@@ -1350,7 +1350,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a column; index labels will be derived from the union of all column dictionary keys.
 
         Args:
@@ -1531,7 +1531,7 @@ class Frame(ContainerOperand):
             columns_labels: tp.Sequence[tp.Hashable],
             columns_constructors: IndexConstructors,
             name: tp.Hashable,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
         '''
@@ -1590,7 +1590,7 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Convert a NumPy structed array into a Frame.
 
@@ -1641,7 +1641,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from an iterable of key, value, where key is a pair of row, column labels.
 
@@ -1757,7 +1757,7 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             parameters: tp.Iterable[tp.Any] = (),
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Frame constructor from an SQL query and a database connection object.
 
@@ -1913,7 +1913,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_index}
 
         Args:
@@ -1956,7 +1956,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
 
         Args:
@@ -1999,7 +1999,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
         Args:
@@ -2037,7 +2037,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_records}
 
         Args:
@@ -2075,7 +2075,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_values}
 
         Args:
@@ -2133,7 +2133,7 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from a file path or a file-like object defining a delimited (CSV, TSV) data file.
 
@@ -2448,7 +2448,7 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
 
@@ -2510,7 +2510,7 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
 
@@ -2573,7 +2573,7 @@ class Frame(ContainerOperand):
             name: NameType = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
 
@@ -2637,7 +2637,7 @@ class Frame(ContainerOperand):
             skip_footer: int = 0,
             trim_nadir: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a sheet in an XLSX workbook.
 
@@ -2679,7 +2679,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a table in an SQLite database file.
         '''
@@ -2712,7 +2712,7 @@ class Frame(ContainerOperand):
             columns_constructors: IndexConstructors = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a table in an HDF5 file.
         '''
@@ -2810,7 +2810,7 @@ class Frame(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Given a Pandas DataFrame, return a Frame.
 
         Args:
@@ -2940,7 +2940,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Realize a ``Frame`` from an Arrow Table.
 
         Args:
@@ -3100,7 +3100,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Realize a ``Frame`` from a Parquet file.
 
@@ -3154,7 +3154,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='constructor_frame')
     def from_msgpack(
             msgpack_data: bytes
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
@@ -3376,7 +3376,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Frame':
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         obj = self.__class__.__new__(self.__class__)
         obj._blocks = deepcopy(self._blocks, memo)
         obj._columns = deepcopy(self._columns, memo)

@@ -66,9 +66,9 @@ class IndexDatetime(Index):
     def __init__(self,
             labels: IndexInitializer,
             *,
-            name: NameType = NAME_DEFAULT,
             loc_is_iloc: bool = False,
-            ):
+            name: NameType = NAME_DEFAULT,
+            ) -> None:
         '''Initializer.
 
         {args}
