@@ -3060,7 +3060,7 @@ class Series(ContainerOperand):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> tp.Union[tp.Hashable, NDArrayAny]:
         '''
         {doc}
 

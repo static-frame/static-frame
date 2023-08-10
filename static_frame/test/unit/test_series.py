@@ -44,6 +44,11 @@ from static_frame.core.util import isna_array
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+
 nan = np.nan
 
 LONG_SAMPLE_STR = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
@@ -521,7 +526,7 @@ class TestUnit(TestCase):
                 ((0, False), (1, True)))
 
         post1 = d < s
-        self.assertEqual(post1.to_pairs(), ((0, False), (1, True)))
+        self.assertEqual(post1.to_pairs(), ((0, False), (1, True))) # type: ignore
 
         s2 = s.iloc[:1]
 
@@ -529,7 +534,7 @@ class TestUnit(TestCase):
                 ((0, True),))
 
         post2 = d < s2
-        self.assertEqual(post2.to_pairs(), ((0, False),))
+        self.assertEqual(post2.to_pairs(), ((0, False),)) # type: ignore
 
 
     def test_series_binary_operator_n(self) -> None:
@@ -594,14 +599,14 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 10), ('c', 20), ('d', 30))
                 )
         post2 = np.array([0, 0, 10, 10]) * s1
-        self.assertEqual(post2.to_pairs(), (('a', 0), ('b', 0), ('c', 20), ('d', 30)))
+        self.assertEqual(post2.to_pairs(), (('a', 0), ('b', 0), ('c', 20), ('d', 30))) # type: ignore
 
     def test_series_binary_operator_r(self) -> None:
         s1 = Series((2, 1, 8), index=list('abc'))
         self.assertEqual((np.int64(2) - s1).to_pairs(),
                 (('a', 0), ('b', 1), ('c', -6)),
                 )
-        self.assertEqual((np.full(3, 2) - s1).to_pairs(),
+        self.assertEqual((np.full(3, 2) - s1).to_pairs(), # type: ignore
                 (('a', 0), ('b', 1), ('c', -6)),
                 )
 
@@ -610,7 +615,7 @@ class TestUnit(TestCase):
         self.assertEqual((np.int64(2) + s1).to_pairs(),
                 (('a', 4), ('b', 3), ('c', 10)),
                 )
-        self.assertEqual((np.full(3, 2) + s1).to_pairs(),
+        self.assertEqual((np.full(3, 2) + s1).to_pairs(), # type: ignore
                 (('a', 4), ('b', 3), ('c', 10)),
                 )
 
@@ -619,7 +624,7 @@ class TestUnit(TestCase):
         self.assertEqual((np.int64(10) / s1).to_pairs(),
                 (('a', 5.0), ('b', 2.0), ('c', 1.0)),
                 )
-        self.assertEqual((np.full(3, 10) / s1).to_pairs(),
+        self.assertEqual((np.full(3, 10) / s1).to_pairs(), # type: ignore
                 (('a', 5.0), ('b', 2.0), ('c', 1.0)),
                 )
 
@@ -628,26 +633,26 @@ class TestUnit(TestCase):
         self.assertEqual((np.int64(10) // s1).to_pairs(),
                 (('a', 5), ('b', 2), ('c', 1)),
                 )
-        self.assertEqual((np.full(3, 10) // s1).to_pairs(),
+        self.assertEqual((np.full(3, 10) // s1).to_pairs(), # type: ignore
                 (('a', 5), ('b', 2), ('c', 1)),
                 )
 
     def test_series_binary_operator_u(self) -> None:
         s1 = Series((2, 5, 10), index=list('abc'))
-        self.assertEqual((np.int64(5) >= s1).to_pairs(),
+        self.assertEqual((np.int64(5) >= s1).to_pairs(), # type: ignore
                 (('a', True), ('b', True), ('c', False)),
                 )
-        self.assertEqual((np.full(3, 5) >= s1).to_pairs(),
+        self.assertEqual((np.full(3, 5) >= s1).to_pairs(), # type: ignore
                 (('a', True), ('b', True), ('c', False)),
                 )
 
     def test_series_binary_operator_v(self) -> None:
         s1 = Series((2, 5, 10), index=list('abc'))
 
-        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1))
-        self.assertTrue((np.int64(5) > s1).equals(5 > s1))
-        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1))
-        self.assertTrue((np.int64(5) < s1).equals(5 < s1))
+        self.assertTrue((np.int64(5) >= s1).equals(5 >= s1)) # type: ignore
+        self.assertTrue((np.int64(5) > s1).equals(5 > s1)) # type: ignore
+        self.assertTrue((np.int64(5) <= s1).equals(5 <= s1)) # type: ignore
+        self.assertTrue((np.int64(5) < s1).equals(5 < s1)) # type: ignore
         self.assertTrue((np.int64(5) == s1).equals(5 == s1))
         self.assertTrue((np.int64(5) != s1).equals(5 != s1))
 
@@ -776,13 +781,13 @@ class TestUnit(TestCase):
                 datetime.date(2021,1,15),
                 datetime.date(2021,1,31)))
 
-        s2 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index[:2]]), fill_value=None) #type: ignore
+        s2 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index[:2]]), fill_value=None)
         self.assertEqual(s2.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
                 (np.datetime64('2021-01-15'), 0))
                 )
 
-        s3 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None)
+        s3 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None) # type: ignore
 
         self.assertEqual(s3.to_pairs(),
                 ((np.datetime64('2020-12-31'), 3),
@@ -1514,8 +1519,8 @@ class TestUnit(TestCase):
         self.assertTrue(np.isnan(s2.median(skipna=False)))
 
         with self.assertRaises(TypeError):
-            # should raise with bad keyword argumenty
-            s2.median(skip_na=False) # pylint: disable=E1123
+            # should raise with bad keyword argument
+            s2.median(skip_na=False) # type: ignore # pylint: disable=E1123
 
     #---------------------------------------------------------------------------
 
@@ -1780,8 +1785,8 @@ class TestUnit(TestCase):
         a1[2] = np.array([3, 4])
         a1[0] = np.array([9])
         s1 = Series(a1, index=('a', 'b', 'c'))
-        self.assertEqual(s1['a'].tolist(), [9])
-        self.assertEqual(s1['c'].tolist(), [3, 4])
+        self.assertEqual(s1['a'].tolist(), [9]) # type: ignore
+        self.assertEqual(s1['c'].tolist(), [3, 4]) # type: ignore
 
     def test_series_loc_extract_j(self) -> None:
 
@@ -2178,7 +2183,7 @@ class TestUnit(TestCase):
         self.assertEqual(s3.values.tolist(),
                 [4, 5, 2, 3, 0, 1])
 
-        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))
+        s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0])) # type: ignore
         self.assertEqual(s4.values.tolist(),
                 [5, 4, 3, 2, 1, 0])
 
@@ -3264,7 +3269,7 @@ class TestUnit(TestCase):
     def test_series_to_frame_k(self) -> None:
         from datetime import date
         f = Frame.from_element(1, columns=IndexDate([date(2022, 9, 30)]), index=[1])
-        s = f[sf.ILoc[-1]]
+        s: Series = f[sf.ILoc[-1]] # type: ignore
         f = s.to_frame(columns_constructor=sf.IndexDate)
         self.assertEqual(f.to_pairs(),
                 ((np.datetime64('2022-09-30'), ((1, 1),)),)
@@ -3661,16 +3666,16 @@ class TestUnit(TestCase):
         self.assertEqual(s1.loc_searchsorted(87), 'c')
         self.assertEqual(s1.loc_searchsorted(87, side_left=False), 'd')
 
-        self.assertEqual(s1.loc_searchsorted([0, 123]).tolist(), ['a', 'd'])
-        self.assertEqual(s1.loc_searchsorted([0, 6]).tolist(), ['a', 'b'])
-        self.assertEqual(s1.loc_searchsorted([3, 8234]).tolist(), ['a', 'g'])
-        self.assertEqual(s1.loc_searchsorted([3, 8234],
+        self.assertEqual(s1.loc_searchsorted([0, 123]).tolist(), ['a', 'd']) # type: ignore
+        self.assertEqual(s1.loc_searchsorted([0, 6]).tolist(), ['a', 'b']) # type: ignore
+        self.assertEqual(s1.loc_searchsorted([3, 8234]).tolist(), ['a', 'g']) # type: ignore
+        self.assertEqual(s1.loc_searchsorted([3, 8234], # type: ignore
                 side_left=False,
                 fill_value=None).tolist(),
                 ['b', None])
 
         self.assertEqual(
-                s1.loc_searchsorted([3, 8235, 3, 8235], fill_value=None).tolist(),
+                s1.loc_searchsorted([3, 8235, 3, 8235], fill_value=None).tolist(), # type: ignore
                 ['a', None, 'a', None])
         self.assertEqual(
                 s1.loc_searchsorted(8235, fill_value=None),
@@ -3683,11 +3688,11 @@ class TestUnit(TestCase):
 
         s1 = Series(range(10), index=IndexDate.from_date_range('2020-01-01', '2020-01-10'))
 
-        self.assertEqual(s1.astype(float).loc_searchsorted(2.5).tolist(),
+        self.assertEqual(s1.astype(float).loc_searchsorted(2.5).tolist(), # type: ignore
                 datetime.date(2020, 1, 4))
 
         self.assertEqual(
-                s1.astype(float).loc_searchsorted((2.5, 5.5, 2000), fill_value=None).tolist(),
+                s1.astype(float).loc_searchsorted((2.5, 5.5, 2000), fill_value=None).tolist(), # type: ignore
                 [datetime.date(2020, 1, 4), datetime.date(2020, 1, 7), None]
                 )
 
@@ -3702,19 +3707,19 @@ class TestUnit(TestCase):
         s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
         post1 = s1.loc_searchsorted([2, 5])
-        self.assertEqual(post1.tolist(), [('a', 3), ('b', 3)])
+        self.assertEqual(post1.tolist(), [('a', 3), ('b', 3)]) # type: ignore
 
         post2 = s1.loc_searchsorted([2, 5, 12], fill_value=None)
-        self.assertEqual(post2.tolist(), [('a', 3), ('b', 3), None])
+        self.assertEqual(post2.tolist(), [('a', 3), ('b', 3), None]) # type: ignore
 
         post3 = s1.loc_searchsorted([12, 2, 5], fill_value=None)
-        self.assertEqual(post3.tolist(), [None, ('a', 3), ('b', 3)])
+        self.assertEqual(post3.tolist(), [None, ('a', 3), ('b', 3)]) # type: ignore
 
     def test_series_loc_searchsorted_e(self) -> None:
 
         s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
-        post = s1.loc_searchsorted([20, 2], fill_value=None)
+        post: NDArrayAny = s1.loc_searchsorted([20, 2], fill_value=None) # type: ignore
         self.assertEqual(post.tolist(), [None, ('a', 3)])
 
 
