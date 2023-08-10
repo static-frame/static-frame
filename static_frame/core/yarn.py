@@ -118,7 +118,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             name:
             deepcopy_from_bus:
         '''
-        bus_components = []
+        bus_components: tp.List[Bus] = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
