@@ -180,7 +180,7 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         self.assertEqual(
-                tp.cast(NDArrayAny, idx._loc_to_iloc(np.array([True, False, True, False]))).tolist(),
+                idx._loc_to_iloc(np.array([True, False, True, False])).tolist(), # type: ignore
                 [0, 2])
 
         self.assertEqual(idx._loc_to_iloc(slice('c',)), slice(None, 3, None))

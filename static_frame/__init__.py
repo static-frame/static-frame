@@ -84,7 +84,7 @@ from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem

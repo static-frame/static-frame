@@ -46,7 +46,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -1202,14 +1202,14 @@ class IndexHierarchy(IndexBase):
 
     @property
     @doc_inject(select='astype')
-    def astype(self: IH) -> InterfaceAsType[IndexHierarchy]:
+    def astype(self) -> InterfaceIndexHierarchyAsType[IndexHierarchy]:
         '''
         Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
 
         Args:
             {dtype}
         '''
-        return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+        return InterfaceIndexHierarchyAsType(func_getitem=self._extract_getitem_astype)
 
     # --------------------------------------------------------------------------
     @property

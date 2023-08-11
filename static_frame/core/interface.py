@@ -64,7 +64,7 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
@@ -535,8 +535,8 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
-        # InterfaceAsType found on Frame, IndexHierarchy
-        if isinstance(obj, (InterfaceAsType, InterfaceBatchAsType)):
+        # InterfaceFrameAsType found on Frame, IndexHierarchy
+        if isinstance(obj, (InterfaceFrameAsType, InterfaceBatchAsType)):
             for field in obj.INTERFACE:
 
                 delegate_obj = getattr(obj, field)

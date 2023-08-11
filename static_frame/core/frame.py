@@ -97,7 +97,7 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
-from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -3498,7 +3498,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(select='astype')
-    def astype(self) -> InterfaceAsType['Frame']:
+    def astype(self) -> InterfaceFrameAsType['Frame']:
         '''
         Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
@@ -3506,7 +3506,7 @@ class Frame(ContainerOperand):
             {dtype}
         '''
         # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
-        return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+        return InterfaceFrameAsType(func_getitem=self._extract_getitem_astype)
 
     @property
     def consolidate(self) -> InterfaceConsolidate['Frame']:

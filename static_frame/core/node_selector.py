@@ -24,6 +24,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import SeriesAssign  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
@@ -246,10 +247,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceAsType(Interface[TContainer]):
-    '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
-    '''
-
+class InterfaceFrameAsType(Interface[TContainer]):
     __slots__ = ('_func_getitem',)
     INTERFACE = ('__getitem__', '__call__')
 
@@ -284,6 +282,44 @@ class InterfaceAsType(Interface[TContainer]):
                 dtype,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+class InterfaceIndexHierarchyAsType(Interface[TContainer]):
+    __slots__ = ('_func_getitem',)
+    INTERFACE = ('__getitem__', '__call__')
+
+    def __init__(self,
+            func_getitem: tp.Callable[[GetItemKeyType], 'IndexHierarchyAsType']
+            ) -> None:
+        '''
+        Args:
+            _func_getitem: a callable that expects a _func_getitem key and returns a IndexHierarchyAsType interface; for example, Frame._extract_getitem_astype.
+        '''
+        self._func_getitem = func_getitem
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._func_getitem(key)
+
+    def __call__(self,
+            dtype: DtypeAny,
+            *,
+            consolidate_blocks: bool = False,
+            ) -> 'IndexHierarchy':
+        '''
+        Apply a single ``dtype`` to all columns.
+        '''
+        return self._func_getitem(NULL_SLICE)(
+                dtype,
+                consolidate_blocks=consolidate_blocks,
+                )
+
+
 
 class BatchAsType:
 
