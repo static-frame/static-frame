@@ -53,6 +53,7 @@ from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_datetime import IndexYearMonthGO
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.index_hierarchy import IndexHierarchyAsType
 from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
@@ -66,6 +67,8 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
+from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
+
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceGetItemCompound
@@ -535,19 +538,18 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
-        # InterfaceFrameAsType found on Frame, IndexHierarchy
-        if isinstance(obj, (InterfaceFrameAsType, InterfaceBatchAsType)):
+        if isinstance(obj, (InterfaceFrameAsType, InterfaceIndexHierarchyAsType, InterfaceBatchAsType)):
             for field in obj.INTERFACE:
 
                 delegate_obj = getattr(obj, field)
                 delegate_reference = f'{obj.__class__.__name__}.{field}'
                 if field == Features.GETITEM:
-                    # the cls.getitem version returns a FrameAsType
+                    cls_returned = FrameAsType if isinstance(obj, InterfaceFrameAsType) else IndexHierarchyAsType
                     signature, signature_no_args = _get_signatures(
                             name,
                             delegate_obj,
                             is_getitem=True,
-                            delegate_func=FrameAsType.__call__,
+                            delegate_func=cls_returned.__call__,
                             max_args=max_args,
                             )
                 else:
