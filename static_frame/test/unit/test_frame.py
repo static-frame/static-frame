@@ -572,7 +572,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(Exception):
-            f['c'] = 0 #pylint: disable=E1137 # type: ignore
+            f['c'] = 0 # type: ignore #pylint: disable=E1137
 
     def test_frame_from_pandas_c(self) -> None:
         import pandas as pd
@@ -2783,7 +2783,7 @@ class TestUnit(TestCase):
         fields = ['m','V','P','c','Y','r','q','R','j','X','a','E','K','p','u','G','D','w','d','e','H','i','h','N','O','k','l','F','g','o','M','T','n','L','Q','W','t','v','s','Z','J','I','b']
 
         # check that normal selection works
-        f1_sub: Frame = f1[fields]
+        f1_sub: Frame = f1[fields] # type: ignore
         self.assertEqual(f1_sub.columns.values.tolist(), fields)
 
         f2 = f1.assign[fields](f1[fields] * 0.5)
@@ -2863,7 +2863,7 @@ class TestUnit(TestCase):
 
         f1 = sf.Frame.from_element('1', index=range(4), columns=range(5))
         f2 = f1[[1, 2, 3]].astype({1: int, 2: bool,})
-        f3 = f1.assign[f2.columns](f2)
+        f3 = f1.assign[f2.columns](f2) # type: ignore
         self.assertEqual([b.dtype.kind for b in f3._blocks._blocks],
                 ['U', 'i', 'b', 'U', 'U'])
         self.assertEqual(f3.to_pairs(),
@@ -3566,7 +3566,7 @@ class TestUnit(TestCase):
                 f1.reindex(columns=('q', 'p', 's')).to_pairs(),
                 (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('p', (('w', 1), ('x', 30), ('y', 54), ('z', 65))), ('s', (('w', False), ('x', True), ('y', False), ('z', True)))))
 
-        f2: Frame = f1[['p', 'q']]
+        f2: Frame = f1[['p', 'q']] # type: ignore
 
         self.assertEqual(
                 f2.reindex(columns=('q', 'p')).to_pairs(),
@@ -3604,7 +3604,7 @@ class TestUnit(TestCase):
                         fill_value=None).to_pairs(),
                 (('c', (('a', None), ('b', None))), ('d', (('a', None), ('b', None)))))
 
-        f2: Frame = f1[['p', 'q']]
+        f2: Frame = f1[['p', 'q']]  # type: ignore
 
         self.assertEqual(
                 f2.reindex(index=('x',), columns=('q',)).to_pairs(),
@@ -7001,7 +7001,7 @@ class TestUnit(TestCase):
                 delimiter='|',
                 index_depth=0,
                 columns_depth=0,
-                dtypes=defaultdict(lambda: str, {1: int}),
+                dtypes=defaultdict(lambda: str, {1: int}), # type: ignore
                 )
         self.assertEqual(
                 [dt.kind for dt in f1.dtypes.values],
