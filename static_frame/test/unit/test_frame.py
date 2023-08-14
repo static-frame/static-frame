@@ -119,8 +119,8 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(),
                 ((0, ((0, 1), (1, 3), (2, 5))), (1, ((0, 2), (1, 4), (2, 6))))
                 )
-        self.assertTrue(f4._index._map is None)
-        self.assertTrue(f4._columns._map is None)
+        self.assertTrue(f4._index._map is None) # type: ignore
+        self.assertTrue(f4._columns._map is None) # type: ignore
 
     def test_frame_init_c(self) -> None:
         f = sf.FrameGO.from_dict(dict(color=('black',)))
@@ -572,7 +572,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(Exception):
-            f['c'] = 0 #pylint: disable=E1137
+            f['c'] = 0 #pylint: disable=E1137 # type: ignore
 
     def test_frame_from_pandas_c(self) -> None:
         import pandas as pd
@@ -684,8 +684,8 @@ class TestUnit(TestCase):
                 columns=IndexAutoFactory
                 )
 
-        self.assertTrue(f.index._map is None)
-        self.assertTrue(f.columns._map is None)
+        self.assertTrue(f.index._map is None) # type: ignore
+        self.assertTrue(f.columns._map is None) # type: ignore
 
         self.assertEqual(f.to_pairs(),
                 ((0, ((0, 1), (1, 2))), (1, ((0, '3'), (1, '4'))), (2, ((0, 1.5), (1, 2.5))), (3, ((0, 'a'), (1, 'b'))))
@@ -1122,7 +1122,7 @@ class TestUnit(TestCase):
                 f2.to_pairs(),
                 (('a', ((0, 1), (1, 30), (2, 54), (3, 65))), ('b', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('c', ((0, False), (1, True), (2, False), (3, True))), ('d', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-16T00:00:00.000000000')), (2, np.datetime64('2017-12-17T00:00:00.000000000')), (3, np.datetime64('2017-12-18T00:00:00.000000000')))))
                 )
-        self.assertTrue(f2.index._map is None)
+        self.assertTrue(f2.index._map is None) # type: ignore
 
     def test_frame_to_parquet_d(self) -> None:
         # pyarrow.lib.ArrowNotImplementedError: Unsupported datetime64 time unit
@@ -1298,7 +1298,7 @@ class TestUnit(TestCase):
                 (('d', ((0, False), (1, True), (2, False), (3, True))), ('a', ((0, 1), (1, 30), (2, 54), (3, 65))))
                 )
 
-        self.assertTrue(f2.index._map is None)
+        self.assertTrue(f2.index._map is None) # type: ignore
 
     def test_frame_from_parquet_b2(self) -> None:
         records = (
@@ -1646,7 +1646,7 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('x','y'))
 
-        f2 = f1['r':]  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        f2: Frame = f1['r':] # type: ignore
         self.assertEqual(f2.columns.values.tolist(), ['r', 's', 't'])
         self.assertTrue((f2.index == f1.index).all())
         self.assertEqual(mloc(f2.index.values), mloc(f1.index.values))
@@ -2497,7 +2497,7 @@ class TestUnit(TestCase):
         # examining cases where shape goes to zero in one dimension
 
         f1 = Frame.from_element(None, index=tuple('ab'), columns=('c',))
-        f2 = f1[[]]
+        f2: Frame = f1[[]] # type: ignore
         self.assertEqual(len(f2.columns), 0)
         self.assertEqual(len(f2.index), 2)
         self.assertEqual(f2.shape, (2, 0))
@@ -2530,15 +2530,15 @@ class TestUnit(TestCase):
         # examining cases where shape goes to zero in one dimension
 
         self.assertEqual(
-                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 0].dtype,
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 0].dtype, # type: ignore
                 np.dtype('float64')
                 )
         self.assertEqual(
-                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 1].dtype,
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 1].dtype, # type: ignore
                 np.dtype('O')
                 )
         self.assertEqual(
-                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 2].dtype,
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 2].dtype, # type: ignore
                 np.dtype('<U3')
                 )
 
@@ -2783,7 +2783,7 @@ class TestUnit(TestCase):
         fields = ['m','V','P','c','Y','r','q','R','j','X','a','E','K','p','u','G','D','w','d','e','H','i','h','N','O','k','l','F','g','o','M','T','n','L','Q','W','t','v','s','Z','J','I','b']
 
         # check that normal selection works
-        f1_sub = f1[fields]
+        f1_sub: Frame = f1[fields]
         self.assertEqual(f1_sub.columns.values.tolist(), fields)
 
         f2 = f1.assign[fields](f1[fields] * 0.5)
@@ -3566,7 +3566,7 @@ class TestUnit(TestCase):
                 f1.reindex(columns=('q', 'p', 's')).to_pairs(),
                 (('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('p', (('w', 1), ('x', 30), ('y', 54), ('z', 65))), ('s', (('w', False), ('x', True), ('y', False), ('z', True)))))
 
-        f2 = f1[['p', 'q']]
+        f2: Frame = f1[['p', 'q']]
 
         self.assertEqual(
                 f2.reindex(columns=('q', 'p')).to_pairs(),
@@ -3604,8 +3604,7 @@ class TestUnit(TestCase):
                         fill_value=None).to_pairs(),
                 (('c', (('a', None), ('b', None))), ('d', (('a', None), ('b', None)))))
 
-
-        f2 = f1[['p', 'q']]
+        f2: Frame = f1[['p', 'q']]
 
         self.assertEqual(
                 f2.reindex(index=('x',), columns=('q',)).to_pairs(),
@@ -4232,11 +4231,11 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
-        self.assertEqual(f1['t'].dtype, np.float64)
-        self.assertEqual(f1['p'].dtype, np.int64)
+        self.assertEqual(f1['t'].dtype, np.float64) # type: ignore
+        self.assertEqual(f1['p'].dtype, np.int64) # type: ignore
 
-        self.assertEqual(f1.loc['w'].dtype, np.float64)
-        self.assertEqual(f1.loc['z'].dtype, np.float64)
+        self.assertEqual(f1.loc['w'].dtype, np.float64) # type: ignore
+        self.assertEqual(f1.loc['z'].dtype, np.float64) # type: ignore
 
         self.assertEqual(f1[['r', 's']].values.dtype, np.float64)
 
@@ -4529,10 +4528,10 @@ class TestUnit(TestCase):
         self.assertTrue((np.int64(10) / f1).equals(10 / f1))
         self.assertTrue((np.int64(10) // f1).equals(10 // f1))
         self.assertTrue((np.int64(10) - f1).equals(10 - f1))
-        self.assertTrue((np.int64(5) > f1).equals(5 > f1))
-        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1))
-        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1))
-        self.assertTrue((np.int64(5) < f1).equals(5 < f1))
+        self.assertTrue((np.int64(5) > f1).equals(5 > f1)) # type: ignore
+        self.assertTrue((np.int64(5) >= f1).equals(5 >= f1)) # type: ignore
+        self.assertTrue((np.int64(5) <= f1).equals(5 <= f1)) # type: ignore
+        self.assertTrue((np.int64(5) < f1).equals(5 < f1)) # type: ignore
         self.assertTrue((np.int64(5) == f1).equals(5 == f1))
         self.assertTrue((np.int64(5) != f1).equals(5 != f1))
 
@@ -5393,7 +5392,7 @@ class TestUnit(TestCase):
                          [8, 1, 4],
                          [2, 9, 6]])
         f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
-        f2 = f1.sort_values(slice('z', None), axis=0, key=lambda f: -f)
+        f2 = f1.sort_values(slice('z', None), axis=0, key=lambda f: -f) # type: ignore
         self.assertEqual(f2.to_pairs(),
                 (('b', (('x', 7), ('y', 1), ('z', 9))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('a', (('x', 3), ('y', 8), ('z', 2))))
                 )
@@ -5503,9 +5502,9 @@ class TestUnit(TestCase):
             )
         self.assertFalse(f2.columns.STATIC)
         f2[4] = None
-        self.assertTrue(f2.columns._map is None)
+        self.assertTrue(f2.columns._map is None) # type: ignore
         f2[6] = None
-        self.assertFalse(f2.columns._map is None)
+        self.assertFalse(f2.columns._map is None) # type: ignore
 
         self.assertEqual(f2.to_pairs(),
                 ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))), (4, (('a', None), ('b', None))), (6, (('a', None), ('b', None))))
@@ -6753,10 +6752,10 @@ class TestUnit(TestCase):
                 )
 
         f1 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=IndexYear, index_depth=1)
-        self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]'))
+        self.assertEqual(f1.index.dtype, np.dtype('<M8[Y]')) # type: ignore
 
         f2 = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear,), index_depth=1)
-        self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]'))
+        self.assertEqual(f2.index.dtype, np.dtype('<M8[Y]')) # type: ignore
 
         with self.assertRaises(RuntimeError):
             _ = Frame.from_delimited(msg.split('\n'), delimiter='|', dtypes=dtypes, index_constructors=(IndexYear, IndexDate), index_depth=1)
@@ -8740,7 +8739,7 @@ class TestUnit(TestCase):
         post = sf.Frame.from_concat((f2, f3), axis=1)
 
         # this form of concatenation has no copy
-        assert post.mloc.tolist() == [f2.mloc[0], f3.mloc[0]]
+        assert post.mloc.tolist() == [f2.mloc[0], f3.mloc[0]] # type: ignore
         self.assertEqual(post.shape, (2600, 41))
 
     def test_frame_from_concat_i(self) -> None:
@@ -9097,9 +9096,9 @@ class TestUnit(TestCase):
         f1_reindexed = f1.reindex(intersection_idx)[intersection_cols]
         f2_reindexed = f2.reindex(intersection_idx)[intersection_cols]
 
-        mismatch_idx_dtypes: sf.Index = f1_reindexed.dtypes != f2_reindexed.dtypes
-        f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
-        f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
+        mismatch_idx_dtypes: sf.Index = f1_reindexed.dtypes != f2_reindexed.dtypes # type: ignore
+        f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a') # type: ignore
+        f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b') # type: ignore
 
         dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes),
                 axis=1,
@@ -10239,8 +10238,8 @@ class TestUnit(TestCase):
                 index=IndexAutoFactory,
                 columns=IndexAutoFactory,
                 )
-        self.assertEqual(f2.index._map, None)
-        self.assertEqual(f2.columns._map, None)
+        self.assertEqual(f2.index._map, None) # type: ignore
+        self.assertEqual(f2.columns._map, None) # type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -10262,7 +10261,7 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c', 'd', 'e', 'f'])
 
         # underlying map objects must be different
-        self.assertTrue(id(f1.columns._map) != id(f2.columns._map))
+        self.assertTrue(id(f1.columns._map) != id(f2.columns._map)) # type: ignore
 
     def test_frame_to_frame_go_b(self) -> None:
         records = (
@@ -10917,7 +10916,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.index.name, ('q', 'r'))
 
         # we reuse the same block data
-        self.assertTrue((f2.index._blocks.mloc == f1._blocks[[1, 2]].mloc).all())
+        self.assertTrue((f2.index._blocks.mloc == f1._blocks[[1, 2]].mloc).all()) # type: ignore
 
         self.assertEqual(f2.to_pairs(),
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('q', (((2, 'a'), 2), ((2, 'b'), 2), ((50, 'a'), 50), ((50, 'b'), 50))), ('r', (((2, 'a'), 'a'), ((2, 'b'), 'b'), ((50, 'a'), 'a'), ((50, 'b'), 'b'))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False)))))
@@ -10961,7 +10960,7 @@ class TestUnit(TestCase):
                 )
 
         # we reuse the block arrays in the Index
-        self.assertTrue((fh.index._blocks.mloc == f._blocks[:2].mloc).all())
+        self.assertTrue((fh.index._blocks.mloc == f._blocks[:2].mloc).all()) # type: ignore
 
         self.assertEqual( fh.to_pairs(),
                 ((2, (((1, 1), 'a'), ((1, 2), 'b'), ((1, 3), 'c'), ((2, 1), 'd'), ((2, 2), 'e'), ((2, 3), 'f'), ((3, 1), 'g'), ((3, 2), 'h'), ((3, 3), 'i'))),))
@@ -10999,7 +10998,7 @@ class TestUnit(TestCase):
                 ((2, (((1, datetime.date(2018, 12, 1)), 10), ((2, datetime.date(2018, 12, 1)), 40))),))
 
         # because we passed index_constructors, we may not be able to reuse blocks
-        self.assertTrue((fh.index._blocks.mloc != f._blocks[:2].mloc).all())
+        self.assertTrue((fh.index._blocks.mloc != f._blocks[:2].mloc).all()) # type: ignore
 
     def test_frame_set_index_hierarchy_f(self) -> None:
         records = (
@@ -11340,7 +11339,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.name, 'test')
         self.assertEqual(f2.name, 'alt')
 
-        f2['u'] = -1
+        f2['u'] = -1 # type: ignore
 
         self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's', 't'])
         self.assertEqual(f2.columns.values.tolist(), ['p', 'q', 'r', 's', 't', 'u'])
@@ -11640,7 +11639,7 @@ class TestUnit(TestCase):
                 index_constructors=(IndexDate, Index),
                 )
 
-        self.assertEqual([dt.kind for dt in f2.index.dtypes.values],
+        self.assertEqual([dt.kind for dt in f2.index.dtypes.values], # type: ignore
                 ['M', 'U'])
 
         self.assertEqual(f2.to_pairs(),
@@ -11655,7 +11654,7 @@ class TestUnit(TestCase):
                 dtypes={'date': 'datetime64[D]', 'count': 'float'},
                 index_depth=1,
                 )
-        self.assertEqual(f1.index.dtype.kind, 'f')
+        self.assertEqual(f1.index.dtype.kind, 'f') # type: ignore
         self.assertEqual(f1.to_pairs(),
                 (('date', ((20.0, np.datetime64('2006-01-01')), (21.0, np.datetime64('2006-01-01')), (22.0, np.datetime64('2006-01-02')), (23.0, np.datetime64('2006-01-02')))), ('identifier', ((20.0, 'a1'), (21.0, 'b2'), (22.0, 'a1'), (23.0, 'b2'))), ('value', ((20.0, 12.5), (21.0, 12.5), (22.0, 12.5), (23.0, 12.5))))
                 )
@@ -12400,7 +12399,7 @@ class TestUnit(TestCase):
 
         s1 = f.bloc[f == True] # pylint: disable=C0121
         self.assertEqual(len(s1), 0)
-        self.assertEqual(s1.index.dtype, object)
+        self.assertEqual(s1.index.dtype, object) # type: ignore
 
         s2 = f.bloc[f == False] # pylint: disable=C0121
         self.assertEqual(s2.to_pairs(),
@@ -12907,7 +12906,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitFrame):
             # no fields remain to populate data.
-            _ = f2[['z', 'y']].pivot('z', 'y')
+            _ = f2[['z', 'y']].pivot('z', 'y') # type: ignore
 
         with self.assertRaises(ErrorInitFrame):
             # cannot create a pivot Frame from a field (q) that is not a column

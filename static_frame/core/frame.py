@@ -1751,7 +1751,7 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_select: tp.Optional[tp.Iterable[str]] = None,
+            columns_select: tp.Iterable[str | tp.Tuple[str, ...]] | None = None,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -4113,7 +4113,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -6031,7 +6031,7 @@ class Frame(ContainerOperand):
             axis: int = 1,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[NDArrayAny, 'Series', 'Frame']]] = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 

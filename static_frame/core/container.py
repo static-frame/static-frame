@@ -588,16 +588,16 @@ class ContainerOperand(ContainerOperandSequence):
     __slots__ = ()
 
     #---------------------------------------------------------------------------
-    def __pos__(self) -> 'ContainerOperand':
+    def __pos__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
 
-    def __neg__(self) -> 'ContainerOperand':
+    def __neg__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__neg__'])
 
-    def __abs__(self) -> 'ContainerOperand':
+    def __abs__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
-    def __invert__(self) -> 'ContainerOperand':
+    def __invert__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     #---------------------------------------------------------------------------
