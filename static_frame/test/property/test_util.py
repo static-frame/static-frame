@@ -321,6 +321,9 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
+    from hypothesis import reproduce_failure
+
+    @reproduce_failure('6.40.0', b'AAACAAMAAAEAAAEAAQE=')
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
