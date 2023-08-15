@@ -1402,7 +1402,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillna(self,
             value: tp.Any # an element or a Series
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing NA (NaN or None) with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1413,7 +1413,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillfalsy(self,
             value: tp.Any # an element or a Series
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing falsy values with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1464,7 +1464,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_forward(self, limit: int = 0) -> 'Series':
+    def fillna_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1479,7 +1479,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_backward(self, limit: int = 0) -> 'Series':
+    def fillna_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1495,7 +1495,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_forward(self, limit: int = 0) -> 'Series':
+    def fillfalsy_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1510,7 +1510,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_backward(self, limit: int = 0) -> 'Series':
+    def fillfalsy_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
 
         Args:
