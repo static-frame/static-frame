@@ -1252,7 +1252,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # na handling
 
-    def isna(self) -> 'Series':
+    def isna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
@@ -1260,7 +1260,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notna(self) -> 'Series':
+    def notna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
@@ -1268,7 +1268,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def dropna(self) -> 'Series':
+    def dropna(self) -> tp.Self:
         '''
         Return a new :obj:`Series` after removing values of NaN or None.
         '''
@@ -1305,7 +1305,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # falsy handling
 
-    def isfalsy(self) -> 'Series':
+    def isfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1313,7 +1313,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notfalsy(self) -> Series:
+    def notfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1321,7 +1321,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def dropfalsy(self) -> 'Series':
+    def dropfalsy(self) -> tp.Self:
         '''
         Return a new :obj:`Series` after removing values of falsy.
         '''
@@ -2488,7 +2488,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
 
         if is_fill_value_factory_initializer(fill_value):
             fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
@@ -2532,7 +2532,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
 
         Args:
@@ -2558,7 +2558,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
 
         Args:
@@ -2584,7 +2584,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -2610,7 +2610,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -2636,7 +2636,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
 
         Args:
@@ -2660,7 +2660,7 @@ class Series(ContainerOperand):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Series')
-    def head(self, count: int = 5) -> 'Series':
+    def head(self, count: int = 5) -> Series:
         '''{doc}
 
         Args:
@@ -2672,7 +2672,7 @@ class Series(ContainerOperand):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Series')
-    def tail(self, count: int = 5) -> 'Series':
+    def tail(self, count: int = 5) -> Series:
         '''{doc}s
 
         Args:
@@ -2725,7 +2725,7 @@ class Series(ContainerOperand):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''{doc}
 
         Args:
@@ -3106,7 +3106,7 @@ class Series(ContainerOperand):
             container: 'Series',
             *,
             after: bool,
-            ) -> 'Series':
+            ) -> tp.Self:
         if not isinstance(container, Series):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')
@@ -3146,7 +3146,7 @@ class Series(ContainerOperand):
     def insert_before(self,
             key: tp.Hashable,
             container: 'Series',
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position before the label specified by ``key``.
 
@@ -3166,7 +3166,7 @@ class Series(ContainerOperand):
     def insert_after(self,
             key: tp.Hashable, # iloc positions
             container: 'Series',
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position after the label specified by ``key``.
 
