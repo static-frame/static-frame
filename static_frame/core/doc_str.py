@@ -5,8 +5,6 @@ from __future__ import annotations
 
 import typing as tp
 
-from static_frame.core.util import AnyCallable
-
 #-------------------------------------------------------------------------------
 # common strings
 #NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
@@ -475,18 +473,18 @@ class DOC_TEMPLATE:
         '''
     )
 
-# NOTE: F here should replace AnyCallable below
+# https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,
         **kwargs: object
-        ) -> tp.Callable[[AnyCallable], AnyCallable]:
+        ) -> tp.Callable[[F], F]:
     '''
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
     '''
-    def decorator(f: AnyCallable) -> AnyCallable:
+    def decorator(f: F) -> F:
 
         assert f.__doc__ is not None, f'{f} must have a docstring!'
 

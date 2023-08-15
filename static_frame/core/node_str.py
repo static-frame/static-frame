@@ -23,15 +23,11 @@ from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-
-BlocksType = tp.Iterable[np.ndarray]
-ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
+    BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer] # pylint: disable=W0611 #pragma: no cover
 
 INTERFACE_STR = (
         '__getitem__',
@@ -107,7 +103,7 @@ class InterfaceString(Interface[TContainer]):
             func: UFunc,
             args: tp.Tuple[tp.Any, ...] = (),
             astype_str: bool = True,
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Block-wise processing of blocks after optional string conversion. Non-string conversion is necessary for ``decode``.
         '''
@@ -122,9 +118,9 @@ class InterfaceString(Interface[TContainer]):
     def _process_tuple_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: np.dtype,
+            dtype: DtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
@@ -146,9 +142,9 @@ class InterfaceString(Interface[TContainer]):
     def _process_element_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: np.dtype,
+            dtype: DtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
-            ) -> tp.Iterator[np.ndarray]:
+            ) -> tp.Iterator[NDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
@@ -258,7 +254,7 @@ class InterfaceString(Interface[TContainer]):
             block_iter = self._process_blocks(self._blocks, npc.endswith, (suffix, start, end))
             return self._blocks_to_container(block_iter)
 
-        def block_gen() -> tp.Iterator[np.ndarray]:
+        def block_gen() -> tp.Iterator[NDArrayAny]:
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.endswith, (sub, start, end))
                     for sub in suffix)
@@ -293,7 +289,7 @@ class InterfaceString(Interface[TContainer]):
 
         if self._ndim == 1:
             # apply the format per label in series
-            def block_gen() -> tp.Iterator[np.ndarray]:
+            def block_gen() -> tp.Iterator[NDArrayAny]:
                 post = []
                 for i, v in enumerate(next(iter(self._blocks))):
                     func = format_factory(i).format
@@ -302,7 +298,7 @@ class InterfaceString(Interface[TContainer]):
                 array.flags.writeable = False
                 yield array
         else:
-            def block_gen() -> tp.Iterator[np.ndarray]:
+            def block_gen() -> tp.Iterator[NDArrayAny]:
                 pos = 0
                 for block in self._blocks:
                     if block.ndim == 1:
@@ -555,7 +551,7 @@ class InterfaceString(Interface[TContainer]):
             block_iter = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
             return self._blocks_to_container(block_iter)
 
-        def block_gen() -> tp.Iterator[np.ndarray]:
+        def block_gen() -> tp.Iterator[NDArrayAny]:
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.startswith, (sub, start, end))
                     for sub in prefix)

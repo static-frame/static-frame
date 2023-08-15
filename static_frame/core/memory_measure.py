@@ -15,7 +15,8 @@ from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class MFConfig(NamedTuple):
     local_only: bool # only data locally owned by arrays, or all referenced data
@@ -82,7 +83,7 @@ class MaterializedArray:
     BASE_ARRAY_BYTES = getsizeof(EMPTY_ARRAY)
 
     def __init__(self,
-            array: np.ndarray,
+            array: NDArrayAny,
             format: MFConfig = MeasureFormat.LOCAL,
             ):
         self._array = array
@@ -256,9 +257,9 @@ class MemoryDisplay:
 
         f = Frame.from_records(gen(), index=f_size.index)
         columns = [
-                f_size.columns[i//2] if i % 2 == 0
-                else f'{f_size.columns[i//2]}u'.ljust(5)
-                for i in f.columns
+                f_size.columns[i // 2] if i % 2 == 0
+                else f'{f_size.columns[i // 2]}u'.ljust(5)
+                for i in range(len(f.columns))
                 ]
         f = f.relabel(columns=columns)
         dc = DisplayConfig(type_show=False)

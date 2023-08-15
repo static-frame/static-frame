@@ -19,7 +19,8 @@ from static_frame.core.util import NULL_SLICE
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame import Index  # pylint: disable=W0611 #pragma: no cover
-
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 NP_KIND_TO_DFI_KIND = {
     'i': DtypeKind.INT,
@@ -64,7 +65,7 @@ class ArrowCType:
     }
 
     @classmethod
-    def from_dtype(cls, dtype: np.dtype) -> str:
+    def from_dtype(cls, dtype: DtypeAny) -> str:
         kind = dtype.kind
         if kind == 'O':
             raise NotImplementedError('no support for object arrays')
@@ -88,7 +89,7 @@ class ArrowCType:
             raise NotImplementedError(f'no support for dtype: {dtype}') from e
 
 
-def np_dtype_to_dfi_dtype(dtype: np.dtype) -> Dtype:
+def np_dtype_to_dfi_dtype(dtype: DtypeAny) -> Dtype:
     return (NP_KIND_TO_DFI_KIND[dtype.kind],
             dtype.itemsize * 8, # bits!
             ArrowCType.from_dtype(dtype),
@@ -101,7 +102,7 @@ class DFIBuffer(Buffer):
         '_array',
         )
 
-    def __init__(self, array: np.ndarray) -> None:
+    def __init__(self, array: NDArrayAny) -> None:
         self._array = array
 
         # NOTE: would expect transformation upstream to avoid reproducing the same contiguous buffer on repeated calls;expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
@@ -111,7 +112,7 @@ class DFIBuffer(Buffer):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -121,7 +122,7 @@ class DFIBuffer(Buffer):
 
     @property
     def bufsize(self) -> int:
-        return self._array.nbytes # type: ignore
+        return self._array.nbytes
 
     @property
     def ptr(self) -> int:
@@ -142,7 +143,7 @@ class DFIColumn(Column):
             )
 
     def __init__(self,
-            array: np.ndarray,
+            array: NDArrayAny,
             index: 'Index',
             ):
         assert len(array) == len(index)
@@ -153,7 +154,7 @@ class DFIColumn(Column):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -162,7 +163,7 @@ class DFIColumn(Column):
         return self._array.astype(dtype)
 
     def size(self) -> int:
-        return self._array.size # type: ignore
+        return self._array.size
 
     @property
     def offset(self) -> int:
@@ -280,7 +281,7 @@ class DFIDataFrame(DataFrame):
                 recast_blocks=False,
                 )
 
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''

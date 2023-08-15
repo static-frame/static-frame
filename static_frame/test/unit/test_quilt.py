@@ -318,7 +318,7 @@ class TestUnit(TestCase):
 
         f2 = q1[['zZbu', 'zkuW']]
         self.assertEqual(f2.shape, (100, 2))
-        self.assertEqual(f2.columns.values.tolist(), ['zZbu', 'zkuW'])
+        self.assertEqual(f2.columns.values.tolist(), ['zZbu', 'zkuW']) # type: ignore
 
         f3 = q1.loc['zQuq':, 'zUvW':] #type: ignore
         self.assertEqual(f3.shape, (6, 2))
@@ -1304,7 +1304,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(q1._bus), 5)
 
         s1 = q1.iter_window_array(size=5, step=4).apply(lambda a: a.sum())
-        self.assertEqual(s1.to_pairs(),
+        self.assertEqual(s1.to_pairs(), # type: ignore
                 (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
 
     def test_quilt_iter_window_array_b2(self) -> None:
@@ -1315,7 +1315,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(q1._bus), 5)
 
         s1 = q1.iter_window_array(size=5, step=4).apply(lambda a: a.sum())
-        self.assertEqual(s1.to_pairs(),
+        self.assertEqual(s1.to_pairs(), # type: ignore
                 (('zmVj', 377853), ('zr4u', 597832), ('zGDJ', 46996), ('zO5l', 391169)))
 
     #---------------------------------------------------------------------------
@@ -1329,11 +1329,11 @@ class TestUnit(TestCase):
 
         # axis 0 will produce windows labelled by the Index
         s1 = q1.iter_window_array_items(size=2, step=1).apply(lambda _, a: a.sum())
-        self.assertEqual(round(s1, 2).to_pairs(),
+        self.assertEqual(round(s1, 2).to_pairs(), # type: ignore
                 ((1, 98797.88), (2, 305042.56), (3, 185974.34)))
 
         s2 = q1.iter_window_array_items(size=2, step=1, axis=1).apply(lambda _, a: a.sum())
-        self.assertEqual(round(s2, 2).to_pairs(),
+        self.assertEqual(round(s2, 2).to_pairs(), # type: ignore
                 ((('f1', 1), 105189.58), (('f1', 2), 173802.58), (('f1', 3), 179577.64), (('f2', 0), 7700.64), (('f2', 1), 1.0), (('f2', 2), 2.0), (('f2', 3), 4.0))
                 )
 
@@ -1728,7 +1728,7 @@ class TestUnit(TestCase):
         bus = Bus.from_frames((f1, f2))
         quilt = Quilt(bus, retain_labels=False, axis=1)
 
-        selected_index = quilt[HLoc["ztsv"]].columns
+        selected_index = quilt[HLoc["ztsv"]].columns # type: ignore
 
         assert set(selected_index.values_at_depth(0)) == {"ztsv"}
 

@@ -1,11 +1,9 @@
-import os
 import sys
 import typing as tp
 
 import invoke
 
 #-------------------------------------------------------------------------------
-
 @invoke.task
 def clean(context):
     '''Clean doc and build artifacts
@@ -74,6 +72,7 @@ def interface(context, container=None, doc=False):
 def test(context,
         unit=False,
         cov=False,
+        pty=False,
         ):
     '''Run tests.
     '''
@@ -84,12 +83,26 @@ def test(context,
 
     # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
     cmd = f'pytest -s --tb=native {fp}'
-
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
     print(cmd)
-    context.run(cmd)
+    context.run(cmd, pty=pty)
+
+
+@invoke.task
+def testex(context,
+        cov=False,
+        pty=False,
+        ):
+    '''Test example generation
+    '''
+    cmd = f'pytest -s --tb=native doc/test_example_gen.py'
+    if cov:
+        cmd += ' --cov=static_frame --cov-report=xml'
+
+    print(cmd)
+    context.run(cmd, pty=pty)
 
 
 @invoke.task
@@ -105,10 +118,12 @@ def coverage(context):
 
 
 @invoke.task
-def mypy(context):
+def mypy(context,
+        pty=False,
+         ):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict')
+    context.run('mypy --strict', pty=pty)
 
 @invoke.task
 def isort(context):

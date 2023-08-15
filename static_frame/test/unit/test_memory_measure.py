@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing as tp
 import unittest
 from sys import getsizeof
 
@@ -14,9 +15,14 @@ from static_frame.core.memory_measure import MemoryMeasure
 from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 _iter_iterable = MemoryMeasure._iter_iterable
 _iter_slots = MemoryMeasure._iter_slots
 nested_sizable_elements = MemoryMeasure.nested_sizable_elements
+
 
 class TestUnit(TestCase):
 
@@ -301,7 +307,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_measure_format_a(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -329,7 +335,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_b(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         mempty = MaterializedArray(empty, format=MeasureFormat.REFERENCED_MATERIALIZED)
 
         a1 = np.array((1, 2), dtype=np.int64)
@@ -355,7 +361,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_c(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -375,7 +381,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_d(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -396,7 +402,7 @@ class TestUnit(TestCase):
 
 
     def test_measure_format_e(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -416,7 +422,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_f(self) -> None:
-        empty = np.array(())
+        empty: NDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 

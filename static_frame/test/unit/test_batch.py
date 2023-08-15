@@ -1702,7 +1702,7 @@ class TestUnit(TestCase):
     def test_batch_via_values_d(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a') % 3
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b') % 3
-        post = np.power(Batch.from_frames((f1, f2)).via_values(dtype=float), 2).to_frame()
+        post = np.power(Batch.from_frames((f1, f2)).via_values(dtype=float), 2).to_frame() # type: ignore
         self.assertEqual([dt.kind for dt in post.dtypes.values], ['f', 'f', 'f'])
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0))), ('ztsv', ((('a', 0), 4.0), (('a', 1), 0.0), (('b', 0), 4.0), (('b', 1), 0.0))), ('zUvW', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0)))))

@@ -7,6 +7,10 @@ import numpy as np
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64
 
+if tp.TYPE_CHECKING:
+    # NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 FILL_VALUE_UNSET = object()
 
 class FillValueAuto:
@@ -96,7 +100,7 @@ class FillValueAuto:
         self.U = U
         self.V = V
 
-    def __getitem__(self, dtype: np.dtype) -> tp.Any:
+    def __getitem__(self, dtype: DtypeAny) -> tp.Any:
         fv = getattr(self, dtype.kind)
         if fv is FILL_VALUE_UNSET:
             raise RuntimeError(f'FillValueAuto requested value for kind {dtype.kind} not defined.')

@@ -66,7 +66,7 @@ class TestUnit(TestCase):
         s1 = SeriesHE.from_dict(dict(a=10, b=42))
         s2 = SeriesHE.from_dict(dict(x='foo', y='bar'), name=s1)
 
-        self.assertEqual(s2.name['b'], 42)
+        self.assertEqual(s2.name['b'], 42) # type: ignore
 
         s3 = Series.from_dict({s1: 40, s2: 1000})
 

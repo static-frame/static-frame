@@ -217,9 +217,9 @@ c
 >>> s.memory
        L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
 Name   16  B     16   B     16  B     16   B     16   B     16  B
-Index  788 B     820  B     596 B     8.86 KB    844  B     620 B
-Values 120 B     136  B     24  B     120  B     136  B     24  B
-Total  964 B     1012 B     676 B     9.04 KB    1.01 KB    700 B
+Index  800 B     832  B     576 B     8.89 KB    856  B     600 B
+Values 136 B     152  B     24  B     136  B     152  B     24  B
+Total  992 B     1.02 KB    656 B     9.08 KB    1.04 KB    680 B
 #end_Series-memory
 
 #start_Series-name
@@ -362,7 +362,7 @@ c        8.734
 >>> s1 = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_Series-corr()
 
 #start_Series-count()
@@ -5533,11 +5533,11 @@ c
 #start_SeriesHE-memory
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16  B     16   B     16  B     16   B     16   B     16  B
-Index  788 B     820  B     596 B     8.86 KB    844  B     620 B
-Values 120 B     136  B     24  B     120  B     136  B     24  B
-Total  972 B     1020 B     684 B     9.04 KB    1.02 KB    708 B
+       L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16   B     16   B     16  B     16   B     16   B     16  B
+Index  800  B     832  B     576 B     8.89 KB    856  B     600 B
+Values 136  B     152  B     24  B     136  B     152  B     24  B
+Total  1000 B     1.02 KB    664 B     9.09 KB    1.05 KB    688 B
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -5680,7 +5680,7 @@ c          8.734
 >>> s1 = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
 >>> s2 = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s1.corr(s2)
-0.9977051066985494
+0.9977051066985492
 #end_SeriesHE-corr()
 
 #start_SeriesHE-count()
@@ -10752,7 +10752,7 @@ r       4       5
 
 #start_Frame-from_dict_fields()
 >>> sf.Frame.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
 #end_Frame-from_dict_fields()
 
 #start_Frame-from_dict_records()
@@ -10788,7 +10788,7 @@ r          0       0
 
 #start_Frame-from_element_items()
 >>> sf.Frame.from_element_items(((('a', 0), -1), (('b', 0), 10), (('a', 1), 3), (('b', 'a'), 1)), columns=(0, 1), index=('a', 'b'), name='x', axis=1)
-ErrorInitTypeBlocks('mismatched row count: 1: 2')
+ErrorInitTypeBlocks('Array block has unaligned row count: found 1, expected 2')
 #end_Frame-from_element_items()
 
 #start_Frame-from_elements()
@@ -11744,12 +11744,12 @@ c           datetime64[D]
 #start_Frame-memory
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 788  B     820  B     596  B     8.86  KB    844  B     620  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.09 KB    2.18 KB    1.53 KB    10.18 KB    2.24 KB    1.58 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   1.82 KB    1.91 KB    1.16 KB    9.93 KB    1.97 KB    1.22 KB
 #end_Frame-memory
 
 #start_Frame-name
@@ -17920,7 +17920,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       nan       nan       nan
+p       inf       inf       inf
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -18169,7 +18169,7 @@ s       0.0       0.0       12.0
 <Frame>
 <Index> a         b         c         <<U1>
 <Index>
-p       nan       nan       nan
+p       inf       inf       inf
 q       1.0       1.0       -0.0
 r       0.0       16.0      18.0
 s       0.0       0.0       12.0
@@ -18885,7 +18885,7 @@ r         4       5
 
 #start_FrameHE-from_dict_fields()
 >>> sf.FrameHE.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
 #end_FrameHE-from_dict_fields()
 
 #start_FrameHE-from_dict_records()
@@ -18921,7 +18921,7 @@ r            0       0
 
 #start_FrameHE-from_element_items()
 >>> sf.FrameHE.from_element_items(((('a', 0), -1), (('b', 0), 10), (('a', 1), 3), (('b', 'a'), 1)), columns=(0, 1), index=('a', 'b'), name='x', axis=1)
-ErrorInitTypeBlocks('mismatched row count: 1: 2')
+ErrorInitTypeBlocks('Array block has unaligned row count: found 1, expected 2')
 #end_FrameHE-from_element_items()
 
 #start_FrameHE-from_elements()
@@ -19877,12 +19877,12 @@ c           datetime64[D]
 #start_FrameHE-memory
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 788  B     820  B     596  B     8.86  KB    844  B     620  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.1  KB    2.19 KB    1.53 KB    10.19 KB    2.24 KB    1.59 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   1.83 KB    1.92 KB    1.17 KB    9.94 KB    1.97 KB    1.22 KB
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -26025,7 +26025,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -26274,7 +26274,7 @@ s         0.0       0.0       12.0
 <FrameHE>
 <Index>   a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -26990,7 +26990,7 @@ r         4       5
 
 #start_FrameGO-from_dict_fields()
 >>> sf.FrameGO.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("from_dict_fields() got an unexpected keyword argument 'records'")
+TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
 #end_FrameGO-from_dict_fields()
 
 #start_FrameGO-from_dict_records()
@@ -27026,7 +27026,7 @@ r            0       0
 
 #start_FrameGO-from_element_items()
 >>> sf.FrameGO.from_element_items(((('a', 0), -1), (('b', 0), 10), (('a', 1), 3), (('b', 'a'), 1)), columns=(0, 1), index=('a', 'b'), name='x', axis=1)
-ErrorInitTypeBlocks('mismatched row count: 1: 2')
+ErrorInitTypeBlocks('Array block has unaligned row count: found 1, expected 2')
 #end_FrameGO-from_element_items()
 
 #start_FrameGO-from_elements()
@@ -27982,12 +27982,12 @@ c           datetime64[D]
 #start_FrameGO-memory
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 1.14 KB    1.17 KB    974  B     9.23  KB    1.19 KB    998  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.43 KB    2.52 KB    1.87 KB    10.52 KB    2.58 KB    1.92 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 1.15 KB    1.18 KB    954  B     9.26 KB    1.21 KB    978  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   2.19 KB    2.28 KB    1.53 KB    10.3 KB    2.34 KB    1.59 KB
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -34185,7 +34185,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -34434,7 +34434,7 @@ s         0.0       0.0       12.0
 <FrameGO>
 <IndexGO> a         b         c         <<U1>
 <Index>
-p         nan       nan       nan
+p         inf       inf       inf
 q         1.0       1.0       -0.0
 r         0.0       16.0      18.0
 s         0.0       0.0       12.0
@@ -35109,12 +35109,12 @@ x        <Index>
 #start_Index-memory
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
-Name      50  B     50  B     50  B     50   B     50  B     50  B
-Map       544 B     544 B     544 B     544  B     544 B     544 B
-Labels    116 B     132 B     20  B     116  B     132 B     20  B
-Positions 96  B     112 B     0   B     8.19 KB    152 B     40  B
-Total     926 B     958 B     734 B     9.0  KB    998 B     774 B
+          L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      50  B     50  B     50  B     50   B     50   B     50  B
+Map       520 B     520 B     520 B     520  B     520  B     520 B
+Labels    132 B     148 B     20  B     132  B     148  B     20  B
+Positions 112 B     128 B     0   B     8.22 KB    168  B     40  B
+Total     938 B     970 B     714 B     9.03 KB    1010 B     754 B
 #end_Index-memory
 
 #start_Index-name
@@ -35689,7 +35689,7 @@ True
 <Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, loc_is_iloc, ... Index    Constructor          Initializer. Args...
+__init__(labels, *, loc_is_iloc, ... Index    Constructor          Initializer. {args}
 from_labels(labels, *, name)         Index    Constructor          Construct an Inde...
 from_pandas(value)                   Index    Constructor          Given a Pandas in...
 to_html(config, style_config)        Index    Exporter             Return an HTML ta...
@@ -35702,7 +35702,7 @@ depth                                Index    Attribute            int([x]) -> i
 dtype                                Index    Attribute            Return the dtype ...
 index_types                          Index    Attribute            Return a Series o...
 memory                               Index    Attribute            Return a MemoryDi...
-mloc                                 Index    Attribute            The memory locati...
+mloc                                 Index    Attribute            {doc_int}
 name                                 Index    Attribute            A hashable label ...
 names                                Index    Attribute            Provide a suitabl...
 nbytes                               Index    Attribute            Return the total ...
@@ -37015,12 +37015,12 @@ x        <IndexGO>
 #start_IndexGO-memory
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      50   B     50   B     50  B     50   B     50   B     50   B
-Map       544  B     544  B     544 B     544  B     544  B     544  B
-Labels    116  B     132  B     20  B     116  B     132  B     20   B
-Positions 96   B     112  B     0   B     8.19 KB    152  B     40   B
-Total     1.39 KB    1.42 KB    1.2 KB    9.48 KB    1.46 KB    1.24 KB
+          L   Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      50  B     50   B     50   B     50   B     50   B     50   B
+Map       520 B     520  B     520  B     520  B     520  B     520  B
+Labels    132 B     148  B     20   B     132  B     148  B     20   B
+Positions 112 B     128  B     0    B     8.22 KB    168  B     40   B
+Total     1.4 KB    1.43 KB    1.18 KB    9.51 KB    1.47 KB    1.22 KB
 #end_IndexGO-memory
 
 #start_IndexGO-name
@@ -37624,7 +37624,7 @@ True
 <Frame>
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, loc_is_iloc, ... IndexGO  Constructor          Initializer. Args...
+__init__(labels, *, loc_is_iloc, ... IndexGO  Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexGO  Constructor          Construct an Inde...
 from_pandas(value)                   IndexGO  Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexGO  Exporter             Return an HTML ta...
@@ -37637,7 +37637,7 @@ depth                                IndexGO  Attribute            int([x]) -> i
 dtype                                IndexGO  Attribute            Return the dtype ...
 index_types                          IndexGO  Attribute            Return a Series o...
 memory                               IndexGO  Attribute            Return a MemoryDi...
-mloc                                 IndexGO  Attribute            The memory locati...
+mloc                                 IndexGO  Attribute            {doc_int}
 name                                 IndexGO  Attribute            A hashable label ...
 names                                IndexGO  Attribute            Provide a suitabl...
 nbytes                               IndexGO  Attribute            Return the total ...
@@ -38968,10 +38968,10 @@ None     <IndexYear>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexYear-memory
 
 #start_IndexYear-name
@@ -39108,13 +39108,13 @@ True
 #start_IndexYear-cumprod()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-cumprod()
 
 #start_IndexYear-cumsum()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-cumsum()
 
 #start_IndexYear-difference()
@@ -39502,7 +39502,7 @@ True
 <Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexYear Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexYear Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexYear Constructor          Get an IndexYearM...
 from_labels(labels, *, name)         IndexYear Constructor          Construct an Inde...
 from_pandas(value)                   IndexYear Constructor          Given a Pandas in...
@@ -39518,7 +39518,7 @@ depth                                IndexYear Attribute            int([x]) -> 
 dtype                                IndexYear Attribute            Return the dtype ...
 index_types                          IndexYear Attribute            Return a Series o...
 memory                               IndexYear Attribute            Return a MemoryDi...
-mloc                                 IndexYear Attribute            The memory locati...
+mloc                                 IndexYear Attribute            {doc_int}
 ...                                  ...       ...                  ...
 via_re(pattern, flags).search(pos... IndexYear Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexYear Accessor Regular ... If zero or more c...
@@ -39824,7 +39824,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexYear-__rtruediv__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> '1518' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-__rtruediv__()
 
 #start_IndexYear-__sub__()
@@ -39836,7 +39836,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #start_IndexYear-__truediv__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix / '1518'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYear-__truediv__()
 
 #start_IndexYear-__xor__()
@@ -39850,7 +39850,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYear-__abs__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYear-__abs__()
 
 #start_IndexYear-__invert__()
@@ -39862,13 +39862,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYear-__neg__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYear-__neg__()
 
 #start_IndexYear-__pos__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> +ix
-['1517' '1520' '1518']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYear-__pos__()
 
 #start_IndexYear-via_dt.__call__()
@@ -40732,12 +40732,12 @@ None     <IndexYearGO>
 #start_IndexYearGO-memory
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
-          L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16  B     16   B     16  B     16   B     16   B     16  B
-Map       464 B     464  B     464 B     464  B     464  B     464 B
-Labels    120 B     136  B     24  B     120  B     136  B     24  B
-Positions 96  B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.1 KB    1.13 KB    932 B     9.19 KB    1.15 KB    956 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16  B     16  B
+Map       472  B     472  B     472 B     472  B     472 B     472 B
+Labels    136  B     152  B     24  B     136  B     152 B     24  B
+Positions 112  B     128  B     0   B     8.22 KB    152 B     24  B
+Total     1.14 KB    1.17 KB    944 B     9.25 KB    1.2 KB    968 B
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -40886,13 +40886,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearGO-cumprod()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-cumprod()
 
 #start_IndexYearGO-cumsum()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-cumsum()
 
 #start_IndexYearGO-difference()
@@ -41295,7 +41295,7 @@ True
 <Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexYearGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexYearGO Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexYearGO Constructor          Get an IndexYearM...
 from_labels(labels, *, name)         IndexYearGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexYearGO Constructor          Given a Pandas in...
@@ -41311,7 +41311,7 @@ depth                                IndexYearGO Attribute            int([x]) -
 dtype                                IndexYearGO Attribute            Return the dtype ...
 index_types                          IndexYearGO Attribute            Return a Series o...
 memory                               IndexYearGO Attribute            Return a MemoryDi...
-mloc                                 IndexYearGO Attribute            The memory locati...
+mloc                                 IndexYearGO Attribute            {doc_int}
 ...                                  ...         ...                  ...
 via_re(pattern, flags).search(pos... IndexYearGO Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexYearGO Accessor Regular ... If zero or more c...
@@ -41617,7 +41617,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexYearGO-__rtruediv__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> '1518' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-__rtruediv__()
 
 #start_IndexYearGO-__sub__()
@@ -41629,7 +41629,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #start_IndexYearGO-__truediv__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix / '1518'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 #end_IndexYearGO-__truediv__()
 
 #start_IndexYearGO-__xor__()
@@ -41643,7 +41643,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearGO-__abs__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearGO-__abs__()
 
 #start_IndexYearGO-__invert__()
@@ -41655,13 +41655,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearGO-__neg__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearGO-__neg__()
 
 #start_IndexYearGO-__pos__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> +ix
-['1517' '1520' '1518']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearGO-__pos__()
 
 #start_IndexYearGO-via_dt.__call__()
@@ -42549,10 +42549,10 @@ None     <IndexYearMonth>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexYearMonth-memory
 
 #start_IndexYearMonth-name
@@ -42689,13 +42689,13 @@ True
 #start_IndexYearMonth-cumprod()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-cumprod()
 
 #start_IndexYearMonth-cumsum()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-cumsum()
 
 #start_IndexYearMonth-difference()
@@ -43083,7 +43083,7 @@ True
 <Frame>
 <Index>                              cls_name       group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexYearMonth Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexYearMonth Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexYearMonth Constructor          Get an IndexYearM...
 from_labels(labels, *, name)         IndexYearMonth Constructor          Construct an Inde...
 from_pandas(value)                   IndexYearMonth Constructor          Given a Pandas in...
@@ -43099,7 +43099,7 @@ depth                                IndexYearMonth Attribute            int([x]
 dtype                                IndexYearMonth Attribute            Return the dtype ...
 index_types                          IndexYearMonth Attribute            Return a Series o...
 memory                               IndexYearMonth Attribute            Return a MemoryDi...
-mloc                                 IndexYearMonth Attribute            The memory locati...
+mloc                                 IndexYearMonth Attribute            {doc_int}
 ...                                  ...            ...                  ...
 via_re(pattern, flags).search(pos... IndexYearMonth Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexYearMonth Accessor Regular ... If zero or more c...
@@ -43405,7 +43405,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexYearMonth-__rtruediv__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> '1517-06' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-__rtruediv__()
 
 #start_IndexYearMonth-__sub__()
@@ -43417,7 +43417,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #start_IndexYearMonth-__truediv__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix / '1517-06'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonth-__truediv__()
 
 #start_IndexYearMonth-__xor__()
@@ -43431,7 +43431,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonth-__abs__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonth-__abs__()
 
 #start_IndexYearMonth-__invert__()
@@ -43443,13 +43443,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonth-__neg__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonth-__neg__()
 
 #start_IndexYearMonth-__pos__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> +ix
-['1517-04' '1517-12' '1517-06']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonth-__pos__()
 
 #start_IndexYearMonth-via_dt.__call__()
@@ -44335,12 +44335,12 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-memory
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
-          L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16  B     16   B     16  B     16   B     16   B     16  B
-Map       464 B     464  B     464 B     464  B     464  B     464 B
-Labels    120 B     136  B     24  B     120  B     136  B     24  B
-Positions 96  B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.1 KB    1.13 KB    932 B     9.19 KB    1.15 KB    956 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16  B     16  B
+Map       472  B     472  B     472 B     472  B     472 B     472 B
+Labels    136  B     152  B     24  B     136  B     152 B     24  B
+Positions 112  B     128  B     0   B     8.22 KB    152 B     24  B
+Total     1.14 KB    1.17 KB    944 B     9.25 KB    1.2 KB    968 B
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -44489,13 +44489,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexYearMonthGO-cumprod()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-cumprod()
 
 #start_IndexYearMonthGO-cumsum()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-cumsum()
 
 #start_IndexYearMonthGO-difference()
@@ -44898,7 +44898,7 @@ True
 <Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexYearMonthGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexYearMonthGO Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexYearMonthGO Constructor          Get an IndexYearM...
 from_labels(labels, *, name)         IndexYearMonthGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexYearMonthGO Constructor          Given a Pandas in...
@@ -44914,7 +44914,7 @@ depth                                IndexYearMonthGO Attribute            int([
 dtype                                IndexYearMonthGO Attribute            Return the dtype ...
 index_types                          IndexYearMonthGO Attribute            Return a Series o...
 memory                               IndexYearMonthGO Attribute            Return a MemoryDi...
-mloc                                 IndexYearMonthGO Attribute            The memory locati...
+mloc                                 IndexYearMonthGO Attribute            {doc_int}
 ...                                  ...              ...                  ...
 via_re(pattern, flags).search(pos... IndexYearMonthGO Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexYearMonthGO Accessor Regular ... If zero or more c...
@@ -45220,7 +45220,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexYearMonthGO-__rtruediv__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> '1517-06' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-__rtruediv__()
 
 #start_IndexYearMonthGO-__sub__()
@@ -45232,7 +45232,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #start_IndexYearMonthGO-__truediv__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix / '1517-06'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 #end_IndexYearMonthGO-__truediv__()
 
 #start_IndexYearMonthGO-__xor__()
@@ -45246,7 +45246,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexYearMonthGO-__abs__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonthGO-__abs__()
 
 #start_IndexYearMonthGO-__invert__()
@@ -45258,13 +45258,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexYearMonthGO-__neg__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[M]'), dtype('<M8[M]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonthGO-__neg__()
 
 #start_IndexYearMonthGO-__pos__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> +ix
-['1517-04' '1517-12' '1517-06']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexYearMonthGO-__pos__()
 
 #start_IndexYearMonthGO-via_dt.__call__()
@@ -46198,10 +46198,10 @@ None     <IndexDate>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexDate-memory
 
 #start_IndexDate-name
@@ -46338,13 +46338,13 @@ True
 #start_IndexDate-cumprod()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-cumprod()
 
 #start_IndexDate-cumsum()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-cumsum()
 
 #start_IndexDate-difference()
@@ -46732,7 +46732,7 @@ True
 <Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexDate Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexDate Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexDate Constructor          Get an IndexDate ...
 from_labels(labels, *, name)         IndexDate Constructor          Construct an Inde...
 from_pandas(value)                   IndexDate Constructor          Given a Pandas in...
@@ -46748,7 +46748,7 @@ depth                                IndexDate Attribute            int([x]) -> 
 dtype                                IndexDate Attribute            Return the dtype ...
 index_types                          IndexDate Attribute            Return a Series o...
 memory                               IndexDate Attribute            Return a MemoryDi...
-mloc                                 IndexDate Attribute            The memory locati...
+mloc                                 IndexDate Attribute            {doc_int}
 ...                                  ...       ...                  ...
 via_re(pattern, flags).search(pos... IndexDate Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexDate Accessor Regular ... If zero or more c...
@@ -47054,7 +47054,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexDate-__rtruediv__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-__rtruediv__()
 
 #start_IndexDate-__sub__()
@@ -47066,7 +47066,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexDate-__truediv__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDate-__truediv__()
 
 #start_IndexDate-__xor__()
@@ -47080,7 +47080,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDate-__abs__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDate-__abs__()
 
 #start_IndexDate-__invert__()
@@ -47092,13 +47092,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDate-__neg__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDate-__neg__()
 
 #start_IndexDate-__pos__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> +ix
-['1517-04-01' '1517-12-01' '1517-06-30']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDate-__pos__()
 
 #start_IndexDate-via_dt.__call__()
@@ -48033,12 +48033,12 @@ None     <IndexDateGO>
 #start_IndexDateGO-memory
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      16  B     16   B     16  B     16   B     16   B     16  B
-Map       464 B     464  B     464 B     464  B     464  B     464 B
-Labels    120 B     136  B     24  B     120  B     136  B     24  B
-Positions 96  B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.1 KB    1.13 KB    932 B     9.19 KB    1.15 KB    956 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name      16   B     16   B     16  B     16   B     16  B     16  B
+Map       472  B     472  B     472 B     472  B     472 B     472 B
+Labels    136  B     152  B     24  B     136  B     152 B     24  B
+Positions 112  B     128  B     0   B     8.22 KB    152 B     24  B
+Total     1.14 KB    1.17 KB    944 B     9.25 KB    1.2 KB    968 B
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -48187,13 +48187,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexDateGO-cumprod()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-cumprod()
 
 #start_IndexDateGO-cumsum()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-cumsum()
 
 #start_IndexDateGO-difference()
@@ -48596,7 +48596,7 @@ True
 <Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexDateGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexDateGO Constructor          Initializer. {args}
 from_date_range(start, stop, step... IndexDateGO Constructor          Get an IndexDate ...
 from_labels(labels, *, name)         IndexDateGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexDateGO Constructor          Given a Pandas in...
@@ -48612,7 +48612,7 @@ depth                                IndexDateGO Attribute            int([x]) -
 dtype                                IndexDateGO Attribute            Return the dtype ...
 index_types                          IndexDateGO Attribute            Return a Series o...
 memory                               IndexDateGO Attribute            Return a MemoryDi...
-mloc                                 IndexDateGO Attribute            The memory locati...
+mloc                                 IndexDateGO Attribute            {doc_int}
 ...                                  ...         ...                  ...
 via_re(pattern, flags).search(pos... IndexDateGO Accessor Regular ... Scan through stri...
 via_re(pattern, flags).match(pos,... IndexDateGO Accessor Regular ... If zero or more c...
@@ -48918,7 +48918,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexDateGO-__rtruediv__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-__rtruediv__()
 
 #start_IndexDateGO-__sub__()
@@ -48930,7 +48930,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexDateGO-__truediv__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexDateGO-__truediv__()
 
 #start_IndexDateGO-__xor__()
@@ -48944,7 +48944,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexDateGO-__abs__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDateGO-__abs__()
 
 #start_IndexDateGO-__invert__()
@@ -48956,13 +48956,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexDateGO-__neg__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDateGO-__neg__()
 
 #start_IndexDateGO-__pos__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> +ix
-['1517-04-01' '1517-12-01' '1517-06-30']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexDateGO-__pos__()
 
 #start_IndexDateGO-via_dt.__call__()
@@ -49807,10 +49807,10 @@ None     <IndexMinute>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexMinute-memory
 
 #start_IndexMinute-name
@@ -49947,13 +49947,13 @@ True
 #start_IndexMinute-cumprod()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-cumprod()
 
 #start_IndexMinute-cumsum()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinute-cumsum()
 
 #start_IndexMinute-difference()
@@ -50341,7 +50341,7 @@ False
 <Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMinute Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMinute Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMinute Constructor          Construct an Inde...
 from_pandas(value)                   IndexMinute Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMinute Exporter             Return an HTML ta...
@@ -50354,7 +50354,7 @@ depth                                IndexMinute Attribute            int([x]) -
 dtype                                IndexMinute Attribute            Return the dtype ...
 index_types                          IndexMinute Attribute            Return a Series o...
 memory                               IndexMinute Attribute            Return a MemoryDi...
-mloc                                 IndexMinute Attribute            The memory locati...
+mloc                                 IndexMinute Attribute            {doc_int}
 name                                 IndexMinute Attribute            A hashable label ...
 names                                IndexMinute Attribute            Provide a suitabl...
 nbytes                               IndexMinute Attribute            Return the total ...
@@ -50665,7 +50665,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMinute-__rtruediv__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMinute-__rtruediv__()
 
 #start_IndexMinute-__sub__()
@@ -50677,7 +50677,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMinute-__truediv__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMinute-__truediv__()
 
 #start_IndexMinute-__xor__()
@@ -50691,7 +50691,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinute-__abs__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinute-__abs__()
 
 #start_IndexMinute-__invert__()
@@ -50703,13 +50703,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinute-__neg__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinute-__neg__()
 
 #start_IndexMinute-__pos__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinute-__pos__()
 
 #start_IndexMinute-via_dt.__call__()
@@ -51555,12 +51555,12 @@ None     <IndexMinuteGO>
 #start_IndexMinuteGO-memory
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16   B
-Map       464  B     464  B     464 B     464  B     464 B     464  B
-Labels    120  B     136  B     24  B     120  B     136 B     24   B
-Positions 96   B     112  B     0   B     8.19 KB    136 B     24   B
-Total     1.14 KB    1.18 KB    980 B     9.24 KB    1.2 KB    1004 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.19 KB    1.22 KB    992 B     9.3  KB    1.24 KB    1016 B
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -51709,13 +51709,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMinuteGO-cumprod()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-cumprod()
 
 #start_IndexMinuteGO-cumsum()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 #end_IndexMinuteGO-cumsum()
 
 #start_IndexMinuteGO-difference()
@@ -52118,7 +52118,7 @@ False
 <Frame>
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMinuteGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMinuteGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMinuteGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMinuteGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMinuteGO Exporter             Return an HTML ta...
@@ -52131,7 +52131,7 @@ depth                                IndexMinuteGO Attribute            int([x])
 dtype                                IndexMinuteGO Attribute            Return the dtype ...
 index_types                          IndexMinuteGO Attribute            Return a Series o...
 memory                               IndexMinuteGO Attribute            Return a MemoryDi...
-mloc                                 IndexMinuteGO Attribute            The memory locati...
+mloc                                 IndexMinuteGO Attribute            {doc_int}
 name                                 IndexMinuteGO Attribute            A hashable label ...
 names                                IndexMinuteGO Attribute            Provide a suitabl...
 nbytes                               IndexMinuteGO Attribute            Return the total ...
@@ -52442,7 +52442,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMinuteGO-__rtruediv__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMinuteGO-__rtruediv__()
 
 #start_IndexMinuteGO-__sub__()
@@ -52454,7 +52454,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMinuteGO-__truediv__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMinuteGO-__truediv__()
 
 #start_IndexMinuteGO-__xor__()
@@ -52468,7 +52468,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMinuteGO-__abs__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinuteGO-__abs__()
 
 #start_IndexMinuteGO-__invert__()
@@ -52480,13 +52480,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMinuteGO-__neg__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[m]'), dtype('<M8[m]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinuteGO-__neg__()
 
 #start_IndexMinuteGO-__pos__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00' '1517-12-01T00:00' '1517-06-30T00:00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMinuteGO-__pos__()
 
 #start_IndexMinuteGO-via_dt.__call__()
@@ -53334,10 +53334,10 @@ None     <IndexHour>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexHour-memory
 
 #start_IndexHour-name
@@ -53474,13 +53474,13 @@ True
 #start_IndexHour-cumprod()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-cumprod()
 
 #start_IndexHour-cumsum()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHour-cumsum()
 
 #start_IndexHour-difference()
@@ -53872,7 +53872,7 @@ False
 <Frame>
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexHour Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexHour Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexHour Constructor          Construct an Inde...
 from_pandas(value)                   IndexHour Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexHour Exporter             Return an HTML ta...
@@ -53885,7 +53885,7 @@ depth                                IndexHour Attribute            int([x]) -> 
 dtype                                IndexHour Attribute            Return the dtype ...
 index_types                          IndexHour Attribute            Return a Series o...
 memory                               IndexHour Attribute            Return a MemoryDi...
-mloc                                 IndexHour Attribute            The memory locati...
+mloc                                 IndexHour Attribute            {doc_int}
 name                                 IndexHour Attribute            A hashable label ...
 names                                IndexHour Attribute            Provide a suitabl...
 nbytes                               IndexHour Attribute            Return the total ...
@@ -54196,7 +54196,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHour-__rtruediv__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexHour-__rtruediv__()
 
 #start_IndexHour-__sub__()
@@ -54208,7 +54208,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexHour-__truediv__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexHour-__truediv__()
 
 #start_IndexHour-__xor__()
@@ -54222,7 +54222,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHour-__abs__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHour-__abs__()
 
 #start_IndexHour-__invert__()
@@ -54234,13 +54234,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHour-__neg__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHour-__neg__()
 
 #start_IndexHour-__pos__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHour-__pos__()
 
 #start_IndexHour-via_dt.__call__()
@@ -55085,12 +55085,12 @@ None     <IndexHourGO>
 #start_IndexHourGO-memory
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16   B
-Map       464  B     464  B     464 B     464  B     464 B     464  B
-Labels    120  B     136  B     24  B     120  B     136 B     24   B
-Positions 96   B     112  B     0   B     8.19 KB    136 B     24   B
-Total     1.14 KB    1.18 KB    980 B     9.24 KB    1.2 KB    1004 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.19 KB    1.22 KB    992 B     9.3  KB    1.24 KB    1016 B
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -55239,13 +55239,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexHourGO-cumprod()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-cumprod()
 
 #start_IndexHourGO-cumsum()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 #end_IndexHourGO-cumsum()
 
 #start_IndexHourGO-difference()
@@ -55652,7 +55652,7 @@ False
 <Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexHourGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexHourGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexHourGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexHourGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexHourGO Exporter             Return an HTML ta...
@@ -55665,7 +55665,7 @@ depth                                IndexHourGO Attribute            int([x]) -
 dtype                                IndexHourGO Attribute            Return the dtype ...
 index_types                          IndexHourGO Attribute            Return a Series o...
 memory                               IndexHourGO Attribute            Return a MemoryDi...
-mloc                                 IndexHourGO Attribute            The memory locati...
+mloc                                 IndexHourGO Attribute            {doc_int}
 name                                 IndexHourGO Attribute            A hashable label ...
 names                                IndexHourGO Attribute            Provide a suitabl...
 nbytes                               IndexHourGO Attribute            Return the total ...
@@ -55976,7 +55976,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHourGO-__rtruediv__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexHourGO-__rtruediv__()
 
 #start_IndexHourGO-__sub__()
@@ -55988,7 +55988,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexHourGO-__truediv__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexHourGO-__truediv__()
 
 #start_IndexHourGO-__xor__()
@@ -56002,7 +56002,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexHourGO-__abs__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHourGO-__abs__()
 
 #start_IndexHourGO-__invert__()
@@ -56014,13 +56014,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexHourGO-__neg__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[h]'), dtype('<M8[h]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHourGO-__neg__()
 
 #start_IndexHourGO-__pos__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00' '1517-12-31T00' '1517-06-30T00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexHourGO-__pos__()
 
 #start_IndexHourGO-via_dt.__call__()
@@ -56867,10 +56867,10 @@ None     <IndexSecond>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexSecond-memory
 
 #start_IndexSecond-name
@@ -57007,13 +57007,13 @@ True
 #start_IndexSecond-cumprod()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-cumprod()
 
 #start_IndexSecond-cumsum()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecond-cumsum()
 
 #start_IndexSecond-difference()
@@ -57405,7 +57405,7 @@ False
 <Frame>
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexSecond Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexSecond Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexSecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexSecond Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexSecond Exporter             Return an HTML ta...
@@ -57418,7 +57418,7 @@ depth                                IndexSecond Attribute            int([x]) -
 dtype                                IndexSecond Attribute            Return the dtype ...
 index_types                          IndexSecond Attribute            Return a Series o...
 memory                               IndexSecond Attribute            Return a MemoryDi...
-mloc                                 IndexSecond Attribute            The memory locati...
+mloc                                 IndexSecond Attribute            {doc_int}
 name                                 IndexSecond Attribute            A hashable label ...
 names                                IndexSecond Attribute            Provide a suitabl...
 nbytes                               IndexSecond Attribute            Return the total ...
@@ -57729,7 +57729,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexSecond-__rtruediv__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexSecond-__rtruediv__()
 
 #start_IndexSecond-__sub__()
@@ -57741,7 +57741,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexSecond-__truediv__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexSecond-__truediv__()
 
 #start_IndexSecond-__xor__()
@@ -57755,7 +57755,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecond-__abs__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecond-__abs__()
 
 #start_IndexSecond-__invert__()
@@ -57767,13 +57767,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecond-__neg__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecond-__neg__()
 
 #start_IndexSecond-__pos__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecond-__pos__()
 
 #start_IndexSecond-via_dt.__call__()
@@ -58623,12 +58623,12 @@ None     <IndexSecondGO>
 #start_IndexSecondGO-memory
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16   B
-Map       464  B     464  B     464 B     464  B     464 B     464  B
-Labels    120  B     136  B     24  B     120  B     136 B     24   B
-Positions 96   B     112  B     0   B     8.19 KB    136 B     24   B
-Total     1.14 KB    1.18 KB    980 B     9.24 KB    1.2 KB    1004 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.19 KB    1.22 KB    992 B     9.3  KB    1.24 KB    1016 B
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -58777,13 +58777,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexSecondGO-cumprod()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-cumprod()
 
 #start_IndexSecondGO-cumsum()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 #end_IndexSecondGO-cumsum()
 
 #start_IndexSecondGO-difference()
@@ -59190,7 +59190,7 @@ False
 <Frame>
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexSecondGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexSecondGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexSecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexSecondGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexSecondGO Exporter             Return an HTML ta...
@@ -59203,7 +59203,7 @@ depth                                IndexSecondGO Attribute            int([x])
 dtype                                IndexSecondGO Attribute            Return the dtype ...
 index_types                          IndexSecondGO Attribute            Return a Series o...
 memory                               IndexSecondGO Attribute            Return a MemoryDi...
-mloc                                 IndexSecondGO Attribute            The memory locati...
+mloc                                 IndexSecondGO Attribute            {doc_int}
 name                                 IndexSecondGO Attribute            A hashable label ...
 names                                IndexSecondGO Attribute            Provide a suitabl...
 nbytes                               IndexSecondGO Attribute            Return the total ...
@@ -59514,7 +59514,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexSecondGO-__rtruediv__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexSecondGO-__rtruediv__()
 
 #start_IndexSecondGO-__sub__()
@@ -59526,7 +59526,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexSecondGO-__truediv__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexSecondGO-__truediv__()
 
 #start_IndexSecondGO-__xor__()
@@ -59540,7 +59540,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexSecondGO-__abs__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecondGO-__abs__()
 
 #start_IndexSecondGO-__invert__()
@@ -59552,13 +59552,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexSecondGO-__neg__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[s]'), dtype('<M8[s]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecondGO-__neg__()
 
 #start_IndexSecondGO-__pos__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00' '1517-12-31T00:00:00' '1517-06-30T00:00:00']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexSecondGO-__pos__()
 
 #start_IndexSecondGO-via_dt.__call__()
@@ -60410,10 +60410,10 @@ None     <IndexMillisecond>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexMillisecond-memory
 
 #start_IndexMillisecond-name
@@ -60551,13 +60551,13 @@ True
 #start_IndexMillisecond-cumprod()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-cumprod()
 
 #start_IndexMillisecond-cumsum()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecond-cumsum()
 
 #start_IndexMillisecond-difference()
@@ -60953,7 +60953,7 @@ False
 <Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMillisecond Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMillisecond Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMillisecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexMillisecond Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMillisecond Exporter             Return an HTML ta...
@@ -60966,7 +60966,7 @@ depth                                IndexMillisecond Attribute            int([
 dtype                                IndexMillisecond Attribute            Return the dtype ...
 index_types                          IndexMillisecond Attribute            Return a Series o...
 memory                               IndexMillisecond Attribute            Return a MemoryDi...
-mloc                                 IndexMillisecond Attribute            The memory locati...
+mloc                                 IndexMillisecond Attribute            {doc_int}
 name                                 IndexMillisecond Attribute            A hashable label ...
 names                                IndexMillisecond Attribute            Provide a suitabl...
 nbytes                               IndexMillisecond Attribute            Return the total ...
@@ -61278,7 +61278,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMillisecond-__rtruediv__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMillisecond-__rtruediv__()
 
 #start_IndexMillisecond-__sub__()
@@ -61291,7 +61291,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMillisecond-__truediv__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMillisecond-__truediv__()
 
 #start_IndexMillisecond-__xor__()
@@ -61305,7 +61305,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecond-__abs__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecond-__abs__()
 
 #start_IndexMillisecond-__invert__()
@@ -61317,14 +61317,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecond-__neg__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecond-__neg__()
 
 #start_IndexMillisecond-__pos__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00.000' '1517-12-31T00:00:00.000'
- '1517-06-30T00:00:00.000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecond-__pos__()
 
 #start_IndexMillisecond-via_dt.__call__()
@@ -62186,12 +62185,12 @@ None     <IndexMillisecondGO>
 #start_IndexMillisecondGO-memory
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16   B
-Map       464  B     464  B     464 B     464  B     464 B     464  B
-Labels    120  B     136  B     24  B     120  B     136 B     24   B
-Positions 96   B     112  B     0   B     8.19 KB    136 B     24   B
-Total     1.14 KB    1.18 KB    980 B     9.24 KB    1.2 KB    1004 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.19 KB    1.22 KB    992 B     9.3  KB    1.24 KB    1016 B
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -62341,13 +62340,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMillisecondGO-cumprod()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-cumprod()
 
 #start_IndexMillisecondGO-cumsum()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 #end_IndexMillisecondGO-cumsum()
 
 #start_IndexMillisecondGO-difference()
@@ -62758,7 +62757,7 @@ False
 <Frame>
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMillisecondGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMillisecondGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMillisecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMillisecondGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMillisecondGO Exporter             Return an HTML ta...
@@ -62771,7 +62770,7 @@ depth                                IndexMillisecondGO Attribute            int
 dtype                                IndexMillisecondGO Attribute            Return the dtype ...
 index_types                          IndexMillisecondGO Attribute            Return a Series o...
 memory                               IndexMillisecondGO Attribute            Return a MemoryDi...
-mloc                                 IndexMillisecondGO Attribute            The memory locati...
+mloc                                 IndexMillisecondGO Attribute            {doc_int}
 name                                 IndexMillisecondGO Attribute            A hashable label ...
 names                                IndexMillisecondGO Attribute            Provide a suitabl...
 nbytes                               IndexMillisecondGO Attribute            Return the total ...
@@ -63083,7 +63082,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMillisecondGO-__rtruediv__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMillisecondGO-__rtruediv__()
 
 #start_IndexMillisecondGO-__sub__()
@@ -63096,7 +63095,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMillisecondGO-__truediv__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMillisecondGO-__truediv__()
 
 #start_IndexMillisecondGO-__xor__()
@@ -63110,7 +63109,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMillisecondGO-__abs__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecondGO-__abs__()
 
 #start_IndexMillisecondGO-__invert__()
@@ -63122,14 +63121,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMillisecondGO-__neg__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecondGO-__neg__()
 
 #start_IndexMillisecondGO-__pos__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00.000' '1517-12-31T00:00:00.000'
- '1517-06-30T00:00:00.000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMillisecondGO-__pos__()
 
 #start_IndexMillisecondGO-via_dt.__call__()
@@ -63993,10 +63991,10 @@ None     <IndexMicrosecond>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexMicrosecond-memory
 
 #start_IndexMicrosecond-name
@@ -64134,13 +64132,13 @@ True
 #start_IndexMicrosecond-cumprod()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-cumprod()
 
 #start_IndexMicrosecond-cumsum()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecond-cumsum()
 
 #start_IndexMicrosecond-difference()
@@ -64536,7 +64534,7 @@ False
 <Frame>
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMicrosecond Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMicrosecond Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMicrosecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexMicrosecond Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMicrosecond Exporter             Return an HTML ta...
@@ -64549,7 +64547,7 @@ depth                                IndexMicrosecond Attribute            int([
 dtype                                IndexMicrosecond Attribute            Return the dtype ...
 index_types                          IndexMicrosecond Attribute            Return a Series o...
 memory                               IndexMicrosecond Attribute            Return a MemoryDi...
-mloc                                 IndexMicrosecond Attribute            The memory locati...
+mloc                                 IndexMicrosecond Attribute            {doc_int}
 name                                 IndexMicrosecond Attribute            A hashable label ...
 names                                IndexMicrosecond Attribute            Provide a suitabl...
 nbytes                               IndexMicrosecond Attribute            Return the total ...
@@ -64861,7 +64859,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMicrosecond-__rtruediv__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMicrosecond-__rtruediv__()
 
 #start_IndexMicrosecond-__sub__()
@@ -64874,7 +64872,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMicrosecond-__truediv__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMicrosecond-__truediv__()
 
 #start_IndexMicrosecond-__xor__()
@@ -64888,7 +64886,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecond-__abs__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecond-__abs__()
 
 #start_IndexMicrosecond-__invert__()
@@ -64900,14 +64898,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecond-__neg__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecond-__neg__()
 
 #start_IndexMicrosecond-__pos__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00.000000' '1517-12-31T00:00:00.000000'
- '1517-06-30T00:00:00.000000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecond-__pos__()
 
 #start_IndexMicrosecond-via_dt.__call__()
@@ -65771,12 +65768,12 @@ None     <IndexMicrosecondGO>
 #start_IndexMicrosecondGO-memory
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD  RMDu
-Name      16   B     16   B     16  B     16   B     16  B     16   B
-Map       464  B     464  B     464 B     464  B     464 B     464  B
-Labels    120  B     136  B     24  B     120  B     136 B     24   B
-Positions 96   B     112  B     0   B     8.19 KB    136 B     24   B
-Total     1.14 KB    1.18 KB    980 B     9.24 KB    1.2 KB    1004 B
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.19 KB    1.22 KB    992 B     9.3  KB    1.24 KB    1016 B
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -65926,13 +65923,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexMicrosecondGO-cumprod()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-cumprod()
 
 #start_IndexMicrosecondGO-cumsum()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 #end_IndexMicrosecondGO-cumsum()
 
 #start_IndexMicrosecondGO-difference()
@@ -66343,7 +66340,7 @@ False
 <Frame>
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexMicrosecondGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexMicrosecondGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexMicrosecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMicrosecondGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexMicrosecondGO Exporter             Return an HTML ta...
@@ -66356,7 +66353,7 @@ depth                                IndexMicrosecondGO Attribute            int
 dtype                                IndexMicrosecondGO Attribute            Return the dtype ...
 index_types                          IndexMicrosecondGO Attribute            Return a Series o...
 memory                               IndexMicrosecondGO Attribute            Return a MemoryDi...
-mloc                                 IndexMicrosecondGO Attribute            The memory locati...
+mloc                                 IndexMicrosecondGO Attribute            {doc_int}
 name                                 IndexMicrosecondGO Attribute            A hashable label ...
 names                                IndexMicrosecondGO Attribute            Provide a suitabl...
 nbytes                               IndexMicrosecondGO Attribute            Return the total ...
@@ -66668,7 +66665,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexMicrosecondGO-__rtruediv__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> '1517-06-30' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMicrosecondGO-__rtruediv__()
 
 #start_IndexMicrosecondGO-__sub__()
@@ -66681,7 +66678,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexMicrosecondGO-__truediv__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix / '1517-06-30'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexMicrosecondGO-__truediv__()
 
 #start_IndexMicrosecondGO-__xor__()
@@ -66695,7 +66692,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexMicrosecondGO-__abs__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecondGO-__abs__()
 
 #start_IndexMicrosecondGO-__invert__()
@@ -66707,14 +66704,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexMicrosecondGO-__neg__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[us]'), dtype('<M8[us]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecondGO-__neg__()
 
 #start_IndexMicrosecondGO-__pos__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> +ix
-['1517-04-01T00:00:00.000000' '1517-12-31T00:00:00.000000'
- '1517-06-30T00:00:00.000000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexMicrosecondGO-__pos__()
 
 #start_IndexMicrosecondGO-via_dt.__call__()
@@ -67580,10 +67576,10 @@ None     <IndexNanosecond>
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
 Name      16  B     16  B     16  B     16   B     16  B     16  B
-Map       464 B     464 B     464 B     464  B     464 B     464 B
-Labels    120 B     136 B     24  B     120  B     136 B     24  B
-Positions 96  B     112 B     0   B     8.19 KB    136 B     24  B
-Total     800 B     832 B     608 B     8.88 KB    856 B     632 B
+Map       472 B     472 B     472 B     472  B     472 B     472 B
+Labels    136 B     152 B     24  B     136  B     152 B     24  B
+Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
+Total     844 B     876 B     620 B     8.93 KB    900 B     644 B
 #end_IndexNanosecond-memory
 
 #start_IndexNanosecond-name
@@ -67721,13 +67717,13 @@ True
 #start_IndexNanosecond-cumprod()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-cumprod()
 
 #start_IndexNanosecond-cumsum()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecond-cumsum()
 
 #start_IndexNanosecond-difference()
@@ -68123,7 +68119,7 @@ False
 <Frame>
 <Index>                              cls_name        group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexNanosecond Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexNanosecond Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexNanosecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexNanosecond Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexNanosecond Exporter             Return an HTML ta...
@@ -68136,7 +68132,7 @@ depth                                IndexNanosecond Attribute            int([x
 dtype                                IndexNanosecond Attribute            Return the dtype ...
 index_types                          IndexNanosecond Attribute            Return a Series o...
 memory                               IndexNanosecond Attribute            Return a MemoryDi...
-mloc                                 IndexNanosecond Attribute            The memory locati...
+mloc                                 IndexNanosecond Attribute            {doc_int}
 name                                 IndexNanosecond Attribute            A hashable label ...
 names                                IndexNanosecond Attribute            Provide a suitabl...
 nbytes                               IndexNanosecond Attribute            Return the total ...
@@ -68448,7 +68444,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexNanosecond-__rtruediv__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> '1789-05-05' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexNanosecond-__rtruediv__()
 
 #start_IndexNanosecond-__sub__()
@@ -68461,7 +68457,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexNanosecond-__truediv__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix / '1789-05-05'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexNanosecond-__truediv__()
 
 #start_IndexNanosecond-__xor__()
@@ -68475,7 +68471,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecond-__abs__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecond-__abs__()
 
 #start_IndexNanosecond-__invert__()
@@ -68487,14 +68483,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecond-__neg__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecond-__neg__()
 
 #start_IndexNanosecond-__pos__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> +ix
-['1789-05-05T00:00:00.000000000' '1789-12-31T00:00:00.000000000'
- '1799-11-09T00:00:00.000000000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecond-__pos__()
 
 #start_IndexNanosecond-via_dt.__call__()
@@ -69359,10 +69354,10 @@ None     <IndexNanosecondGO>
 >>> ix.memory
           L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
 Name      16   B     16   B     16  B     16   B     16   B     16  B
-Map       464  B     464  B     464 B     464  B     464  B     464 B
-Labels    120  B     136  B     24  B     120  B     136  B     24  B
-Positions 96   B     112  B     0   B     8.19 KB    136  B     24  B
-Total     1.11 KB    1.14 KB    944 B     9.2  KB    1.16 KB    968 B
+Map       472  B     472  B     472 B     472  B     472  B     472 B
+Labels    136  B     152  B     24  B     136  B     152  B     24  B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24  B
+Total     1.15 KB    1.18 KB    956 B     9.26 KB    1.21 KB    980 B
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -69512,13 +69507,13 @@ ValueError('Error parsing datetime string "f" at position 0')
 #start_IndexNanosecondGO-cumprod()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumprod()
-ValueError("could not find a matching type for multiply.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'multiply'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-cumprod()
 
 #start_IndexNanosecondGO-cumsum()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix.cumsum()
-ValueError("could not find a matching type for add.accumulate, requested type has type code 'M'")
+UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 #end_IndexNanosecondGO-cumsum()
 
 #start_IndexNanosecondGO-difference()
@@ -69929,7 +69924,7 @@ False
 <Frame>
 <Index>                              cls_name          group                doc                  <<U18>
 <Index: signature>
-__init__(labels, *, name, loc_is_... IndexNanosecondGO Constructor          Initializer. Args...
+__init__(labels, *, name, loc_is_... IndexNanosecondGO Constructor          Initializer. {args}
 from_labels(labels, *, name)         IndexNanosecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexNanosecondGO Constructor          Given a Pandas in...
 to_html(config, style_config)        IndexNanosecondGO Exporter             Return an HTML ta...
@@ -69942,7 +69937,7 @@ depth                                IndexNanosecondGO Attribute            int(
 dtype                                IndexNanosecondGO Attribute            Return the dtype ...
 index_types                          IndexNanosecondGO Attribute            Return a Series o...
 memory                               IndexNanosecondGO Attribute            Return a MemoryDi...
-mloc                                 IndexNanosecondGO Attribute            The memory locati...
+mloc                                 IndexNanosecondGO Attribute            {doc_int}
 name                                 IndexNanosecondGO Attribute            A hashable label ...
 names                                IndexNanosecondGO Attribute            Provide a suitabl...
 nbytes                               IndexNanosecondGO Attribute            Return the total ...
@@ -70254,7 +70249,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexNanosecondGO-__rtruediv__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> '1789-05-05' / ix
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexNanosecondGO-__rtruediv__()
 
 #start_IndexNanosecondGO-__sub__()
@@ -70267,7 +70262,7 @@ UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #start_IndexNanosecondGO-__truediv__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix / '1789-05-05'
-UFuncTypeError(<ufunc 'true_divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
+UFuncTypeError(<ufunc 'divide'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 #end_IndexNanosecondGO-__truediv__()
 
 #start_IndexNanosecondGO-__xor__()
@@ -70281,7 +70276,7 @@ TypeError("ufunc 'bitwise_xor' not supported for the input types, and the inputs
 #start_IndexNanosecondGO-__abs__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> abs(ix)
-UFuncTypeError(<ufunc 'absolute'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'absolute'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecondGO-__abs__()
 
 #start_IndexNanosecondGO-__invert__()
@@ -70293,14 +70288,13 @@ TypeError("ufunc 'invert' not supported for the input types, and the inputs coul
 #start_IndexNanosecondGO-__neg__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> -ix
-UFuncTypeError(<ufunc 'negative'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
+UFuncTypeError(<ufunc 'negative'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecondGO-__neg__()
 
 #start_IndexNanosecondGO-__pos__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> +ix
-['1789-05-05T00:00:00.000000000' '1789-12-31T00:00:00.000000000'
- '1799-11-09T00:00:00.000000000']
+UFuncTypeError(<ufunc 'positive'>, (<class 'numpy.dtypes.DateTime64DType'>, None))
 #end_IndexNanosecondGO-__pos__()
 
 #start_IndexNanosecondGO-via_dt.__call__()
@@ -71293,11 +71287,11 @@ z        <IndexDate>
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  2.33 KB    2.42 KB    1.77 KB    10.42 KB    2.48 KB    1.83 KB
-Indexers 184  B     184  B     72   B     184   B     184  B     72   B
-Blocks   1016 B     1.04 KB    728  B     1016  B     1.04 KB    728  B
+Indices  2.38 KB    2.47 KB    1.72 KB    10.49 KB    2.54 KB    1.79 KB
+Indexers 200  B     200  B     72   B     200   B     200  B     72   B
+Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.46 KB    4.62 KB    3.41 KB    12.55 KB    4.68 KB    3.48 KB
+Total    4.25 KB    4.41 KB    3.03 KB    12.36 KB    4.47 KB    3.09 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -71315,7 +71309,7 @@ Total    4.46 KB    4.62 KB    3.41 KB    12.55 KB    4.68 KB    3.48 KB
 #start_IndexHierarchy-nbytes
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-701
+677
 #end_IndexHierarchy-nbytes
 
 #start_IndexHierarchy-ndim
@@ -71401,13 +71395,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f0b1c3e9670> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f14dccd3ba0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f0b1c3e9700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f14dccd3c40> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -71455,13 +71449,13 @@ False                             True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f0bca9bc9d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f14ec2707c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f0bca9b7f70> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f14ec270040> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -71724,13 +71718,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f0bca9bf0d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f14ec270d60> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f0bca86e670> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f14ec20e700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -71742,7 +71736,7 @@ NotImplementedError('<function median at 0x7f0bca86e670> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f0bca9bc820> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f14ec270680> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -71857,13 +71851,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f0bca9bf280>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f14ec26a3b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f0bca9b7a60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f14ee443c40> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -71919,7 +71913,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f0bca9bf430>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f14ec26a5f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -73218,7 +73212,7 @@ XYZ              12/31/1517
 #start_IndexHierarchy-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -73373,7 +73367,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchy-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -73786,11 +73780,11 @@ z        <IndexDateGO>
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
 Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  3.18 KB    3.28 KB    2.62 KB    11.28 KB    3.34 KB    2.68 KB
-Indexers 184  B     184  B     72   B     184   B     184  B     72   B
-Blocks   1016 B     1.04 KB    728  B     1016  B     1.04 KB    728  B
+Indices  3.25 KB    3.34 KB    2.59 KB    11.36 KB    3.4  KB    2.65 KB
+Indexers 200  B     200  B     72   B     200   B     200  B     72   B
+Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.25 KB    5.41 KB    4.21 KB    13.35 KB    5.47 KB    4.27 KB
+Total    5.14 KB    5.3  KB    3.92 KB    13.25 KB    5.36 KB    3.98 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -73808,7 +73802,7 @@ Total    5.25 KB    5.41 KB    4.21 KB    13.35 KB    5.47 KB    4.27 KB
 #start_IndexHierarchyGO-nbytes
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.nbytes
-701
+677
 #end_IndexHierarchyGO-nbytes
 
 #start_IndexHierarchyGO-ndim
@@ -73894,13 +73888,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f0b1c3e9670> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f14dccd3ba0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f0b1c3e9700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f14dccd3c40> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -73961,13 +73955,13 @@ False                               True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f0bca9bc9d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f14ec2707c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f0bca9b7f70> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f14ec270040> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -74238,13 +74232,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f0bca9bf0d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f14ec270d60> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f0bca86e670> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f14ec20e700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -74256,7 +74250,7 @@ NotImplementedError('<function median at 0x7f0bca86e670> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f0bca9bc820> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f14ec270680> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -74371,13 +74365,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f0bca9bf280>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f14ec26a3b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f0bca9b7a60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f14ee443c40> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -74433,7 +74427,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f0bca9bf430>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f14ec26a5f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -75732,7 +75726,7 @@ XYZ                12/31/1517
 #start_IndexHierarchyGO-via_T.__floordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -75887,7 +75881,7 @@ TypeError("ufunc 'right_shift' not supported for the input types, and the inputs
 #start_IndexHierarchyGO-via_T.__rfloordiv__()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=('x', 'y'))
 >>> ih.via_T // (0, 1, 1, -1)
-[[      nan       nan]
+[[      nan       inf]
  [1.000e+00       nan]
  [1.000e+01 2.048e+03]
  [      nan       nan]]
@@ -76400,7 +76394,7 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
       L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.99 KB    1.61 KB    1.17 KB    14.08 KB    1.62 KB    1.18 KB
+Total 5.72 KB    1.65 KB    1.15 KB    13.83 KB    1.67 KB    1.17 KB
 #end_Bus-memory
 
 #start_Bus-name
@@ -76832,19 +76826,18 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.values
 [<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
- <Frame: y>
-<Index>    c      d      <<U1>
-<Index>
-p          False  True
-q          False  True
-r          False  True
-<<U1>      <bool> <bool>]
+ <Index>    a       b       <<U1>
+ <Index>
+ p          0       1
+ q          2       3
+ r          4       5
+ <<U1>      <int64> <int64>       <Frame: y>
+                                  <Index>    c      d      <<U1>
+                                  <Index>
+                                  p          False  True
+                                  q          False  True
+                                  r          False  True
+                                  <<U1>      <bool> <bool>      ]
 #end_Bus-values
 
 #start_Bus-interface
@@ -77577,8 +77570,8 @@ j                w
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 15.7 KB    4.59 KB    3.39 KB    23.79 KB    4.65 KB    3.45 KB
+      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 15.32 KB    4.46 KB    3.08 KB    23.43 KB    4.52 KB    3.15 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -77969,33 +77962,31 @@ j                w
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.values
 [<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
- <Frame: y>
-<Index>    c      d      <<U1>
-<Index>
-p          False  True
-q          False  True
-r          False  True
-<<U1>      <bool> <bool>
+ <Index>    a       b       <<U1>
+ <Index>
+ p          0       1
+ q          2       3
+ r          4       5
+ <<U1>      <int64> <int64>       <Frame: y>
+                                  <Index>    c      d      <<U1>
+                                  <Index>
+                                  p          False  True
+                                  q          False  True
+                                  r          False  True
+                                  <<U1>      <bool> <bool>
  <Frame: v>
-<Index>    a       b       <<U1>
-<Index>
-p          40      41
-q          42      43
-r          44      45
-<<U1>      <int64> <int64>
- <Frame: w>
-<Index>    c      d      <<U1>
-<Index>
-p          False  True
-q          True   False
-r          True   True
-<<U1>      <bool> <bool>]
+ <Index>    a       b       <<U1>
+ <Index>
+ p          40      41
+ q          42      43
+ r          44      45
+ <<U1>      <int64> <int64>       <Frame: w>
+                                  <Index>    c      d      <<U1>
+                                  <Index>
+                                  p          False  True
+                                  q          True   False
+                                  r          True   True
+                                  <<U1>      <bool> <bool>      ]
 #end_Yarn-values
 
 #start_Yarn-interface
@@ -78757,7 +78748,7 @@ True
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
       L    Lu    LM  LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.18 KB    5.3 KB    4.21 KB    13.27 KB    5.38 KB    4.29 KB
+Total 4.98 KB    5.1 KB    3.85 KB    13.09 KB    5.18 KB    3.93 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -81726,11 +81717,11 @@ j                s     0.0       0.0       1.0
 <Frame>
 <Index>                a         b         c         <<U1>
 <IndexHierarchy>
-i                p     nan       nan       nan
+i                p     inf       inf       inf
 i                q     1.0       1.0       -0.0
 i                r     0.0       16.0      18.0
 i                s     0.0       0.0       12.0
-j                p     nan       nan       nan
+j                p     inf       inf       inf
 j                q     -1.0      -1.0      -0.0
 j                r     0.0       4.0       4.0
 j                s     0.0       0.0       1.0
@@ -82044,11 +82035,11 @@ j                s     0.0       0.0       1.0
 <Frame>
 <Index>                a         b         c         <<U1>
 <IndexHierarchy>
-i                p     nan       nan       nan
+i                p     inf       inf       inf
 i                q     1.0       1.0       -0.0
 i                r     0.0       16.0      18.0
 i                s     0.0       0.0       12.0
-j                p     nan       nan       nan
+j                p     inf       inf       inf
 j                q     -1.0      -1.0      -0.0
 j                r     0.0       4.0       4.0
 j                s     0.0       0.0       1.0
@@ -83076,8 +83067,8 @@ c
 #start_Quilt-memory
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 9.09 KB    6.06 KB    4.53 KB    17.53 KB    6.15 KB    4.62 KB
+      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
+Total 8.88 KB    6.02 KB    4.27 KB    17.38 KB    6.1 KB    4.35 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -83280,7 +83271,7 @@ NotImplementedAxis('Iteration along this axis is too inefficient; create a conso
 <Frame>
 <Index>                              cls_name group            doc                  <<U18>
 <Index: signature>
-__init__(bus, *, axis, retain_lab... Quilt    Constructor      Args: bus: Bus of...
+__init__(bus, *, axis, retain_lab... Quilt    Constructor      {args}
 from_frame(frame, *, chunksize, r... Quilt    Constructor      Given a Frame, cr...
 from_frames(frames, *, axis, name... Quilt    Constructor      Return a Quilt fr...
 from_hdf5(fp, *, config, axis, ...)  Quilt    Constructor      Given a file path...
@@ -84765,7 +84756,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0b0c0ee340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f14dc9daac0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -84825,13 +84816,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0b0c0ee840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f14dc9d9b40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0b0c0ee940>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f14dc9d9b40>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -84847,19 +84838,19 @@ False
 #start_MemoryDisplay-__init__()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 788  B     820  B     596  B     8.86  KB    844  B     620  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.09 KB    2.18 KB    1.53 KB    10.18 KB    2.24 KB    1.58 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   1.82 KB    1.91 KB    1.16 KB    9.93 KB    1.97 KB    1.22 KB
 #end_MemoryDisplay-__init__()
 
 #start_MemoryDisplay-from_any()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> sf.MemoryDisplay.from_any(f.index)
-      L   Lu    LM  LMu   LMD LMDu  R   Ru    RM  RMu   RMD RMDu
-Total 216 B     232 B     120 B     8.3 KB    264 B     152 B
+      L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Total 236 B     252 B     124 B     8.34 KB    284 B     156 B
 #end_MemoryDisplay-from_any()
 
 #start_MemoryDisplay-to_frame()
@@ -84869,10 +84860,10 @@ Total 216 B     232 B     120 B     8.3 KB    264 B     152 B
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
 Name                50      50      50      50      50      50
-Index               216     232     120     8504    264     152
-Columns             788     820     596     9076    844     620
-Blocks              1052    1100    764     1052    1100    764
-Total               2138    2234    1562    10426   2290    1618
+Index               236     252     124     8540    284     156
+Columns             800     832     576     9104    856     600
+Blocks              748     796     412     748     796     412
+Total               1862    1958    1190    10166   2014    1246
 <<U7>               <int64> <int64> <int64> <int64> <int64> <int64>
 #end_MemoryDisplay-to_frame()
 
@@ -84880,23 +84871,23 @@ Total               2138    2234    1562    10426   2290    1618
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> md = f.memory
 >>> repr(md)
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 788  B     820  B     596  B     8.86  KB    844  B     620  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.09 KB    2.18 KB    1.53 KB    10.18 KB    2.24 KB    1.58 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   1.82 KB    1.91 KB    1.16 KB    9.93 KB    1.97 KB    1.22 KB
 #end_MemoryDisplay-__repr__()
 
 #start_MemoryDisplay-__str__()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> md = f.memory
 >>> str(md)
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   216  B     232  B     120  B     8.3   KB    264  B     152  B
-Columns 788  B     820  B     596  B     8.86  KB    844  B     620  B
-Blocks  1.03 KB    1.07 KB    764  B     1.03  KB    1.07 KB    764  B
-Total   2.09 KB    2.18 KB    1.53 KB    10.18 KB    2.24 KB    1.58 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   1.82 KB    1.91 KB    1.16 KB    9.93 KB    1.97 KB    1.22 KB
 #end_MemoryDisplay-__str__()
 

@@ -14,6 +14,7 @@ from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexSecond
 from static_frame import Series
+from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import bloc_key_normalize
@@ -123,23 +124,23 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         self.assertEqual(
-                matmul(f1, [4, 3]).to_pairs(),
+                matmul(f1, [4, 3]).to_pairs(), # type: ignore
                 (('x', 13), ('y', 20), ('z', 27))
                 )
 
         self.assertEqual(
-                matmul(f1, np.array([4, 3])).to_pairs(),
+                matmul(f1, np.array([4, 3])).to_pairs(), # type: ignore
                 (('x', 13), ('y', 20), ('z', 27))
                 )
 
 
         self.assertEqual(
-                matmul(f1, [3, 4]).to_pairs(),
+                matmul(f1, [3, 4]).to_pairs(), # type: ignore
                 (('x', 15), ('y', 22), ('z', 29))
                 )
 
         self.assertEqual(
-                matmul(f1, np.array([3, 4])).to_pairs(),
+                matmul(f1, np.array([3, 4])).to_pairs(), # type: ignore
                 (('x', 15), ('y', 22), ('z', 29))
                 )
 
@@ -151,7 +152,7 @@ class TestUnit(TestCase):
 
         # get an auto incremented integer columns
         self.assertEqual(
-            matmul(f1, np.arange(10).reshape(2, 5)).to_pairs(0),
+            matmul(f1, np.arange(10).reshape(2, 5)).to_pairs(), # type: ignore
             ((0, (('x', 15), ('y', 20), ('z', 25))), (1, (('x', 19), ('y', 26), ('z', 33))), (2, (('x', 23), ('y', 32), ('z', 41))), (3, (('x', 27), ('y', 38), ('z', 49))), (4, (('x', 31), ('y', 44), ('z', 57))))
             )
 
@@ -162,10 +163,10 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
         s1 = Series((10, 11), index=('a', 'b'))
 
-        self.assertEqual(matmul(f1, s1).to_pairs(),
+        self.assertEqual(matmul(f1, s1).to_pairs(), # type: ignore
                 (('x', 43), ('y', 64), ('z', 85)))
 
-        self.assertEqual(matmul(f1, s1.values).to_pairs(),
+        self.assertEqual(matmul(f1, s1.values).to_pairs(), # type: ignore
                 (('x', 43), ('y', 64), ('z', 85)))
 
         with self.assertRaises(RuntimeError):
@@ -180,12 +181,12 @@ class TestUnit(TestCase):
         s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
 
         self.assertEqual(
-            matmul(s1, f1).to_pairs(),
+            matmul(s1, f1).to_pairs(), # type: ignore
             (('a', 17), ('b', 35))
             )
 
         # produces a Series indexed 0, 1
-        self.assertEqual(matmul(s1, f1.values).to_pairs(),
+        self.assertEqual(matmul(s1, f1.values).to_pairs(), # type: ignore
             ((0, 17), (1, 35)))
 
     def test_matmul_e(self) -> None:
@@ -204,10 +205,10 @@ class TestUnit(TestCase):
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
 
-        self.assertEqual(matmul([3, 4, 5], f1.values).tolist(),
+        self.assertEqual(matmul([3, 4, 5], f1.values).tolist(), # type: ignore
                 [26, 50])
 
-        self.assertEqual(matmul([3, 4, 5], f1).to_pairs(),
+        self.assertEqual(matmul([3, 4, 5], f1).to_pairs(), # type: ignore
                 (('a', 26), ('b', 50))
                 )
 
@@ -228,11 +229,11 @@ class TestUnit(TestCase):
         f2 = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
 
-        self.assertEqual(matmul(f1.values, f2).to_pairs(0),
+        self.assertEqual(matmul(f1.values, f2).to_pairs(), # type: ignore
                 (('p', ((0, 11), (1, 14), (2, 17), (3, 20))), ('q', ((0, 23), (1, 30), (2, 37), (3, 44))), ('r', ((0, 35), (1, 46), (2, 57), (3, 68))))
                 )
 
-        self.assertEqual(matmul(f1, f2.values).to_pairs(0),
+        self.assertEqual(matmul(f1, f2.values).to_pairs(), # type: ignore
                 ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
                 )
 
@@ -901,6 +902,27 @@ class TestUnit(TestCase):
         post = group_from_container(idx, s, None, 0)
         self.assertEqual(post.tolist(), [[0], [None], [0]])
 
+
+    def test_get_containers(self) -> None:
+        keys_gc = set(cls.__name__ for cls in TestCase.get_containers())
+        keys_cm = set(ContainerMap.keys())
+
+        # these two different utilities have slightly different constituents as they are used for different purposes
+        self.assertEqual(keys_gc - keys_cm, {'ContainerOperand', 'ContainerOperandSequence'})
+        self.assertEqual(keys_cm - keys_gc, {'FillValueAuto', 'ILoc', 'HLoc', 'MemoryDisplay'})
+
+        self.assertEqual(keys_cm & keys_gc, {'FrameHE', 'IndexSecondGO', 'IndexSecond', 'IndexDateGO', 'Bus', 'IndexMinute', 'Index', 'Frame', 'IndexDate', 'IndexYearMonth', 'IndexYearGO', 'IndexMicrosecondGO', 'Yarn', 'IndexNanosecond', 'IndexYearMonthGO', 'IndexNanosecondGO', 'IndexHourGO', 'Batch', 'Quilt', 'IndexMinuteGO', 'FrameGO', 'IndexHour', 'Series', 'IndexGO', 'IndexHierarchy', 'IndexMillisecondGO', 'TypeBlocks', 'IndexYear', 'SeriesHE', 'IndexMicrosecond', 'IndexMillisecond', 'IndexHierarchyGO'})
+
+
+
+    def test_get_container_map_a(self) -> None:
+        if hasattr(ContainerMap, '_map'):
+            delattr(ContainerMap, '_map')
+        keys = set(ContainerMap.keys())
+
+        delattr(ContainerMap, '_map')
+        for k in keys:
+            ContainerMap.get(k)
 
 
 if __name__ == '__main__':

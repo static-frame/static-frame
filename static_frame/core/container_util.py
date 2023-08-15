@@ -72,6 +72,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
 
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 
 ExplicitConstructor = tp.Union[
         IndexConstructor,
@@ -84,7 +87,7 @@ FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 class ContainerMap:
 
-    _map: tp.Optional[tp.Dict[str, tp.Type[ContainerOperand]]] = None
+    _map: tp.Dict[str, tp.Type[ContainerBase]]
 
     @classmethod
     def _update_map(cls) -> None:
@@ -123,15 +126,28 @@ class ContainerMap:
         from static_frame.core.quilt import Quilt
         from static_frame.core.series import Series
         from static_frame.core.series import SeriesHE
+        from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.yarn import Yarn
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type[ContainerOperand]:
-        if cls._map is None:
+    def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
+        if not hasattr(cls, '_map'):
             cls._update_map()
-        return cls._map[name] #type: ignore #pylint: disable=unsubscriptable-object
+        return cls._map[name] #pylint: disable=unsubscriptable-object
+
+    @classmethod
+    def keys(cls) -> tp.Iterator[str]:
+        if not hasattr(cls, '_map'):
+            cls._update_map()
+        yield from cls._map.keys()
+
+    @classmethod
+    def get(cls, key: str) -> tp.Type[ContainerBase]:
+        if not hasattr(cls, '_map'):
+            cls._update_map()
+        return cls._map[key]
 
 
 def is_frozen_generator_input(value: tp.Any) -> bool:
@@ -177,7 +193,7 @@ def get_col_dtype_factory(
             if col_idx < 0:
                 return None
         if is_element:
-            return dtypes  # already validated
+            return dtypes  # type: ignore
         if is_map:
             # if no columns, assume mapping is an integer mapping
             key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
@@ -196,7 +212,7 @@ def get_col_dtype_factory(
 def get_col_fill_value_factory(
         fill_value: tp.Any,
         columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int, np.dtype], tp.Any]:
+        ) -> tp.Callable[[int, DtypeAny], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
@@ -229,7 +245,7 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    def get_col_fill_value(col_idx: int, dtype: tp.Optional[np.dtype]) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[DtypeAny]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple
@@ -333,7 +349,7 @@ def pandas_to_numpy(
         container: tp.Union['pd.Index', 'pd.Series', 'pd.DataFrame'],
         own_data: bool,
         fill_value: tp.Any = np.nan
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''Convert Pandas container to a numpy array in pandas 1.0, where we might have Pandas extension dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
 
     If coming from a Pandas extension type, will convert pd.NA to `fill_value` in the resulting object array. For object dtypes, pd.NA may pass on into SF; the only way to find them is an expensive iteration and `is` comparison, which we are not sure we want to do at this time.
@@ -364,6 +380,8 @@ def pandas_to_numpy(
     else:
         dtype = None # resolve below
         is_extension_dtype = True
+
+    array: NDArrayAny
 
     if is_extension_dtype:
         isna = container.isna() # returns a NumPy Boolean type sometimes
@@ -413,10 +431,10 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
         pdvu1: bool,
         own_data: bool,
-        ) -> tp.Iterator[np.ndarray]:
+        ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a slice of a DataFrame, extract an array and optionally convert dtypes. If dtypes are provided, they are read with iloc positions given by `columns_ilocs`.
     '''
@@ -500,7 +518,7 @@ def constructor_from_optional_constructor(
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
-            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
             ) -> 'IndexBase':
         return index_from_optional_constructor(value,
                 default_constructor=default_constructor,
@@ -509,7 +527,7 @@ def constructor_from_optional_constructor(
     return func
 
 def index_from_optional_constructors(
-        value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+        value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -554,13 +572,13 @@ def constructor_from_optional_constructors(
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
         ) -> tp.Callable[
-                [tp.Union[np.ndarray, tp.Iterable[tp.Hashable]]],
+                [tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]]],
                 tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
-            value: tp.Union[np.ndarray, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
             ) -> tp.Optional['IndexBase']:
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
@@ -592,12 +610,13 @@ def index_constructor_empty(
 
 #---------------------------------------------------------------------------
 def matmul(
-        lhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
-        rhs: tp.Union['Series', 'Frame', np.ndarray, tp.Sequence[float]],
-        ) -> tp.Any: #tp.Union['Series', 'Frame']:
+        lhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
+        rhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
+        ) -> tp.Union['Series', 'Frame', NDArrayAny]:
     '''
     Implementation of matrix multiplication for Series and Frame
     '''
+    # NOTE: the design of this function makes typing very hard. Recast with overrides or use specialized functions
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 
@@ -617,19 +636,19 @@ def matmul(
     if isinstance(lhs, np.ndarray):
         lhs_type = np.ndarray
     elif isinstance(lhs, Series):
-        lhs_type = Series
+        lhs_type = Series # type: ignore
     else: # normalize subclasses
-        lhs_type = Frame
+        lhs_type = Frame # type: ignore
 
     if isinstance(rhs, np.ndarray):
         rhs_type = np.ndarray
     elif isinstance(rhs, Series):
-        rhs_type = Series
+        rhs_type = Series # type: ignore
     else: # normalize subclasses
-        rhs_type = Frame
+        rhs_type = Frame # type: ignore
 
     if rhs_type == np.ndarray and lhs_type == np.ndarray:
-        return np.matmul(lhs, rhs)
+        return np.matmul(lhs, rhs) # type: ignore
 
 
     own_index = True
@@ -639,86 +658,86 @@ def matmul(
         # result will be 1D or 0D
         columns = None
 
-        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame):
-            aligned = lhs._index.union(rhs._index)
+        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame): # type: ignore
+            aligned = lhs._index.union(rhs._index) # type: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index): # type: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication') #pragma: no cover
 
-        if lhs_type == Series:
+        if lhs_type == Series: # type: ignore
             if rhs_type == np.ndarray:
                 if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
-                left = lhs.values
+                left = lhs.values # type: ignore
                 right = rhs # already np
                 if ndim == 1:
                     index = None # force auto increment integer
                     own_index = False
                     constructor = lhs.__class__
-            elif rhs_type == Series:
+            elif rhs_type == Series: # type: ignore
                 ndim = 0
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(aligned).values
+                left = lhs.reindex(aligned).values # type: ignore
+                right = rhs.reindex(aligned).values # type: ignore
             else: # rhs is Frame
                 ndim = 1
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = rhs._columns
+                left = lhs.reindex(aligned).values # type: ignore
+                right = rhs.reindex(index=aligned).values # type: ignore
+                index = rhs._columns # type: ignore
                 constructor = lhs.__class__
         else: # lhs is 1D array
             left = lhs
-            right = rhs.values
-            if rhs_type == Series:
+            right = rhs.values # type: ignore
+            if rhs_type == Series: # type: ignore
                 ndim = 0
             else: # rhs is Frame, len(lhs) == len(rhs.index)
                 ndim = 1
-                index = rhs._columns
+                index = rhs._columns # type: ignore
                 constructor = Series # cannot get from argument
 
     elif lhs.ndim == 2: # Frame, 2D array
 
-        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame):
-            aligned = lhs._columns.union(rhs._index)
+        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame): # type: ignore
+            aligned = lhs._columns.union(rhs._index) # type: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index): # type: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
-        if lhs_type == Frame:
+        if lhs_type == Frame: # type: ignore
             if rhs_type == np.ndarray:
                 if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim
-                left = lhs.values
+                left = lhs.values # type: ignore
                 right = rhs # already np
-                index = lhs._index
+                index = lhs._index # type: ignore
 
                 if ndim == 1:
                     constructor = Series
                 else:
                     constructor = lhs.__class__
                     columns = None # force auto increment index
-            elif rhs_type == Series:
+            elif rhs_type == Series: # type: ignore
                 # a.columns must align with b.index
                 ndim = 1
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(aligned).values
-                index = lhs._index  # this axis is not changed
+                left = lhs.reindex(columns=aligned).values # type: ignore
+                right = rhs.reindex(aligned).values # type: ignore
+                index = lhs._index  # type: ignore
                 constructor = rhs.__class__
             else: # rhs is Frame
                 # a.columns must align with b.index
                 ndim = 2
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = lhs._index
-                columns = rhs._columns
+                left = lhs.reindex(columns=aligned).values # type: ignore
+                right = rhs.reindex(index=aligned).values # type: ignore
+                index = lhs._index # type: ignore
+                columns = rhs._columns # type: ignore
                 constructor = lhs.__class__ # give left precedence
         else: # lhs is 2D array
             left = lhs
-            right = rhs.values
-            if rhs_type == Series: # returns unindexed Series
+            right = rhs.values # type: ignore
+            if rhs_type == Series: # type: ignore
                 ndim = 1
-                index = None
+                index = None # returns unindexed Series
                 own_index = False
                 constructor = rhs.__class__
             else: # rhs is Frame, lhs.shape[1] == rhs.shape[0]
@@ -727,13 +746,13 @@ def matmul(
                 ndim = 2
                 index = None
                 own_index = False
-                columns = rhs._columns
+                columns = rhs._columns #type: ignore
                 constructor = rhs.__class__
     else:
         raise NotImplementedError(f'no handling for {lhs}')
 
     # NOTE: np.matmul is not the same as np.dot for some arguments
-    data = np.matmul(left, right)
+    data: NDArrayAny = np.matmul(left, right)
 
     if ndim == 0:
         return data
@@ -742,11 +761,11 @@ def matmul(
 
     data.flags.writeable = False
     if ndim == 1:
-        return constructor(data,
+        return constructor(data, # type: ignore
                 index=index,
                 own_index=own_index,
                 )
-    return constructor(data,
+    return constructor(data, # type: ignore
             index=index,
             own_index=own_index,
             columns=columns
@@ -783,7 +802,7 @@ def axis_window_items( *,
         raise RuntimeError('window step cannot be less than than 0')
 
     source_ndim = source.ndim
-    values: tp.Optional[np.ndarray] = None
+    values: tp.Optional[NDArrayAny] = None
 
     if source_ndim == 1:
         assert isinstance(source, Series) # for mypy
@@ -864,8 +883,8 @@ def axis_window_items( *,
 
 def get_block_match(
         width: int,
-        values_source: tp.List[np.ndarray],
-        ) -> tp.Iterator[np.ndarray]:
+        values_source: tp.List[NDArrayAny],
+        ) -> tp.Iterator[NDArrayAny]:
     '''Utility method for assignment. Draw from values to provide as many columns as specified by width. Use `values_source` as a stack to draw and replace values.
     '''
     # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
@@ -902,7 +921,7 @@ def get_block_match(
 def bloc_key_normalize(
         key: Bloc2DKeyType,
         container: 'Frame'
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Normalize and validate a bloc key. Return a same sized Boolean array.
     '''
@@ -970,7 +989,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        ) -> tp.Tuple['TypeBlocks', np.ndarray]:
+        ) -> tp.Tuple['TypeBlocks', NDArrayAny]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
@@ -1012,7 +1031,7 @@ def rehierarch_from_index_hierarchy(*,
         depth_map: tp.Sequence[int],
         index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
-        ) -> tp.Tuple['IndexBase', np.ndarray]:
+        ) -> tp.Tuple['IndexBase', NDArrayAny]:
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
     '''
@@ -1027,7 +1046,7 @@ def rehierarch_from_index_hierarchy(*,
 
     if index_constructors is None:
         # transform the existing index constructors correspondingly
-        index_constructors = labels.index_types.values[list(depth_map)]
+        index_constructors = labels.index_types.values[list(depth_map)] # type: ignore
 
     return labels.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
@@ -1039,9 +1058,9 @@ def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
         row_count: int,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Return a single array given keys and collections.
 
@@ -1081,14 +1100,16 @@ def array_from_value_iter(
 # utilities for binary operator applications with type blocks
 
 def apply_binary_operator(*,
-        values: np.ndarray,
+        values: NDArrayAny,
         other: tp.Any,
         other_is_array: bool,
         operator: UFunc,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Utility to handle binary operator application.
     '''
+    result: tp.Any
+
     if (values.dtype.kind in DTYPE_STR_KINDS or
             (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
@@ -1121,14 +1142,14 @@ def apply_binary_operator(*,
             # raise on unaligned shapes as is done for arithmetic operators
 
     result.flags.writeable = False
-    return result
+    return result # type: ignore
 
 def apply_binary_operator_blocks(*,
-        values: tp.Iterable[np.ndarray],
-        other: tp.Iterable[np.ndarray],
+        values: tp.Iterable[NDArrayAny],
+        other: tp.Iterable[NDArrayAny],
         operator: UFunc,
         apply_column_2d_filter: bool,
-    ) -> tp.Iterator[np.ndarray]:
+    ) -> tp.Iterator[NDArrayAny]:
     '''
     Application from iterators of arrays, to iterators of arrays.
     '''
@@ -1145,10 +1166,10 @@ def apply_binary_operator_blocks(*,
                 )
 
 def apply_binary_operator_blocks_columnar(*,
-        values: tp.Iterable[np.ndarray],
-        other: np.ndarray,
+        values: tp.Iterable[NDArrayAny],
+        other: NDArrayAny,
         operator: UFunc,
-    ) -> tp.Iterator[np.ndarray]:
+    ) -> tp.Iterator[NDArrayAny]:
     '''
     Application from iterators of arrays, to iterators of arrays. Will return iterator of all 1D arrays, as we will break down larger blocks in values into 1D arrays.
 
@@ -1179,7 +1200,7 @@ def arrays_from_index_frame(
         container: 'Frame',
         depth_level: tp.Optional[DepthLevelSpecifier],
         columns: GetItemKeyType
-        ) -> tp.Iterator[np.ndarray]:
+        ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
     '''
@@ -1240,7 +1261,7 @@ def group_from_container(
         group_source: tp.Any,
         fill_value: tp.Any,
         axis: int,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Unpack group_source values from another Index, Series, or ILoc selection.
     '''
@@ -1248,7 +1269,7 @@ def group_from_container(
     from static_frame.core.index import Index
     from static_frame.core.series import Series
 
-    key: np.ndarray
+    key: NDArrayAny
 
     if isinstance(group_source, np.ndarray):
         if group_source.ndim > 2:
@@ -1298,7 +1319,7 @@ def group_from_container(
 class IMTOAdapterSeries:
     __slots__ = ('values',)
 
-    def __init__(self, values: np.ndarray) -> None:
+    def __init__(self, values: NDArrayAny) -> None:
         self.values = values
 
 class IMTOAdapter:
@@ -1316,7 +1337,7 @@ class IMTOAdapter:
     _map = object() # not None
 
     def __init__(self,
-            values: np.ndarray,
+            values: NDArrayAny,
             name: NameType,
             depth: int,
             ndim: int,
@@ -1396,9 +1417,9 @@ def index_many_to_one(
     from static_frame.core.index import Index
     from static_frame.core.index_auto import IndexAutoFactory
 
-    array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
+    array_processor: tp.Callable[..., NDArrayAny]
     if mtot_is_concat:
         array_processor = concat_resolved
     else:
@@ -1445,6 +1466,7 @@ def index_many_to_one(
             )
 
     # collect initial values from `index`
+    arrays: tp.List[NDArrayAny]
     if index.ndim == 2:
         is_ih = True
         index_types_arrays = [index.index_types.values]
@@ -1457,7 +1479,7 @@ def index_many_to_one(
 
         if mtot_is_concat:
             # store array for each depth; unpack aligned depths with zip
-            arrays = [[index.values_at_depth(d) for d in range(depth_first)]]
+            arrays = [[index.values_at_depth(d) for d in range(depth_first)]] #type: ignore
         else: # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]
     else:
@@ -1493,9 +1515,9 @@ def index_many_to_one(
     # return an index auto if we can; already filtered out difference and concat
     if index_auto_aligned:
         if many_to_one_type is ManyToOneType.UNION:
-            size = max(a.size for a in arrays) #type: ignore
+            size = max(a.size for a in arrays)
         elif many_to_one_type is ManyToOneType.INTERSECT:
-            size = min(a.size for a in arrays) #type: ignore
+            size = min(a.size for a in arrays)
         return IndexAutoFactory(size, name=name).to_index(
                 default_constructor=cls_default,
                 explicit_constructor=explicit_constructor,
@@ -1630,8 +1652,8 @@ def frame_to_frame(
 def prepare_values_for_lex(
         *,
         ascending: BoolOrBools = True,
-        values_for_lex: tp.Optional[tp.Iterable[np.ndarray]],
-        ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[np.ndarray]]]:
+        values_for_lex: tp.Optional[tp.Iterable[NDArrayAny]],
+        ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[NDArrayAny]]]:
     '''Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
     '''
     asc_is_element = isinstance(ascending, BOOL_TYPES)
@@ -1656,8 +1678,8 @@ def sort_index_for_order(
         index: 'IndexBase',
         ascending: BoolOrBools,
         kind: str,
-        key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[np.ndarray, 'IndexBase']]],
-        ) -> np.ndarray:
+        key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[NDArrayAny, 'IndexBase']]],
+        ) -> NDArrayAny:
     '''Return an integer array defing the new ordering.
     '''
     # cfs is container_for_sort
@@ -1667,7 +1689,7 @@ def sort_index_for_order(
         if cfs_is_array:
             cfs_depth = 1 if cfs.ndim == 1 else cfs.shape[1]
         else:
-            cfs_depth = cfs.depth
+            cfs_depth = cfs.depth # type: ignore
         if len(cfs) != len(index):
             raise RuntimeError('key function returned a container of invalid length')
     else:
@@ -1676,13 +1698,14 @@ def sort_index_for_order(
         cfs_depth = cfs.depth
 
     asc_is_element: bool
+    order: NDArrayAny
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
             values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)]
         else: # cfs is an IndexHierarchy
-            values_for_lex = [cfs.values_at_depth(i)
-                    for i in range(cfs.depth-1, -1, -1)]
+            values_for_lex = [cfs.values_at_depth(i) #type: ignore
+                    for i in range(cfs.depth-1, -1, -1)] #type: ignore
 
         asc_is_element, values_for_lex = prepare_values_for_lex( #type: ignore
                 ascending=ascending,
@@ -1695,7 +1718,7 @@ def sort_index_for_order(
         if not asc_is_element:
             raise RuntimeError('Multiple ascending values not permitted.')
 
-        v = cfs if cfs_is_array else cfs.values
+        v = cfs if cfs_is_array else cfs.values # type: ignore
         order = np.argsort(v, kind=kind)
 
     if asc_is_element and not ascending:

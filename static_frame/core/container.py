@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing as tp
-from collections import deque
 from functools import partial
 
 import numpy as np
@@ -23,6 +22,7 @@ from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
@@ -32,6 +32,8 @@ from static_frame.core.util import ufunc_nanany
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
 
@@ -195,39 +197,30 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''Open an interactive VisiData session.
         '''
         from static_frame.core.display_visidata import view_sf  # pragma: no cover
-        view_sf(self) #type: ignore [no-untyped-call] #pragma: no cover
+        view_sf(self) # type: ignore  #pragma: no cover
 
 
-class ContainerOperand(ContainerBase):
-    '''Base class of all containers that support opperators.'''
+
+
+class ContainerOperandSequence(ContainerBase):
+    '''Base class of all sequence-like containers that support operators but tend to decay to NumPy array, not specialized container subclasses. IndexBase inherits from this class.'''
 
     __slots__ = ()
 
     interface: 'Frame' # property that returns a Frame
-    values: np.ndarray
+    # values: NDArrayAny
 
-    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
-        raise NotImplementedError() #pragma: no cover
-
-    def _ufunc_binary_operator(self: T, *,
+    # NOTE: the return type here is intentionally broad as it will get specialized in derived classes
+    def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
             fill_value: object = np.nan,
-            ) -> T:
+            ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
-    #---------------------------------------------------------------------------
-    def __pos__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__pos__'])
-
-    def __neg__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__neg__'])
-
-    def __abs__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__abs__'])
-
-    def __invert__(self) -> 'ContainerOperand':
-        return self._ufunc_unary_operator(OPERATORS['__invert__'])
+    @property
+    def values(self) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
@@ -319,20 +312,21 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: np.dtype = None) -> np.ndarray:
+    def __array__(self, dtype: DtypeSpecifier = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values
-        return self.values.astype(dtype)
+        array: NDArrayAny = self.values.astype(dtype)
+        return array
 
     def __array_ufunc__(self,
             ufunc: UFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> 'ContainerOperand':
+            ) -> tp.Any:
         '''Support for NumPy elements or arrays on the left hand of binary operators.
         '''
         if len(args) == 2 and args[1] is self and method == '__call__':
@@ -349,17 +343,15 @@ class ContainerOperand(ContainerBase):
 
     # --------------------------------------------------------------------------
     # ufunc axis skipna methods: applied along an axis, reducing dimensionality.
-    # NOTE: as argmin and argmax have iloc/loc interetaions, they are implemented on derived containers
-
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> tp.Any: # usually a Series
         '''
         Args:
             dtypes: iterable of valid dtypes that can be returned; first is default of not match
@@ -374,7 +366,7 @@ class ContainerOperand(ContainerBase):
     def all(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``and`` over values along the specified axis.
 
@@ -394,7 +386,7 @@ class ContainerOperand(ContainerBase):
     def any(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``or`` over values along the specified axis.
 
@@ -414,7 +406,7 @@ class ContainerOperand(ContainerBase):
     def sum(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Sum values along the specified axis.
 
@@ -434,7 +426,7 @@ class ContainerOperand(ContainerBase):
     def min(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the minimum along the specified axis.
 
@@ -473,7 +465,7 @@ class ContainerOperand(ContainerBase):
     def mean(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the mean along the specified axis.
 
@@ -493,7 +485,7 @@ class ContainerOperand(ContainerBase):
     def median(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the median along the specified axis.
 
@@ -514,7 +506,7 @@ class ContainerOperand(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the standard deviaton along the specified axis.
 
@@ -535,7 +527,7 @@ class ContainerOperand(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the variance along the specified axis.
 
@@ -555,7 +547,7 @@ class ContainerOperand(ContainerBase):
     def prod(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[np.ndarray] = None,
+            out: tp.Optional[NDArrayAny] = None,
             ) -> tp.Any:
         '''Return the product along the specified axis.
 
@@ -571,6 +563,55 @@ class ContainerOperand(ContainerBase):
                 size_one_unity=True
                 )
 
+    #---------------------------------------------------------------------------
+    def _repr_html_(self) -> str:
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # NOTE: We observe that Jupyter will window big content into scrollable component, so do not limit output and introduce ellipsis.
+
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False,
+                display_columns=np.inf,
+                display_rows=np.inf,
+                )
+        # modify the active display to be for HTML
+        return repr(self.display(config))
+
+
+
+
+class ContainerOperand(ContainerOperandSequence):
+    '''Base class of all mapping-like containers that support operators. Series, TypeBlocks, and Frame inherit from this class. These containers preserve the type in unary and binary operations.'''
+
+    __slots__ = ()
+
+    #---------------------------------------------------------------------------
+    def __pos__(self) -> tp.Self:
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
+
+    def __neg__(self) -> tp.Self:
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
+
+    def __abs__(self) -> tp.Self:
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
+    def __invert__(self) -> tp.Self:
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
+
+    #---------------------------------------------------------------------------
+
+    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
+        raise NotImplementedError() #pragma: no cover
+
+    def _ufunc_binary_operator(self: T, *,
+            operator: UFunc,
+            other: tp.Any,
+            fill_value: object = np.nan,
+            ) -> T:
+        raise NotImplementedError() #pragma: no cover
+
     # ufunc shape skipna methods -----------------------------------------------
 
     def _ufunc_shape_skipna(self, *,
@@ -579,9 +620,9 @@ class ContainerOperand(ContainerBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> tp.Any:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 
@@ -622,35 +663,3 @@ class ContainerOperand(ContainerBase):
                 dtypes=(),
                 size_one_unity=True
                 )
-
-    #---------------------------------------------------------------------------
-    def _repr_html_(self) -> str:
-        '''
-        Provide HTML representation for Jupyter Notebooks.
-        '''
-        # NOTE: We observe that Jupyter will window big content into scrollable component, so do not limit output and introduce ellipsis.
-
-        config = DisplayActive.get(
-                display_format=DisplayFormats.HTML_TABLE,
-                type_show=False,
-                display_columns=np.inf,
-                display_rows=np.inf,
-                )
-        # modify the active display to be for HTML
-        return repr(self.display(config))
-
-#-------------------------------------------------------------------------------
-# TODO: replace usage with ContainerMap; use this in a test to validate
-
-def container_opperand_map() -> tp.Dict[str, tp.Type[ContainerOperand]]:
-    '''Return a mapping of ContainerOperand types, from name to cls. Note that other modules must be loaded before this returns usable results.
-    '''
-    def collector() -> tp.Iterator[tp.Type[ContainerOperand]]:
-        targets = deque((ContainerOperand,))
-        while targets:
-            target = targets.popleft()
-            for part in target.__subclasses__():
-                targets.append(part)
-                yield part
-
-    return {cls.__name__: cls for cls in collector()}

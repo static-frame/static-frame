@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as tp
 
 import numpy as np
+from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
@@ -18,16 +19,21 @@ if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.bus import Bus  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAssignILoc  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import SeriesAssign  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
-#-------------------------------------------------------------------------------
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+#-------------------------------------------------------------------------------
 TContainer = tp.TypeVar('TContainer',
         'Index',
         'Series',
@@ -39,10 +45,15 @@ TContainer = tp.TypeVar('TContainer',
         # 'Quilt',
         'IndexHierarchy',
         'SeriesAssign',
+        'FrameAssignILoc',
+         # cannot be NDArrayAny as not available in old NumPy
+        np.ndarray, # type: ignore
+        MaskedArray, # type: ignore
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
         )
+
 
 
 class Interface(tp.Generic[TContainer]):
@@ -236,10 +247,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceAsType(Interface[TContainer]):
-    '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
-    '''
-
+class InterfaceFrameAsType(Interface[TContainer]):
     __slots__ = ('_func_getitem',)
     INTERFACE = ('__getitem__', '__call__')
 
@@ -262,7 +270,7 @@ class InterfaceAsType(Interface[TContainer]):
         return self._func_getitem(key)
 
     def __call__(self,
-            dtype: np.dtype,
+            dtype: DtypeAny,
             *,
             consolidate_blocks: bool = False,
             ) -> 'Frame':
@@ -274,6 +282,44 @@ class InterfaceAsType(Interface[TContainer]):
                 dtype,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+class InterfaceIndexHierarchyAsType(Interface[TContainer]):
+    __slots__ = ('_func_getitem',)
+    INTERFACE = ('__getitem__', '__call__')
+
+    def __init__(self,
+            func_getitem: tp.Callable[[GetItemKeyType], 'IndexHierarchyAsType']
+            ) -> None:
+        '''
+        Args:
+            _func_getitem: a callable that expects a _func_getitem key and returns a IndexHierarchyAsType interface; for example, Frame._extract_getitem_astype.
+        '''
+        self._func_getitem = func_getitem
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._func_getitem(key)
+
+    def __call__(self,
+            dtype: DtypeAny,
+            *,
+            consolidate_blocks: bool = False,
+            ) -> 'IndexHierarchy':
+        '''
+        Apply a single ``dtype`` to all columns.
+        '''
+        return self._func_getitem(NULL_SLICE)(
+                dtype,
+                consolidate_blocks=consolidate_blocks,
+                )
+
+
 
 class BatchAsType:
 
@@ -319,7 +365,7 @@ class InterfaceBatchAsType(Interface[TContainer]):
         '''
         return BatchAsType(batch_apply=self._batch_apply, column_key=key)
 
-    def __call__(self, dtype: np.dtype) -> 'Batch':
+    def __call__(self, dtype: DtypeAny) -> 'Batch':
         '''
         Apply a single ``dtype`` to all columns.
         '''
@@ -378,10 +424,10 @@ class InterfaceConsolidate(Interface[TContainer]):
         '''
         from static_frame.core.frame import Frame
 
-        flag_attrs = ('owndata', 'f_contiguous', 'c_contiguous')
-        columns = self._container.columns # type: ignore
+        flag_attrs: tp.Tuple[str, ...] = ('owndata', 'f_contiguous', 'c_contiguous')
+        columns: IndexBase = self._container.columns # type: ignore
 
-        def gen() -> tp.Tuple[np.dtype, tp.Tuple[int, ...], int]:
+        def gen() -> tp.Tuple[DtypeAny, tp.Tuple[int, ...], int]:
             iloc_start = 0
 
             for b in self._container._blocks._blocks: # type: ignore
@@ -396,10 +442,10 @@ class InterfaceConsolidate(Interface[TContainer]):
                 sub = columns[iloc_slice] # returns a column
                 iloc: tp.Union[int, slice]
                 if len(sub) == 1:
-                    loc = sub[0] #type: ignore
+                    loc = sub[0]
                     iloc = iloc_start
                 else: # get inclusive slice
-                    loc = slice(sub[0], sub[-1]) #type: ignore
+                    loc = slice(sub[0], sub[-1])
                     iloc = iloc_slice
 
                 yield [loc, iloc, b.dtype, b.shape, b.ndim] + [
@@ -407,7 +453,7 @@ class InterfaceConsolidate(Interface[TContainer]):
 
                 iloc_start = iloc_end
 
-        return Frame.from_records(gen(),#type: ignore
+        return Frame.from_records(gen(),
             columns=('loc', 'iloc', 'dtype', 'shape', 'ndim') + flag_attrs
             )
 

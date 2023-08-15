@@ -62,6 +62,9 @@ FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
@@ -392,7 +395,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='batch_init')
+    # @doc_inject(selector='batch_init')
     def __init__(self,
             items: IteratorFrameItems,
             *,
@@ -758,7 +761,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         yield from self.keys()
 
     @property
-    def values(self) -> tp.Iterator[FrameOrSeries]:
+    def values(self) -> tp.Iterator[FrameOrSeries]: # type: ignore # NOTE: this violates the supertype
         '''
         Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
         '''
@@ -800,7 +803,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
             ) -> 'Batch':
         return self._apply_attr(
@@ -820,7 +823,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
             ) -> 'Batch':
 
@@ -1114,7 +1117,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def dropna(
             self,
-            axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all,
+            axis: int = 0, condition: tp.Callable[[NDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1144,7 +1147,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr='notfalsy')
 
     def dropfalsy(self,
-            axis: int = 0, condition: tp.Callable[[np.ndarray], bool] = np.all,
+            axis: int = 0, condition: tp.Callable[[NDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1756,7 +1759,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-            return Frame.from_concat( #type: ignore
+            return Frame.from_concat(
                     containers,
                     axis=axis,
                     union=union,

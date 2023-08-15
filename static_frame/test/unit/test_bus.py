@@ -85,7 +85,7 @@ class TestUnit(TestCase):
             # how to show that this derived getitem has derived type?
             f3 = zs.read('foo', config=config['foo'])
             self.assertEqual(
-                f3.to_pairs(0),
+                f3.to_pairs(0), # type: ignore
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
             )
 
@@ -801,7 +801,7 @@ class TestUnit(TestCase):
 
             b2 = Bus.from_sqlite(fp, config=config, index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
-            self.assertEqual(b2.index.dtype.kind, 'M')
+            self.assertEqual(b2.index.dtype.kind, 'M') # type: ignore
 
 
         for frame in (f1, f2):
@@ -879,7 +879,7 @@ class TestUnit(TestCase):
 
             b2 = Bus.from_hdf5(fp, config=config, index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
-            self.assertEqual(b2.index.dtype.kind, 'M')
+            self.assertEqual(b2.index.dtype.kind, 'M') # type: ignore
 
 
         for frame in (f1, f2):
@@ -1216,7 +1216,7 @@ class TestUnit(TestCase):
                 )
 
         b1 = Bus.from_frames((f1, f2, f3), config=config, index_constructor=IndexDate)
-        self.assertEqual(b1.index.dtype.kind, 'M')
+        self.assertEqual(b1.index.dtype.kind, 'M') # type: ignore
 
         with temp_file('.zip') as fp:
             b1.to_zip_parquet(fp, config=config)
@@ -1224,7 +1224,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_parquet(fp,
                     config=config,
                     index_constructor=IndexDate)
-            self.assertEqual(b2.index.dtype.kind, 'M')
+            self.assertEqual(b2.index.dtype.kind, 'M') # type: ignore
 
             key = dt64('2020-01-01')
             self.assertEqualFrames(b1[key], b2[key], compare_dtype=False)
@@ -1301,11 +1301,11 @@ class TestUnit(TestCase):
             self.assertEqual(b3._loaded.tolist(),
                     [False, False, False, False, False, False, False, False, False, True]
                     )
-            self.assertEqual(b3.iloc[0].sum().sum(), 145)
+            self.assertEqual(b3.iloc[0].sum().sum(), 145) # type: ignore
             self.assertEqual(b3._loaded.tolist(),
                     [True, False, False, False, False, False, False, False, False, False]
                     )
-            self.assertEqual(b3.iloc[4].sum().sum(), 185)
+            self.assertEqual(b3.iloc[4].sum().sum(), 185) # type: ignore
             self.assertEqual(b3._loaded.tolist(),
                     [False, False, False, False, True, False, False, False, False, False]
                     )
@@ -1586,11 +1586,11 @@ class TestUnit(TestCase):
             self.assertTrue(isinstance(b3, Bus))
 
             f4 = b3['f2']
-            self.assertEqual(f4.to_pairs(0),
+            self.assertEqual(f4.to_pairs(0), # type: ignore
                     (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6)))))
 
             f5 = b3['f1']
-            self.assertEqual(f5.to_pairs(),
+            self.assertEqual(f5.to_pairs(), # type: ignore
                     (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))))
 
     #---------------------------------------------------------------------------
@@ -1639,7 +1639,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f3, f2, f1))
         b2 = b1.iter_element().apply(lambda f: f.sum().sum())
 
-        self.assertEqual(b2.to_pairs(),
+        self.assertEqual(b2.to_pairs(), # type: ignore
                 (('f3', 14), ('f2', 21), ('f1', 30007)))
 
         self.assertEqual(id(b1.index), id(b2.index))
@@ -2258,7 +2258,7 @@ class TestUnit(TestCase):
             # set max_persist to size to test when fully loaded with max_persist
             b2 = Bus.from_zip_npz(fp, config=config, max_persist=3)
             b3 = b2['f2':]
-            self.assertEqual(b3['f5'].to_pairs(),
+            self.assertEqual(b3['f5'].to_pairs(), # type: ignore
                 ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
                 )
 
@@ -2318,7 +2318,7 @@ class TestUnit(TestCase):
             # set max_persist to size to test when fully loaded with max_persist
             b2 = Bus.from_zip_npy(fp, config=config, max_persist=3)
             b3 = b2['f2':]
-            self.assertEqual(b3['f5'].to_pairs(),
+            self.assertEqual(b3['f5'].to_pairs(), # type: ignore
                 ((0, ((0, 1930.4), (1, -1760.34), (2, 1857.34), (3, 1699.34))), (1, ((0, -610.8), (1, 3243.94), (2, -823.14), (3, 114.58))), (2, ((0, 694.3), (1, -72.96), (2, 1826.02), (3, 604.1))), (3, ((0, 1080.4), (1, 2580.34), (2, 700.42), (3, 3338.48))))
                 )
 
@@ -2387,14 +2387,14 @@ class TestUnit(TestCase):
             b1.to_zip_npz(fp)
             b2 = Bus.from_zip_npz(fp, max_persist=1)
 
-            assert not b2._store._weak_cache
+            assert not b2._store._weak_cache # type: ignore
 
             f1_r = b2.iloc[0]
             f2_r = b2.iloc[1]
 
             assert b2.iloc[1] is f2_r
 
-            assert f1_r in b2._store._weak_cache.values()
+            assert f1_r in b2._store._weak_cache.values() # type: ignore
             assert b2.iloc[0] is f1_r
 
             b3 = pickle.loads(pickle.dumps(b2))

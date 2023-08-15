@@ -16,7 +16,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from numpy.ma import MaskedArray  # type: ignore
+from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -74,6 +74,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FLOAT_TYPES
@@ -88,6 +89,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -127,7 +129,9 @@ if tp.TYPE_CHECKING:
     from static_frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
 
-
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    FrameType = tp.TypeVar('FrameType', bound='Frame') # pylint: disable=W0611 #pragma: no cover
 
 
 #-------------------------------------------------------------------------------
@@ -139,7 +143,7 @@ class Series(ContainerOperand):
             '_index',
             '_name',
             )
-    values: np.ndarray
+    values: NDArrayAny
     _index: IndexBase
     _NDIM: int = 1
 
@@ -153,7 +157,7 @@ class Series(ContainerOperand):
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Create a :obj:`static_frame.Series` from a single element. The size of the resultant container will be determined by the ``index`` argument.
 
@@ -168,7 +172,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
 
-        length = len(index_final) #type: ignore
+        length = len(index_final)
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -190,7 +194,7 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
         Args:
@@ -234,7 +238,7 @@ class Series(ContainerOperand):
             thousands_char: str = '',
             decimal_char: str = '.',
             own_index: bool = False,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from a delimited string.
 
         Args:
@@ -275,7 +279,7 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
 
         Args:
@@ -297,7 +301,7 @@ class Series(ContainerOperand):
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
 
@@ -363,7 +367,7 @@ class Series(ContainerOperand):
             *,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
 
@@ -386,6 +390,7 @@ class Series(ContainerOperand):
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index)
+        values: NDArrayAny
         try:
             # populates array_values as side
             ih = index_from_optional_constructor(
@@ -399,21 +404,21 @@ class Series(ContainerOperand):
         except StopIteration:
             # Default to empty when given an empty iterable
             ih = None
-            values = ()
+            values = EMPTY_ARRAY
             own_index = False
 
         return cls(values, index=ih, own_index=own_index, name=name)
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable['Series'],
+            containers: tp.Iterable[tp.Self],
             *,
             index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
-            func: tp.Callable[[np.ndarray], np.ndarray] = isna_array,
+            func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
@@ -462,7 +467,7 @@ class Series(ContainerOperand):
             index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
-            own_data: bool = False) -> 'Series':
+            own_data: bool = False) -> tp.Self:
         '''Given a Pandas Series, return a Series.
 
         Args:
@@ -510,7 +515,7 @@ class Series(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    @doc_inject(selector='container_init', class_name='Series')
+    # @doc_inject(selector='container_init', class_name='Series')
     def __init__(self,
             values: SeriesInitializer,
             *,
@@ -559,10 +564,10 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
         else: # is numpy array
-            if dtype is not None and dtype != values.dtype: #type: ignore
-                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') #type: ignore
+            if dtype is not None and dtype != values.dtype: # type: ignore
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})') # type: ignore
 
-            if values.shape == (): #type: ignore
+            if values.shape == (): # type: ignore
                 # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
@@ -574,9 +579,10 @@ class Series(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # index assignment
+        self._index: IndexBase
 
         if own_index:
-            self._index = index #type: ignore
+            self._index = index # type: ignore
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
             if values_constructor:
@@ -622,7 +628,7 @@ class Series(ContainerOperand):
             setattr(self, key, value)
         self.values.flags.writeable = False
 
-    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         obj = self.__class__.__new__(self.__class__)
         obj.values = array_deepcopy(self.values, memo)
         obj._index = deepcopy(self._index, memo)
@@ -672,7 +678,7 @@ class Series(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             *,
             index: NameType = NAME_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Return a new Series with an updated name attribute.
         '''
@@ -706,7 +712,7 @@ class Series(ContainerOperand):
         '''
         Interface for dropping elements from :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio( #type: ignore
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
                 func_getitem=self._drop_loc
@@ -717,7 +723,7 @@ class Series(ContainerOperand):
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio( #type: ignore
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
                 func_getitem=self._extract_loc_mask
@@ -728,7 +734,7 @@ class Series(ContainerOperand):
         '''
         Interface for extracting NumPy Masked Arrays.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
                 func_getitem=self._extract_loc_masked_array
@@ -740,7 +746,7 @@ class Series(ContainerOperand):
         Interface for doing assignment-like selection and replacement.
         '''
         # NOTE: this is not a InterfaceAssignQuartet, like on Frame
-        return InterfaceAssignTrio( #type: ignore
+        return InterfaceAssignTrio( # type: ignore
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign,
@@ -760,7 +766,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -780,7 +786,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -811,7 +817,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -1074,7 +1080,7 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
-        return value.reindex( #type: ignore
+        return value.reindex(
                 self._index._extract_iloc(iloc_key),
                 fill_value=fill_value
                 )
@@ -1086,7 +1092,7 @@ class Series(ContainerOperand):
             fill_value: tp.Any = np.nan,
             own_index: bool = False,
             check_equals: bool = True
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1109,13 +1115,13 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        ic = IndexCorrespondence.from_correspondence(self._index, index) #type: ignore
+        ic = IndexCorrespondence.from_correspondence(self._index, index)
         if not ic.size:
             # NOTE: take slice to ensure same type of index and array
-            return self._extract_iloc(EMPTY_SLICE)
+            return self._extract_iloc(EMPTY_SLICE) # type: ignore
 
         if ic.is_subset: # must have some common
-            values = self.values[ic.iloc_src]
+            values = self.values[ic.iloc_src] # type: ignore
             values.flags.writeable = False
             return self.__class__(
                     values,
@@ -1128,10 +1134,10 @@ class Series(ContainerOperand):
         else:
             fv = fill_value
 
-        values = full_for_fill(self.values.dtype, len(index), fv) #type: ignore
+        values = full_for_fill(self.values.dtype, len(index), fv)
         # if some intersection of values
         if ic.has_common:
-            values[ic.iloc_dst] = self.values[ic.iloc_src]
+            values[ic.iloc_dst] = self.values[ic.iloc_src] # type: ignore
         values.flags.writeable = False
 
         return self.__class__(values,
@@ -1152,18 +1158,19 @@ class Series(ContainerOperand):
             index: {relabel_input}
         '''
         own_index = False
+        index_init: IndexInitializer | None
         if index is IndexAutoFactory:
             index_init = None
         elif index is None:
             index_init = self._index
             own_index = index_constructor is None
-        elif is_callable_or_mapping(index): #type: ignore
+        elif is_callable_or_mapping(index):
             index_init = self._index.relabel(index)
             own_index = index_constructor is None
         elif isinstance(index, Set):
             raise RelabelInvalid()
         else:
-            index_init = index #type: ignore
+            index_init = index # type: ignore
 
         return self.__class__(self.values,
                 index=index_init,
@@ -1230,7 +1237,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
         index, iloc_map = rehierarch_from_index_hierarchy(
-                labels=self._index, #type: ignore
+                labels=self._index,
                 depth_map=depth_map,
                 index_constructors=index_constructors,
                 name=self._index.name,
@@ -1306,7 +1313,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notfalsy(self) -> 'Series':
+    def notfalsy(self) -> Series:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1345,8 +1352,8 @@ class Series(ContainerOperand):
 
     def _fill_missing(self,
             value: tp.Any, # an element or a Series
-            func: tp.Callable[[np.ndarray], np.ndarray],
-            ) -> 'Series':
+            func: tp.Callable[[NDArrayAny], NDArrayAny],
+            ) -> tp.Self:
         '''
         Args:
             func: A function that returns a same-shaped array of Booleans.
@@ -1395,7 +1402,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillna(self,
             value: tp.Any # an element or a Series
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing NA (NaN or None) with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1406,7 +1413,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillfalsy(self,
             value: tp.Any # an element or a Series
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing falsy values with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1417,11 +1424,11 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     @staticmethod
     def _fill_missing_directional(
-            array: np.ndarray,
+            array: NDArrayAny,
             directional_forward: bool,
             func_target: UFunc,
             limit: int = 0,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1457,7 +1464,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_forward(self, limit: int = 0) -> 'Series':
+    def fillna_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1472,7 +1479,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_backward(self, limit: int = 0) -> 'Series':
+    def fillna_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1488,7 +1495,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_forward(self, limit: int = 0) -> 'Series':
+    def fillfalsy_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1503,7 +1510,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_backward(self, limit: int = 0) -> 'Series':
+    def fillfalsy_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1520,11 +1527,11 @@ class Series(ContainerOperand):
 
 
     @staticmethod
-    def _fill_missing_sided(array: np.ndarray,
+    def _fill_missing_sided(array: NDArrayAny,
             value: tp.Any,
             sided_leading: bool,
             func_target: UFunc,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         '''
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
@@ -1566,7 +1573,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_leading(self, value: tp.Any) -> 'Series':
+    def fillna_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) null (NaN or None) with the supplied value.
 
         Args:
@@ -1581,7 +1588,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_trailing(self, value: tp.Any) -> 'Series':
+    def fillna_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
 
         Args:
@@ -1597,7 +1604,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_leading(self, value: tp.Any) -> 'Series':
+    def fillfalsy_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) falsy values with the supplied value.
 
         Args:
@@ -1612,7 +1619,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_trailing(self, value: tp.Any) -> 'Series':
+    def fillfalsy_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) falsy values with the supplied value.
 
         Args:
@@ -1630,7 +1637,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: UFunc) -> 'Series':
+    def _ufunc_unary_operator(self, operator: UFunc) -> tp.Self:
         '''
         For unary operations, the `name` attribute propagates.
         '''
@@ -1646,7 +1653,7 @@ class Series(ContainerOperand):
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
         '''
@@ -1703,9 +1710,9 @@ class Series(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> np.ndarray:
+            ) -> tp.Any:
         '''
         For a Series, all functions of this type reduce the single axis of the Series to a single element, so Index has no use here.
 
@@ -1726,9 +1733,9 @@ class Series(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
+            dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         NumPy ufunc proccessors that retain the shape of the processed.
 
@@ -1749,7 +1756,7 @@ class Series(ContainerOperand):
     def __len__(self) -> int:
         '''Length of values.
         '''
-        return self.values.__len__() #type: ignore
+        return self.values.__len__()
 
     def _display(self,
             config: DisplayConfig,
@@ -1822,14 +1829,15 @@ class Series(ContainerOperand):
         return mloc(self.values)
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 
         Returns:
             :obj:`numpy.dtype`
         '''
-        return self.values.dtype
+        dt: DtypeAny = self.values.dtype
+        return dt
 
     @property
     def shape(self) -> tp.Tuple[int]:
@@ -1859,7 +1867,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.size #type: ignore
+        return self.values.size
 
     @property
     def nbytes(self) -> int:
@@ -1869,21 +1877,21 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.nbytes #type: ignore
+        return self.values.nbytes
 
     #---------------------------------------------------------------------------
     # extraction
 
-    # def _extract_array(self, key: GetItemKeyType) -> np.ndarray:
+    # def _extract_array(self, key: GetItemKeyType) -> NDArrayAny:
     #     return self.values[key]
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
+    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         # iterable selection should be handled by NP
         values = self.values[key]
 
         if isinstance(key, INT_TYPES): # if we have a single element
             # NOTE: cannot check if we have an array as an array might be an element
-            return values #type: ignore
+            return values
 
         return self.__class__(
                 values,
@@ -1926,9 +1934,9 @@ class Series(ContainerOperand):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
-        if key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
+        if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
-            values = np.delete(self.values, self._index.positions[key])
+            values = np.delete(self.values, self._index.positions[key]) # type: ignore
         else:
             values = np.delete(self.values, key)
         values.flags.writeable = False
@@ -1962,13 +1970,13 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_masked_array(self, key: GetItemKeyType) -> MaskedArray:
+    def _extract_iloc_masked_array(self, key: GetItemKeyType) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
         mask = self._extract_iloc_mask(key=key)
-        return MaskedArray(data=self.values, mask=mask.values)
+        return MaskedArray(data=self.values, mask=mask.values) # type: ignore
 
-    def _extract_loc_masked_array(self, key: GetItemKeyType) -> MaskedArray:
+    def _extract_loc_masked_array(self, key: GetItemKeyType) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
         '''
         iloc_key = self._index._loc_to_iloc(key)
@@ -1989,7 +1997,7 @@ class Series(ContainerOperand):
     def _axis_group_items(self, *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: np.ndarray,
+            group_source: NDArrayAny,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
         '''
         Args:
@@ -2004,13 +2012,13 @@ class Series(ContainerOperand):
 
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, func(selection)
+            yield g, func(selection) # type: ignore
 
 
     def _axis_group(self, *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: np.ndarray,
+            group_source: NDArrayAny,
             ) -> tp.Iterator['Series']:
         yield from (x for _, x in self._axis_group_items(
                 axis=axis,
@@ -2051,7 +2059,7 @@ class Series(ContainerOperand):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, func(selection)
+            yield g, func(selection) # type: ignore
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
@@ -2076,7 +2084,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Union[np.ndarray, 'Series']]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Union[NDArrayAny, 'Series']]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -2104,7 +2112,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Union[np.ndarray, 'Series']]:
+            ) -> tp.Iterator[tp.Union[NDArrayAny, 'Series']]:
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
                 size=size,
@@ -2189,7 +2197,7 @@ class Series(ContainerOperand):
             *,
             ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[np.ndarray, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
@@ -2221,7 +2229,7 @@ class Series(ContainerOperand):
             *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['Series'], tp.Union[np.ndarray, 'Series']]] = None,
+            key: tp.Optional[tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']]] = None,
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
@@ -2237,7 +2245,7 @@ class Series(ContainerOperand):
         '''
         if key:
             cfs = key(self)
-            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values
+            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
         else:
             cfs_values = self.values
 
@@ -2286,19 +2294,20 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        args = [lower, upper]
-        for idx, arg in enumerate(args):
+        args: tp.List[NDArrayAny | float | None] = []
+        for idx, arg in enumerate((lower, upper)):
             # arg = args[idx]
             if isinstance(arg, Series):
                 # after reindexing, strip away the index
                 # NOTE: using the bound forces going to a float type; this may not be the best approach
                 bound = -np.inf if idx == 0 else np.inf
-                args[idx] = arg.reindex(self.index).fillna(bound).values
+                args.append(arg.reindex(self.index).fillna(bound).values)
             elif hasattr(arg, '__iter__'):
                 raise RuntimeError('only Series are supported as iterable lower/upper arguments')
-            # assume single value otherwise, no change necessary
+            else:
+                args.append(arg)
 
-        array = np.clip(self.values, *args)
+        array = np.clip(self.values, *args) # pylint: disable=E1120
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 
@@ -2323,7 +2332,7 @@ class Series(ContainerOperand):
     def duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False,
-            ) -> np.ndarray:
+            ) -> tp.Self:
         '''
         Return a same-sized Boolean Series that shows True for all values that are duplicated.
 
@@ -2512,7 +2521,7 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
         # this will preserve the name
-        return post.reindex(self.index, #type: ignore
+        return post.reindex(self.index,
                 fill_value=fv,
                 check_equals=False, # the index will never be equal
                 )
@@ -2696,7 +2705,7 @@ class Series(ContainerOperand):
         if not skipna and not skipfalsy and not unique:
             return len(values)
 
-        valid: tp.Optional[np.ndarray] = None
+        valid: tp.Optional[NDArrayAny] = None
         if skipfalsy: # always includes skipna
             valid = ~isfalsy_array(values)
         elif skipna: # NOTE: elif, as skipfalsy incldues skipna
@@ -2747,7 +2756,7 @@ class Series(ContainerOperand):
         post = argmin_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post] #type: ignore [unreachable]
+        return self.index[post] # type: ignore
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -2780,7 +2789,7 @@ class Series(ContainerOperand):
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
-        return self.index[post] #type: ignore [unreachable]
+        return self.index[post] # type: ignore
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
@@ -2805,7 +2814,7 @@ class Series(ContainerOperand):
             return_label: bool,
             forward: bool,
             fill_value: tp.Hashable = np.nan,
-            func: tp.Callable[[np.ndarray], np.ndarray],
+            func: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the first not NA (None or nan) value found.
@@ -2824,7 +2833,7 @@ class Series(ContainerOperand):
         if pos == -1:
             return fill_value
         if return_label:
-            return self._index[pos]
+            return self._index[pos] # type: ignore
         return pos
 
     def iloc_notna_first(self,
@@ -2992,7 +3001,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def cov(self,
-            other: tp.Union['Series', np.ndarray],
+            other: tp.Union['Series', NDArrayAny],
             *,
             ddof: int = 1,
             ) -> float:
@@ -3008,7 +3017,7 @@ class Series(ContainerOperand):
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
 
     def corr(self,
-            other: tp.Union['Series', np.ndarray],
+            other: tp.Union['Series', NDArrayAny],
             ) -> float:
         '''
         Return the index-aligned correlation to the supplied :obj:`Series`.
@@ -3028,7 +3037,7 @@ class Series(ContainerOperand):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> NDArrayAny: # might be 0 dim scalar
         '''
         {doc}
 
@@ -3039,10 +3048,11 @@ class Series(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values, #type: ignore [no-any-return]
+        post: NDArrayAny = np.searchsorted(self.values,
                 values,
                 'left' if side_left else 'right',
                 )
+        return post
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
@@ -3050,7 +3060,7 @@ class Series(ContainerOperand):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
+            ) -> tp.Union[tp.Hashable, NDArrayAny]:
         '''
         {doc}
 
@@ -3059,25 +3069,36 @@ class Series(ContainerOperand):
             {side_left}
             {fill_value}
         '''
-        sel = self.iloc_searchsorted(values, side_left=side_left)
+        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value #type: ignore [no-any-return]
 
-        mask = sel == length
-        if not mask.any():
-            return self._index.values[sel] #type: ignore [no-any-return]
+        # sel and mask might be zero-dimensional
+        found: NDArrayAny = sel != length
+        if found.all(): # if all matches within series
+            if self._index.ndim == 1:
+                return self._index.values[sel]
+            elif found.sum() == 1:
+                return self._index._extract_iloc(sel) # type: ignore
 
-        post = np.empty(len(sel),
-                dtype=resolve_dtype(self._index.dtype,
-                dtype_from_element(fill_value))
-                )
-        sel[mask] = 0 # set out of range values to zero
-        post[:] = self._index.values[sel]
-        post[mask] = fill_value
+        if self._index.ndim == 1:
+            post = np.full(len(sel),
+                    fill_value,
+                    dtype=resolve_dtype(self._index.dtype, # type: ignore
+                    dtype_from_element(fill_value))
+                    )
+            post[found] = self._index.values[sel[found]]
+        else:
+            # build object array of tuples
+            post = np.full(len(sel), fill_value, dtype=object)
+            for i, (j, assign) in enumerate(zip(sel, found)):
+                if assign:
+                    post[i] = self._index._extract_iloc(j)
+
         post.flags.writeable = False
-        return post #type: ignore [no-any-return]
+        return post
 
     #---------------------------------------------------------------------------
     def _insert(self,
@@ -3111,7 +3132,7 @@ class Series(ContainerOperand):
 
         index = self._index.__class__.from_labels(chain(
                 labels_prior[:key],
-                container._index.__iter__(), #type: ignore
+                container._index.__iter__(),
                 labels_prior[key:],
                 ))
 
@@ -3164,7 +3185,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
-    def unique(self) -> np.ndarray:
+    def unique(self) -> NDArrayAny:
         '''
         Return a NumPy array of unique values.
 
@@ -3173,11 +3194,11 @@ class Series(ContainerOperand):
         '''
         return ufunc_unique1d(self.values)
 
-    @doc_inject()
+    # @doc_inject()
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
-            ) -> tp.Tuple[np.ndarray, np.ndarray]:
+            ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
         '''
         {doc}
         {args}
@@ -3241,6 +3262,7 @@ class Series(ContainerOperand):
         Returns:
             tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
+        index_values: tp.Iterable[tp.Hashable]
         if isinstance(self._index, IndexHierarchy):
             index_values = self._index.__iter__()
         else:
@@ -3250,14 +3272,14 @@ class Series(ContainerOperand):
 
     def _to_frame(self,
             *,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[FrameType],
             axis: int = 1,
             index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> FrameType:
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
         '''
@@ -3265,7 +3287,7 @@ class Series(ContainerOperand):
 
         if axis == 1:
             # present as a column
-            def block_gen() -> tp.Iterator[np.ndarray]:
+            def block_gen() -> tp.Iterator[NDArrayAny]:
                 yield self.values
 
             if index is IndexAutoFactory:
@@ -3288,7 +3310,7 @@ class Series(ContainerOperand):
             own_columns = False
 
         elif axis == 0:
-            def block_gen() -> tp.Iterator[np.ndarray]:
+            def block_gen() -> tp.Iterator[NDArrayAny]:
                 array = self.values
                 yield array.reshape(1, array.shape[0])
 
@@ -3380,7 +3402,7 @@ class Series(ContainerOperand):
             :obj:`FrameGO`
         '''
         from static_frame import FrameGO
-        return self._to_frame(constructor=FrameGO, #type: ignore
+        return self._to_frame(constructor=FrameGO,
                 axis=axis,
                 index=index,
                 index_constructor=index_constructor,
@@ -3410,7 +3432,7 @@ class Series(ContainerOperand):
             :obj:`FrameHE`
         '''
         from static_frame import FrameHE
-        return self._to_frame(constructor=FrameHE, #type: ignore
+        return self._to_frame(constructor=FrameHE,
                 axis=axis,
                 index=index,
                 index_constructor=index_constructor,
@@ -3419,7 +3441,7 @@ class Series(ContainerOperand):
                 name=name,
                 )
 
-    def to_series_he(self) -> 'SeriesHE':
+    def to_series_he(self) -> SeriesHE:
         '''
         Return a :obj:`SeriesHE` from this :obj:`Series`.
         '''
@@ -3520,7 +3542,7 @@ class SeriesAssign(Assign):
         Args:
             key: an iloc-style key.
         '''
-        self.container = container
+        self.container: Series = container
         self.key = key
 
     def __call__(self,
@@ -3625,6 +3647,7 @@ class SeriesAssign(Assign):
                 )
 
 #-------------------------------------------------------------------------------
+
 class SeriesHE(Series):
     '''
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
@@ -3636,7 +3659,7 @@ class SeriesHE(Series):
         '''
         Return True if other is a ``Series`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
         '''
-        return self.equals(other, #type: ignore
+        return self.equals(other,
                 compare_name=True,
                 compare_dtype=False,
                 compare_class=False,

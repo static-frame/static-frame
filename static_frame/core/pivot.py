@@ -17,6 +17,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
@@ -30,7 +31,8 @@ from static_frame.core.util import ufunc_unique1d
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 #-------------------------------------------------------------------------------
@@ -82,7 +84,7 @@ def pivot_records_dtypes(
         data_fields: tp.Iterable[tp.Hashable],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
-        ) -> tp.Iterator[tp.Optional[np.dtype]]:
+        ) -> tp.Iterator[tp.Optional[DtypeAny]]:
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
@@ -107,7 +109,7 @@ def pivot_records_items_to_frame(
         columns_constructor: IndexConstructor,
         columns: tp.List[tp.Hashable],
         index_constructor: IndexConstructor,
-        dtypes: tp.Tuple[tp.Optional[np.dtype]],
+        dtypes: tp.Tuple[tp.Optional[DtypeAny]],
         frame_cls: tp.Type['Frame'],
         ) -> 'Frame':
     '''
@@ -137,7 +139,7 @@ def pivot_records_items_to_frame(
                     arrays[i].append(func(values))
                     i += 1
 
-    def gen() -> tp.Iterator[np.ndarray]:
+    def gen() -> tp.Iterator[NDArrayAny]:
         for b, dtype in zip(arrays, dtypes):
             if dtype is None:
                 array, _ = iterable_to_array_1d(b)
@@ -165,18 +167,18 @@ def pivot_records_items_to_blocks(*,
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         func_no: bool,
         fill_value: tp.Any,
-        fill_value_dtype: np.dtype,
+        fill_value_dtype: DtypeAny,
         index_outer: 'IndexBase',
-        dtypes: tp.Tuple[tp.Optional[np.dtype]],
+        dtypes: tp.Tuple[tp.Optional[DtypeAny]],
         kind: str,
-        ) -> tp.List[np.ndarray]:
+        ) -> tp.List[NDArrayAny]:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-    arrays: tp.List[tp.Union[tp.List[tp.Any], np.ndarray]] = []
+    arrays: tp.List[tp.Union[tp.List[tp.Any], NDArrayAny]] = []
     for dtype in dtypes:
         if dtype is None:
             # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
@@ -209,7 +211,7 @@ def pivot_records_items_to_blocks(*,
                     arrays_key += 1
 
     if iloc_not_found:
-        # we did not fill all arrrays and have values that need to be filled
+        # we did not fill all arrays and have values that need to be filled
         # order does not matter
         fill_targets = list(iloc_not_found)
         # mutate in place then make immutable
@@ -231,8 +233,8 @@ def pivot_records_items_to_blocks(*,
             if not array.__class__ is np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array # re-assign new array
-            array.flags.writeable = False
-    return arrays
+            array.flags.writeable = False # type: ignore
+    return arrays # type: ignore # we have converted all sequences to arrays at this point
 
 
 
@@ -242,12 +244,12 @@ def pivot_items_to_block(*,
         group_depth: int,
         data_field_iloc: tp.Hashable,
         func_single: tp.Optional[UFunc],
-        dtype: tp.Optional[np.dtype],
+        dtype: tp.Optional[DtypeAny],
         fill_value: tp.Any,
-        fill_value_dtype: np.dtype,
+        fill_value_dtype: DtypeAny,
         index_outer: 'IndexBase',
         kind: str,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     '''
@@ -314,10 +316,10 @@ def pivot_items_to_frame(*,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
         data_field_iloc: tp.Hashable,
-        func_single: tp.Optional[UFunc],
+        func_single: tp.Optional[AnyCallable],
         frame_cls: tp.Type['Frame'],
         name: NameType,
-        dtype: np.dtype,
+        dtype: DtypeAny | None,
         index_constructor: IndexConstructor,
         columns_constructor: IndexConstructor,
         kind: str,
@@ -416,11 +418,12 @@ def pivot_core(
                 depth_reference=columns_depth,
                 name=columns_name)
 
+    dtype_single: DtypeAny | None
     dtype_map = frame.dtypes # returns a Series
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
-            dtype_single = dtype_map[data_fields[0]]
+            dtype_single = dtype_map[data_fields[0]] # type: ignore
     else:
         dtypes_per_data_fields = tuple(pivot_records_dtypes(
                 dtype_map=dtype_map,
@@ -479,7 +482,7 @@ def pivot_core(
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
-        return f.relabel(columns=columns_final) #type: ignore
+        return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
     # Second major branch: we are grouping by index and columns fields. This is done with an outer and inner gruop by. The index is calculated ahead of time.
@@ -603,16 +606,16 @@ def pivot_outer_index(
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[tp.Hashable]
     target_depth: int
-    target_select: np.ndarray
+    target_select: NDArrayAny
     group_to_target_map: tp.Dict[tp.Optional[tp.Hashable], tp.Dict[tp.Any, int]]
     group_depth: int
-    group_select: np.ndarray
-    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], np.dtype]
+    group_select: NDArrayAny
+    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], DtypeAny]
 
 def pivot_index_map(*,
         index_src: IndexBase,
         depth_level: DepthLevelSpecifier,
-        dtypes_src: tp.Optional[tp.Sequence[np.dtype]],
+        dtypes_src: tp.Optional[tp.Sequence[DtypeAny | None]],
         ) -> PivotIndexMap:
     '''
     Args:
@@ -636,9 +639,10 @@ def pivot_index_map(*,
 
     group_depth = len(group_arrays)
     target_depth = len(target_arrays)
-    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], np.dtype] = {}
+    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], DtypeAny | None] = {}
     targets_unique: tp.Iterable[tp.Hashable]
 
+    group_to_target_map: tp.Dict[tp.Any, tp.Dict[tp.Any, int]]
     if group_depth == 0:
         # targets must be a tuple
         group_to_target_map = {
@@ -672,7 +676,7 @@ def pivot_index_map(*,
             targets_unique=targets_unique,
             target_depth=target_depth,
             target_select=target_select,
-            group_to_target_map=group_to_target_map, #type: ignore
+            group_to_target_map=group_to_target_map,
             group_depth=group_depth,
             group_select=group_select,
             group_to_dtype=group_to_dtype
@@ -688,9 +692,9 @@ class PivotDeriveConstructors(tp.NamedTuple):
 def pivot_derive_constructors(*,
         contract_src: IndexBase,
         expand_src: IndexBase,
-        group_select: np.ndarray, # Boolean
+        group_select: NDArrayAny, # Boolean
         group_depth: int,
-        target_select: np.ndarray,
+        target_select: NDArrayAny,
         # target_depth: int,
         group_to_target_map: tp.Dict[tp.Hashable, tp.Tuple[tp.Hashable]],
         expand_is_columns: bool,

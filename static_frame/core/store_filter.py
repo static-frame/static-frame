@@ -23,6 +23,9 @@ from static_frame.core.util import NAT
 from static_frame.core.util import NAT_STR
 from static_frame.core.util import frozenset_filter
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class StoreFilter(metaclass=InterfaceMeta):
     '''
@@ -136,7 +139,7 @@ class StoreFilter(metaclass=InterfaceMeta):
         self._EQUAL_FUNC_TO_FROM = (
                 # NOTE: this using the same heuristic as util.isna_array, which may not be the best choice for non-standard objects
                 (lambda x: np.not_equal(x, x), self.from_nan),
-                (lambda x: np.equal(x, None), self.from_none),
+                (lambda x: np.equal(x, None), self.from_none), # type: ignore
                 (lambda x: np.equal(x, np.inf), self.from_posinf),
                 (lambda x: np.equal(x, -np.inf), self.from_neginf)
                 )
@@ -201,9 +204,9 @@ class StoreFilter(metaclass=InterfaceMeta):
         return value
 
     def _format_inexact_array(self,
-            array: np.ndarray,
-            array_object: tp.Optional[np.ndarray],
-            ) -> np.ndarray:
+            array: NDArrayAny,
+            array_object: tp.Optional[NDArrayAny],
+            ) -> NDArrayAny:
         '''
         Args:
             array_object: if we have already created an object array, use it as destination, mutating values in-place. ``array`` and ``array_object`` can be the same array.
@@ -223,8 +226,8 @@ class StoreFilter(metaclass=InterfaceMeta):
         return array_object
 
     def from_type_filter_array(self,
-            array: np.ndarray
-            ) -> np.ndarray:
+            array: NDArrayAny
+            ) -> NDArrayAny:
         '''Given an array, replace types with strings
         '''
         kind = array.dtype.kind
@@ -318,8 +321,8 @@ class StoreFilter(metaclass=InterfaceMeta):
     # converting from strings (in data store) to types
 
     def to_type_filter_array(self,
-            array: np.ndarray
-            ) -> np.ndarray:
+            array: NDArrayAny
+            ) -> NDArrayAny:
         '''Given an array, replace strings with types.
         '''
         kind = array.dtype.kind

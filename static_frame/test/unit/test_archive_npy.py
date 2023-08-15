@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+# import typing as tp
 import zipfile
 from io import StringIO
 from io import UnsupportedOperation
@@ -9,7 +10,7 @@ from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
-from numpy.lib.format import write_array  # type: ignore
+from numpy.lib.format import write_array
 
 from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ
@@ -123,7 +124,7 @@ class TestUnit(TestCase):
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                write_array(f, a1, version=(1, 0))
+                write_array(f, a1, version=(1, 0)) # type: ignore
 
             with open(fp, 'rb') as f:
                 # invalid shape
@@ -135,7 +136,7 @@ class TestUnit(TestCase):
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                write_array(f, a1, version=(3, 0))
+                write_array(f, a1, version=(3, 0)) # type: ignore
 
             with open(fp, 'rb') as f:
                 # invlid header; only version 1,0 is supported
@@ -147,7 +148,7 @@ class TestUnit(TestCase):
 
         with temp_file('.npy') as fp:
             with open(fp, 'wb') as f:
-                write_array(f, a1, version=(1, 0))
+                write_array(f, a1, version=(1, 0)) # type: ignore
 
             with open(fp, 'rb') as f:
                 # invalid object dtype

@@ -36,7 +36,7 @@ class TestUnit(TestCase):
 
         self.assertEqual((f1.keys() == f1.columns).all(), True)
         self.assertEqual([x for x in f1.columns], ['p', 'q', 'r', 's', 't'])
-        self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't'])
+        self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't']) # type: ignore
 
     def test_frame_iter_array_a(self) -> None:
 
@@ -49,11 +49,11 @@ class TestUnit(TestCase):
                 index=('x','y'))
 
         self.assertEqual(
-                next(iter(f1.iter_array(axis=0))).tolist(),
+                next(iter(f1.iter_array(axis=0))).tolist(), # type: ignore
                 [1, 30])
 
         self.assertEqual(
-                next(iter(f1.iter_array(axis=1))).tolist(),
+                next(iter(f1.iter_array(axis=1))).tolist(), # type: ignore
                 [1, 2, 'a', False, True])
 
     def test_frame_iter_array_b(self) -> None:
@@ -114,7 +114,7 @@ class TestUnit(TestCase):
                 dtypes=dict(diameter=np.int64))
 
         post = f.iter_array(axis=0).apply(np.sum)
-        self.assertTrue(post.dtype == float)
+        self.assertTrue(post.dtype == float) # type: ignore
 
     def test_frame_iter_array_f(self) -> None:
 
@@ -207,7 +207,7 @@ class TestUnit(TestCase):
                    ('B', 1,  False, False),
                    ('B', 2,  True, True))
         f = Frame.from_records(records, columns=columns, index=index)
-        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None})
+        post = f[['r', 's']].iter_tuple(axis=1, constructor=tuple).map_any({(False, False): None}) # type: ignore
         self.assertEqual(post.to_pairs(),
                 (('z', None), ('x', (True, False)), ('w', None), ('y', (True, True)))
                 )
@@ -221,7 +221,7 @@ class TestUnit(TestCase):
                    ('B', 1,  False, False),
                    ('B', 2,  True, True))
         f = Frame.from_records(records, columns=columns, index=index)
-        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill({('w', (False, False)): None}, fill_value=0)
+        post = f[['r', 's']].iter_tuple_items(axis=1, constructor=tuple).map_fill ({('w', (False, False)): None}, fill_value=0) # type: ignore
         self.assertEqual(post.to_pairs(),
             (('z', 0), ('x', 0), ('w', None), ('y', 0))
             )
@@ -532,12 +532,12 @@ class TestUnit(TestCase):
                 records, columns=columns, index=index, name='foo')
 
         with self.assertRaises(TypeError):
-            next(iter(f.iter_group(foo='x')))
+            next(iter(f.iter_group(foo='x'))) # type: ignore
 
         with self.assertRaises(TypeError):
             next(iter(f.iter_group(3, 5)))
 
-        self.assertEqual(next(iter(f.iter_group('q'))).to_pairs(0),
+        self.assertEqual(next(iter(f.iter_group('q'))).to_pairs(0), # type: ignore
                 (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', 'a'), ('w', 'c'))), ('s', (('z', False), ('w', False))), ('t', (('z', False), ('w', False))))
                 )
 
@@ -843,7 +843,7 @@ class TestUnit(TestCase):
             f1.iter_group_labels(3, 4)
 
         with self.assertRaises(TypeError):
-            f1.iter_group_labels(foo=4)
+            f1.iter_group_labels(foo=4) # type: ignore
 
         post = tuple(f1.iter_group_labels(0, axis=0))
 
@@ -1325,19 +1325,19 @@ class TestUnit(TestCase):
 
         f2 = f1[['p', 'q']]
 
-        s1 = f2.iter_array(axis=0).apply(np.sum)
+        s1 = f2.iter_array(axis=0).apply(np.sum) # type: ignore
         self.assertEqual(list(s1.items()), [('p', 150), ('q', 204)])
 
-        s2 = f2.iter_array(axis=1).apply(np.sum)
+        s2 = f2.iter_array(axis=1).apply(np.sum) # type: ignore
         self.assertEqual(list(s2.items()),
                 [('w', 3), ('x', 64), ('y', 149), ('z', 138)])
 
         def sum_if(idx: tp.Hashable, vals: tp.Iterable[int]) -> tp.Optional[int]:
             if idx in ('x', 'z'):
-                return tp.cast(int, np.sum(vals))
+                return np.sum(vals) # type: ignore
             return None
 
-        s3 = f2.iter_array_items(axis=1).apply(sum_if)
+        s3 = f2.iter_array_items(axis=1).apply(sum_if) # type: ignore
         self.assertEqual(list(s3.items()),
                 [('w', None), ('x', 64), ('y', None), ('z', 138)])
 

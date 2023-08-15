@@ -13,6 +13,9 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import PositionsAllocator
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class RankMethod(str, Enum):
     MEAN = 'mean'
@@ -23,11 +26,11 @@ class RankMethod(str, Enum):
 
 
 def rank_1d(
-        array: np.ndarray,
+        array: NDArrayAny,
         method: tp.Union[str, RankMethod],
         ascending: bool = True,
         start: int = 0,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Rank 1D array. Based on the the scipy implementation:
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html
@@ -106,17 +109,18 @@ def rank_1d(
 
 
 def rank_2d(
-        array: np.ndarray,
+        array: NDArrayAny,
         method: tp.Union[str, RankMethod],
         ascending: bool = True,
         start: int = 0,
         axis: int = 0,
-        ) -> np.ndarray:
+        ) -> NDArrayAny:
     '''
     Args:
         axis: if 0, columns are ranked, if 1, rows are ranked
     '''
     # scipy uses np.apply_along_axis, but that handles many more cases than needed
+    dtype: DtypeAny
 
     if method == RankMethod.MEAN:
         dtype = DTYPE_FLOAT_DEFAULT

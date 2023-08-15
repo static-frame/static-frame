@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing as tp
 
+import numpy as np
+
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import PositionsAllocator
@@ -10,8 +12,9 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
-
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 class IndexCorrespondence:
@@ -75,12 +78,14 @@ class IndexCorrespondence:
                     )
             if mixed_depth:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
-                common_labels = list(array2d_to_tuples(common_labels))
+                common_labels = list(array2d_to_tuples(common_labels)) # type: ignore
             has_common = len(common_labels) > 0
         else:
             has_common = False
 
         size = len(dst_index.values)
+        iloc_dst: GetItemKeyType
+
         # either a reordering or a subset
         if has_common:
             if len(common_labels) == len(dst_index):

@@ -5,9 +5,8 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
-from arraykit import resolve_dtype
 
-from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import IMTOAdapter
 from static_frame.core.container_util import imto_adapter_factory
 from static_frame.core.container_util import index_many_to_one
@@ -23,14 +22,16 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.util import OPERATORS
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IntegerLocType
+from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
@@ -39,10 +40,12 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
-class IndexBase(ContainerOperand):
+class IndexBase(ContainerOperandSequence):
     '''
     All indices are derived from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
     '''
@@ -53,49 +56,67 @@ class IndexBase(ContainerOperand):
 
     _recache: bool
     _name: NameType
-    values: np.ndarray
-    positions: np.ndarray
     depth: int
+    _NDIM: int
 
     loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
-    dtype: np.dtype
 
-    __pos__: tp.Callable[['IndexBase'], np.ndarray]
-    __neg__: tp.Callable[['IndexBase'], np.ndarray]
-    __abs__: tp.Callable[['IndexBase'], np.ndarray]
-    __invert__: tp.Callable[['IndexBase'], np.ndarray]
-    __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __floordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __mod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    # __divmod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __pow__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __lshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __and__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __xor__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __or__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __lt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __le__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __eq__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __ne__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __gt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __ge__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __radd__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rsub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
-    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    #---------------------------------------------------------------------------
+    def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
+
+    @property
+    def positions(self) -> NDArrayAny:
+        raise NotImplementedError() #pragma: no cover
+
+    #---------------------------------------------------------------------------
+    def __pos__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__pos__'])
+
+    def __neg__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__neg__'])
+
+    def __abs__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
+    def __invert__(self) -> NDArrayAny:
+        return self._ufunc_unary_operator(OPERATORS['__invert__'])
+
+    __add__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __sub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __mul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __matmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __truediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __floordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __mod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    # __divmod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __pow__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __lshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __and__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __xor__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __or__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __lt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __le__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __eq__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __ne__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __gt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __ge__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __radd__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rsub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
     # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
-    label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
+    def label_widths_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy
@@ -106,7 +127,7 @@ class IndexBase(ContainerOperand):
     @classmethod
     def from_pandas(cls,
             value: 'pandas.Index',
-            ) -> 'IndexBase':
+            ) -> IndexBase:
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
@@ -170,7 +191,7 @@ class IndexBase(ContainerOperand):
 
     def values_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -179,7 +200,7 @@ class IndexBase(ContainerOperand):
         from static_frame.core.series import Series
         return Series(()) # pragma: no cover
 
-    def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
+    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
@@ -200,7 +221,7 @@ class IndexBase(ContainerOperand):
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+    def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     def roll(self: I, shift: int) -> I:
@@ -213,7 +234,7 @@ class IndexBase(ContainerOperand):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[I, np.ndarray]:
+            ) -> tp.Tuple[I, NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def level_add(self,
@@ -229,6 +250,59 @@ class IndexBase(ContainerOperand):
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
         raise NotImplementedError()
+
+    # ufunc shape skipna methods -----------------------------------------------
+
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[DtypeAny, ...],
+            size_one_unity: bool
+            ) -> NDArrayAny:
+        # not sure if these make sense on TypeBlocks, as they reduce dimensionality
+        raise NotImplementedError() #pragma: no cover
+
+    @doc_inject(selector='ufunc_skipna')
+    def cumsum(self,
+            axis: int = 0,
+            skipna: bool = True,
+            ) -> NDArrayAny:
+        '''Return the cumulative sum over the specified axis.
+
+        {args}
+        '''
+        return self._ufunc_shape_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=np.cumsum,
+                ufunc_skipna=np.nancumsum,
+                composable=False,
+                dtypes=(),
+                size_one_unity=True
+                )
+
+    @doc_inject(selector='ufunc_skipna')
+    def cumprod(self,
+            axis: int = 0,
+            skipna: bool = True,
+            ) -> NDArrayAny:
+        '''Return the cumulative product over the specified axis.
+
+        {args}
+        '''
+        return self._ufunc_shape_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=np.cumprod,
+                ufunc_skipna=np.nancumprod,
+                composable=False,
+                dtypes=(),
+                size_one_unity=True
+                )
+
 
     #---------------------------------------------------------------------------
 
@@ -249,77 +323,21 @@ class IndexBase(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    @doc_inject(selector='searchsorted', label_type='iloc (integer)')
-    def iloc_searchsorted(self,
-            values: tp.Any,
-            *,
-            side_left: bool = True,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
-        '''
-        {doc}
-
-        Args:
-            {values}
-            {side_left}
-        '''
-        if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not values.__class__ is np.ndarray:
-                values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(self.values, #type: ignore [no-any-return]
-                values,
-                'left' if side_left else 'right',
-                )
-
-    @doc_inject(selector='searchsorted', label_type='loc (label)')
-    def loc_searchsorted(self,
-            values: tp.Any,
-            *,
-            side_left: bool = True,
-            fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]:
-        '''
-        {doc}
-
-        Args:
-            {values}
-            {side_left}
-            {fill_value}
-        '''
-        sel = self.iloc_searchsorted(values, side_left=side_left)
-
-        length = self.__len__()
-        if sel.ndim == 0 and sel == length: # an element:
-            return fill_value #type: ignore [no-any-return]
-
-        mask = sel == length
-        if not mask.any():
-            return self.values[sel] #type: ignore [no-any-return]
-
-        post = np.empty(len(sel),
-                dtype=resolve_dtype(self.dtype,
-                dtype_from_element(fill_value))
-                )
-        sel[mask] = 0 # set out of range values to zero
-        post[:] = self.values[sel]
-        post[mask] = fill_value
-        post.flags.writeable = False
-        return post #type: ignore [no-any-return]
-
-    #---------------------------------------------------------------------------
-
     def _loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> GetItemKeyType:
+            key_transform: KeyTransformType = None,
+            partial_selection: bool = False,
+            ) -> IntegerLocType:
         raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> GetItemKeyType:
+            ) -> IntegerLocType:
         raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
             key: GetItemKeyType
-            ) -> tp.Union[I, tp.Hashable]:
+            ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
@@ -348,7 +366,8 @@ class IndexBase(ContainerOperand):
                 yield str(name)
             # try to use name only if it is a tuple of the right size
             elif name and self._name_is_names():
-                for n in name: #type: ignore [attr-defined]
+                # name is a tuple of length equal to depth
+                for n in name: # type: ignore
                     yield str(n)
             else:
                 for i in range(depth):
@@ -433,17 +452,17 @@ class IndexBase(ContainerOperand):
     # via interfaces
 
     @property
-    def via_str(self) -> InterfaceString[np.ndarray]:
+    def via_str(self) -> InterfaceString[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+    def via_dt(self) -> InterfaceDatetime[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[np.ndarray]:
+            ) -> InterfaceRe[NDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
@@ -481,13 +500,13 @@ class IndexBase(ContainerOperand):
                 )
         content = repr(self.display(config))
         # path_filter called internally
-        fp = write_optional_file(content=content, fp=fp)
+        fp_post: tp.Optional[str] = write_optional_file(content=content, fp=fp)
 
-        if fp and show:
+        if fp_post is not None and show:
             import webbrowser  # pragma: no cover
-            webbrowser.open_new_tab(fp) #pragma: no cover
+            webbrowser.open_new_tab(fp_post) #pragma: no cover
 
-        return fp
+        return fp_post
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover

@@ -31,6 +31,9 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import arrays_equal
 from static_frame.test.test_case import TestCase
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class TestUnit(TestCase):
 
@@ -177,7 +180,7 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         self.assertEqual(
-                tp.cast(np.ndarray, idx._loc_to_iloc(np.array([True, False, True, False]))).tolist(),
+                idx._loc_to_iloc(np.array([True, False, True, False])).tolist(), # type: ignore
                 [0, 2])
 
         self.assertEqual(idx._loc_to_iloc(slice('c',)), slice(None, 3, None))
@@ -258,9 +261,9 @@ class TestUnit(TestCase):
                 )
         # NOTE: this fails as we only see a list of dt64s and cannot match them in the AutoMap dictionary unless we were to directly examine and conert each element
         with self.assertRaises(KeyError):
-            _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)])
+            _ = idx1.loc_to_iloc([dt64(d) for d in reversed(idx1)]) # type: ignore
 
-        post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)]))
+        post = idx1.loc_to_iloc(np.array([dt64(d) for d in reversed(idx1)])) # type: ignore
         self.assertEqual(post.tolist(), [2, 1, 0]) #type: ignore
 
     def test_index_loc_to_iloc_g(self) -> None:
@@ -293,7 +296,7 @@ class TestUnit(TestCase):
         self.assertTrue(idx1._map is None)
 
         idx2 = idx1[:]
-        self.assertTrue(idx2._map is None) #type: ignore
+        self.assertTrue(idx2._map is None)
 
     def test_index_loc_to_iloc_j(self) -> None:
         idx1 = IndexAutoFactory.from_optional_constructor(10,
@@ -327,12 +330,12 @@ class TestUnit(TestCase):
 
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-        self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
+        self.assertTrue(idx.mloc == idx[:2].mloc)
 
     def test_index_mloc_b(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
         idx.append('e')
-        self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
+        self.assertTrue(idx.mloc == idx[:2].mloc)
 
     def test_index_dtype_a(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
@@ -416,7 +419,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
 
-        self.assertEqual(idx[2:].values.tolist(), ['c', 'd']) #type: ignore
+        self.assertEqual(idx[2:].values.tolist(), ['c', 'd'])
 
         self.assertEqual(idx.loc['b':].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
@@ -596,9 +599,9 @@ class TestUnit(TestCase):
         self.assertEqual(len(index), 7)
 
         index3 = index[2:]
-        index3.append('i') #type: ignore
+        index3.append('i')
 
-        self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i']) #type: ignore
+        self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i'])
         self.assertEqual(index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'h'])
 
     def test_index_go_b(self) -> None:
@@ -768,7 +771,7 @@ class TestUnit(TestCase):
         idx = IndexGO(('a', 'b', 'c', 'd'))
         idx.append('e')
         post = idx._extract_iloc(slice(None))
-        self.assertEqual(post.values.tolist(), #type: ignore
+        self.assertEqual(post.values.tolist(),
                 ['a', 'b', 'c', 'd', 'e'])
 
     def test_index_drop_iloc_a(self) -> None:
@@ -1548,10 +1551,11 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         self.assertEqual(idx1.loc_searchsorted('c'), 'c')
         self.assertEqual(idx1.loc_searchsorted('c', side_left=False), 'd')
-        self.assertEqual(idx1.loc_searchsorted(('a', 'c'), side_left=False).tolist(), ['b', 'd'])
+        self.assertEqual(idx1.loc_searchsorted(('a', 'c'), side_left=False).tolist(), # type: ignore
+                ['b', 'd'])
 
         self.assertEqual(idx1.loc_searchsorted(
-                ('a', 'e'), side_left=False, fill_value=None).tolist(),
+                ('a', 'e'), side_left=False, fill_value=None).tolist(), # type: ignore
                 ['b', None])
 
     def test_index_iloc_searchsorted_c(self) -> None:

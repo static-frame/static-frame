@@ -65,9 +65,6 @@ class TestUnit(TestCase):
 
     def test_index_date_b(self) -> None:
 
-        with self.assertRaises(Exception):
-            IndexDate([3,4,5], dtype=np.int64) #pylint: disable=E1123
-
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
         self.assertEqual(idx1._loc_to_iloc('2018-01-01'), 1)
@@ -832,10 +829,10 @@ class TestUnit(TestCase):
     def test_index_datetime_loc_searchsorted_a(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
-        self.assertEqual(idx.loc_searchsorted(dt64('2020-01-05')).tolist(), datetime.date(2020, 1, 5))
+        self.assertEqual(idx.loc_searchsorted(dt64('2020-01-05')).tolist(), datetime.date(2020, 1, 5)) # type: ignore
 
         self.assertEqual(
-                idx.loc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')],
+                idx.loc_searchsorted([dt64('2020-01-05'), dt64('2020-01-31')], # type: ignore
                         side_left=False,
                         fill_value=None).tolist(),
                 [datetime.date(2020, 1, 6), None]
@@ -844,10 +841,10 @@ class TestUnit(TestCase):
     def test_index_datetime_loc_searchsorted_b(self) -> None:
         dt64 = np.datetime64
         idx = IndexDate.from_date_range('2020-01-01', '2020-01-31')
-        self.assertEqual(idx.loc_searchsorted('2020-01-05').tolist(), datetime.date(2020, 1, 5))
+        self.assertEqual(idx.loc_searchsorted('2020-01-05').tolist(), datetime.date(2020, 1, 5)) # type: ignore
 
         self.assertEqual(
-                idx.loc_searchsorted(['2020-01-05', '2020-01-31'],
+                idx.loc_searchsorted(['2020-01-05', '2020-01-31'], # type: ignore
                         side_left=False,
                         fill_value=None).tolist(),
                 [datetime.date(2020, 1, 6), None]

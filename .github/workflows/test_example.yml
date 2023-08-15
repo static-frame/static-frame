@@ -1,4 +1,4 @@
-name: Quality
+name: Test Example Generation
 
 on:
   push:
@@ -36,5 +36,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
 
-    - name: Invoke Quality
-      run: inv quality
+    - name: Test Example Generation
+      run: inv testex --cov
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: 6de39346-7381-441d-80d3-a6c0c051be2d
+        files: coverage.xml
+        fail_ci_if_error: false
+        verbose: true

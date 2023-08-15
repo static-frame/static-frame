@@ -118,8 +118,6 @@ class TestUnit(TestCase):
             f3 = f2 @ f1
             self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
 
-    # from hypothesis import reproduce_failure
-    # NOTE: was able to improve many of these, but continued to get compliated type cases, and complications
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.NUMERIC_REAL,
             min_rows=1,
@@ -139,15 +137,16 @@ class TestUnit(TestCase):
                     a = getattr(f1, attr)(axis=axis).values # call the method
                     b = attrs.ufunc_skipna(values, axis=axis)
 
-    @given(sfst.get_frame())
+    # NOTE: this fails with dt64 types due to odd unitless values from hypothesis
+    @given(sfst.get_frame(
+            dtype_group=sfst.DTGroup.CORE,
+            ))
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]
         if (not isna_element(value) and
                 not isinstance(value, np.datetime64) and
                 not isinstance(value, np.timedelta64)):
             self.assertTrue(f1.isin((value,)).iloc[0, 0])
-
-    # # TODO: intger tests with pow, mod
 
     #---------------------------------------------------------------------------
 

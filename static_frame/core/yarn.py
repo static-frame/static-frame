@@ -44,6 +44,10 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import is_callable_or_mapping
 
+if tp.TYPE_CHECKING:
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
@@ -114,7 +118,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             name:
             deepcopy_from_bus:
         '''
-        bus_components = []
+        bus_components: tp.List[Bus] = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
@@ -263,7 +267,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Yarn']:
+    def iter_element(self) -> IterNodeNoArg['Frame']:
         '''
         Iterator of elements.
         '''
@@ -276,7 +280,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArg['Frame']:
         '''
         Iterator of label, element pairs.
         '''
@@ -293,7 +297,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> DtypeAny:
         '''
         Return the dtype of the realized NumPy array.
 
@@ -399,7 +403,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     _items_store = items
 
     @property
-    def values(self) -> np.ndarray:
+    def values(self) -> NDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
@@ -498,7 +502,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Yarn':
+    def _extract_iloc(self, key: GetItemKeyType) -> Yarn | Frame:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -544,14 +548,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Yarn':
+    def _extract_loc(self, key: GetItemKeyType) -> Yarn | Frame:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Yarn':
+    def __getitem__(self, key: GetItemKeyType) -> Yarn | Frame:
         '''Selector of values by label.
 
         Args:
@@ -565,7 +569,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
         invalid = np.full(len(self._index), True)
         invalid[key] = False
-        return self._extract_iloc(invalid)
+        return self._extract_iloc(invalid) # type: ignore
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
         return self._drop_iloc(self._index._loc_to_iloc(key))
@@ -637,11 +641,10 @@ class Yarn(ContainerBase, StoreClientMixin):
     def dtypes(self) -> Frame:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
-        f = Frame.from_concat(
+        return Frame.from_concat(
                 frames=(f.dtypes for f in self._series.values),
                 fill_value=None,
                 ).relabel(index=self._index)
-        return tp.cast(Frame, f)
 
     @property
     def shapes(self) -> Series:
@@ -667,7 +670,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         f = Frame.from_concat(
                 (b.status for b in self._series.values),
                 index=IndexAutoFactory)
-        return f.relabel(index=self._index) # type: ignore
+        return f.relabel(index=self._index)
 
 
 
@@ -816,4 +819,4 @@ class Yarn(ContainerBase, StoreClientMixin):
                 name=self._index.name,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index) #type: ignore
+        return self._extract_iloc(iloc_map).relabel(index) # type: ignore

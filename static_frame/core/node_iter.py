@@ -30,6 +30,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
+    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
@@ -61,7 +63,7 @@ class IterNodeApplyType(Enum):
         return True
 
 
-
+# NOTE: the generic type here is the type returned from calls to apply()
 class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
     Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
@@ -571,12 +573,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
             index = index_constructor(index)
 
         # PERF: passing count here permits faster generator realization
-        values, _ = iterable_to_array_1d(
+        array, _ = iterable_to_array_1d(
                 values,
                 count=index.shape[0],
                 dtype=dtype,
                 )
-        return Series(values,
+        return Series(array,
                 name=name,
                 index=index,
                 own_index=own_index,
@@ -683,7 +685,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
-            ) -> np.ndarray:
+            ) -> NDArrayAny:
         # NOTE: name argument is for common interface
         if index_constructor is not None:
             raise RuntimeError('index_constructor not supported with this interface')
@@ -739,7 +741,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             apply_constructor = partial(self.to_frame_from_elements, axis=axis)
 
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
-            apply_constructor = self.to_index_from_labels
+            apply_constructor = self.to_index_from_labels # type: ignore
 
         else:
             raise NotImplementedError(self._apply_type) #pragma: no cover
@@ -857,7 +859,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            other: tp.Union[np.ndarray, 'Index', 'Series', tp.Iterable[tp.Any]],
+            other: tp.Union[NDArrayAny, 'Index', 'Series', tp.Iterable[tp.Any]],
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0

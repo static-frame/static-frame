@@ -38,8 +38,8 @@ commands = sorted(
 try: # This lets us play nicely with IPython:
     from builtins import __IPYTHON__  # type: ignore
 
-    from IPython import embed
-    from IPython import get_ipython
+    from IPython.core.getipython import get_ipython
+    from IPython.terminal.embed import embed
 
 except ImportError:
     is_ipython = False
@@ -50,14 +50,14 @@ else:
 if __name__ == '__main__':
 
     if is_ipython:
-        ipython = get_ipython()
+        ipython = get_ipython() # type: ignore
 
-        print() # Spacer.
+        print() # Spacer
         for command in commands:
             ipython.auto_rewrite_input(command)
-        print() # Spacer.
+        print() # Spacer
 
-        embed(user_ns=imports, colors='neutral')
+        embed(user_ns=imports, colors='neutral') # type: ignore
 
     else:
         banner_head = f'Python {version} on {platform}\n'

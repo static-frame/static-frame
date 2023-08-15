@@ -49,7 +49,7 @@ class TestUnit(TestCase):
             count(past, counts_past)
         count(current.readlines(), counts_current)
 
-        for key in counts_current.keys() | counts_past.keys():
+        for key in sorted(counts_current.keys() | counts_past.keys()):
             with self.subTest(key):
                 self.assertEqual(counts_current[key], counts_past[key], key)
 
