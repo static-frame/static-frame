@@ -7491,7 +7491,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 1,
             ddof: int = 1,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Compute a covariance matrix.
 
         Args:
@@ -7524,7 +7524,7 @@ class Frame(ContainerOperand):
     def corr(self,
             *,
             axis: int = 1,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''Compute a correlation matrix.
 
         Args:
@@ -7625,7 +7625,6 @@ class Frame(ContainerOperand):
                 index_constructor=index_constructor,
                 )
 
-
     #---------------------------------------------------------------------------
     # pivot stack, unstack
 
@@ -7633,7 +7632,7 @@ class Frame(ContainerOperand):
             depth_level: DepthLevelSpecifier = -1,
             *,
             fill_value: object = np.nan,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Move labels from the columns to the index, creating or extending an :obj:`IndexHierarchy` on the index.
 
@@ -7713,7 +7712,7 @@ class Frame(ContainerOperand):
             depth_level: DepthLevelSpecifier = -1,
             *,
             fill_value: object = np.nan,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Move labels from the index to the columns, creating or extending an :obj:`IndexHierarchy` on the columns.
 
@@ -7798,7 +7797,7 @@ class Frame(ContainerOperand):
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: tp.Hashable = None,
-            ) -> 'Frame':
+            ) -> Frame:
         '''
         Perform an inner join.
 
@@ -7843,7 +7842,7 @@ class Frame(ContainerOperand):
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: tp.Hashable = None,
-            ) -> 'Frame':
+            ) -> Frame:
         '''
         Perform a left outer join.
 
@@ -7888,7 +7887,7 @@ class Frame(ContainerOperand):
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: tp.Hashable = None,
-            ) -> 'Frame':
+            ) -> Frame:
         '''
         Perform a right outer join.
 
@@ -7933,7 +7932,7 @@ class Frame(ContainerOperand):
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: tp.Hashable = None,
-            ) -> 'Frame':
+            ) -> Frame:
         '''
         Perform an outer join.
 
