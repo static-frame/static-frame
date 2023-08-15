@@ -321,9 +321,6 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
-    from hypothesis import reproduce_failure
-
-    @reproduce_failure('6.40.0', b'AAACAAMAAAEAAAEAAQE=')
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
@@ -337,7 +334,10 @@ class TestUnit(TestCase):
 
         if post.dtype.kind in ('f', 'c', 'i', 'u'):
             # Compare directly to numpy behavior for number values.
-            self.assertTrue(len(post) == len(np.setdiff1d(arrays[0], arrays[1], assume_unique=False)))
+            try: # IndexError: arrays used as indices must be of integer (or boolean) type
+                self.assertTrue(len(post) == len(np.setdiff1d(arrays[0], arrays[1], assume_unique=False)))
+            except IndexError:
+                pass
         else:
             # nan values in complex numbers make direct comparison tricky
             self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
