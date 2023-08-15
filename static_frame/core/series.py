@@ -149,7 +149,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @classmethod
-    def from_element(cls: tp.Type[Series],
+    def from_element(cls,
             element: tp.Any,
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactory],
@@ -157,7 +157,7 @@ class Series(ContainerOperand):
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Create a :obj:`static_frame.Series` from a single element. The size of the resultant container will be determined by the ``index`` argument.
 
@@ -194,7 +194,7 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
         Args:
@@ -238,7 +238,7 @@ class Series(ContainerOperand):
             thousands_char: str = '',
             decimal_char: str = '.',
             own_index: bool = False,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from a delimited string.
 
         Args:
@@ -279,7 +279,7 @@ class Series(ContainerOperand):
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
 
         Args:
@@ -301,7 +301,7 @@ class Series(ContainerOperand):
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
 
@@ -367,7 +367,7 @@ class Series(ContainerOperand):
             *,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
 
@@ -411,14 +411,14 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable['Series'],
+            containers: tp.Iterable[tp.Self],
             *,
             index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
@@ -467,7 +467,7 @@ class Series(ContainerOperand):
             index: IndexInitOrAutoType = None,
             index_constructor: IndexConstructor = None,
             name: NameType = NAME_DEFAULT,
-            own_data: bool = False) -> 'Series':
+            own_data: bool = False) -> tp.Self:
         '''Given a Pandas Series, return a Series.
 
         Args:
@@ -628,7 +628,7 @@ class Series(ContainerOperand):
             setattr(self, key, value)
         self.values.flags.writeable = False
 
-    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> 'Series':
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         obj = self.__class__.__new__(self.__class__)
         obj.values = array_deepcopy(self.values, memo)
         obj._index = deepcopy(self._index, memo)
@@ -678,7 +678,7 @@ class Series(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             *,
             index: NameType = NAME_DEFAULT,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Return a new Series with an updated name attribute.
         '''
@@ -1092,7 +1092,7 @@ class Series(ContainerOperand):
             fill_value: tp.Any = np.nan,
             own_index: bool = False,
             check_equals: bool = True
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1353,7 +1353,7 @@ class Series(ContainerOperand):
     def _fill_missing(self,
             value: tp.Any, # an element or a Series
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Args:
             func: A function that returns a same-shaped array of Booleans.
