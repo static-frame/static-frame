@@ -116,7 +116,7 @@ class IndexBase(ContainerOperandSequence):
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy

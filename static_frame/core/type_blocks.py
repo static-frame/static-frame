@@ -3370,7 +3370,7 @@ class TypeBlocks(ContainerOperand):
                     return concat_resolved(parts, axis=1)
                 # width < width_target
                 parts.append(block)
-            raise RuntimeError('Unexepcted exit')
+            raise RuntimeError('Unexepcted exit') # type: ignore
 
         def blocks() -> tp.Iterator[NDArrayAny]:
             start = end = 0

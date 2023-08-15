@@ -12205,6 +12205,24 @@ class TestUnit(TestCase):
                 (('x', 3), ('y', 1), ('z', 3))
                 )
 
+    def test_frame_iloc_notna_c(self) -> None:
+
+        records = (
+                (np.nan, 2, 5, 4),
+                (np.nan, np.nan, np.nan, np.nan),
+                (np.nan, np.nan, 3, 4),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((0, 1), (10, 100)),
+                index=('x', 'y', 'z')
+                )
+        post = f1.loc_notna_first(axis=1, fill_value='')
+        self.assertEqual(post.to_pairs(),
+                (('x', (0, 100)), ('y', ''), ('z', (1, 10)))
+                )
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_loc_notfalsy_a(self) -> None:
