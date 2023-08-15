@@ -131,7 +131,7 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    FrameType = tp.TypeVar('FrameType', bound='Frame')
+    FrameType = tp.TypeVar('FrameType', bound='Frame') # pylint: disable=W0611 #pragma: no cover
 
 
 #-------------------------------------------------------------------------------
