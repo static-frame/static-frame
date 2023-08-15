@@ -2198,7 +2198,7 @@ class Series(ContainerOperand):
             ascending: BoolOrBools = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted Index.
 
@@ -2230,7 +2230,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']]] = None,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted values.
 
@@ -2269,7 +2269,7 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> 'Series':
+    def isin(self, other: tp.Iterable[tp.Any]) -> tp.Self:
         '''
         Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
 
@@ -2284,7 +2284,7 @@ class Series(ContainerOperand):
     def clip(self, *,
             lower: tp.Optional[tp.Union[float, 'Series']] = None,
             upper: tp.Optional[tp.Union[float, 'Series']] = None,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''{}
 
         Args:
@@ -2311,7 +2311,7 @@ class Series(ContainerOperand):
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 
-    def transpose(self) -> 'Series':
+    def transpose(self) -> tp.Self:
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
@@ -2320,7 +2320,7 @@ class Series(ContainerOperand):
         return self
 
     @property
-    def T(self) -> 'Series':
+    def T(self) -> tp.Self:
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
@@ -2353,7 +2353,7 @@ class Series(ContainerOperand):
     def drop_duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         Return a Series with duplicated values removed.
 
@@ -2374,7 +2374,7 @@ class Series(ContainerOperand):
                 )
 
     @doc_inject(select='astype')
-    def astype(self, dtype: DtypeSpecifier) -> 'Series':
+    def astype(self, dtype: DtypeSpecifier) -> tp.Self:
         '''
         Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for ``Frame``, this is an interface exposing both a callable and a getitem interface.
 
@@ -2393,7 +2393,7 @@ class Series(ContainerOperand):
                 name=self._name
                 )
 
-    def __round__(self, decimals: int = 0) -> 'Series':
+    def __round__(self, decimals: int = 0) -> tp.Self:
         '''
         Return a Series rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
@@ -2413,7 +2413,7 @@ class Series(ContainerOperand):
             shift: int,
             *,
             include_index: bool = False,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a Series with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
@@ -2449,7 +2449,7 @@ class Series(ContainerOperand):
             shift: int,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
