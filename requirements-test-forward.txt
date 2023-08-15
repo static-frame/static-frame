@@ -1,4 +1,4 @@
-numpy==1.25.1
+numpy==1.25.2
 arraymap==0.1.9
 arraykit==0.4.9
 
@@ -6,10 +6,10 @@ pytest==7.1.2
 pytest-cov==4.0.0
 hypothesis==6.40.0
 scipy==1.10.0
-invoke==2.0.0
-ipython==7.16.3
+invoke==2.2.0
+ipython==8.14.0
 
-pandas==1.5.3
+pandas==2.0.3
 xlsxwriter==1.1.2
 openpyxl==3.0.10
 xarray==0.21.1

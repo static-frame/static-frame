@@ -9,7 +9,7 @@ scipy==1.10.0
 invoke==2.2.0
 ipython==8.14.0
 
-pandas==1.5.3 # could be any > 1.0
+pandas==2.0.3
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.21.1
