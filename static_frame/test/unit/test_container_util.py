@@ -914,6 +914,17 @@ class TestUnit(TestCase):
         self.assertEqual(keys_cm & keys_gc, {'FrameHE', 'IndexSecondGO', 'IndexSecond', 'IndexDateGO', 'Bus', 'IndexMinute', 'Index', 'Frame', 'IndexDate', 'IndexYearMonth', 'IndexYearGO', 'IndexMicrosecondGO', 'Yarn', 'IndexNanosecond', 'IndexYearMonthGO', 'IndexNanosecondGO', 'IndexHourGO', 'Batch', 'Quilt', 'IndexMinuteGO', 'FrameGO', 'IndexHour', 'Series', 'IndexGO', 'IndexHierarchy', 'IndexMillisecondGO', 'TypeBlocks', 'IndexYear', 'SeriesHE', 'IndexMicrosecond', 'IndexMillisecond', 'IndexHierarchyGO'})
 
 
+
+    def test_get_container_map_a(self) -> None:
+        if hasattr(ContainerMap, '_map'):
+            delattr(ContainerMap, '_map')
+        keys = set(ContainerMap.keys())
+
+        delattr(ContainerMap, '_map')
+        for k in keys:
+            ContainerMap.get(k)
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
