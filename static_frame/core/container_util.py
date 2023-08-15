@@ -1640,8 +1640,6 @@ def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
         return 'to_frame_he'
     raise NotImplementedError(f'no handling for {container_type}')
 
-# NOTE: this needs to use a typevar?
-
 def frame_to_frame(
         frame: 'Frame',
         container_type: tp.Type['Frame'],
