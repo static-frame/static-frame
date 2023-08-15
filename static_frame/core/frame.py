@@ -4163,7 +4163,7 @@ class Frame(ContainerOperand):
     def relabel_flat(self,
             index: bool = False,
             columns: bool = False
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4193,7 +4193,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4226,7 +4226,7 @@ class Frame(ContainerOperand):
     def relabel_level_drop(self,
             index: int = 0,
             columns: int = 0
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4252,7 +4252,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             index_constructors: IndexConstructors = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections from the Frame (via axis-appropriate ``loc`` selections) to move into the :obj:`Index`.
 
@@ -4343,7 +4343,7 @@ class Frame(ContainerOperand):
             depth_level: DepthLevelSpecifier,
             *,
             axis: int = 0,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Shift values from an index on an axis to the Frame by providing one or more depth level selections.
 
@@ -4456,7 +4456,7 @@ class Frame(ContainerOperand):
             *,
             index_constructors: IndexConstructors = None,
             columns_constructors: IndexConstructors = None,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
 
@@ -4510,12 +4510,11 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # na handling
 
-    def isna(self) -> 'Frame':
+    def isna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are NaN or None.
         '''
-        # always return a Frame, even if this is a FrameGO
-        return Frame(self._blocks.isna(),
+        return self.__class__(self._blocks.isna(),
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
@@ -4524,12 +4523,11 @@ class Frame(ContainerOperand):
                 )
 
 
-    def notna(self) -> 'Frame':
+    def notna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are not NaN or None.
         '''
-        # always return a Frame, even if this is a FrameGO
-        return Frame(self._blocks.notna(),
+        return self.__class__(self._blocks.notna(),
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
@@ -4539,7 +4537,7 @@ class Frame(ContainerOperand):
 
     def dropna(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> 'Frame':
+            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> tp.Self:
         '''
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -4565,12 +4563,12 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # falsy handling
 
-    def isfalsy(self) -> 'Frame':
+    def isfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are falsy.
         '''
         # always return a Frame, even if this is a FrameGO
-        return Frame(self._blocks.isfalsy(),
+        return self.__class__(self._blocks.isfalsy(),
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
@@ -4579,12 +4577,12 @@ class Frame(ContainerOperand):
                 )
 
 
-    def notfalsy(self) -> 'Frame':
+    def notfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are not falsy.
         '''
         # always return a Frame, even if this is a FrameGO
-        return Frame(self._blocks.notfalsy(),
+        return self.__class__(self._blocks.notfalsy(),
                 index=self._index,
                 columns=self._columns,
                 own_index=True,
@@ -4594,7 +4592,7 @@ class Frame(ContainerOperand):
 
     def dropfalsy(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> 'Frame':
+            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> tp.Self:
         '''
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
 
@@ -4620,7 +4618,7 @@ class Frame(ContainerOperand):
     def _fill_missing(self,
             value: tp.Any,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Args:
             func: function to return True for missing values
@@ -4669,7 +4667,7 @@ class Frame(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Frame':
+    def fillna(self, value: tp.Any) -> tp.Self:
         '''Return a new ``Frame`` after replacing null (NaN or None) values with the supplied value.
 
         Args:
@@ -4678,7 +4676,7 @@ class Frame(ContainerOperand):
         return self._fill_missing(value, func=isna_array)
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self, value: tp.Any) -> 'Frame':
+    def fillfalsy(self, value: tp.Any) -> tp.Self:
         '''Return a new ``Frame`` after replacing falsy values with the supplied value.
 
         Args:
@@ -4691,7 +4689,7 @@ class Frame(ContainerOperand):
     def fillna_leading(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
 
@@ -4709,7 +4707,7 @@ class Frame(ContainerOperand):
     def fillna_trailing(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
 
@@ -4727,7 +4725,7 @@ class Frame(ContainerOperand):
     def fillfalsy_leading(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling leading (and only leading) falsy values with the provided ``value``.
 
@@ -4745,7 +4743,7 @@ class Frame(ContainerOperand):
     def fillfalsy_trailing(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
 
@@ -4764,7 +4762,7 @@ class Frame(ContainerOperand):
     def fillna_forward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling forward null (NaN or None) with the last observed value.
 
@@ -4782,7 +4780,7 @@ class Frame(ContainerOperand):
     def fillna_backward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling backward null (NaN or None) with the first observed value.
 
@@ -4801,7 +4799,7 @@ class Frame(ContainerOperand):
     def fillfalsy_forward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling forward falsy values with the last observed value.
 
@@ -4819,7 +4817,7 @@ class Frame(ContainerOperand):
     def fillfalsy_backward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> 'Frame':
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling backward falsy values with the first observed value.
 
@@ -5125,7 +5123,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> tp.Self:
         '''
         Args:
             key: If a Boolean Series was passed, it has been converted to Boolean NumPy array already in loc to iloc.
@@ -5159,11 +5157,11 @@ class Frame(ContainerOperand):
                 own_index=own_index
                 )
 
-    def _drop_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _drop_loc(self, key: GetItemKeyTypeCompound) -> tp.Self:
         key = self._compound_loc_to_iloc(key)
         return self._drop_iloc(key=key)
 
-    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> tp.Self:
         key = self._compound_loc_to_getitem_iloc(key)
         return self._drop_iloc(key=key)
 
