@@ -1573,7 +1573,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_leading(self, value: tp.Any) -> 'Series':
+    def fillna_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) null (NaN or None) with the supplied value.
 
         Args:
@@ -1588,7 +1588,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_trailing(self, value: tp.Any) -> 'Series':
+    def fillna_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
 
         Args:
@@ -1604,7 +1604,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_leading(self, value: tp.Any) -> 'Series':
+    def fillfalsy_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) falsy values with the supplied value.
 
         Args:
@@ -1619,7 +1619,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_trailing(self, value: tp.Any) -> 'Series':
+    def fillfalsy_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) falsy values with the supplied value.
 
         Args:
@@ -1637,7 +1637,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: UFunc) -> 'Series':
+    def _ufunc_unary_operator(self, operator: UFunc) -> tp.Self:
         '''
         For unary operations, the `name` attribute propagates.
         '''
@@ -1653,7 +1653,7 @@ class Series(ContainerOperand):
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> tp.Self:
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
         '''
