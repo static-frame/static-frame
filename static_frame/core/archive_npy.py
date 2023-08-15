@@ -40,9 +40,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-
-    HeaderType = tp.Tuple[DtypeAny, bool, tp.Tuple[int, ...]]
-    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
+    HeaderType = tp.Tuple[DtypeAny, bool, tp.Tuple[int, ...]] # pylint: disable=W0611 #pragma: no cover
+    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
