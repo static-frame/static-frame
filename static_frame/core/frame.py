@@ -7312,7 +7312,7 @@ class Frame(ContainerOperand):
             if labels_opposite._NDIM == 1:
                 array = labels_opposite.values[pos]
             else:
-                array = labels_opposite.flat().values[pos]
+                array = labels_opposite.flat().values[pos] # type: ignore
         else:
             array = pos # will contain -1 in fill positions
 
