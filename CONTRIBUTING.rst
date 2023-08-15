@@ -12,13 +12,15 @@ If you have an idea for a new feature for which there is not already an issue, p
 Preparing an Environment
 -------------------------------
 
+StaticFrame is developed on Python 3.11.
+
 To prepare a StaticFrame repository and environment, follow the following steps.
 
 Clone the git repository (or your fork)::
 
     git clone https://github.com/static-frame/static-frame.git
 
-Create a virtual environment with StaticFrame's requirements for development::
+Using Python 3.11, Create a virtual environment with StaticFrame's development requirements::
 
     cd static-frame
     python3 -m venv .env-sf
