@@ -52,8 +52,8 @@ from static_frame.core.index_datetime import IndexYearGO
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_datetime import IndexYearMonthGO
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import IndexHierarchyAsType
+from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime
@@ -65,13 +65,12 @@ from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceBatchAsType
-from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
-
 from static_frame.core.node_selector import InterfaceConsolidate
+from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
