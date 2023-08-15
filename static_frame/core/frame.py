@@ -7970,7 +7970,7 @@ class Frame(ContainerOperand):
             *,
             after: bool,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Return a new Frame with the provided container inserted at the position (or after the position) determined by the column key.
 
@@ -8032,7 +8032,7 @@ class Frame(ContainerOperand):
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position before the label specified by ``key``.
 
@@ -8055,7 +8055,7 @@ class Frame(ContainerOperand):
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> tp.Self:
         '''
         Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position after the label specified by ``key``.
 
