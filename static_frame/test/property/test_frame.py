@@ -139,7 +139,7 @@ class TestUnit(TestCase):
 
     # NOTE: this fails with dt64 types due to odd unitless values from hypothesis
     @given(sfst.get_frame(
-            dtype_group=sfst.DTGroup.CORE,
+            dtype_group=sfst.DTGroup.CORE_NO_OBJECT,
             ))
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]

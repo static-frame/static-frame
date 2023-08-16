@@ -221,10 +221,17 @@ class DTGroup(Enum):
 
     # NOTE: duplicate non-datetime to produce more balanced distribution
     CORE = tuple(chain(
-            # OBJECT, # object has to be handled with get_array_from_dtype_group
+            # OBJECT, # object is included butg is handled with get_array_from_dtype_group
             NUMERIC, NUMERIC, NUMERIC,
             BOOL, BOOL, BOOL,
             STRING, STRING, STRING,
+            DATETIME,
+            ))
+
+    CORE_NO_OBJECT = tuple(chain(
+            NUMERIC, NUMERIC,
+            BOOL, BOOL,
+            STRING, STRING,
             DATETIME,
             ))
 
@@ -358,7 +365,7 @@ def get_array_from_dtype_group(
     return array_non_object
 
 
-def get_array_1d(
+def get_array_1d(*,
         min_size: int = 0,
         max_size: int = MAX_ROWS,
         unique: bool = False,
@@ -373,7 +380,7 @@ def get_array_1d(
             )
 
 
-def get_array_2d(
+def get_array_2d(*,
         min_rows: int = 1,
         max_rows: int = MAX_ROWS,
         min_columns: int = 1,
@@ -396,7 +403,7 @@ def get_array_2d(
             )
 
 
-def get_array_1d2d(
+def get_array_1d2d(*,
         min_rows: int = 1,
         max_rows: int = MAX_ROWS,
         min_columns: int = 1,
@@ -839,7 +846,7 @@ get_series_obj_dgt1_numeric.__name__ = 'get_series_obj_dgt1_numeric'
 #-------------------------------------------------------------------------------
 # frames
 
-def get_frame(
+def get_frame(*,
         min_rows: int = 1,
         max_rows: int = MAX_ROWS,
         min_columns: int = 1,
@@ -853,7 +860,6 @@ def get_frame(
         ) -> st.SearchStrategy:
 
     def constructor(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
-
         row_count, column_count = shape
 
         if issubclass(index_cls, IndexHierarchy):
