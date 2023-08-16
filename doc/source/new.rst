@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.6.0
+-----------
+
+Comprehensive improvements and expansions to type hints using Python 3.11 and NumPy 1.25.
+
+
 1.5.0
 -----------
 
