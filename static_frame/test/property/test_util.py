@@ -16,6 +16,7 @@ from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import datetime64_not_aligned
+from static_frame.core.util import timedelta64_not_aligned
 from static_frame.test.property.strategies import DTGroup
 from static_frame.test.property.strategies import get_array_1d
 from static_frame.test.property.strategies import get_array_1d2d
@@ -290,7 +291,8 @@ class TestUnit(TestCase):
     def test_union1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         post = util.union1d(
                 arrays[0],
                 arrays[1],
@@ -309,6 +311,8 @@ class TestUnit(TestCase):
     def test_intersect1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         post = util.intersect1d(
                 arrays[0],
                 arrays[1],
@@ -325,7 +329,8 @@ class TestUnit(TestCase):
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         post = util.setdiff1d(
                 arrays[0],
                 arrays[1],
@@ -352,7 +357,8 @@ class TestUnit(TestCase):
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
 
@@ -368,7 +374,8 @@ class TestUnit(TestCase):
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
@@ -380,7 +387,8 @@ class TestUnit(TestCase):
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         for array in arrays:
             if array.dtype.kind in ('f', 'c') and np.isnan(array).any():
                 return
@@ -398,7 +406,8 @@ class TestUnit(TestCase):
 
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
-
+        if timedelta64_not_aligned(arrays[0], arrays[1]):
+            return
         for mtot in (ManyToOneType.INTERSECT, ManyToOneType.UNION):
             post = util.ufunc_set_iter(arrays, many_to_one_type=mtot)
             self.assertTrue(post.ndim == 2)

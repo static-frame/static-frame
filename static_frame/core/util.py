@@ -1953,6 +1953,16 @@ def datetime64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
         return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]
     return False
 
+def timedelta64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
+    '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
+    '''
+    array_is_td64 = array.dtype.kind == DTYPE_TIMEDELTA_KIND
+    other_is_td64 = other.dtype.kind == DTYPE_TIMEDELTA_KIND
+    if array_is_td64 and other_is_td64:
+        return np.datetime_data(array.dtype)[0] != np.datetime_data(other.dtype)[0]
+    return False
+
+
 def _slice_to_datetime_slice_args(key: slice,
         dtype: tp.Optional[DtypeAny] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
