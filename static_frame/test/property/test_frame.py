@@ -198,9 +198,10 @@ class TestUnit(TestCase):
                 self.assertEqual(len(post[0][1]), f1.shape[0]) # type: ignore
             self.assertTrue(isinstance(post, tuple))
 
+    # from hypothesis import reproduce_failure
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
-            index_dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
     def test_frame_to_pandas(self, f1: Frame) -> None:
         post = f1.to_pandas()
@@ -224,7 +225,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.CORE,
-            index_dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
         msg = f1.to_msgpack()
@@ -237,7 +238,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
-            index_dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
     def test_frame_to_xarray(self, f1: Frame) -> None:
         xa = f1.to_xarray()

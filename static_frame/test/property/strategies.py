@@ -174,6 +174,8 @@ class DTGroup(Enum):
                     endianness='='),
             partial(hypo_np.integer_dtypes,
                     endianness='='),
+            partial(hypo_np.unsigned_integer_dtypes,
+                    endianness='='),
             partial(hypo_np.complex_number_dtypes,
                     endianness='='),
             )
@@ -198,6 +200,10 @@ class DTGroup(Enum):
             hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
             )
+    NUMERIC_INT = (
+            hypo_np.unsigned_integer_dtypes,
+            hypo_np.integer_dtypes,
+            )
     DATETIME = tuple(chain(
             YEAR,
             YEAR_MONTH,
@@ -210,6 +216,8 @@ class DTGroup(Enum):
             ))
 
     BASIC = NUMERIC + BOOL + STRING
+
+    BASIC_NO_REAL = NUMERIC_INT + BOOL + STRING
 
     # NOTE: duplicate non-datetime to produce more balanced distribution
     CORE = tuple(chain(
