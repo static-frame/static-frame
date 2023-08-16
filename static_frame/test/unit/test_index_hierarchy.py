@@ -3109,7 +3109,7 @@ class TestUnit(TestCase):
     def test_hierarchy_drop_level_g(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             _ = ih.level_drop(0)
 
     def test_hierarchy_drop_level_h(self) -> None:
@@ -3201,6 +3201,13 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels(labels)
         with self.assertRaises(ErrorInitIndexNonUnique):
             post = ih.level_drop(2)
+
+    def test_hierarchy_drop_level_m(self) -> None:
+        ih1= IndexHierarchy.from_product(('a', 'b'), (1, 2), name=('x', 'y'))
+        self.assertTrue(ih1._name_is_names())
+        with self.assertRaises(ValueError):
+            _ = ih1.level_drop(0)
+
 
     #---------------------------------------------------------------------------
 
