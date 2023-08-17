@@ -134,7 +134,7 @@ class InterfaceValues(Interface[TContainer]):
                 tb = TypeBlocks.from_blocks(blocks)
 
             if isinstance(self._container, Frame):
-                return self._container.__class__(
+                return self._container.__class__( # type: ignore
                         tb,
                         index=self._container.index,
                         columns=self._container.columns,
