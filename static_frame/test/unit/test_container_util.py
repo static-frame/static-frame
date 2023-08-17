@@ -124,23 +124,23 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         self.assertEqual(
-                matmul(f1, [4, 3]).to_pairs(), # type: ignore
+                matmul(f1, [4, 3]).to_pairs(),
                 (('x', 13), ('y', 20), ('z', 27))
                 )
 
         self.assertEqual(
-                matmul(f1, np.array([4, 3])).to_pairs(), # type: ignore
+                matmul(f1, np.array([4, 3])).to_pairs(),
                 (('x', 13), ('y', 20), ('z', 27))
                 )
 
 
         self.assertEqual(
-                matmul(f1, [3, 4]).to_pairs(), # type: ignore
+                matmul(f1, [3, 4]).to_pairs(),
                 (('x', 15), ('y', 22), ('z', 29))
                 )
 
         self.assertEqual(
-                matmul(f1, np.array([3, 4])).to_pairs(), # type: ignore
+                matmul(f1, np.array([3, 4])).to_pairs(),
                 (('x', 15), ('y', 22), ('z', 29))
                 )
 
@@ -152,7 +152,7 @@ class TestUnit(TestCase):
 
         # get an auto incremented integer columns
         self.assertEqual(
-            matmul(f1, np.arange(10).reshape(2, 5)).to_pairs(), # type: ignore
+            matmul(f1, np.arange(10).reshape(2, 5)).to_pairs(),
             ((0, (('x', 15), ('y', 20), ('z', 25))), (1, (('x', 19), ('y', 26), ('z', 33))), (2, (('x', 23), ('y', 32), ('z', 41))), (3, (('x', 27), ('y', 38), ('z', 49))), (4, (('x', 31), ('y', 44), ('z', 57))))
             )
 
@@ -163,10 +163,10 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
         s1 = Series((10, 11), index=('a', 'b'))
 
-        self.assertEqual(matmul(f1, s1).to_pairs(), # type: ignore
+        self.assertEqual(matmul(f1, s1).to_pairs(),
                 (('x', 43), ('y', 64), ('z', 85)))
 
-        self.assertEqual(matmul(f1, s1.values).to_pairs(), # type: ignore
+        self.assertEqual(matmul(f1, s1.values).to_pairs(),
                 (('x', 43), ('y', 64), ('z', 85)))
 
         with self.assertRaises(RuntimeError):
@@ -181,7 +181,7 @@ class TestUnit(TestCase):
         s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
 
         self.assertEqual(
-            matmul(s1, f1).to_pairs(), # type: ignore
+            matmul(s1, f1).to_pairs(),
             (('a', 17), ('b', 35))
             )
 
@@ -208,7 +208,7 @@ class TestUnit(TestCase):
         self.assertEqual(matmul([3, 4, 5], f1.values).tolist(), # type: ignore
                 [26, 50])
 
-        self.assertEqual(matmul([3, 4, 5], f1).to_pairs(), # type: ignore
+        self.assertEqual(matmul([3, 4, 5], f1).to_pairs(),
                 (('a', 26), ('b', 50))
                 )
 
@@ -216,7 +216,7 @@ class TestUnit(TestCase):
         # lhs: array 1D, rhs: array 1D, Series
 
         s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
-        self.assertEqual(matmul([10, 11, 12], s1.values), 98)
+        self.assertEqual(matmul([10, 11, 12], s1.values), 98) # type: ignore
         self.assertEqual(matmul([10, 11, 12], s1), 98)
 
         with self.assertRaises(RuntimeError):
@@ -229,11 +229,11 @@ class TestUnit(TestCase):
         f2 = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
 
-        self.assertEqual(matmul(f1.values, f2).to_pairs(), # type: ignore
+        self.assertEqual(matmul(f1.values, f2).to_pairs(),
                 (('p', ((0, 11), (1, 14), (2, 17), (3, 20))), ('q', ((0, 23), (1, 30), (2, 37), (3, 44))), ('r', ((0, 35), (1, 46), (2, 57), (3, 68))))
                 )
 
-        self.assertEqual(matmul(f1, f2.values).to_pairs(), # type: ignore
+        self.assertEqual(matmul(f1, f2.values).to_pairs(),
                 ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
                 )
 
@@ -251,8 +251,8 @@ class TestUnit(TestCase):
         for pair in ((f1, f1.T), (f1, f1.loc['y']), (f1['a'], f1), (f1.loc['y'], f1.loc['z'])):
             for x, y in it.combinations((f_container, f_values, f_container, f_values), 2):
                 post = matmul(x(pair[0]), y(pair[1])) # type: ignore
-                if isinstance(post, (Series, Frame)):
-                    self.assertTrue(post.values.tolist(), (pair[0].values @ pair[1].values).tolist())
+                if isinstance(post, (Series, Frame)): # type: ignore
+                    self.assertTrue(post.values.tolist(), (pair[0].values @ pair[1].values).tolist()) # type: ignore
                 elif isinstance(post, np.ndarray):
                     self.assertTrue(post.tolist(), (pair[0].values @ pair[1].values).tolist())
 
