@@ -609,10 +609,52 @@ def index_constructor_empty(
     return False
 
 #---------------------------------------------------------------------------
-def matmul(
-        lhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
-        rhs: tp.Union['Series', 'Frame', NDArrayAny, tp.Sequence[float]],
-        ) -> tp.Union['Series', 'Frame', NDArrayAny]:
+@tp.overload
+def matmul(lhs: NDArrayAny, rhs: NDArrayAny) -> NDArrayAny: ...
+
+# 1D @ 1D = 0D
+# 1D @ 2D = 1D
+
+@tp.overload
+def matmul(lhs: Series, rhs: Series) -> float: ...
+
+@tp.overload
+def matmul(lhs: Series, rhs: tp.Sequence[float]) -> float: ...
+
+@tp.overload
+def matmul(lhs: Series, rhs: NDArrayAny) -> tp.Union[Series, float]: ...
+
+@tp.overload
+def matmul(lhs: tp.Sequence[float], rhs: Series) -> float: ...
+
+@tp.overload
+def matmul(lhs: NDArrayAny, rhs: Series) -> tp.Union[Series, float]: ...
+
+
+@tp.overload
+def matmul(lhs: Frame, rhs: Series) -> Series: ...
+
+@tp.overload
+def matmul(lhs: Frame, rhs: tp.Sequence[float]) -> Series: ...
+
+@tp.overload
+def matmul(lhs: Frame, rhs: NDArrayAny) -> tp.Union[Series, Frame]: ...
+
+@tp.overload
+def matmul(lhs: Series, rhs: Frame) -> Series: ...
+
+@tp.overload
+def matmul(lhs: tp.Sequence[float], rhs: Frame) -> Series: ...
+
+@tp.overload
+def matmul(lhs: NDArrayAny, rhs: Frame) -> tp.Union[Series, Frame]: ...
+
+# 2D @ 2D = 2D
+@tp.overload
+def matmul(lhs: Frame, rhs: Frame) -> Frame: ...
+
+
+def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
     '''
     Implementation of matrix multiplication for Series and Frame
     '''
@@ -648,7 +690,7 @@ def matmul(
         rhs_type = Frame # type: ignore
 
     if rhs_type == np.ndarray and lhs_type == np.ndarray:
-        return np.matmul(lhs, rhs) # type: ignore
+        return np.matmul(lhs, rhs)
 
 
     own_index = True
@@ -659,9 +701,9 @@ def matmul(
         columns = None
 
         if lhs_type == Series and (rhs_type == Series or rhs_type == Frame): # type: ignore
-            aligned = lhs._index.union(rhs._index) # type: ignore
+            aligned = lhs._index.union(rhs._index)
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index): # type: ignore
+            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
                 raise RuntimeError('shapes not alignable for matrix multiplication') #pragma: no cover
 
         if lhs_type == Series: # type: ignore
@@ -669,7 +711,7 @@ def matmul(
                 if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
-                left = lhs.values # type: ignore
+                left = lhs.values
                 right = rhs # already np
                 if ndim == 1:
                     index = None # force auto increment integer
@@ -677,30 +719,30 @@ def matmul(
                     constructor = lhs.__class__
             elif rhs_type == Series: # type: ignore
                 ndim = 0
-                left = lhs.reindex(aligned).values # type: ignore
-                right = rhs.reindex(aligned).values # type: ignore
+                left = lhs.reindex(aligned).values
+                right = rhs.reindex(aligned).values
             else: # rhs is Frame
                 ndim = 1
-                left = lhs.reindex(aligned).values # type: ignore
-                right = rhs.reindex(index=aligned).values # type: ignore
-                index = rhs._columns # type: ignore
+                left = lhs.reindex(aligned).values
+                right = rhs.reindex(index=aligned).values
+                index = rhs._columns
                 constructor = lhs.__class__
         else: # lhs is 1D array
             left = lhs
-            right = rhs.values # type: ignore
+            right = rhs.values
             if rhs_type == Series: # type: ignore
                 ndim = 0
             else: # rhs is Frame, len(lhs) == len(rhs.index)
                 ndim = 1
-                index = rhs._columns # type: ignore
+                index = rhs._columns
                 constructor = Series # cannot get from argument
 
     elif lhs.ndim == 2: # Frame, 2D array
 
         if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame): # type: ignore
-            aligned = lhs._columns.union(rhs._index) # type: ignore
+            aligned = lhs._columns.union(rhs._index)
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index): # type: ignore
+            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
         if lhs_type == Frame: # type: ignore
@@ -708,9 +750,9 @@ def matmul(
                 if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim
-                left = lhs.values # type: ignore
+                left = lhs.values
                 right = rhs # already np
-                index = lhs._index # type: ignore
+                index = lhs._index
 
                 if ndim == 1:
                     constructor = Series
@@ -720,21 +762,21 @@ def matmul(
             elif rhs_type == Series: # type: ignore
                 # a.columns must align with b.index
                 ndim = 1
-                left = lhs.reindex(columns=aligned).values # type: ignore
-                right = rhs.reindex(aligned).values # type: ignore
-                index = lhs._index  # type: ignore
+                left = lhs.reindex(columns=aligned).values
+                right = rhs.reindex(aligned).values
+                index = lhs._index
                 constructor = rhs.__class__
             else: # rhs is Frame
                 # a.columns must align with b.index
                 ndim = 2
-                left = lhs.reindex(columns=aligned).values # type: ignore
-                right = rhs.reindex(index=aligned).values # type: ignore
-                index = lhs._index # type: ignore
-                columns = rhs._columns # type: ignore
+                left = lhs.reindex(columns=aligned).values
+                right = rhs.reindex(index=aligned).values
+                index = lhs._index
+                columns = rhs._columns
                 constructor = lhs.__class__ # give left precedence
         else: # lhs is 2D array
             left = lhs
-            right = rhs.values # type: ignore
+            right = rhs.values
             if rhs_type == Series: # type: ignore
                 ndim = 1
                 index = None # returns unindexed Series
@@ -746,7 +788,7 @@ def matmul(
                 ndim = 2
                 index = None
                 own_index = False
-                columns = rhs._columns #type: ignore
+                columns = rhs._columns
                 constructor = rhs.__class__
     else:
         raise NotImplementedError(f'no handling for {lhs}')
@@ -761,11 +803,11 @@ def matmul(
 
     data.flags.writeable = False
     if ndim == 1:
-        return constructor(data, # type: ignore
+        return constructor(data,
                 index=index,
                 own_index=own_index,
                 )
-    return constructor(data, # type: ignore
+    return constructor(data,
             index=index,
             own_index=own_index,
             columns=columns
