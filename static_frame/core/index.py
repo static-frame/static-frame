@@ -477,7 +477,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
         return mloc(self._labels)
 
     @property
-    def dtype(self) -> DtypeAny:
+    def dtype(self) -> np.dtype[TDtype]:
         '''
         Return the dtype of the underlying NumPy array.
 

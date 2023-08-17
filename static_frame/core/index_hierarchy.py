@@ -225,9 +225,10 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-TDtypes = tp.TypeVarTuple('TDtypes')
+# TDtypes = tp.TypeVarTuple('TDtypes')
 # can use tp.Unpack
-class IndexHierarchy(IndexBase, tp.Generic[*TDtypes]):
+# class IndexHierarchy(IndexBase, tp.Generic[*TDtypes]):
+class IndexHierarchy(IndexBase):
     '''
     A hierarchy of :obj:`Index` objects.
     '''
