@@ -2827,6 +2827,9 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         # NOTE: this was implement with a bipolar ``count`` to specify what to drop, but it could have been implemented with a depth level specifier, supporting arbitrary removals. The approach taken here is likely faster as we reuse levels.
+        if count == 0:
+            raise ValueError('0 is an invalid count value.')
+
         if self._name_is_names():
             if count < 0:
                 name: NameType = self._name[:count] # type: ignore
@@ -2855,25 +2858,23 @@ class IndexHierarchy(IndexBase):
                     own_blocks=self.STATIC,
                     )
 
-        elif count > 0:
-            if count >= (self.depth - 1):
-                # When the removal equals or exceeds the depth of the hierarchy, we just return the innermost index
-                # NOTE: We can't copy the index directly, since the index order might not match.
-                return self._indices[-1].__class__(
-                        self._blocks.iloc[:,-1].values.reshape(self.__len__()),
-                        name=name,
-                        )
-
-            # Remove from outer
-            return self.__class__(
-                    indices=self._indices[count:],
-                    indexers=self._indexers[count:],
+        # Remove from outer
+        if count >= (self.depth - 1):
+            # When the removal equals or exceeds the depth of the hierarchy, we just return the innermost index
+            # NOTE: We can't copy the index directly, since the index order might not match.
+            return self._indices[-1].__class__(
+                    self._blocks.iloc[:,-1].values.reshape(self.__len__()),
                     name=name,
-                    blocks=self._blocks.iloc[:,count:],
-                    own_blocks=self.STATIC,
                     )
 
-        raise NotImplementedError('no handling for a 0 count drop level.')
+        return self.__class__(
+                indices=self._indices[count:],
+                indexers=self._indexers[count:],
+                name=name,
+                blocks=self._blocks.iloc[:,count:],
+                own_blocks=self.STATIC,
+                )
+
 
 
 class IndexHierarchyGO(IndexHierarchy):
