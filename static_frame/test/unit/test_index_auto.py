@@ -13,6 +13,7 @@ from static_frame.core.index_auto import IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.test.test_case import TestCase
+from static_frame.core.series import Series
 
 
 class TestUnit(TestCase):
@@ -48,6 +49,14 @@ class TestUnit(TestCase):
         self.assertEqual(idx1._map is None, False) #type: ignore
         self.assertEqual(len(idx1), 5)
         self.assertEqual(idx1.STATIC, True)
+
+    def test_index_auto_factory_d(self) -> None:
+
+        idx1 = Series([10, 20], index=IndexAutoFactory(name='foo'))
+        import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_auto_factory_from_optional_constructor(self) -> None:
         initializer = 3
