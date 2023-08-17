@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.6.1-dev
+-----------
+
+Corrected exception raised in ``IndexHierarchy.level_drop()`` when provided count is 0.
+
+
 1.6.0
 -----------
 
