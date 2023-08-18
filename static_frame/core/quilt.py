@@ -28,6 +28,7 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
@@ -58,10 +59,9 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
-from static_frame.core.index_hierarchy import TreeNodeT
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
