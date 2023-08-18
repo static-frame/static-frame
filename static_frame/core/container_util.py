@@ -1392,13 +1392,11 @@ class IMTOAdapter:
         if self.ndim > 1:
             # simply provide None so as not to match in any comparison
             self.index_types = IMTOAdapterSeries(
-                    np.array([None for _ in range(depth)],
-                    dtype=DTYPE_OBJECT,
-                    ))
+                    np.full(depth, None, dtype=DTYPE_OBJECT),
+                    )
             self.dtypes = IMTOAdapterSeries(
-                    np.array([self.values.dtype for _ in range(depth)],
-                    dtype=DTYPE_OBJECT,
-                    ))
+                    np.full(depth, self.values.dtype, dtype=DTYPE_OBJECT),
+                    )
 
     def __len__(self) -> int:
         return len(self.values)

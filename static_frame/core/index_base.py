@@ -418,7 +418,7 @@ class IndexBase(ContainerOperandSequence):
 
         indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
 
-        if hasattr(others, '__len__') and len(others) == 1:
+        if hasattr(others, '__len__') and len(others) == 1: # type: ignore
             # NOTE: having only one `other` is far more common than many others; thus, optimize for that case by not using an iterator
             indices = (self, imtoaf(others[0])) # type: ignore
         else:
