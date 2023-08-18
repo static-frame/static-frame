@@ -289,6 +289,7 @@ class DisplayHeader:
             return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
+THeaderSpecifier = tp.Union[DtypeAny, type, DisplayHeader, None]
 
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 
@@ -322,13 +323,13 @@ class Display:
 
     @staticmethod
     def type_attributes(
-            type_input: tp.Union[DtypeAny, type, DisplayHeader],
+            type_input: THeaderSpecifier,
             config: DisplayConfig
             ) -> tp.Tuple[str, tp.Type[DisplayTypeCategory]]:
         '''
         Return the `type_input` as a string, applying delimters to either numpy dtypes or Python classes.
         '''
-        type_ref: tp.Union[DtypeAny, type, DisplayHeader]
+        type_ref: THeaderSpecifier
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
@@ -374,7 +375,7 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: tp.Union[DtypeAny, type, DisplayHeader],
+            value: THeaderSpecifier,
             config: DisplayConfig,
             is_dtype: bool = False) -> DisplayCell:
         '''
@@ -429,7 +430,7 @@ class Display:
     def from_values(cls,
             values: NDArrayAny,
             *,
-            header: tp.Union[DtypeAny, type, DisplayHeader],
+            header: THeaderSpecifier,
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,

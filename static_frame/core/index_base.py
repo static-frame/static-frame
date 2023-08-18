@@ -336,7 +336,7 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
-            key: GetItemKeyType
+            key: IntegerLocType
             ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 

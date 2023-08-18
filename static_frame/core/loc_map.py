@@ -145,7 +145,7 @@ class LocMap:
             try:
                 return slice(*cls.map_slice_args(
                         label_to_pos.get,
-                        key,
+                        key, # type: ignore
                         labels)
                         )
             except LocEmpty:
@@ -167,7 +167,7 @@ class LocMap:
 
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:
-            if len(key) == 0:
+            if len(key) == 0: # type: ignore
                 return EMPTY_ARRAY_INT
 
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND: #type: ignore
@@ -217,7 +217,7 @@ class HierarchicalLocMap:
     def __init__(self: _HLMap,
             *,
             indices: tp.List['Index'],
-            indexers: tp.List[NDArrayAny],
+            indexers: NDArrayAny,
             ) -> None:
 
         if not len(indexers[0]):
@@ -324,7 +324,7 @@ class HierarchicalLocMap:
         '''
         # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
         if encoding_can_overflow:
-            indexers = indexers.astype(object).T
+            indexers = indexers.astype(DTYPE_OBJECT).T
         else:
             indexers = indexers.astype(DTYPE_UINT_DEFAULT).T
 
@@ -394,12 +394,12 @@ class HierarchicalLocMap:
         # 1. Perform label resolution
         for key_at_depth, index_at_depth in zip(key, indices):
             if self.is_single_element(key_at_depth):
-                key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),))
+                key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),)) # type: ignore
             else:
                 is_single_key = False
                 subkey_indexers = []
                 for sub_key in key_at_depth:
-                    subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key))
+                    subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key)) # type: ignore
                 key_indexers.append(subkey_indexers)
 
         # 2. Convert to numpy array

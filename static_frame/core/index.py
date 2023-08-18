@@ -231,7 +231,7 @@ class Index(IndexBase):
             ) -> NDArrayAny:
         # positions is either None or an ndarray
         if positions.__class__ is np.ndarray: # type: ignore
-            return immutable_filter(positions)
+            return immutable_filter(positions) # type: ignore
         return PositionsAllocator.get(size)
 
     #---------------------------------------------------------------------------
@@ -251,7 +251,7 @@ class Index(IndexBase):
 
     @staticmethod
     def _error_init_index_non_unique(
-            labels: tp.Sequence[tp.Hashable],
+            labels: tp.Iterable[tp.Any],
             ) -> ErrorInitIndexNonUnique:
         '''Return an exception configured with an informative message.
         '''
@@ -297,7 +297,7 @@ class Index(IndexBase):
 
         #-----------------------------------------------------------------------
         if labels.__class__ is np.ndarray:
-            labels = immutable_filter(labels)
+            labels = immutable_filter(labels) # type: ignore
         elif isinstance(labels, IndexBase):
             # handle all Index subclasses
             if labels._recache:
@@ -332,7 +332,7 @@ class Index(IndexBase):
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not labels.__class__ is np.ndarray:
                 # if is_typed, _DTYPE is defined, we have a date
-                labels = (to_datetime64(v, dtype_extract) for v in labels)
+                labels = (to_datetime64(v, dtype_extract) for v in labels) #type: ignore
             # coerce to target type
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
@@ -553,7 +553,7 @@ class Index(IndexBase):
             labels = np.delete(self._labels, self._positions[key], axis=0) # type: ignore
             labels.flags.writeable = False
         else:
-            labels = np.delete(self._labels, key, axis=0)
+            labels = np.delete(self._labels, key, axis=0) # type: ignore
             labels.flags.writeable = False
 
         # from labels will work with both Index and IndexHierarchy
@@ -869,7 +869,7 @@ class Index(IndexBase):
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
                 # might raise LocInvalid
-                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__()) # type: ignore
             return key # type: ignore
 
         if key_transform:
@@ -916,7 +916,7 @@ class Index(IndexBase):
                 return result # return position as array
 
             # might raise LocInvalid
-            return pos_loc_slice_to_iloc_slice(key, self.__len__())
+            return pos_loc_slice_to_iloc_slice(key, self.__len__()) # type: ignore
 
         return self._loc_to_iloc(key)
 
@@ -968,7 +968,7 @@ class Index(IndexBase):
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self,
-            key: GetItemKeyType
+            key: IntegerLocType
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -1391,7 +1391,7 @@ class Index(IndexBase):
             # cannot assume new depth is the same index subclass
             index_constructor = cls_depth
 
-        indices = [index_constructor((level,)), immutable_index_filter(self)]
+        indices: tp.List[Index] = [index_constructor((level,)), immutable_index_filter(self)] # type: ignore
 
         indexers = np.array(
                 [
