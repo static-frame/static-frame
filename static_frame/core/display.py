@@ -21,6 +21,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import CallableToIterType
 from static_frame.core.util import gen_skip_middle
@@ -375,7 +376,7 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: THeaderSpecifier,
+            value: tp.Any,
             config: DisplayConfig,
             is_dtype: bool = False) -> DisplayCell:
         '''
@@ -564,7 +565,7 @@ class Display:
         # prepare header display of container class
         header_displays = []
         if config.type_show:
-            display_cls = cls.from_values((), header=header, config=config_transpose)
+            display_cls = cls.from_values(EMPTY_ARRAY, header=header, config=config_transpose)
             header_displays.append(display_cls.flatten())
 
         #-----------------------------------------------------------------------
