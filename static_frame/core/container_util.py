@@ -1441,8 +1441,8 @@ def imto_adapter_factory(
 
 
 def index_many_to_one(
-        indices: tp.Iterable['IndexBase'],
-        cls_default: tp.Type['IndexBase'],
+        indices: tp.Iterable[IndexBase | IMTOAdapter],
+        cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
         explicit_constructor: tp.Optional[IndexInitializer] = None,
         ) -> 'IndexBase':
