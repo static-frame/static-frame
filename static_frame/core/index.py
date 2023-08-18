@@ -155,7 +155,7 @@ class _ArgsortCache(tp.NamedTuple):
         memo[id(self)] = obj
         return obj
 
-TDtype = tp.TypeVar('TDtype')
+TDtype = tp.TypeVar('TDtype', bound=np.generic)
 
 class Index(IndexBase, tp.Generic[TDtype]):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
