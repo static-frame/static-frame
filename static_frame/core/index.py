@@ -15,6 +15,7 @@ from arraykit import resolve_dtype
 from arraymap import AutoMap  # pylint: disable=E0611
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
+import typing_extensions as tpe
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -155,7 +156,7 @@ class _ArgsortCache(tp.NamedTuple):
         memo[id(self)] = obj
         return obj
 
-TDtype = tp.TypeVar('TDtype', bound=np.generic)
+TDtype = tpe.TypeVar('TDtype', bound=np.generic, default=tp.Any)
 
 class Index(IndexBase, tp.Generic[TDtype]):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
