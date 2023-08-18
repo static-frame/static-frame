@@ -1154,11 +1154,11 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound['Frame']:
+    def loc(self) -> InterfaceGetItemCompound[Frame | Series]:
         return InterfaceGetItemCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound['Frame']:
+    def iloc(self) -> InterfaceGetItemCompound[Frame | Series]:
         return InterfaceGetItemCompound(self._extract_iloc)
 
     #---------------------------------------------------------------------------
@@ -1340,7 +1340,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
     @doc_inject(selector='head', class_name='Quilt')
-    def head(self, count: int = 5) -> 'Frame':
+    def head(self, count: int = 5) -> 'Frame': # type: ignore
         '''{doc}
 
         Args:
@@ -1349,7 +1349,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Quilt')
-    def tail(self, count: int = 5) -> 'Frame':
+    def tail(self, count: int = 5) -> 'Frame': # type: ignore
         '''{doc}
 
         Args:

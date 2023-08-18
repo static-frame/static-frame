@@ -34,6 +34,8 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
+FrameOrSeries = tp.Union['Frame', 'Series']
+
 TContainer = tp.TypeVar('TContainer',
         'Index',
         'Series',
@@ -49,6 +51,7 @@ TContainer = tp.TypeVar('TContainer',
          # cannot be NDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
+        FrameOrSeries,
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
