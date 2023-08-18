@@ -7,6 +7,7 @@ from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+import typing_extensions as tpe
 from arraykit import array_deepcopy
 from arraykit import immutable_filter
 from arraykit import mloc
@@ -1177,7 +1178,7 @@ class Index(IndexBase):
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Index'], tp.Union[NDArrayAny, 'Index']]] = None,
-            ) -> tp.Self:
+            ) -> tpe.Self:
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -1214,7 +1215,7 @@ class Index(IndexBase):
     def _drop_missing(self,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
-            ) -> tp.Self:
+            ) -> tpe.Self:
         '''
         Args:
             func: UFunc that returns True for missing values
@@ -1241,13 +1242,13 @@ class Index(IndexBase):
                 name=self._name,
                 )
 
-    def dropna(self) -> tp.Self:
+    def dropna(self) -> tpe.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
         return self._drop_missing(isna_array, DTYPE_NA_KINDS)
 
-    def dropfalsy(self) -> tp.Self:
+    def dropfalsy(self) -> tpe.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
@@ -1299,7 +1300,7 @@ class Index(IndexBase):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[tp.Self, NDArrayAny]:
+            ) -> tp.Tuple[tpe.Self, NDArrayAny]:
         # NOTE: base class defines pubic method
         # force usage of property for cache update
         # sort positions to avoid uncomparable objects
