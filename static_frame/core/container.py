@@ -516,8 +516,8 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=partial(np.std, ddof=ddof),
-                ufunc_skipna=partial(np.nanstd, ddof=ddof),
+                ufunc=partial(np.std, ddof=ddof), #type: ignore
+                ufunc_skipna=partial(np.nanstd, ddof=ddof), #type: ignore
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False
@@ -537,8 +537,8 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=partial(np.var, ddof=ddof),
-                ufunc_skipna=partial(np.nanvar, ddof=ddof),
+                ufunc=partial(np.var, ddof=ddof), #type: ignore
+                ufunc_skipna=partial(np.nanvar, ddof=ddof), #type: ignore
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False
@@ -574,8 +574,8 @@ class ContainerOperandSequence(ContainerBase):
         config = DisplayActive.get(
                 display_format=DisplayFormats.HTML_TABLE,
                 type_show=False,
-                display_columns=np.inf,
-                display_rows=np.inf,
+                display_columns=np.iinfo(np.int64).max,
+                display_rows=np.iinfo(np.int64).max,
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
