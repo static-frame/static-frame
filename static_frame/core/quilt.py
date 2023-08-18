@@ -58,8 +58,10 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
+from static_frame.core.index_hierarchy import TreeNodeT
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.index import Index # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -120,23 +122,24 @@ class Quilt(ContainerBase, StoreClientMixin):
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0]
 
-        axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
+        axis_map_components: TreeNodeT = {}
         opposite = None
 
         def values() -> tp.Iterator[Frame]:
             nonlocal opposite
 
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
+                # NOTE: index / columns cannot be IndexHierarchy
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index)
-                    axis_map_components[label] = f.index
+                    axis_map_components[label] = f.index # type: ignore
                     if opposite is None:
                         opposite = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f.columns)
-                    axis_map_components[label] = f.columns
+                    axis_map_components[label] = f.columns # type: ignore
                     if opposite is None:
                         opposite = f.index
                 else:
@@ -1340,22 +1343,22 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
     @doc_inject(selector='head', class_name='Quilt')
-    def head(self, count: int = 5) -> 'Frame': # type: ignore
+    def head(self, count: int = 5) -> 'Frame':
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[:count]
+        return self.iloc[:count] # type: ignore
 
     @doc_inject(selector='tail', class_name='Quilt')
-    def tail(self, count: int = 5) -> 'Frame': # type: ignore
+    def tail(self, count: int = 5) -> 'Frame':
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[-count:]
+        return self.iloc[-count:] # type: ignore
 
     #---------------------------------------------------------------------------
     @doc_inject()

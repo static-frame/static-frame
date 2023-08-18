@@ -963,7 +963,7 @@ class IndexHierarchy(IndexBase):
 
     # --------------------------------------------------------------------------
     def __init__(self: IH,
-            indices: tp.Union[IH, tp.List[Index]],
+            indices: tp.Union[IndexHierarchy, tp.List[Index]],
             *,
             indexers: NDArrayAny = EMPTY_ARRAY_INT,
             name: NameType = NAME_DEFAULT,

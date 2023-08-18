@@ -374,7 +374,7 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: object, # dtype, HeaderInitializer, or a type
+            value: tp.Union[DtypeAny, type, DisplayHeader],
             config: DisplayConfig,
             is_dtype: bool = False) -> DisplayCell:
         '''
@@ -429,7 +429,7 @@ class Display:
     def from_values(cls,
             values: NDArrayAny,
             *,
-            header: object,
+            header: tp.Union[DtypeAny, type, DisplayHeader],
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
