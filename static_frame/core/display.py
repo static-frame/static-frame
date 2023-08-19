@@ -21,7 +21,6 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import CallableToIterType
 from static_frame.core.util import gen_skip_middle
@@ -30,6 +29,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    THeaderSpecifier = tp.Union[DtypeAny, type, 'DisplayHeader', None]
 
 
 _module = sys.modules[__name__]
@@ -290,8 +290,6 @@ class DisplayHeader:
             return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
-THeaderSpecifier = tp.Union[DtypeAny, type, DisplayHeader, None]
-
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 
 # An NT that stores a formatted strings ``format_str`` as well as a ``raw`` string
@@ -429,7 +427,7 @@ class Display:
 
     @classmethod
     def from_values(cls,
-            values: NDArrayAny,
+            values: NDArrayAny | tp.Sequence[tp.Any],
             *,
             header: THeaderSpecifier,
             config: tp.Optional[DisplayConfig] = None,
@@ -454,10 +452,10 @@ class Display:
             else:
                 rows.append([cls.CELL_EMPTY])
 
-        if values.__class__ is np.ndarray and values.ndim == 2:
+        if values.__class__ is np.ndarray and values.ndim == 2: # type: ignore
             # NOTE: this is generally only used by TypeBlocks
             # get rows from numpy string formatting
-            np_rows = np.array_str(values).split('\n')
+            np_rows = np.array_str(values).split('\n') # type: ignore
             last_idx = len(np_rows) - 1
             for idx, row in enumerate(np_rows):
                 # trim brackets
@@ -487,7 +485,7 @@ class Display:
 
         # add the types to the last row
         if values.__class__ is np.ndarray and config.type_show:
-            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
+            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)]) # type: ignore
 
         return cls(rows,
                 config=config,
@@ -565,7 +563,7 @@ class Display:
         # prepare header display of container class
         header_displays = []
         if config.type_show:
-            display_cls = cls.from_values(EMPTY_ARRAY, header=header, config=config_transpose)
+            display_cls = cls.from_values((), header=header, config=config_transpose)
             header_displays.append(display_cls.flatten())
 
         #-----------------------------------------------------------------------
