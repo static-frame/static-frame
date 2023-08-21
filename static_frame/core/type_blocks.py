@@ -50,6 +50,7 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IntegerLocType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
@@ -177,7 +178,7 @@ def group_sorted(
         blocks: 'TypeBlocks',
         *,
         axis: int,
-        key: int,
+        key: GetItemKeyTypeCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
@@ -454,8 +455,8 @@ class TypeBlocks(ContainerOperand):
 
         # if a single block, no need to loop
         if raw_blocks.__class__ is np.ndarray:
-            if index.register(raw_blocks):
-                blocks.append(immutable_filter(raw_blocks))
+            if index.register(raw_blocks): # type: ignore
+                blocks.append(immutable_filter(raw_blocks)) # type: ignore
         else: # an iterable of blocks
             for block in raw_blocks:
                 # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
@@ -679,7 +680,7 @@ class TypeBlocks(ContainerOperand):
 
     @property
     def iloc(self) -> InterfaceGetItem: #type: ignore
-        return InterfaceGetItem(self._extract_iloc)
+        return InterfaceGetItem(self._extract_iloc) # type: ignore
 
     #---------------------------------------------------------------------------
     # common NP-style properties
@@ -1173,9 +1174,9 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def sort(self,
-            axis: int,
+            axis: int | np.integer[tp.Any],
             key: GetItemKeyTypeCompound,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Tuple[TypeBlocks, NDArrayAny]:
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
 
@@ -1222,7 +1223,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: GetItemKeyType,
             drop: bool = False,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
         '''
         Axis 0 groups on column values, axis 1 groups on row values
@@ -1246,7 +1247,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: int,
             extract: int,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, NDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
@@ -1411,7 +1412,7 @@ class TypeBlocks(ContainerOperand):
         func = partial(np.round, decimals=decimals)
         # for now, we do not expose application of rounding on a subset of blocks, but is doable by setting the column_key
         return self.__class__(
-                blocks=list(self._ufunc_blocks(column_key=NULL_SLICE, func=func)),
+                blocks=list(self._ufunc_blocks(column_key=NULL_SLICE, func=func)), # type: ignore
                 index=self._index.copy(),
                 )
 
@@ -1437,6 +1438,7 @@ class TypeBlocks(ContainerOperand):
         d: tp.Optional[Display] = None
         outermost = True # only for the first
         idx = 0
+        h: str | type
         for block in self._blocks:
             block = column_2d_filter(block)
             # NOTE: we do not expect 0 width arrays
@@ -1489,7 +1491,7 @@ class TypeBlocks(ContainerOperand):
                 raise KeyError(key) from e
         else: # all cases where we try to get contiguous slices
             try:
-                yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
+                yield from self._index.iter_contiguous(key, ascending=not retain_key_order) # type: ignore
             except TypeError as e:
                 # BlockIndex will raise TypeErrors in a number of cases of bad inputs; some of these are not easy to change
                 raise KeyError(key) from e
@@ -1891,13 +1893,13 @@ class TypeBlocks(ContainerOperand):
             # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors
             if not drop_block and not parts:
                 if row_key is not None:
-                    b = np.delete(b, row_key, axis=0)
+                    b = np.delete(b, row_key, axis=0) # type: ignore
                     b.flags.writeable = False
                 yield b
             elif parts:
                 if row_key is not None:
                     for part in parts:
-                        part = np.delete(part, row_key, axis=0)
+                        part = np.delete(part, row_key, axis=0) # type: ignore
                         part.flags.writeable = False
                         yield part
                 else:
@@ -1985,7 +1987,7 @@ class TypeBlocks(ContainerOperand):
             row_shift: int,
             column_shift: int,
             wrap: bool,
-            get_col_fill_value: tp.Callable[[int, DtypeAny], tp.Any],
+            get_col_fill_value: tp.Callable[[int, DtypeAny | None], tp.Any],
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``get_col_fill_value``.
@@ -2246,7 +2248,7 @@ class TypeBlocks(ContainerOperand):
     def _assign_from_iloc_by_unit(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            value: object = None
+            value: tp.Any = None
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign a single value (a tuple, array, or element) into all blocks, returning blocks of the same size and shape.
 
@@ -2264,7 +2266,7 @@ class TypeBlocks(ContainerOperand):
                 row_key=row_key,
                 column_key=column_key,
                 value=value,
-                assign_inner=assign_inner_from_iloc_by_unit,
+                assign_inner=assign_inner_from_iloc_by_unit, # type: ignore
                 )
 
 
@@ -2281,7 +2283,7 @@ class TypeBlocks(ContainerOperand):
                 row_key=row_key,
                 column_key=column_key,
                 value=value,
-                assign_inner=assign_inner_from_iloc_by_sequence,
+                assign_inner=assign_inner_from_iloc_by_sequence, # type: ignore
                 )
 
 
@@ -2781,12 +2783,12 @@ class TypeBlocks(ContainerOperand):
         return array
 
     def _extract_array_column(self,
-            key: int,
+            key: int | np.integer[tp.Any],
             ) -> NDArrayAny:
         '''Alternative extractor that returns full-column arrays from single integer selection.
         '''
         try:
-            block_idx, column = self._index[key]
+            block_idx, column = self._index[key] # type: ignore
         except IndexError as e:
             raise KeyError(key) from e
 
@@ -2986,7 +2988,7 @@ class TypeBlocks(ContainerOperand):
 
     def extract_iloc_assign_by_unit(self,
             key: tp.Tuple[GetItemKeyType, GetItemKeyType],
-            value: object,
+            value: tp.Any,
             ) -> 'TypeBlocks':
         '''
         Assign with value via a unit: a single array or element.
@@ -2999,7 +3001,7 @@ class TypeBlocks(ContainerOperand):
 
     def extract_iloc_assign_by_sequence(self,
             key: tp.Tuple[GetItemKeyType, GetItemKeyType],
-            value: object,
+            value: tp.Any,
             ) -> 'TypeBlocks':
         '''
         Assign with value via a unit: a single array or element.

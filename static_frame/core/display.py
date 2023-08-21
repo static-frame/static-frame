@@ -29,7 +29,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    THeaderSpecifier = tp.Union[DtypeAny, type, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
+    THeaderSpecifier = tp.Union[DtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
 
 
 _module = sys.modules[__name__]
