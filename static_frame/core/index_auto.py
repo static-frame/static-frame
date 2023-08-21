@@ -39,7 +39,7 @@ class IndexDefaultConstructorFactory(IndexConstructorFactoryBase):
         self._name = name
 
     def __call__(self,
-            labels: tp.Iterator[tp.Hashable],
+            labels: tp.Iterable[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
