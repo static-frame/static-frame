@@ -974,7 +974,7 @@ def concat_resolved(
     return out
 
 def blocks_to_array_2d(
-        blocks: tp.Iterator[NDArrayAny],
+        blocks: tp.Iterable[NDArrayAny], # can be iterator
         shape: tp.Optional[tp.Tuple[int, int]] = None,
         dtype: tp.Optional[DtypeAny] = None,
         ) -> NDArrayAny:
@@ -3483,7 +3483,7 @@ class JSONTranslator(JSONFilter):
 
 def slices_from_targets(
         target_index: tp.Sequence[int],
-        target_values: tp.Sequence[tp.Any],
+        target_values: tp.Iterable[tp.Any],
         length: int,
         directional_forward: bool,
         limit: int,

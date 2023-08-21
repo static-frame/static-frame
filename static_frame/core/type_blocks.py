@@ -1057,7 +1057,7 @@ class TypeBlocks(ContainerOperand):
     def resize_blocks_by_callable(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
-            fill_value: tp.Callable[[int, DtypeAny], tp.Any]
+            fill_value: tp.Callable[[int, DtypeAny | None], tp.Any]
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
@@ -3173,7 +3173,7 @@ class TypeBlocks(ContainerOperand):
         if columnar:
             return self.from_blocks(apply_binary_operator_blocks_columnar(
                     values=self_operands,
-                    other=other,
+                    other=other, # type: ignore
                     operator=operator,
                     ))
 
@@ -3303,14 +3303,16 @@ class TypeBlocks(ContainerOperand):
         upper_is_array = upper.__class__ is np.ndarray
 
         # get a mutable list in reverse order for pop/pushing
+        lower_source: None | float | NDArrayAny | tp.List[NDArrayAny]
         if lower_is_element or lower_is_array:
-            lower_source = lower
+            lower_source = lower # type: ignore
         else:
             lower_source = list(lower) #type: ignore
             lower_source.reverse()
 
+        upper_source: None | float | NDArrayAny | tp.List[NDArrayAny]
         if upper_is_element or upper_is_array:
-            upper_source = upper
+            upper_source = upper # type: ignore
         else:
             upper_source = list(upper) #type: ignore
             upper_source.reverse()
@@ -3696,7 +3698,7 @@ class TypeBlocks(ContainerOperand):
                             return sel[target_slice.start, i] # type: ignore
 
                     for target_slice, value in slices_from_targets(
-                            target_index=target_index,
+                            target_index=target_index, # type: ignore
                             target_values=target_values,
                             length=length,
                             directional_forward=directional_forward,
@@ -3780,7 +3782,7 @@ class TypeBlocks(ContainerOperand):
                         bridging_count = np.full(b.shape[0], 0)
 
                     bridging_values = assigned
-                    bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
+                    bridging_isna = isna_array(bridging_values) # type: ignore # must reevaluate if assigned
 
                 elif ndim == 2:
 
@@ -3866,7 +3868,7 @@ class TypeBlocks(ContainerOperand):
                             bridging_count[i] = len(range(*target_slice.indices(length))) # type: ignore
 
                     bridging_values = assigned[:, bridge_src_index]
-                    bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
+                    bridging_isna = isna_array(bridging_values) # type: ignore
 
                     # if the birdging values is NaN now, it could not be filled, or was not filled enough, and thus does not continue a count; can set to zero
                     bridging_count_reset |= bridging_isna
@@ -4036,14 +4038,12 @@ class TypeBlocks(ContainerOperand):
     def fill_missing_by_callable(self,
             *,
             func_missing: tp.Callable[[NDArrayAny], NDArrayAny],
-            get_col_fill_value: tp.Callable[[int], tp.Any]
+            get_col_fill_value: tp.Callable[[int, DtypeAny | None], tp.Any]
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
 
         Args:
-            value: value to fill missing with; can be an element or a same-sized array.
-            value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
             func_missing: A function that takes an array and returns a Boolean array.
         '''
         return self.from_blocks(
