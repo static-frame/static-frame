@@ -409,9 +409,10 @@ IndexInitializer = tp.Union[
         tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
         ]
 
-IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
+IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase'] | tp.Type['Index']]
 IndexConstructors = tp.Union[IndexConstructor,
         tp.Sequence[IndexConstructor],
+        tp.Iterator[IndexConstructor],
         np.ndarray, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],

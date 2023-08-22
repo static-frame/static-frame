@@ -116,7 +116,7 @@ class IndexAutoFactory:
 
         if explicit_constructor:
             # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
-            if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime): # type: ignore
+            if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime):
                 raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
             if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
                 return explicit_constructor(labels,

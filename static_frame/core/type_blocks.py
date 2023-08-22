@@ -466,7 +466,7 @@ class TypeBlocks(ContainerOperand):
             # blocks can be empty, and index with no registration has rows as -1
             if index.rows < 0:
                 if shape_reference is not None:
-                    index.register(EMPTY_ARRAY.reshape(shape_reference[0], 0))
+                    index.register(EMPTY_ARRAY.reshape(shape_reference[0], 0)) # type: ignore
                 else:
                     raise ErrorInitTypeBlocks('cannot derive a row_count from blocks; provide a shape reference')
         return cls(
