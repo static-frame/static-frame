@@ -110,7 +110,7 @@ IH = tp.TypeVar('IH', bound='IndexHierarchy')
 IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
 IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
-SingleLabelType = tp.Tuple[tp.Hashable, ...]
+SingleLabelType = tp.Sequence[tp.Hashable]
 TreeNodeT = tp.Dict[tp.Hashable, tp.Union[Index, 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
@@ -2981,7 +2981,7 @@ class IndexHierarchyAsType:
         else:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a depth selection other than the NULL slice')
-            gen = self.container._blocks._astype_blocks(self.depth_key, dtypes)
+            gen = self.container._blocks._astype_blocks(self.depth_key, dtypes) # type: ignore
 
         if consolidate_blocks:
             gen = TypeBlocks.consolidate_blocks(gen)

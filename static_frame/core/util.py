@@ -412,6 +412,7 @@ IndexInitializer = tp.Union[
 IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
 IndexConstructors = tp.Union[IndexConstructor,
         tp.Sequence[IndexConstructor],
+        np.ndarray, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],
         ]

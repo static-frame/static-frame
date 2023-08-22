@@ -438,7 +438,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_blocks(cls,
             raw_blocks: tp.Iterable[NDArrayAny],
-            shape_reference: tp.Optional[tp.Tuple[int, int]] = None
+            shape_reference: tp.Optional[ShapeType] = None
             ) -> 'TypeBlocks':
         '''
         Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
@@ -1615,7 +1615,7 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Optional[tp.Callable[[int], DtypeAny]],
+            dtype_factory: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray.
