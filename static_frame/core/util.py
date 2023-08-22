@@ -245,10 +245,12 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # use this as a repalcement for tp.Hashable
-# NOTE: add slice?
+# NOTE: slice is not hashable
 LabelType = tp.Union[
         tp.Hashable,
         int,
+        bool,
+        np.bool_,
         np.integer,
         float,
         complex,
@@ -257,6 +259,7 @@ LabelType = tp.Union[
         bytes,
         None,
         np.datetime64,
+        np.timedelta64,
         datetime.date,
         tp.Tuple['LabelType'],
 ]
