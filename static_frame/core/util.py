@@ -244,14 +244,32 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
+# use this as a repalcement for tp.Hashable
+# NOTE: add slice?
+LabelType = tp.Union[
+        tp.Hashable,
+        int,
+        np.integer,
+        float,
+        complex,
+        np.inexact,
+        str,
+        bytes,
+        None,
+        np.datetime64,
+        datetime.date,
+        tp.Tuple['LabelType'],
+]
+
+
 # for type hinting
 CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
 
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
         int,
-        str,
         np.integer,
+        str,
         slice,
         tp.Hashable,
         tp.List[tp.Any],
