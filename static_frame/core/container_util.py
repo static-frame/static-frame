@@ -157,7 +157,7 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
 
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        columns: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase],
         index_depth: int = 0,
         ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
@@ -961,7 +961,7 @@ def get_block_match(
             break
 
 def bloc_key_normalize(
-        key: Bloc2DKeyType,
+        key: Bloc2DKeyType | None,
         container: 'Frame'
         ) -> NDArrayAny:
     '''

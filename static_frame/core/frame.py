@@ -2311,7 +2311,7 @@ class Frame(ContainerOperand):
             line_select = None
 
         get_col_dtype = (None if dtypes is None
-                else get_col_dtype_factory(dtypes, columns, index_depth)) #type: ignore
+                else get_col_dtype_factory(dtypes, columns, index_depth))
         values_arrays: tp.Sequence[NDArrayAny] = delimited_to_arrays(
                 row_iter,
                 axis=1, # process type per column
@@ -3182,7 +3182,7 @@ class Frame(ContainerOperand):
                             own_data=True,
                             )
                 elif issubclass(cls, IndexHierarchy):
-                    index_constructors=[
+                    index_constructors: tp.List[tp.Type[Index]] = [
                             ContainerMap.get(cls_name) for cls_name in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
@@ -5743,7 +5743,7 @@ class Frame(ContainerOperand):
 
         if len(labels) > 1:
             # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
-            group_source = blocks_to_array_2d(labels) # type: ignore
+            group_source = blocks_to_array_2d(labels)
             if use_sorted:
                 group_source = group_source[ordering]
         else:
@@ -8694,7 +8694,7 @@ class Frame(ContainerOperand):
             {store_filter}
         '''
         with file_like_manager(fp, encoding=encoding, mode='w') as fl:
-            csvw = csv.writer(fl,
+            csvw = csv.writer(fl, # type: ignore
                     delimiter=delimiter,
                     escapechar=escape_char,
                     quotechar=quote_char,
@@ -9053,7 +9053,7 @@ class Frame(ContainerOperand):
 
         if show:
             import webbrowser  # pragma: no cover
-            webbrowser.open_new_tab(fp) #pragma: no cover
+            webbrowser.open_new_tab(fp) #type: ignore #pragma: no cover
         return fp
 
     def to_rst(self,
@@ -9423,9 +9423,9 @@ class FrameAssignBLoc(FrameAssign):
             columns = self.container._columns
 
             # cannot assume order of coordinates, so create a mapping for lookup by coordinate
-            values_map = {}
+            values_map: tp.Dict[tp.Tuple[int, int], tp.Any] = {}
             for (i, c), e in value.items():
-                values_map[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e
+                values_map[index._loc_to_iloc(i), columns._loc_to_iloc(c)] = e # type: ignore
 
             # NOTE: should we pass dtype here, or re-evaluate dtype from observed values for each block?
             blocks = self.container._blocks.extract_bloc_assign_by_coordinate(
@@ -9500,7 +9500,7 @@ class FrameAsType:
         else:
             if not is_dtype_specifier(dtypes):
                 raise RuntimeError('must supply a single dtype specifier if using a column selection other than the NULL slice')
-            gen = self.container._blocks._astype_blocks(self.column_key, dtypes)
+            gen = self.container._blocks._astype_blocks(self.column_key, dtypes) # type: ignore
 
         if consolidate_blocks:
             gen = TypeBlocks.consolidate_blocks(gen)
