@@ -191,6 +191,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -5614,7 +5615,7 @@ class Frame(ContainerOperand):
             drop_mask[key] = False
 
         # NOTE: in limited studies using stable does not show significant overhead
-        kind = DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
+        kind: TSortKinds = DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
         try:
             blocks, ordering = blocks.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -6028,7 +6029,7 @@ class Frame(ContainerOperand):
             *,
             ascending: BoolOrBools = True,
             axis: int = 1,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[NDArrayAny, 'Series', 'Frame']]] = None,
             ) -> tpe.Self:
         '''
@@ -6047,7 +6048,7 @@ class Frame(ContainerOperand):
         cfs: NDArrayAny | Series | Frame | TypeBlocks
 
         if axis == 0: # get a column ordering based on one or more rows
-            iloc_key = self._index._loc_to_iloc(label)
+            iloc_key = self._index._loc_to_iloc(label) # type: ignore
             if key:
                 cfs = key(self._extract(row_key=iloc_key))
                 cfs_is_array = cfs.__class__ is np.ndarray
@@ -6075,7 +6076,7 @@ class Frame(ContainerOperand):
                             for i in range(cfs.shape[0]-1, -1, -1)]
 
         elif axis == 1: # get a row ordering based on one or more columns
-            iloc_key = self._columns._loc_to_iloc(label)
+            iloc_key = self._columns._loc_to_iloc(label) # type: ignore
             if key:
                 cfs = key(self._extract(column_key=iloc_key))
                 cfs_is_array = cfs.__class__ is np.ndarray
@@ -6203,7 +6204,7 @@ class Frame(ContainerOperand):
                 raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
-        blocks = self._blocks.clip(*args)
+        blocks = self._blocks.clip(*args) # type: ignore
 
         return self.__class__(blocks,
                 columns=self._columns,
@@ -6865,7 +6866,7 @@ class Frame(ContainerOperand):
         asc_is_element = isinstance(ascending, BOOL_TYPES)
 
         if not asc_is_element:
-            ascending = tuple(ascending)
+            ascending = tuple(ascending) # type: ignore
             opposite_axis = int(not axis)
             if len(ascending) != shape[opposite_axis]:
                 raise RuntimeError(f'Multiple ascending values must match length of axis {opposite_axis}.')
@@ -7610,8 +7611,9 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # have final fields and normalized function representation
         all_fields = list(chain(index_fields, columns_fields, data_fields))
+        frame: Frame
         if len(all_fields) < len(self.columns):
-            frame = self._extract_loc_columns(all_fields)
+            frame = self._extract_loc_columns(all_fields) # type: ignore
         else:
             frame = self
         from static_frame.core.pivot import pivot_core
@@ -8008,7 +8010,7 @@ class Frame(ContainerOperand):
 
         columns = self._columns.__class__.from_labels(chain(
                 labels_prior[:key],
-                labels_insert,
+                labels_insert, # type: ignore
                 labels_prior[key:],
                 ))
 
@@ -8307,7 +8309,7 @@ class Frame(ContainerOperand):
         import msgpack_numpy
 
         def encode(obj: tp.Union[ContainerOperand, IndexBase, NDArrayAny],
-                chain: tp.Callable[[NDArrayAny], tp.Dict[bytes, tp.Any]] = msgpack_numpy.encode,
+                chain: tp.Callable[[tp.Any], tp.Dict[bytes, tp.Any]] = msgpack_numpy.encode,
                 ) -> tp.Dict[bytes, tp.Any]: #returns dict that msgpack-python consumes
             cls = obj.__class__
             cls_name = cls.__name__

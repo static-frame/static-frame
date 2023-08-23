@@ -308,7 +308,7 @@ IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
-TupleConstructorType = tp.Callable[[tp.Iterator[tp.Any]], tp.Tuple[tp.Any, ...]]
+TupleConstructorType = tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any, ...]]
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
@@ -3413,7 +3413,7 @@ class JSONFilter:
 
     @classmethod
     def encode_iterable(cls,
-            iterable: tp.Iterator[tp.Any],
+            iterable: tp.Iterable[tp.Any],
             ) -> tp.Any:
         '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
         '''

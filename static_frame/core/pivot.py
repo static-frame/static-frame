@@ -615,7 +615,7 @@ class PivotIndexMap(tp.NamedTuple):
 def pivot_index_map(*,
         index_src: IndexBase,
         depth_level: DepthLevelSpecifier,
-        dtypes_src: tp.Optional[tp.Sequence[DtypeAny | None]],
+        dtypes_src: NDArrayAny | None, # array of dtypes
         ) -> PivotIndexMap:
     '''
     Args:
@@ -695,8 +695,7 @@ def pivot_derive_constructors(*,
         group_select: NDArrayAny, # Boolean
         group_depth: int,
         target_select: NDArrayAny,
-        # target_depth: int,
-        group_to_target_map: tp.Dict[tp.Hashable, tp.Tuple[tp.Hashable]],
+        group_to_target_map: tp.Dict[tp.Optional[tp.Hashable], tp.Dict[tp.Any, int]],
         expand_is_columns: bool,
         frame_cls: tp.Type['Frame'],
         ) -> PivotDeriveConstructors:

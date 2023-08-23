@@ -211,8 +211,8 @@ def get_col_dtype_factory(
 
 def get_col_fill_value_factory(
         fill_value: tp.Any,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int, DtypeAny], tp.Any]:
+        columns: tp.Optional[tp.Sequence[tp.Hashable]] | IndexBase,
+        ) -> tp.Callable[[int, DtypeAny | None], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
