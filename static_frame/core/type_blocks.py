@@ -3700,7 +3700,7 @@ class TypeBlocks(ContainerOperand):
                             return sel[target_slice.start, i] # type: ignore
 
                     for target_slice, value in slices_from_targets(
-                            target_index=target_index, # type: ignore
+                            target_index=target_index,
                             target_values=target_values,
                             length=length,
                             directional_forward=directional_forward,

@@ -329,7 +329,7 @@ def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return isinstance(value, (dict, Series))
 
-def is_callable_or_mapping(value: CallableOrMapping) -> bool:
+def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
@@ -3505,7 +3505,7 @@ class JSONTranslator(JSONFilter):
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(
-        target_index: tp.Sequence[int],
+        target_index: tp.Sequence[int] | NDArrayAny,
         target_values: tp.Iterable[tp.Any],
         length: int,
         directional_forward: bool,

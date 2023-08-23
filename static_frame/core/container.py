@@ -362,7 +362,6 @@ class ContainerOperandSequence(ContainerBase):
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 
-
     @doc_inject(selector='ufunc_skipna')
     def all(self,
             axis: int = 0,

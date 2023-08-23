@@ -95,6 +95,7 @@ from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
@@ -173,7 +174,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
 
-        length = len(index_final)
+        length = len(index_final) # type: ignore
         dtype = None if dtype is None else np.dtype(dtype)
         array = full_for_fill(
                 dtype,
@@ -253,7 +254,7 @@ class Series(ContainerOperand):
                 quoting=quoting,
                 quotechar=quote_char,
                 doublequote=quote_double,
-                escapechar=escape_char,
+                escapechar=escape_char, # type: ignore
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
                 skipinitialspace=skip_initial_space,
@@ -571,10 +572,10 @@ class Series(ContainerOperand):
             if values.shape == (): # type: ignore
                 # handle special case of NP element
                 def values_constructor(count: int) -> None: #pylint: disable=E0102
-                    self.values = np.repeat(values, count)
+                    self.values = np.repeat(values, count) # type: ignore
                     self.values.flags.writeable = False
             else:
-                self.values = immutable_filter(values)
+                self.values = immutable_filter(values) # type: ignore
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
@@ -706,7 +707,7 @@ class Series(ContainerOperand):
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItem(self._extract_iloc)
+        return InterfaceGetItem(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Series']:
@@ -1076,7 +1077,7 @@ class Series(ContainerOperand):
 
     def _reindex_other_like_iloc(self,
             value: 'Series',
-            iloc_key: GetItemKeyType,
+            iloc_key: IntegerLocType,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
@@ -1103,20 +1104,23 @@ class Series(ContainerOperand):
             {fill_value}
             {own_index}
         '''
-        if not own_index:
-            index = index_from_optional_constructor(index,
+        index_owned: IndexBase
+        if own_index:
+            index_owned = index # type: ignore
+        else:
+            index_owned = index_from_optional_constructor(index,
                     default_constructor=Index)
 
         # NOTE: it is assumed that the equals comparison is faster than continuing with this method
-        if check_equals and self._index.equals(index):
+        if check_equals and self._index.equals(index_owned):
             # if labels are equal (even if a different Index subclass), we can simply use the new Index
             return self.__class__(
                     self.values,
-                    index=index,
+                    index=index_owned,
                     own_index=True,
                     name=self._name)
 
-        ic = IndexCorrespondence.from_correspondence(self._index, index)
+        ic = IndexCorrespondence.from_correspondence(self._index, index_owned)
         if not ic.size:
             # NOTE: take slice to ensure same type of index and array
             return self._extract_iloc(EMPTY_SLICE) # type: ignore
@@ -1126,7 +1130,7 @@ class Series(ContainerOperand):
             values.flags.writeable = False
             return self.__class__(
                     values,
-                    index=index,
+                    index=index_owned,
                     own_index=True,
                     name=self._name)
 
@@ -1135,14 +1139,14 @@ class Series(ContainerOperand):
         else:
             fv = fill_value
 
-        values = full_for_fill(self.values.dtype, len(index), fv)
+        values = full_for_fill(self.values.dtype, len(index_owned), fv)
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src] # type: ignore
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=index,
+                index=index_owned,
                 own_index=True,
                 name=self._name)
 
@@ -1234,11 +1238,11 @@ class Series(ContainerOperand):
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
-        if self.index.depth == 1:
+        if self._index.depth == 1:
             raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
         index, iloc_map = rehierarch_from_index_hierarchy(
-                labels=self._index,
+                labels=self._index, # type: ignore
                 depth_map=depth_map,
                 index_constructors=index_constructors,
                 name=self._index.name,
@@ -1934,12 +1938,12 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
+    def _drop_iloc(self, key: IntegerLocType) -> 'Series':
         if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
-            values = np.delete(self.values, self._index.positions[key]) # type: ignore
+            values = np.delete(self.values, self._index.positions[key])
         else:
-            values = np.delete(self.values, key)
+            values = np.delete(self.values, key) # type: ignore
         values.flags.writeable = False
 
         index = self._index._drop_iloc(key)
@@ -1985,7 +1989,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
+    def _extract_iloc_assign(self, key: IntegerLocType) -> 'SeriesAssign':
         return SeriesAssign(self, key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
@@ -2229,7 +2233,7 @@ class Series(ContainerOperand):
     def sort_values(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']]] = None,
             ) -> tpe.Self:
         '''
@@ -2308,7 +2312,7 @@ class Series(ContainerOperand):
             else:
                 args.append(arg)
 
-        array = np.clip(self.values, *args) # pylint: disable=E1120
+        array = np.clip(self.values, *args) # type: ignore # pylint: disable=E1120
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 
@@ -3133,7 +3137,7 @@ class Series(ContainerOperand):
 
         index = self._index.__class__.from_labels(chain(
                 labels_prior[:key],
-                container._index.__iter__(),
+                container._index.__iter__(), # type: ignore
                 labels_prior[key:],
                 ))
 
@@ -3537,7 +3541,7 @@ class SeriesAssign(Assign):
 
     def __init__(self,
             container: Series,
-            key: GetItemKeyType
+            key: IntegerLocType,
             ) -> None:
         '''
         Args:
