@@ -54,8 +54,10 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -805,7 +807,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                             if f is FrameDeferred),
                     max_persist=self._max_persist,
                     )
-            targets_items = zip(target_labels, target_values)
+            targets_items = zip(target_labels, target_values) # type: ignore
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items:
@@ -900,7 +902,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Bus':
+    def _drop_iloc(self, key: IntegerLocType) -> 'Bus':
         series = self._to_series_state()._drop_iloc(key)
         return self._derive_from_series(series, own_data=True)
 
@@ -1330,7 +1332,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def sort_values(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']],
             ) -> 'Bus':
         '''
