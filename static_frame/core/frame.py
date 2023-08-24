@@ -192,6 +192,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import TSortKinds
+from static_frame.core.util import TupleConstructorType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -5486,7 +5487,7 @@ class Frame(ContainerOperand):
 
     def _axis_tuple(self, *,
             axis: int,
-            constructor: tp.Optional[tp.Type[tp.Tuple[tp.Hashable, ...]]] = None,
+            constructor: tp.Optional[TupleConstructorType] = None,
             ) -> tp.Iterator[tp.NamedTuple]:
         '''Generator of named tuples across an axis.
 
@@ -5513,7 +5514,7 @@ class Frame(ContainerOperand):
             else: # assume it can take a single arguments
                 ctor = constructor
         else:
-            ctor = constructor #type: ignore
+            ctor = constructor
 
         # NOTE: if all types are the same, it will be faster to use axis_values
         if axis == 1 and not self._blocks.unified_dtypes:
@@ -5524,7 +5525,7 @@ class Frame(ContainerOperand):
 
     def _axis_tuple_items(self, *,
             axis: int,
-            constructor: tp.Optional[tp.Type[tp.Tuple[tp.Hashable, ...]]] = None,
+            constructor: tp.Optional[TupleConstructorType] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))

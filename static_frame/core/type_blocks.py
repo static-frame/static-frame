@@ -74,6 +74,7 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import TupleConstructorType
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -2811,7 +2812,7 @@ class TypeBlocks(ContainerOperand):
     def iter_row_tuples(self,
             key: tp.Optional[GetItemKeyTypeCompound],
             *,
-            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
+            constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns. This interface yields all rows in the TypeBlocks.
         '''
@@ -2837,7 +2838,7 @@ class TypeBlocks(ContainerOperand):
     def iter_columns_tuples(self,
             key: tp.Optional[GetItemKeyTypeCompound],
             *,
-            constructor: tp.Type[tp.Tuple[tp.Any, ...]] = tuple,
+            constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per column of values based on a selection of one or more rows. This interface yields all columns in the TypeBlocks.
         '''
