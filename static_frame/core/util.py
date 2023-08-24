@@ -310,7 +310,7 @@ KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
 TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
-Bloc2DKeyType = tp.Union['Frame', np.ndarray]
+TBlocKey = tp.Union['Frame', np.ndarray, None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
 
 UFunc = tp.Callable[..., np.ndarray]

@@ -495,8 +495,8 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_zero_size_shape(cls,
-            shape: tp.Tuple[int, int] = (0, 0),
-            get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]] = None,
+            shape: ShapeType = (0, 0),
+            get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
@@ -2799,7 +2799,7 @@ class TypeBlocks(ContainerOperand):
         return b[NULL_SLICE, column]
 
     def iter_row_elements(self,
-            key: int,
+            key: int | np.integer[tp.Any],
             ) -> tp.Iterator[tp.Any]:
         '''Alternative extractor that yields a full-row of values from a single integer selection. This will avoid any type coercion.
         '''

@@ -33,7 +33,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import TBlocKey
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
@@ -431,7 +431,7 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
         pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[NDArrayAny]:
@@ -527,7 +527,7 @@ def constructor_from_optional_constructor(
     return func
 
 def index_from_optional_constructors(
-        value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+        value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable], tp.Iterable[NDArrayAny]],
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -571,9 +571,7 @@ def constructor_from_optional_constructors(
         depth: int,
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
-        ) -> tp.Callable[
-                [tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]]],
-                tp.Optional['IndexBase']]:
+        ) -> tp.Callable[..., tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
@@ -961,7 +959,7 @@ def get_block_match(
             break
 
 def bloc_key_normalize(
-        key: Bloc2DKeyType | None,
+        key: TBlocKey,
         container: 'Frame'
         ) -> NDArrayAny:
     '''

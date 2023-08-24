@@ -101,7 +101,9 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import FrameOrSeries
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
@@ -143,7 +145,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import TBlocKey
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import DepthLevelSpecifier
@@ -194,6 +196,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import ShapeType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -1840,6 +1843,7 @@ class Frame(ContainerOperand):
                         )
 
             row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]]
+            index_constructor: IndexConstructor | None
             if index_depth == 0:
                 index = None
                 row_gen = lambda: cursor # type: ignore
@@ -2213,7 +2217,7 @@ class Frame(ContainerOperand):
                             quoting=quoting,
                             quotechar=quote_char,
                             doublequote=quote_double,
-                            escapechar=escape_char,
+                            escapechar=escape_char, # type: ignore
                             )
 
                 [array_right] = delimited_to_arrays(
@@ -2223,7 +2227,7 @@ class Frame(ContainerOperand):
                         quoting=quoting,
                         quotechar=quote_char,
                         doublequote=quote_double,
-                        escapechar=escape_char,
+                        escapechar=escape_char, # type: ignore
                         thousandschar=thousands_char,
                         decimalchar=decimal_char,
                         skipinitialspace=skip_initial_space,
@@ -2238,7 +2242,7 @@ class Frame(ContainerOperand):
                             quoting=quoting,
                             quotechar=quote_char,
                             doublequote=quote_double,
-                            escapechar=escape_char,
+                            escapechar=escape_char, # type: ignore
                             thousandschar=thousands_char,
                             decimalchar=decimal_char,
                             skipinitialspace=skip_initial_space,
@@ -2306,8 +2310,8 @@ class Frame(ContainerOperand):
             if columns is not None:
                 columns_included = list(columns.loc_to_iloc(l) for l in columns_select)
                 columns = columns.iloc[columns_included]
-            else: # assume columsn_select are integers
-                columns_included = list(columns_select)
+            else: # assume columns_select are integers
+                columns_included = list(columns_select) # type: ignore
             # order of columns_included maters
             line_select = set(columns_included).__contains__
         else:
@@ -2323,7 +2327,7 @@ class Frame(ContainerOperand):
                 quoting=quoting,
                 quotechar=quote_char,
                 doublequote=quote_double,
-                escapechar=escape_char,
+                escapechar=escape_char, # type: ignore
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
                 skipinitialspace=skip_initial_space,
@@ -2372,7 +2376,7 @@ class Frame(ContainerOperand):
                 )
 
         if index_depth == 0:
-            return cls(index=None, **kwargs)
+            return cls(index=None, **kwargs) # type: ignore
 
         index_name = None if columns_depth == 0 else apex_to_name(
                 rows=apex_rows,
@@ -2397,7 +2401,7 @@ class Frame(ContainerOperand):
         elif index_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
             # expect all index_arrays to have the same length
             index_values = zip(*index_arrays)
-            index_constructor = partial(IndexHierarchy.from_labels,
+            index_constructor = partial(IndexHierarchy.from_labels, # type: ignore
                     name=index_name,
                     continuation_token=index_continuation_token,
                     )
@@ -2409,7 +2413,7 @@ class Frame(ContainerOperand):
                     )
         else: # index_depth > 1, no continuation toke`n
             index_constructor = partial(
-                    IndexHierarchy.from_values_per_depth,
+                    IndexHierarchy.from_values_per_depth, # type: ignore
                     name=index_name,
                     )
             index, own_index = index_from_optional_constructors(
@@ -2421,7 +2425,7 @@ class Frame(ContainerOperand):
         return cls(
                 index=index,
                 own_index=own_index,
-                **kwargs
+                **kwargs # type: ignore
                 )
 
     @classmethod
@@ -2429,7 +2433,7 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
@@ -2491,7 +2495,7 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
@@ -2554,7 +2558,7 @@ class Frame(ContainerOperand):
             *,
             delimiter: str = '\t',
             index_depth: int = 0,
-            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
@@ -2971,10 +2975,7 @@ class Frame(ContainerOperand):
             apex_labels = None
             index_arrays = None
 
-        if columns_depth > 0:
-            columns_labels: tp.Optional[tp.Sequence[tp.Hashable]] = []
-        else:
-            columns_labels = None
+        columns_labels: tp.List[tp.Hashable] = []
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
@@ -3015,7 +3016,7 @@ class Frame(ContainerOperand):
 
                 if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
-                    columns_labels.append(name) # type: ignore
+                    columns_labels.append(name)
 
                 yield array_final
 
@@ -3037,7 +3038,7 @@ class Frame(ContainerOperand):
                     name=columns_name)
         else:
             columns_default_constructor = partial(
-                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
+                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited, # type: ignore
                     delimiter=' ',
                     name=columns_name)
 
@@ -3260,7 +3261,7 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # blocks assignment
 
-        blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, ...]], None]] = None
+        blocks_constructor: tp.Optional[tp.Callable[[ShapeType], None]] = None
 
         if data.__class__ is TypeBlocks:
             if own_data:
@@ -3272,11 +3273,11 @@ class Frame(ContainerOperand):
             if own_data:
                 data.flags.writeable = False # type: ignore
             # from_blocks will apply immutable filter
-            self._blocks = TypeBlocks.from_blocks(data)
+            self._blocks = TypeBlocks.from_blocks(data) # type: ignore
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
-            def blocks_constructor(shape: tp.Tuple[int, ...]) -> None: #pylint: disable=E0102
-                if shape[0] > 0 and shape[1] > 0:
+            def blocks_constructor(shape: ShapeType) -> None: #pylint: disable=E0102
+                if shape[0] > 0 and shape[1] > 0: # type: ignore
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)
@@ -3457,16 +3458,16 @@ class Frame(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound['Frame']:
+    def loc(self) -> InterfaceGetItemCompound[FrameOrSeries]:
         return InterfaceGetItemCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound['Frame']:
+    def iloc(self) -> InterfaceGetItemCompound[FrameOrSeries]:
         return InterfaceGetItemCompound(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItemCompound['Frame']:
-        return InterfaceGetItemCompound(self._extract_bloc)
+    def bloc(self) -> InterfaceGetItemBLoc['Series']:
+        return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Frame']:
@@ -3991,7 +3992,9 @@ class Frame(ContainerOperand):
         # assert iloc_key.__class__ is tuple # must already be normalized
         assert is_series ^ is_frame # one must be True
 
-        row_key, column_key = iloc_key
+        row_key: IntegerLocType
+        column_key: IntegerLocType
+        row_key, column_key = iloc_key # type: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
@@ -4066,7 +4069,7 @@ class Frame(ContainerOperand):
                 columns_owned = index_from_optional_constructor(columns,
                         default_constructor=self._COLUMNS_CONSTRUCTOR)
             else:
-                columns_owned = columns
+                columns_owned = columns # type: ignore
 
             if check_equals and self._columns.equals(columns):
                 columns_ic = None
@@ -5100,7 +5103,7 @@ class Frame(ContainerOperand):
                 self._columns._loc_to_iloc(key),
                 )
 
-    def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
+    def _extract_bloc(self, key: TBlocKey) -> Series:
         '''
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
@@ -5216,7 +5219,7 @@ class Frame(ContainerOperand):
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssignBLoc':
+    def _extract_bloc_assign(self, key: TBlocKey) -> 'FrameAssignBLoc':
         '''Assignment based on a Boolean Frame or array.'''
         return FrameAssignBLoc(self, key=key)
 
@@ -7080,7 +7083,7 @@ class Frame(ContainerOperand):
         Args:
             {count}
         '''
-        return self.iloc[:count]
+        return self.iloc[:count] # type: ignore
 
     @doc_inject(selector='tail', class_name='Frame')
     def tail(self, count: int = 5) -> 'Frame':
@@ -7089,7 +7092,7 @@ class Frame(ContainerOperand):
         Args:
             {count}
         '''
-        return self.iloc[-count:]
+        return self.iloc[-count:] # type: ignore
 
 
     def count(self, *,
@@ -9402,7 +9405,7 @@ class FrameAssignBLoc(FrameAssign):
 
     def __init__(self,
             container: Frame,
-            key: tp.Optional[Bloc2DKeyType] = None,
+            key: TBlocKey = None,
             ) -> None:
         '''
         Args:

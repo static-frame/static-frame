@@ -2053,7 +2053,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     def _extract_iloc_by_int(self,
-            key: int,
+            key: int | np.integer[tp.Any],
             ) -> tp.Tuple[tp.Hashable, ...]:
         '''Extract a single row as a tuple (without coercion) given an iloc integer key. This interface is overwhelmingly for compatibility with Index.
         '''

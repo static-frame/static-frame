@@ -12,6 +12,8 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TBlocKey
+
 
 # from static_frame.core.util import AnyCallable
 
@@ -93,6 +95,20 @@ class InterfaceGetItemCompound(Interface[TContainer]):
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> TContainer:
         return self._func(key)
+
+class InterfaceGetItemBLoc(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TBlocKey], TContainer]
+
+    def __init__(self, func: tp.Callable[[TBlocKey], TContainer]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TBlocKey) -> TContainer:
+        return self._func(key)
+
 
 #-------------------------------------------------------------------------------
 

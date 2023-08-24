@@ -135,10 +135,10 @@ class Quilt(ContainerBase, StoreClientMixin):
                     label = label_extractor(f.index)
                     axis_map_components[label] = f.index # type: ignore
                     if opposite is None:
-                        opposite = f.columns
+                        opposite = f.columns # type: ignore
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns)
+                    label = label_extractor(f.columns) # type: ignore
                     axis_map_components[label] = f.columns # type: ignore
                     if opposite is None:
                         opposite = f.index

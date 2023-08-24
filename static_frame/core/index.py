@@ -954,7 +954,7 @@ class Index(IndexBase):
                 )
 
     def _extract_iloc_by_int(self,
-            key: int,
+            key: int | np.integer[tp.Any],
             ) -> tp.Any:
         '''Extract an element given an iloc integer key.
         '''

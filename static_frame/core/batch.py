@@ -44,7 +44,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import TBlocKey
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
@@ -687,7 +687,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 key=key
                 )
 
-    def _extract_bloc(self, key: Bloc2DKeyType) -> 'Batch':
+    def _extract_bloc(self, key: TBlocKey) -> 'Batch':
         return self._apply_attr(
                 attr='_extract_bloc',
                 key=key
