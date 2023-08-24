@@ -1098,7 +1098,7 @@ def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
         row_count: int,
         ) -> NDArrayAny:
     '''
@@ -1442,7 +1442,7 @@ def index_many_to_one(
         indices: tp.Iterable[IndexBase | IMTOAdapter],
         cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
-        explicit_constructor: tp.Optional[IndexInitializer] = None,
+        explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> 'IndexBase':
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.

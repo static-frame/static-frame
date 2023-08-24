@@ -260,7 +260,7 @@ class Frame(ContainerOperand):
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
-            dtypes: DtypeSpecifier = None,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -531,7 +531,7 @@ class Frame(ContainerOperand):
             def blocks() -> tp.Iterator[NDArrayAny]:
                 for frame in frame_seq:
                     if not frame.index.equals(index):
-                        frame = frame.reindex(index=index,
+                        frame = frame.reindex(index=index, # type: ignore
                                 fill_value=fill_value,
                                 check_equals=False,
                                 )
@@ -571,7 +571,7 @@ class Frame(ContainerOperand):
 
                 for frame in frame_seq:
                     if not frame.columns.equals(columns):
-                        frame = frame.reindex(columns=columns,
+                        frame = frame.reindex(columns=columns, # type: ignore
                                 fill_value=fill_value,
                                 check_equals=False,
                                 )
@@ -694,7 +694,7 @@ class Frame(ContainerOperand):
                 name=name,
                 fill_value=fill_value,
                 consolidate_blocks=consolidate_blocks,
-                **kwargs
+                **kwargs # type: ignore
                 )
 
     @classmethod
@@ -766,7 +766,7 @@ class Frame(ContainerOperand):
         if fill_value is FILL_VALUE_DEFAULT:
             get_col_fill_value = lambda _, dtype: dtype_kind_to_na(dtype.kind)
         else:
-            get_col_fill_value = get_col_fill_value_factory(fill_value, columns) # type: ignore
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns)
 
         # dtype column mapping will not change
         dtypes = post.dtypes
@@ -984,12 +984,12 @@ class Frame(ContainerOperand):
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns))
 
-        rows: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
+        rows: tp.Sequence[tp.Dict[tp.Hashable, tp.Any]]
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
         else: # could be a sequence, or something like a dict view
-            rows = records
+            rows = records # type: ignore
         row_count = len(rows)
 
         if not row_count:
@@ -1295,7 +1295,7 @@ class Frame(ContainerOperand):
             own_index = True
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns) #type: ignore
-        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
+        get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns) # type: ignore
 
         def blocks() -> tp.Iterator[NDArrayAny]:
             for col_idx, v in enumerate(fields):
@@ -1371,17 +1371,16 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        index: tp.List[tp.Hashable] = []
-        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns) # type: ignore
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
-                else get_col_fill_value_factory(fill_value, columns))
+                else get_col_fill_value_factory(fill_value, columns)) # type: ignore
 
-        cols: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]]
+        cols: tp.Sequence[tp.Dict[tp.Hashable, tp.Any]]
         if not hasattr(fields, '__len__'):
             # might be a generator; must convert to sequence
             cols = list(fields)
         else: # could be a sequence, or something like a dict view
-            cols = fields
+            cols = fields # type: ignore
         cols_count = len(cols)
 
         if not cols_count:
@@ -1681,13 +1680,15 @@ class Frame(ContainerOperand):
             if is_fill_value_factory_initializer(fill_value):
                 raise InvalidFillValue(fill_value, 'axis==None')
 
-            items = (((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v) # type: ignore
+            items_iloc: tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]] = (
+                    ((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v) # type: ignore
                     for k, v in items)
-            dtype = dtype if dtype is not None else DTYPE_OBJECT
+
+            dt: DtypeSpecifier = dtype if dtype is not None else DTYPE_OBJECT # type: ignore
             tb = TypeBlocks.from_element_items(
-                    items,
+                    items_iloc,
                     shape=(len(index), len(columns)), #type: ignore
-                    dtype=dtype,
+                    dtype=dt,
                     fill_value=fill_value)
             return cls(tb,
                     index=index,
@@ -1763,7 +1764,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            parameters: tp.Iterable[tp.Any] = (),
+            parameters: tp.Any = (),
             ) -> tpe.Self:
         '''
         Frame constructor from an SQL query and a database connection object.
@@ -1850,9 +1851,9 @@ class Frame(ContainerOperand):
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
-                default_constructor = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index
+                default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index # type: ignore
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors(
+                index_constructor = constructor_from_optional_constructors( # type: ignore
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -1865,7 +1866,7 @@ class Frame(ContainerOperand):
                 index = [list() for _ in range(index_depth)]
 
                 def default_constructor(
-                        iterables: tp.Iterable[tp.Hashable],
+                        iterables: tp.Iterable[tp.Iterable[tp.Hashable]],
                         index_constructors: IndexConstructors,
                         ) -> IndexHierarchy: #pylint: disable=function-redefined
                     if get_col_dtype:
@@ -1879,7 +1880,7 @@ class Frame(ContainerOperand):
                             own_blocks=True,
                             )
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors(
+                index_constructor = constructor_from_optional_constructors( # type: ignore
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,

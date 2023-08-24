@@ -477,9 +477,9 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_element_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]],
+            items: tp.Iterable[tp.Tuple[tp.Tuple[int, int], tp.Any]],
             shape: tp.Tuple[int, ...],
-            dtype: DtypeAny,
+            dtype: DtypeSpecifier | None,
             fill_value: object = FILL_VALUE_DEFAULT
             ) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype. This permits only uniformly typed data, as we have to create a single empty array first, then populate it.
@@ -2860,7 +2860,7 @@ class TypeBlocks(ContainerOperand):
                         for i in range(a.shape[1]):
                             yield a[NULL_SLICE, i]
 
-            yield from map(constructor, chainer())
+            yield from map(constructor, chainer()) # type: ignore
 
     def _extract(self,
             row_key: GetItemKeyType = None,
