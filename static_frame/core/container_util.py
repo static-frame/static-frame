@@ -1070,7 +1070,7 @@ def rehierarch_from_type_blocks(*,
 
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
-        depth_map: tp.Sequence[int],
+        depth_map: tp.Iterable[int],
         index_constructors: IndexConstructors = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', NDArrayAny]:

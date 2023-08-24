@@ -156,6 +156,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
@@ -164,6 +165,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
+from static_frame.core.util import TSortKinds
+from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
@@ -191,8 +194,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TupleConstructorType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -4059,34 +4060,37 @@ class Frame(ContainerOperand):
         # index can always be owned by this point, as self._index is STATIC, or  we have created a new Index, or we have bbeen given own_index
         own_index_frame = True
 
+        columns_owned: IndexBase
         if columns is not None:
             if not own_columns:
-                columns = index_from_optional_constructor(columns,
+                columns_owned = index_from_optional_constructor(columns,
                         default_constructor=self._COLUMNS_CONSTRUCTOR)
+            else:
+                columns_owned = columns
 
             if check_equals and self._columns.equals(columns):
                 columns_ic = None
             else:
-                columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns) # type: ignore
+                columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns_owned)
             own_columns_frame = True
         else:
-            columns = self._columns
+            columns_owned = self._columns
             columns_ic = None
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
         # if fill_value is a non-element, call get_col_fill_value_factory with the new index/columns, not the old
         if is_fill_value_factory_initializer(fill_value):
-            get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
+            get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns_owned)
             return self.__class__(
                     TypeBlocks.from_blocks(
                             self._blocks.resize_blocks_by_callable(
                                     index_ic=index_ic,
                                     columns_ic=columns_ic,
                                     fill_value=get_col_fill_value),
-                            shape_reference=(len(index), len(columns)) #type: ignore
+                            shape_reference=(len(index), len(columns_owned)) #type: ignore
                             ),
                     index=index,
-                    columns=columns,
+                    columns=columns_owned,
                     name=self._name,
                     own_data=True,
                     own_index=own_index_frame,
@@ -4099,10 +4103,10 @@ class Frame(ContainerOperand):
                                 index_ic=index_ic,
                                 columns_ic=columns_ic,
                                 fill_value=fill_value),
-                        shape_reference=(len(index), len(columns)) #type: ignore
+                        shape_reference=(len(index), len(columns_owned)) #type: ignore
                         ),
                 index=index,
-                columns=columns,
+                columns=columns_owned,
                 name=self._name,
                 own_data=True,
                 own_index=own_index_frame,
@@ -4128,7 +4132,7 @@ class Frame(ContainerOperand):
         if index is IndexAutoFactory:
             index = None
         elif is_callable_or_mapping(index):
-            index = self._index.relabel(index)
+            index = self._index.relabel(index) # type: ignore
             # can only own if index_constructor is None
             own_index = index_constructor is None
         elif index is None:
@@ -4141,7 +4145,7 @@ class Frame(ContainerOperand):
         if columns is IndexAutoFactory:
             columns = None
         elif is_callable_or_mapping(columns):
-            columns = self._columns.relabel(columns)
+            columns = self._columns.relabel(columns) # type: ignore
             # can only own if columns_constructor is None
             own_columns = columns_constructor is None
         elif columns is None:
@@ -4152,8 +4156,8 @@ class Frame(ContainerOperand):
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
-                index=index,
-                columns=columns,
+                index=index, # type: ignore
+                columns=columns, # type: ignore
                 name=self._name,
                 index_constructor=index_constructor,
                 columns_constructor=columns_constructor,
@@ -4177,13 +4181,13 @@ class Frame(ContainerOperand):
         if not index and not columns:
             raise RuntimeError('must specify one or both of columns, index')
 
-        index = self._index.flat() if index else self._index.copy() # type: ignore
-        columns = self._columns.flat() if columns else self._columns.copy() # type: ignore
+        index_owned = self._index.flat() if index else self._index.copy() # type: ignore
+        columns_owned = self._columns.flat() if columns else self._columns.copy() # type: ignore
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
-                index=index,
-                columns=columns,
+                index=index_owned,
+                columns=columns_owned,
                 name=self._name,
                 own_data=True,
                 own_index=True,
@@ -4238,13 +4242,13 @@ class Frame(ContainerOperand):
             columns: {count} Default is zero.
         '''
 
-        index = self._index.level_drop(index) if index else self._index.copy() # type: ignore
-        columns = self._columns.level_drop(columns) if columns else self._columns.copy() # type: ignore
+        index_owned = self._index.level_drop(index) if index else self._index.copy() # type: ignore
+        columns_owned = self._columns.level_drop(columns) if columns else self._columns.copy() # type: ignore
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
-                index=index,
-                columns=columns,
+                index=index_owned,
+                columns=columns_owned,
                 name=self._name,
                 own_data=True,
                 own_index=True,
@@ -4300,7 +4304,7 @@ class Frame(ContainerOperand):
         elif callable(index_constructors): # one constructor
             ih_index_constructors.extend(index_constructors for _ in name_posterior)
         else: # assume properly sized iterable
-            ih_index_constructors.extend(index_constructors)
+            ih_index_constructors.extend(index_constructors) # type: ignore
             if len(ih_index_constructors) != len(ih_name):
                 raise RuntimeError('Incorrect number of values in index_constructors.')
 
@@ -4425,7 +4429,7 @@ class Frame(ContainerOperand):
             else:
                 extend_labels = self._columns.__iter__()
             columns = self._COLUMNS_CONSTRUCTOR.from_labels(
-                    chain(new_labels, extend_labels),
+                    chain(new_labels, extend_labels), # type: ignore
                     name=self._columns.name,
                     )
         else:
@@ -4474,7 +4478,7 @@ class Frame(ContainerOperand):
 
         if index:
             index_idx, index_iloc = rehierarch_from_index_hierarchy(
-                    labels=self._index,
+                    labels=self._index, # type: ignore
                     depth_map=index,
                     index_constructors=index_constructors,
                     name=self._index.name
@@ -4485,7 +4489,7 @@ class Frame(ContainerOperand):
 
         if columns:
             columns_idx, columns_iloc = rehierarch_from_index_hierarchy(
-                    labels=self._columns,
+                    labels=self._columns, # type: ignore
                     depth_map=columns,
                     index_constructors=columns_constructors,
                     name=self._columns.name
@@ -4540,7 +4544,7 @@ class Frame(ContainerOperand):
 
     def dropna(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> tpe.Self:
+            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tpe.Self:
         '''
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -4595,7 +4599,7 @@ class Frame(ContainerOperand):
 
     def dropfalsy(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], bool] = np.all) -> tpe.Self:
+            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tpe.Self:
         '''
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
 
@@ -4649,7 +4653,7 @@ class Frame(ContainerOperand):
                     )).values
             return self.__class__(
                     self._blocks.fill_missing_by_unit(fill, fill_valid, func=func),
-                    **kwargs,
+                    **kwargs, # type: ignore
                     )
         elif is_fill_value_factory_initializer(value):
             # we have a iterable or a mapping, or FillValueAuto
@@ -4659,12 +4663,12 @@ class Frame(ContainerOperand):
                             func_missing=func,
                             get_col_fill_value=get_col_fill_value,
                             ),
-                    **kwargs,
+                    **kwargs, # type: ignore
                     )
         # if not an iterable or if a string
         return self.__class__(
                 self._blocks.fill_missing_by_unit(value, None, func=func),
-                **kwargs,
+                **kwargs, # type: ignore
                 )
 
 
@@ -5507,7 +5511,7 @@ class Frame(ContainerOperand):
             if (issubclass(constructor, tuple) and
                     hasattr(constructor, '_make')):
                 # discover named tuples, use _make method for single-value calling
-                ctor = constructor._make
+                ctor = constructor._make # type: ignore
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
                 ctor = lambda args: constructor(*args)

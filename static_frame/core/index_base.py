@@ -203,7 +203,7 @@ class IndexBase(ContainerOperandSequence):
     def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
-    def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
+    def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> tp.Hashable:
         raise NotImplementedError() #pragma: no cover
 
     def _update_array_cache(self) -> None:
