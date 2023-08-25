@@ -12,6 +12,7 @@ from static_frame.core.index_datetime import IndexDatetime  # base class
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
@@ -21,7 +22,7 @@ from static_frame.core.util import iterable_to_array_1d
 
 class IndexConstructorFactoryBase:
     def __call__(self,
-            labels: tp.Iterator[tp.Hashable],
+            labels: tp.Iterable[tp.Hashable],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
@@ -107,7 +108,7 @@ class IndexAutoFactory:
     def from_optional_constructor(cls,
             initializer: IndexAutoInitializer, # size
             *,
-            default_constructor: tp.Type[IndexBase],
+            default_constructor: IndexConstructor,
             explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
             ) -> IndexBase:
 
@@ -120,13 +121,14 @@ class IndexAutoFactory:
                 raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
             if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
                 return explicit_constructor(labels,
-                        default_constructor=default_constructor,
+                        default_constructor=default_constructor, # type: ignore
                         # NOTE might just pass name
                         )
             return explicit_constructor(labels)
 
         else: # get from default constructor
-            constructor = Index if default_constructor.STATIC else IndexGO
+            assert default_constructor is not None
+            constructor = Index if default_constructor.STATIC else IndexGO # type: ignore
             return constructor(
                     labels=labels,
                     loc_is_iloc=True,
@@ -143,8 +145,8 @@ class IndexAutoFactory:
 
     def to_index(self,
             *,
-            default_constructor: tp.Type[IndexBase],
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
+            default_constructor: IndexConstructor,
+            explicit_constructor: ExplicitConstructor = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''

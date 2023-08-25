@@ -1306,7 +1306,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def sort_index(self,
             *,
             ascending: BoolOrBools = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> 'Bus':
         '''

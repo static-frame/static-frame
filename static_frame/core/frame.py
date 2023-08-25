@@ -97,13 +97,13 @@ from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_selector import FrameOrSeries
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceGetItemBLoc
+from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import FrameOrSeries
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
@@ -145,7 +145,6 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import TBlocKey
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import DepthLevelSpecifier
@@ -167,6 +166,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
+from static_frame.core.util import ShapeType
+from static_frame.core.util import TBlocKey
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -196,7 +197,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import ShapeType
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -2418,7 +2418,7 @@ class Frame(ContainerOperand):
                     name=index_name,
                     )
             index, own_index = index_from_optional_constructors(
-                    index_arrays,
+                    index_arrays, # type: ignore
                     depth=index_depth,
                     default_constructor=index_constructor,
                     explicit_constructors=index_constructors, # cannot supply name
@@ -4462,8 +4462,8 @@ class Frame(ContainerOperand):
 
 
     def rehierarch(self,
-            index: tp.Optional[tp.Iterable[int]] = None,
-            columns: tp.Optional[tp.Iterable[int]] = None,
+            index: tp.Optional[tp.Sequence[int]] = None,
+            columns: tp.Optional[tp.Sequence[int]] = None,
             *,
             index_constructors: IndexConstructors = None,
             columns_constructors: IndexConstructors = None,
@@ -5981,7 +5981,7 @@ class Frame(ContainerOperand):
     def sort_index(self,
             *,
             ascending: BoolOrBools = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> 'Frame':
         '''
@@ -6008,7 +6008,7 @@ class Frame(ContainerOperand):
     def sort_columns(self,
             *,
             ascending: BoolOrBools = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> 'Frame':
         '''

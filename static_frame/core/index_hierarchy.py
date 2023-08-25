@@ -76,6 +76,7 @@ from static_frame.core.util import IntegerLocType
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
@@ -2363,7 +2364,7 @@ class IndexHierarchy(IndexBase):
     def sort(self: IH,
             *,
             ascending: BoolOrBools = True,
-            kind: str = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
             ) -> IH:
         '''

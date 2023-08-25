@@ -14,7 +14,6 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import TBlocKey
 
-
 # from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:

@@ -44,6 +44,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
+
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.node_iter import IterNodeAxisElement
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
@@ -442,6 +444,12 @@ IndexConstructors = tp.Union[IndexConstructor,
         tp.Type['IndexAutoConstructorFactory'],
         ]
 
+ExplicitConstructor = tp.Union[
+        IndexConstructor,
+        'IndexConstructorFactoryBase',
+        tp.Type['IndexConstructorFactoryBase'],
+        None,
+        ]
 # take integers for size; otherwise, extract size from any other index initializer
 
 SeriesInitializer = tp.Union[
