@@ -18,7 +18,7 @@ from static_frame.core.util import NULL_SLICE
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -144,7 +144,7 @@ class DFIColumn(Column):
 
     def __init__(self,
             array: NDArrayAny,
-            index: 'Index',
+            index: 'IndexBase',
             ):
         assert len(array) == len(index)
         # NOTE: for efficiency, we do not store a Series, but just an array and the index (for metadata)
@@ -313,7 +313,7 @@ class DFIDataFrame(DataFrame):
         return DFIColumn(self._frame._blocks._extract_array_column(i), self._frame._index)
 
     def get_column_by_name(self, name: str) -> DFIColumn:
-        return self.get_column(self._frame._columns.loc_to_iloc(name))
+        return self.get_column(self._frame._columns.loc_to_iloc(name)) # type: ignore
 
     def get_columns(self) -> tp.Iterable[DFIColumn]:
         index = self._frame._index
@@ -324,7 +324,7 @@ class DFIDataFrame(DataFrame):
             indices = list(indices)
 
         return self.__class__(
-                self._frame.iloc[NULL_SLICE, indices],
+                self._frame.iloc[NULL_SLICE, indices], # type: ignore
                 nan_as_null=self._nan_as_null,
                 allow_copy=self._allow_copy,
                 recast_blocks=False,
@@ -334,7 +334,7 @@ class DFIDataFrame(DataFrame):
         if not isinstance(names, list):
             names = list(names)
 
-        return self.select_columns(self._frame.columns.loc_to_iloc(names))
+        return self.select_columns(self._frame.columns.loc_to_iloc(names)) # type: ignore
 
     def get_chunks(self, n_chunks: tp.Optional[int] = None) -> tp.Iterable["DFIDataFrame"]:
 
@@ -348,7 +348,7 @@ class DFIDataFrame(DataFrame):
 
             for start in range(0, step * n_chunks, step):
                 yield DFIDataFrame(
-                        self._frame.iloc[start: start + step, NULL_SLICE],
+                        self._frame.iloc[start: start + step, NULL_SLICE], # type: ignore
                         nan_as_null=self._nan_as_null,
                         allow_copy=self._allow_copy,
                         recast_blocks=True,
