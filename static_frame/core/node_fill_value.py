@@ -21,11 +21,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_selector import FrameOrSeries  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceBatchTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_selector import FrameOrSeries # pylint: disable = W0611 #pragma: no cover
 
 
 TContainer = tp.TypeVar('TContainer',
