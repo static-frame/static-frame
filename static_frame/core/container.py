@@ -30,6 +30,7 @@ from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
+from static_frame.core.util import INT64_MAX
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -573,8 +574,8 @@ class ContainerOperandSequence(ContainerBase):
         config = DisplayActive.get(
                 display_format=DisplayFormats.HTML_TABLE,
                 type_show=False,
-                display_columns=np.iinfo(np.int64).max,
-                display_rows=np.iinfo(np.int64).max,
+                display_columns=INT64_MAX,
+                display_rows=INT64_MAX,
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))

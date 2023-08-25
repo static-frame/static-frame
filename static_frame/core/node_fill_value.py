@@ -25,6 +25,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_transpose import InterfaceTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_selector import FrameOrSeries # pylint: disable = W0611 #pragma: no cover
+
 
 TContainer = tp.TypeVar('TContainer',
         'Frame',
@@ -163,8 +165,8 @@ class InterfaceFillValue(Interface[TContainer]):
         if row_is_multiple and column_is_multiple:
             # cannot reindex if loc keys are elements
             return container.reindex( # type: ignore
-                    index=row_key if not row_is_null_slice else None,
-                    columns=column_key if not column_is_null_slice else None,
+                    index=row_key if not row_is_null_slice else None, # type: ignore
+                    columns=column_key if not column_is_null_slice else None, # type: ignore
                     fill_value=fill_value,
                     )
         elif not row_is_multiple and not column_is_multiple: # selecting an element
@@ -181,21 +183,21 @@ class InterfaceFillValue(Interface[TContainer]):
 
             fv = get_col_fill_value_factory(fill_value, None)(0, None)
             return Series.from_element(fv,
-                    index=column_key,
-                    name=row_key,
+                    index=column_key, # type: ignore
+                    name=row_key, # type: ignore
                     )
         # columns is an element, return Series indexed by index
         if column_key in container._columns: #type: ignore
-            s = container[column_key] # type: ignore
+            s = container[column_key]
             return s.reindex(row_key, fill_value=fill_value) #type: ignore
 
         fv = get_col_fill_value_factory(fill_value, None)(0, None)
         return Series.from_element(fv,
-                index=row_key,
-                name=column_key,
+                index=row_key, # type: ignore
+                name=column_key, # type: ignore
                 )
 
-    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound) -> tp.Union['Frame', 'Series']:
+    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound) -> FrameOrSeries:
         if isinstance(key, tuple):
             row_key, column_key = key
         else:
@@ -205,14 +207,14 @@ class InterfaceFillValue(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItem['Frame']:
+    def loc(self) -> InterfaceGetItem[FrameOrSeries]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
             return InterfaceGetItem(self._extract_loc1d)
         return InterfaceGetItem(self._extract_loc2d_compound)
 
-    def __getitem__(self,  key: GetItemKeyType) -> tp.Union['Frame', 'Series']:
+    def __getitem__(self,  key: GetItemKeyType) -> FrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
@@ -474,7 +476,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItem['Frame']:
+    def loc(self) -> InterfaceGetItem['Batch']:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         def func(key: GetItemKeyType) -> 'Batch':

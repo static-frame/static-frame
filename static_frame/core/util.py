@@ -239,6 +239,7 @@ NON_STR_TYPES = {int, float, bool}
 
 # integers above this value will occassionally, once coerced to a float (64 or 128) in an NP array, will not match a hash lookup as a key in a dictionary; an NP array of int or object will work
 INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
+INT64_MAX = np.iinfo(np.int64).max
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)

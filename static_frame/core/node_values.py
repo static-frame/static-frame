@@ -60,7 +60,7 @@ class InterfaceValues(Interface[TContainer]):
         self._container: TContainer = container
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
-        self._dtype = dtype
+        self._dtype: DtypeAny = np.dtype(dtype)
 
     def __call__(self,
             *,
@@ -117,7 +117,7 @@ class InterfaceValues(Interface[TContainer]):
                 dtype = self._container._blocks._index.dtype if self._dtype is None else self._dtype #type: ignore
                 tb = TypeBlocks.from_blocks(func(blocks_to_array_2d(
                         blocks=blocks,
-                        shape=self._container.shape,
+                        shape=self._container.shape, # type: ignore
                         dtype=dtype,
                         )))
             elif self._consolidate_blocks:
@@ -167,7 +167,7 @@ class InterfaceValues(Interface[TContainer]):
                     own_index=True,
                     )
         # else, Index
-        return self._container.__class__(values,
+        return self._container.__class__(values, # type: ignore
                 name=self._container.name,
                 )
 

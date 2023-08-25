@@ -10,6 +10,7 @@ import numpy as np
 from static_frame.core import display_html_datatables
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import INT64_MAX
 
 ColorConstructor = tp.Union[int, str]
 
@@ -525,18 +526,18 @@ class DisplayConfigs:
             )
 
     UNBOUND = DisplayConfig(
-            display_columns=np.inf,
-            display_rows=np.inf,
-            cell_max_width=np.inf,
-            cell_max_width_leftmost=np.inf,
+            display_columns=INT64_MAX,
+            display_rows=INT64_MAX,
+            cell_max_width=INT64_MAX,
+            cell_max_width_leftmost=INT64_MAX,
             )
     UNBOUND_COLUMNS = DisplayConfig(
-            display_columns=np.inf,
-            cell_max_width=np.inf,
-            cell_max_width_leftmost=np.inf,
+            display_columns=INT64_MAX,
+            cell_max_width=INT64_MAX,
+            cell_max_width_leftmost=INT64_MAX,
             )
     UNBOUND_ROWS = DisplayConfig(
-            display_rows=np.inf,
-            cell_max_width=np.inf,
-            cell_max_width_leftmost=np.inf,
+            display_rows=INT64_MAX,
+            cell_max_width=INT64_MAX,
+            cell_max_width_leftmost=INT64_MAX,
             )
