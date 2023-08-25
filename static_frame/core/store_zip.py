@@ -123,7 +123,7 @@ class _StoreZip(Store):
                 # don't have a race condition
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield self._set_container_type(cache_lookup, container_type)
+                    yield self._set_container_type(cache_lookup, container_type) # type: ignore
                     continue
 
                 c: StoreConfig = config_map[label]
@@ -170,7 +170,7 @@ class _StoreZip(Store):
                 count_labels += 1
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    results[label] = self._set_container_type(cache_lookup, container_type)
+                    results[label] = self._set_container_type(cache_lookup, container_type) # type: ignore
                     count_cache += 1
                 else:
                     results[label] = None
@@ -562,7 +562,7 @@ class StoreZipNPY(Store):
             for label in labels:
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield _StoreZip._set_container_type(cache_lookup, container_type)
+                    yield _StoreZip._set_container_type(cache_lookup, container_type) # type: ignore
                     continue
 
                 archive.prefix = config_map.default.label_encode(label) # mutate
