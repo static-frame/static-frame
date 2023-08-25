@@ -477,7 +477,7 @@ def index_from_optional_constructor(
     if explicit_constructor:
         if isinstance(explicit_constructor, IndexConstructorFactoryBase):
             return explicit_constructor(value, # type: ignore
-                    default_constructor=default_constructor,
+                    default_constructor=default_constructor, # type: ignore
                     )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
@@ -503,7 +503,7 @@ def index_from_optional_constructor(
             return value._MUTABLE_CONSTRUCTOR(value)
 
     # cannot always determine static status from constructors; fallback on using default constructor
-    return default_constructor(value)
+    return default_constructor(value) # type: ignore
 
 def constructor_from_optional_constructor(
         default_constructor: IndexConstructor,
@@ -533,7 +533,7 @@ def index_from_optional_constructors(
         index = None
         own_index = False
     elif depth == 1:
-        explicit_constructor: IndexConstructor
+        explicit_constructor: ExplicitConstructor
         if not explicit_constructors:
             explicit_constructor = None
         elif callable(explicit_constructors):
@@ -541,7 +541,7 @@ def index_from_optional_constructors(
         else:
             if len(explicit_constructors) != 1: # type: ignore
                 raise RuntimeError('Cannot specify multiple index constructors for depth 1 indicies.')
-            explicit_constructor = explicit_constructors[0]
+            explicit_constructor = explicit_constructors[0] # type: ignore
 
         index = index_from_optional_constructor(
                 value,

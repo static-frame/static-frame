@@ -45,7 +45,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
-
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.node_iter import IterNodeAxisElement
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover

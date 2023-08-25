@@ -109,7 +109,7 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: IndexConstructor,
-            explicit_constructor: tp.Optional[tp.Union[IndexConstructor, IndexDefaultConstructorFactory]] = None,
+            explicit_constructor: ExplicitConstructor = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
@@ -124,7 +124,7 @@ class IndexAutoFactory:
                         default_constructor=default_constructor, # type: ignore
                         # NOTE might just pass name
                         )
-            return explicit_constructor(labels)
+            return explicit_constructor(labels) # type: ignore
 
         else: # get from default constructor
             assert default_constructor is not None
