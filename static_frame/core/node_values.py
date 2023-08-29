@@ -55,18 +55,18 @@ class InterfaceValues(Interface[TContainer]):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeAny | None = None,
             ) -> None:
         self._container: TContainer = container
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
-        self._dtype: DtypeAny = np.dtype(dtype)
+        self._dtype: DtypeAny | None = dtype
 
     def __call__(self,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeAny | None = None,
             ) -> 'InterfaceValues[TContainer]':
         '''
         Args:
@@ -199,7 +199,7 @@ class InterfaceBatchValues(InterfaceBatch):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeAny | None = None,
             ) -> None:
         self._batch_apply = batch_apply
         self._consolidate_blocks = consolidate_blocks
@@ -225,7 +225,7 @@ class InterfaceBatchValues(InterfaceBatch):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeAny | None = None,
             ) -> 'InterfaceBatchValues':
         '''
         Args:
