@@ -17,7 +17,7 @@ Specifying shape for n-dimensional arrays is complex; there are numerous proposa
 
 PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be typed to meet the needs of most interfaces.
 
-In this CR we will review NumPy's approach to typing, including the as-of-yet undefined generic shape and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Finally, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can  make columnar type specification variadic for `IndexHierarchy` and `Frame`.
+In this CR we will review NumPy's approach to typing, including the as-of-yet undefined generic shape and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Finally, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can make columnar type specification variadic for `IndexHierarchy` and `Frame`.
 
 
 
