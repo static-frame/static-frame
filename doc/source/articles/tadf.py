@@ -46,7 +46,7 @@ class Series(ContainerOperand, tp.Generic[TIndex, TDtype]):
     ...
 
 a: Series[Index[np.int64], np.unicode_]
-b: Series[IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]], np.float128]
+b: Series[IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]], np.float64]
 
 
 

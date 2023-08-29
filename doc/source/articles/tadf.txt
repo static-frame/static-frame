@@ -5,20 +5,19 @@
 
 
 
-Typing Arrays and DataFrames
+Typing Arrays and DataFrames Using `TypeVarTuple`
+.. for Variadic Columnar dtype Specfication
 
 
-A goal of StaticFrame has always been to provide an explicit interface that supports creating maintainable libraries using DataFrames. As Python typing has improved and grown, using type hints to make DataFrame interfaces explicit and statically checkable is now (nearly!) possible.
+A goal of StaticFrame is to provide an explicit interface that supports creating maintainable libraries using DataFrames. As Python standard library tools for typing have evolved, using type hints to make DataFrame interfaces explicit and statically checkable is now (nearly!) possible.
 
-NumPy has made substantial efforts to implement typing for n-dimensional arrays. The challenge of typing n-dimensional arrays is different than for DataFrames: while an array instance might be of any dimensionality and shape while having a single dtype, a DataFrame has indices on the rows and columns, is always two-dimensional, and has zero or more columnar dtypes. For n-dimensional arrays, specifying shape is complex and the design of such specification is still in development.
+NumPy has made substantial effort to implement typing for n-dimensional arrays. The challenge of typing n-dimensional arrays is different than for DataFrames: while an array instance might be of any dimensionality and shape while having a single dtype, a DataFrame has indices on the rows and columns, is always two-dimensional, and has zero or more columnar dtypes. Specifying shape for n-dimensional arrays is complex; there are numerous proposals for such a specification.
 
-While NumPy and others have explored various shape-types to describe the heterogeneity of dimensionality and shape, I argue that DataFrames do not need such a complexity. As DataFrames are always two-dimensional, and columnar types bear the greatest relevance for interfaces, we can forgo full shape types and instead focus on columnar types.
+DataFrames do not need the complexity of an n-dimensional shape type. As DataFrames are always two-dimensional, and columnar types bear the greatest relevance for interfaces, we can forgo full shape types and instead focus on columnar types.
 
-Python 3.11 introduces `TypeVarTuple`, a new construct that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be typed to meet the needs of most interfaces.
+PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be typed to meet the needs of most interfaces.
 
-In this CR we will review NumPy's approach to typing, including the as-of-yet undefined generic attribute of shape and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple`. Finally, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series, and `Frame` generic, and how, with `TypeVarTuple`, we can  make columnar type specification variadic for `IndexHierarchy` and `Frame`.
-
-
+In this CR we will review NumPy's approach to typing, including the as-of-yet undefined generic shape and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Finally, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can  make columnar type specification variadic for `IndexHierarchy` and `Frame`.
 
 
 
