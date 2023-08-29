@@ -36,6 +36,10 @@ https://github.com/numpy/numpy/blob/18d89cc7c5b4ee202fcc6093a388e816115c1d8d/num
 Shape types:
 https://github.com/numpy/numpy/issues/16544#issuecomment-1037835285
 
+
+A long discussion
+https://taoa.io/posts/Shape-typing-numpy-with-pyright-and-variadic-generics
+
 Variadic generics
 https://peps.python.org/pep-0646/
 

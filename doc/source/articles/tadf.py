@@ -93,11 +93,10 @@ def proc1(
 
 
 @sf.validate(
-        x = Frame.validate(
+        Frame.validate(
         name='scores',
         columns=Index.validate('code', 'included', ..., 'signal', ...),
         shape=(20,)),
-        y = FrameGO.validate(...)
         )
 def proc(
     f: Frame[
@@ -110,6 +109,7 @@ def proc(
     ) -> Series[IndexDate[np.datetime64], np.float64]:
     ...
 
+# NOTE: could use tp.Annotated to bundle type with a field name
 
 @sf.validate(
         x = Series.validate(index=bb_index, shape=len(bb_index)),
