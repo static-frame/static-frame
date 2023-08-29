@@ -15,17 +15,32 @@ NumPy has made substantial effort to implement typing for n-dimensional arrays. 
 
 Specifying shape for n-dimensional arrays is complex; there are numerous proposals for such a specification. DataFrames do not need the complexity of an n-dimensional shape type. As DataFrames are always two-dimensional, and columnar types bear the greatest relevance for interfaces, we can forgo full shape types and instead focus on columnar types.
 
-PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be typed to meet the needs of most interfaces.
+PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be statically typed to meet the needs of most interfaces.
 
-In this CR we will review NumPy's approach to typing, including the as-of-yet undefined generic shape and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Finally, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can make columnar type specification variadic for `IndexHierarchy` and `Frame`.
+In CR today we will review NumPy's approach to typing, including the as-of-yet undefined generic shape type and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Then, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can make columnar type specification variadic for `IndexHierarchy` and `Frame`. Finally, we will consider other `Frame` characteristics that might be combined with type hints to perform comprehensive run-time validations.
 
 
 
+
+
+
+NumPy Typing Utilities
+https://numpy.org/doc/stable/reference/typing.html
+
+NumPy's pyi file
 https://github.com/numpy/numpy/blob/main/numpy/__init__.pyi
+
+Overloads
+https://github.com/numpy/numpy/blob/18d89cc7c5b4ee202fcc6093a388e816115c1d8d/numpy/__init__.pyi#L1814
+
+Shape types:
+https://github.com/numpy/numpy/issues/16544#issuecomment-1037835285
+
+Variadic generics
 https://peps.python.org/pep-0646/
 
-
-
+Spark's use of slices to define label / dtype pairs:
+https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/typehints.html
 
 
 

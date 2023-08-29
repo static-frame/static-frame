@@ -2,9 +2,21 @@
 import typing_extensions as tpe
 import typing as tp
 import numpy as np
+import numpy.typing as npt
 from static_frame.core.index_base import IndexBase
 from static_frame.core.container import ContainerOperand
 
+
+
+
+a1: np.ndarray[tp.Any, np.int64]
+
+dt1: = np.dtype[np.int64]
+
+a2: NDArray[np.int64]
+
+
+# NOTE: flattening of types means that NumPy's shape-first approach is awkward
 
 
 
@@ -22,18 +34,14 @@ y: IndexDate[np.datetime64]
 
 
 
-
-
 TIndices = tpe.TypeVarTuple('TIndices', default=tp.Any) # bound=IndexBase,
 class IndexHierarchy(IndexBase, tp.Generic[*TIndices]):
     ...
 
 z: IndexHierarchy[Index[np.int64], Index[np.unicode_]]
+z: IndexHierarchy[Index[np.int64], Index[np.unicode_], Index[np.float256]]
 
 # NOTE: including Index[dt] instead of just dt becomes more useful in the case of Series and Frame, where it becomes much more readable what are indices and dtypes
-
-
-
 
 
 
@@ -45,11 +53,6 @@ class Series(ContainerOperand, tp.Generic[TIndex, TDtype]):
 
 a: Series[Index[np.int64], np.unicode_]
 b: Series[IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]], np.float64]
-
-
-
-
-
 
 
 TIndex = tpe.TypeVar('TIndex', bound=IndexBase, default=tp.Any)
@@ -64,19 +67,19 @@ q: Frame[Index[np.int64], Index[np.unicode_], np.bool_, np.unicode_, np.int64]
 
 r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
 
+r2: Frame[tp.Any, tp.Any, np.float64, np.int64]
+
 s: Frame[
         IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
         Index[np.unicode_],
         np.bool_,
         np.unicode_,
         *tp.Tuple[np.int64, ...],
+        np.bool_,
         ]
 
 
-
-
-
-def proc(
+def proc1(
     f: Frame[
         IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
         Index[np.unicode_],
@@ -88,6 +91,30 @@ def proc(
     ...
 
 
+
+@sf.validate(
+        x = Frame.validate(
+        name='scores',
+        columns=Index.validate('code', 'included', ..., 'signal', ...),
+        shape=(20,)),
+        y = FrameGO.validate(...)
+        )
+def proc(
+    f: Frame[
+        IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
+        Index[np.unicode_],
+        np.unicode_,
+        np.bool_,
+        *tp.Tuple[np.float64, ...]
+        ]
+    ) -> Series[IndexDate[np.datetime64], np.float64]:
+    ...
+
+
+@sf.validate(
+        x = Series.validate(index=bb_index, shape=len(bb_index)),
+        y = Series.validate(index=bb_index),
+        )
 
 
 
