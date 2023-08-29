@@ -1,11 +1,9 @@
 
 import typing_extensions as tpe
 import typing as tp
-
 import numpy as np
 from static_frame.core.index_base import IndexBase
 from static_frame.core.container import ContainerOperand
-
 
 
 
@@ -63,12 +61,15 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
 
 
 q: Frame[Index[np.int64], Index[np.unicode_], np.bool_, np.unicode_, np.int64]
-r: Frame[
+
+r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
+
+s: Frame[
         IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
         Index[np.unicode_],
         np.bool_,
         np.unicode_,
-        np.int64,
+        *tp.Tuple[np.int64, ...],
         ]
 
 
