@@ -266,7 +266,7 @@ def get_col_fill_value_factory(
 
 def get_col_format_factory(
         format: tp.Any,
-        fields: tp.Optional[tp.Sequence[tp.Hashable]] = None,
+        fields: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase] = None,
         ) -> tp.Callable[[int], str]:
     '''
     Return a function to get string format, used in InterfaceString.

@@ -968,7 +968,7 @@ def dtype_from_element(
 #     return dt_resolve
 
 def concat_resolved(
-        arrays: tp.Sequence[NDArrayAny],
+        arrays: tp.Iterable[NDArrayAny],
         axis: int = 0,
         ) -> NDArrayAny:
     '''
@@ -981,10 +981,16 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
+    arrays_seq: tp.Sequence[NDArrayAny]
+    if not hasattr(arrays, '__len__'): # a generator
+        arrays_seq = list(arrays)
+    else:
+        arrays_seq = arrays # type: ignore
+
     shape: tp.Sequence[int]
-    if len(arrays) == 2: # assume we have a sequence
+    if len(arrays_seq) == 2: # assume we have a sequence
         # faster path when we have two in a sequence
-        a1, a2 = arrays
+        a1, a2 = arrays_seq
         dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
         size = a1.shape[axis] + a2.shape[axis]
         if a1.ndim == 1:
@@ -992,7 +998,7 @@ def concat_resolved(
         else:
             shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
     else: # first pass to determine shape and resolved type
-        arrays_iter = iter(arrays)
+        arrays_iter = iter(arrays_seq)
         first = next(arrays_iter)
         dt_resolve = first.dtype
         shape = list(first.shape)
@@ -1003,7 +1009,7 @@ def concat_resolved(
             shape[axis] += array.shape[axis]
 
     out: NDArrayAny = np.empty(shape=shape, dtype=dt_resolve)
-    np.concatenate(arrays, out=out, axis=axis)
+    np.concatenate(arrays_seq, out=out, axis=axis)
     out.flags.writeable = False
     return out
 

@@ -45,6 +45,9 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 
+
+TNDIterFlags = tp.Sequence[tp.Literal['external_loop', 'buffered', 'zerosize_ok']]
+
 class NPYConverter:
     '''Optimized implementation based on numpy/lib/format.py
     '''
@@ -56,7 +59,7 @@ class NPYConverter:
     MAGIC_AND_STRUCT_FMT_SIZE_LEN = MAGIC_LEN + STRUCT_FMT_SIZE
     ENCODING = 'latin1' # version 1.0
     BUFFERSIZE_NUMERATOR = 16 * 1024 ** 2 # ~16 MB
-    NDITER_FLAGS = ('external_loop', 'buffered', 'zerosize_ok')
+    NDITER_FLAGS: TNDIterFlags = ('external_loop', 'buffered', 'zerosize_ok')
 
     @classmethod
     def _header_encode(cls, header: str) -> bytes:
@@ -624,14 +627,14 @@ class ArchiveIndexConverter:
             *,
             metadata: tp.Dict[str, tp.Hashable],
             archive: Archive,
-            array: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+            array: NDArrayAny,
             key_template_values: str,
             ) -> None:
         '''
         Args:
             metadata: mutates in place with json components
         '''
-        assert array.ndim == 1 # type: ignore
+        assert array.ndim == 1
         archive.write_array(key_template_values.format(0), array)
 
     @staticmethod
@@ -789,7 +792,10 @@ class ArchiveFrameConverter:
 
 
         block_count, depth_index, depth_columns = metadata[Label.KEY_DEPTHS]
-        cls_index, cls_columns = (ContainerMap.str_to_cls(name)
+        cls_index: tp.Type[IndexBase]
+        cls_columns: tp.Type[IndexBase]
+
+        cls_index, cls_columns = (ContainerMap.str_to_cls(name) # type: ignore
                 for name in metadata[Label.KEY_TYPES])
 
         index = ArchiveIndexConverter.index_decode(
@@ -974,8 +980,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
     def from_arrays(self,
             blocks: tp.Iterable[NDArrayAny],
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: NDArrayAny | IndexBase | None = None,
+            columns: NDArrayAny | IndexBase | None = None,
             name: NameType = None,
             axis: int = 0,
             ) -> None:
@@ -1014,7 +1020,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
             depth_index = 1
             name_index = None
-            cls_index = dtype_to_index_cls(True, index.dtype) #type: ignore
+            cls_index = dtype_to_index_cls(True, index.dtype)
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=self._archive,
@@ -1045,7 +1051,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
             depth_columns = 1 # only support 1D
             name_columns = None
-            cls_columns = dtype_to_index_cls(True, columns.dtype) #type: ignore
+            cls_columns = dtype_to_index_cls(True, columns.dtype)
             ArchiveIndexConverter.array_encode(
                     metadata=metadata,
                     archive=self._archive,
@@ -1147,7 +1153,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
             def blocks() -> tp.Iterator[NDArrayAny]:
                 for f in frames:
-                    if len(f.index) != len(index) or (f.index != index).any():
+                    if len(f.index) != len(index) or (f.index != index).any(): # type: ignore
                         f = f.reindex(index=index, fill_value=fill_value)
                     for block in f._blocks._blocks:
                         yield block
@@ -1177,7 +1183,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 reblock_compatible = True
 
                 for f in frames:
-                    if len(f.columns) != len(columns) or (f.columns != columns).any():
+                    if len(f.columns) != len(columns) or (f.columns != columns).any(): # type: ignore
                         f = f.reindex(columns=columns, fill_value=fill_value)
 
                     type_blocks.append(f._blocks)

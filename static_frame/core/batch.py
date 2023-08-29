@@ -21,6 +21,7 @@ from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItemCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
@@ -731,8 +732,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         return InterfaceGetItemCompound(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItemCompound['Batch']:
-        return InterfaceGetItemCompound(self._extract_bloc)
+    def bloc(self) -> InterfaceGetItemBLoc['Batch']:
+        return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Batch']:
@@ -1794,11 +1795,14 @@ class Batch(ContainerOperand, StoreClientMixin):
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        frames = []
+        frames: tp.List[Frame] = []
         index = []
         for i, f in self.items():
             index.append(i)
-            frames.append(f)
+            if isinstance(f, Series):
+                frames.append(f.to_frame())
+            else:
+                frames.append(f)
 
         return Bus(frames,
                 index=index,
