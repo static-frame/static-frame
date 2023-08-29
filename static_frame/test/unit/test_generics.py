@@ -3,27 +3,6 @@ import numpy.typing as npt
 
 import static_frame as sf
 
-# samples
-
-
-# TDtype = tp.TypeVar('TDtype')
-# class Index(IndexBase, tp.Generic[TDtype]):
-# usage defines dtype, does not define length
-# if we want to include shape, it could come last and expand out
-
-
-# TIndex = tp.TypeVarTuple('TIndex')
-# class IndexHierarchy(IndexBase, tp.Generic[*TIndex]):
-# usage defines depth, index type,  and types
-# we cannot include more than on TypeVarTuple...
-
-
-# Index[bool]
-# IndexHierarchy[Index[int], Index[str]]
-
-# Series[Index[int], str]
-# Frame[Index[int], Index[str], bool, str, int, bool, int]
-
 
 def run_idx_int(idx: sf.Index[np.int64]) -> bool:
     return True

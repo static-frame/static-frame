@@ -21,12 +21,6 @@ In this CR we will review NumPy's approach to typing, including the as-of-yet un
 
 
 
-def proc(
-    f: sf.Frame[sf.IndexDate, sf.Index[str], str, bool, float, float]
-    ) -> sf.Series[sf.IndexDate, float]
-
-
-
 
 https://github.com/numpy/numpy/blob/main/numpy/__init__.pyi
 https://peps.python.org/pep-0646/
@@ -36,24 +30,3 @@ https://peps.python.org/pep-0646/
 
 
 
-
-
-
-# samples
-
-# TDtype = tp.TypeVar('TDtype')
-# class Index(IndexBase, tp.Generic[TDtype]):
-# usage defines dtype, does not define length
-# if we want to include shape, it could come last and expand out
-
-# TIndex = tp.TypeVarTuple('TIndex')
-# class IndexHierarchy(IndexBase, tp.Generic[*TIndex]):
-# usage defines depth, index type,  and types
-# we cannot include more than on TypeVarTuple...
-
-
-# Index[bool]
-# IndexHierarchy[Index[int], Index[str]]
-
-# Series[Index[int], str]
-# Frame[Index[int], Index[str], bool, str, int, bool, int]
