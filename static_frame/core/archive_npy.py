@@ -27,7 +27,6 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType

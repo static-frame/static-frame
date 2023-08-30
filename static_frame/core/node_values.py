@@ -9,7 +9,6 @@ from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.util import blocks_to_array_2d
 
