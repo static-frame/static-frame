@@ -28,6 +28,7 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
@@ -60,6 +61,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -120,23 +122,24 @@ class Quilt(ContainerBase, StoreClientMixin):
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0]
 
-        axis_map_components: tp.Dict[tp.Hashable, IndexBase] = {}
+        axis_map_components: TreeNodeT = {}
         opposite = None
 
         def values() -> tp.Iterator[Frame]:
             nonlocal opposite
 
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
+                # NOTE: index / columns cannot be IndexHierarchy
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index)
-                    axis_map_components[label] = f.index
+                    axis_map_components[label] = f.index # type: ignore
                     if opposite is None:
-                        opposite = f.columns
+                        opposite = f.columns # type: ignore
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns)
-                    axis_map_components[label] = f.columns
+                    label = label_extractor(f.columns) # type: ignore
+                    axis_map_components[label] = f.columns # type: ignore
                     if opposite is None:
                         opposite = f.index
                 else:
@@ -1154,11 +1157,11 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound['Frame']:
+    def loc(self) -> InterfaceGetItemCompound[Frame | Series]:
         return InterfaceGetItemCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound['Frame']:
+    def iloc(self) -> InterfaceGetItemCompound[Frame | Series]:
         return InterfaceGetItemCompound(self._extract_iloc)
 
     #---------------------------------------------------------------------------
@@ -1346,7 +1349,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[:count]
+        return self.iloc[:count] # type: ignore
 
     @doc_inject(selector='tail', class_name='Quilt')
     def tail(self, count: int = 5) -> 'Frame':
@@ -1355,7 +1358,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[-count:]
+        return self.iloc[-count:] # type: ignore
 
     #---------------------------------------------------------------------------
     @doc_inject()

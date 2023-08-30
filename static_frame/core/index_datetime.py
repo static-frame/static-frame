@@ -198,7 +198,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     def append(self, value: tp.Hashable) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
-        value = to_datetime64(value, self._DTYPE)
+        value = to_datetime64(value, self._DTYPE) # type: ignore
         if self._map is not None:
             try:
                 self._map.add(value)

@@ -4,6 +4,7 @@ import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tpe
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -20,6 +21,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
+from static_frame.core.util import INT64_MAX
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
 from static_frame.core.util import DtypeSpecifier
@@ -361,7 +363,6 @@ class ContainerOperandSequence(ContainerBase):
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 
-
     @doc_inject(selector='ufunc_skipna')
     def all(self,
             axis: int = 0,
@@ -515,8 +516,8 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=partial(np.std, ddof=ddof),
-                ufunc_skipna=partial(np.nanstd, ddof=ddof),
+                ufunc=partial(np.std, ddof=ddof), #type: ignore
+                ufunc_skipna=partial(np.nanstd, ddof=ddof), #type: ignore
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False
@@ -536,8 +537,8 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=partial(np.var, ddof=ddof),
-                ufunc_skipna=partial(np.nanvar, ddof=ddof),
+                ufunc=partial(np.var, ddof=ddof), #type: ignore
+                ufunc_skipna=partial(np.nanvar, ddof=ddof), #type: ignore
                 composable=False,
                 dtypes=(DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
                 size_one_unity=False
@@ -573,8 +574,8 @@ class ContainerOperandSequence(ContainerBase):
         config = DisplayActive.get(
                 display_format=DisplayFormats.HTML_TABLE,
                 type_show=False,
-                display_columns=np.inf,
-                display_rows=np.inf,
+                display_columns=INT64_MAX,
+                display_rows=INT64_MAX,
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
@@ -588,16 +589,16 @@ class ContainerOperand(ContainerOperandSequence):
     __slots__ = ()
 
     #---------------------------------------------------------------------------
-    def __pos__(self) -> tp.Self:
+    def __pos__(self) -> tpe.Self:
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
 
-    def __neg__(self) -> tp.Self:
+    def __neg__(self) -> tpe.Self:
         return self._ufunc_unary_operator(OPERATORS['__neg__'])
 
-    def __abs__(self) -> tp.Self:
+    def __abs__(self) -> tpe.Self:
         return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
-    def __invert__(self) -> tp.Self:
+    def __invert__(self) -> tpe.Self:
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     #---------------------------------------------------------------------------

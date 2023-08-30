@@ -29,6 +29,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    THeaderSpecifier = tp.Union[DtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -289,7 +290,6 @@ class DisplayHeader:
             return f'{self.cls.__name__}: {self.name}'
         return self.cls.__name__
 
-
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 
 # An NT that stores a formatted strings ``format_str`` as well as a ``raw`` string
@@ -322,13 +322,13 @@ class Display:
 
     @staticmethod
     def type_attributes(
-            type_input: tp.Union[DtypeAny, type, DisplayHeader],
+            type_input: THeaderSpecifier,
             config: DisplayConfig
             ) -> tp.Tuple[str, tp.Type[DisplayTypeCategory]]:
         '''
         Return the `type_input` as a string, applying delimters to either numpy dtypes or Python classes.
         '''
-        type_ref: tp.Union[DtypeAny, type, DisplayHeader]
+        type_ref: THeaderSpecifier
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
@@ -374,7 +374,7 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: object, # dtype, HeaderInitializer, or a type
+            value: tp.Any,
             config: DisplayConfig,
             is_dtype: bool = False) -> DisplayCell:
         '''
@@ -427,9 +427,9 @@ class Display:
 
     @classmethod
     def from_values(cls,
-            values: NDArrayAny,
+            values: NDArrayAny | tp.Sequence[tp.Any],
             *,
-            header: object,
+            header: THeaderSpecifier,
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
@@ -452,10 +452,10 @@ class Display:
             else:
                 rows.append([cls.CELL_EMPTY])
 
-        if values.__class__ is np.ndarray and values.ndim == 2:
+        if values.__class__ is np.ndarray and values.ndim == 2: # type: ignore
             # NOTE: this is generally only used by TypeBlocks
             # get rows from numpy string formatting
-            np_rows = np.array_str(values).split('\n')
+            np_rows = np.array_str(values).split('\n') # type: ignore
             last_idx = len(np_rows) - 1
             for idx, row in enumerate(np_rows):
                 # trim brackets
@@ -485,7 +485,7 @@ class Display:
 
         # add the types to the last row
         if values.__class__ is np.ndarray and config.type_show:
-            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
+            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)]) # type: ignore
 
         return cls(rows,
                 config=config,

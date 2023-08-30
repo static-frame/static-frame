@@ -34,7 +34,7 @@ class StringIOTemporaryFile(StringIO):
     def read(self, size: tp.Optional[int] =-1) -> str:
         return self._file.read(size)
 
-    def readline(self, size: tp.Optional[int] = -1) -> str: # type: ignore
+    def readline(self, size: int = -1) -> str: # type: ignore
         return self._file.readline(size)
 
     def __iter__(self) -> tp.Iterator[str]: # type: ignore
@@ -148,7 +148,7 @@ class WWW:
     @staticmethod
     def _write_maybe_temporary(
             fp: tp.Optional[Path],
-            encoding: tp.Optional[str],
+            encoding: str,
             extractor: tp.Callable[[], tp.Union[str, bytes]]
             ) -> WWWReturnType:
         with MaybeTemporaryFile(fp=fp,
@@ -175,7 +175,7 @@ class WWW:
     def from_file(cls,
             url: tp.Union[str, request.Request],
             *,
-            encoding: tp.Optional[str] = 'utf-8',
+            encoding: str = 'utf-8',
             in_memory: tp.Optional[bool] = None,
             buffer_size: int = 8192,
             fp: tp.Optional[tp.Union[Path, str]] = None,
@@ -216,7 +216,7 @@ class WWW:
     def from_zip(cls,
             url: tp.Union[str, request.Request],
             *,
-            encoding: tp.Optional[str] = 'utf-8',
+            encoding: str = 'utf-8',
             in_memory: tp.Optional[bool] = None,
             buffer_size: int = 8192,
             fp: tp.Optional[tp.Union[Path, str]] = None,
@@ -263,7 +263,7 @@ class WWW:
             return data_io
 
         # not in-memory, write a file, delete archive
-        os.unlink(archive)
+        os.unlink(archive) # type: ignore
         return cls._write_maybe_temporary(
                 fp=fp,
                 encoding=encoding,
@@ -276,7 +276,7 @@ class WWW:
     def from_gzip(cls,
             url: tp.Union[str, request.Request],
             *,
-            encoding: tp.Optional[str] = 'utf-8',
+            encoding: str = 'utf-8',
             in_memory: tp.Optional[bool] = None,
             buffer_size: int = 8192,
             fp: tp.Optional[tp.Union[Path, str]] = None,
@@ -312,7 +312,7 @@ class WWW:
             return data_io
 
         # not in-memory, write a file, delete archive
-        os.unlink(archive)
+        os.unlink(archive) # type: ignore
         return cls._write_maybe_temporary(
                 fp=fp,
                 encoding=encoding,

@@ -5,7 +5,7 @@ import typing as tp
 from static_frame.core.display_color import HexColor
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.container import ContainerOperand  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.container import ContainerOperandSequence  # pylint: disable=W0611 #pragma: no cover
 
 CSSDict = tp.Dict[str, str]
 
@@ -13,8 +13,8 @@ CSSDict = tp.Dict[str, str]
 class StyleConfig:
     __slots__ = ('container',)
 
-    def __init__(self, container: tp.Optional['ContainerOperand'] = None):
-        self.container: tp.Optional['ContainerOperand'] = container
+    def __init__(self, container: tp.Optional['ContainerOperandSequence'] = None):
+        self.container: tp.Optional['ContainerOperandSequence'] = container
 
     def frame(self) -> str:
         '''
@@ -166,7 +166,7 @@ class StyleConfigCSS(StyleConfig):
 
 def style_config_css_factory(
         style_config: tp.Optional[StyleConfig],
-        container: 'ContainerOperand',
+        container: 'ContainerOperandSequence',
         ) -> tp.Optional[StyleConfig]:
     # let user set style_config to None to disable styling
     if style_config is STYLE_CONFIG_DEFAULT:

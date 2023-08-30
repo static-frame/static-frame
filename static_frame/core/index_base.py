@@ -203,7 +203,7 @@ class IndexBase(ContainerOperandSequence):
     def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
-    def _extract_iloc_by_int(self, key: int) -> tp.Hashable:
+    def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> tp.Hashable:
         raise NotImplementedError() #pragma: no cover
 
     def _update_array_cache(self) -> None:
@@ -336,7 +336,7 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
-            key: GetItemKeyType
+            key: IntegerLocType
             ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
@@ -418,7 +418,7 @@ class IndexBase(ContainerOperandSequence):
 
         indices: tp.Iterable[tp.Union[IndexBase, IMTOAdapter]]
 
-        if hasattr(others, '__len__') and len(others) == 1:
+        if hasattr(others, '__len__') and len(others) == 1: # type: ignore
             # NOTE: having only one `other` is far more common than many others; thus, optimize for that case by not using an iterator
             indices = (self, imtoaf(others[0])) # type: ignore
         else:
