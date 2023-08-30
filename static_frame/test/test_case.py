@@ -254,8 +254,8 @@ class TestCase(unittest.TestCase):
     #---------------------------------------------------------------------------
 
     def assertEqualWithNaN(self,
-            v1: object,
-            v2: object,
+            v1: tp.Any,
+            v2: tp.Any,
             ) -> None:
         if ((isinstance(v1, float) or isinstance(v1, np.floating))
                 and np.isnan(v1)
@@ -267,7 +267,7 @@ class TestCase(unittest.TestCase):
         if ((isinstance(v1, complex) or isinstance(v1, np.complexfloating))
                 and cmath.isnan(v1)
                 and (isinstance(v2, complex) or isinstance(v1, np.complexfloating))
-                and cmath.isnan(v2)  # type: ignore
+                and cmath.isnan(v2)
                 ):
             return
         return self.assertEqual(v1, v2)
@@ -280,7 +280,7 @@ class TestCase(unittest.TestCase):
 
     def assertTypeBlocksArrayEqual(self,
             tb: TypeBlocks,
-            match: tp.Iterable[object],
+            match: tp.Iterable[tp.Any],
             match_dtype: tp.Optional[tp.Union[type, DtypeAny, str]] = None) -> None:
         '''
         Args:
@@ -295,14 +295,14 @@ class TestCase(unittest.TestCase):
 
 
     def assertAlmostEqualValues(self,
-            values1: tp.Iterable[object], values2: tp.Iterable[object]) -> None:
+            values1: tp.Iterable[tp.Any], values2: tp.Iterable[tp.Any]) -> None:
 
         for v1, v2 in zip_longest(values1, values2):
             self.assertEqualWithNaN(v1, v2)
 
     def assertAlmostEqualItems(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, object]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, object]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]) -> None:
 
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
@@ -314,8 +314,8 @@ class TestCase(unittest.TestCase):
 
 
     def assertAlmostEqualFramePairs(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[object]]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[object]]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]]) -> None:
         '''
         For comparing nested tuples returned by Frame.to_pairs()
         '''
