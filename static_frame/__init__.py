@@ -119,4 +119,4 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '1.6.0'
+__version__ = '1.6.1'

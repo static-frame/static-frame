@@ -1,10 +1,16 @@
 What is New in StaticFrame
 ===============================
 
-1.6.1-dev
+1.6.1
 -----------
 
 Corrected exception raised in ``IndexHierarchy.level_drop()`` when provided count is 0.
+
+Added ``typing-extensions`` as a dependency for back-ported typing features.
+
+Updated ``mypy`` configuration for broader checks.
+
+Numerous typing improvements and enhancements.
 
 
 1.6.0
