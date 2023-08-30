@@ -1255,6 +1255,13 @@ class TestUnit(TestCase):
         a3 = concat_resolved((a1, a2), axis=0).round(1)
         self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
 
+    def test_concat_resolved_d(self) -> None:
+        a1 = np.array([3,4,5])
+        a2 = np.array([1.1,2.5,3.1])
+        a3 = concat_resolved((a for a in (a1, a2)), axis=0).round(1)
+        self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
+
+
     def test_dtype_to_na_a(self) -> None:
 
         self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
