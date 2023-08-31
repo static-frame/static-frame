@@ -821,7 +821,6 @@ def axis_window_items( *,
         size_increment: int = 0,
         as_array: bool = False,
         label_required: bool = True,
-        missing_label_raises: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
@@ -861,6 +860,7 @@ def axis_window_items( *,
     idx_left_max = count_window_max - 1
     idx_left = start_shift
     count = 0
+    label = None
 
     while True:
         # idx_left, size can change over iterations
@@ -892,7 +892,9 @@ def axis_window_items( *,
                     window = source._extract(column_key=key) #type: ignore
 
         valid = True
-        if window_sized and window.shape[axis] != size:
+        if not len(window):
+            valid = False
+        if valid and window_sized and window.shape[axis] != size:
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
@@ -904,8 +906,7 @@ def axis_window_items( *,
                     raise IndexError()
                 label = labels.iloc[idx_label]
             except IndexError: # an invalid label, if required, is an error
-                if missing_label_raises:
-                    raise InvalidWindowLabel() from None
+                # raise InvalidWindowLabel() from None
                 valid = False
 
         if valid:

@@ -2103,7 +2103,8 @@ class Series(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                as_array=as_array
+                as_array=as_array,
+                label_required=True,
                 )
 
     def _axis_window(self, *,
@@ -2118,7 +2119,8 @@ class Series(ContainerOperand):
             size_increment: int = 0,
             as_array: bool = False,
             ) -> tp.Iterator[tp.Union[NDArrayAny, 'Series']]:
-        yield from (x for _, x in self._axis_window_items(
+        yield from (x for _, x in axis_window_items(
+                source=self,
                 axis=axis,
                 size=size,
                 step=step,
@@ -2128,7 +2130,8 @@ class Series(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                as_array=as_array
+                as_array=as_array,
+                label_required=False,
                 ))
 
     #---------------------------------------------------------------------------

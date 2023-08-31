@@ -3817,7 +3817,6 @@ class TestUnit(TestCase):
 
         post = tuple(s1._axis_window_items(as_array=True, size=5, start_shift=-5, window_sized=False))
 
-
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
