@@ -845,6 +845,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
@@ -861,8 +862,10 @@ class Quilt(ContainerBase, StoreClientMixin):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
+                derive_label=True,
                 as_array=as_array
                 )
 
@@ -874,11 +877,13 @@ class Quilt(ContainerBase, StoreClientMixin):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
             ) -> tp.Iterator['Frame']:
-        yield from (x for _, x in self._axis_window_items(
+        yield from (x for _, x in axis_window_items(
+                source=self,
                 size=size,
                 axis=axis,
                 step=step,
@@ -886,8 +891,10 @@ class Quilt(ContainerBase, StoreClientMixin):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
+                derive_label=False,
                 as_array=as_array
                 ))
 

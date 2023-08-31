@@ -2086,6 +2086,7 @@ class Series(ContainerOperand):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
@@ -2101,10 +2102,11 @@ class Series(ContainerOperand):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array,
-                label_required=True,
+                derive_label=True,
                 )
 
     def _axis_window(self, *,
@@ -2115,6 +2117,7 @@ class Series(ContainerOperand):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
@@ -2128,10 +2131,11 @@ class Series(ContainerOperand):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array,
-                label_required=False,
+                derive_label=False,
                 ))
 
     #---------------------------------------------------------------------------

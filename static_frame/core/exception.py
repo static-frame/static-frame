@@ -80,8 +80,8 @@ class InvalidFillValue(RuntimeError):
 
 
 class InvalidWindowLabel(IndexError):
-    def __init__(self) -> None:
-        super().__init__('A label cannot be assigned to the window; update `label_shift` to select an appropriate label relative to the window.')
+    def __init__(self, label_iloc: int) -> None:
+        super().__init__(f'A label cannot be assigned to the window for position {label_iloc}; set `label_missing_raises` to `False` or update `label_shift` to select an appropriate label relative to the window.')
 
 
 #-------------------------------------------------------------------------------

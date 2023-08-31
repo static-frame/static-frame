@@ -5893,6 +5893,7 @@ class Frame(ContainerOperand):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
@@ -5908,10 +5909,11 @@ class Frame(ContainerOperand):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array,
-                label_required=True,
+                derive_label=True,
                 )
 
 
@@ -5923,22 +5925,11 @@ class Frame(ContainerOperand):
             window_func: tp.Optional[AnyCallable] = None,
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
+            label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
             ) -> tp.Iterator['Frame']:
-        # yield from (x for _, x in self._axis_window_items(
-        #         size=size,
-        #         axis=axis,
-        #         step=step,
-        #         window_sized=window_sized,
-        #         window_func=window_func,
-        #         window_valid=window_valid,
-        #         label_shift=label_shift,
-        #         start_shift=start_shift,
-        #         size_increment=size_increment,
-        #         as_array=as_array
-        #         ))
         yield from (x for _, x in axis_window_items(
                 source=self,
                 size=size,
@@ -5948,10 +5939,11 @@ class Frame(ContainerOperand):
                 window_func=window_func,
                 window_valid=window_valid,
                 label_shift=label_shift,
+                label_missing_raises=label_missing_raises,
                 start_shift=start_shift,
                 size_increment=size_increment,
                 as_array=as_array,
-                label_required=False,
+                derive_label=False,
                 ))
 
 

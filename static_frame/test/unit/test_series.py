@@ -38,6 +38,7 @@ from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import InvalidDatetime64Initializer
+from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 from static_frame.core.util import isna_array
@@ -4030,6 +4031,53 @@ class TestUnit(TestCase):
             [(l, len(s)) for l, s in post],
             [(0, 10), (8, 10), (16, 4)]
             )
+
+
+    def test_series_iter_window_f(self) -> None:
+        s = sf.Series(range(5))
+        post1 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=True, label_shift=-3))
+        self.assertEqual(post1, [[0, 1, 2, 3], [1, 2, 3, 4]])
+
+        post2 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=True))
+        self.assertEqual(post2, [[0, 1, 2, 3], [1, 2, 3, 4]])
+
+        post2 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=True, label_missing_raises=True))
+        self.assertEqual(post2, [[0, 1, 2, 3], [1, 2, 3, 4]])
+
+
+        post3 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_shift=-3))
+        self.assertEqual(post3, [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4], [3, 4], [4]])
+
+        post4 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False))
+        self.assertEqual(post4, [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4], [3, 4], [4]])
+
+        with self.assertRaises(InvalidWindowLabel):
+            _ = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_missing_raises=True))
+
+
+    def test_series_iter_window_g(self) -> None:
+        s = sf.Series(range(5))
+        post1 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=True, label_shift=-3))
+        self.assertEqual(post1, [(0, [0, 1, 2, 3]), (1, [1, 2, 3, 4])])
+
+        post2 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=True))
+        self.assertEqual(post2, [(3, [0, 1, 2, 3]), (4, [1, 2, 3, 4])])
+
+        post2 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=True, label_missing_raises=True))
+        self.assertEqual(post2, [(3, [0, 1, 2, 3]), (4, [1, 2, 3, 4])])
+
+
+        post3 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=False, label_shift=-3))
+        self.assertEqual(post3, [(0, [0, 1, 2, 3]), (1, [1, 2, 3, 4]), (2, [2, 3, 4]), (3, [3, 4]), (4, [4])])
+
+        post4 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=False))
+        self.assertEqual(post4, [(3, [0, 1, 2, 3]), (4, [1, 2, 3, 4])])
+
+        with self.assertRaises(InvalidWindowLabel):
+            _ = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=False, label_missing_raises=True))
+
+        # import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
