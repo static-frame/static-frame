@@ -896,14 +896,14 @@ def axis_window_items( *,
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
+
         if valid and label_required:
             idx_label = idx_right + label_shift
-            if idx_label < 0: # do not wrap around
-                raise InvalidWindowLabel()
             try:
+                if idx_label < 0: # do not wrap around
+                    raise IndexError()
                 label = labels.iloc[idx_label]
             except IndexError: # an invalid label, if required, is an error
-                print(idx_label, labels)
                 if missing_label_raises:
                     raise InvalidWindowLabel() from None
                 valid = False
