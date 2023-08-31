@@ -3813,8 +3813,10 @@ class TestUnit(TestCase):
     def test_series_axis_window_items_d(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
+        # import ipdb; ipdb.set_trace()
 
         post = tuple(s1._axis_window_items(as_array=True, size=5, start_shift=-5, window_sized=False))
+
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
