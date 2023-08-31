@@ -79,6 +79,11 @@ class InvalidFillValue(RuntimeError):
         super().__init__(f'{fill_value} not supported in the context of {context}.')
 
 
+class InvalidWindowLabel(IndexError):
+    def __init__(self) -> None:
+        super().__init__('A label cannot be assigned to the window; update `label_shift` to select an appropriate label relative to the window.')
+
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):

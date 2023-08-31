@@ -4021,6 +4021,15 @@ class TestUnit(TestCase):
         self.assertEqual(post2.to_pairs(),
                 ((4, 2.0), (5, 3.0), (6, 4.0), (7, 5.0), (8, 6.0), (9, 7.0), (10, 8.0), (11, 9.0)))
 
+
+    def test_series_iter_window_e(self) -> None:
+        s = sf.Series(range(20))
+        post = list(s.iter_window_items(size=10, step=8, label_shift=-9, window_sized=False))
+        self.assertEqual(
+            [(l, len(s)) for l, s in post],
+            [(0, 10), (8, 10), (16, 4)]
+            )
+
     #---------------------------------------------------------------------------
 
     def test_series_bool_a(self) -> None:

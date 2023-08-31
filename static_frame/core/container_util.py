@@ -58,6 +58,7 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.exception import InvalidWindowLabel
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -819,6 +820,7 @@ def axis_window_items( *,
         start_shift: int = 0,
         size_increment: int = 0,
         as_array: bool = False,
+        label_required: bool = True,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
@@ -828,7 +830,6 @@ def axis_window_items( *,
     # see doc_str window for docs
 
     from static_frame.core.frame import Frame
-    from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
 
     if size <= 0:
@@ -890,19 +891,18 @@ def axis_window_items( *,
                     window = source._extract(column_key=key) #type: ignore
 
         valid = True
-        try:
-            idx_label = idx_right + label_shift
-            if idx_label < 0: # do not wrap around
-                raise IndexError()
-            #if we cannot get a label, the window is invalid
-            label = labels.iloc[idx_label]
-        except IndexError: # an invalid label has to be dropped
-            valid = False
-
-        if valid and window_sized and window.shape[axis] != size:
+        if window_sized and window.shape[axis] != size:
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
+        if valid and label_required:
+            idx_label = idx_right + label_shift
+            if idx_label < 0: # do not wrap around
+                raise InvalidWindowLabel()
+            try: # if we cannot get a label, the window is invalid
+                label = labels.iloc[idx_label]
+            except IndexError: # an invalid label has to be dropped
+                raise InvalidWindowLabel() from None
 
         if valid:
             if window_func:
