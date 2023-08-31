@@ -20,6 +20,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -58,7 +59,6 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.exception import InvalidWindowLabel
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
