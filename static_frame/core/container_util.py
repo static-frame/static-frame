@@ -853,10 +853,11 @@ def axis_window_items( *,
             # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necessary for each window (which is not the same for axis 1, where block coercion is not required)
             values = source._blocks.values
 
+    count_labels = len(labels)
     if start_shift >= 0:
-        count_window_max = len(labels)
+        count_window_max = count_labels
     else: # add for iterations when less than 0
-        count_window_max = len(labels) + abs(start_shift)
+        count_window_max = count_labels + abs(start_shift)
 
     idx_left_max = count_window_max - 1
     idx_left = start_shift
@@ -902,14 +903,13 @@ def axis_window_items( *,
 
         if valid and (derive_label or label_missing_raises):
             idx_label = idx_right + label_shift
-            try:
-                if idx_label < 0: # do not wrap around
-                    raise IndexError()
-                label = labels.iloc[idx_label]
-            except IndexError: # an invalid label, if required, is an error
+            if idx_label < 0 or idx_label >= count_labels:
+                # an invalid label, if required, is an error
                 if label_missing_raises:
-                    raise InvalidWindowLabel(idx_label) from None
+                    raise InvalidWindowLabel(idx_label)
                 valid = False
+            else:
+                label = labels.iloc[idx_label]
 
         if valid:
             if window_func:
