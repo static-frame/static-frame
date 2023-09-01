@@ -157,7 +157,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
@@ -3994,8 +3994,8 @@ class Frame(ContainerOperand):
         # assert iloc_key.__class__ is tuple # must already be normalized
         assert is_series ^ is_frame # one must be True
 
-        row_key: IntegerLocType
-        column_key: IntegerLocType
+        row_key: TILocSelector
+        column_key: TILocSelector
         row_key, column_key = iloc_key # type: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys

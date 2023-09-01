@@ -6,7 +6,7 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
@@ -208,12 +208,12 @@ class InterfaceFillValue(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItem[FrameOrSeries]:
+    def loc(self) -> InterfaceGetItemLoc[FrameOrSeries]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
-            return InterfaceGetItem(self._extract_loc1d)
-        return InterfaceGetItem(self._extract_loc2d_compound)
+            return InterfaceGetItemLoc(self._extract_loc1d)
+        return InterfaceGetItemLoc(self._extract_loc2d_compound)
 
     def __getitem__(self,  key: GetItemKeyType) -> FrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
@@ -477,7 +477,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItem['Batch']:
+    def loc(self) -> InterfaceGetItemLoc['Batch']:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         def func(key: GetItemKeyType) -> 'Batch':
@@ -486,7 +486,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
                             fill_value=self._fill_value,
                             axis=self._axis).loc[key]
                     )
-        return InterfaceGetItem(func)
+        return InterfaceGetItemLoc(func)
 
     def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.

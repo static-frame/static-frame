@@ -31,7 +31,7 @@ from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
@@ -129,7 +129,7 @@ class LocMap:
             positions: NDArrayAny,
             key: GetItemKeyType,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 

@@ -285,7 +285,7 @@ GetItemKeyType = tp.Union[
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Tuple[GetItemKeyType, ...]
 
-IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
+TILocSelector = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = TLabel # include None

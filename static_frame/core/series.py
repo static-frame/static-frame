@@ -63,7 +63,7 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
@@ -90,7 +90,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -697,18 +697,18 @@ class Series(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Series']:
+    def loc(self) -> InterfaceGetItemLoc['Series']:
         '''
         Interface for label-based selection.
         '''
-        return InterfaceGetItem(self._extract_loc)
+        return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem['Series']:
+    def iloc(self) -> InterfaceGetItemLoc['Series']:
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItem(self._extract_iloc) # type: ignore
+        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Series']:
@@ -1078,7 +1078,7 @@ class Series(ContainerOperand):
 
     def _reindex_other_like_iloc(self,
             value: 'Series',
-            iloc_key: IntegerLocType,
+            iloc_key: TILocSelector,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
@@ -1891,7 +1891,7 @@ class Series(ContainerOperand):
     # def _extract_array(self, key: GetItemKeyType) -> NDArrayAny:
     #     return self.values[key]
 
-    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
+    def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
         # iterable selection should be handled by NP
         values = self.values[key]
 
@@ -1939,7 +1939,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
 
-    def _drop_iloc(self, key: IntegerLocType) -> 'Series':
+    def _drop_iloc(self, key: TILocSelector) -> 'Series':
         if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
@@ -1990,7 +1990,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_assign(self, key: IntegerLocType) -> 'SeriesAssign':
+    def _extract_iloc_assign(self, key: TILocSelector) -> 'SeriesAssign':
         return SeriesAssign(self, key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
@@ -3549,7 +3549,7 @@ class SeriesAssign(Assign):
 
     def __init__(self,
             container: Series,
-            key: IntegerLocType,
+            key: TILocSelector,
             ) -> None:
         '''
         Args:

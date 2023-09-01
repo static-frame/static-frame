@@ -37,7 +37,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
@@ -59,7 +59,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
@@ -435,12 +435,12 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc) #type: ignore
+    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
@@ -848,7 +848,7 @@ class Index(IndexBase):
             key: GetItemKeyType,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
@@ -890,7 +890,7 @@ class Index(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
         Args:
@@ -922,7 +922,7 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: IntegerLocType | None,
+            key: TILocSelector | None,
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -969,7 +969,7 @@ class Index(IndexBase):
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self,
-            key: IntegerLocType
+            key: TILocSelector
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''

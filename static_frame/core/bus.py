@@ -24,7 +24,8 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterfaceGetItemILoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -54,7 +55,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
@@ -581,12 +582,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLoc['Bus']:
+        return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemILoc['Bus']:
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Bus']:
@@ -761,16 +762,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 yield store.read(label, config=config[label])
 
 
-    def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
+    def _update_series_cache_iloc(self, key: TILocSelector) -> None:
         '''
-        Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
+        Update the Series cache with the key specified, where key can be any iloc.
 
         Args:
             key: always an iloc key.
         '''
         max_persist_active = self._max_persist is not None
 
-        load = False if self._loaded_all else not self._loaded[key].all() # type: ignore
+        load = False if self._loaded_all else not self._loaded[key].all()
         if not load and not max_persist_active:
             return
 
@@ -789,7 +790,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values: NDArrayAny | Frame = array[key] # type: ignore
+        target_values: NDArrayAny | Frame = array[key]
         target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
@@ -863,7 +864,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
+    def _extract_iloc(self, key: TILocSelector) -> 'Bus':
         '''
         Returns:
             Bus or, if an element is selected, a Frame
@@ -871,7 +872,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
-        values: tp.Any = self._values_mutable[key] # type: ignore
+        values: tp.Any = self._values_mutable[key]
 
         # NOTE: Bus only stores Frame and FrameDeferred, can rely on check with values
         if not values.__class__ is np.ndarray: # if we have a single element
@@ -903,7 +904,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: IntegerLocType) -> 'Bus':
+    def _drop_iloc(self, key: TILocSelector) -> 'Bus':
         series = self._to_series_state()._drop_iloc(key)
         return self._derive_from_series(series, own_data=True)
 

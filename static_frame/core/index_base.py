@@ -26,7 +26,7 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -61,7 +61,7 @@ class IndexBase(ContainerOperandSequence):
     _NDIM: int
 
     loc: tp.Any
-    iloc: tp.Any # this does not work: InterfaceGetItem[I]
+    iloc: tp.Any # this does not work: InterfaceGetItemLoc[I]
 
     #---------------------------------------------------------------------------
     def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:
@@ -201,7 +201,7 @@ class IndexBase(ContainerOperandSequence):
         from static_frame.core.series import Series
         return Series(()) # pragma: no cover
 
-    def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
+    def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> TLabel:
@@ -328,16 +328,16 @@ class IndexBase(ContainerOperandSequence):
             key: GetItemKeyType,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
 
     def __getitem__(self: I,
-            key: IntegerLocType
+            key: TILocSelector
             ) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 

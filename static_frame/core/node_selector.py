@@ -13,6 +13,7 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TILocSelector
 
 # from static_frame.core.util import AnyCallable
 
@@ -69,7 +70,7 @@ class InterfaceBatch:
     INTERFACE: tp.Tuple[str, ...] = ()
 
 
-class InterfaceGetItem(Interface[TContainer]):
+class InterfaceGetItemLoc(Interface[TContainer]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
@@ -81,6 +82,20 @@ class InterfaceGetItem(Interface[TContainer]):
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
         return self._func(key)
+
+class InterfaceGetItemILoc(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TILocSelector], TContainer]
+
+    def __init__(self, func: tp.Callable[[TILocSelector], TContainer]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TILocSelector) -> TContainer:
+        return self._func(key)
+
 
 class InterfaceGetItemCompound(Interface[TContainer]):
 
@@ -129,12 +144,12 @@ class InterfaceSelectDuo(Interface[TContainer]):
         self._func_loc = func_loc
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._func_iloc)
+    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._func_iloc)
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._func_loc)
+    def loc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._func_loc)
 
 class InterfaceSelectTrio(Interface[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
@@ -163,15 +178,15 @@ class InterfaceSelectTrio(Interface[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
+    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
         '''Integer-position based selection.'''
-        return InterfaceGetItem(self._func_iloc)
+        return InterfaceGetItemLoc(self._func_iloc)
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
+    def loc(self) -> InterfaceGetItemLoc[TContainer]:
         '''Label-based selection.
         '''
-        return InterfaceGetItem(self._func_loc)
+        return InterfaceGetItemLoc(self._func_loc)
 
 
 class InterfaceSelectQuartet(Interface[TContainer]):
@@ -204,20 +219,20 @@ class InterfaceSelectQuartet(Interface[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def bloc(self) -> InterfaceGetItem[TContainer]:
+    def bloc(self) -> InterfaceGetItemLoc[TContainer]:
         '''Boolean based assignment.'''
-        return InterfaceGetItem(self._func_bloc)
+        return InterfaceGetItemLoc(self._func_bloc)
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
+    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
         '''Integer-position based assignment.'''
-        return InterfaceGetItem(self._func_iloc)
+        return InterfaceGetItemLoc(self._func_iloc)
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
+    def loc(self) -> InterfaceGetItemLoc[TContainer]:
         '''Label-based assignment.
         '''
-        return InterfaceGetItem(self._func_loc)
+        return InterfaceGetItemLoc(self._func_loc)
 
 
 #-------------------------------------------------------------------------------

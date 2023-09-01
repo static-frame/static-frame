@@ -30,7 +30,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -47,7 +47,7 @@ from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TSortKinds
@@ -680,8 +680,8 @@ class TypeBlocks(ContainerOperand):
     # interfaces
 
     @property
-    def iloc(self) -> InterfaceGetItem: #type: ignore
-        return InterfaceGetItem(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterfaceGetItemLoc: #type: ignore
+        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     #---------------------------------------------------------------------------
     # common NP-style properties
@@ -2905,7 +2905,7 @@ class TypeBlocks(ContainerOperand):
                 )
 
     def _extract_iloc(self,
-            key: IntegerLocType | None
+            key: TILocSelector | None
             ) -> tp.Any:
         if isinstance(key, tuple):
             return self._extract(*key) # type: ignore # NOTE: needs specialization for 2D input

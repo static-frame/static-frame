@@ -46,7 +46,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -72,7 +72,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
@@ -1151,12 +1151,12 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self: IH) -> InterfaceGetItem['IndexHierarchy']:
-        return InterfaceGetItem(self._extract_loc) # type: ignore
+    def loc(self: IH) -> InterfaceGetItemLoc['IndexHierarchy']:
+        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self: IH) -> InterfaceGetItem['IndexHierarchy']:
-        return InterfaceGetItem(self._extract_iloc) # type: ignore
+    def iloc(self: IH) -> InterfaceGetItemLoc['IndexHierarchy']:
+        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     def _iter_label(self: IH,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
@@ -1866,7 +1866,7 @@ class IndexHierarchy(IndexBase):
 
     def _loc_per_depth_to_iloc(self: IH,
             key: tp.Union[NDArrayAny, CompoundLabelType],
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
 
@@ -1908,7 +1908,7 @@ class IndexHierarchy(IndexBase):
             key: GetItemKeyType | ILoc | HLoc,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Given iterable (or instance) of GetItemKeyType, determine the equivalent iloc key.
 
@@ -1988,7 +1988,7 @@ class IndexHierarchy(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Given a label (loc) style key (either a label, a list of labels, a slice, an HLoc object, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
@@ -1999,7 +1999,7 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: IntegerLocType | None,
+            key: TILocSelector | None,
             ) -> tp.Any:
         '''
         Extract a new index given an iloc key
@@ -2063,7 +2063,7 @@ class IndexHierarchy(IndexBase):
         return self._extract_iloc(self._loc_to_iloc(key)) # type: ignore
 
     def __getitem__(self,
-            key: IntegerLocType,
+            key: TILocSelector,
             ) -> tp.Any:
         '''
         Extract a new index given a key.

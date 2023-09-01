@@ -30,7 +30,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -41,7 +41,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import NameType
 from static_frame.core.util import TLabel
 from static_frame.core.util import is_callable_or_mapping
@@ -249,12 +249,12 @@ class Yarn(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_loc) # type: ignore
+    def loc(self) -> InterfaceGetItemLoc['Yarn']:
+        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterfaceGetItemLoc['Yarn']:
+        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Yarn']:
@@ -504,7 +504,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: IntegerLocType) -> Yarn | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> Yarn | Frame:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -568,7 +568,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
+    def _drop_iloc(self, key: TILocSelector) -> 'Yarn':
         invalid = np.full(len(self._index), True)
         invalid[key] = False
         return self._extract_iloc(invalid) # type: ignore
