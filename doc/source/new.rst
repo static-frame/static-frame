@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-1.6.2
+1.6.3
 -----------
 
 Added ``label_missing_skips`` to all ``iter_window`` and related interfaces.
