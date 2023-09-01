@@ -44,7 +44,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ArraySignature
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TILocSelector
@@ -479,7 +479,7 @@ class TypeBlocks(ContainerOperand):
     def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[tp.Tuple[int, int], tp.Any]],
             shape: tp.Tuple[int, ...],
-            dtype: DtypeSpecifier | None,
+            dtype: TDtypeSpecifier | None,
             fill_value: object = FILL_VALUE_DEFAULT
             ) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype. This permits only uniformly typed data, as we have to create a single empty array first, then populate it.
@@ -496,7 +496,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_zero_size_shape(cls,
             shape: ShapeType = (0, 0),
-            get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]] = None,
+            get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]] = None,
             ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
@@ -867,7 +867,7 @@ class TypeBlocks(ContainerOperand):
     @staticmethod
     def _concatenate_blocks(
             blocks: tp.Iterable[NDArrayAny],
-            dtype: DtypeSpecifier,
+            dtype: TDtypeSpecifier,
             columns: int,
             ) -> NDArrayAny:
         '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array. This generally assumes that they dtype is aligned among the provided blocks.
@@ -1543,7 +1543,7 @@ class TypeBlocks(ContainerOperand):
 
     def _astype_blocks(self,
             column_key: TLocSelector,
-            dtype: DtypeSpecifier
+            dtype: TDtypeSpecifier
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given any column selection, apply a single dtype.
@@ -1616,7 +1616,7 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
+            dtype_factory: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray.

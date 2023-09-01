@@ -107,7 +107,7 @@ from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
-from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import FrameInitializer as FrameInitializer
 from static_frame.core.util import IndexInitializer as IndexInitializer
 from static_frame.core.util import IndexSpecifier as IndexSpecifier

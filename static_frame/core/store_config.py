@@ -5,7 +5,7 @@ import typing as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
@@ -24,7 +24,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     columns_name_depth_level: tp.Optional[TDepthLevel]
     columns_constructors: IndexConstructors
     columns_select: tp.Optional[tp.Iterable[str]]
-    dtypes: DtypesSpecifier
+    dtypes: TDtypesSpecifier
     consolidate_blocks: bool
     skip_header: int
     skip_footer: int
@@ -76,7 +76,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            dtypes: DtypesSpecifier = None,
+            dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # not used by all constructors
             skip_header: int = 0,
@@ -153,7 +153,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         return tuple(depth_specifier)
 
     @staticmethod
-    def _hash_dtypes_specifier(dtypes_specifier: DtypesSpecifier) -> TLabel:
+    def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> TLabel:
         if dtypes_specifier is None :
             return dtypes_specifier
         if isinstance(dtypes_specifier, dict):
@@ -228,7 +228,7 @@ class StoreConfig(StoreConfigHE):
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            dtypes: DtypesSpecifier = None,
+            dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,

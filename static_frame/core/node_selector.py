@@ -9,7 +9,7 @@ from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TILocSelector
@@ -381,7 +381,7 @@ class BatchAsType:
         self._column_key = column_key
 
     def __call__(self,
-            dtypes: DtypesSpecifier,
+            dtypes: TDtypesSpecifier,
             *,
             consolidate_blocks: bool = False,
             ) -> 'Batch':

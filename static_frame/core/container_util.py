@@ -35,8 +35,8 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import IndexConstructor
@@ -152,12 +152,12 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
             or not hasattr(value, '__getitem__'))
 
 def get_col_dtype_factory(
-        dtypes: DtypesSpecifier,
+        dtypes: TDtypesSpecifier,
         columns: tp.Optional[tp.Sequence[TLabel] | IndexBase],
         index_depth: int = 0,
-        ) -> tp.Callable[[int], DtypeSpecifier]:
+        ) -> tp.Callable[[int], TDtypeSpecifier]:
     '''
-    Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
+    Return a function, or None, to get values from a TDtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
@@ -183,7 +183,7 @@ def get_col_dtype_factory(
         if is_frozen_generator_input(dtypes):
             dtypes = FrozenGenerator(dtypes) #type: ignore
 
-    def get_col_dtype(col_idx: int) -> DtypeSpecifier:
+    def get_col_dtype(col_idx: int) -> TDtypeSpecifier:
         if is_map:
             col_idx = col_idx - index_depth
             if col_idx < 0:
@@ -427,7 +427,7 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
         pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[NDArrayAny]:
@@ -1106,7 +1106,7 @@ def array_from_value_iter(
         key: TLabel,
         idx: int,
         get_value_iter: tp.Callable[[TLabel, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
         row_count: int,
         ) -> NDArrayAny:
     '''

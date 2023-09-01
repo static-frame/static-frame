@@ -328,10 +328,10 @@ PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
-DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
-DtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
+TDtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
 
-def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
+def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
     if value is None or isinstance(value, np.dtype):
         return value
 
@@ -400,10 +400,10 @@ def depth_level_from_specifier(
     return key # type: ignore
 
 # support an iterable of specifiers, or mapping based on column names
-DtypesSpecifier = tp.Optional[tp.Union[
-        DtypeSpecifier,
-        tp.Iterable[DtypeSpecifier],
-        tp.Dict[TLabel, DtypeSpecifier]
+TDtypesSpecifier = tp.Optional[tp.Union[
+        TDtypeSpecifier,
+        tp.Iterable[TDtypeSpecifier],
+        tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
 # specifiers that are equivalent to object
@@ -1107,7 +1107,7 @@ def full_for_fill(
 
     return array
 
-def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
+def dtype_to_fill_value(dtype: TDtypeSpecifier) -> tp.Any:
     '''Given a dtype, return an appropriate and compatible null value. This is used to provide temporary, "dummy" fill values that reduce type coercions.
     '''
     if not isinstance(dtype, np.dtype):
@@ -1589,9 +1589,9 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
-        ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
+        ) -> tp.Tuple[TDtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
-    Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
+    Determine an appropriate TDtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the TDtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
 
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values.
@@ -1662,7 +1662,7 @@ def prepare_iter_for_array(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier = None,
+        dtype: TDtypeSpecifier = None,
         count: tp.Optional[int] = None,
         ) -> tp.Tuple[NDArrayAny, bool]:
     '''
@@ -1932,7 +1932,7 @@ DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
-        dtype: tp.Optional[DtypeOrDT64] = None
+        dtype: tp.Optional[TDtypeOrDT64] = None
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
@@ -1997,7 +1997,7 @@ def timedelta64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
 
 
 def _slice_to_datetime_slice_args(key: slice,
-        dtype: tp.Optional[DtypeOrDT64] = None
+        dtype: tp.Optional[TDtypeOrDT64] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
@@ -2014,7 +2014,7 @@ def _slice_to_datetime_slice_args(key: slice,
 
 def key_to_datetime_key(
         key: TLocSelector,
-        dtype: DtypeOrDT64 = np.datetime64,
+        dtype: TDtypeOrDT64 = np.datetime64,
         ) -> TLocSelector:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.

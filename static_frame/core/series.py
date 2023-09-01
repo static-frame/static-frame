@@ -84,7 +84,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -156,7 +156,7 @@ class Series(ContainerOperand):
             element: tp.Any,
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactory],
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False,
@@ -194,7 +194,7 @@ class Series(ContainerOperand):
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tpe.Self:
@@ -230,7 +230,7 @@ class Series(ContainerOperand):
             *,
             delimiter: str,
             index: tp.Optional[IndexInitOrAutoType] = None,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             skip_initial_space: bool = False,
@@ -279,7 +279,7 @@ class Series(ContainerOperand):
     def from_dict(cls,
             mapping: tp.Dict[TLabel, tp.Any],
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tpe.Self:
@@ -524,7 +524,7 @@ class Series(ContainerOperand):
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False
             ) -> None:
@@ -2391,7 +2391,7 @@ class Series(ContainerOperand):
                 )
 
     @doc_inject(select='astype')
-    def astype(self, dtype: DtypeSpecifier) -> tpe.Self:
+    def astype(self, dtype: TDtypeSpecifier) -> tpe.Self:
         '''
         Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for ``Frame``, this is an interface exposing both a callable and a getitem interface.
 
@@ -3628,7 +3628,7 @@ class SeriesAssign(Assign):
     def apply_element(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''
@@ -3647,7 +3647,7 @@ class SeriesAssign(Assign):
     def apply_element_items(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
             ) -> 'Series':
         '''

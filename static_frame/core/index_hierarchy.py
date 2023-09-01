@@ -66,7 +66,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CompoundLabelType
-from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -2948,7 +2948,7 @@ class IndexHierarchyAsType:
         self.depth_key = depth_key
 
     def __call__(self: IHAsType,
-            dtypes: DtypesSpecifier,
+            dtypes: TDtypesSpecifier,
             *,
             consolidate_blocks: bool = False,
             ) -> IndexHierarchy:

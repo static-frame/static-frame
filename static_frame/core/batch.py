@@ -47,7 +47,7 @@ from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -1721,7 +1721,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # exporter
 
     def to_series(self, *,
-        dtype: DtypeSpecifier = None,
+        dtype: TDtypeSpecifier = None,
         name: NameType = None,
         index_constructor: IndexConstructor = None
         ) -> Series:

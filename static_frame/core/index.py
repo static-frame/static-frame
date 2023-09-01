@@ -54,7 +54,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
@@ -273,7 +273,7 @@ class Index(IndexBase):
             *,
             loc_is_iloc: bool = False,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             ) -> None:
         '''Initializer.
 
@@ -575,7 +575,7 @@ class Index(IndexBase):
 
 
     # @doc_inject(select='astype')
-    def astype(self, dtype: DtypeSpecifier) -> 'Index':
+    def astype(self, dtype: TDtypeSpecifier) -> 'Index':
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 

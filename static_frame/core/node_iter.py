@@ -14,7 +14,7 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
@@ -209,7 +209,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def apply(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             columns_constructor: tp.Optional[IndexConstructor] = None,
@@ -253,7 +253,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def apply_pool(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             max_workers: tp.Optional[int] = None,
@@ -356,7 +356,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
     def map_any(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             ) -> FrameOrSeries:
@@ -425,7 +425,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             ) -> FrameOrSeries:
@@ -490,7 +490,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
     def map_all(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             ) -> FrameOrSeries:
@@ -555,7 +555,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     def to_series_from_values(self,
             values: tp.Iterator[tp.Any],
             *,
-            dtype: DtypeSpecifier,
+            dtype: TDtypeSpecifier,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             axis: int = 0,
@@ -588,7 +588,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     def to_series_from_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             axis: int = 0,
@@ -624,7 +624,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     def to_series_from_group_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             name_index: NameType = None,
@@ -649,7 +649,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[TLabel, TLabel], tp.Any]],
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             columns_constructor: tp.Optional[IndexConstructor]= None,
@@ -683,7 +683,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
     def to_index_from_labels(self,
             values: tp.Iterator[TLabel], #pylint: disable=function-redefined
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,
             ) -> NDArrayAny:

@@ -24,7 +24,7 @@ from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import INT64_MAX
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
@@ -314,7 +314,7 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: DtypeSpecifier = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeSpecifier = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
