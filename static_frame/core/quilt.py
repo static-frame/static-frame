@@ -34,7 +34,7 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -60,6 +60,7 @@ from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
+from static_frame.core.util import TILocSelectorCompound
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
@@ -1113,7 +1114,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc(self, key: TLocSelectorCompound) -> tp.Union[Series, Frame]:
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union[Series, Frame]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -1165,12 +1166,12 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound[Frame | Series]:
-        return InterfaceGetItemCompound(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLocCompound[Frame | Series]:
+        return InterfaceGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound[Frame | Series]:
-        return InterfaceGetItemCompound(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemLocCompound[Frame | Series]:
+        return InterfaceGetItemLocCompound(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators

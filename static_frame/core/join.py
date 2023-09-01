@@ -15,11 +15,11 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TDepthLevel
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
 from static_frame.core.util import PairRight
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent

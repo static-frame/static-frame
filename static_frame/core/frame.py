@@ -102,7 +102,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -147,7 +147,6 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FrameInitializer
@@ -165,6 +164,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
@@ -3460,12 +3460,12 @@ class Frame(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound[FrameOrSeries]:
-        return InterfaceGetItemCompound(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLocCompound[FrameOrSeries]:
+        return InterfaceGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound[FrameOrSeries]:
-        return InterfaceGetItemCompound(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemLocCompound[FrameOrSeries]:
+        return InterfaceGetItemLocCompound(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Series']:

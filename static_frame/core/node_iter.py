@@ -14,11 +14,11 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import get_concurrent_executor

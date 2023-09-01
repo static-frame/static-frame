@@ -14,7 +14,7 @@ from static_frame.core.util import TBlocKey
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
-
+from static_frame.core.util import TILocSelectorCompound
 # from static_frame.core.util import AnyCallable
 
 if tp.TYPE_CHECKING:
@@ -97,7 +97,7 @@ class InterfaceGetItemILoc(Interface[TContainer]):
         return self._func(key)
 
 
-class InterfaceGetItemCompound(Interface[TContainer]):
+class InterfaceGetItemLocCompound(Interface[TContainer]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
@@ -108,6 +108,19 @@ class InterfaceGetItemCompound(Interface[TContainer]):
         self._func = func
 
     def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
+        return self._func(key)
+
+class InterfaceGetItemILocCompound(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TILocSelectorCompound], TContainer]
+
+    def __init__(self, func: tp.Callable[[TILocSelectorCompound], TContainer]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TILocSelectorCompound) -> TContainer:
         return self._func(key)
 
 class InterfaceGetItemBLoc(Interface[TContainer]):

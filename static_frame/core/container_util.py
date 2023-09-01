@@ -35,7 +35,6 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
@@ -46,6 +45,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
@@ -1018,7 +1018,7 @@ def key_to_ascending_key(key: TLocSelector, size: int) -> TLocSelector:
         return key
 
     if isinstance(key, list):
-        return sorted(key)
+        return sorted(key) # type: ignore
 
     if isinstance(key, Series):
         return key.sort_index()

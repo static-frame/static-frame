@@ -249,7 +249,7 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 
 TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
-TILocSelectorCompound = tp.Tuple[TILocSelector, ...]
+TILocSelectorCompound = TILocSelector | tp.Tuple[TILocSelector, ...]
 
 # NOTE: slice is not hashable
 TLabel = tp.Union[
@@ -283,7 +283,7 @@ TLocSelector = tp.Union[
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-TLocSelectorCompound = tp.Tuple[TLocSelector, ...]
+TLocSelectorCompound = TLocSelector | tp.Tuple[TLocSelector, ...]
 # TODO: evaluate usage of this; if needed, name better
 CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
 
