@@ -438,7 +438,8 @@ class DOC_TEMPLATE:
             window_func: Array processor of window values, executed before function application (if used): can be used for applying a weighting function to each window.
             window_valid: Function that, given an array window, returns True if the window is valid; invalid windows are skipped.
             label_shift: A shift, relative to the right-most element contained in the window, to derive the label to be paired with the window. For example, to label each window with the label found at the start of the window, ``label_shift`` can be set to one less than ``size``.
-            label_missing_raises: If False, a window that cannot derive a label will be skipped; if ``True``, an exception will be raised.
+            label_missing_skips: If True, a window that cannot derive a label will skip that window; if False, the window will be returned with None as the label.
+            label_missing_raises: If True, a window that cannot derive a label will raise an exception.
             start_shift: A shift to determine the first element where window collection begins.
             size_increment: A value to be added to ``size`` with each window after the first, so as to, in combination with setting ``step`` to 0, permit iterating over expanding windows.
             '''

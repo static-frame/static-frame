@@ -4048,14 +4048,17 @@ class TestUnit(TestCase):
         post3 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_shift=-3))
         self.assertEqual(post3, [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4], [3, 4], [4]])
 
-        post4 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False))
+        post4 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_missing_skips=False))
         self.assertEqual(post4, [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4], [3, 4], [4]])
+
+        post4 = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_missing_skips=True))
+        self.assertEqual(post4, [[0, 1, 2, 3], [1, 2, 3, 4]])
 
         with self.assertRaises(InvalidWindowLabel):
             _ = list(x.tolist() for x in s.iter_window_array(size=4, step=1, window_sized=False, label_missing_raises=True))
 
 
-    def test_series_iter_window_g(self) -> None:
+    def test_series_iter_window_g1(self) -> None:
         s = sf.Series(range(5))
         post1 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=True, label_shift=-3))
         self.assertEqual(post1, [(0, [0, 1, 2, 3]), (1, [1, 2, 3, 4])])
@@ -4076,7 +4079,20 @@ class TestUnit(TestCase):
         with self.assertRaises(InvalidWindowLabel):
             _ = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=False, label_missing_raises=True))
 
-        # import ipdb; ipdb.set_trace()
+    def test_series_iter_window_g2(self) -> None:
+        s = sf.Series(range(5))
+        post1 = list((y, x.tolist()) for y, x in s.iter_window_array_items(size=4, step=1, window_sized=False, label_missing_skips=False))
+        self.assertEqual(post1, [(3, [0, 1, 2, 3]), (4, [1, 2, 3, 4]), (None, [2, 3, 4]), (None, [3, 4]), (None, [4])])
+
+
+    def test_series_iter_window_h(self) -> None:
+        s = sf.Series(range(10))
+        self.assertEqual(len(list(s.iter_window(size=2, window_sized=False, start_shift=-1))), 10)
+        self.assertEqual(len(list(s.iter_window(size=2, window_sized=False, start_shift=-1, label_missing_skips=False))), 11)
+
+        self.assertEqual(len(list(s.iter_window_items(size=2, window_sized=False, start_shift=-1))), 10)
+        self.assertEqual(len(list(s.iter_window_items(size=2, window_sized=False, start_shift=-1, label_missing_skips=False))), 11)
+
 
 
     #---------------------------------------------------------------------------
