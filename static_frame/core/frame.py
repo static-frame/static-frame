@@ -205,6 +205,7 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TIndexAny = Index[tp.Any]
 
 class Frame(ContainerOperand):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
@@ -3187,7 +3188,7 @@ class Frame(ContainerOperand):
                             own_data=True,
                             )
                 elif issubclass(cls, IndexHierarchy):
-                    index_constructors: tp.List[tp.Type[Index]] = [
+                    index_constructors: tp.List[tp.Type[TIndexAny]] = [
                             ContainerMap.get(cls_name) for cls_name in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
@@ -5110,7 +5111,7 @@ class Frame(ContainerOperand):
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
         coords, values = self._blocks.extract_bloc(bloc_key)
-        index = Index(
+        index: Index[np.object_] = Index(
                 ((self._index[x], self._columns[y]) for x, y in coords),
                 dtype=DTYPE_OBJECT)
         return Series(values, index=index, own_index=True)
