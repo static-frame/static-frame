@@ -54,13 +54,13 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
-from static_frame.core.util import TILocSelectorCompound
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
