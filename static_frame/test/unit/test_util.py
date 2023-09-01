@@ -52,6 +52,7 @@ from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import datetime64_not_aligned
+from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import gen_skip_middle
@@ -89,7 +90,6 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable

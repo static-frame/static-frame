@@ -74,6 +74,7 @@ from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
@@ -82,6 +83,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_neither_slice_nor_mask
 from static_frame.core.util import isfalsy_array
@@ -93,9 +95,7 @@ from static_frame.core.util import run_length_1d
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import TDepthLevelSpecifier
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
