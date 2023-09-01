@@ -35,7 +35,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
@@ -1242,7 +1242,7 @@ def apply_binary_operator_blocks_columnar(*,
 
 def arrays_from_index_frame(
         container: 'Frame',
-        depth_level: tp.Optional[DepthLevelSpecifier],
+        depth_level: tp.Optional[TDepthLevel],
         columns: TLocSelector
         ) -> tp.Iterator[NDArrayAny]:
     '''
@@ -1630,7 +1630,7 @@ def index_many_concat(
 #-------------------------------------------------------------------------------
 def apex_to_name(
         rows: tp.Sequence[tp.Sequence[TLabel]],
-        depth_level: tp.Optional[DepthLevelSpecifier],
+        depth_level: tp.Optional[TDepthLevel],
         axis: int, # 0 is by row (for index), 1 is by column (for columns)
         axis_depth: int,
         ) -> NameType:

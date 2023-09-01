@@ -66,7 +66,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CompoundLabelType
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -1159,7 +1159,7 @@ class IndexHierarchy(IndexBase):
         return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     def _iter_label(self: IH,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            depth_level: tp.Optional[TDepthLevel] = None,
             ) -> tp.Iterator[TLabel]:
         '''
         Iterate over labels at a given depth level.
@@ -1177,7 +1177,7 @@ class IndexHierarchy(IndexBase):
             yield from zip(*map(self.values_at_depth, depth_level))
 
     def _iter_label_items(self: IH,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            depth_level: tp.Optional[TDepthLevel] = None,
             ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         '''
         This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
@@ -1476,7 +1476,7 @@ class IndexHierarchy(IndexBase):
         return len(self._indices)
 
     def values_at_depth(self: IH,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             ) -> NDArrayAny:
         '''
         Return an NP array for the ``depth_level`` specified.
@@ -1494,7 +1494,7 @@ class IndexHierarchy(IndexBase):
         return self._blocks._extract_array(column_key=list(depth_level))
 
     def index_at_depth(self: IH,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             ) -> tp.Union[Index, tp.Tuple[Index, ...]]:
         '''
         Return an index, or a tuple of indices for the ``depth_level`` specified.
@@ -1513,7 +1513,7 @@ class IndexHierarchy(IndexBase):
         return tuple(map(self._indices.__getitem__, depth_level))
 
     def indexer_at_depth(self: IH,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             ) -> NDArrayAny:
         '''
         Return the indexers for the ``depth_level`` specified.
@@ -1531,7 +1531,7 @@ class IndexHierarchy(IndexBase):
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''
         {}
@@ -1627,7 +1627,7 @@ class IndexHierarchy(IndexBase):
 
     def relabel_at_depth(self: IH,
             mapper: RelabelInput,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
@@ -2255,7 +2255,7 @@ class IndexHierarchy(IndexBase):
     # utility functions
 
     def unique(self: IH,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             order_by_occurrence: bool = False,
             ) -> NDArrayAny:
         '''

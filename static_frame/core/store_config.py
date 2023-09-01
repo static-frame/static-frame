@@ -5,7 +5,7 @@ import typing as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import TLabel
@@ -18,10 +18,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     '''
 
     index_depth: int
-    index_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    index_name_depth_level: tp.Optional[TDepthLevel]
     index_constructors: IndexConstructors
     columns_depth: int
-    columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    columns_name_depth_level: tp.Optional[TDepthLevel]
     columns_constructors: IndexConstructors
     columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: DtypesSpecifier
@@ -70,10 +70,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     def __init__(self, *,
             # constructors
             index_depth: int = 0, # this default does not permit round trip
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
@@ -147,7 +147,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         return not self.__eq__(other)
 
     @staticmethod
-    def _hash_depth_specifier(depth_specifier: tp.Optional[DepthLevelSpecifier]) -> TLabel:
+    def _hash_depth_specifier(depth_specifier: tp.Optional[TDepthLevel]) -> TLabel:
         if depth_specifier is None or isinstance(depth_specifier, int):
             return depth_specifier
         return tuple(depth_specifier)
@@ -222,10 +222,10 @@ class StoreConfig(StoreConfigHE):
 
     def __init__(self, *,
             index_depth: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,

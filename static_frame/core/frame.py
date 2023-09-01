@@ -147,7 +147,7 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FrameInitializer
@@ -2121,11 +2121,11 @@ class Frame(ContainerOperand):
             delimiter: str,
             index_depth: int = 0,
             index_column_first: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
@@ -2436,11 +2436,11 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
@@ -2498,11 +2498,11 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
@@ -2561,11 +2561,11 @@ class Frame(ContainerOperand):
             delimiter: str = '\t',
             index_depth: int = 0,
             index_column_first: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
@@ -2636,10 +2636,10 @@ class Frame(ContainerOperand):
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
@@ -2942,10 +2942,10 @@ class Frame(ContainerOperand):
             value: 'pyarrow.Table',
             *,
             index_depth: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
             name: TLabel = None,
@@ -3098,10 +3098,10 @@ class Frame(ContainerOperand):
             fp: PathSpecifier,
             *,
             index_depth: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
@@ -4352,7 +4352,7 @@ class Frame(ContainerOperand):
 
 
     def relabel_shift_out(self,
-            depth_level: DepthLevelSpecifier,
+            depth_level: TDepthLevel,
             *,
             axis: int = 0,
             ) -> tpe.Self:
@@ -5719,7 +5719,7 @@ class Frame(ContainerOperand):
 
     #-----------------------------------------------------------------------
     def _axis_group_labels_items(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             *,
             axis: int = 0,
             as_array: bool = False,
@@ -5798,7 +5798,7 @@ class Frame(ContainerOperand):
 
 
     def _axis_group_labels(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             *,
             axis: int = 0,
             as_array: bool = False,
@@ -7649,7 +7649,7 @@ class Frame(ContainerOperand):
     # pivot stack, unstack
 
     def pivot_stack(self,
-            depth_level: DepthLevelSpecifier = -1,
+            depth_level: TDepthLevel = -1,
             *,
             fill_value: object = np.nan,
             ) -> tpe.Self:
@@ -7729,7 +7729,7 @@ class Frame(ContainerOperand):
 
 
     def pivot_unstack(self,
-            depth_level: DepthLevelSpecifier = -1,
+            depth_level: TDepthLevel = -1,
             *,
             fill_value: object = np.nan,
             ) -> tpe.Self:
@@ -7807,9 +7807,9 @@ class Frame(ContainerOperand):
     def join_inner(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
-            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
             right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
@@ -7852,9 +7852,9 @@ class Frame(ContainerOperand):
     def join_left(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
-            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
             right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
@@ -7897,9 +7897,9 @@ class Frame(ContainerOperand):
     def join_right(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
-            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
             right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
@@ -7942,9 +7942,9 @@ class Frame(ContainerOperand):
     def join_outer(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
-            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
             right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',

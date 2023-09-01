@@ -23,7 +23,7 @@ from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
@@ -115,7 +115,7 @@ class IndexBase(ContainerOperandSequence):
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
     def label_widths_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         raise NotImplementedError() #pragma: no cover
 
@@ -191,7 +191,7 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     def values_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> NDArrayAny:
         raise NotImplementedError() #pragma: no cover
 

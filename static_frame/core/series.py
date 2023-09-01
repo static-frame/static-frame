@@ -84,7 +84,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -2046,7 +2046,7 @@ class Series(ContainerOperand):
 
 
     def _axis_group_labels_items(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            depth_level: tp.Optional[TDepthLevel] = None,
             *,
             as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[TLabel, 'Series']]:
@@ -2068,7 +2068,7 @@ class Series(ContainerOperand):
             yield g, func(selection) # type: ignore
 
     def _axis_group_labels(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             *,
             as_array: bool = False,
             ) -> tp.Iterator[TLabel]:

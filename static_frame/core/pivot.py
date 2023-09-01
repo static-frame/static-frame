@@ -18,7 +18,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
 from static_frame.core.util import TLabel
@@ -618,7 +618,7 @@ class PivotIndexMap(tp.NamedTuple):
 
 def pivot_index_map(*,
         index_src: IndexBase,
-        depth_level: DepthLevelSpecifier,
+        depth_level: TDepthLevel,
         dtypes_src: NDArrayAny | None, # array of dtypes
         ) -> PivotIndexMap:
     '''

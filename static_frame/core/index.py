@@ -54,7 +54,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
@@ -445,12 +445,12 @@ class Index(IndexBase):
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     def _iter_label(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None
+            depth_level: tp.Optional[TDepthLevel] = None
             ) -> tp.Iterator[TLabel]:
         yield from self._labels
 
     def _iter_label_items(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None
+            depth_level: tp.Optional[TDepthLevel] = None
             ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         yield from zip(self._positions, self._labels)
 
@@ -777,7 +777,7 @@ class Index(IndexBase):
         return indexer
 
     @staticmethod
-    def _depth_level_validate(depth_level: DepthLevelSpecifier) -> None:
+    def _depth_level_validate(depth_level: TDepthLevel) -> None:
         '''
         Handle all variety of depth_level specifications for a 1D index: only 0, -1, and lists of the same are valid.
         '''
@@ -791,7 +791,7 @@ class Index(IndexBase):
             raise RuntimeError('invalid depth_level', depth_level)
 
     def values_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> NDArrayAny:
         '''
         Return an NP array for the `depth_level` specified.
@@ -801,7 +801,7 @@ class Index(IndexBase):
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''{}'''
         self._depth_level_validate(depth_level)
@@ -1115,7 +1115,7 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             order_by_occurrence: bool = False,
             ) -> NDArrayAny:
         '''

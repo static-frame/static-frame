@@ -15,7 +15,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
@@ -33,9 +33,9 @@ def join(frame: 'Frame',
         other: 'Frame', # support a named Series as a 1D frame?
         *,
         join_type: Join, # intersect, left, right, union,
-        left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        left_depth_level: tp.Optional[TDepthLevel] = None,
         left_columns: TLocSelector = None,
-        right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+        right_depth_level: tp.Optional[TDepthLevel] = None,
         right_columns: TLocSelector = None,
         left_template: str = '{}',
         right_template: str = '{}',
@@ -253,9 +253,9 @@ def join(frame: 'Frame',
 #         right: 'Frame', # support a named Series as a 1D frame?
 #         *,
 #         # join_type: Join, # intersect, left, right, union,
-#         left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+#         left_depth_level: tp.Optional[TDepthLevel] = None,
 #         left_columns: TLocSelector = None,
-#         right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+#         right_depth_level: tp.Optional[TDepthLevel] = None,
 #         right_columns: TLocSelector = None,
 #         left_template: str = '{}',
 #         right_template: str = '{}',

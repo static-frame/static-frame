@@ -14,7 +14,7 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import TDepthLevel
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
@@ -887,7 +887,7 @@ class IterNodeDepthLevel(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None
+            depth_level: tp.Optional[TDepthLevel] = None
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self, depth_level=depth_level)
 
@@ -897,7 +897,7 @@ class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
