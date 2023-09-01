@@ -249,7 +249,7 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # use this as a repalcement for tp.Hashable
 # NOTE: slice is not hashable
-LabelType = tp.Union[
+TLabel = tp.Union[
         tp.Hashable,
         int,
         bool,
@@ -264,7 +264,7 @@ LabelType = tp.Union[
         np.datetime64,
         np.timedelta64,
         datetime.date,
-        tp.Tuple['LabelType'],
+        tp.Tuple['TLabel'],
 ]
 
 

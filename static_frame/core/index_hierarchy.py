@@ -116,15 +116,6 @@ TreeNodeT = tp.Dict[tp.Hashable, tp.Union[Index, 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
-# GetItemKeyType = tp.Union[
-#     'IndexHierarchy',
-#     HLoc,
-#     ILoc,
-#     CompoundLabelType,
-#     np.ndarray,
-#     tp.List[CompoundLabelType],
-#     slice,
-# ]
 ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
 
 HashableToIntMapsT = tp.List[tp.Dict[tp.Hashable, int]]
