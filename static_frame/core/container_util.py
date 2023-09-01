@@ -818,6 +818,7 @@ def axis_window_items( *,
         window_func: tp.Optional[AnyCallable] = None,
         window_valid: tp.Optional[AnyCallable] = None,
         label_shift: int = 0,
+        label_missing_skips: bool = True,
         label_missing_raises: bool = False,
         start_shift: int = 0,
         size_increment: int = 0,
@@ -902,14 +903,17 @@ def axis_window_items( *,
         if valid and window_valid and not window_valid(window):
             valid = False
 
-        if valid and (derive_label or label_missing_raises):
+        if valid:
             idx_label = idx_right + label_shift
             if idx_label < 0 or idx_label >= count_labels:
                 # an invalid label, if required, is an error
                 if label_missing_raises:
                     raise InvalidWindowLabel(idx_label)
-                valid = False
-            else:
+                if label_missing_skips:
+                    valid = False
+                else:
+                    label = None
+            elif derive_label:
                 label = labels.iloc[idx_label]
 
         if valid:
