@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+1.6.2
+-----------
+
+Added ``label_missing_raises`` to all ``iter_window`` and related interfaces.
+
+Set ``typing-extensions`` to greater than or equal to 4.7.1
+
+
 1.6.1
 -----------
 
