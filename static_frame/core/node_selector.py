@@ -10,10 +10,10 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 
 # from static_frame.core.util import AnyCallable
 

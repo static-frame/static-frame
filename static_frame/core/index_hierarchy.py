@@ -68,15 +68,15 @@ from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CompoundLabelType
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d

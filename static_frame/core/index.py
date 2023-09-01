@@ -56,15 +56,15 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples

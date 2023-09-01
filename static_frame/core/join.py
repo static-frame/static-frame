@@ -16,12 +16,12 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
 from static_frame.core.util import PairRight
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
@@ -193,12 +193,12 @@ def join(frame: 'Frame',
         return final.to_frame().relabel(IndexAutoFactory)
 
     # From here, is_many is True
-    row_key = []
+    row_key: tp.List[int]  = []
     final_index_left = []
     for p in final_index:
         if p.__class__ is Pair: # in both
             iloc = left_index._loc_to_iloc(p[0]) #type: ignore
-            row_key.append(iloc)
+            row_key.append(iloc) #type: ignore
             final_index_left.append(p)
         elif p.__class__ is PairLeft:
             row_key.append(left_index._loc_to_iloc(p[0])) #type: ignore

@@ -45,11 +45,11 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -2719,8 +2719,8 @@ class TypeBlocks(ContainerOperand):
                     yield b_fill
 
     def _extract_array(self,
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None
+            row_key: tp.Optional[TILocSelectorCompound] = None,
+            column_key: tp.Optional[TILocSelectorCompound] = None
             ) -> NDArrayAny:
         '''Alternative extractor that returns just an ndarray, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
 
@@ -2863,8 +2863,8 @@ class TypeBlocks(ContainerOperand):
             yield from map(constructor, chainer()) # type: ignore
 
     def _extract(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None
             ) -> tp.Any:
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.

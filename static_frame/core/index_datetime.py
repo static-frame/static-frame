@@ -29,11 +29,12 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import DateInitializer
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
@@ -147,7 +148,7 @@ class IndexDatetime(Index):
             key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key,
             partial_selection: bool = False,
-            ) -> TLocSelector:
+            ) -> TILocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
@@ -292,7 +293,7 @@ class IndexYear(IndexDatetime):
             key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key_year,
             partial_selection: bool = False,
-            ) -> TLocSelector:
+            ) -> TILocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''

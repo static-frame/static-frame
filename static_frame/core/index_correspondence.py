@@ -5,8 +5,8 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d

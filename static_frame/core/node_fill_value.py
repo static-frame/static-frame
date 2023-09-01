@@ -11,9 +11,9 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover

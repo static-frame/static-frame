@@ -52,11 +52,11 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn

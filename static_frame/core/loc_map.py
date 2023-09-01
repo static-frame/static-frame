@@ -30,9 +30,9 @@ from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover

@@ -109,13 +109,13 @@ from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
 from static_frame.core.util import FrameInitializer as FrameInitializer
-from static_frame.core.util import TLocSelector as TLocSelector
-from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.util import IndexInitializer as IndexInitializer
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.util import TLocSelector as TLocSelector
+from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 

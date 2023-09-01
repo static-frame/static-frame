@@ -47,8 +47,6 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -57,6 +55,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import UFunc
 from static_frame.core.util import get_concurrent_executor
 

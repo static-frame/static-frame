@@ -40,7 +40,6 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -48,6 +47,7 @@ from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
@@ -1650,7 +1650,7 @@ def apex_to_name(
             targets = [rows[level] for level in depth_level]
             # combine into tuples
             if axis_depth == 1:
-                return next(zip(*targets))
+                return next(zip(*targets)) # type: ignore
             else:
                 return tuple(zip(*targets))
     elif axis == 1:

@@ -17,8 +17,8 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method

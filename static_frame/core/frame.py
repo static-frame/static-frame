@@ -151,13 +151,10 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FrameInitializer
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import KeyOrKeys
@@ -168,7 +165,10 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc

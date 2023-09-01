@@ -68,9 +68,9 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
