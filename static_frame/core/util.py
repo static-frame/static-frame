@@ -42,10 +42,12 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    # from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
-
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
@@ -66,7 +68,7 @@ if tp.TYPE_CHECKING:
 
 # https://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.scalars.html
 
-
+TSortKinds = tp.Literal['quicksort', 'mergesort']
 DEFAULT_SORT_KIND: tp.Literal['mergesort'] = 'mergesort'
 DEFAULT_STABLE_SORT_KIND: tp.Literal['mergesort'] = 'mergesort' # for when results will be in correct if not used
 DEFAULT_FAST_SORT_KIND: tp.Literal['quicksort'] = 'quicksort' # for when fastest is all that we want
@@ -236,6 +238,7 @@ NON_STR_TYPES = {int, float, bool}
 
 # integers above this value will occassionally, once coerced to a float (64 or 128) in an NP array, will not match a hash lookup as a key in a dictionary; an NP array of int or object will work
 INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
+INT64_MAX = np.iinfo(np.int64).max
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -244,14 +247,35 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
+# use this as a repalcement for tp.Hashable
+# NOTE: slice is not hashable
+LabelType = tp.Union[
+        tp.Hashable,
+        int,
+        bool,
+        np.bool_,
+        np.integer,
+        float,
+        complex,
+        np.inexact,
+        str,
+        bytes,
+        None,
+        np.datetime64,
+        np.timedelta64,
+        datetime.date,
+        tp.Tuple['LabelType'],
+]
+
+
 # for type hinting
 CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
 
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
         int,
-        str,
         np.integer,
+        str,
         slice,
         tp.Hashable,
         tp.List[tp.Any],
@@ -285,9 +309,9 @@ IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
-TupleConstructorType = tp.Callable[[tp.Iterator[tp.Any]], tp.Tuple[tp.Any, ...]]
+TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
-Bloc2DKeyType = tp.Union['Frame', np.ndarray]
+TBlocKey = tp.Union['Frame', np.ndarray, None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
 
 UFunc = tp.Callable[..., np.ndarray]
@@ -308,7 +332,7 @@ def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return isinstance(value, (dict, Series))
 
-def is_callable_or_mapping(value: CallableOrMapping) -> bool:
+def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
@@ -407,11 +431,24 @@ IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
         tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
+        # tp.Type['IndexAutoFactory'],
         ]
 
-IndexConstructor = tp.Optional[tp.Callable[..., 'IndexBase']]
-IndexConstructors = tp.Union[IndexConstructor, tp.Sequence[IndexConstructor], None]
+IndexConstructor = tp.Optional[tp.Union[tp.Callable[..., 'IndexBase'], tp.Callable[..., 'Index'], tp.Type['Index']]]
+IndexConstructors = tp.Union[IndexConstructor,
+        tp.Sequence[IndexConstructor],
+        tp.Iterator[IndexConstructor],
+        np.ndarray, # object array of constructors
+        None,
+        tp.Type['IndexAutoConstructorFactory'],
+        ]
 
+ExplicitConstructor = tp.Union[
+        IndexConstructor,
+        'IndexConstructorFactoryBase',
+        tp.Type['IndexConstructorFactoryBase'],
+        None,
+        ]
 # take integers for size; otherwise, extract size from any other index initializer
 
 SeriesInitializer = tp.Union[
@@ -433,9 +470,9 @@ FrameInitializer = tp.Union[
         'Series',
         ]
 
-DateInitializer = tp.Union[int, str, datetime.date, np.datetime64]
-YearMonthInitializer = tp.Union[int, str, datetime.date, np.datetime64]
-YearInitializer = tp.Union[int, str, datetime.date, np.datetime64]
+DateInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+YearMonthInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+YearInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
@@ -673,6 +710,8 @@ def get_concurrent_executor(
         mp_context: tp.Optional[str],
         ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
+    from concurrent.futures import Executor
+    exe: tp.Callable[..., Executor]
     if use_threads:
         from concurrent.futures import ThreadPoolExecutor
         exe = partial(ThreadPoolExecutor,
@@ -694,7 +733,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tp.Tuple[int, int]):
+class Pair(tp.Tuple[tp.Hashable, tp.Hashable]):
     pass
 
 
@@ -928,7 +967,7 @@ def dtype_from_element(
 #     return dt_resolve
 
 def concat_resolved(
-        arrays: tp.Sequence[NDArrayAny],
+        arrays: tp.Iterable[NDArrayAny],
         axis: int = 0,
         ) -> NDArrayAny:
     '''
@@ -941,10 +980,16 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
+    arrays_seq: tp.Sequence[NDArrayAny]
+    if not hasattr(arrays, '__len__'): # a generator
+        arrays_seq = list(arrays)
+    else:
+        arrays_seq = arrays # type: ignore
+
     shape: tp.Sequence[int]
-    if len(arrays) == 2: # assume we have a sequence
+    if len(arrays_seq) == 2: # assume we have a sequence
         # faster path when we have two in a sequence
-        a1, a2 = arrays
+        a1, a2 = arrays_seq
         dt_resolve = resolve_dtype(a1.dtype, a2.dtype)
         size = a1.shape[axis] + a2.shape[axis]
         if a1.ndim == 1:
@@ -952,7 +997,7 @@ def concat_resolved(
         else:
             shape = (size, a1.shape[1]) if axis == 0 else (a1.shape[0], size)
     else: # first pass to determine shape and resolved type
-        arrays_iter = iter(arrays)
+        arrays_iter = iter(arrays_seq)
         first = next(arrays_iter)
         dt_resolve = first.dtype
         shape = list(first.shape)
@@ -963,12 +1008,12 @@ def concat_resolved(
             shape[axis] += array.shape[axis]
 
     out: NDArrayAny = np.empty(shape=shape, dtype=dt_resolve)
-    np.concatenate(arrays, out=out, axis=axis)
+    np.concatenate(arrays_seq, out=out, axis=axis)
     out.flags.writeable = False
     return out
 
 def blocks_to_array_2d(
-        blocks: tp.Iterator[NDArrayAny],
+        blocks: tp.Iterable[NDArrayAny], # can be iterator
         shape: tp.Optional[tp.Tuple[int, int]] = None,
         dtype: tp.Optional[DtypeAny] = None,
         ) -> NDArrayAny:
@@ -1014,7 +1059,7 @@ def blocks_to_array_2d(
 
     if blocks_post is None:
         # blocks might be an iterator if we did not need to discover shape or dtype
-        if not blocks_is_gen and len(blocks) == 1:
+        if not blocks_is_gen and len(blocks) == 1: # type: ignore
             return column_2d_filter(blocks[0]) # type: ignore
         blocks_post = blocks #type: ignore
     elif len(blocks_post) == 1:
@@ -1022,7 +1067,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: NDArrayAny = np.empty(shape, dtype=dtype)
+    array: NDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
     pos = 0
     for b in blocks_post: #type: ignore
         if b.ndim == 1:
@@ -1161,7 +1206,7 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def argsort_array(array: NDArrayAny, kind: str = DEFAULT_STABLE_SORT_KIND) -> NDArrayAny:
+def argsort_array(array: NDArrayAny, kind: TSortKinds = DEFAULT_STABLE_SORT_KIND) -> NDArrayAny:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:
@@ -1176,7 +1221,7 @@ def argsort_array(array: NDArrayAny, kind: str = DEFAULT_STABLE_SORT_KIND) -> ND
             array_sortable[i] = indices.setdefault(v, len(indices))
         del indices
 
-        return np.argsort(array_sortable, kind=kind) # type: ignore
+        return np.argsort(array_sortable, kind=kind)
 
     return array.argsort(kind=kind)
 
@@ -1415,7 +1460,7 @@ def ufunc_unique(
         return ufunc_unique1d(array.reshape(-1)) # reshape over flatten return a view if possible
     elif array.ndim == 1:
         return ufunc_unique1d(array)
-    return ufunc_unique2d(array, axis=axis)
+    return ufunc_unique2d(array, axis=axis) # type: ignore
 
 def roll_1d(array: NDArrayAny,
             shift: int
@@ -1899,7 +1944,7 @@ DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
-        dtype: tp.Optional[DtypeAny] = None
+        dtype: tp.Optional[DtypeOrDT64] = None
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
@@ -1910,7 +1955,7 @@ def to_datetime64(
     if not isinstance(value, np.datetime64):
         if dtype is None:
             # let constructor figure it out; if value is an integer it will raise
-            dt = np.datetime64(value)
+            dt = np.datetime64(value) # type: ignore
         else: # assume value is single value;
             # integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
@@ -1920,14 +1965,14 @@ def to_datetime64(
                     raise InvalidDatetime64Initializer(f'Attempting to create {dtype} from an integer, which is generally not desired as the result will be an offset from the epoch.')
             # cannot use the datetime directly
             if dtype != np.datetime64:
-                dt = np.datetime64(value, np.datetime_data(dtype)[0])
+                dt = np.datetime64(value, np.datetime_data(dtype)[0]) # type: ignore
                 # permit NaNs to pass
                 if not np.isnan(dt) and dtype == DT64_YEAR:
-                    dt_naive = np.datetime64(value)
+                    dt_naive = np.datetime64(value) # type: ignore
                     if dt_naive.dtype != dt.dtype:
                         raise InvalidDatetime64Initializer(f'value ({value}) will not be converted to dtype ({dtype})')
             else: # cannot use a generic datetime type
-                dt = np.datetime64(value)
+                dt = np.datetime64(value) # type: ignore
     else: # if a dtype was explicitly given, check it
         # value is an instance of a datetime64, and has a dtype attr
         dt = value
@@ -1964,7 +2009,7 @@ def timedelta64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
 
 
 def _slice_to_datetime_slice_args(key: slice,
-        dtype: tp.Optional[DtypeAny] = None
+        dtype: tp.Optional[DtypeOrDT64] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
@@ -2016,7 +2061,7 @@ def key_to_datetime_key(
 
     if hasattr(key, '__iter__'): # a generator-like
         if dtype == DT64_YEAR:
-            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype) # type: ignore
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype)
         return np.array(tuple(key), dtype=dtype) #type: ignore
 
     # could be None
@@ -2253,7 +2298,7 @@ def _array_to_duplicated_hashable(
     # np.unique fails under the same conditions that sorting fails, so there is no need to try np.unique: must go to set drectly.
     len_axis = array.shape[axis]
 
-    value_source: tp.Iterable[tp.Hashable]
+    value_source: tp.Iterable[tp.Any]
     if array.ndim == 1:
         value_source = array
         to_hashable = None
@@ -2854,7 +2899,7 @@ def ufunc_set_iter(
     '''
     # will detect ndim by first value, but insure that all other arrays have the same ndim
 
-    if hasattr(arrays, '__len__') and len(arrays) == 2:
+    if hasattr(arrays, '__len__') and len(arrays) == 2: # type: ignore
         a1, a2 = arrays
         if a1.ndim != a2.ndim:
             raise RuntimeError('arrays do not all have the same ndim')
@@ -3381,7 +3426,7 @@ class JSONFilter:
 
     @classmethod
     def encode_iterable(cls,
-            iterable: tp.Iterator[tp.Any],
+            iterable: tp.Iterable[tp.Any],
             ) -> tp.Any:
         '''Return an iterable. Saves on isinstance checks when we no what the outer container is.
         '''
@@ -3476,8 +3521,8 @@ class JSONTranslator(JSONFilter):
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(
-        target_index: tp.Sequence[int],
-        target_values: tp.Sequence[tp.Any],
+        target_index: tp.Sequence[int] | NDArrayAny,
+        target_values: tp.Iterable[tp.Any],
         length: int,
         directional_forward: bool,
         limit: int,

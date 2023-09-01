@@ -12,7 +12,7 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -38,8 +38,8 @@ class IndexCorrespondence:
 
     @classmethod
     def from_correspondence(cls,
-            src_index: 'Index',
-            dst_index: 'Index') -> 'IndexCorrespondence':
+            src_index: 'IndexBase',
+            dst_index: 'IndexBase') -> 'IndexCorrespondence':
         '''
         Return an IndexCorrespondence instance from the correspondence of two Index or IndexHierarchy objects.
 

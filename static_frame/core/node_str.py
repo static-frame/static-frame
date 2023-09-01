@@ -11,6 +11,7 @@ from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NULL_SLICE
@@ -23,6 +24,7 @@ from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -88,12 +90,12 @@ class InterfaceString(Interface[TContainer]):
             blocks: BlocksType,
             blocks_to_container: ToContainerType[TContainer],
             ndim: int,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Sequence[tp.Hashable] | IndexBase,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
         self._ndim: int = ndim
-        self._labels: tp.Iterable[tp.Hashable] = labels
+        self._labels: tp.Sequence[tp.Hashable] | IndexBase = labels
 
     #---------------------------------------------------------------------------
 
@@ -434,7 +436,7 @@ class InterfaceString(Interface[TContainer]):
                 blocks=self._blocks,
                 method_name='partition',
                 args=(sep,),
-                dtype=object
+                dtype=DTYPE_OBJECT,
                 )
         return self._blocks_to_container(block_gen)
 
@@ -492,7 +494,7 @@ class InterfaceString(Interface[TContainer]):
                 blocks=self._blocks,
                 method_name='rpartition',
                 args=(sep,),
-                dtype=object
+                dtype=DTYPE_OBJECT,
                 )
         return self._blocks_to_container(block_gen)
 
@@ -508,7 +510,7 @@ class InterfaceString(Interface[TContainer]):
                 blocks=self._blocks,
                 method_name='rsplit',
                 args=(sep, maxsplit),
-                dtype=object
+                dtype=DTYPE_OBJECT,
                 )
         return self._blocks_to_container(block_gen)
 
@@ -533,7 +535,7 @@ class InterfaceString(Interface[TContainer]):
                 blocks=self._blocks,
                 method_name='split',
                 args=(sep, maxsplit),
-                dtype=object
+                dtype=DTYPE_OBJECT,
                 )
         return self._blocks_to_container(block_gen)
 

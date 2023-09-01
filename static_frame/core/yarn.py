@@ -41,6 +41,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
 from static_frame.core.util import is_callable_or_mapping
 
@@ -146,7 +147,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     def __init__(self,
             series: tp.Union[Series, tp.Iterable[Bus]],
             *,
-            index: tp.Optional[tp.Union[IndexBase, IndexAutoFactoryType]] = None,
+            index: IndexInitializer | IndexAutoFactoryType | None = None,
             index_constructor: tp.Optional[IndexConstructor] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
@@ -248,11 +249,11 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @property
     def loc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_loc)
+        return InterfaceGetItem(self._extract_loc) # type: ignore
 
     @property
     def iloc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_iloc)
+        return InterfaceGetItem(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Yarn']:
@@ -267,7 +268,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Frame']:
+    def iter_element(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of elements.
         '''
@@ -280,7 +281,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Frame']:
+    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
         '''
         Iterator of label, element pairs.
         '''
@@ -502,7 +503,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyType) -> Yarn | Frame:
+    def _extract_iloc(self, key: IntegerLocType) -> Yarn | Frame:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -734,7 +735,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             index_init = None
         elif index is None:
             index_init = self._index
-        elif is_callable_or_mapping(index): #type: ignore
+        elif is_callable_or_mapping(index):
             index_init = self._index.relabel(index)
             own_index = True
         elif isinstance(index, Set):

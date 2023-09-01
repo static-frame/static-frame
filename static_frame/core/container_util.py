@@ -20,6 +20,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -33,11 +34,11 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
@@ -45,6 +46,8 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
+from static_frame.core.util import TBlocKey
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import concat_resolved
@@ -74,14 +77,6 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-
-
-ExplicitConstructor = tp.Union[
-        IndexConstructor,
-        'IndexConstructorFactoryBase',
-        tp.Type['IndexConstructorFactoryBase'],
-        None,
-        ]
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
@@ -157,7 +152,7 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
 
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        columns: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase],
         index_depth: int = 0,
         ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
@@ -211,8 +206,8 @@ def get_col_dtype_factory(
 
 def get_col_fill_value_factory(
         fill_value: tp.Any,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]],
-        ) -> tp.Callable[[int, DtypeAny], tp.Any]:
+        columns: tp.Optional[tp.Sequence[tp.Hashable]] | IndexBase,
+        ) -> tp.Callable[[int, DtypeAny | None], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
@@ -272,7 +267,7 @@ def get_col_fill_value_factory(
 
 def get_col_format_factory(
         format: tp.Any,
-        fields: tp.Optional[tp.Sequence[tp.Hashable]] = None,
+        fields: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase] = None,
         ) -> tp.Callable[[int], str]:
     '''
     Return a function to get string format, used in InterfaceString.
@@ -431,7 +426,7 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
         pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[NDArrayAny]:
@@ -482,8 +477,8 @@ def index_from_optional_constructor(
 
     if explicit_constructor:
         if isinstance(explicit_constructor, IndexConstructorFactoryBase):
-            return explicit_constructor(value,
-                    default_constructor=default_constructor,
+            return explicit_constructor(value, # type: ignore
+                    default_constructor=default_constructor, # type: ignore
                     )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
@@ -509,7 +504,7 @@ def index_from_optional_constructor(
             return value._MUTABLE_CONSTRUCTOR(value)
 
     # cannot always determine static status from constructors; fallback on using default constructor
-    return default_constructor(value)
+    return default_constructor(value) # type: ignore
 
 def constructor_from_optional_constructor(
         default_constructor: IndexConstructor,
@@ -527,7 +522,7 @@ def constructor_from_optional_constructor(
     return func
 
 def index_from_optional_constructors(
-        value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+        value: IndexInitializer,
         *,
         depth: int,
         default_constructor: IndexConstructor,
@@ -539,14 +534,15 @@ def index_from_optional_constructors(
         index = None
         own_index = False
     elif depth == 1:
+        explicit_constructor: ExplicitConstructor
         if not explicit_constructors:
             explicit_constructor = None
         elif callable(explicit_constructors):
             explicit_constructor = explicit_constructors
         else:
-            if len(explicit_constructors) != 1:
+            if len(explicit_constructors) != 1: # type: ignore
                 raise RuntimeError('Cannot specify multiple index constructors for depth 1 indicies.')
-            explicit_constructor = explicit_constructors[0]
+            explicit_constructor = explicit_constructors[0] # type: ignore
 
         index = index_from_optional_constructor(
                 value,
@@ -557,9 +553,9 @@ def index_from_optional_constructors(
     else:
         # if depth is > 1, the default constructor is expected to be an IndexHierarchy, and explicit constructors are optionally provided `index_constructors`
         if callable(explicit_constructors):
-            explicit_constructors = [explicit_constructors] * depth
+            explicit_constructors = [explicit_constructors] * depth # type: ignore
         # default_constructor is an IH type
-        index = default_constructor(
+        index = default_constructor( # type: ignore
                 value,
                 index_constructors=explicit_constructors
                 )
@@ -571,9 +567,7 @@ def constructor_from_optional_constructors(
         depth: int,
         default_constructor: IndexConstructor,
         explicit_constructors: IndexConstructors = None,
-        ) -> tp.Callable[
-                [tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]]],
-                tp.Optional['IndexBase']]:
+        ) -> tp.Callable[..., tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
@@ -823,9 +817,11 @@ def axis_window_items( *,
         window_func: tp.Optional[AnyCallable] = None,
         window_valid: tp.Optional[AnyCallable] = None,
         label_shift: int = 0,
+        label_missing_raises: bool = False,
         start_shift: int = 0,
         size_increment: int = 0,
         as_array: bool = False,
+        derive_label: bool = True,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
@@ -835,7 +831,6 @@ def axis_window_items( *,
     # see doc_str window for docs
 
     from static_frame.core.frame import Frame
-    from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
 
     if size <= 0:
@@ -858,14 +853,16 @@ def axis_window_items( *,
             # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necessary for each window (which is not the same for axis 1, where block coercion is not required)
             values = source._blocks.values
 
+    count_labels = len(labels)
     if start_shift >= 0:
-        count_window_max = len(labels)
+        count_window_max = count_labels
     else: # add for iterations when less than 0
-        count_window_max = len(labels) + abs(start_shift)
+        count_window_max = count_labels + abs(start_shift)
 
     idx_left_max = count_window_max - 1
     idx_left = start_shift
     count = 0
+    label = None
 
     while True:
         # idx_left, size can change over iterations
@@ -897,19 +894,22 @@ def axis_window_items( *,
                     window = source._extract(column_key=key) #type: ignore
 
         valid = True
-        try:
-            idx_label = idx_right + label_shift
-            if idx_label < 0: # do not wrap around
-                raise IndexError()
-            #if we cannot get a label, the window is invalid
-            label = labels.iloc[idx_label]
-        except IndexError: # an invalid label has to be dropped
+        if not len(window):
             valid = False
-
         if valid and window_sized and window.shape[axis] != size:
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
+
+        if valid and (derive_label or label_missing_raises):
+            idx_label = idx_right + label_shift
+            if idx_label < 0 or idx_label >= count_labels:
+                # an invalid label, if required, is an error
+                if label_missing_raises:
+                    raise InvalidWindowLabel(idx_label)
+                valid = False
+            else:
+                label = labels.iloc[idx_label]
 
         if valid:
             if window_func:
@@ -961,7 +961,7 @@ def get_block_match(
             break
 
 def bloc_key_normalize(
-        key: Bloc2DKeyType,
+        key: TBlocKey,
         container: 'Frame'
         ) -> NDArrayAny:
     '''
@@ -969,6 +969,7 @@ def bloc_key_normalize(
     '''
     from static_frame.core.frame import Frame
 
+    bloc_key: NDArrayAny
     if isinstance(key, Frame):
         bloc_frame = key.reindex(
                 index=container._index,
@@ -977,7 +978,7 @@ def bloc_key_normalize(
                 )
         bloc_key = bloc_frame.values # shape must match post reindex
     elif key.__class__ is np.ndarray:
-        bloc_key = key
+        bloc_key = key # type: ignore
         if bloc_key.shape != container.shape:
             raise RuntimeError(f'bloc {bloc_key.shape} must match shape {container.shape}')
     else:
@@ -1010,7 +1011,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
         if key.dtype == DTYPE_BOOL: #type: ignore
             return key
         # NOTE: there should never be ties
-        return np.sort(key, kind=DEFAULT_SORT_KIND)
+        return np.sort(key, kind=DEFAULT_SORT_KIND) # type: ignore
 
     if not len(key): #type: ignore
         return key
@@ -1088,7 +1089,7 @@ def rehierarch_from_index_hierarchy(*,
 
     if index_constructors is None:
         # transform the existing index constructors correspondingly
-        index_constructors = labels.index_types.values[list(depth_map)] # type: ignore
+        index_constructors = labels.index_types.values[list(depth_map)]
 
     return labels.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
@@ -1100,7 +1101,7 @@ def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeAny]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
         row_count: int,
         ) -> NDArrayAny:
     '''
@@ -1377,6 +1378,9 @@ class IMTOAdapter:
         )
 
     _map = object() # not None
+    STATIC = True
+    _MUTABLE_CONSTRUCTOR = None
+    _IMMUTABLE_CONSTRUCTOR = None
 
     def __init__(self,
             values: NDArrayAny,
@@ -1392,19 +1396,17 @@ class IMTOAdapter:
         if self.ndim > 1:
             # simply provide None so as not to match in any comparison
             self.index_types = IMTOAdapterSeries(
-                    np.array([None for _ in range(depth)],
-                    dtype=DTYPE_OBJECT,
-                    ))
+                    np.full(depth, None, dtype=DTYPE_OBJECT),
+                    )
             self.dtypes = IMTOAdapterSeries(
-                    np.array([self.values.dtype for _ in range(depth)],
-                    dtype=DTYPE_OBJECT,
-                    ))
+                    np.full(depth, self.values.dtype, dtype=DTYPE_OBJECT),
+                    )
 
     def __len__(self) -> int:
         return len(self.values)
 
 def imto_adapter_factory(
-        source: tp.Union['IndexBase', tp.Iterable[tp.Hashable]],
+        source: tp.Union['IndexBase', NDArrayAny, tp.Iterable[tp.Hashable]],
         depth: int,
         name: NameType,
         ndim: int,
@@ -1432,10 +1434,10 @@ def imto_adapter_factory(
         if not assume_unique:
             array = ufunc_unique1d(array)
     else:
-        array = iterable_to_array_2d(source)
+        array = iterable_to_array_2d(source) # type: ignore
         array = ufunc_unique2d(array, axis=0) # TODO: check axis
 
-    return IMTOAdapter(array,
+    return IMTOAdapter(array, # type: ignore
             name=name,
             depth=depth,
             ndim=ndim,
@@ -1443,10 +1445,10 @@ def imto_adapter_factory(
 
 
 def index_many_to_one(
-        indices: tp.Iterable['IndexBase'],
-        cls_default: tp.Type['IndexBase'],
+        indices: tp.Iterable[IndexBase | IMTOAdapter],
+        cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
-        explicit_constructor: tp.Optional[IndexInitializer] = None,
+        explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> 'IndexBase':
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1469,11 +1471,11 @@ def index_many_to_one(
                 many_to_one_type=many_to_one_type,
                 assume_unique=True)
 
-    indices_iter: tp.Iterable['IndexBase']
-    if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:
+    indices_iter: tp.Iterable['IndexBase' | IMTOAdapter]
+    if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2: # type: ignore
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
-        if index.equals(other,
+        if index.equals(other, # type: ignore
                 compare_dtype=True,
                 compare_name=True,
                 compare_class=True,
@@ -1491,7 +1493,7 @@ def index_many_to_one(
             index = next(indices_iter)
         except StopIteration:
             if explicit_constructor is not None:
-                return explicit_constructor(()) #type: ignore
+                return explicit_constructor(())
             return cls_default.from_labels(())
 
     name_first = index.name
@@ -1534,7 +1536,7 @@ def index_many_to_one(
             raise ErrorInitIndex(f'Indices must have aligned depths: {depth_first}, {index.depth}')
 
         if mtot_is_concat and depth_first > 1:
-            arrays.append([index.values_at_depth(d) for d in range(depth_first)])
+            arrays.append([index.values_at_depth(d) for d in range(depth_first)]) # type: ignore
         else:
             arrays.append(index.values)
 
@@ -1571,7 +1573,7 @@ def index_many_to_one(
         elif not cls_default.STATIC and cls_first.STATIC:
             constructor_cls = cls_first._MUTABLE_CONSTRUCTOR
         else:
-            constructor_cls = cls_first
+            constructor_cls = cls_first # type: ignore
         constructor = (constructor_cls.from_values_per_depth if is_ih # type: ignore
                 else constructor_cls.from_labels) # type: ignore
     elif explicit_constructor is not None:
@@ -1719,7 +1721,7 @@ def prepare_values_for_lex(
 def sort_index_for_order(
         index: 'IndexBase',
         ascending: BoolOrBools,
-        kind: str,
+        kind: TSortKinds,
         key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[NDArrayAny, 'IndexBase']]],
         ) -> NDArrayAny:
     '''Return an integer array defing the new ordering.
@@ -1744,7 +1746,7 @@ def sort_index_for_order(
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
-            values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)]
+            values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1]-1, -1, -1)] # type: ignore
         else: # cfs is an IndexHierarchy
             values_for_lex = [cfs.values_at_depth(i) #type: ignore
                     for i in range(cfs.depth-1, -1, -1)] #type: ignore

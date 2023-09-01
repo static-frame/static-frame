@@ -505,7 +505,7 @@ class StoreXLSX(Store):
             if index_depth <= 1:
                 index_default_constructor = partial(Index, name=index_name)
             else: # > 1
-                index_default_constructor = partial(IndexHierarchy.from_labels,
+                index_default_constructor = partial(IndexHierarchy.from_labels, # type: ignore
                         name=index_name,
                         continuation_token=None, # NOTE: needed
                         )
@@ -533,7 +533,7 @@ class StoreXLSX(Store):
                         )
             elif columns_depth > 1:
                 columns_default_constructor = partial(
-                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
                         name=columns_name,
                         continuation_token=None, # NOTE: needed, not the default
                         )

@@ -34,7 +34,7 @@ class ValidationResult(tp.NamedTuple):
 
 
 def _validate_and_process_indices(
-        indices: tp.Tuple[IndexHierarchy],
+        indices: tp.Tuple[IndexHierarchy, ...],
         ) -> ValidationResult:
     '''
     Common sanitization for IndexHierarchy operations.
@@ -91,7 +91,7 @@ def _validate_and_process_indices(
             any_dropped=any_dropped,
             any_shallow_copies=any_shallow_copies,
             name=name,
-            index_constructors=index_constructors or [Index] * depth,
+            index_constructors=index_constructors or [Index] * depth, # type: ignore
             )
 
 
@@ -129,10 +129,10 @@ def build_union_indices(
     for i in range(depth):
         union = index_many_to_one(
                 (idx._indices[i] for idx in indices),
-                cls_default=index_constructors[i],
+                cls_default=index_constructors[i], # type: ignore
                 many_to_one_type=ManyToOneType.UNION,
                 )
-        union_indices.append(union)
+        union_indices.append(union) # type: ignore
 
     return union_indices
 
@@ -173,7 +173,7 @@ def _get_encodings(
 
 def _remove_union_bloat(
         indices: tp.List[Index],
-        indexers: tp.List[NDArrayAny],
+        indexers: tp.List[NDArrayAny] | NDArrayAny,
         ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
     # There is potentially a LOT of leftover bloat from all the unions. Clean up.
     final_indices: tp.List[Index] = []

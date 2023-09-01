@@ -117,9 +117,14 @@ class InterfaceDatetime(Interface[TContainer]):
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
         self._fill_value: tp.Any = fill_value
-        self._fill_value_dtype: tp.Optional[DtypeAny] = (None
-                if fill_value is FILL_VALUE_DEFAULT
-                else dtype_from_element(fill_value))
+
+        # only set attr if we will need to use the value
+        if fill_value is not FILL_VALUE_DEFAULT:
+            self._fill_value_dtype = dtype_from_element(fill_value)
+
+        # self._fill_value_dtype: tp.Optional[DtypeAny] = (None
+        #         if fill_value is FILL_VALUE_DEFAULT
+        #         else dtype_from_element(fill_value))
 
     def __call__(self,
             *,

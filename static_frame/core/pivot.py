@@ -21,6 +21,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
@@ -89,7 +90,7 @@ def pivot_records_dtypes(
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
     for field in data_fields:
-        dtype = dtype_map[field]
+        dtype: DtypeAny = dtype_map[field] # type: ignore
         if func_single:
             yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
@@ -101,28 +102,28 @@ def pivot_records_items_to_frame(
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_fields_iloc: tp.Iterable[tp.Hashable],
+        data_fields_iloc: tp.Iterable[int],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         func_no: bool,
-        kind: str,
+        kind: TSortKinds,
         columns_constructor: IndexConstructor,
-        columns: tp.List[tp.Hashable],
+        columns: tp.Sequence[tp.Hashable],
         index_constructor: IndexConstructor,
-        dtypes: tp.Tuple[tp.Optional[DtypeAny]],
+        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
         frame_cls: tp.Type['Frame'],
         ) -> 'Frame':
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-    record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map))
+    record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map)) # type: ignore
 
-    index_labels = []
+    index_labels: tp.List[tp.Hashable] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-        index_labels.append(label)
+        index_labels.append(label) # type: ignore
         if func_no:
             if len(part) != 1:
                 raise RuntimeError('pivot requires aggregation of values; provide a `func` argument.')
@@ -162,15 +163,15 @@ def pivot_records_items_to_blocks(*,
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_fields_iloc: tp.Iterable[tp.Hashable],
+        data_fields_iloc: tp.Iterable[int],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         func_no: bool,
         fill_value: tp.Any,
         fill_value_dtype: DtypeAny,
         index_outer: 'IndexBase',
-        dtypes: tp.Tuple[tp.Optional[DtypeAny]],
-        kind: str,
+        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
+        kind: TSortKinds,
         ) -> tp.List[NDArrayAny]:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
@@ -242,13 +243,13 @@ def pivot_items_to_block(*,
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_field_iloc: tp.Hashable,
+        data_field_iloc: int,
         func_single: tp.Optional[UFunc],
         dtype: tp.Optional[DtypeAny],
         fill_value: tp.Any,
         fill_value_dtype: DtypeAny,
         index_outer: 'IndexBase',
-        kind: str,
+        kind: TSortKinds,
         ) -> NDArrayAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
@@ -315,14 +316,14 @@ def pivot_items_to_frame(*,
         blocks: TypeBlocks,
         group_fields_iloc: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_field_iloc: tp.Hashable,
+        data_field_iloc: int,
         func_single: tp.Optional[AnyCallable],
         frame_cls: tp.Type['Frame'],
         name: NameType,
         dtype: DtypeAny | None,
         index_constructor: IndexConstructor,
         columns_constructor: IndexConstructor,
-        kind: str,
+        kind: TSortKinds,
         ) -> 'Frame':
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
@@ -333,7 +334,7 @@ def pivot_items_to_frame(*,
     group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
 
     if func_single:
-        labels = []
+        labels: tp.List[tp.Hashable] = []
         values = []
         for label, _, v in blocks.group_extract(
                 axis=0,
@@ -341,7 +342,7 @@ def pivot_items_to_frame(*,
                 extract=data_field_iloc,
                 kind=kind,
                 ):
-            labels.append(label)
+            labels.append(label) # type: ignore
             values.append(func_single(v))
 
         if dtype is None:
@@ -382,7 +383,7 @@ def pivot_core(
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]],
         fill_value: object = np.nan,
         index_constructor: IndexConstructor = None,
-        kind: str = DEFAULT_FAST_SORT_KIND,
+        kind: TSortKinds = DEFAULT_FAST_SORT_KIND,
         ) -> 'Frame':
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
@@ -414,12 +415,14 @@ def pivot_core(
         columns_name = columns_name[0] # type: ignore
         columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
     else:
-        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
                 depth_reference=columns_depth,
                 name=columns_name)
 
     dtype_single: DtypeAny | None
     dtype_map = frame.dtypes # returns a Series
+
+    dtypes_per_data_fields: tp.Tuple[DtypeAny | None, ...]
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
@@ -432,7 +435,7 @@ def pivot_core(
                 func_map=func_map,
                 ))
         if func_single and data_fields_len == 1:
-            dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]])
+            dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]]) # type: ignore
 
     fill_value_dtype = dtype_from_element(fill_value)
 
@@ -512,7 +515,7 @@ def pivot_core(
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
-                group if not retuple_group_label else (group,),
+                group if not retuple_group_label else (group,), # type: ignore
                 data_fields,
                 func_fields,
                 )
@@ -520,7 +523,7 @@ def pivot_core(
 
         sub_frame: Frame
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
-        if len(sub_columns) == 1:
+        if len(sub_columns) == 1: # type: ignore
             sub_blocks.append(pivot_items_to_block(blocks=sub,
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
@@ -572,7 +575,7 @@ def pivot_outer_index(
     if index_depth == 1:
         index_values = ufunc_unique1d(
                 frame._blocks._extract_array_column(
-                        frame._columns._loc_to_iloc(index_loc)),
+                        frame._columns._loc_to_iloc(index_loc)), # type: ignore
                 )
         index_values.flags.writeable = False
         name = index_fields[0]
@@ -610,12 +613,12 @@ class PivotIndexMap(tp.NamedTuple):
     group_to_target_map: tp.Dict[tp.Optional[tp.Hashable], tp.Dict[tp.Any, int]]
     group_depth: int
     group_select: NDArrayAny
-    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], DtypeAny]
+    group_to_dtype: tp.Dict[tp.Hashable | None, DtypeAny]
 
 def pivot_index_map(*,
         index_src: IndexBase,
         depth_level: DepthLevelSpecifier,
-        dtypes_src: tp.Optional[tp.Sequence[DtypeAny | None]],
+        dtypes_src: NDArrayAny | None, # array of dtypes
         ) -> PivotIndexMap:
     '''
     Args:
@@ -639,7 +642,7 @@ def pivot_index_map(*,
 
     group_depth = len(group_arrays)
     target_depth = len(target_arrays)
-    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], DtypeAny | None] = {}
+    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], DtypeAny] = {}
     targets_unique: tp.Iterable[tp.Hashable]
 
     group_to_target_map: tp.Dict[tp.Any, tp.Dict[tp.Any, int]]
@@ -655,7 +658,7 @@ def pivot_index_map(*,
         group_to_target_map = defaultdict(dict)
         targets_unique = {} # Store targets in order observed
 
-        for axis_idx, (group, target, dtype) in enumerate(zip(
+        for axis_idx, (group, target, dtype) in enumerate(zip( # type: ignore
                 zip(*group_arrays), # get tuples of len 1 to depth
                 zip(*target_arrays),
                 (dtypes_src if dtypes_src is not None else repeat(None)),
@@ -695,8 +698,7 @@ def pivot_derive_constructors(*,
         group_select: NDArrayAny, # Boolean
         group_depth: int,
         target_select: NDArrayAny,
-        # target_depth: int,
-        group_to_target_map: tp.Dict[tp.Hashable, tp.Tuple[tp.Hashable]],
+        group_to_target_map: tp.Dict[tp.Optional[tp.Hashable], tp.Dict[tp.Any, int]],
         expand_is_columns: bool,
         frame_cls: tp.Type['Frame'],
         ) -> PivotDeriveConstructors:

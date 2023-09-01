@@ -16,6 +16,7 @@ from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
 from static_frame.test.test_case import TestCase
@@ -2744,6 +2745,18 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [dt.kind for dt in post.dtypes.values],
                 ['U', 'U', 'U']
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_batch_to_bus(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        b1 = Batch.from_frames((f1, f2)).iloc[:, 2].to_bus()
+
+        self.assertEqual(
+                Quilt(b1, retain_labels=True).to_frame().to_pairs(),
+                (('zUvW', ((('a', 34715), 'ztsv'), (('a', -3648), 'zUvW'), (('b', 34715), 'ztsv'), (('b', -3648), 'zUvW'))),)
                 )
 
 if __name__ == '__main__':

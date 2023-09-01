@@ -12,6 +12,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TBlocKey
 
 # from static_frame.core.util import AnyCallable
 
@@ -34,6 +35,8 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
+FrameOrSeries = tp.Union['Frame', 'Series']
+
 TContainer = tp.TypeVar('TContainer',
         'Index',
         'Series',
@@ -49,6 +52,7 @@ TContainer = tp.TypeVar('TContainer',
          # cannot be NDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
+        FrameOrSeries,
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
@@ -90,6 +94,20 @@ class InterfaceGetItemCompound(Interface[TContainer]):
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> TContainer:
         return self._func(key)
+
+class InterfaceGetItemBLoc(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TBlocKey], TContainer]
+
+    def __init__(self, func: tp.Callable[[TBlocKey], TContainer]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TBlocKey) -> TContainer:
+        return self._func(key)
+
 
 #-------------------------------------------------------------------------------
 

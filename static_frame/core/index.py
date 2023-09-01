@@ -7,6 +7,7 @@ from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+import typing_extensions as tpe
 from arraykit import array_deepcopy
 from arraykit import immutable_filter
 from arraykit import mloc
@@ -232,7 +233,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             ) -> NDArrayAny:
         # positions is either None or an ndarray
         if positions.__class__ is np.ndarray: # type: ignore
-            return immutable_filter(positions)
+            return immutable_filter(positions) # type: ignore
         return PositionsAllocator.get(size)
 
     #---------------------------------------------------------------------------
@@ -252,7 +253,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
 
     @staticmethod
     def _error_init_index_non_unique(
-            labels: tp.Sequence[tp.Hashable],
+            labels: tp.Iterable[tp.Any],
             ) -> ErrorInitIndexNonUnique:
         '''Return an exception configured with an informative message.
         '''
@@ -298,7 +299,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
 
         #-----------------------------------------------------------------------
         if labels.__class__ is np.ndarray:
-            labels = immutable_filter(labels)
+            labels = immutable_filter(labels) # type: ignore
         elif isinstance(labels, IndexBase):
             # handle all Index subclasses
             if labels._recache:
@@ -333,7 +334,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not labels.__class__ is np.ndarray:
                 # if is_typed, _DTYPE is defined, we have a date
-                labels = (to_datetime64(v, dtype_extract) for v in labels)
+                labels = (to_datetime64(v, dtype_extract) for v in labels) #type: ignore
             # coerce to target type
             elif labels.dtype != dtype_extract: #type: ignore
                 labels = labels.astype(dtype_extract) #type: ignore
@@ -554,7 +555,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             labels = np.delete(self._labels, self._positions[key], axis=0) # type: ignore
             labels.flags.writeable = False
         else:
-            labels = np.delete(self._labels, key, axis=0)
+            labels = np.delete(self._labels, key, axis=0) # type: ignore
             labels.flags.writeable = False
 
         # from labels will work with both Index and IndexHierarchy
@@ -870,7 +871,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
                     return key.astype(DTYPE_INT_DEFAULT) #type: ignore
             elif key.__class__ is slice:
                 # might raise LocInvalid
-                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__()) # type: ignore
             return key # type: ignore
 
         if key_transform:
@@ -917,7 +918,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
                 return result # return position as array
 
             # might raise LocInvalid
-            return pos_loc_slice_to_iloc_slice(key, self.__len__())
+            return pos_loc_slice_to_iloc_slice(key, self.__len__()) # type: ignore
 
         return self._loc_to_iloc(key)
 
@@ -955,7 +956,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
                 )
 
     def _extract_iloc_by_int(self,
-            key: int,
+            key: int | np.integer[tp.Any],
             ) -> tp.Any:
         '''Extract an element given an iloc integer key.
         '''
@@ -969,7 +970,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self,
-            key: GetItemKeyType
+            key: IntegerLocType
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -1179,7 +1180,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Index'], tp.Union[NDArrayAny, 'Index']]] = None,
-            ) -> tp.Self:
+            ) -> tpe.Self:
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -1216,7 +1217,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
     def _drop_missing(self,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
-            ) -> tp.Self:
+            ) -> tpe.Self:
         '''
         Args:
             func: UFunc that returns True for missing values
@@ -1243,13 +1244,13 @@ class Index(IndexBase, tp.Generic[TDtype]):
                 name=self._name,
                 )
 
-    def dropna(self) -> tp.Self:
+    def dropna(self) -> tpe.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
         return self._drop_missing(isna_array, DTYPE_NA_KINDS)
 
-    def dropfalsy(self) -> tp.Self:
+    def dropfalsy(self) -> tpe.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
@@ -1301,7 +1302,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[tp.Self, NDArrayAny]:
+            ) -> tp.Tuple[tpe.Self, NDArrayAny]:
         # NOTE: base class defines pubic method
         # force usage of property for cache update
         # sort positions to avoid uncomparable objects
@@ -1392,7 +1393,7 @@ class Index(IndexBase, tp.Generic[TDtype]):
             # cannot assume new depth is the same index subclass
             index_constructor = cls_depth
 
-        indices = [index_constructor((level,)), immutable_index_filter(self)]
+        indices: tp.List[Index] = [index_constructor((level,)), immutable_index_filter(self)] # type: ignore
 
         indexers = np.array(
                 [
