@@ -2863,8 +2863,8 @@ class TestUnit(TestCase):
         self.assertFalse(is_strict_int(np.array([True])[0]))
 
     #---------------------------------------------------------------------------
-    def test_validate_depth_selection(self) -> None:
-        depth_level_from_specifier(np.array([True, False]), 3)
+    def test_validate_depth_selection_a(self) -> None:
+        depth_level_from_specifier(np.array([True, False]), 2)
         depth_level_from_specifier(np.array([2, 3]), 3)
         depth_level_from_specifier(np.array([2, 3], dtype=object), 3)
         depth_level_from_specifier([2, 3], 3)
@@ -2893,8 +2893,9 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             depth_level_from_specifier(5.4, 3)
 
-        with self.assertRaises(KeyError):
-            depth_level_from_specifier(None, 3)
+    def test_validate_depth_selection_a(self) -> None:
+        self.assertEqual(depth_level_from_specifier(None, 3), [0, 1, 2])
+
 
     #---------------------------------------------------------------------------
     def test_bytes_to_size_label(self) -> None:
