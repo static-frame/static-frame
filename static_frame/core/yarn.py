@@ -211,7 +211,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             b.unpersist()
 
     #---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the :obj:`Yarn` index.
 
@@ -361,7 +361,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -370,7 +370,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -379,7 +379,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index.__contains__(value)
 
-    def get(self, key: tp.Hashable,
+    def get(self, key: TLabel,
             default: tp.Any = None,
             ) -> tp.Any:
         '''
@@ -392,7 +392,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             return default
         return self.__getitem__(key)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
@@ -579,7 +579,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -767,7 +767,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @doc_inject(selector='relabel_level_add', class_name='Yarn')
     def relabel_level_add(self,
-            level: tp.Hashable
+            level: TLabel
             ) -> 'Yarn':
         '''
         {doc}

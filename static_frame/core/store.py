@@ -71,7 +71,7 @@ class Store:
         self._fp: str = fp
         self._last_modified = np.nan
         self._mtime_update()
-        self._weak_cache: tp.MutableMapping[tp.Hashable, Frame] = WeakValueDictionary()
+        self._weak_cache: tp.MutableMapping[TLabel, Frame] = WeakValueDictionary()
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -126,7 +126,7 @@ class Store:
 
         index = frame.index
         columns = frame.columns
-        columns_values: tp.Sequence[tp.Hashable] = columns.values # type: ignore
+        columns_values: tp.Sequence[TLabel] = columns.values # type: ignore
 
         if include_index_name and include_columns_name:
             raise StoreParameterConflict('cannot include_index_name and include_columns_name with this Store')
@@ -135,7 +135,7 @@ class Store:
             # The str() of an array produces a space-delimited representation that includes list brackets; we could trim these brackets here, but need them for SQLite usage; thus, clients will have to trim if necessary.
             columns_values = tuple(str(c) for c in columns_values)
 
-        field_names: tp.Sequence[tp.Hashable]
+        field_names: tp.Sequence[TLabel]
         dtypes: tp.List[DtypeAny]
 
         if not include_index:
@@ -234,7 +234,7 @@ class Store:
 
     #---------------------------------------------------------------------------
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
@@ -245,7 +245,7 @@ class Store:
 
     @store_coherent_non_write
     def read(self,
-            label: tp.Hashable,
+            label: TLabel,
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
@@ -266,6 +266,6 @@ class Store:
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
         raise NotImplementedError() #pragma: no cover
 

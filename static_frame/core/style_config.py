@@ -45,7 +45,7 @@ class StyleConfig:
         return str(value), ''
 
     def index(self,
-            label: tp.Hashable,
+            label: TLabel,
             ) -> tp.Tuple[str, str]:
         '''
         Returns:
@@ -54,7 +54,7 @@ class StyleConfig:
         return str(label), ''
 
     def columns(self,
-            label: tp.Hashable,
+            label: TLabel,
             ) -> tp.Tuple[str, str]:
         '''
         Returns:
@@ -141,7 +141,7 @@ class StyleConfigCSS(StyleConfig):
         return str(value), self._dict_to_style(css)
 
     def index(self,
-            label: tp.Hashable,
+            label: TLabel,
             ) -> tp.Tuple[str, str]:
         css = dict(
                 background_color=self.COLOR_GREY,
@@ -151,7 +151,7 @@ class StyleConfigCSS(StyleConfig):
         return str(label), self._dict_to_style(css)
 
     def columns(self,
-            label: tp.Hashable,
+            label: TLabel,
             ) -> tp.Tuple[str, str]:
 
         css = dict(

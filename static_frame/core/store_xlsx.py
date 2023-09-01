@@ -286,7 +286,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -296,7 +296,7 @@ class StoreXLSX(Store):
             store_filter: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
 
         '''
-        # format_data: tp.Optional[tp.Dict[tp.Hashable, tp.Dict[str, tp.Any]]]
+        # format_data: tp.Optional[tp.Dict[TLabel, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
 
         # will create default from None, will pass let a map pass through
@@ -377,7 +377,7 @@ class StoreXLSX(Store):
     # @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -559,7 +559,7 @@ class StoreXLSX(Store):
 
     @store_coherent_non_write
     def read(self,
-            label: tp.Hashable,
+            label: TLabel,
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -577,7 +577,7 @@ class StoreXLSX(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
 
         config_map = StoreConfigMap.from_initializer(config)
 

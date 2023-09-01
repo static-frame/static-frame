@@ -197,6 +197,8 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -220,7 +222,7 @@ class Frame(ContainerOperand):
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
-    _name: tp.Hashable
+    _name: TLabel
 
     _COLUMNS_CONSTRUCTOR = Index
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchy
@@ -234,7 +236,7 @@ class Frame(ContainerOperand):
     def from_series(cls,
             series: Series,
             *,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             columns_constructor: IndexConstructor = None,
             ) -> tpe.Self:
         '''
@@ -261,7 +263,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -310,7 +312,7 @@ class Frame(ContainerOperand):
             index: IndexInitializer,
             columns: IndexInitializer,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -360,7 +362,7 @@ class Frame(ContainerOperand):
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -614,7 +616,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Union['Frame', Series]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Union['Frame', Series]]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -639,7 +641,7 @@ class Frame(ContainerOperand):
         '''
         frames = []
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, IndexBase]]:
             # default index construction does not yield elements, but instead yield Index objects for more efficient IndexHierarchy construction
             yield_elements = True
             if axis == 0 and (index_constructor is None or isinstance(index_constructor, IndexDefaultConstructorFactory)):
@@ -819,7 +821,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -913,11 +915,11 @@ class Frame(ContainerOperand):
             raise NotImplementedError(f'cannot get col_count from {row_reference}')
 
         if not is_dc_inst:
-            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: TLabel, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (row[col_key] for row in rows_iter)
         else:
-            def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
+            def get_value_iter(col_key: TLabel, col_idx: int) -> tp.Iterator[tp.Any]:
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (getattr(row, fields_dc[col_key]) for row in rows_iter) #type: ignore
 
@@ -955,11 +957,11 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records(cls,
-            records: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]],
+            records: tp.Iterable[tp.Dict[TLabel, tp.Any]],
             *,
             index: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
@@ -979,12 +981,12 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        columns: tp.List[tp.Hashable] = []
+        columns: tp.List[TLabel] = []
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns))
 
-        rows: tp.Sequence[tp.Dict[tp.Hashable, tp.Any]]
+        rows: tp.Sequence[tp.Dict[TLabel, tp.Any]]
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
@@ -1006,7 +1008,7 @@ class Frame(ContainerOperand):
             row_reference.update(row)
 
         # get value for a column accross all rows
-        def get_value_iter(col_key: tp.Hashable, col_idx: int) -> tp.Iterator[tp.Any]:
+        def get_value_iter(col_key: TLabel, col_idx: int) -> tp.Iterator[tp.Any]:
             rows_iter = rows if not rows_to_iter else iter(rows)
 
             if get_col_fill_value is not None and get_col_dtype is not None:
@@ -1052,11 +1054,11 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
-            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -1096,10 +1098,10 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
-            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False) -> tpe.Self:
         '''Frame constructor from iterable of pairs of index label, row, where row is a dictionary. Column names will be derived from the union of all row dictionary keys.
 
@@ -1130,12 +1132,12 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             index: tp.Optional[IndexInitializer] = None,
             fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
@@ -1155,7 +1157,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        columns: tp.List[tp.Hashable] = []
+        columns: tp.List[TLabel] = []
 
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
         # NOTE: could add own_index argument in signature, see implementation in from_fields()
@@ -1223,12 +1225,12 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
+            mapping: tp.Dict[TLabel, tp.Iterable[tp.Any]],
             *,
             index: tp.Optional[IndexInitializer] = None,
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
@@ -1266,7 +1268,7 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             fill_value: tp.Any = np.nan,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
@@ -1347,11 +1349,11 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_fields(cls,
-            fields: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]],
+            fields: tp.Iterable[tp.Dict[TLabel, tp.Any]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
@@ -1375,7 +1377,7 @@ class Frame(ContainerOperand):
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns)) # type: ignore
 
-        cols: tp.Sequence[tp.Dict[tp.Hashable, tp.Any]]
+        cols: tp.Sequence[tp.Dict[TLabel, tp.Any]]
         if not hasattr(fields, '__len__'):
             # might be a generator; must convert to sequence
             cols = list(fields)
@@ -1442,7 +1444,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tp.Tuple[TypeBlocks, tp.Sequence[NDArrayAny], tp.Sequence[tp.Hashable]]:
+            ) -> tp.Tuple[TypeBlocks, tp.Sequence[NDArrayAny], tp.Sequence[TLabel]]:
         '''
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
 
@@ -1480,7 +1482,7 @@ class Frame(ContainerOperand):
         index_arrays = []
         # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
         columns_labels = []
-        columns_by_col_idx: tp.List[tp.Hashable] = []
+        columns_by_col_idx: tp.List[TLabel] = []
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
@@ -1534,9 +1536,9 @@ class Frame(ContainerOperand):
             index_arrays: tp.Sequence[NDArrayAny],
             index_constructors: IndexConstructors,
             columns_depth: int,
-            columns_labels: tp.Sequence[tp.Hashable],
+            columns_labels: tp.Sequence[TLabel],
             columns_constructors: IndexConstructors,
-            name: tp.Hashable,
+            name: TLabel,
             ) -> tpe.Self:
         '''
         Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
@@ -1593,7 +1595,7 @@ class Frame(ContainerOperand):
             columns_depth: int = 1,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> tpe.Self:
@@ -1635,7 +1637,7 @@ class Frame(ContainerOperand):
     @classmethod
     def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[
-                    tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
+                    tp.Tuple[TLabel, TLabel], tp.Any]],
             *,
             index: IndexInitializer,
             columns: IndexInitializer,
@@ -1724,7 +1726,7 @@ class Frame(ContainerOperand):
                     )
 
         elif axis == 1: # column wise, use from_fields
-            def fields() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.List[tp.Any]]]:
+            def fields() -> tp.Iterator[tp.Tuple[TLabel, tp.List[tp.Any]]]:
                 items_iter = iter(items)
                 first = next(items_iter)
                 (_, c_last), value = first
@@ -1762,7 +1764,7 @@ class Frame(ContainerOperand):
             columns_select: tp.Iterable[str | tp.Tuple[str, ...]] | None = None,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             parameters: tp.Any = (),
             ) -> tpe.Self:
@@ -1866,7 +1868,7 @@ class Frame(ContainerOperand):
                 index = [list() for _ in range(index_depth)]
 
                 def default_constructor(
-                        iterables: tp.Iterable[tp.Iterable[tp.Hashable]],
+                        iterables: tp.Iterable[tp.Iterable[TLabel]],
                         index_constructors: IndexConstructors,
                         ) -> IndexHierarchy: #pylint: disable=function-redefined
                     if get_col_dtype:
@@ -1918,7 +1920,7 @@ class Frame(ContainerOperand):
             json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -1961,7 +1963,7 @@ class Frame(ContainerOperand):
             json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -2004,7 +2006,7 @@ class Frame(ContainerOperand):
             json_data: tp.Union[str, StringIO],
             *,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -2042,7 +2044,7 @@ class Frame(ContainerOperand):
             *,
             index: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -2080,7 +2082,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -2122,12 +2124,12 @@ class Frame(ContainerOperand):
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
-            index_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
+            index_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
-            columns_continuation_token: tp.Optional[tp.Hashable] = CONTINUATION_TOKEN_INACTIVE,
-            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
+            columns_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             skip_initial_space: bool = False,
@@ -2139,7 +2141,7 @@ class Frame(ContainerOperand):
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
             ) -> tpe.Self:
@@ -2437,12 +2439,12 @@ class Frame(ContainerOperand):
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
-            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
-            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
-            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
+            columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             skip_initial_space: bool = False,
@@ -2454,7 +2456,7 @@ class Frame(ContainerOperand):
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
             ) -> tpe.Self:
@@ -2499,12 +2501,12 @@ class Frame(ContainerOperand):
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
-            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
-            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
-            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
+            columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             skip_initial_space: bool = False,
@@ -2516,7 +2518,7 @@ class Frame(ContainerOperand):
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
             ) -> tpe.Self:
@@ -2562,12 +2564,12 @@ class Frame(ContainerOperand):
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
-            index_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
-            columns_continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
-            columns_select: tp.Optional[tp.Iterable[tp.Hashable]] = None,
+            columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
+            columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             skip_initial_space: bool = False,
@@ -2633,7 +2635,7 @@ class Frame(ContainerOperand):
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Hashable = STORE_LABEL_DEFAULT,
+            label: TLabel = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             index_constructors: IndexConstructors = None,
@@ -2680,7 +2682,7 @@ class Frame(ContainerOperand):
     def from_sqlite(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Hashable,
+            label: TLabel,
             index_depth: int = 0,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
@@ -2714,7 +2716,7 @@ class Frame(ContainerOperand):
     def from_hdf5(cls,
             fp: PathSpecifier,
             *,
-            label: tp.Hashable,
+            label: TLabel,
             index_depth: int = 0,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
@@ -2947,7 +2949,7 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_constructors: IndexConstructors = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             ) -> tpe.Self:
         '''Realize a ``Frame`` from an Arrow Table.
@@ -2976,7 +2978,7 @@ class Frame(ContainerOperand):
             apex_labels = None
             index_arrays = None
 
-        columns_labels: tp.List[tp.Hashable] = []
+        columns_labels: tp.List[TLabel] = []
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
@@ -3104,7 +3106,7 @@ class Frame(ContainerOperand):
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: TLabel = None,
             consolidate_blocks: bool = False,
             ) -> tpe.Self:
         '''
@@ -4199,8 +4201,8 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='relabel_level_add', class_name='Frame')
     def relabel_level_add(self,
-            index: tp.Hashable = None,
-            columns: tp.Hashable = None,
+            index: TLabel = None,
+            columns: TLabel = None,
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -4295,7 +4297,7 @@ class Frame(ContainerOperand):
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping
-        name_posterior: tp.Tuple[tp.Hashable, ...]
+        name_posterior: tp.Tuple[TLabel, ...]
         if isinstance(iloc_key, INT_TYPES):
             name_posterior = (index_opposite[iloc_key],)
         else:
@@ -4376,7 +4378,7 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-        new_labels: tp.Iterable[tp.Hashable]
+        new_labels: tp.Iterable[TLabel]
 
         if index_target.depth == 1:
             index_target._depth_level_validate(depth_level) # type: ignore # will raise
@@ -5244,24 +5246,24 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> tp.Iterable[tp.Hashable]:
+    def keys(self) -> tp.Iterable[TLabel]:
         '''Iterator of column labels.
         '''
         return self._columns
 
-    def __iter__(self) -> tp.Iterable[tp.Hashable]:
+    def __iter__(self) -> tp.Iterable[TLabel]:
         '''
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         '''
         return self._columns.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in column labels.
         '''
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
         for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
@@ -5269,7 +5271,7 @@ class Frame(ContainerOperand):
             yield label, Series(array, index=self._index, name=label)
 
     def get(self,
-            key: tp.Hashable,
+            key: TLabel,
             default: tp.Optional[Series] = None,
             ) -> Series:
         '''
@@ -5489,7 +5491,7 @@ class Frame(ContainerOperand):
 
     def _axis_array_items(self,
             axis: int,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._blocks.axis_values(axis))
 
@@ -5534,7 +5536,7 @@ class Frame(ContainerOperand):
     def _axis_tuple_items(self, *,
             axis: int,
             constructor: tp.Optional[TupleConstructorType] = None,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
@@ -5555,7 +5557,7 @@ class Frame(ContainerOperand):
             # NOTE: axis_values here are already immutable
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -5570,7 +5572,7 @@ class Frame(ContainerOperand):
             index: IndexBase,
             columns: IndexBase,
             ordering: tp.Optional[NDArrayAny],
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
         '''Utility for final iteration of the group_iter, shared by three methods.
         '''
         if as_array:
@@ -5609,7 +5611,7 @@ class Frame(ContainerOperand):
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
         '''
         Core group implementation.
 
@@ -5682,7 +5684,7 @@ class Frame(ContainerOperand):
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
         '''
         Args:
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
@@ -5722,7 +5724,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
         # NOTE: simlar to _axis_group_iloc_items
 
         blocks = self._blocks
@@ -5814,7 +5816,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
 
         blocks = self._blocks
         index = self._index
@@ -5897,7 +5899,7 @@ class Frame(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -5959,7 +5961,7 @@ class Frame(ContainerOperand):
 
     def _iter_element_loc_items(self,
             axis: int = 0,
-            ) -> tp.Iterator[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[TLabel, TLabel], tp.Any]]:
         '''
         Generator of pairs of (index, column), value. This is driven by ``np.ndindex``, and thus orders by row.
         '''
@@ -5978,7 +5980,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the frame's columns.
         '''
@@ -6322,7 +6324,7 @@ class Frame(ContainerOperand):
         # invalid axis will raise in array_to_duplicated
 
     def set_index(self,
-            column: tp.Hashable,
+            column: TLabel,
             *,
             drop: bool = False,
             index_constructor: IndexConstructor = None,
@@ -6352,7 +6354,7 @@ class Frame(ContainerOperand):
             own_data = False
             own_columns = False
 
-        index_values: tp.Iterable[tp.Hashable]
+        index_values: tp.Iterable[TLabel]
         if isinstance(column_iloc, INT_TYPES):
             index_values = self._blocks._extract_array_column(column_iloc)
             name = column
@@ -6458,7 +6460,7 @@ class Frame(ContainerOperand):
                 )
 
     def unset_index(self, *,
-            names: tp.Sequence[tp.Hashable] = (),
+            names: tp.Sequence[TLabel] = (),
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
             columns_constructors: IndexConstructors = None,
@@ -6544,7 +6546,7 @@ class Frame(ContainerOperand):
                 )
 
     def set_columns(self,
-            index: tp.Hashable,
+            index: TLabel,
             *,
             drop: bool = False,
             columns_constructor: IndexConstructor = None,
@@ -6680,7 +6682,7 @@ class Frame(ContainerOperand):
                 )
 
     def unset_columns(self, *,
-            names: tp.Sequence[tp.Hashable] = (),
+            names: tp.Sequence[TLabel] = (),
             # consolidate_blocks: bool = False,
             index_constructors: IndexConstructors = None,
             ) -> 'Frame':
@@ -7290,7 +7292,7 @@ class Frame(ContainerOperand):
             axis: int,
             return_label: bool,
             forward: bool,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             ) -> Series:
         '''
@@ -7389,7 +7391,7 @@ class Frame(ContainerOperand):
                 )
 
     def loc_notna_first(self, *,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             axis: int = 0
             ) -> Series:
         '''
@@ -7408,7 +7410,7 @@ class Frame(ContainerOperand):
                 )
 
     def loc_notna_last(self, *,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             axis: int = 0
             ) -> Series:
         '''
@@ -7466,7 +7468,7 @@ class Frame(ContainerOperand):
                 )
 
     def loc_notfalsy_first(self, *,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             axis: int = 0
             ) -> Series:
         '''
@@ -7485,7 +7487,7 @@ class Frame(ContainerOperand):
                 )
 
     def loc_notfalsy_last(self, *,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             axis: int = 0
             ) -> Series:
         '''
@@ -7690,7 +7692,7 @@ class Frame(ContainerOperand):
         group_has_fill = {g: False for g in group_to_target_map}
 
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
-        def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+        def records_items() -> tp.Iterator[tp.Tuple[TLabel, tp.Sequence[tp.Any]]]:
             for row_idx, outer in enumerate(index_src): # iter tuple or label
                 for target in targets_unique: # target is always a tuple
                     # derive the new index
@@ -7769,7 +7771,7 @@ class Frame(ContainerOperand):
                 frame_cls=self.__class__,
                 )
 
-        def items() -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+        def items() -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
             for col_idx, outer in enumerate(columns_src): # iter tuple or label
                 dtype_src_col = dtypes_src[col_idx]
 
@@ -7815,7 +7817,7 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             include_index: bool = False,
             # composite_index: bool = True,
-            # composite_index_fill_value: tp.Hashable = None,
+            # composite_index_fill_value: TLabel = None,
             ) -> Frame:
         '''
         Perform an inner join.
@@ -7860,7 +7862,7 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             include_index: bool = False,
             # composite_index: bool = True,
-            # composite_index_fill_value: tp.Hashable = None,
+            # composite_index_fill_value: TLabel = None,
             ) -> Frame:
         '''
         Perform a left outer join.
@@ -7905,7 +7907,7 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             include_index: bool = False,
             # composite_index: bool = True,
-            # composite_index_fill_value: tp.Hashable = None,
+            # composite_index_fill_value: TLabel = None,
             ) -> Frame:
         '''
         Perform a right outer join.
@@ -7950,7 +7952,7 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             include_index: bool = False,
             # composite_index: bool = True,
-            # composite_index_fill_value: tp.Hashable = None,
+            # composite_index_fill_value: TLabel = None,
             ) -> Frame:
         '''
         Perform an outer join.
@@ -8014,7 +8016,7 @@ class Frame(ContainerOperand):
 
         # NOTE: might introduce coercions in IndexHierarchy
         labels_prior = self._columns.values
-        labels_insert: tp.Iterable[tp.Hashable]
+        labels_insert: tp.Iterable[TLabel]
 
         if isinstance(container, Frame):
             labels_insert = container.columns.__iter__()
@@ -8047,7 +8049,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='insert')
     def insert_before(self,
-            key: tp.Hashable,
+            key: TLabel,
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
@@ -8070,7 +8072,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='insert')
     def insert_after(self,
-            key: tp.Hashable,
+            key: TLabel,
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
@@ -8178,7 +8180,7 @@ class Frame(ContainerOperand):
     # exporters
 
     def to_pairs(self, axis: int = 0) -> tp.Iterable[
-            tp.Tuple[tp.Hashable, tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]]]:
+            tp.Tuple[TLabel, tp.Iterable[tp.Tuple[TLabel, tp.Any]]]]:
         '''
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument. Note that the returned object is eagerly constructed; use an iterator interface for lazy iteration.
         '''
@@ -8390,7 +8392,7 @@ class Frame(ContainerOperand):
         columns = self.columns
         index = self.index
 
-        index_name: tp.Union[tp.Hashable, tp.Tuple[tp.Hashable, ...]]
+        index_name: tp.Union[TLabel, tp.Tuple[TLabel, ...]]
         if index.depth == 1:
             index_name = index.names[0]
             coords = {index_name: index.values}
@@ -8512,7 +8514,7 @@ class Frame(ContainerOperand):
         # immutability should be preserved
         array = self._blocks.values.reshape(self._blocks.size)
 
-        def labels() -> tp.Iterator[tp.Hashable]:
+        def labels() -> tp.Iterator[TLabel]:
             for row, col in np.ndindex(self._blocks.shape):
                 yield index_tuples[row] + columns_tuples[col] # type: ignore
 
@@ -8891,7 +8893,7 @@ class Frame(ContainerOperand):
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet
             *,
-            label: tp.Hashable = STORE_LABEL_DEFAULT,
+            label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_index_name: bool = True,
             include_columns: bool = True,
@@ -8921,7 +8923,7 @@ class Frame(ContainerOperand):
     def to_sqlite(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Hashable = STORE_LABEL_DEFAULT,
+            label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -8951,7 +8953,7 @@ class Frame(ContainerOperand):
     def to_hdf5(self,
             fp: PathSpecifier, # not sure file-like StringIO works
             *,
-            label: tp.Hashable = STORE_LABEL_DEFAULT,
+            label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -9132,7 +9134,7 @@ class FrameGO(Frame):
 
 
     def __setitem__(self,
-            key: tp.Hashable,
+            key: TLabel,
             value: tp.Any,
             fill_value: tp.Any = np.nan
             ) -> None:
@@ -9178,7 +9180,7 @@ class FrameGO(Frame):
 
 
     def extend_items(self,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Series]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, Series]],
             fill_value: tp.Any = np.nan,
             ) -> None:
         '''

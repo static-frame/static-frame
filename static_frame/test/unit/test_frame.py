@@ -11836,7 +11836,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_items_a(self) -> None:
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Dict[tp.Hashable, tp.Any]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Dict[TLabel, tp.Any]]]:
             for i in range(3):
                 yield f'000{i}', {'squared': i**2, 'cubed': i**3}
 
@@ -11849,7 +11849,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_items_b(self) -> None:
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Tuple[str, str]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Tuple[str, str]]]:
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 

@@ -24,6 +24,7 @@ from static_frame.core.util import PairRight
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -46,7 +47,7 @@ def join(frame: 'Frame',
 
     # NOTE: pre 1.0 these were optional parameters; now, we always return the data without an index; in the future, we might add back parameters to control how and if an index is returned
     # composite_index: bool = True,
-    composite_index_fill_value: tp.Hashable = None
+    composite_index_fill_value: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -106,8 +107,8 @@ def join(frame: 'Frame',
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
 
-    left_loc_set: tp.Set[tp.Hashable] = set() # all left loc labels that match
-    right_loc_set: tp.Set[tp.Hashable] = set() # all right loc labels that match
+    left_loc_set: tp.Set[TLabel] = set() # all left loc labels that match
+    right_loc_set: tp.Set[TLabel] = set() # all right loc labels that match
     many_loc: tp.List[Pair] = []
 
     cifv = composite_index_fill_value
@@ -260,7 +261,7 @@ def join(frame: 'Frame',
 #         right_template: str = '{}',
 #         fill_value: tp.Any = np.nan,
 #         composite_index: bool = True,
-#         composite_index_fill_value: tp.Hashable = None,
+#         composite_index_fill_value: TLabel = None,
 #         ) -> 'Frame':
 
 #     from static_frame.core.frame import Frame

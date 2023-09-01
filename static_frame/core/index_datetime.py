@@ -39,6 +39,8 @@ from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
@@ -195,7 +197,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def append(self, value: tp.Hashable) -> None:
+    def append(self, value: TLabel) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         value = to_datetime64(value, self._DTYPE) # type: ignore
@@ -222,7 +224,7 @@ class IndexYear(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None) -> I:
+            name: tp.Optional[TLabel] = None) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
@@ -240,7 +242,7 @@ class IndexYear(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
@@ -261,7 +263,7 @@ class IndexYear(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
@@ -333,7 +335,7 @@ class IndexYearMonth(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
@@ -353,7 +355,7 @@ class IndexYearMonth(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
@@ -374,7 +376,7 @@ class IndexYearMonth(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
@@ -416,7 +418,7 @@ class IndexDate(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
@@ -434,7 +436,7 @@ class IndexDate(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None) -> I:
+            name: tp.Optional[TLabel] = None) -> I:
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
@@ -452,7 +454,7 @@ class IndexDate(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.

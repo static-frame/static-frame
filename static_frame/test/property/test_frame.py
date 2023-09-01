@@ -151,7 +151,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     @given(sfst.get_frame_go(), sfst.get_label())
-    def test_frame_go_setitem(self, f1: Frame, label: tp.Hashable) -> None:
+    def test_frame_go_setitem(self, f1: Frame, label: TLabel) -> None:
 
         shape = f1.shape
         f1['foo'] = label # type: ignore
@@ -176,7 +176,7 @@ class TestUnit(TestCase):
 
         letters = self.get_letters(len(series_arrays))
 
-        def items() -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
+        def items() -> tp.Iterator[tp.Tuple[TLabel, Series]]:
             for idx, label in enumerate(letters):
                 s = Series(series_arrays[idx], index=f1.index)
                 yield label, s

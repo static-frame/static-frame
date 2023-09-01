@@ -259,7 +259,7 @@ class TestUnit(TestCase):
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
-            config_map_read: tp.Dict[tp.Hashable, StoreConfig] = {}
+            config_map_read: tp.Dict[TLabel, StoreConfig] = {}
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
                 c = StoreConfig(

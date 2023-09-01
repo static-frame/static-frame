@@ -33,6 +33,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -115,7 +117,7 @@ class IndexBase(ContainerOperandSequence):
 
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
@@ -157,15 +159,15 @@ class IndexBase(ContainerOperandSequence):
 
     @classmethod
     def from_labels(cls: tp.Type[I],
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def __init__(self, initializer: tp.Any = None,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ):
         # trivial init for mypy; not called by derived class
         pass
@@ -175,10 +177,10 @@ class IndexBase(ContainerOperandSequence):
     def __len__(self) -> int:
         raise NotImplementedError() #pragma: no cover
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         raise NotImplementedError() #pragma: no cover
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -203,7 +205,7 @@ class IndexBase(ContainerOperandSequence):
     def _extract_iloc(self, key: IntegerLocType | None) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
-    def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> tp.Hashable:
+    def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> TLabel:
         raise NotImplementedError() #pragma: no cover
 
     def _update_array_cache(self) -> None:
@@ -238,7 +240,7 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     def level_add(self,
-            level: tp.Hashable,
+            level: TLabel,
             *,
             index_constructor: IndexConstructor = None,
             ) -> 'IndexHierarchy':
@@ -401,7 +403,7 @@ class IndexBase(ContainerOperandSequence):
     # set operations
 
     def _ufunc_set(self: I,
-            others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[tp.Hashable]]],
+            others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
             many_to_one_type: ManyToOneType,
             ) -> I:
         '''Normalize inputs and call `index_many_to_one`.
@@ -430,19 +432,19 @@ class IndexBase(ContainerOperandSequence):
                 many_to_one_type=many_to_one_type,
                 )
 
-    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
         return self._ufunc_set(others, ManyToOneType.INTERSECT)
 
-    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
         return self._ufunc_set(others, ManyToOneType.UNION)
 
-    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
+    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''

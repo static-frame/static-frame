@@ -122,6 +122,8 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -191,7 +193,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -276,7 +278,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, tp.Any],
+            mapping: tp.Dict[TLabel, tp.Any],
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -365,7 +367,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']],
+            items: tp.Iterable[tp.Tuple[TLabel, 'Series']],
             *,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor] = None
@@ -383,12 +385,12 @@ class Series(ContainerOperand):
 
         if index_constructor is None or isinstance(index_constructor, IndexDefaultConstructorFactory):
             # default index constructor expects delivery of Indices for greater efficiency
-            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
+            def gen() -> tp.Iterator[tp.Tuple[TLabel, IndexBase]]:
                 for label, series in items:
                     array_values.append(series.values)
                     yield label, series._index
         else:
-            def gen() -> tp.Iterator[tp.Hashable]: #type: ignore
+            def gen() -> tp.Iterator[TLabel]: #type: ignore
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index)
@@ -658,7 +660,7 @@ class Series(ContainerOperand):
                 )
 
     # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the series' index.
 
@@ -1199,7 +1201,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
-            level: tp.Hashable
+            level: TLabel
             ) -> 'Series':
         '''
         {doc}
@@ -2003,7 +2005,7 @@ class Series(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Series']]:
         '''
         Args:
             group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
@@ -2033,7 +2035,7 @@ class Series(ContainerOperand):
 
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from zip(self._index.__iter__(), self.values)
@@ -2048,7 +2050,7 @@ class Series(ContainerOperand):
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, 'Series']]:
 
         if depth_level is None:
             depth_level = 0
@@ -2070,7 +2072,7 @@ class Series(ContainerOperand):
             depth_level: DepthLevelSpecifier = 0,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 as_array=as_array,
@@ -2090,7 +2092,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Union[NDArrayAny, 'Series']]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[NDArrayAny, 'Series']]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -2162,7 +2164,7 @@ class Series(ContainerOperand):
         '''
         return self._index
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -2171,7 +2173,7 @@ class Series(ContainerOperand):
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -2188,7 +2190,7 @@ class Series(ContainerOperand):
         '''
         return zip(self._index.__iter__(), self.values)
 
-    def get(self, key: tp.Hashable,
+    def get(self, key: TLabel,
             default: tp.Any = None,
             ) -> tp.Any:
         '''
@@ -2754,7 +2756,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the label corresponding to the minimum value found.
 
@@ -2762,7 +2764,7 @@ class Series(ContainerOperand):
             {skipna}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         # if skipna is False and a NaN is returned, this will raise
         post = argmin_1d(self.values, skipna=skipna)
@@ -2788,7 +2790,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='argminmax')
     def loc_max(self, *,
             skipna: bool = True,
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the label corresponding to the maximum value found.
 
@@ -2796,7 +2798,7 @@ class Series(ContainerOperand):
             {skipna}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
@@ -2825,9 +2827,9 @@ class Series(ContainerOperand):
             *,
             return_label: bool,
             forward: bool,
-            fill_value: tp.Hashable = np.nan,
+            fill_value: TLabel = np.nan,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the label corresponding to the first not NA (None or nan) value found.
 
@@ -2835,7 +2837,7 @@ class Series(ContainerOperand):
             {skipna}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         # if skipna is False and a NaN is returned, this will raise
         if not len(self.values):
@@ -2851,7 +2853,7 @@ class Series(ContainerOperand):
     def iloc_notna_first(self,
             *,
             fill_value: int = -1,
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the position corresponding to the first not NA (None or nan) value found.
 
@@ -2859,7 +2861,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=False,
@@ -2871,7 +2873,7 @@ class Series(ContainerOperand):
     def iloc_notna_last(self,
             *,
             fill_value: int = -1,
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the position corresponding to the last not NA (None or nan) value found.
 
@@ -2879,7 +2881,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=False,
@@ -2890,8 +2892,8 @@ class Series(ContainerOperand):
 
     def loc_notna_first(self,
             *,
-            fill_value: tp.Hashable = np.nan,
-            ) -> tp.Hashable:
+            fill_value: TLabel = np.nan,
+            ) -> TLabel:
         '''
         Return the label corresponding to the first not NA (None or nan) value found.
 
@@ -2899,7 +2901,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=True,
@@ -2910,8 +2912,8 @@ class Series(ContainerOperand):
 
     def loc_notna_last(self,
             *,
-            fill_value: tp.Hashable = -1,
-            ) -> tp.Hashable:
+            fill_value: TLabel = -1,
+            ) -> TLabel:
         '''
         Return the label corresponding to the last not NA (None or nan) value found.
 
@@ -2919,7 +2921,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=True,
@@ -2932,8 +2934,8 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     def loc_notfalsy_first(self,
             *,
-            fill_value: tp.Hashable = np.nan,
-            ) -> tp.Hashable:
+            fill_value: TLabel = np.nan,
+            ) -> TLabel:
         '''
         Return the label corresponding to the first non-falsy (including nan) value found.
 
@@ -2941,7 +2943,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=True,
@@ -2953,7 +2955,7 @@ class Series(ContainerOperand):
     def iloc_notfalsy_first(self,
             *,
             fill_value: int = -1,
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the position corresponding to the first non-falsy (including nan) value found.
 
@@ -2961,7 +2963,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=False,
@@ -2973,8 +2975,8 @@ class Series(ContainerOperand):
 
     def loc_notfalsy_last(self,
             *,
-            fill_value: tp.Hashable = np.nan,
-            ) -> tp.Hashable:
+            fill_value: TLabel = np.nan,
+            ) -> TLabel:
         '''
         Return the label corresponding to the last non-falsy (including nan) value found.
 
@@ -2982,7 +2984,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=True,
@@ -2994,7 +2996,7 @@ class Series(ContainerOperand):
     def iloc_notfalsy_last(self,
             *,
             fill_value: int = -1,
-            ) -> tp.Hashable:
+            ) -> TLabel:
         '''
         Return the position corresponding to the last non-falsy (including nan) value found.
 
@@ -3002,7 +3004,7 @@ class Series(ContainerOperand):
             {fill_value}
 
         Returns:
-            tp.Hashable
+            TLabel
         '''
         return self._label_not_missing(
                 return_label=False,
@@ -3072,7 +3074,7 @@ class Series(ContainerOperand):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, NDArrayAny]:
+            ) -> tp.Union[TLabel, NDArrayAny]:
         '''
         {doc}
 
@@ -3156,7 +3158,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='insert')
     def insert_before(self,
-            key: tp.Hashable,
+            key: TLabel,
             container: 'Series',
             ) -> tpe.Self:
         '''
@@ -3176,7 +3178,7 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='insert')
     def insert_after(self,
-            key: tp.Hashable, # iloc positions
+            key: TLabel, # iloc positions
             container: 'Series',
             ) -> tpe.Self:
         '''
@@ -3267,14 +3269,14 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # export
 
-    def to_pairs(self) -> tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]:
+    def to_pairs(self) -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
         '''
         Return a tuple of tuples, where each inner tuple is a pair of index label, value.
 
         Returns:
-            tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
+            tp.Iterable[tp.Tuple[TLabel, tp.Any]]
         '''
-        index_values: tp.Iterable[tp.Hashable]
+        index_values: tp.Iterable[TLabel]
         if isinstance(self._index, IndexHierarchy):
             index_values = self._index.__iter__()
         else:

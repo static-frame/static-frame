@@ -59,6 +59,7 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
@@ -152,7 +153,7 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
 
 def get_col_dtype_factory(
         dtypes: DtypesSpecifier,
-        columns: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase],
+        columns: tp.Optional[tp.Sequence[TLabel] | IndexBase],
         index_depth: int = 0,
         ) -> tp.Callable[[int], DtypeSpecifier]:
     '''
@@ -191,7 +192,7 @@ def get_col_dtype_factory(
             return dtypes  # type: ignore
         if is_map:
             # if no columns, assume mapping is an integer mapping
-            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            key: TLabel = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
                 dt = dtypes[key] #type: ignore
             except KeyError:
@@ -206,7 +207,7 @@ def get_col_dtype_factory(
 
 def get_col_fill_value_factory(
         fill_value: tp.Any,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]] | IndexBase,
+        columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
         ) -> tp.Callable[[int, DtypeAny | None], tp.Any]:
     '''
     Return a function to get fill_vlaue.
@@ -252,7 +253,7 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            key: TLabel = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
                 return fill_value[key]
             except KeyError:
@@ -267,7 +268,7 @@ def get_col_fill_value_factory(
 
 def get_col_format_factory(
         format: tp.Any,
-        fields: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase] = None,
+        fields: tp.Optional[tp.Sequence[TLabel] | IndexBase] = None,
         ) -> tp.Callable[[int], str]:
     '''
     Return a function to get string format, used in InterfaceString.
@@ -295,7 +296,7 @@ def get_col_format_factory(
         if is_element:
             return format # type: ignore
         if is_map:
-            key: tp.Hashable = fields[col_idx] if fields is not None else col_idx
+            key: TLabel = fields[col_idx] if fields is not None else col_idx
             try: # try lookup for defaultdict support
                 return format[key] #type: ignore
             except KeyError:
@@ -513,7 +514,7 @@ def constructor_from_optional_constructor(
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
-            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[TLabel]],
             ) -> 'IndexBase':
         return index_from_optional_constructor(value,
                 default_constructor=default_constructor,
@@ -572,7 +573,7 @@ def constructor_from_optional_constructors(
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
-            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[TLabel]],
             ) -> tp.Optional['IndexBase']:
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
@@ -822,7 +823,7 @@ def axis_window_items( *,
         size_increment: int = 0,
         as_array: bool = False,
         derive_label: bool = True,
-        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
     Args:
@@ -1051,7 +1052,7 @@ def rehierarch_from_type_blocks(*,
     labels_sort = np.full(labels_post.shape, 0)
 
     # get ordering of values found in each level
-    order: tp.List[tp.Dict[tp.Hashable, int]] = [defaultdict(int) for _ in range(depth)]
+    order: tp.List[tp.Dict[TLabel, int]] = [defaultdict(int) for _ in range(depth)]
 
     for (idx_row, idx_col), label in labels.element_items():
         if label not in order[idx_col]:
@@ -1073,7 +1074,7 @@ def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
         index_constructors: IndexConstructors = None,
-        name: tp.Optional[tp.Hashable] = None,
+        name: tp.Optional[TLabel] = None,
         ) -> tp.Tuple['IndexBase', NDArrayAny]:
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
@@ -1098,9 +1099,9 @@ def rehierarch_from_index_hierarchy(*,
             ), index_iloc
 
 def array_from_value_iter(
-        key: tp.Hashable,
+        key: TLabel,
         idx: int,
-        get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
+        get_value_iter: tp.Callable[[TLabel, int], tp.Iterator[tp.Any]],
         get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
         row_count: int,
         ) -> NDArrayAny:
@@ -1406,7 +1407,7 @@ class IMTOAdapter:
         return len(self.values)
 
 def imto_adapter_factory(
-        source: tp.Union['IndexBase', NDArrayAny, tp.Iterable[tp.Hashable]],
+        source: tp.Union['IndexBase', NDArrayAny, tp.Iterable[TLabel]],
         depth: int,
         name: NameType,
         ndim: int,
@@ -1628,7 +1629,7 @@ def index_many_concat(
 
 #-------------------------------------------------------------------------------
 def apex_to_name(
-        rows: tp.Sequence[tp.Sequence[tp.Hashable]],
+        rows: tp.Sequence[tp.Sequence[TLabel]],
         depth_level: tp.Optional[DepthLevelSpecifier],
         axis: int, # 0 is by row (for index), 1 is by column (for columns)
         axis_depth: int,

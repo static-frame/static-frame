@@ -13,6 +13,8 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -432,7 +434,7 @@ class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is Frame
             )
 
     def __setitem__(self,
-            key: tp.Hashable,
+            key: TLabel,
             value: tp.Any,
             ) -> None:
         self._container.__setitem__(key, value, self._fill_value) #type: ignore

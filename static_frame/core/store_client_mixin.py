@@ -16,6 +16,8 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
+
 
 # NOTE: wanted this to inherit from tp.Generic[T], such that values returned from constructors would be known, but this breaks in 3.6 with: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 
@@ -29,7 +31,7 @@ class StoreClientMixin:
 
     _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
-    _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
+    _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[TLabel, tp.Any]]]
 
 
     def _filter_config(self,

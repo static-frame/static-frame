@@ -94,6 +94,7 @@ from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import validate_depth_selection
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -111,14 +112,14 @@ IH = tp.TypeVar('IH', bound='IndexHierarchy')
 IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
 IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
-SingleLabelType = tp.Sequence[tp.Hashable]
-TreeNodeT = tp.Dict[tp.Hashable, tp.Union[Index, 'TreeNodeT']]
+SingleLabelType = tp.Sequence[TLabel]
+TreeNodeT = tp.Dict[TLabel, tp.Union[Index, 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
 ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
 
-HashableToIntMapsT = tp.List[tp.Dict[tp.Hashable, int]]
+HashableToIntMapsT = tp.List[tp.Dict[TLabel, int]]
 GrowableIndexersT = tp.List[tp.List[int]]
 
 
@@ -211,7 +212,7 @@ class PendingRow:
         '''Each row is a single label in an IndexHierarchy'''
         return 1
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         yield from self.row
 
 
@@ -317,7 +318,7 @@ class IndexHierarchy(IndexBase):
         value = value.remove_unused_levels()
 
         # iterating over a hierarchical index will iterate over labels
-        name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+        name: tp.Optional[tp.Tuple[TLabel, ...]] = tuple(value.names)
 
         # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
         if all(n is None for n in name): #type: ignore
@@ -432,7 +433,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def _from_empty(cls: tp.Type[IH],
-            empty_labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            empty_labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -485,7 +486,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_values_per_depth(cls: tp.Type[IH],
-            values: tp.Union[NDArrayAny, tp.Sequence[tp.Iterable[tp.Hashable]] | NDArrayAny],
+            values: tp.Union[NDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | NDArrayAny],
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
@@ -563,13 +564,13 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: IndexConstructors = None,
             depth_reference: tp.Optional[int] = None,
-            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE,
+            continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             ) -> IH:
         '''
         Construct an ``IndexHierarchy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
@@ -606,7 +607,7 @@ class IndexHierarchy(IndexBase):
         hash_maps: HashableToIntMapsT = [{} for _ in range(depth)]
         indexers_coll: GrowableIndexersT = [[] for _ in range(depth)]
 
-        prev_row: tp.Sequence[tp.Hashable] = ()
+        prev_row: tp.Sequence[TLabel] = ()
 
         while True:
             for hash_map, indexer, val in zip(hash_maps, indexers_coll, label_row):
@@ -668,12 +669,12 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def _from_index_items_1d(cls: tp.Type[IH],
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
+            items: tp.Iterable[tp.Tuple[TLabel, Index]],
             *,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
             ) -> IH:
-        labels: tp.List[tp.Hashable] = []
+        labels: tp.List[TLabel] = []
         index_inner: tp.Optional[IndexGO] = None  # We will grow this in-place
         indexers_inner: tp.List[NDArrayAny] = []
 
@@ -726,7 +727,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_index_items(cls: tp.Type[IH],
-            items: tp.Iterable[tp.Tuple[tp.Hashable, IndexBase]],
+            items: tp.Iterable[tp.Tuple[TLabel, IndexBase]],
             *,
             index_constructor: IndexConstructor = None,
             name: NameType = None,
@@ -754,7 +755,7 @@ class IndexHierarchy(IndexBase):
         assert isinstance(index, IndexHierarchy) # mypy
 
         depth = index.depth
-        labels: tp.List[tp.Hashable] = [label]
+        labels: tp.List[TLabel] = [label]
         repeats: tp.List[int] = [len(index)]
         existing_index_constructors: tp.List[IndexConstructor] = list(index._index_constructors)
 
@@ -859,7 +860,7 @@ class IndexHierarchy(IndexBase):
 
     @classmethod
     def from_names(cls: tp.Type[IH],
-            names: tp.Iterable[tp.Hashable],
+            names: tp.Iterable[TLabel],
             ) -> IH:
         '''
         Construct a zero-length :obj:`IndexHierarchy` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
@@ -917,7 +918,7 @@ class IndexHierarchy(IndexBase):
         elif name_interleave:
             # NOTE: we always expect name to be a tuple when name_priorty is False as this pathway is exclusively from Frame.set_index_hierarchy()
             assert isinstance(name, tuple) and len(name) == len(indices)
-            def gen() -> tp.Iterator[tp.Hashable]:
+            def gen() -> tp.Iterator[TLabel]:
                 for index, n in zip(indices, name): #type: ignore
                     if index.name is not None:
                         yield index.name
@@ -1159,7 +1160,7 @@ class IndexHierarchy(IndexBase):
 
     def _iter_label(self: IH,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
         '''
         Iterate over labels at a given depth level.
 
@@ -1177,7 +1178,7 @@ class IndexHierarchy(IndexBase):
 
     def _iter_label_items(self: IH,
             depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
+            ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         '''
         This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
         '''
@@ -1531,7 +1532,7 @@ class IndexHierarchy(IndexBase):
     @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''
         {}
         '''
@@ -1695,7 +1696,7 @@ class IndexHierarchy(IndexBase):
 
         mapper_func = mapper if is_callable else mapper.__getitem__ # type: ignore
 
-        def get_new_label(label: tp.Hashable) -> tp.Hashable:
+        def get_new_label(label: TLabel) -> TLabel:
             if is_callable or label in mapper: # type: ignore
                 return mapper_func(label) # type: ignore
             return label
@@ -1708,8 +1709,8 @@ class IndexHierarchy(IndexBase):
         for level in depth_level:
             index = self._indices[level]
 
-            new_index: tp.Dict[tp.Hashable, int] = {}
-            index_remap: tp.Dict[tp.Hashable, tp.Hashable] = {}
+            new_index: tp.Dict[TLabel, int] = {}
+            index_remap: tp.Dict[TLabel, TLabel] = {}
 
             for label_idx, label in enumerate(index.values):
                 new_label = get_new_label(label)
@@ -2046,7 +2047,7 @@ class IndexHierarchy(IndexBase):
 
     def _extract_iloc_by_int(self,
             key: int | np.integer[tp.Any],
-            ) -> tp.Tuple[tp.Hashable, ...]:
+            ) -> tp.Tuple[TLabel, ...]:
         '''Extract a single row as a tuple (without coercion) given an iloc integer key. This interface is overwhelmingly for compatibility with Index.
         '''
         if self._recache:
@@ -2384,7 +2385,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     def isin(self: IH,
-            other: tp.Iterable[tp.Iterable[tp.Hashable]],
+            other: tp.Iterable[tp.Iterable[TLabel]],
             ) -> NDArrayAny:
         '''
         Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
@@ -2429,7 +2430,7 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # utility functions
 
-    def union(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+    def union(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2437,7 +2438,7 @@ class IndexHierarchy(IndexBase):
 
         return IndexBase.union(self, *others)
 
-    def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+    def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2445,7 +2446,7 @@ class IndexHierarchy(IndexBase):
 
         return IndexBase.intersection(self, *others)
 
-    def difference(self: IH, *others: tp.Union[IH, tp.Iterable[tp.Hashable]]) -> IH:
+    def difference(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2630,7 +2631,7 @@ class IndexHierarchy(IndexBase):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, tp.Iterable[tp.Hashable], tp.Any]:
+            ) -> tp.Union[TLabel, tp.Iterable[TLabel], tp.Any]:
         '''
         {doc}
 
@@ -2770,7 +2771,7 @@ class IndexHierarchy(IndexBase):
         return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name) # type: ignore
 
     def level_add(self: IH,
-            level: tp.Hashable,
+            level: TLabel,
             *,
             index_constructor: IndexConstructor = None,
             ) -> IH:
@@ -2883,7 +2884,7 @@ class IndexHierarchyGO(IndexHierarchy):
     _indices: tp.List[IndexGO] # type: ignore
 
     def append(self: IHGO,
-            value: tp.Sequence[tp.Hashable],
+            value: tp.Sequence[TLabel],
             ) -> None:
         '''
         Append a single label to this IndexHierarchyGO in-place

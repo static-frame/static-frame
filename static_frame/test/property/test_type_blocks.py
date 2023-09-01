@@ -15,13 +15,13 @@ class TestUnit(TestCase):
     @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
     def test_from_element_items(self,
             shapes: tp.List[tp.Tuple[int, int]],
-            labels: tp.Sequence[tp.Hashable]
+            labels: tp.Sequence[TLabel]
             ) -> None:
 
         # use shapes to get coordinates, where the max shape + 1 is the final shape
         shape = tuple(np.array(shapes).max(axis=0) + 1)
 
-        def values() -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Hashable]]:
+        def values() -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], TLabel]]:
             for idx, coord in enumerate(shapes):
                 yield coord, labels[idx % len(labels)]
 

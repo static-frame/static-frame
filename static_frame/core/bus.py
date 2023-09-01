@@ -58,6 +58,8 @@ from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TSortKinds
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -74,7 +76,7 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
 
 BusItemsType = tp.Iterable[tp.Tuple[
-        tp.Hashable, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+        TLabel, tp.Union[Frame, tp.Type[FrameDeferred]]]]
 
 FrameIterType = tp.Iterator[Frame]
 
@@ -107,7 +109,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
@@ -152,7 +154,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, Frame],
+            mapping: tp.Dict[TLabel, Frame],
             *,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
@@ -439,7 +441,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         if max_persist is not None:
             # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
-            self._last_accessed: tp.Dict[tp.Hashable, None] = {}
+            self._last_accessed: tp.Dict[TLabel, None] = {}
 
         if own_index:
             self._index = index #type: ignore
@@ -533,7 +535,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the :obj:`Bus` index.
 
@@ -682,7 +684,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
-            level: tp.Hashable
+            level: TLabel
             ) -> 'Bus':
         '''
         {doc}
@@ -734,7 +736,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _store_reader(
             store: Store,
             config: StoreConfigMap,
-            labels: tp.Iterator[tp.Hashable],
+            labels: tp.Iterator[TLabel],
             max_persist: tp.Optional[int],
             ) -> FrameIterType:
         '''
@@ -774,7 +776,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return
 
         index = self._index
-        label: tp.Hashable
+        label: TLabel
 
         if not load and max_persist_active: # must update LRU position
             labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
@@ -789,7 +791,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         array = self._values_mutable
         target_values: NDArrayAny | Frame = array[key] # type: ignore
-        target_labels: IndexBase | tp.Hashable = self._index.iloc[key]
+        target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
         store_reader: FrameIterType
@@ -913,7 +915,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -944,7 +946,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._loaded_all:
@@ -1046,7 +1048,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not self._loaded.any():
             return Series.from_element(None, index=self._index)
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Optional[tp.Tuple[int, ...]]]]:
             for label, f in zip(self._index, self._values_mutable):
                 if f is FrameDeferred:
                     yield label, None
@@ -1180,7 +1182,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -1189,7 +1191,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -1198,7 +1200,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index.__contains__(value)
 
-    def get(self, key: tp.Hashable,
+    def get(self, key: TLabel,
             default: tp.Any = None,
             ) -> tp.Any:
         '''

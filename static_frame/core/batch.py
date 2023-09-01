@@ -58,9 +58,10 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import UFunc
 from static_frame.core.util import get_concurrent_executor
+from static_frame.core.util import TLabel
 
 FrameOrSeries = tp.Union[Frame, Series]
-IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
+IteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
 if tp.TYPE_CHECKING:
@@ -89,7 +90,7 @@ def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
     container, func = bundle
     return func(container) # type: ignore
 
-def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
+def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, TLabel]
         ) -> FrameOrSeries:
     container, func, label = bundle
     return func(label, container) # type: ignore
@@ -511,7 +512,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             yield label, frame
 
     def _apply_pool(self,
-            labels: tp.List[tp.Hashable],
+            labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
             caller: tp.Callable[..., FrameOrSeries],
             ) -> 'Batch':
@@ -530,7 +531,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._derive(gen_pool)
 
     def _apply_pool_except(self,
-            labels: tp.List[tp.Hashable],
+            labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
             caller: tp.Callable[..., FrameOrSeries],
             exception: tp.Type[Exception],
@@ -639,7 +640,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -663,7 +664,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -748,14 +749,14 @@ class Batch(ContainerOperand, StoreClientMixin):
     # dictionary-like interface
     # these methods operate on the Batch itself, not the contained Frames
 
-    def keys(self) -> tp.Iterator[tp.Hashable]:
+    def keys(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of :obj:`Frame` labels.
         '''
         for k, _ in self._iter_items():
             yield k
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
         '''
@@ -1357,7 +1358,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def unset_index(self,
             *,
-            names: tp.Iterable[tp.Hashable] = (),
+            names: tp.Iterable[TLabel] = (),
             consolidate_blocks: bool = False,
             columns_constructors: IndexConstructors = None
             ) -> 'Batch':
@@ -1401,8 +1402,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             )
 
     def relabel_level_add(self,
-            index: tp.Hashable = None,
-            columns: tp.Hashable = None,
+            index: TLabel = None,
+            columns: TLabel = None,
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None

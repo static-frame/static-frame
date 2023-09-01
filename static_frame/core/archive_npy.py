@@ -15,6 +15,7 @@ from zipfile import ZipFile
 
 import numpy as np
 
+from static_frame.core.util import TLabel
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -599,7 +600,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def index_encode(
             *,
-            metadata: tp.Dict[str, tp.Hashable],
+            metadata: tp.Dict[str, TLabel],
             archive: Archive,
             index: 'IndexBase',
             key_template_values: str,
@@ -624,7 +625,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def array_encode(
             *,
-            metadata: tp.Dict[str, tp.Hashable],
+            metadata: tp.Dict[str, TLabel],
             archive: Archive,
             array: NDArrayAny,
             key_template_values: str,

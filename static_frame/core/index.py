@@ -82,6 +82,7 @@ from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
@@ -189,8 +190,8 @@ class Index(IndexBase):
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
-            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
-            labels: tp.Iterable[tp.Hashable],
+            mapping: tp.Optional[tp.Dict[TLabel, int]],
+            labels: tp.Iterable[TLabel],
             dtype: tp.Optional[DtypeAny] = None
             ) -> NDArrayAny:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
@@ -239,7 +240,7 @@ class Index(IndexBase):
 
     @classmethod
     def from_labels(cls: tp.Type[I],
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
             name: NameType = None
             ) -> I:
@@ -445,12 +446,12 @@ class Index(IndexBase):
 
     def _iter_label(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
         yield from self._labels
 
     def _iter_label_items(self,
             depth_level: tp.Optional[DepthLevelSpecifier] = None
-            ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
+            ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         yield from zip(self._positions, self._labels)
 
     @property
@@ -801,7 +802,7 @@ class Index(IndexBase):
     @doc_inject()
     def label_widths_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''{}'''
         self._depth_level_validate(depth_level)
         yield from zip_longest(self.values, (), fillvalue=1)
@@ -1085,14 +1086,14 @@ class Index(IndexBase):
     # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
 
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''Iterate over labels.
         '''
         if self._recache:
             self._update_array_cache()
         yield from self._labels.__iter__()
 
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the index labels.
         '''
@@ -1338,7 +1339,7 @@ class Index(IndexBase):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, NDArrayAny]:
+            ) -> tp.Union[TLabel, NDArrayAny]:
         '''
         {doc}
 
@@ -1368,7 +1369,7 @@ class Index(IndexBase):
         return post
 
     def level_add(self,
-            level: tp.Hashable,
+            level: TLabel,
             *,
             index_constructor: IndexConstructor = None,
             ) -> 'IndexHierarchy':
@@ -1454,7 +1455,7 @@ class _IndexGOMixin:
     _map: tp.Optional[AutoMap]
     _labels: NDArrayAny
     _positions: NDArrayAny
-    _labels_mutable: tp.List[tp.Hashable]
+    _labels_mutable: tp.List[TLabel]
     _labels_mutable_dtype: tp.Optional[DtypeAny]
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
@@ -1480,7 +1481,7 @@ class _IndexGOMixin:
 
     #---------------------------------------------------------------------------
     def _extract_labels(self,
-            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
+            mapping: tp.Optional[tp.Dict[TLabel, int]],
             labels: NDArrayAny,
             dtype: tp.Optional[DtypeAny] = None
             ) -> NDArrayAny:
@@ -1525,7 +1526,7 @@ class _IndexGOMixin:
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value: tp.Hashable) -> None:
+    def append(self, value: TLabel) -> None:
         '''append a value
         '''
         if self.__contains__(value): #type: ignore

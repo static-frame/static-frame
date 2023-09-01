@@ -301,8 +301,8 @@ class TestCase(unittest.TestCase):
             self.assertEqualWithNaN(v1, v2)
 
     def assertAlmostEqualItems(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
+            pairs2: tp.Iterable[tp.Tuple[TLabel, tp.Any]]) -> None:
 
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
@@ -314,8 +314,8 @@ class TestCase(unittest.TestCase):
 
 
     def assertAlmostEqualFramePairs(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            pairs2: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]]) -> None:
         '''
         For comparing nested tuples returned by Frame.to_pairs()
         '''

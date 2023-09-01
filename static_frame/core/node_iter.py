@@ -22,6 +22,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover
@@ -585,7 +586,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 )
 
     def to_series_from_items(self,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -621,7 +622,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 )
 
     def to_series_from_group_items(self,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -646,7 +647,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
     def to_frame_from_elements(self,
             items: tp.Iterable[tp.Tuple[
-                    tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
+                    tp.Tuple[TLabel, TLabel], tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
@@ -681,7 +682,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 )
 
     def to_index_from_labels(self,
-            values: tp.Iterator[tp.Hashable], #pylint: disable=function-redefined
+            values: tp.Iterator[TLabel], #pylint: disable=function-redefined
             dtype: DtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[IndexConstructor]= None,

@@ -247,7 +247,6 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
-# use this as a repalcement for tp.Hashable
 # NOTE: slice is not hashable
 TLabel = tp.Union[
         tp.Hashable,
@@ -269,7 +268,7 @@ TLabel = tp.Union[
 
 
 # for type hinting
-CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
+CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
 
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
@@ -277,7 +276,7 @@ GetItemKeyType = tp.Union[
         np.integer,
         str,
         slice,
-        tp.Hashable,
+        TLabel,
         tp.List[tp.Any],
         tp.Tuple[tp.Any, ...], # might be CompoundLabelType
         None,
@@ -295,7 +294,7 @@ GetItemKeyTypeCompound = tp.Union[
         str,
         np.integer,
         slice,
-        tp.Hashable,
+        TLabel,
         tp.List[tp.Any],
         None,
         'IndexBase',
@@ -308,7 +307,7 @@ GetItemKeyTypeCompound = tp.Union[
 IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
-NameType = tp.Optional[tp.Hashable]
+NameType = tp.Optional[TLabel]
 TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
 TBlocKey = tp.Union['Frame', np.ndarray, None]
@@ -317,8 +316,8 @@ TBlocKey = tp.Union['Frame', np.ndarray, None]
 UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
-Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
-CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
+Mapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
+CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[TLabel, tp.Any], 'Series']
 
 ShapeType = tp.Union[int, tp.Tuple[int, ...]]
 
@@ -336,10 +335,10 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
-CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallable]]
+CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[TLabel, AnyCallable]]
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
-KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
+KeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 BoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
 PathSpecifier = tp.Union[str, PathLike]
@@ -365,7 +364,7 @@ DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
 def is_dtype_specifier(value: tp.Any) -> bool:
     return isinstance(value, DTYPE_SPECIFIER_TYPES)
 
-def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
+def is_neither_slice_nor_mask(value: tp.Union[slice, TLabel]) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
@@ -416,7 +415,7 @@ def validate_depth_selection(
 DtypesSpecifier = tp.Optional[tp.Union[
         DtypeSpecifier,
         tp.Iterable[DtypeSpecifier],
-        tp.Dict[tp.Hashable, DtypeSpecifier]
+        tp.Dict[TLabel, DtypeSpecifier]
         ]]
 
 # specifiers that are equivalent to object
@@ -426,11 +425,11 @@ DepthLevelSpecifier = tp.Union[int, tp.List[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
-IndexSpecifier = tp.Union[int, tp.Hashable] # specify a postiion in an index
+IndexSpecifier = tp.Union[int, TLabel] # specify a postiion in an index
 IndexInitializer = tp.Union[
         'IndexBase',
-        tp.Iterable[tp.Hashable],
-        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
+        tp.Iterable[TLabel],
+        tp.Iterable[tp.Sequence[TLabel]], # only for IndexHierarchy
         # tp.Type['IndexAutoFactory'],
         ]
 
@@ -454,7 +453,7 @@ ExplicitConstructor = tp.Union[
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
         np.ndarray,
-        tp.Mapping[tp.Hashable, tp.Any],
+        tp.Mapping[TLabel, tp.Any],
         int, float, str, bool]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
@@ -733,7 +732,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tp.Tuple[tp.Hashable, tp.Hashable]):
+class Pair(tp.Tuple[TLabel, TLabel]):
     pass
 
 
@@ -761,7 +760,7 @@ def bytes_to_size_label(size_bytes: int) -> str:
 
 #-------------------------------------------------------------------------------
 
-_T = tp.TypeVar('_T', bound=tp.Hashable)
+_T = tp.TypeVar('_T', bound=TLabel)
 
 def frozenset_filter(src: tp.Iterable[_T]) -> tp.FrozenSet[_T]:
     '''
@@ -1310,7 +1309,7 @@ def ufunc_unique1d_counts(array: NDArrayAny,
 
         if not sortable:
             # Use a dict to retain order; this will break for non hashables
-            store: tp.Dict[tp.Hashable, int] = Counter(array)
+            store: tp.Dict[TLabel, int] = Counter(array)
 
             counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
             array = np.empty(len(store), dtype=DTYPE_OBJECT)
@@ -2316,9 +2315,9 @@ def _array_to_duplicated_hashable(
     # could exit early with a set, but would have to hash all array twice to go to set and dictionary
     # creating a list for each entry and tracking indices would be very expensive
 
-    unique_to_first: tp.Dict[tp.Hashable, int] = {} # value to first occurence
-    dupe_to_first: tp.Dict[tp.Hashable, int] = {}
-    dupe_to_last: tp.Dict[tp.Hashable, int] = {}
+    unique_to_first: tp.Dict[TLabel, int] = {} # value to first occurence
+    dupe_to_first: tp.Dict[TLabel, int] = {}
+    dupe_to_last: tp.Dict[TLabel, int] = {}
 
     for idx, v in enumerate(value_source):
 
@@ -2749,7 +2748,7 @@ def _ufunc_set_2d(
         # NOTE: this sort may not always be successful
         try:
             with WarningsSilent():
-                values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
+                values: tp.Sequence[tp.Tuple[TLabel, ...]] = sorted(result)
         except TypeError:
             values = tuple(result)
 
@@ -3417,7 +3416,7 @@ class JSONFilter:
 
     @classmethod
     def encode_items(cls,
-            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
+            items: tp.Iterator[tp.Tuple[TLabel, tp.Any]],
             ) -> tp.Any:
         '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
         '''
@@ -3666,7 +3665,7 @@ def get_tuple_constructor(
         pass
     raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
-def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
+def key_normalize(key: KeyOrKeys) -> tp.List[TLabel]:
     '''
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''

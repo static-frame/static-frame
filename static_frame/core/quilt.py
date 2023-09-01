@@ -59,6 +59,8 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
@@ -100,7 +102,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             retain_labels: bool,
             axis: int = 0,
             name: NameType = None,
-            label_extractor: tp.Optional[tp.Callable[[IndexBase], tp.Hashable]] = None,
+            label_extractor: tp.Optional[tp.Callable[[IndexBase], TLabel]] = None,
             config: StoreConfigMapInitializer = None,
             deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
@@ -416,7 +418,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             axis: int = 0,
             name: NameType = None,
@@ -700,14 +702,14 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> tp.Iterable[tp.Hashable]:
+    def keys(self) -> tp.Iterable[TLabel]:
         '''Iterator of column labels.
         '''
         if self._assign_axis:
             self._update_axis_labels()
         return self._columns
 
-    def __iter__(self) -> tp.Iterable[tp.Hashable]:
+    def __iter__(self) -> tp.Iterable[TLabel]:
         '''
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         '''
@@ -715,7 +717,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in column labels.
         '''
@@ -723,7 +725,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
         if self._assign_axis:
@@ -731,7 +733,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         yield from self._axis_series_items(axis=0) # iterate columns
 
     def get(self,
-            key: tp.Hashable,
+            key: TLabel,
             default: tp.Optional[Series] = None,
             ) -> tp.Optional[Series]:
         '''
@@ -746,7 +748,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
 
-    def _items_store(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def _items_store(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Iterator of pairs of :obj:`Quilt` label and contained :obj:`Frame`.
         '''
         yield from self._bus.items()
@@ -784,7 +786,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             raise AxisInvalid(f'no support for axis {axis}')
 
-    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
@@ -820,7 +822,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _axis_tuple_items(self, *,
             axis: int,
             constructor: tp.Optional[tp.Type[tp.NamedTuple]] = None,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.NamedTuple]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.NamedTuple]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
@@ -832,7 +834,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         for label, axis_values in self._axis_array_items(axis):
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, NDArrayAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -849,7 +851,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
         # NOTE: this will use _extract, _extract_array to get results, thus we do not need an extractor
@@ -929,7 +931,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[NDArrayAny] = []
-        bus_keys: tp.Iterable[tp.Hashable]
+        bus_keys: tp.Iterable[TLabel]
 
         if self._axis == 0:
             sel_key = row_key
@@ -1018,7 +1020,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     )
 
         parts: tp.List[tp.Any] = []
-        frame_labels: tp.Iterable[tp.Hashable]
+        frame_labels: tp.Iterable[TLabel]
 
         if self._axis == 0:
             sel_key = row_key

@@ -28,7 +28,7 @@ def func1(f: Frame) -> Frame:
     return f.loc['q']
 
 
-def func2(label: tp.Hashable, f: Frame) -> Frame:
+def func2(label: TLabel, f: Frame) -> Frame:
     return f.loc['q']
 
 class TestUnit(TestCase):

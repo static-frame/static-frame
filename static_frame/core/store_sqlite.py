@@ -19,6 +19,8 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import TLabel
+
 
 if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -96,7 +98,7 @@ class StoreSQLite(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -139,7 +141,7 @@ class StoreSQLite(Store):
 
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
@@ -176,7 +178,7 @@ class StoreSQLite(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
 
         config_map = StoreConfigMap.from_initializer(config)
 
