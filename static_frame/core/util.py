@@ -361,38 +361,43 @@ def is_strict_int(value: tp.Any) -> bool:
         return False
     return isinstance(value, INT_TYPES)
 
-def validate_depth_selection(
-        key: TLocSelector,
-        ) -> None:
+def depth_level_from_specifier(
+        key: TDepthLevelSpecifier,
+        size: int,
+        ) -> TDepthLevel:
     '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
 
     This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
     '''
-    if key.__class__ is np.ndarray:
+    if key is None:
+        return list(range(size))
+    elif key.__class__ is np.ndarray:
         # let object dtype use iterable path
-        if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
-            return
+        if key.dtype.kind in DTYPE_INT_KINDS:
+            return key.tolist()
+        elif key.dtype == DTYPE_BOOL:
+            return PositionsAllocator.get(size)[key].tolist()
         elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
             for e in key: # type: ignore
                 if not is_strict_int(e):
                     raise KeyError(f'Cannot select depths by non integer: {e!r}')
-            return
+            return key.tolist()
         raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
     elif key.__class__ is slice:
         if key.start is not None and not is_strict_int(key.start): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
         if key.stop is not None and not is_strict_int(key.stop): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
-        return
+        return list(range(*key.indices(size)))
     elif isinstance(key, list):
         # an iterable, or an object dtype array
         for e in key:
             if not is_strict_int(e):
                 raise KeyError(f'Cannot select depths by non integer: {e!r}')
-    else: # an element
-        if not is_strict_int(key):
-            raise KeyError(f'Cannot select depths by non integer: {key!r}')
-
+        return key
+    if not is_strict_int(key):
+        raise KeyError(f'Cannot select depths by non integer: {key!r}')
+    return key
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[
@@ -404,6 +409,7 @@ DtypesSpecifier = tp.Optional[tp.Union[
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
 
+TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
 TDepthLevel = tp.Union[int, tp.List[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]

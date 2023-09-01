@@ -93,8 +93,9 @@ from static_frame.core.util import run_length_1d
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import validate_depth_selection
+from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import TDepthLevelSpecifier
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1159,25 +1160,22 @@ class IndexHierarchy(IndexBase):
         return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
 
     def _iter_label(self: IH,
-            depth_level: tp.Optional[TDepthLevel] = None,
+            depth_level: TDepthLevelSpecifier = None,
             ) -> tp.Iterator[TLabel]:
         '''
         Iterate over labels at a given depth level.
 
         For multiple depth levels, the iterator will yield tuples of labels.
         '''
-        if depth_level is None: # default to full labels
-            depth_level = list(range(self.depth))
-        else:
-            validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
-        if isinstance(depth_level, INT_TYPES):
-            yield from self.values_at_depth(depth_level)
+        if isinstance(dl, INT_TYPES):
+            yield from self.values_at_depth(dl)
         else:
-            yield from zip(*map(self.values_at_depth, depth_level))
+            yield from zip(*map(self.values_at_depth, dl))
 
     def _iter_label_items(self: IH,
-            depth_level: tp.Optional[TDepthLevel] = None,
+            depth_level: TDepthLevelSpecifier = None,
             ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         '''
         This function is not directly called in iter_label or related routines, fulfills the expectations of the IterNodeDepthLevel interface.
@@ -1476,7 +1474,7 @@ class IndexHierarchy(IndexBase):
         return len(self._indices)
 
     def values_at_depth(self: IH,
-            depth_level: TDepthLevel = 0,
+            depth_level: TDepthLevelSpecifier = 0,
             ) -> NDArrayAny:
         '''
         Return an NP array for the ``depth_level`` specified.
@@ -1487,14 +1485,14 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
-        if isinstance(depth_level, INT_TYPES):
-            return self._blocks._extract_array_column(depth_level)
-        return self._blocks._extract_array(column_key=list(depth_level))
+        if isinstance(dl, INT_TYPES):
+            return self._blocks._extract_array_column(dl)
+        return self._blocks._extract_array(column_key=dl)
 
     def index_at_depth(self: IH,
-            depth_level: TDepthLevel = 0,
+            depth_level: TDepthLevelSpecifier = 0,
             ) -> tp.Union[Index, tp.Tuple[Index, ...]]:
         '''
         Return an index, or a tuple of indices for the ``depth_level`` specified.
@@ -1505,15 +1503,15 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
-        if isinstance(depth_level, INT_TYPES):
-            return self._indices[depth_level]
+        if isinstance(dl, INT_TYPES):
+            return self._indices[dl]
 
-        return tuple(map(self._indices.__getitem__, depth_level))
+        return tuple(map(self._indices.__getitem__, dl))
 
     def indexer_at_depth(self: IH,
-            depth_level: TDepthLevel = 0,
+            depth_level: TDepthLevelSpecifier = 0,
             ) -> NDArrayAny:
         '''
         Return the indexers for the ``depth_level`` specified.
@@ -1525,13 +1523,12 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        validate_depth_selection(depth_level)
-
-        return self._indexers[depth_level]
+        dl = depth_level_from_specifier(depth_level, self.depth)
+        return self._indexers[dl]
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: TDepthLevel = 0
+            depth_level: TDepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''
         {}
@@ -1539,15 +1536,14 @@ class IndexHierarchy(IndexBase):
         if depth_level is None:
             raise NotImplementedError('depth_level of None is not supported')
 
-        validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
         pos: tp.Optional[int] = None
-        if not isinstance(depth_level, INT_TYPES):
-            sel = list(depth_level)
-            if len(sel) == 1:
-                pos = sel.pop()
+        if not isinstance(dl, INT_TYPES):
+            if len(dl) == 1:
+                pos = dl.pop()
         else: # is an int
-            pos = depth_level
+            pos = dl
 
         if pos is None:
             raise NotImplementedError(
@@ -1627,7 +1623,7 @@ class IndexHierarchy(IndexBase):
 
     def relabel_at_depth(self: IH,
             mapper: RelabelInput,
-            depth_level: TDepthLevel = 0,
+            depth_level: TDepthLevelSpecifier = 0,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
@@ -1648,22 +1644,22 @@ class IndexHierarchy(IndexBase):
 
         albeit more efficient.
         '''
-        validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
-        if isinstance(depth_level, INT_TYPES):
-            depth_level = [depth_level]
-            target_depths = set(depth_level)
+        if isinstance(dl, INT_TYPES):
+            dl = [dl]
+            target_depths = set(dl)
         else:
-            depth_level = sorted(depth_level)
-            target_depths = set(depth_level)
+            dl = sorted(dl)
+            target_depths = set(dl)
 
-            if len(target_depths) != len(depth_level):
+            if len(target_depths) != len(dl):
                 raise ValueError('depth_levels must be unique')
 
-            if not depth_level:
-                raise ValueError('depth_level must be non-empty')
+            if not dl:
+                raise ValueError('dl must be non-empty')
 
-        if any(level < 0 or level >= self.depth for level in depth_level):
+        if any(level < 0 or level >= self.depth for level in dl):
             raise ValueError(
                 f'Invalid depth level found. Valid levels: [0-{self.depth - 1}]'
             )
@@ -1706,7 +1702,7 @@ class IndexHierarchy(IndexBase):
         new_indices = list(self._indices)
         new_indexers = self._indexers.copy()
 
-        for level in depth_level:
+        for level in dl:
             index = self._indices[level]
 
             new_index: tp.Dict[TLabel, int] = {}
@@ -2078,11 +2074,12 @@ class IndexHierarchy(IndexBase):
         '''
         Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
         '''
+        # NOTE: key might be a dictionary mapping iloc to dtype
         # key is an iloc key
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
-        validate_depth_selection(key)
-        return IndexHierarchyAsType(self, key)
+        dl = depth_level_from_specifier(key, self.depth)
+        return IndexHierarchyAsType(self, dl)
 
     # --------------------------------------------------------------------------
     # operators
@@ -2255,7 +2252,7 @@ class IndexHierarchy(IndexBase):
     # utility functions
 
     def unique(self: IH,
-            depth_level: TDepthLevel = 0,
+            depth_level: TDepthLevelSpecifier = 0,
             order_by_occurrence: bool = False,
             ) -> NDArrayAny:
         '''
@@ -2268,15 +2265,14 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`numpy.ndarray`
         '''
-        validate_depth_selection(depth_level)
+        dl = depth_level_from_specifier(depth_level, self.depth)
 
-        pos: tp.Optional[int] = None
-        if not isinstance(depth_level, INT_TYPES):
-            sel = list(depth_level)
-            if len(sel) == 1:
-                pos = sel.pop()
+        pos: int | None = None
+        if not isinstance(dl, INT_TYPES):
+            if len(dl) == 1:
+                pos = dl.pop()
         else: # is an int
-            pos = depth_level
+            pos = dl
 
         if pos is not None: # i.e. a single level
             if order_by_occurrence:
@@ -2297,7 +2293,7 @@ class IndexHierarchy(IndexBase):
         if order_by_occurrence:
             raise NotImplementedError('order_by_occurrence not implemented for multiple depth levels.')
 
-        return ufunc_unique(array2d_to_array1d(self.values_at_depth(sel)))
+        return ufunc_unique(array2d_to_array1d(self.values_at_depth(dl)))
 
     @doc_inject()
     def equals(self: IH,
@@ -2942,16 +2938,12 @@ class IndexHierarchyAsType:
             )
 
     container: IndexHierarchy
-    depth_key: TLocSelector
+    depth_key: TDepthLevel
 
     def __init__(self: IHAsType,
             container: IndexHierarchy,
-            depth_key: TLocSelector
+            depth_key: TDepthLevel
             ) -> None:
-        '''
-        Args:
-            depth_key: must be normalized iloc key via validate_depth_selection()
-        '''
         self.container = container
         self.depth_key = depth_key
 
@@ -2969,7 +2961,8 @@ class IndexHierarchyAsType:
         if container._recache:
             container._update_array_cache()
 
-        if self.depth_key.__class__ is slice and self.depth_key == NULL_SLICE:
+        # if self.depth_key.__class__ is slice and self.depth_key == NULL_SLICE:
+        if self.depth_key == list(range(container.depth)):
             dtype_factory = get_col_dtype_factory(dtypes, range(self.container.depth))
             gen = self.container._blocks._astype_blocks_from_dtypes(dtype_factory)
         else:

@@ -4351,16 +4351,23 @@ class TestUnit(TestCase):
                 ('B', np.datetime64('2019-01-08'), 1)])
 
     #---------------------------------------------------------------------------
-    def test_hierarchy_unique_a(self) -> None:
+    def test_hierarchy_unique_a1(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
 
         self.assertEqual(ih1.unique(0).tolist(), [1, 2])
         self.assertEqual(ih1.unique(1).tolist(), ['a', 'b'])
         self.assertEqual(ih1.unique(2).tolist(), [2, 5])
+
+    def test_hierarchy_unique_a2(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         self.assertEqual(ih1.unique([0, 2]).tolist(),
                 [(1, 2), (1, 5), (2, 2), (2, 5)])
+
+    def test_hierarchy_unique_a3(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         self.assertEqual(ih1.unique([1, 2]).tolist(),
                 [('a', 2), ('a', 5), ('b', 2), ('b', 5)])
+
 
     def test_hierarchy_unique_b(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))

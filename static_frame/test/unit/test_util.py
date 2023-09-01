@@ -89,7 +89,7 @@ from static_frame.core.util import ufunc_unique2d_indexer
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import validate_depth_selection
+from static_frame.core.util import depth_level_from_specifier
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -2864,37 +2864,37 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_validate_depth_selection(self) -> None:
-        validate_depth_selection(np.array([True, False]))
-        validate_depth_selection(np.array([2, 3]))
-        validate_depth_selection(np.array([2, 3], dtype=object))
-        validate_depth_selection([2, 3])
+        depth_level_from_specifier(np.array([True, False]), 3)
+        depth_level_from_specifier(np.array([2, 3]), 3)
+        depth_level_from_specifier(np.array([2, 3], dtype=object), 3)
+        depth_level_from_specifier([2, 3], 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(np.array([1.3, 2.5]))
+            depth_level_from_specifier(np.array([1.3, 2.5]), 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(np.array([2, 3, True], dtype=object))
+            depth_level_from_specifier(np.array([2, 3, True], dtype=object), 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(slice('a', 'b'))
+            depth_level_from_specifier(slice('a', 'b'), 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(slice(None, 'b'))
+            depth_level_from_specifier(slice(None, 'b'), 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(slice(None, True))
+            depth_level_from_specifier(slice(None, True), 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection([3, 4, False])
+            depth_level_from_specifier([3, 4, False], 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(False)
+            depth_level_from_specifier(False, 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(5.4)
+            depth_level_from_specifier(5.4, 3)
 
         with self.assertRaises(KeyError):
-            validate_depth_selection(None)
+            depth_level_from_specifier(None, 3)
 
     #---------------------------------------------------------------------------
     def test_bytes_to_size_label(self) -> None:

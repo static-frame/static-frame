@@ -538,7 +538,7 @@ class Index(IndexBase):
         return self._labels.nbytes
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: TLocSelector) -> 'Index':
+    def _drop_iloc(self, key: TILocSelector) -> 'Index':
         '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
@@ -551,10 +551,10 @@ class Index(IndexBase):
         elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(self._labels, self._positions[key], axis=0) # type: ignore
+            labels = np.delete(self._labels, self._positions[key], axis=0)
             labels.flags.writeable = False
         else:
-            labels = np.delete(self._labels, key, axis=0) # type: ignore
+            labels = np.delete(self._labels, key, axis=0)
             labels.flags.writeable = False
 
         # from labels will work with both Index and IndexHierarchy
@@ -1530,7 +1530,7 @@ class _IndexGOMixin:
         '''append a value
         '''
         if self.__contains__(value): #type: ignore
-            raise KeyError(f'duplicate key append attempted: {value}')
+            raise KeyError(f'duplicate key append attempted: {value!r}')
 
         # we might need to initialize map if not an increment that keeps loc_is_iloc relationship
         initialize_map = False

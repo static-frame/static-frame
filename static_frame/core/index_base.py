@@ -219,7 +219,7 @@ class IndexBase(ContainerOperandSequence):
     def rename(self: I, name: NameType) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def _drop_iloc(self: I, key: TLocSelector) -> I:
+    def _drop_iloc(self: I, key: TILocSelector) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
