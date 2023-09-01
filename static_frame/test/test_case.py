@@ -24,6 +24,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover

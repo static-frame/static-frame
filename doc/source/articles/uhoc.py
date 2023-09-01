@@ -6,8 +6,8 @@ import typing as tp
 import numpy as np
 
 import static_frame as sf
-from static_frame.test.test_case import Timer
 from static_frame.core.util import TLabel
+from static_frame.test.test_case import Timer
 
 # def func_b(frame: Frame) -> Frame:
 #     for row in frame.iter_series():

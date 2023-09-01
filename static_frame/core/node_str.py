@@ -18,10 +18,10 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLabel
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover

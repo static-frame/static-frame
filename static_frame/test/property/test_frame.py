@@ -15,6 +15,7 @@ from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.interface import UFUNC_BINARY_OPERATORS
 from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.core.series import Series
+from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase

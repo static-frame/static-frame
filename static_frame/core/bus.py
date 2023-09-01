@@ -57,9 +57,8 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
-from static_frame.core.util import TSortKinds
 from static_frame.core.util import TLabel
-
+from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover

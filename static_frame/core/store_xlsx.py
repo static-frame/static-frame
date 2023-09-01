@@ -30,6 +30,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:

@@ -15,7 +15,6 @@ from zipfile import ZipFile
 
 import numpy as np
 
-from static_frame.core.util import TLabel
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -32,6 +31,7 @@ from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:

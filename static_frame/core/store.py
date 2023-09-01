@@ -17,6 +17,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:

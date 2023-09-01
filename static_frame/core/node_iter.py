@@ -19,10 +19,10 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
+from static_frame.core.util import TLabel
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover

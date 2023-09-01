@@ -64,6 +64,7 @@ from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TLabel
 from static_frame.core.util import UFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples
@@ -82,7 +83,6 @@ from static_frame.core.util import pos_loc_slice_to_iloc_slice
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

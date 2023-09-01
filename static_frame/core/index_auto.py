@@ -17,9 +17,8 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import TLabel
-
+from static_frame.core.util import iterable_to_array_1d
 
 
 class IndexConstructorFactoryBase:

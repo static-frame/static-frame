@@ -22,6 +22,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 from static_frame.core.util import get_concurrent_executor
 
 FrameExporter = AnyCallable # Protocol not supported yet...

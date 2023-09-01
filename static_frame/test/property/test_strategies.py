@@ -9,6 +9,7 @@ from static_frame import Index
 from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import TypeBlocks
+from static_frame.core.util import TLabel
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 

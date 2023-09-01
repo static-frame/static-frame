@@ -21,7 +21,6 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
 
-
 if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 

@@ -15,11 +15,11 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
+from static_frame.core.util import TLabel
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover

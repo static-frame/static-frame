@@ -10,7 +10,6 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import TLabel
 
-
 #-------------------------------------------------------------------------------
 
 class StoreConfigHE(metaclass=InterfaceMeta):

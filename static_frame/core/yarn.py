@@ -43,6 +43,7 @@ from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
+from static_frame.core.util import TLabel
 from static_frame.core.util import is_callable_or_mapping
 
 if tp.TYPE_CHECKING:

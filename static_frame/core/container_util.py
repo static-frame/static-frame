@@ -47,6 +47,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
@@ -59,7 +60,6 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover

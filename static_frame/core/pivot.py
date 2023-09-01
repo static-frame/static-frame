@@ -21,6 +21,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
+from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_from_element
@@ -28,7 +29,6 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover

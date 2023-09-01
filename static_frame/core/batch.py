@@ -56,9 +56,9 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TLabel
 from static_frame.core.util import UFunc
 from static_frame.core.util import get_concurrent_executor
-from static_frame.core.util import TLabel
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, FrameOrSeries]]

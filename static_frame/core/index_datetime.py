@@ -33,14 +33,13 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
+from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
-from static_frame.core.util import TLabel
-
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover

@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as tp
 
 from static_frame.core.display_color import HexColor
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.container import ContainerOperandSequence  # pylint: disable=W0611 #pragma: no cover

@@ -29,6 +29,7 @@ from static_frame.core.display import DisplayTypeInt
 from static_frame.core.display import terminal_ansi
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import DisplayFormatLaTeX
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file

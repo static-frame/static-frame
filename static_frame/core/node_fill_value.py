@@ -15,7 +15,6 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import TLabel
 
-
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover

@@ -31,10 +31,9 @@ from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import TLabel
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import TLabel
-
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

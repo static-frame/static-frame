@@ -13,9 +13,8 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import WarningsSilent
 from static_frame.core.util import TLabel
-
+from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover

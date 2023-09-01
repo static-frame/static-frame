@@ -95,6 +95,7 @@ from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
@@ -122,8 +123,6 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import TLabel
-
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover

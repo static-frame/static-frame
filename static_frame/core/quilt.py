@@ -56,11 +56,10 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
-from static_frame.core.util import TLabel
-
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
