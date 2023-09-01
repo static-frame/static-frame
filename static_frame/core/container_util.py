@@ -20,6 +20,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -816,9 +817,11 @@ def axis_window_items( *,
         window_func: tp.Optional[AnyCallable] = None,
         window_valid: tp.Optional[AnyCallable] = None,
         label_shift: int = 0,
+        label_missing_raises: bool = False,
         start_shift: int = 0,
         size_increment: int = 0,
         as_array: bool = False,
+        derive_label: bool = True,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
@@ -828,7 +831,6 @@ def axis_window_items( *,
     # see doc_str window for docs
 
     from static_frame.core.frame import Frame
-    from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
 
     if size <= 0:
@@ -851,14 +853,16 @@ def axis_window_items( *,
             # for a Frame, when collecting rows, it is more efficient to pre-consolidate blocks prior to slicing. Note that this results in the same block coercion necessary for each window (which is not the same for axis 1, where block coercion is not required)
             values = source._blocks.values
 
+    count_labels = len(labels)
     if start_shift >= 0:
-        count_window_max = len(labels)
+        count_window_max = count_labels
     else: # add for iterations when less than 0
-        count_window_max = len(labels) + abs(start_shift)
+        count_window_max = count_labels + abs(start_shift)
 
     idx_left_max = count_window_max - 1
     idx_left = start_shift
     count = 0
+    label = None
 
     while True:
         # idx_left, size can change over iterations
@@ -890,19 +894,22 @@ def axis_window_items( *,
                     window = source._extract(column_key=key) #type: ignore
 
         valid = True
-        try:
-            idx_label = idx_right + label_shift
-            if idx_label < 0: # do not wrap around
-                raise IndexError()
-            #if we cannot get a label, the window is invalid
-            label = labels.iloc[idx_label]
-        except IndexError: # an invalid label has to be dropped
+        if not len(window):
             valid = False
-
         if valid and window_sized and window.shape[axis] != size:
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
+
+        if valid and (derive_label or label_missing_raises):
+            idx_label = idx_right + label_shift
+            if idx_label < 0 or idx_label >= count_labels:
+                # an invalid label, if required, is an error
+                if label_missing_raises:
+                    raise InvalidWindowLabel(idx_label)
+                valid = False
+            else:
+                label = labels.iloc[idx_label]
 
         if valid:
             if window_func:
