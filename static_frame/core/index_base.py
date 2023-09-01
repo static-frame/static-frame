@@ -24,7 +24,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import KeyTransformType
@@ -219,7 +219,7 @@ class IndexBase(ContainerOperandSequence):
     def rename(self: I, name: NameType) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def _drop_iloc(self: I, key: GetItemKeyType) -> I:
+    def _drop_iloc(self: I, key: TLocSelector) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
@@ -325,14 +325,14 @@ class IndexBase(ContainerOperandSequence):
     #---------------------------------------------------------------------------
 
     def _loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
 
     def loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
 

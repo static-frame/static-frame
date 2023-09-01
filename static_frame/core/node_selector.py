@@ -10,8 +10,8 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TILocSelector
 
@@ -56,7 +56,7 @@ TContainer = tp.TypeVar('TContainer',
         FrameOrSeries,
         )
 GetItemFunc = tp.TypeVar('GetItemFunc',
-        bound=tp.Callable[[GetItemKeyType], TContainer]
+        bound=tp.Callable[[TLocSelector], TContainer]
         )
 
 
@@ -75,12 +75,12 @@ class InterfaceGetItemLoc(Interface[TContainer]):
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[GetItemKeyType], TContainer]
+    _func: tp.Callable[[TLocSelector], TContainer]
 
-    def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelector], TContainer]) -> None:
         self._func = func
 
-    def __getitem__(self, key: GetItemKeyType) -> TContainer:
+    def __getitem__(self, key: TLocSelector) -> TContainer:
         return self._func(key)
 
 class InterfaceGetItemILoc(Interface[TContainer]):
@@ -102,12 +102,12 @@ class InterfaceGetItemCompound(Interface[TContainer]):
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[GetItemKeyTypeCompound], TContainer]
+    _func: tp.Callable[[TLocSelectorCompound], TContainer]
 
-    def __init__(self, func: tp.Callable[[GetItemKeyTypeCompound], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
         self._func = func
 
-    def __getitem__(self, key: GetItemKeyTypeCompound) -> TContainer:
+    def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
         return self._func(key)
 
 class InterfaceGetItemBLoc(Interface[TContainer]):
@@ -172,7 +172,7 @@ class InterfaceSelectTrio(Interface[TContainer]):
         self._func_loc = func_loc
         self._func_getitem = func_getitem
 
-    def __getitem__(self, key: GetItemKeyType) -> tp.Any:
+    def __getitem__(self, key: TLocSelector) -> tp.Any:
         '''Label-based selection.
         '''
         return self._func_getitem(key)
@@ -213,7 +213,7 @@ class InterfaceSelectQuartet(Interface[TContainer]):
         self._func_getitem = func_getitem
         self._func_bloc = func_bloc
 
-    def __getitem__(self, key: GetItemKeyType) -> tp.Any:
+    def __getitem__(self, key: TLocSelector) -> tp.Any:
         '''Label-based selection.
         '''
         return self._func_getitem(key)
@@ -285,7 +285,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']
+            func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
             ) -> None:
         '''
         Args:
@@ -294,7 +294,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'FrameAsType':
+    def __getitem__(self, key: TLocSelector) -> 'FrameAsType':
         '''Selector of columns by label.
 
         Args:
@@ -322,7 +322,7 @@ class InterfaceIndexHierarchyAsType(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[GetItemKeyType], 'IndexHierarchyAsType']
+            func_getitem: tp.Callable[[TLocSelector], 'IndexHierarchyAsType']
             ) -> None:
         '''
         Args:
@@ -331,7 +331,7 @@ class InterfaceIndexHierarchyAsType(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
+    def __getitem__(self, key: TLocSelector) -> 'IndexHierarchyAsType':
         '''Selector of columns by label.
 
         Args:
@@ -360,7 +360,7 @@ class BatchAsType:
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],
-            column_key: GetItemKeyType
+            column_key: TLocSelector
             ) -> None:
         self._batch_apply = batch_apply
         self._column_key = column_key
@@ -390,7 +390,7 @@ class InterfaceBatchAsType(Interface[TContainer]):
         self._batch_apply = batch_apply
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> BatchAsType:
+    def __getitem__(self, key: TLocSelector) -> BatchAsType:
         '''Selector of columns by label.
 
         Args:
@@ -427,7 +427,7 @@ class InterfaceConsolidate(Interface[TContainer]):
 
     def __init__(self,
             container: TContainer,
-            func_getitem: tp.Callable[[GetItemKeyType], 'Frame']
+            func_getitem: tp.Callable[[TLocSelector], 'Frame']
             ) -> None:
         '''
         Args:
@@ -437,7 +437,7 @@ class InterfaceConsolidate(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Frame':
+    def __getitem__(self, key: TLocSelector) -> 'Frame':
         '''Selector of columns by label for consolidation.
 
         Args:

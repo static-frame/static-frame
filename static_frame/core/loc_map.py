@@ -30,7 +30,7 @@ from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 
@@ -127,7 +127,7 @@ class LocMap:
             label_to_pos: FrozenAutoMap,
             labels: NDArrayAny,
             positions: NDArrayAny,
-            key: GetItemKeyType,
+            key: TLocSelector,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''

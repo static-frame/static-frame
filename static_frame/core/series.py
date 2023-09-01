@@ -86,7 +86,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -1888,7 +1888,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # extraction
 
-    # def _extract_array(self, key: GetItemKeyType) -> NDArrayAny:
+    # def _extract_array(self, key: TLocSelector) -> NDArrayAny:
     #     return self.values[key]
 
     def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
@@ -1904,7 +1904,7 @@ class Series(ContainerOperand):
                 index=self._index.iloc[key],
                 name=self._name)
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Series':
+    def _extract_loc(self, key: TLocSelector) -> 'Series':
         '''
         Compatibility:
             Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
@@ -1925,7 +1925,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Series':
+    def __getitem__(self, key: TLocSelector) -> 'Series':
         '''Selector of values by label.
 
         Args:
@@ -1955,12 +1955,12 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'Series':
+    def _drop_loc(self, key: TLocSelector) -> 'Series':
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_mask(self, key: GetItemKeyType) -> 'Series':
+    def _extract_iloc_mask(self, key: TLocSelector) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True. The `name` attribute is not propagated.
         '''
         mask = np.full(self.values.shape, False, dtype=bool)
@@ -1968,7 +1968,7 @@ class Series(ContainerOperand):
         mask.flags.writeable = False
         return self.__class__(mask, index=self._index)
 
-    def _extract_loc_mask(self, key: GetItemKeyType) -> 'Series':
+    def _extract_loc_mask(self, key: TLocSelector) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True. The `name` attribute is not propagated.
         '''
         iloc_key = self._index._loc_to_iloc(key)
@@ -1976,13 +1976,13 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_masked_array(self, key: GetItemKeyType) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_iloc_masked_array(self, key: TLocSelector) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
         mask = self._extract_iloc_mask(key=key)
         return MaskedArray(data=self.values, mask=mask.values) # type: ignore
 
-    def _extract_loc_masked_array(self, key: GetItemKeyType) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_loc_masked_array(self, key: TLocSelector) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
         '''
         iloc_key = self._index._loc_to_iloc(key)
@@ -1993,7 +1993,7 @@ class Series(ContainerOperand):
     def _extract_iloc_assign(self, key: TILocSelector) -> 'SeriesAssign':
         return SeriesAssign(self, key)
 
-    def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
+    def _extract_loc_assign(self, key: TLocSelector) -> 'SeriesAssign':
         iloc_key = self._index._loc_to_iloc(key)
         return SeriesAssign(self, iloc_key)
 

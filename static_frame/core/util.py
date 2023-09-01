@@ -247,6 +247,10 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
+
+TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
+TILocSelectorCompound = tp.Tuple[TILocSelector, ...]
+
 # NOTE: slice is not hashable
 TLabel = tp.Union[
         tp.Hashable,
@@ -266,12 +270,8 @@ TLabel = tp.Union[
         tp.Tuple['TLabel'],
 ]
 
-
-# for type hinting
-CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
-
 # keys once dimension has been isolated
-GetItemKeyType = tp.Union[
+TLocSelector = tp.Union[
         TLabel,
         slice,
         tp.List[TLabel],
@@ -283,11 +283,12 @@ GetItemKeyType = tp.Union[
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-GetItemKeyTypeCompound = tp.Tuple[GetItemKeyType, ...]
+TLocSelectorCompound = tp.Tuple[TLocSelector, ...]
+# TODO: evaluate usage of this; if needed, name better
+CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
 
-TILocSelector = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
-KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
+KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
 NameType = TLabel # include None
 
 TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
@@ -361,7 +362,7 @@ def is_strict_int(value: tp.Any) -> bool:
     return isinstance(value, INT_TYPES)
 
 def validate_depth_selection(
-        key: GetItemKeyType,
+        key: TLocSelector,
         ) -> None:
     '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
 
@@ -1878,7 +1879,7 @@ def pos_loc_slice_to_iloc_slice(
         stop = key.stop + 1
     return slice(start, stop, key.step)
 
-def key_to_str(key: GetItemKeyType) -> str:
+def key_to_str(key: TLocSelector) -> str:
     if key.__class__ is not slice:
         return str(key)
     if key == NULL_SLICE:
@@ -2006,9 +2007,9 @@ def _slice_to_datetime_slice_args(key: slice,
             yield to_datetime64(value, dtype=dtype)
 
 def key_to_datetime_key(
-        key: GetItemKeyType,
+        key: TLocSelector,
         dtype: DtypeOrDT64 = np.datetime64,
-        ) -> GetItemKeyType:
+        ) -> TLocSelector:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''

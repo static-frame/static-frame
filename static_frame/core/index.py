@@ -56,7 +56,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import TILocSelector
@@ -99,7 +99,7 @@ I = tp.TypeVar('I', bound='Index')
 class ILocMeta(type):
 
     def __getitem__(cls,
-            key: GetItemKeyType
+            key: TLocSelector
             ) -> 'ILoc':
         return cls(key) #type: ignore
 
@@ -113,7 +113,7 @@ class ILoc(metaclass=ILocMeta):
             'key',
             )
 
-    def __init__(self, key: GetItemKeyType):
+    def __init__(self, key: TLocSelector):
         self.key = key
 
     def __repr__(self) -> str:
@@ -538,7 +538,7 @@ class Index(IndexBase):
         return self._labels.nbytes
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
+    def _drop_iloc(self, key: TLocSelector) -> 'Index':
         '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
@@ -560,7 +560,7 @@ class Index(IndexBase):
         # from labels will work with both Index and IndexHierarchy
         return self.__class__.from_labels(labels, name=self._name)
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_loc(self, key: TLocSelector) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -845,7 +845,7 @@ class Index(IndexBase):
     # extraction and selection
 
     def _loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
@@ -889,7 +889,7 @@ class Index(IndexBase):
                 )
 
     def loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             ) -> TILocSelector:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
@@ -964,7 +964,7 @@ class Index(IndexBase):
         return self._labels[key]
 
     def _extract_loc(self: I,
-            key: GetItemKeyType
+            key: TLocSelector
             ) -> tp.Any:
         return self._extract_iloc(self._loc_to_iloc(key))
 

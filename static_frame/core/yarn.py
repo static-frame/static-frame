@@ -37,7 +37,7 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -550,14 +550,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> Yarn | Frame:
+    def _extract_loc(self, key: TLocSelector) -> Yarn | Frame:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> Yarn | Frame:
+    def __getitem__(self, key: TLocSelector) -> Yarn | Frame:
         '''Selector of values by label.
 
         Args:
@@ -573,7 +573,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         invalid[key] = False
         return self._extract_iloc(invalid) # type: ignore
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
+    def _drop_loc(self, key: TLocSelector) -> 'Yarn':
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------

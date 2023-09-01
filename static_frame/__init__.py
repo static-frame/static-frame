@@ -109,8 +109,8 @@ from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
 from static_frame.core.util import FrameInitializer as FrameInitializer
-from static_frame.core.util import GetItemKeyType as GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound as GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector as TLocSelector
+from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.util import IndexInitializer as IndexInitializer
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import KeyOrKeys as KeyOrKeys

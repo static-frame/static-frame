@@ -151,8 +151,8 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FrameInitializer
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -3984,7 +3984,7 @@ class Frame(ContainerOperand):
 
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
-            iloc_key: GetItemKeyTypeCompound,
+            iloc_key: TLocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
@@ -4260,7 +4260,7 @@ class Frame(ContainerOperand):
                 own_columns=True)
 
     def relabel_shift_in(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int = 0,
             index_constructors: IndexConstructors = None,
@@ -4964,8 +4964,8 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _extract_array(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None,
             ) -> NDArrayAny:
         '''
         Alternative extractor that returns just an ndarray. Keys are iloc keys.
@@ -4991,8 +4991,8 @@ class Frame(ContainerOperand):
 
 
     def _extract(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None,
             ) -> tp.Union['Frame', Series]:
         '''
         Extract Container based on iloc selection (indices have already mapped)
@@ -5072,7 +5072,7 @@ class Frame(ContainerOperand):
                 )
 
 
-    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> tp.Union['Frame', Series]:
+    def _extract_iloc(self, key: TLocSelectorCompound) -> tp.Union['Frame', Series]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -5081,7 +5081,7 @@ class Frame(ContainerOperand):
         return self._extract(row_key=key)
 
     def _compound_loc_to_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
         '''
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
@@ -5095,10 +5095,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: GetItemKeyTypeCompound) -> tp.Union['Frame', Series]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union['Frame', Series]:
         return self._extract(*self._compound_loc_to_iloc(key))
 
-    def _extract_loc_columns(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
+    def _extract_loc_columns(self, key: TLocSelector) -> tp.Union['Frame', Series]:
         '''Alternate extract of a columns only selection.
         '''
         return self._extract(None,
@@ -5117,14 +5117,14 @@ class Frame(ContainerOperand):
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
+    def __getitem__(self, key: TLocSelector) -> tp.Union['Frame', Series]:
         '''Selector of columns by label.
 
         Args:
@@ -5135,7 +5135,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> tpe.Self:
+    def _drop_iloc(self, key: TLocSelectorCompound) -> tpe.Self:
         '''
         Args:
             key: If a Boolean Series was passed, it has been converted to Boolean NumPy array already in loc to iloc.
@@ -5169,54 +5169,54 @@ class Frame(ContainerOperand):
                 own_index=own_index
                 )
 
-    def _drop_loc(self, key: GetItemKeyTypeCompound) -> tpe.Self:
+    def _drop_loc(self, key: TLocSelectorCompound) -> tpe.Self:
         key = self._compound_loc_to_iloc(key)
         return self._drop_iloc(key=key)
 
-    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> tpe.Self:
+    def _drop_getitem(self, key: TLocSelectorCompound) -> tpe.Self:
         key = self._compound_loc_to_getitem_iloc(key)
         return self._drop_iloc(key=key)
 
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_mask(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _extract_iloc_mask(self, key: TLocSelectorCompound) -> 'Frame':
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return self.__class__(masked_blocks,
                 columns=self._columns,
                 index=self._index,
                 own_data=True)
 
-    def _extract_loc_mask(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _extract_loc_mask(self, key: TLocSelectorCompound) -> 'Frame':
         key = self._compound_loc_to_iloc(key)
         return self._extract_iloc_mask(key=key)
 
-    def _extract_getitem_mask(self, key: GetItemKeyTypeCompound) -> 'Frame':
+    def _extract_getitem_mask(self, key: TLocSelectorCompound) -> 'Frame':
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_mask(key=key)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_iloc_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return MaskedArray(data=self.values, mask=masked_blocks.values) # type: ignore
 
-    def _extract_loc_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_loc_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
         key = self._compound_loc_to_iloc(key)
         return self._extract_iloc_masked_array(key=key)
 
-    def _extract_getitem_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_getitem_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_masked_array(key=key)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
+    def _extract_iloc_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
         return FrameAssignILoc(self, key=key)
 
-    def _extract_loc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
+    def _extract_loc_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_getitem_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssignILoc':
+    def _extract_getitem_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
@@ -5227,12 +5227,12 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_getitem_astype(self, key: GetItemKeyType) -> 'FrameAsType':
+    def _extract_getitem_astype(self, key: TLocSelector) -> 'FrameAsType':
         # extract if tuple, then pack back again
         _, key = self._compound_loc_to_getitem_iloc(key)
         return FrameAsType(self, column_key=key)
 
-    def _extract_getitem_consolidate(self, key: GetItemKeyType) -> 'Frame':
+    def _extract_getitem_consolidate(self, key: TLocSelector) -> 'Frame':
         _, key = self._compound_loc_to_getitem_iloc(key)
         blocks = TypeBlocks.from_blocks(self._blocks._consolidate_select_blocks(key))
         return self.__class__(blocks,
@@ -5604,7 +5604,7 @@ class Frame(ContainerOperand):
 
 
     def _axis_group_iloc_items(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int,
             drop: bool = False,
@@ -5677,7 +5677,7 @@ class Frame(ContainerOperand):
                 )
 
     def _axis_group_loc_items(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int = 0,
             drop: bool = False,
@@ -5704,7 +5704,7 @@ class Frame(ContainerOperand):
                 )
 
     def _axis_group_loc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int = 0,
             drop: bool = False,
@@ -6379,7 +6379,7 @@ class Frame(ContainerOperand):
                 )
 
     def set_index_hierarchy(self,
-            columns: GetItemKeyType,
+            columns: TLocSelector,
             *,
             drop: bool = False,
             index_constructors: IndexConstructors = None,
@@ -6397,7 +6397,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        column_loc: GetItemKeyType
+        column_loc: TLocSelector
         if isinstance(columns, tuple):
             # NOTE: this prohibits selecting a single tuple label, which might be fine given context
             column_loc = list(columns)
@@ -6600,7 +6600,7 @@ class Frame(ContainerOperand):
                 )
 
     def set_columns_hierarchy(self,
-            index: GetItemKeyType,
+            index: TLocSelector,
             *,
             drop: bool = False,
             columns_constructors: IndexConstructors = None,
@@ -6618,7 +6618,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
-        index_loc: GetItemKeyType
+        index_loc: TLocSelector
         if isinstance(index, tuple):
             # NOTE: this prohibits selecting a single tuple label, which might be fine given context
             index_loc = list(index)
@@ -7808,9 +7808,9 @@ class Frame(ContainerOperand):
             other: 'Frame', # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            left_columns: GetItemKeyType = None,
+            left_columns: TLocSelector = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            right_columns: GetItemKeyType = None,
+            right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
@@ -7853,9 +7853,9 @@ class Frame(ContainerOperand):
             other: 'Frame', # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            left_columns: GetItemKeyType = None,
+            left_columns: TLocSelector = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            right_columns: GetItemKeyType = None,
+            right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
@@ -7898,9 +7898,9 @@ class Frame(ContainerOperand):
             other: 'Frame', # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            left_columns: GetItemKeyType = None,
+            left_columns: TLocSelector = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            right_columns: GetItemKeyType = None,
+            right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
@@ -7943,9 +7943,9 @@ class Frame(ContainerOperand):
             other: 'Frame', # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            left_columns: GetItemKeyType = None,
+            left_columns: TLocSelector = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-            right_columns: GetItemKeyType = None,
+            right_columns: TLocSelector = None,
             left_template: str = '{}',
             right_template: str = '{}',
             fill_value: tp.Any = np.nan,
@@ -9324,7 +9324,7 @@ class FrameAssignILoc(FrameAssign):
 
     def __init__(self,
             container: Frame,
-            key: GetItemKeyTypeCompound = None,
+            key: TLocSelectorCompound = None,
             ) -> None:
         '''
         Args:
@@ -9501,7 +9501,7 @@ class FrameAsType:
 
     def __init__(self,
             container: Frame,
-            column_key: GetItemKeyType
+            column_key: TLocSelector
             ) -> None:
         self.container = container
         self.column_key = column_key

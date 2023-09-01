@@ -47,8 +47,8 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -678,12 +678,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _extract_iloc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_extract_iloc',
                 key=key
                 )
-    def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _extract_loc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_extract_loc',
                 key=key
@@ -695,7 +695,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 key=key
                 )
 
-    def __getitem__(self, key: GetItemKeyType) -> 'Batch':
+    def __getitem__(self, key: TLocSelector) -> 'Batch':
         ''
         return self._apply_attr(
                 attr='__getitem__',
@@ -703,19 +703,19 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_iloc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_iloc',
                 key=key
                 )
 
-    def _drop_loc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_loc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_loc',
                 key=key
                 )
 
-    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_getitem(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_getitem',
                 key=key
@@ -1429,7 +1429,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             )
 
     def relabel_shift_in(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int = 0,
             ) -> 'Batch':

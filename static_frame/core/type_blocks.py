@@ -45,8 +45,8 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ArraySignature
 from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
@@ -87,7 +87,7 @@ def group_match(
         blocks: 'TypeBlocks',
         *,
         axis: int,
-        key: GetItemKeyTypeCompound,
+        key: TLocSelectorCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
@@ -179,7 +179,7 @@ def group_sorted(
         blocks: 'TypeBlocks',
         *,
         axis: int,
-        key: GetItemKeyTypeCompound,
+        key: TLocSelectorCompound,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
@@ -287,8 +287,8 @@ def assign_inner_from_iloc_by_unit(
         *,
         value: tp.Any,
         block: NDArrayAny,
-        row_target: GetItemKeyType,
-        target_key: GetItemKeyType,
+        row_target: TLocSelector,
+        target_key: TLocSelector,
         t_shape: ShapeType,
         target_is_slice: bool,
         block_is_column: bool,
@@ -351,8 +351,8 @@ def assign_inner_from_iloc_by_sequence(
         *,
         value: tp.Any,
         block: NDArrayAny,
-        row_target: GetItemKeyType,
-        target_key: GetItemKeyType,
+        row_target: TLocSelector,
+        target_key: TLocSelector,
         t_shape: ShapeType,
         target_is_slice: bool,
         block_is_column: bool,
@@ -1176,7 +1176,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def sort(self,
             axis: int | np.integer[tp.Any],
-            key: GetItemKeyTypeCompound,
+            key: TLocSelectorCompound,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Tuple[TypeBlocks, NDArrayAny]:
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
@@ -1222,7 +1222,7 @@ class TypeBlocks(ContainerOperand):
 
     def group(self,
             axis: int,
-            key: GetItemKeyType,
+            key: TLocSelector,
             drop: bool = False,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
@@ -1470,7 +1470,7 @@ class TypeBlocks(ContainerOperand):
     # extraction utilities
 
     def _key_to_block_slices(self,
-            key: GetItemKeyTypeCompound,
+            key: TLocSelectorCompound,
             retain_key_order: bool = True
             ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
@@ -1499,8 +1499,8 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[NDArrayAny]:
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None) -> tp.Iterator[NDArrayAny]:
         '''Return Boolean blocks of the same size and shape, where key selection sets values to True.
         '''
 
@@ -1542,7 +1542,7 @@ class TypeBlocks(ContainerOperand):
 
 
     def _astype_blocks(self,
-            column_key: GetItemKeyType,
+            column_key: TLocSelector,
             dtype: DtypeSpecifier
             ) -> tp.Iterator[NDArrayAny]:
         '''
@@ -1656,7 +1656,7 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, slice(group_start, None)]
 
     def _consolidate_select_blocks(self,
-            column_key: GetItemKeyType,
+            column_key: TLocSelector,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given any column selection, consolidate when possible within that region.
@@ -1738,7 +1738,7 @@ class TypeBlocks(ContainerOperand):
         yield from consolidate_and_clear()
 
     def _ufunc_blocks(self,
-            column_key: GetItemKeyType,
+            column_key: TLocSelector,
             func: UFunc
             ) -> tp.Iterator[NDArrayAny]:
         '''
@@ -1811,8 +1811,8 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _drop_blocks(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
@@ -2069,8 +2069,8 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def _assign_from_iloc_by_blocks(self,
             values: tp.Iterable[NDArrayAny],
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
@@ -2151,14 +2151,14 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_iloc_core(self,
             *,
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None,
             value: tp.Any = None,
             assign_inner: tp.Callable[[
                     tp.Any,
                     NDArrayAny,
-                    GetItemKeyType,
-                    GetItemKeyType,
+                    TLocSelector,
+                    TLocSelector,
                     ShapeType,
                     bool,
                     bool,
@@ -2247,8 +2247,8 @@ class TypeBlocks(ContainerOperand):
 
 
     def _assign_from_iloc_by_unit(self,
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None,
             value: tp.Any = None
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign a single value (a tuple, array, or element) into all blocks, returning blocks of the same size and shape.
@@ -2274,8 +2274,8 @@ class TypeBlocks(ContainerOperand):
     def _assign_from_iloc_by_sequence(self,
             *,
             value: tp.Sequence[tp.Any],
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign an iterable of appropriate size (a tuple) into all blocks, returning blocks of the same size and shape. If row-key is a multiple, the values will be replicated in all rows.
 
@@ -2633,8 +2633,8 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _slice_blocks(self,
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator of sliced blocks, given row and column key selectors.
@@ -2719,8 +2719,8 @@ class TypeBlocks(ContainerOperand):
                     yield b_fill
 
     def _extract_array(self,
-            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None
+            row_key: tp.Optional[TLocSelectorCompound] = None,
+            column_key: tp.Optional[TLocSelectorCompound] = None
             ) -> NDArrayAny:
         '''Alternative extractor that returns just an ndarray, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
 
@@ -2810,7 +2810,7 @@ class TypeBlocks(ContainerOperand):
                 yield from b[key]
 
     def iter_row_tuples(self,
-            key: tp.Optional[GetItemKeyTypeCompound],
+            key: tp.Optional[TLocSelectorCompound],
             *,
             constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
@@ -2836,7 +2836,7 @@ class TypeBlocks(ContainerOperand):
                 yield constructor(chainer(i))
 
     def iter_columns_tuples(self,
-            key: tp.Optional[GetItemKeyTypeCompound],
+            key: tp.Optional[TLocSelectorCompound],
             *,
             constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
@@ -2863,8 +2863,8 @@ class TypeBlocks(ContainerOperand):
             yield from map(constructor, chainer()) # type: ignore
 
     def _extract(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None
             ) -> tp.Any:
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.
@@ -2912,7 +2912,7 @@ class TypeBlocks(ContainerOperand):
         return self._extract(row_key=key)
 
     def extract_iloc_mask(self,
-            key: GetItemKeyTypeCompound
+            key: TLocSelectorCompound
             ) -> 'TypeBlocks':
         if isinstance(key, tuple):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
@@ -2988,7 +2988,7 @@ class TypeBlocks(ContainerOperand):
     # assignment interfaces
 
     def extract_iloc_assign_by_unit(self,
-            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
+            key: tp.Tuple[TLocSelector, TLocSelector],
             value: tp.Any,
             ) -> 'TypeBlocks':
         '''
@@ -3001,7 +3001,7 @@ class TypeBlocks(ContainerOperand):
                 value=value))
 
     def extract_iloc_assign_by_sequence(self,
-            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
+            key: tp.Tuple[TLocSelector, TLocSelector],
             value: tp.Any,
             ) -> 'TypeBlocks':
         '''
@@ -3014,7 +3014,7 @@ class TypeBlocks(ContainerOperand):
                 value=value))
 
     def extract_iloc_assign_by_blocks(self,
-            key: tp.Tuple[GetItemKeyType, GetItemKeyType],
+            key: tp.Tuple[TLocSelector, TLocSelector],
             values: tp.Iterable[NDArrayAny],
             ) -> 'TypeBlocks':
         '''
@@ -3058,7 +3058,7 @@ class TypeBlocks(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+    def drop(self, key: TLocSelectorCompound) -> 'TypeBlocks':
         '''
         Drop rows or columns from a TypeBlocks instance.
 
@@ -3079,7 +3079,7 @@ class TypeBlocks(ContainerOperand):
     def __iter__(self) -> tp.Iterator['TypeBlocks']:
         raise NotImplementedError('Amibigous whether or not to return np array or TypeBlocks')
 
-    def __getitem__(self, key: GetItemKeyTypeCompound) -> tp.Any:
+    def __getitem__(self, key: TLocSelectorCompound) -> tp.Any:
         '''
         Returns a column, or a column slice.
         '''

@@ -16,7 +16,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
@@ -34,9 +34,9 @@ def join(frame: 'Frame',
         *,
         join_type: Join, # intersect, left, right, union,
         left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-        left_columns: GetItemKeyType = None,
+        left_columns: TLocSelector = None,
         right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-        right_columns: GetItemKeyType = None,
+        right_columns: TLocSelector = None,
         left_template: str = '{}',
         right_template: str = '{}',
         fill_value: tp.Any = np.nan,
@@ -254,9 +254,9 @@ def join(frame: 'Frame',
 #         *,
 #         # join_type: Join, # intersect, left, right, union,
 #         left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         left_columns: GetItemKeyType = None,
+#         left_columns: TLocSelector = None,
 #         right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         right_columns: GetItemKeyType = None,
+#         right_columns: TLocSelector = None,
 #         left_template: str = '{}',
 #         right_template: str = '{}',
 #         fill_value: tp.Any = np.nan,

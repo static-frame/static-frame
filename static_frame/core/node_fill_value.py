@@ -11,8 +11,8 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
@@ -103,9 +103,9 @@ class InterfaceFillValue(Interface[TContainer]):
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_key_attrs(
-            key: GetItemKeyType,
+            key: TLocSelector,
             index: 'IndexBase',
-            ) -> tp.Tuple[GetItemKeyType, bool, bool]:
+            ) -> tp.Tuple[TLocSelector, bool, bool]:
         from static_frame.core.container_util import key_from_container_key
 
         key = key_from_container_key(index, key, expand_iloc=True)
@@ -120,7 +120,7 @@ class InterfaceFillValue(Interface[TContainer]):
         return key, key_is_multiple, key_is_null_slice
 
     def _extract_loc1d(self,
-            key: GetItemKeyType = NULL_SLICE,
+            key: TLocSelector = NULL_SLICE,
             ) -> 'Series':
         '''This is only called if container is 1D
         '''
@@ -142,8 +142,8 @@ class InterfaceFillValue(Interface[TContainer]):
         return container.get(key, fv) #type: ignore
 
     def _extract_loc2d(self,
-            row_key: GetItemKeyType = NULL_SLICE,
-            column_key: GetItemKeyType = NULL_SLICE,
+            row_key: TLocSelector = NULL_SLICE,
+            column_key: TLocSelector = NULL_SLICE,
             ) -> tp.Union['Frame', 'Series']:
         '''
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
@@ -198,7 +198,7 @@ class InterfaceFillValue(Interface[TContainer]):
                 name=column_key, # type: ignore
                 )
 
-    def _extract_loc2d_compound(self, key: GetItemKeyTypeCompound) -> FrameOrSeries:
+    def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> FrameOrSeries:
         if isinstance(key, tuple):
             row_key, column_key = key
         else:
@@ -215,7 +215,7 @@ class InterfaceFillValue(Interface[TContainer]):
             return InterfaceGetItemLoc(self._extract_loc1d)
         return InterfaceGetItemLoc(self._extract_loc2d_compound)
 
-    def __getitem__(self,  key: GetItemKeyType) -> FrameOrSeries:
+    def __getitem__(self,  key: TLocSelector) -> FrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
@@ -480,7 +480,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
     def loc(self) -> InterfaceGetItemLoc['Batch']:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
-        def func(key: GetItemKeyType) -> 'Batch':
+        def func(key: TLocSelector) -> 'Batch':
             return self._batch_apply(
                     lambda c: InterfaceFillValue(c,
                             fill_value=self._fill_value,
@@ -488,7 +488,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
                     )
         return InterfaceGetItemLoc(func)
 
-    def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
+    def __getitem__(self,  key: TLocSelector) -> 'Batch':
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         return self._batch_apply(

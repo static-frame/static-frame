@@ -51,7 +51,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -888,12 +888,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_data=False, # force immutable copy
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
+    def _extract_loc(self, key: TLocSelector) -> 'Bus':
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Bus':
+    def __getitem__(self, key: TLocSelector) -> 'Bus':
         '''Selector of values by label.
 
         Args:
@@ -908,7 +908,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         series = self._to_series_state()._drop_iloc(key)
         return self._derive_from_series(series, own_data=True)
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
+    def _drop_loc(self, key: TLocSelector) -> 'Bus':
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------

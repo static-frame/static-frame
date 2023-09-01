@@ -40,7 +40,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -991,7 +991,7 @@ def bloc_key_normalize(
     return bloc_key
 
 
-def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
+def key_to_ascending_key(key: TLocSelector, size: int) -> TLocSelector:
     '''
     Normalize all types of keys into an ascending formation.
 
@@ -1243,7 +1243,7 @@ def apply_binary_operator_blocks_columnar(*,
 def arrays_from_index_frame(
         container: 'Frame',
         depth_level: tp.Optional[DepthLevelSpecifier],
-        columns: GetItemKeyType
+        columns: TLocSelector
         ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
@@ -1259,9 +1259,9 @@ def arrays_from_index_frame(
 
 def key_from_container_key(
         index: 'IndexBase',
-        key: GetItemKeyType,
+        key: TLocSelector,
         expand_iloc: bool = False,
-        ) -> GetItemKeyType:
+        ) -> TLocSelector:
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''

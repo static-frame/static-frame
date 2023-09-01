@@ -52,8 +52,8 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
@@ -901,8 +901,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def _extract_array(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None,
             ) -> NDArrayAny:
         '''
         Extract a consolidated array based on iloc selection.
@@ -983,8 +983,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         return concat_resolved(parts, axis=self._axis)
 
     def _extract(self,
-            row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None,
+            row_key: TLocSelector = None,
+            column_key: TLocSelector = None,
             ) -> tp.Union[Frame, Series]:
         '''
         Extract Container based on iloc selection.
@@ -1113,7 +1113,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
+    def _extract_iloc(self, key: TLocSelectorCompound) -> tp.Union[Series, Frame]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -1124,7 +1124,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self._extract(row_key=key)
 
     def _compound_loc_to_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
         '''
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
@@ -1138,20 +1138,20 @@ class Quilt(ContainerBase, StoreClientMixin):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: GetItemKeyTypeCompound) -> tp.Union[Series, Frame]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union[Series, Frame]:
         if self._assign_axis:
             self._update_axis_labels()
         return self._extract(*self._compound_loc_to_iloc(key))
 
     def _compound_loc_to_getitem_iloc(self,
-            key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
+            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> tp.Union[Frame, Series]:
+    def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, Series]:
         '''Selector of columns by label.
 
         Args:

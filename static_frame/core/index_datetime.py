@@ -29,7 +29,7 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import DateInitializer
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
@@ -144,10 +144,10 @@ class IndexDatetime(Index):
         return result
 
     def _loc_to_iloc(self,  # type: ignore
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key,
             partial_selection: bool = False,
-            ) -> GetItemKeyType:
+            ) -> TLocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
@@ -289,10 +289,10 @@ class IndexYear(IndexDatetime):
 
 
     def _loc_to_iloc(self,  # type: ignore
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key_year,
             partial_selection: bool = False,
-            ) -> GetItemKeyType:
+            ) -> TLocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
