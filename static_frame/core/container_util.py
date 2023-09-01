@@ -902,16 +902,6 @@ def axis_window_items( *,
         if valid and window_valid and not window_valid(window):
             valid = False
 
-        # if valid and (derive_label or label_missing_raises):
-        #     idx_label = idx_right + label_shift
-        #     if idx_label < 0 or idx_label >= count_labels:
-        #         # an invalid label, if required, is an error
-        #         if label_missing_raises:
-        #             raise InvalidWindowLabel(idx_label)
-        #         valid = False
-        #     else:
-        #         label = labels.iloc[idx_label]
-
         if valid:
             idx_label = idx_right + label_shift
             if idx_label < 0 or idx_label >= count_labels:
