@@ -272,14 +272,9 @@ CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
 
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
-        int,
-        np.integer,
-        str,
-        slice,
         TLabel,
-        tp.List[tp.Any],
-        tp.Tuple[tp.Any, ...], # might be CompoundLabelType
-        None,
+        slice,
+        tp.List[TLabel],
         'IndexBase',
         'Series',
         np.ndarray,
@@ -288,26 +283,13 @@ GetItemKeyType = tp.Union[
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-GetItemKeyTypeCompound = tp.Union[
-        tp.Tuple[tp.Any, ...],
-        int,
-        str,
-        np.integer,
-        slice,
-        TLabel,
-        tp.List[tp.Any],
-        None,
-        'IndexBase',
-        'Series',
-        np.ndarray,
-        np.datetime64,
-        datetime.date,
-        ]
+GetItemKeyTypeCompound = tp.Tuple[GetItemKeyType, ...]
 
 IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
-NameType = tp.Optional[TLabel]
+NameType = TLabel # include None
+
 TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
 TBlocKey = tp.Union['Frame', np.ndarray, None]
