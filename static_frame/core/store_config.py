@@ -5,9 +5,9 @@ import typing as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TLabel
 
 #-------------------------------------------------------------------------------

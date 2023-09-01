@@ -47,7 +47,6 @@ from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -55,6 +54,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector

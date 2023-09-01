@@ -24,8 +24,8 @@ from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import INT64_MAX
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import NameType
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any

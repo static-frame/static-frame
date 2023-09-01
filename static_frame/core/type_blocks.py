@@ -44,9 +44,9 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ArraySignature
-from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound

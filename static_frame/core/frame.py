@@ -147,8 +147,6 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -165,6 +163,8 @@ from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector

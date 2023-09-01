@@ -66,7 +66,6 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CompoundLabelType
-from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -75,6 +74,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
+from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
