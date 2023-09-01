@@ -1811,8 +1811,8 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _drop_blocks(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.

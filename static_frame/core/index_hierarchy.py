@@ -1418,7 +1418,7 @@ class IndexHierarchy(IndexBase):
         yield from (index.__class__ for index in self._indices)
 
     def _drop_iloc(self: IH,
-            key: TLocSelector,
+            key: TILocSelector,
             ) -> IH:
         '''
         Create a new index after removing the values specified by the iloc key.
@@ -2069,7 +2069,7 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
 
     def _extract_getitem_astype(self: IH,
-            key: TLocSelector,
+            key: TDepthLevelSpecifier,
             ) -> 'IndexHierarchyAsType':
         '''
         Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
@@ -2978,7 +2978,7 @@ class IndexHierarchyAsType:
         # update index_constructors based on dtype
         index_constructors = container.index_types.values.copy()
         # can select element or array
-        dtype_post: DtypeAny | NDArrayAny = blocks.dtypes[self.depth_key] # type: ignore
+        dtype_post: DtypeAny | NDArrayAny = blocks.dtypes[self.depth_key]
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,

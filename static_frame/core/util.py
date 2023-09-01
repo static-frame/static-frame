@@ -373,22 +373,22 @@ def depth_level_from_specifier(
         return list(range(size))
     elif key.__class__ is np.ndarray:
         # let object dtype use iterable path
-        if key.dtype.kind in DTYPE_INT_KINDS:
-            return key.tolist()
-        elif key.dtype == DTYPE_BOOL:
-            return PositionsAllocator.get(size)[key].tolist()
+        if key.dtype.kind in DTYPE_INT_KINDS: #type: ignore
+            return key.tolist() # type: ignore
+        elif key.dtype == DTYPE_BOOL: # type: ignore
+            return PositionsAllocator.get(size)[key].tolist() # type: ignore
         elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
             for e in key: # type: ignore
                 if not is_strict_int(e):
                     raise KeyError(f'Cannot select depths by non integer: {e!r}')
-            return key.tolist()
+            return key.tolist() # type: ignore
         raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
     elif key.__class__ is slice:
         if key.start is not None and not is_strict_int(key.start): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
         if key.stop is not None and not is_strict_int(key.stop): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
-        return list(range(*key.indices(size)))
+        return list(range(*key.indices(size))) # type: ignore
     elif isinstance(key, list):
         # an iterable, or an object dtype array
         for e in key:
@@ -397,7 +397,7 @@ def depth_level_from_specifier(
         return key
     if not is_strict_int(key):
         raise KeyError(f'Cannot select depths by non integer: {key!r}')
-    return key
+    return key # type: ignore
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[

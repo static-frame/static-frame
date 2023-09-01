@@ -15,6 +15,7 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TDepthLevelSpecifier
 
 # from static_frame.core.util import AnyCallable
 
@@ -299,7 +300,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
+            func_getitem: tp.Callable[[TDepthLevelSpecifier], 'FrameAsType']
             ) -> None:
         '''
         Args:
@@ -308,7 +309,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'FrameAsType':
+    def __getitem__(self, key: TDepthLevelSpecifier) -> 'FrameAsType':
         '''Selector of columns by label.
 
         Args:
@@ -336,7 +337,7 @@ class InterfaceIndexHierarchyAsType(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[TLocSelector], 'IndexHierarchyAsType']
+            func_getitem: tp.Callable[[TDepthLevelSpecifier], 'IndexHierarchyAsType']
             ) -> None:
         '''
         Args:
@@ -345,7 +346,7 @@ class InterfaceIndexHierarchyAsType(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'IndexHierarchyAsType':
+    def __getitem__(self, key: TDepthLevelSpecifier) -> 'IndexHierarchyAsType':
         '''Selector of columns by label.
 
         Args:
