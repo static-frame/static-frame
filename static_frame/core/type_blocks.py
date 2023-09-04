@@ -48,8 +48,7 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import ShapeType
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -87,7 +86,7 @@ def group_match(
         blocks: 'TypeBlocks',
         *,
         axis: int,
-        key: TLocSelectorCompound,
+        key: TILocSelector,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
@@ -179,7 +178,7 @@ def group_sorted(
         blocks: 'TypeBlocks',
         *,
         axis: int,
-        key: TLocSelectorCompound,
+        key: TILocSelector,
         drop: bool = False,
         extract: tp.Optional[int] = None,
         as_array: bool = False,
@@ -287,8 +286,8 @@ def assign_inner_from_iloc_by_unit(
         *,
         value: tp.Any,
         block: NDArrayAny,
-        row_target: TLocSelector,
-        target_key: TLocSelector,
+        row_target: TILocSelector,
+        target_key: TILocSelector,
         t_shape: ShapeType,
         target_is_slice: bool,
         block_is_column: bool,
@@ -330,7 +329,7 @@ def assign_inner_from_iloc_by_unit(
         if block_is_column:
             assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
         else:
-            assigned_target_pre = block[NULL_SLICE, target_key] # type: ignore
+            assigned_target_pre = block[NULL_SLICE, target_key]
         if block.dtype == assigned_dtype:
             assigned_target = assigned_target_pre.copy()
         else:
@@ -351,8 +350,8 @@ def assign_inner_from_iloc_by_sequence(
         *,
         value: tp.Any,
         block: NDArrayAny,
-        row_target: TLocSelector,
-        target_key: TLocSelector,
+        row_target: TILocSelector,
+        target_key: TILocSelector,
         t_shape: ShapeType,
         target_is_slice: bool,
         block_is_column: bool,
@@ -402,7 +401,7 @@ def assign_inner_from_iloc_by_sequence(
         if block_is_column:
             assigned_target_pre = block if block.ndim == 1 else block.reshape(block.shape[0]) # make 1D
         else:
-            assigned_target_pre = block[NULL_SLICE, target_key] # type: ignore
+            assigned_target_pre = block[NULL_SLICE, target_key]
         if block.dtype == assigned_dtype:
             assigned_target = assigned_target_pre.copy()
         else:
@@ -971,12 +970,12 @@ class TypeBlocks(ContainerOperand):
             for b in self._blocks:
                 if index_ic.is_subset:
                     # works for both 1d and 2s arrays
-                    yield b[index_ic.iloc_src] # type: ignore
+                    yield b[index_ic.iloc_src]
                 else:
                     shape: ShapeType = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                     values.flags.writeable = False
                     yield values
 
@@ -991,7 +990,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src] # type: ignore
+                    yield b[:, columns_ic.iloc_src]
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1021,9 +1020,9 @@ class TypeBlocks(ContainerOperand):
             elif self.unified and index_ic.is_subset and columns_ic.is_subset:
                 b = self._blocks[0]
                 if b.ndim == 1:
-                    yield b[index_ic.iloc_src] # type: ignore
+                    yield b[index_ic.iloc_src]
                 else:
-                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src] # type: ignore
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
             else:
                 columns_dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1036,17 +1035,17 @@ class TypeBlocks(ContainerOperand):
                         if index_ic.is_subset:
                             if b.ndim == 1:
                                 # NOTE: iloc_src is in the right order for dst
-                                yield b[index_ic.iloc_src] # type: ignore
+                                yield b[index_ic.iloc_src]
                             else:
-                                yield b[index_ic.iloc_src, block_col] # type: ignore
+                                yield b[index_ic.iloc_src, block_col]
                         else: # need an empty to fill, compatible with this block
                             values = full_for_fill(b.dtype,
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col] # type: ignore
+                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values
                     else:
@@ -1072,13 +1071,13 @@ class TypeBlocks(ContainerOperand):
             for b in self._blocks:
                 if index_ic.is_subset: # no rows added
                     # works for both 1d and 2d arrays
-                    yield b[index_ic.iloc_src] # type: ignore
+                    yield b[index_ic.iloc_src]
                     col_src += (1 if b.ndim == 1 else b.shape[1])
                 elif b.ndim == 1:
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
                     if index_ic.has_common: # if we have some overlap
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
+                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                     values.flags.writeable = False
                     yield values
                     col_src += 1
@@ -1087,7 +1086,7 @@ class TypeBlocks(ContainerOperand):
                         fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
                         if index_ic.has_common: # if we have some overlap
-                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos] # type: ignore
+                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
                         values.flags.writeable = False
                         yield values
                         col_src += 1
@@ -1106,7 +1105,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src] # type: ignore
+                    yield b[:, columns_ic.iloc_src]
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1139,9 +1138,9 @@ class TypeBlocks(ContainerOperand):
                     b = self._blocks[0]
                     if b.ndim == 1:
                         # NOTE: iloc_src is in the right order for dst
-                        yield b[index_ic.iloc_src] #type: ignore
+                        yield b[index_ic.iloc_src]
                     else:
-                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src] #type: ignore
+                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
                     col_src += 1
                 else:
                     columns_dst_to_src = dict(
@@ -1153,17 +1152,17 @@ class TypeBlocks(ContainerOperand):
                             b = self._blocks[block_idx]
                             if index_ic.is_subset:
                                 if b.ndim == 1:
-                                    yield b[index_ic.iloc_src] # type: ignore
+                                    yield b[index_ic.iloc_src]
                                 else:
                                     # NOTE: this is not using iloc_dst if iloc_src is a different order
-                                    yield b[index_ic.iloc_src, block_col] # type: ignore
+                                    yield b[index_ic.iloc_src, block_col]
                             else: # need an empty to fill, compatible with this
                                 fv = fill_value(col_src, b.dtype)
                                 values = full_for_fill(b.dtype, index_ic.size, fv)
                                 if b.ndim == 1:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src] # type: ignore
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                                 else:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col] # type: ignore
+                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                                 values.flags.writeable = False
                                 yield values
                         else:
@@ -1176,7 +1175,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def sort(self,
             axis: int | np.integer[tp.Any],
-            key: TLocSelectorCompound,
+            key: TILocSelector,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Tuple[TypeBlocks, NDArrayAny]:
         '''While sorting generally happens at the Frame level, some lower level operations will benefit from sorting on type blocks directly.
@@ -1222,7 +1221,7 @@ class TypeBlocks(ContainerOperand):
 
     def group(self,
             axis: int,
-            key: TLocSelector,
+            key: TILocSelector,
             drop: bool = False,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
@@ -1470,7 +1469,7 @@ class TypeBlocks(ContainerOperand):
     # extraction utilities
 
     def _key_to_block_slices(self,
-            key: TLocSelectorCompound,
+            key: TILocSelector,
             retain_key_order: bool = True
             ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
@@ -1492,15 +1491,16 @@ class TypeBlocks(ContainerOperand):
                 raise KeyError(key) from e
         else: # all cases where we try to get contiguous slices
             try:
-                yield from self._index.iter_contiguous(key, ascending=not retain_key_order) # type: ignore
+                yield from self._index.iter_contiguous(key, ascending=not retain_key_order)
             except TypeError as e:
                 # BlockIndex will raise TypeErrors in a number of cases of bad inputs; some of these are not easy to change
                 raise KeyError(key) from e
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None) -> tp.Iterator[NDArrayAny]:
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
+            ) -> tp.Iterator[NDArrayAny]:
         '''Return Boolean blocks of the same size and shape, where key selection sets values to True.
         '''
 
@@ -1542,7 +1542,7 @@ class TypeBlocks(ContainerOperand):
 
 
     def _astype_blocks(self,
-            column_key: TLocSelector,
+            column_key: TILocSelector,
             dtype: TDtypeSpecifier
             ) -> tp.Iterator[NDArrayAny]:
         '''
@@ -1656,7 +1656,7 @@ class TypeBlocks(ContainerOperand):
                     yield b[NULL_SLICE, slice(group_start, None)]
 
     def _consolidate_select_blocks(self,
-            column_key: TLocSelector,
+            column_key: TILocSelector,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given any column selection, consolidate when possible within that region.
@@ -1738,7 +1738,7 @@ class TypeBlocks(ContainerOperand):
         yield from consolidate_and_clear()
 
     def _ufunc_blocks(self,
-            column_key: TLocSelector,
+            column_key: TILocSelector,
             func: UFunc
             ) -> tp.Iterator[NDArrayAny]:
         '''
@@ -1894,13 +1894,13 @@ class TypeBlocks(ContainerOperand):
             # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors
             if not drop_block and not parts:
                 if row_key is not None:
-                    b = np.delete(b, row_key, axis=0) # type: ignore
+                    b = np.delete(b, row_key, axis=0)
                     b.flags.writeable = False
                 yield b
             elif parts:
                 if row_key is not None:
                     for part in parts:
-                        part = np.delete(part, row_key, axis=0) # type: ignore
+                        part = np.delete(part, row_key, axis=0)
                         part.flags.writeable = False
                         yield part
                 else:
@@ -2069,8 +2069,8 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def _assign_from_iloc_by_blocks(self,
             values: tp.Iterable[NDArrayAny],
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
@@ -2151,14 +2151,14 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_iloc_core(self,
             *,
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             value: tp.Any = None,
             assign_inner: tp.Callable[[
                     tp.Any,
                     NDArrayAny,
-                    TLocSelector,
-                    TLocSelector,
+                    TILocSelector,
+                    TILocSelector,
                     ShapeType,
                     bool,
                     bool,
@@ -2247,8 +2247,8 @@ class TypeBlocks(ContainerOperand):
 
 
     def _assign_from_iloc_by_unit(self,
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             value: tp.Any = None
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign a single value (a tuple, array, or element) into all blocks, returning blocks of the same size and shape.
@@ -2274,8 +2274,8 @@ class TypeBlocks(ContainerOperand):
     def _assign_from_iloc_by_sequence(self,
             *,
             value: tp.Sequence[tp.Any],
-            row_key: tp.Optional[TLocSelectorCompound] = None,
-            column_key: tp.Optional[TLocSelectorCompound] = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign an iterable of appropriate size (a tuple) into all blocks, returning blocks of the same size and shape. If row-key is a multiple, the values will be replicated in all rows.
 
@@ -2633,8 +2633,8 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _slice_blocks(self,
-            row_key: tp.Optional[TILocSelectorCompound] = None,
-            column_key: tp.Optional[TILocSelectorCompound] = None
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator of sliced blocks, given row and column key selectors.
@@ -2667,13 +2667,13 @@ class TypeBlocks(ContainerOperand):
                 column_key.__class__ is slice and column_key == NULL_SLICE
                 ):
             if self._index.columns == 0:
-                yield EMPTY_ARRAY.reshape(self._index.shape)[row_key] # type: ignore
+                yield EMPTY_ARRAY.reshape(self._index.shape)[row_key]
             elif row_key_null: # when column_key is full
                 yield from self._blocks
             else:
                 for b in self._blocks:
                     # selection works for both 1D (to an element) and 2D (two a 1D array)
-                    b_row = b[row_key] # type: ignore
+                    b_row = b[row_key]
                     if b_row.__class__ is np.ndarray:
                         if single_row and b_row.ndim == 1:
                             # reshaping preserves writeable status
@@ -2693,12 +2693,12 @@ class TypeBlocks(ContainerOperand):
                     if row_key_null:
                         b_sliced = b
                     else:
-                        b_sliced = b[row_key] # type: ignore
+                        b_sliced = b[row_key]
                 else: # given 2D, use row key and column slice
                     if row_key_null:
                         b_sliced = b[NULL_SLICE, slc]
                     else:
-                        b_sliced = b[row_key, slc] # type: ignore
+                        b_sliced = b[row_key, slc]
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
@@ -2719,8 +2719,8 @@ class TypeBlocks(ContainerOperand):
                     yield b_fill
 
     def _extract_array(self,
-            row_key: tp.Optional[TILocSelectorCompound] = None,
-            column_key: tp.Optional[TILocSelectorCompound] = None
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None
             ) -> NDArrayAny:
         '''Alternative extractor that returns just an ndarray, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
 
@@ -2733,7 +2733,7 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 if row_key is None:
                     return b
-                array = b[row_key] # type: ignore
+                array = b[row_key]
                 if array.__class__ is np.ndarray:
                     array.flags.writeable = False
                 return array
@@ -2741,7 +2741,7 @@ class TypeBlocks(ContainerOperand):
             if row_key is None:
                 return b[NULL_SLICE, column]
 
-            array = b[row_key, column] # type: ignore
+            array = b[row_key, column]
             if array.__class__ is np.ndarray:
                 array.flags.writeable = False
             return array
@@ -2810,7 +2810,7 @@ class TypeBlocks(ContainerOperand):
                 yield from b[key]
 
     def iter_row_tuples(self,
-            key: tp.Optional[TLocSelectorCompound],
+            key: TILocSelector,
             *,
             constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
@@ -2836,7 +2836,7 @@ class TypeBlocks(ContainerOperand):
                 yield constructor(chainer(i))
 
     def iter_columns_tuples(self,
-            key: tp.Optional[TLocSelectorCompound],
+            key: TILocSelector,
             *,
             constructor: tp.Optional[TupleConstructorType] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
@@ -2888,13 +2888,13 @@ class TypeBlocks(ContainerOperand):
                     return TypeBlocks.from_blocks(b)
                 elif isinstance(row_key, INT_TYPES):
                     return b[row_key] # return single item
-                return TypeBlocks.from_blocks(b[row_key]) # type: ignore
+                return TypeBlocks.from_blocks(b[row_key])
 
             if row_key_null:
                 return TypeBlocks.from_blocks(b[:, column])
             elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column]
-            return TypeBlocks.from_blocks(b[row_key, column]) # type: ignore
+            return TypeBlocks.from_blocks(b[row_key, column])
 
         # pass a generator to from_block; will return a TypeBlocks or a single element
         return self.from_blocks(
@@ -2912,7 +2912,7 @@ class TypeBlocks(ContainerOperand):
         return self._extract(row_key=key)
 
     def extract_iloc_mask(self,
-            key: TLocSelectorCompound
+            key: TILocSelectorCompound
             ) -> 'TypeBlocks':
         if isinstance(key, tuple):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
@@ -2988,7 +2988,7 @@ class TypeBlocks(ContainerOperand):
     # assignment interfaces
 
     def extract_iloc_assign_by_unit(self,
-            key: tp.Tuple[TLocSelector, TLocSelector],
+            key: tp.Tuple[TILocSelector, TILocSelector],
             value: tp.Any,
             ) -> 'TypeBlocks':
         '''
@@ -3001,7 +3001,7 @@ class TypeBlocks(ContainerOperand):
                 value=value))
 
     def extract_iloc_assign_by_sequence(self,
-            key: tp.Tuple[TLocSelector, TLocSelector],
+            key: tp.Tuple[TILocSelector, TILocSelector],
             value: tp.Any,
             ) -> 'TypeBlocks':
         '''
@@ -3014,7 +3014,7 @@ class TypeBlocks(ContainerOperand):
                 value=value))
 
     def extract_iloc_assign_by_blocks(self,
-            key: tp.Tuple[TLocSelector, TLocSelector],
+            key: tp.Tuple[TILocSelector, TILocSelector],
             values: tp.Iterable[NDArrayAny],
             ) -> 'TypeBlocks':
         '''
@@ -3058,7 +3058,7 @@ class TypeBlocks(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    def drop(self, key: TLocSelectorCompound) -> 'TypeBlocks':
+    def drop(self, key: TILocSelectorCompound) -> 'TypeBlocks':
         '''
         Drop rows or columns from a TypeBlocks instance.
 
@@ -3079,7 +3079,7 @@ class TypeBlocks(ContainerOperand):
     def __iter__(self) -> tp.Iterator['TypeBlocks']:
         raise NotImplementedError('Amibigous whether or not to return np array or TypeBlocks')
 
-    def __getitem__(self, key: TLocSelectorCompound) -> tp.Any:
+    def __getitem__(self, key: TILocSelectorCompound) -> tp.Any:
         '''
         Returns a column, or a column slice.
         '''

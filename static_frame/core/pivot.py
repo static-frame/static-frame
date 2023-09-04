@@ -398,9 +398,9 @@ def pivot_core(
 
     # all are lists of hashables; get converted to lists of integers
     columns_loc_to_iloc = frame.columns._loc_to_iloc
-    index_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(index_fields) #type: ignore
-    data_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(data_fields) #type: ignore
-    columns_fields_iloc: tp.Sequence[int] = columns_loc_to_iloc(columns_fields) #type: ignore
+    index_fields_iloc: tp.List[int] = columns_loc_to_iloc(index_fields) #type: ignore
+    data_fields_iloc: tp.List[int] = columns_loc_to_iloc(data_fields) #type: ignore
+    columns_fields_iloc: tp.List[int] = columns_loc_to_iloc(columns_fields) #type: ignore
 
     # For data fields, we add the field name, not the field values, to the columns.
     columns_name = tuple(columns_fields)
@@ -500,7 +500,7 @@ def pivot_core(
     columns_loc_to_iloc = frame.columns._loc_to_iloc
     # group by on 1 or more columns fields
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
-    group_key = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
+    group_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
     index_outer = pivot_outer_index(frame=frame,
                 index_fields=index_fields,
