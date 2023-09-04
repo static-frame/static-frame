@@ -65,7 +65,6 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import CompoundLabelType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -78,6 +77,7 @@ from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import array2d_to_array1d
@@ -1757,7 +1757,7 @@ class IndexHierarchy(IndexBase):
 
     def _build_mask_for_key_at_depth(self: IH,
             depth: int,
-            key: tp.Union[NDArrayAny, CompoundLabelType],
+            key: tp.Sequence[TLocSelectorNonContainer],
             available: tp.Optional[NDArrayAny],
             ) -> NDArrayAny:
         '''
@@ -1861,7 +1861,7 @@ class IndexHierarchy(IndexBase):
             raise KeyError(key.difference(self)[0]) from None
 
     def _loc_per_depth_to_iloc(self: IH,
-            key: tp.Union[NDArrayAny, CompoundLabelType],
+            key: tp.Sequence[TLocSelectorNonContainer],
             ) -> TILocSelector:
         '''
         Return the indexer for a given key. Key is assumed to not be compound (i.e. HLoc, list of keys, etc)
@@ -1980,7 +1980,9 @@ class IndexHierarchy(IndexBase):
             # We can occasionally receive a sequence of tuples
             return [self._loc_to_iloc(k) for k in key] # type: ignore
 
-        return self._loc_per_depth_to_iloc(key) # type: ignore
+        # key is now normalized to tuple
+        keys_per_depth: tp.Sequence[TLocSelectorNonContainer] = key # type: ignore
+        return self._loc_per_depth_to_iloc(keys_per_depth)
 
     def loc_to_iloc(self,
             key: TLocSelector,

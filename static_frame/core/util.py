@@ -270,23 +270,24 @@ TLabel = tp.Union[
         tp.Tuple['TLabel'],
 ]
 
-# keys once dimension has been isolated
-TLocSelector = tp.Union[
+TLocSelectorNonContainer = tp.Union[
         TLabel,
         slice,
         tp.List[TLabel],
-        'IndexBase',
-        'Series',
         np.ndarray,
         np.datetime64,
         datetime.date,
         ]
 
+# keys once dimension has been isolated
+TLocSelector = tp.Union[
+        TLocSelectorNonContainer,
+        'IndexBase',
+        'Series',
+        ]
+
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 TLocSelectorCompound = TLocSelector | tp.Tuple[TLocSelector, ...]
-# TODO: evaluate usage of this; if needed, name better
-CompoundLabelType = tp.Tuple[tp.Union[slice, TLabel, tp.List[TLabel]], ...]
-
 
 KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
 NameType = TLabel # include None
@@ -347,7 +348,7 @@ DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
 def is_dtype_specifier(value: tp.Any) -> bool:
     return isinstance(value, DTYPE_SPECIFIER_TYPES)
 
-def is_neither_slice_nor_mask(value: tp.Union[slice, TLabel]) -> bool:
+def is_neither_slice_nor_mask(value: TLocSelectorNonContainer) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
