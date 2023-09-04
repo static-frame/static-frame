@@ -63,6 +63,7 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceGetItemILoc
 from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
@@ -704,11 +705,11 @@ class Series(ContainerOperand):
         return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc['Series']:
+    def iloc(self) -> InterfaceGetItemILoc['Series']:
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Series']:
@@ -1127,7 +1128,7 @@ class Series(ContainerOperand):
             return self._extract_iloc(EMPTY_SLICE) # type: ignore
 
         if ic.is_subset: # must have some common
-            values = self.values[ic.iloc_src] # type: ignore
+            values = self.values[ic.iloc_src]
             values.flags.writeable = False
             return self.__class__(
                     values,
@@ -1143,7 +1144,7 @@ class Series(ContainerOperand):
         values = full_for_fill(self.values.dtype, len(index_owned), fv)
         # if some intersection of values
         if ic.has_common:
-            values[ic.iloc_dst] = self.values[ic.iloc_src] # type: ignore
+            values[ic.iloc_dst] = self.values[ic.iloc_src]
         values.flags.writeable = False
 
         return self.__class__(values,
@@ -1960,7 +1961,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_mask(self, key: TLocSelector) -> 'Series':
+    def _extract_iloc_mask(self, key: TILocSelector) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True. The `name` attribute is not propagated.
         '''
         mask = np.full(self.values.shape, False, dtype=bool)
@@ -1976,7 +1977,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_masked_array(self, key: TLocSelector) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_iloc_masked_array(self, key: TILocSelector) -> MaskedArray[tp.Any, tp.Any]:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
         mask = self._extract_iloc_mask(key=key)
@@ -3119,7 +3120,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _insert(self,
-            key: int, # iloc positions
+            key: int | np.integer[tp.Any], # iloc positions
             container: 'Series',
             *,
             after: bool,
@@ -3176,7 +3177,7 @@ class Series(ContainerOperand):
         '''
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError(f'Unsupported key type: {key}')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, container, after=False)
 
     @doc_inject(selector='insert')
@@ -3196,7 +3197,7 @@ class Series(ContainerOperand):
         '''
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError(f'Unsupported key type: {key}')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, container, after=True)
 
     #---------------------------------------------------------------------------
@@ -3560,7 +3561,7 @@ class SeriesAssign(Assign):
             key: an iloc-style key.
         '''
         self.container: Series = container
-        self.key = key
+        self.key: TILocSelector = key
 
     def __call__(self,
             value: tp.Any, # any possible assignment type

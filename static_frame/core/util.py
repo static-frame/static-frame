@@ -3662,7 +3662,10 @@ def key_normalize(key: KeyOrKeys) -> tp.List[TLabel]:
         return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
-def iloc_to_insertion_iloc(key: int, size: int) -> int:
+def iloc_to_insertion_iloc(
+        key: int | np.integer[tp.Any],
+        size: int,
+        ) -> int | np.integer[tp.Any]:
     '''
     Given an iloc (possibly bipolar), return the appropriate insertion iloc (always positive)
     '''
