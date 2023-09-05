@@ -249,7 +249,7 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 
 TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
-TILocSelectorCompound = TILocSelector | tp.Tuple[TILocSelector, ...]
+TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
 
 # NOTE: slice is not hashable
 TLabel = tp.Union[
