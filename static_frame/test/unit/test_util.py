@@ -2893,7 +2893,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             depth_level_from_specifier(5.4, 3)
 
-    def test_validate_depth_selection_a(self) -> None:
+    def test_validate_depth_selection_b(self) -> None:
         self.assertEqual(depth_level_from_specifier(None, 3), [0, 1, 2])
 
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import time
-import typing as tp
 
 import frame_fixtures as ff
 import numpy as np
