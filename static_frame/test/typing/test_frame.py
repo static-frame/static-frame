@@ -23,3 +23,7 @@ def test_frame_from_dict_records() -> None:
 
     f: sf.FrameGO = sf.FrameGO.from_dict_records((d1, d2))
     assert f.shape == (2, 3)
+
+
+
+
