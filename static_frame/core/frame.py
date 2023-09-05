@@ -1223,10 +1223,12 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor
                 )
 
+    # NOTE: mapping keys must be tp.Any; anything else requires uses TLabel
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict(cls,
-            mapping: tp.Dict[TLabel, tp.Iterable[tp.Any]],
+            mapping: tp.Mapping[tp.Any, tp.Iterable[tp.Any]],
             *,
             index: tp.Optional[IndexInitializer] = None,
             fill_value: object = np.nan,
