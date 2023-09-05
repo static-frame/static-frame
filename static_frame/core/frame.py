@@ -102,6 +102,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
+from static_frame.core.node_selector import InterfaceGetItemILocCompound
 from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
@@ -166,6 +167,7 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -3464,8 +3466,8 @@ class Frame(ContainerOperand):
         return InterfaceGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLocCompound[FrameOrSeries]:
-        return InterfaceGetItemLocCompound(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemILocCompound[FrameOrSeries]:
+        return InterfaceGetItemILocCompound(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Series']:
@@ -4964,8 +4966,8 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _extract_array(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> NDArrayAny:
         '''
         Alternative extractor that returns just an ndarray. Keys are iloc keys.
@@ -4991,8 +4993,8 @@ class Frame(ContainerOperand):
 
 
     def _extract(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> tp.Union['Frame', Series]:
         '''
         Extract Container based on iloc selection (indices have already mapped)
@@ -5007,7 +5009,7 @@ class Frame(ContainerOperand):
         if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
         else:
-            index = self._index._extract_iloc(row_key) # type: ignore
+            index = self._index._extract_iloc(row_key)
             if not row_key_is_slice and isinstance(row_key, INT_TYPES):
                 name_row = self._index._extract_iloc_by_int(row_key)
 
@@ -5018,7 +5020,7 @@ class Frame(ContainerOperand):
             columns = self._columns
             own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
         else:
-            columns = self._columns._extract_iloc(column_key) # type: ignore
+            columns = self._columns._extract_iloc(column_key)
             own_columns = True
             if not column_key_is_slice and isinstance(column_key, INT_TYPES):
                 name_column = self._columns._extract_iloc_by_int(column_key)
@@ -5072,7 +5074,7 @@ class Frame(ContainerOperand):
                 )
 
 
-    def _extract_iloc(self, key: TLocSelectorCompound) -> tp.Union['Frame', Series]:
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union['Frame', Series]:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -5081,7 +5083,7 @@ class Frame(ContainerOperand):
         return self._extract(row_key=key)
 
     def _compound_loc_to_iloc(self,
-            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
+            key: TLocSelectorCompound) -> TILocSelectorCompound:
         '''
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
@@ -5117,7 +5119,7 @@ class Frame(ContainerOperand):
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
-            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
+            key: TLocSelectorCompound) -> TILocSelectorCompound:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
@@ -5135,7 +5137,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _drop_iloc(self, key: TLocSelectorCompound) -> tpe.Self:
+    def _drop_iloc(self, key: TILocSelectorCompound) -> tpe.Self:
         '''
         Args:
             key: If a Boolean Series was passed, it has been converted to Boolean NumPy array already in loc to iloc.
@@ -5170,16 +5172,16 @@ class Frame(ContainerOperand):
                 )
 
     def _drop_loc(self, key: TLocSelectorCompound) -> tpe.Self:
-        key = self._compound_loc_to_iloc(key)
-        return self._drop_iloc(key=key)
+        key_iloc = self._compound_loc_to_iloc(key)
+        return self._drop_iloc(key=key_iloc)
 
     def _drop_getitem(self, key: TLocSelectorCompound) -> tpe.Self:
-        key = self._compound_loc_to_getitem_iloc(key)
-        return self._drop_iloc(key=key)
+        key_iloc = self._compound_loc_to_getitem_iloc(key)
+        return self._drop_iloc(key=key_iloc)
 
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_mask(self, key: TLocSelectorCompound) -> 'Frame':
+    def _extract_iloc_mask(self, key: TILocSelectorCompound) -> 'Frame':
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return self.__class__(masked_blocks,
                 columns=self._columns,
@@ -5187,39 +5189,41 @@ class Frame(ContainerOperand):
                 own_data=True)
 
     def _extract_loc_mask(self, key: TLocSelectorCompound) -> 'Frame':
-        key = self._compound_loc_to_iloc(key)
-        return self._extract_iloc_mask(key=key)
+        key_iloc = self._compound_loc_to_iloc(key)
+        return self._extract_iloc_mask(key=key_iloc)
 
     def _extract_getitem_mask(self, key: TLocSelectorCompound) -> 'Frame':
-        key = self._compound_loc_to_getitem_iloc(key)
-        return self._extract_iloc_mask(key=key)
+        key_iloc = self._compound_loc_to_getitem_iloc(key)
+        return self._extract_iloc_mask(key=key_iloc)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_iloc_masked_array(self,
+            key: TILocSelectorCompound,
+            ) -> MaskedArray[tp.Any, tp.Any]:
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return MaskedArray(data=self.values, mask=masked_blocks.values) # type: ignore
 
     def _extract_loc_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
-        key = self._compound_loc_to_iloc(key)
-        return self._extract_iloc_masked_array(key=key)
+        key_iloc = self._compound_loc_to_iloc(key)
+        return self._extract_iloc_masked_array(key=key_iloc)
 
     def _extract_getitem_masked_array(self, key: TLocSelectorCompound) -> MaskedArray[tp.Any, tp.Any]:
-        key = self._compound_loc_to_getitem_iloc(key)
-        return self._extract_iloc_masked_array(key=key)
+        key_iloc = self._compound_loc_to_getitem_iloc(key)
+        return self._extract_iloc_masked_array(key=key_iloc)
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
+    def _extract_iloc_assign(self, key: TILocSelectorCompound) -> 'FrameAssignILoc':
         return FrameAssignILoc(self, key=key)
 
     def _extract_loc_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
-        key = self._compound_loc_to_iloc(key)
-        return self._extract_iloc_assign(key=key)
+        key_iloc = self._compound_loc_to_iloc(key)
+        return self._extract_iloc_assign(key=key_iloc)
 
     def _extract_getitem_assign(self, key: TLocSelectorCompound) -> 'FrameAssignILoc':
         # extract if tuple, then pack back again
-        key = self._compound_loc_to_getitem_iloc(key)
-        return self._extract_iloc_assign(key=key)
+        key_iloc = self._compound_loc_to_getitem_iloc(key)
+        return self._extract_iloc_assign(key=key_iloc)
 
     def _extract_bloc_assign(self, key: TBlocKey) -> 'FrameAssignBLoc':
         '''Assignment based on a Boolean Frame or array.'''
@@ -5229,12 +5233,13 @@ class Frame(ContainerOperand):
 
     def _extract_getitem_astype(self, key: TLocSelector) -> 'FrameAsType':
         # extract if tuple, then pack back again
-        _, key = self._compound_loc_to_getitem_iloc(key)
-        return FrameAsType(self, column_key=key)
+        _, key_iloc = self._compound_loc_to_getitem_iloc(key)
+        return FrameAsType(self, column_key=key_iloc)
 
     def _extract_getitem_consolidate(self, key: TLocSelector) -> 'Frame':
-        _, key = self._compound_loc_to_getitem_iloc(key)
-        blocks = TypeBlocks.from_blocks(self._blocks._consolidate_select_blocks(key))
+        _, key_iloc = self._compound_loc_to_getitem_iloc(key)
+        blocks = TypeBlocks.from_blocks(
+                self._blocks._consolidate_select_blocks(key_iloc))
         return self.__class__(blocks,
                 index=self._index,
                 columns=self._columns,
@@ -5604,7 +5609,7 @@ class Frame(ContainerOperand):
 
 
     def _axis_group_iloc_items(self,
-            key: TLocSelector,
+            key: TILocSelector,
             *,
             axis: int,
             drop: bool = False,
@@ -6503,7 +6508,7 @@ class Frame(ContainerOperand):
 
         if columns_depth > 1:
             if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
-                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per columns depth.')
+                raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per columns depth.')
 
             if index_depth == 1:
                 # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
@@ -6718,7 +6723,7 @@ class Frame(ContainerOperand):
 
         if index_depth > 1:
             if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
-                raise RuntimeError(f'Invalid name labels ({names[0]}); provide a sequence with a label per index depth.')
+                raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per index depth.')
 
             if columns_depth == 1:
                 # assume that names[0] is an iterable of labels per index depth level (one row of labels)
@@ -7989,7 +7994,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _insert(self,
-            key: int, # iloc positions
+            key: int | np.integer[tp.Any], # iloc positions
             container: tp.Union['Frame', Series],
             *,
             after: bool,
@@ -8070,7 +8075,7 @@ class Frame(ContainerOperand):
         '''
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError(f'Unsupported key type: {key}')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, container, after=False, fill_value=fill_value)
 
     @doc_inject(selector='insert')
@@ -8093,7 +8098,7 @@ class Frame(ContainerOperand):
         '''
         iloc_key = self._columns._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError(f'Unsupported key type: {key}')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, container, after=True, fill_value=fill_value)
 
     #---------------------------------------------------------------------------
@@ -9144,7 +9149,7 @@ class FrameGO(Frame):
         '''For adding a single column, one column at a time.
         '''
         if key in self._columns:
-            raise RuntimeError(f'The provided key ({key}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
+            raise RuntimeError(f'The provided key ({key!r}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
 
         row_count = len(self._index)
 
@@ -9328,7 +9333,7 @@ class FrameAssignILoc(FrameAssign):
 
     def __init__(self,
             container: Frame,
-            key: TLocSelectorCompound = None,
+            key: TILocSelectorCompound = None,
             ) -> None:
         '''
         Args:
@@ -9345,11 +9350,12 @@ class FrameAssignILoc(FrameAssign):
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
+        key: tp.Tuple[TILocSelector, TILocSelector]
         if isinstance(self.key, tuple):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
-            key = (self.key[0],
+            key = (self.key[0], # type: ignore
                     key_to_ascending_key(
-                            self.key[1],
+                            self.key[1], # type: ignore
                             self.container.shape[1]
                     ))
         else:
@@ -9505,7 +9511,7 @@ class FrameAsType:
 
     def __init__(self,
             container: Frame,
-            column_key: TLocSelector
+            column_key: TILocSelector
             ) -> None:
         self.container = container
         self.column_key = column_key

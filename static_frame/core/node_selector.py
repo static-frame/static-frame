@@ -57,10 +57,13 @@ TContainer = tp.TypeVar('TContainer',
         MaskedArray, # type: ignore
         FrameOrSeries,
         )
-GetItemFunc = tp.TypeVar('GetItemFunc',
+TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TContainer]
         )
 
+TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
+        bound=tp.Callable[[TILocSelector], TContainer]
+        )
 
 
 class Interface(tp.Generic[TContainer]):
@@ -152,8 +155,8 @@ class InterfaceSelectDuo(Interface[TContainer]):
     INTERFACE = ('iloc', 'loc')
 
     def __init__(self, *,
-            func_iloc: GetItemFunc,
-            func_loc: GetItemFunc) -> None:
+            func_iloc: TLocSelectorFunc,
+            func_loc: TLocSelectorFunc) -> None:
 
         self._func_iloc = func_iloc
         self._func_loc = func_loc
@@ -178,9 +181,9 @@ class InterfaceSelectTrio(Interface[TContainer]):
     INTERFACE = ('__getitem__', 'iloc', 'loc')
 
     def __init__(self, *,
-            func_iloc: GetItemFunc,
-            func_loc: GetItemFunc,
-            func_getitem: GetItemFunc,
+            func_iloc: TILocSelectorFunc,
+            func_loc: TLocSelectorFunc,
+            func_getitem: TLocSelectorFunc,
             ) -> None:
 
         self._func_iloc = func_iloc
@@ -193,9 +196,9 @@ class InterfaceSelectTrio(Interface[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
+    def iloc(self) -> InterfaceGetItemILoc[TContainer]:
         '''Integer-position based selection.'''
-        return InterfaceGetItemLoc(self._func_iloc)
+        return InterfaceGetItemILoc(self._func_iloc)
 
     @property
     def loc(self) -> InterfaceGetItemLoc[TContainer]:
@@ -217,9 +220,9 @@ class InterfaceSelectQuartet(Interface[TContainer]):
     INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
 
     def __init__(self, *,
-            func_iloc: GetItemFunc,
-            func_loc: GetItemFunc,
-            func_getitem: GetItemFunc,
+            func_iloc: TILocSelectorFunc,
+            func_loc: TLocSelectorFunc,
+            func_getitem: TLocSelectorFunc,
             func_bloc: tp.Any, # not sure what is the right type
             ) -> None:
 
@@ -239,9 +242,9 @@ class InterfaceSelectQuartet(Interface[TContainer]):
         return InterfaceGetItemLoc(self._func_bloc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
+    def iloc(self) -> InterfaceGetItemILoc[TContainer]:
         '''Integer-position based assignment.'''
-        return InterfaceGetItemLoc(self._func_iloc)
+        return InterfaceGetItemILoc(self._func_iloc)
 
     @property
     def loc(self) -> InterfaceGetItemLoc[TContainer]:
@@ -259,9 +262,9 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
     __slots__ = ('delegate',)
 
     def __init__(self, *,
-            func_iloc: GetItemFunc,
-            func_loc: GetItemFunc,
-            func_getitem: GetItemFunc,
+            func_iloc: TILocSelectorFunc,
+            func_loc: TLocSelectorFunc,
+            func_getitem: TLocSelectorFunc,
             delegate: tp.Type[Assign]
             ) -> None:
         InterfaceSelectTrio.__init__(self,
@@ -278,9 +281,9 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
     __slots__ = ('delegate',)
 
     def __init__(self, *,
-            func_iloc: GetItemFunc,
-            func_loc: GetItemFunc,
-            func_getitem: GetItemFunc,
+            func_iloc: TILocSelectorFunc,
+            func_loc: TLocSelectorFunc,
+            func_getitem: TLocSelectorFunc,
             func_bloc: tp.Any, # not sure what is the right type
             delegate: tp.Type[Assign]
             ) -> None:
@@ -300,7 +303,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
     INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            func_getitem: tp.Callable[[TDepthLevelSpecifier], 'FrameAsType']
+            func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
             ) -> None:
         '''
         Args:
@@ -309,7 +312,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TDepthLevelSpecifier) -> 'FrameAsType':
+    def __getitem__(self, key: TLocSelector) -> 'FrameAsType':
         '''Selector of columns by label.
 
         Args:
