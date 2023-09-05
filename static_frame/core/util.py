@@ -287,7 +287,7 @@ TLocSelector = tp.Union[
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-TLocSelectorCompound = TLocSelector | tp.Tuple[TLocSelector, ...]
+TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, ...]]
 
 KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
 NameType = TLabel # include None
