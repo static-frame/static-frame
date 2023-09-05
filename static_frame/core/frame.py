@@ -958,7 +958,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records(cls,
-            records: tp.Iterable[tp.Dict[TLabel, tp.Any]],
+            records: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
             *,
             index: tp.Optional[IndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -987,7 +987,7 @@ class Frame(ContainerOperand):
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns))
 
-        rows: tp.Sequence[tp.Dict[TLabel, tp.Any]]
+        rows: tp.Sequence[tp.Mapping[TLabel, tp.Any]]
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
@@ -1352,7 +1352,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_fields(cls,
-            fields: tp.Iterable[tp.Dict[TLabel, tp.Any]],
+            fields: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1380,7 +1380,7 @@ class Frame(ContainerOperand):
         get_col_fill_value = (None if not is_fill_value_factory_initializer(fill_value)
                 else get_col_fill_value_factory(fill_value, columns)) # type: ignore
 
-        cols: tp.Sequence[tp.Dict[TLabel, tp.Any]]
+        cols: tp.Sequence[tp.Mapping[tp.Any, tp.Any]]
         if not hasattr(fields, '__len__'):
             # might be a generator; must convert to sequence
             cols = list(fields)
@@ -1392,7 +1392,7 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame('No columns available in `fields`.')
 
         # derive union index
-        col_reference = {}
+        col_reference: tp.Dict[TLabel, tp.Any] = {}
         for col in cols: # produce a column that has a value for all observed keys
             col_reference.update(col)
 
@@ -1409,7 +1409,7 @@ class Frame(ContainerOperand):
                     fv = get_col_fill_value(col_idx, None)
                 else:
                     fv = fill_value
-                # for som e dtypes can use an np.fromiter constructor
+
                 values = []
                 for key in col_reference:
                     values.append(col_dict.get(key, fv))
