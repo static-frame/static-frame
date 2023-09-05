@@ -30,6 +30,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_selector import InterfaceGetItemILoc
 from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
@@ -253,8 +254,8 @@ class Yarn(ContainerBase, StoreClientMixin):
         return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc['Yarn']:
-        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterfaceGetItemILoc['Yarn']:
+        return InterfaceGetItemILoc(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Yarn']:

@@ -46,6 +46,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
+from static_frame.core.node_selector import InterfaceGetItemILoc
 from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_str import InterfaceString
@@ -1156,8 +1157,8 @@ class IndexHierarchy(IndexBase):
         return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self: IH) -> InterfaceGetItemLoc['IndexHierarchy']:
-        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
+    def iloc(self: IH) -> InterfaceGetItemILoc['IndexHierarchy']:
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     def _iter_label(self: IH,
             depth_level: TDepthLevelSpecifier = None,

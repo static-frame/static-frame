@@ -34,6 +34,7 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_selector import InterfaceGetItemILocCompound
 from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -54,6 +55,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
@@ -951,9 +953,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels
-        axis_map_sub = self._axis_hierarchy.iloc[sel_key]
+        axis_map_sub = self._axis_hierarchy.iloc[sel_key] # type: ignore
         if isinstance(axis_map_sub, tuple): # type: ignore
-            bus_keys = (axis_map_sub[0],) #type: ignore
+            bus_keys = (axis_map_sub[0],) # type: ignore
         else:
             bus_keys = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
 
@@ -988,8 +990,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         return concat_resolved(parts, axis=self._axis)
 
     def _extract(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> tp.Union[Frame, Series]:
         '''
         Extract Container based on iloc selection.
@@ -1025,6 +1027,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         parts: tp.List[tp.Any] = []
         frame_labels: tp.Iterable[TLabel]
+        opposite_key: TILocSelector
+        sel_key: TILocSelector
 
         if self._axis == 0:
             sel_key = row_key
@@ -1040,8 +1044,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): #type: ignore
-            frame_labels = (axis_map_sub[0],) #type: ignore
+        if isinstance(axis_map_sub, tuple): # type: ignore
+            frame_labels = (axis_map_sub[0],) # type: ignore
         else:
             # get the outer level, or just the unique frame labels needed
             frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
@@ -1052,7 +1056,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key].iloc[sel_component, opposite_key]
+                component = self._bus.loc[key].iloc[sel_component, opposite_key] # type: ignore
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1061,7 +1065,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
-                component = self._bus.loc[key].iloc[opposite_key, sel_component]
+                component = self._bus.loc[key].iloc[opposite_key, sel_component] # type: ignore
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1129,7 +1133,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self._extract(row_key=key)
 
     def _compound_loc_to_iloc(self,
-            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
+            key: TLocSelectorCompound) -> tp.Tuple[TILocSelector, TILocSelector]:
         '''
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
@@ -1149,7 +1153,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self._extract(*self._compound_loc_to_iloc(key))
 
     def _compound_loc_to_getitem_iloc(self,
-            key: TLocSelectorCompound) -> tp.Tuple[TLocSelector, TLocSelector]:
+            key: TLocSelectorCompound) -> tp.Tuple[TILocSelector, TILocSelector]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
@@ -1174,8 +1178,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         return InterfaceGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLocCompound[Frame | Series]:
-        return InterfaceGetItemLocCompound(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemILocCompound[Frame | Series]:
+        return InterfaceGetItemILocCompound(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators
