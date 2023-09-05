@@ -1,7 +1,6 @@
 import typing as tp
 
 import static_frame as sf
-from static_frame.core.util import TLabel
 
 def test_frame_from_dict() -> None:
 

@@ -278,7 +278,7 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[TLabel, tp.Any],
+            mapping: tp.Mapping[tp.Any, tp.Any],
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,

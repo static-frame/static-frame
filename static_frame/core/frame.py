@@ -1004,7 +1004,7 @@ class Frame(ContainerOperand):
             rows_to_iter = True
 
         # derive union columns
-        row_reference = {}
+        row_reference: tp.Dict[TLabel, tp.Any] = {}
         for row in rows: # produce a row that has a value for all observed keys
             row_reference.update(row)
 
