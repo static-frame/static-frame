@@ -13,6 +13,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
@@ -25,7 +26,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -74,7 +75,7 @@ class StoreHDF5(Store):
 
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
@@ -137,7 +138,7 @@ class StoreHDF5(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
         '''
         Iterator of labels.
         '''

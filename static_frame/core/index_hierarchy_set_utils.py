@@ -15,6 +15,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_UINT_DEFAULT
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
+from static_frame.core.util import TLabel
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import ufunc_unique1d
@@ -29,7 +30,7 @@ class ValidationResult(tp.NamedTuple):
     depth: int
     any_dropped: bool
     any_shallow_copies: bool
-    name: tp.Hashable
+    name: TLabel
     index_constructors: tp.List[IndexConstructor]
 
 
@@ -48,10 +49,10 @@ def _validate_and_process_indices(
     any_dropped = False
     any_shallow_copies = False
 
-    name: tp.Hashable = indices[0].name
+    name: TLabel = indices[0].name
     index_constructors = list(indices[0]._index_constructors)
 
-    unique_signatures: tp.Set[tp.Hashable] = set()
+    unique_signatures: tp.Set[TLabel] = set()
     unique_non_empty_indices: tp.List[IndexHierarchy] = []
 
     depth: tp.Optional[int] = None
@@ -109,7 +110,7 @@ def get_encoding_invariants(indices: tp.List[Index]
 
 def get_empty(
         index_constructors: tp.List[IndexConstructor],
-        name: tp.Hashable,
+        name: TLabel,
         ) -> IndexHierarchy:
     return IndexHierarchy._from_empty(
             (),

@@ -17,12 +17,13 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TLabel
 from static_frame.core.util import iterable_to_array_1d
 
 
 class IndexConstructorFactoryBase:
     def __call__(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
@@ -40,7 +41,7 @@ class IndexDefaultConstructorFactory(IndexConstructorFactoryBase):
         self._name = name
 
     def __call__(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
@@ -60,7 +61,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
         self._name = name
 
     @staticmethod
-    def to_index(labels: tp.Iterable[tp.Hashable],
+    def to_index(labels: tp.Iterable[TLabel],
             *,
             default_constructor: tp.Type[IndexBase],
             name: NameType = None,
@@ -78,7 +79,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
                 dtype=labels.dtype)(labels, name=name) #type: ignore
 
     def __call__(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             name: NameType = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase] = Index,

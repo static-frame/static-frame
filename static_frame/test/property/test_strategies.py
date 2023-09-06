@@ -9,6 +9,7 @@ from static_frame import Index
 from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import TypeBlocks
+from static_frame.core.util import TLabel
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 
@@ -16,7 +17,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
     @given(sfst.get_labels())
-    def test_get_labels(self, values: tp.Iterable[tp.Hashable]) -> None:
+    def test_get_labels(self, values: tp.Iterable[TLabel]) -> None:
         for value in values:
             self.assertTrue(isinstance(hash(value), int))
 

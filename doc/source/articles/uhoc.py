@@ -6,6 +6,7 @@ import typing as tp
 import numpy as np
 
 import static_frame as sf
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import Timer
 
 # def func_b(frame: Frame) -> Frame:
@@ -61,7 +62,7 @@ from static_frame.test.test_case import Timer
 
 def bus_batch_streaming() -> None:
 
-    TypeIterFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, sf.Frame]]
+    TypeIterFrameItems = tp.Iterator[tp.Tuple[TLabel, sf.Frame]]
 
     # do a bunch of processing on large Frames while maintaining single frame overhead
 
@@ -95,7 +96,7 @@ def bus_batch_streaming() -> None:
 
     # a function that reads through the derived data and produces single in-memory result
     def derive_characteristic(bus: sf.Bus) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, float]]:
             for label in bus.keys():
                 f = bus[label]
                 yield label, f.mean().mean()
@@ -127,7 +128,7 @@ def bus_batch_streaming() -> None:
             yield label, f_post
 
     def derive_characteristic_alt(items: TypeIterFrameItems) -> sf.Series:
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, float]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, float]]:
             for label, f in items:
                 yield label, f.mean().mean()
         return sf.Series.from_items(gen())

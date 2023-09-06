@@ -24,6 +24,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -301,8 +302,8 @@ class TestCase(unittest.TestCase):
             self.assertEqualWithNaN(v1, v2)
 
     def assertAlmostEqualItems(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
+            pairs2: tp.Iterable[tp.Tuple[TLabel, tp.Any]]) -> None:
 
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
@@ -314,8 +315,8 @@ class TestCase(unittest.TestCase):
 
 
     def assertAlmostEqualFramePairs(self,
-            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
-            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]]) -> None:
+            pairs1: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            pairs2: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]]) -> None:
         '''
         For comparing nested tuples returned by Frame.to_pairs()
         '''

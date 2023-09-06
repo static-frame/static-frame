@@ -30,19 +30,21 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemILoc
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import is_callable_or_mapping
 
 if tp.TYPE_CHECKING:
@@ -211,7 +213,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             b.unpersist()
 
     #---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the :obj:`Yarn` index.
 
@@ -248,12 +250,12 @@ class Yarn(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_loc) # type: ignore
+    def loc(self) -> InterfaceGetItemLoc['Yarn']:
+        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem['Yarn']:
-        return InterfaceGetItem(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterfaceGetItemILoc['Yarn']:
+        return InterfaceGetItemILoc(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio['Yarn']:
@@ -361,7 +363,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -370,7 +372,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -379,7 +381,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''
         return self._index.__contains__(value)
 
-    def get(self, key: tp.Hashable,
+    def get(self, key: TLabel,
             default: tp.Any = None,
             ) -> tp.Any:
         '''
@@ -392,7 +394,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             return default
         return self.__getitem__(key)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
@@ -503,7 +505,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: IntegerLocType) -> Yarn | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> Yarn | Frame:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -549,14 +551,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> Yarn | Frame:
+    def _extract_loc(self, key: TLocSelector) -> Yarn | Frame:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> Yarn | Frame:
+    def __getitem__(self, key: TLocSelector) -> Yarn | Frame:
         '''Selector of values by label.
 
         Args:
@@ -567,19 +569,19 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Yarn':
+    def _drop_iloc(self, key: TILocSelector) -> 'Yarn':
         invalid = np.full(len(self._index), True)
         invalid[key] = False
         return self._extract_iloc(invalid) # type: ignore
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'Yarn':
+    def _drop_loc(self, key: TLocSelector) -> 'Yarn':
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -767,7 +769,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @doc_inject(selector='relabel_level_add', class_name='Yarn')
     def relabel_level_add(self,
-            level: tp.Hashable
+            level: TLabel
             ) -> 'Yarn':
         '''
         {doc}

@@ -17,7 +17,8 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
@@ -90,12 +91,12 @@ class InterfaceString(Interface[TContainer]):
             blocks: BlocksType,
             blocks_to_container: ToContainerType[TContainer],
             ndim: int,
-            labels: tp.Sequence[tp.Hashable] | IndexBase,
+            labels: tp.Sequence[TLabel] | IndexBase,
             ) -> None:
         self._blocks: BlocksType = blocks
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
         self._ndim: int = ndim
-        self._labels: tp.Sequence[tp.Hashable] | IndexBase = labels
+        self._labels: tp.Sequence[TLabel] | IndexBase = labels
 
     #---------------------------------------------------------------------------
 
@@ -165,7 +166,7 @@ class InterfaceString(Interface[TContainer]):
 
 
     #---------------------------------------------------------------------------
-    def __getitem__(self,  key: GetItemKeyType) -> TContainer:
+    def __getitem__(self,  key: TLocSelector) -> TContainer:
         '''
         Return a container with the provided selection or slice of each element.
         '''
@@ -622,7 +623,7 @@ class InterfaceBatchString(InterfaceBatch):
         self._batch_apply = batch_apply
 
     #---------------------------------------------------------------------------
-    def __getitem__(self,  key: GetItemKeyType) -> 'Batch':
+    def __getitem__(self,  key: TLocSelector) -> 'Batch':
         '''
         Return a container with the provided selection or slice of each element.
         '''

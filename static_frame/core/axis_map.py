@@ -15,6 +15,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TreeNodeT
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
@@ -48,7 +49,7 @@ def _bus_to_hierarchy_inner_hierarchies(
     '''
     opposite: tp.Optional[IndexBase] = None
 
-    def level_add(pair: tp.Tuple[tp.Hashable, Frame]) -> IndexHierarchy:
+    def level_add(pair: tp.Tuple[TLabel, Frame]) -> IndexHierarchy:
         nonlocal opposite
         label, frame = pair
 
@@ -125,7 +126,7 @@ def bus_to_hierarchy(
 
 def buses_to_hierarchy(
         buses: tp.Iterable[Bus],
-        labels: tp.Iterable[tp.Hashable],
+        labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
         ) -> IndexHierarchy:

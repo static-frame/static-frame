@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.6.3
+-----------
+
+Added ``label_missing_skips`` to all ``iter_window`` and related interfaces.
+
+
 1.6.2
 -----------
 
@@ -1214,9 +1220,9 @@ API change: ``Series.relabel_add_level`` to ``Series.relabel_level_add``, ``Seri
 0.6.38
 ----------
 
-``Frame.dtype`` interface now takes ``DtypesSpecifier``, permitting setting ``dtype`` by mapping, iterable, or single value.
+``Frame.dtype`` interface now takes ``TDtypesSpecifier``, permitting setting ``dtype`` by mapping, iterable, or single value.
 
-``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying ``dtype`` of all columns.
+``dtypes`` can be given as a single ``TDtypeSpecifier`` for specifying ``dtype`` of all columns.
 
 ``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
 

@@ -12,6 +12,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
@@ -259,7 +260,7 @@ class TestUnit(TestCase):
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
-            config_map_read: tp.Dict[tp.Hashable, StoreConfig] = {}
+            config_map_read: tp.Dict[TLabel, StoreConfig] = {}
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
                 c = StoreConfig(

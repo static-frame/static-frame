@@ -29,6 +29,7 @@ from static_frame.core.display import DisplayTypeInt
 from static_frame.core.display import terminal_ansi
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import DisplayFormatLaTeX
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
@@ -870,8 +871,8 @@ class TestUnit(TestCase):
         #     index=index, columns=columns)
 
         from itertools import product
-        index: tp.Iterable[tp.Hashable] = (0x2210, 0x2330)
-        columns: tp.Iterable[tp.Hashable] = (0x1, 0xe)
+        index: tp.Iterable[TLabel] = (0x2210, 0x2330)
+        columns: tp.Iterable[TLabel] = (0x1, 0xe)
         f = sf.Frame.from_element_items(
                 ((x, chr(sum(x))) for x in product(index, columns)),  # type: ignore  # Should probably open a typeshed issue for this.
                 index=index,

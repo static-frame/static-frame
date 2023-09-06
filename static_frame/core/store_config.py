@@ -5,9 +5,10 @@ import typing as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexConstructors
+from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDtypesSpecifier
+from static_frame.core.util import TLabel
 
 #-------------------------------------------------------------------------------
 
@@ -17,13 +18,13 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     '''
 
     index_depth: int
-    index_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    index_name_depth_level: tp.Optional[TDepthLevel]
     index_constructors: IndexConstructors
     columns_depth: int
-    columns_name_depth_level: tp.Optional[DepthLevelSpecifier]
+    columns_name_depth_level: tp.Optional[TDepthLevel]
     columns_constructors: IndexConstructors
     columns_select: tp.Optional[tp.Iterable[str]]
-    dtypes: DtypesSpecifier
+    dtypes: TDtypesSpecifier
     consolidate_blocks: bool
     skip_header: int
     skip_footer: int
@@ -69,13 +70,13 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     def __init__(self, *,
             # constructors
             index_depth: int = 0, # this default does not permit round trip
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            dtypes: DtypesSpecifier = None,
+            dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # not used by all constructors
             skip_header: int = 0,
@@ -146,13 +147,13 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         return not self.__eq__(other)
 
     @staticmethod
-    def _hash_depth_specifier(depth_specifier: tp.Optional[DepthLevelSpecifier]) -> tp.Hashable:
+    def _hash_depth_specifier(depth_specifier: tp.Optional[TDepthLevel]) -> TLabel:
         if depth_specifier is None or isinstance(depth_specifier, int):
             return depth_specifier
         return tuple(depth_specifier)
 
     @staticmethod
-    def _hash_dtypes_specifier(dtypes_specifier: DtypesSpecifier) -> tp.Hashable:
+    def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> TLabel:
         if dtypes_specifier is None :
             return dtypes_specifier
         if isinstance(dtypes_specifier, dict):
@@ -194,8 +195,8 @@ class StoreConfig(StoreConfigHE):
     '''
     A read-only container of parameters used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
     '''
-    label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]]
-    label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]]
+    label_encoder: tp.Optional[tp.Callable[[TLabel], str]]
+    label_decoder: tp.Optional[tp.Callable[[str], TLabel]]
 
     __slots__ = (
             'label_encoder',
@@ -221,13 +222,13 @@ class StoreConfig(StoreConfigHE):
 
     def __init__(self, *,
             index_depth: int = 0,
-            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            index_name_depth_level: tp.Optional[TDepthLevel] = None,
             index_constructors: IndexConstructors = None,
             columns_depth: int = 1,
-            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: IndexConstructors = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            dtypes: DtypesSpecifier = None,
+            dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -237,8 +238,8 @@ class StoreConfig(StoreConfigHE):
             include_columns: bool = True,
             include_columns_name: bool = False,
             merge_hierarchical_labels: bool = True,
-            label_encoder: tp.Optional[tp.Callable[[tp.Hashable], str]] = None,
-            label_decoder: tp.Optional[tp.Callable[[str], tp.Hashable]] = None,
+            label_encoder: tp.Optional[tp.Callable[[TLabel], str]] = None,
+            label_decoder: tp.Optional[tp.Callable[[str], TLabel]] = None,
             read_max_workers: tp.Optional[int] = None,
             read_chunksize: int = 1,
             write_max_workers: tp.Optional[int] = None,
@@ -272,14 +273,14 @@ class StoreConfig(StoreConfigHE):
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
 
-    def label_encode(self, label: tp.Hashable) -> str:
+    def label_encode(self, label: TLabel) -> str:
         if self.label_encoder:
             label = self.label_encoder(label)
         if not isinstance(label, str):
             raise RuntimeError(f'Store label {label} is not a string; provide a label_encoder to StoreConfig')
         return label
 
-    def label_decode(self, label: str) -> tp.Hashable:
+    def label_decode(self, label: str) -> TLabel:
         if self.label_decoder:
             return self.label_decoder(label)
         return label
@@ -390,7 +391,7 @@ class StoreConfigMap:
 
                 self._map[label] = config
 
-    def __getitem__(self, key: tp.Optional[tp.Hashable]) -> StoreConfig:
+    def __getitem__(self, key: tp.Optional[TLabel]) -> StoreConfig:
         return self._map.get(key, self._default)
 
     @property

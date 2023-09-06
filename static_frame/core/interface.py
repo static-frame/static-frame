@@ -68,9 +68,11 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemILoc
+from static_frame.core.node_selector import InterfaceGetItemILocCompound
+from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -857,7 +859,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
-        For root __getitem__ methods, as well as __getitem__ on InterfaceGetItem objects.
+        For root __getitem__ methods, as well as __getitem__ on InterfaceGetItemLoc objects.
         '''
         if name != Features.GETITEM:
             target = obj.__getitem__ #type: ignore
@@ -1199,7 +1201,13 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_exporter(**kwargs)
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
-            elif isinstance(obj, (InterfaceGetItem, InterfaceGetItemCompound, InterfaceGetItemBLoc)) or name == cls.GETITEM:
+            elif isinstance(obj, (
+                    InterfaceGetItemLoc,
+                    InterfaceGetItemLocCompound,
+                    InterfaceGetItemILoc,
+                    InterfaceGetItemILocCompound,
+                    InterfaceGetItemBLoc,
+                    )) or name == cls.GETITEM:
                 yield from InterfaceRecord.gen_from_getitem(**kwargs)
 
             elif obj.__class__ in INTERFACE_ATTRIBUTE_CLS:
