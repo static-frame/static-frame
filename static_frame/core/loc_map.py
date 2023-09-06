@@ -30,15 +30,16 @@ from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import IntegerLocType
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[tp.Hashable], tp.Hashable], ...]]
+HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
 _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
@@ -53,7 +54,7 @@ class LocMap:
 
     @staticmethod
     def map_slice_args(
-            label_to_pos: tp.Callable[[tp.Iterable[tp.Hashable]], int],
+            label_to_pos: tp.Callable[[tp.Iterable[TLabel]], int],
             key: slice,
             labels: tp.Optional[NDArrayAny] = None,
             ) -> tp.Iterator[tp.Union[int, None]]:
@@ -126,9 +127,9 @@ class LocMap:
             label_to_pos: FrozenAutoMap,
             labels: NDArrayAny,
             positions: NDArrayAny,
-            key: GetItemKeyType,
+            key: TLocSelector,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 

@@ -10,6 +10,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
@@ -204,7 +205,7 @@ class TestUnit(TestCase):
             labels = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), labels)
 
-            config_map_read: tp.Dict[tp.Hashable, StoreConfig] = {}
+            config_map_read: tp.Dict[TLabel, StoreConfig] = {}
             for i, name in enumerate(labels):
                 f_src = frames[i]
                 c = StoreConfig(

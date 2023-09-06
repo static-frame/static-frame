@@ -31,6 +31,7 @@ from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TLabel
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
@@ -599,7 +600,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def index_encode(
             *,
-            metadata: tp.Dict[str, tp.Hashable],
+            metadata: tp.Dict[str, TLabel],
             archive: Archive,
             index: 'IndexBase',
             key_template_values: str,
@@ -624,7 +625,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def array_encode(
             *,
-            metadata: tp.Dict[str, tp.Hashable],
+            metadata: tp.Dict[str, TLabel],
             archive: Archive,
             array: NDArrayAny,
             key_template_values: str,

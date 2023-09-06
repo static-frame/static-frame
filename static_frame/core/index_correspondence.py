@@ -5,8 +5,8 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
@@ -32,8 +32,8 @@ class IndexCorrespondence:
 
     has_common: bool
     is_subset: bool
-    iloc_src: GetItemKeyType
-    iloc_dst: GetItemKeyType
+    iloc_src: TILocSelector
+    iloc_dst: TILocSelector
     size: int
 
     @classmethod
@@ -84,7 +84,7 @@ class IndexCorrespondence:
             has_common = False
 
         size = len(dst_index.values)
-        iloc_dst: GetItemKeyType
+        iloc_dst: TILocSelector
 
         # either a reordering or a subset
         if has_common:
@@ -127,8 +127,8 @@ class IndexCorrespondence:
     def __init__(self,
             has_common: bool,
             is_subset: bool,
-            iloc_src: GetItemKeyType,
-            iloc_dst: GetItemKeyType,
+            iloc_src: TILocSelector,
+            iloc_dst: TILocSelector,
             size: int) -> None:
         '''
         Args:

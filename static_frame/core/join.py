@@ -15,12 +15,13 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
 from static_frame.core.util import PairRight
+from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
@@ -32,10 +33,10 @@ def join(frame: 'Frame',
         other: 'Frame', # support a named Series as a 1D frame?
         *,
         join_type: Join, # intersect, left, right, union,
-        left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-        left_columns: GetItemKeyType = None,
-        right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-        right_columns: GetItemKeyType = None,
+        left_depth_level: tp.Optional[TDepthLevel] = None,
+        left_columns: TLocSelector = None,
+        right_depth_level: tp.Optional[TDepthLevel] = None,
+        right_columns: TLocSelector = None,
         left_template: str = '{}',
         right_template: str = '{}',
         fill_value: tp.Any = np.nan,
@@ -46,7 +47,7 @@ def join(frame: 'Frame',
 
     # NOTE: pre 1.0 these were optional parameters; now, we always return the data without an index; in the future, we might add back parameters to control how and if an index is returned
     # composite_index: bool = True,
-    composite_index_fill_value: tp.Hashable = None
+    composite_index_fill_value: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -106,8 +107,8 @@ def join(frame: 'Frame',
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
 
-    left_loc_set: tp.Set[tp.Hashable] = set() # all left loc labels that match
-    right_loc_set: tp.Set[tp.Hashable] = set() # all right loc labels that match
+    left_loc_set: tp.Set[TLabel] = set() # all left loc labels that match
+    right_loc_set: tp.Set[TLabel] = set() # all right loc labels that match
     many_loc: tp.List[Pair] = []
 
     cifv = composite_index_fill_value
@@ -192,12 +193,12 @@ def join(frame: 'Frame',
         return final.to_frame().relabel(IndexAutoFactory)
 
     # From here, is_many is True
-    row_key = []
+    row_key: tp.List[int]  = []
     final_index_left = []
     for p in final_index:
         if p.__class__ is Pair: # in both
             iloc = left_index._loc_to_iloc(p[0]) #type: ignore
-            row_key.append(iloc)
+            row_key.append(iloc) #type: ignore
             final_index_left.append(p)
         elif p.__class__ is PairLeft:
             row_key.append(left_index._loc_to_iloc(p[0])) #type: ignore
@@ -252,15 +253,15 @@ def join(frame: 'Frame',
 #         right: 'Frame', # support a named Series as a 1D frame?
 #         *,
 #         # join_type: Join, # intersect, left, right, union,
-#         left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         left_columns: GetItemKeyType = None,
-#         right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
-#         right_columns: GetItemKeyType = None,
+#         left_depth_level: tp.Optional[TDepthLevel] = None,
+#         left_columns: TLocSelector = None,
+#         right_depth_level: tp.Optional[TDepthLevel] = None,
+#         right_columns: TLocSelector = None,
 #         left_template: str = '{}',
 #         right_template: str = '{}',
 #         fill_value: tp.Any = np.nan,
 #         composite_index: bool = True,
-#         composite_index_fill_value: tp.Hashable = None,
+#         composite_index_fill_value: TLabel = None,
 #         ) -> 'Frame':
 
 #     from static_frame.core.frame import Frame

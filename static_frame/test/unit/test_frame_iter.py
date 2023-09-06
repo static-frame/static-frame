@@ -15,6 +15,7 @@ from static_frame import IndexYear
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 
 nan = np.nan
@@ -1332,7 +1333,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(s2.items()),
                 [('w', 3), ('x', 64), ('y', 149), ('z', 138)])
 
-        def sum_if(idx: tp.Hashable, vals: tp.Iterable[int]) -> tp.Optional[int]:
+        def sum_if(idx: TLabel, vals: tp.Iterable[int]) -> tp.Optional[int]:
             if idx in ('x', 'z'):
                 return np.sum(vals) # type: ignore
             return None

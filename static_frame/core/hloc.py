@@ -3,13 +3,13 @@ from __future__ import annotations
 import typing as tp
 
 from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import key_to_str
 
 
 class HLocMeta(type):
 
-    def __getitem__(cls, key: GetItemKeyType) -> 'HLoc':
+    def __getitem__(cls, key: TLocSelector) -> 'HLoc':
         if not isinstance(key, tuple) or key is EMPTY_TUPLE:
             key = (key,)
         return cls(key) #type: ignore [no-any-return]
@@ -26,10 +26,10 @@ class HLoc(metaclass=HLocMeta):
             'key',
             )
 
-    def __init__(self, key: tp.Tuple[GetItemKeyType]) -> None:
+    def __init__(self, key: tp.Tuple[TLocSelector]) -> None:
         self.key = key
 
-    def __iter__(self) -> tp.Iterator[GetItemKeyType]:
+    def __iter__(self) -> tp.Iterator[TLocSelector]:
         return self.key.__iter__()
 
     def __len__(self) -> int:

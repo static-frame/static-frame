@@ -29,10 +29,12 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import DateInitializer
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import YearInitializer
 from static_frame.core.util import YearMonthInitializer
@@ -143,10 +145,10 @@ class IndexDatetime(Index):
         return result
 
     def _loc_to_iloc(self,  # type: ignore
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key,
             partial_selection: bool = False,
-            ) -> GetItemKeyType:
+            ) -> TILocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
@@ -195,7 +197,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def append(self, value: tp.Hashable) -> None:
+    def append(self, value: TLabel) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         value = to_datetime64(value, self._DTYPE) # type: ignore
@@ -222,7 +224,7 @@ class IndexYear(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None) -> I:
+            name: tp.Optional[TLabel] = None) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
@@ -240,7 +242,7 @@ class IndexYear(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
@@ -261,7 +263,7 @@ class IndexYear(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
@@ -288,10 +290,10 @@ class IndexYear(IndexDatetime):
 
 
     def _loc_to_iloc(self,  # type: ignore
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = key_to_datetime_key_year,
             partial_selection: bool = False,
-            ) -> GetItemKeyType:
+            ) -> TILocSelector:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
@@ -333,7 +335,7 @@ class IndexYearMonth(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
@@ -353,7 +355,7 @@ class IndexYearMonth(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
@@ -374,7 +376,7 @@ class IndexYearMonth(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
@@ -416,7 +418,7 @@ class IndexDate(IndexDatetime):
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
@@ -434,7 +436,7 @@ class IndexDate(IndexDatetime):
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None) -> I:
+            name: tp.Optional[TLabel] = None) -> I:
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
@@ -452,7 +454,7 @@ class IndexDate(IndexDatetime):
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: tp.Optional[TLabel] = None
             ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.

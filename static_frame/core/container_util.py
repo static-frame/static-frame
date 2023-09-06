@@ -35,18 +35,19 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TDtypesSpecifier
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import WarningsSilent
@@ -151,12 +152,12 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
             or not hasattr(value, '__getitem__'))
 
 def get_col_dtype_factory(
-        dtypes: DtypesSpecifier,
-        columns: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase],
+        dtypes: TDtypesSpecifier,
+        columns: tp.Optional[tp.Sequence[TLabel] | IndexBase],
         index_depth: int = 0,
-        ) -> tp.Callable[[int], DtypeSpecifier]:
+        ) -> tp.Callable[[int], TDtypeSpecifier]:
     '''
-    Return a function, or None, to get values from a DtypeSpecifier by integer column positions.
+    Return a function, or None, to get values from a TDtypeSpecifier by integer column positions.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
@@ -182,7 +183,7 @@ def get_col_dtype_factory(
         if is_frozen_generator_input(dtypes):
             dtypes = FrozenGenerator(dtypes) #type: ignore
 
-    def get_col_dtype(col_idx: int) -> DtypeSpecifier:
+    def get_col_dtype(col_idx: int) -> TDtypeSpecifier:
         if is_map:
             col_idx = col_idx - index_depth
             if col_idx < 0:
@@ -191,7 +192,7 @@ def get_col_dtype_factory(
             return dtypes  # type: ignore
         if is_map:
             # if no columns, assume mapping is an integer mapping
-            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            key: TLabel = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
                 dt = dtypes[key] #type: ignore
             except KeyError:
@@ -206,7 +207,7 @@ def get_col_dtype_factory(
 
 def get_col_fill_value_factory(
         fill_value: tp.Any,
-        columns: tp.Optional[tp.Sequence[tp.Hashable]] | IndexBase,
+        columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
         ) -> tp.Callable[[int, DtypeAny | None], tp.Any]:
     '''
     Return a function to get fill_vlaue.
@@ -252,7 +253,7 @@ def get_col_fill_value_factory(
         if is_element:
             return fill_value
         if is_map:
-            key: tp.Hashable = columns[col_idx] if columns is not None else col_idx
+            key: TLabel = columns[col_idx] if columns is not None else col_idx
             try: # try lookup for defaultdict support
                 return fill_value[key]
             except KeyError:
@@ -267,7 +268,7 @@ def get_col_fill_value_factory(
 
 def get_col_format_factory(
         format: tp.Any,
-        fields: tp.Optional[tp.Sequence[tp.Hashable] | IndexBase] = None,
+        fields: tp.Optional[tp.Sequence[TLabel] | IndexBase] = None,
         ) -> tp.Callable[[int], str]:
     '''
     Return a function to get string format, used in InterfaceString.
@@ -295,7 +296,7 @@ def get_col_format_factory(
         if is_element:
             return format # type: ignore
         if is_map:
-            key: tp.Hashable = fields[col_idx] if fields is not None else col_idx
+            key: TLabel = fields[col_idx] if fields is not None else col_idx
             try: # try lookup for defaultdict support
                 return format[key] #type: ignore
             except KeyError:
@@ -426,7 +427,7 @@ def pandas_to_numpy(
 def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
         pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[NDArrayAny]:
@@ -513,7 +514,7 @@ def constructor_from_optional_constructor(
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
-            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[TLabel]],
             ) -> 'IndexBase':
         return index_from_optional_constructor(value,
                 default_constructor=default_constructor,
@@ -572,7 +573,7 @@ def constructor_from_optional_constructors(
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
     def func(
-            value: tp.Union[NDArrayAny, tp.Iterable[tp.Hashable]],
+            value: tp.Union[NDArrayAny, tp.Iterable[TLabel]],
             ) -> tp.Optional['IndexBase']:
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
@@ -823,7 +824,7 @@ def axis_window_items( *,
         size_increment: int = 0,
         as_array: bool = False,
         derive_label: bool = True,
-        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        ) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
     '''Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
     Args:
@@ -994,7 +995,7 @@ def bloc_key_normalize(
     return bloc_key
 
 
-def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
+def key_to_ascending_key(key: TLocSelector, size: int) -> TLocSelector:
     '''
     Normalize all types of keys into an ascending formation.
 
@@ -1021,7 +1022,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
         return key
 
     if isinstance(key, list):
-        return sorted(key)
+        return sorted(key) # type: ignore
 
     if isinstance(key, Series):
         return key.sort_index()
@@ -1055,7 +1056,7 @@ def rehierarch_from_type_blocks(*,
     labels_sort = np.full(labels_post.shape, 0)
 
     # get ordering of values found in each level
-    order: tp.List[tp.Dict[tp.Hashable, int]] = [defaultdict(int) for _ in range(depth)]
+    order: tp.List[tp.Dict[TLabel, int]] = [defaultdict(int) for _ in range(depth)]
 
     for (idx_row, idx_col), label in labels.element_items():
         if label not in order[idx_col]:
@@ -1077,7 +1078,7 @@ def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
         index_constructors: IndexConstructors = None,
-        name: tp.Optional[tp.Hashable] = None,
+        name: tp.Optional[TLabel] = None,
         ) -> tp.Tuple['IndexBase', NDArrayAny]:
     '''
     Alternate interface that updates IndexHierarchy cache before rehierarch.
@@ -1102,10 +1103,10 @@ def rehierarch_from_index_hierarchy(*,
             ), index_iloc
 
 def array_from_value_iter(
-        key: tp.Hashable,
+        key: TLabel,
         idx: int,
-        get_value_iter: tp.Callable[[tp.Hashable, int], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable[[int], DtypeSpecifier]],
+        get_value_iter: tp.Callable[[TLabel, int], tp.Iterator[tp.Any]],
+        get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
         row_count: int,
         ) -> NDArrayAny:
     '''
@@ -1245,8 +1246,8 @@ def apply_binary_operator_blocks_columnar(*,
 
 def arrays_from_index_frame(
         container: 'Frame',
-        depth_level: tp.Optional[DepthLevelSpecifier],
-        columns: GetItemKeyType
+        depth_level: tp.Optional[TDepthLevel],
+        columns: TLocSelector
         ) -> tp.Iterator[NDArrayAny]:
     '''
     Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
@@ -1262,9 +1263,9 @@ def arrays_from_index_frame(
 
 def key_from_container_key(
         index: 'IndexBase',
-        key: GetItemKeyType,
+        key: TLocSelector,
         expand_iloc: bool = False,
-        ) -> GetItemKeyType:
+        ) -> TLocSelector:
     '''
     Unpack selection values from another Index, Series, or ILoc selection.
     '''
@@ -1410,7 +1411,7 @@ class IMTOAdapter:
         return len(self.values)
 
 def imto_adapter_factory(
-        source: tp.Union['IndexBase', NDArrayAny, tp.Iterable[tp.Hashable]],
+        source: tp.Union['IndexBase', NDArrayAny, tp.Iterable[TLabel]],
         depth: int,
         name: NameType,
         ndim: int,
@@ -1632,8 +1633,8 @@ def index_many_concat(
 
 #-------------------------------------------------------------------------------
 def apex_to_name(
-        rows: tp.Sequence[tp.Sequence[tp.Hashable]],
-        depth_level: tp.Optional[DepthLevelSpecifier],
+        rows: tp.Sequence[tp.Sequence[TLabel]],
+        depth_level: tp.Optional[TDepthLevel],
         axis: int, # 0 is by row (for index), 1 is by column (for columns)
         axis_depth: int,
         ) -> NameType:
@@ -1653,7 +1654,7 @@ def apex_to_name(
             targets = [rows[level] for level in depth_level]
             # combine into tuples
             if axis_depth == 1:
-                return next(zip(*targets))
+                return next(zip(*targets)) # type: ignore
             else:
                 return tuple(zip(*targets))
     elif axis == 1:

@@ -37,7 +37,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
@@ -54,16 +54,17 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples
@@ -98,7 +99,7 @@ I = tp.TypeVar('I', bound='Index')
 class ILocMeta(type):
 
     def __getitem__(cls,
-            key: GetItemKeyType
+            key: TLocSelector
             ) -> 'ILoc':
         return cls(key) #type: ignore
 
@@ -112,7 +113,7 @@ class ILoc(metaclass=ILocMeta):
             'key',
             )
 
-    def __init__(self, key: GetItemKeyType):
+    def __init__(self, key: TLocSelector):
         self.key = key
 
     def __repr__(self) -> str:
@@ -189,8 +190,8 @@ class Index(IndexBase):
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
-            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
-            labels: tp.Iterable[tp.Hashable],
+            mapping: tp.Optional[tp.Dict[TLabel, int]],
+            labels: tp.Iterable[TLabel],
             dtype: tp.Optional[DtypeAny] = None
             ) -> NDArrayAny:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
@@ -239,7 +240,7 @@ class Index(IndexBase):
 
     @classmethod
     def from_labels(cls: tp.Type[I],
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
             name: NameType = None
             ) -> I:
@@ -272,7 +273,7 @@ class Index(IndexBase):
             *,
             loc_is_iloc: bool = False,
             name: NameType = NAME_DEFAULT,
-            dtype: DtypeSpecifier = None,
+            dtype: TDtypeSpecifier = None,
             ) -> None:
         '''Initializer.
 
@@ -434,23 +435,23 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc) #type: ignore
+    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
+        return InterfaceGetItemLoc(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     def _iter_label(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None
-            ) -> tp.Iterator[tp.Hashable]:
+            depth_level: tp.Optional[TDepthLevel] = None
+            ) -> tp.Iterator[TLabel]:
         yield from self._labels
 
     def _iter_label_items(self,
-            depth_level: tp.Optional[DepthLevelSpecifier] = None
-            ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
+            depth_level: tp.Optional[TDepthLevel] = None
+            ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         yield from zip(self._positions, self._labels)
 
     @property
@@ -537,7 +538,7 @@ class Index(IndexBase):
         return self._labels.nbytes
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
+    def _drop_iloc(self, key: TILocSelector) -> 'Index':
         '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
@@ -550,16 +551,16 @@ class Index(IndexBase):
         elif key.__class__ is np.ndarray and key.dtype == bool: #type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(self._labels, self._positions[key], axis=0) # type: ignore
+            labels = np.delete(self._labels, self._positions[key], axis=0)
             labels.flags.writeable = False
         else:
-            labels = np.delete(self._labels, key, axis=0) # type: ignore
+            labels = np.delete(self._labels, key, axis=0)
             labels.flags.writeable = False
 
         # from labels will work with both Index and IndexHierarchy
         return self.__class__.from_labels(labels, name=self._name)
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_loc(self, key: TLocSelector) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -574,7 +575,7 @@ class Index(IndexBase):
 
 
     # @doc_inject(select='astype')
-    def astype(self, dtype: DtypeSpecifier) -> 'Index':
+    def astype(self, dtype: TDtypeSpecifier) -> 'Index':
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 
@@ -776,7 +777,7 @@ class Index(IndexBase):
         return indexer
 
     @staticmethod
-    def _depth_level_validate(depth_level: DepthLevelSpecifier) -> None:
+    def _depth_level_validate(depth_level: TDepthLevel) -> None:
         '''
         Handle all variety of depth_level specifications for a 1D index: only 0, -1, and lists of the same are valid.
         '''
@@ -790,7 +791,7 @@ class Index(IndexBase):
             raise RuntimeError('invalid depth_level', depth_level)
 
     def values_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: TDepthLevel = 0
             ) -> NDArrayAny:
         '''
         Return an NP array for the `depth_level` specified.
@@ -800,8 +801,8 @@ class Index(IndexBase):
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: DepthLevelSpecifier = 0
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            depth_level: TDepthLevel = 0
+            ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''{}'''
         self._depth_level_validate(depth_level)
         yield from zip_longest(self.values, (), fillvalue=1)
@@ -844,10 +845,10 @@ class Index(IndexBase):
     # extraction and selection
 
     def _loc_to_iloc(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
-            ) -> IntegerLocType:
+            ) -> TILocSelector:
         '''
         Args:
             key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
@@ -888,8 +889,8 @@ class Index(IndexBase):
                 )
 
     def loc_to_iloc(self,
-            key: GetItemKeyType,
-            ) -> IntegerLocType:
+            key: TLocSelector,
+            ) -> TILocSelector:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
         Args:
@@ -921,7 +922,7 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: IntegerLocType | None,
+            key: TILocSelector | None,
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -963,12 +964,12 @@ class Index(IndexBase):
         return self._labels[key]
 
     def _extract_loc(self: I,
-            key: GetItemKeyType
+            key: TLocSelector
             ) -> tp.Any:
         return self._extract_iloc(self._loc_to_iloc(key))
 
     def __getitem__(self,
-            key: IntegerLocType
+            key: TILocSelector
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -1085,14 +1086,14 @@ class Index(IndexBase):
     # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
 
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''Iterate over labels.
         '''
         if self._recache:
             self._update_array_cache()
         yield from self._labels.__iter__()
 
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the index labels.
         '''
@@ -1114,7 +1115,7 @@ class Index(IndexBase):
     # utility functions
 
     def unique(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: TDepthLevel = 0,
             order_by_occurrence: bool = False,
             ) -> NDArrayAny:
         '''
@@ -1338,7 +1339,7 @@ class Index(IndexBase):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[tp.Hashable, NDArrayAny]:
+            ) -> tp.Union[TLabel, NDArrayAny]:
         '''
         {doc}
 
@@ -1368,7 +1369,7 @@ class Index(IndexBase):
         return post
 
     def level_add(self,
-            level: tp.Hashable,
+            level: TLabel,
             *,
             index_constructor: IndexConstructor = None,
             ) -> 'IndexHierarchy':
@@ -1454,7 +1455,7 @@ class _IndexGOMixin:
     _map: tp.Optional[AutoMap]
     _labels: NDArrayAny
     _positions: NDArrayAny
-    _labels_mutable: tp.List[tp.Hashable]
+    _labels_mutable: tp.List[TLabel]
     _labels_mutable_dtype: tp.Optional[DtypeAny]
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
@@ -1480,7 +1481,7 @@ class _IndexGOMixin:
 
     #---------------------------------------------------------------------------
     def _extract_labels(self,
-            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
+            mapping: tp.Optional[tp.Dict[TLabel, int]],
             labels: NDArrayAny,
             dtype: tp.Optional[DtypeAny] = None
             ) -> NDArrayAny:
@@ -1525,11 +1526,11 @@ class _IndexGOMixin:
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value: tp.Hashable) -> None:
+    def append(self, value: TLabel) -> None:
         '''append a value
         '''
         if self.__contains__(value): #type: ignore
-            raise KeyError(f'duplicate key append attempted: {value}')
+            raise KeyError(f'duplicate key append attempted: {value!r}')
 
         # we might need to initialize map if not an increment that keeps loc_is_iloc relationship
         initialize_map = False

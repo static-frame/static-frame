@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import time
-import typing as tp
 
 import frame_fixtures as ff
 import numpy as np
@@ -19,6 +18,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
+from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
@@ -28,7 +28,7 @@ def func1(f: Frame) -> Frame:
     return f.loc['q']
 
 
-def func2(label: tp.Hashable, f: Frame) -> Frame:
+def func2(label: TLabel, f: Frame) -> Frame:
     return f.loc['q']
 
 class TestUnit(TestCase):

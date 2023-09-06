@@ -22,19 +22,20 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 from static_frame.core.util import get_concurrent_executor
 
 FrameExporter = AnyCallable # Protocol not supported yet...
 FrameConstructor = tp.Callable[[tp.Any], Frame]
-LabelAndBytes = tp.Tuple[tp.Hashable, tp.Union[str, bytes]]
-IteratorItemsLabelOptionalFrame = tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[Frame]]]
+LabelAndBytes = tp.Tuple[TLabel, tp.Union[str, bytes]]
+IteratorItemsLabelOptionalFrame = tp.Iterator[tp.Tuple[TLabel, tp.Optional[Frame]]]
 
 class PayloadBytesToFrame(tp.NamedTuple):
     '''
     Defines the necessary objects to construct a Frame. Used for multiprocessing.
     '''
     src: bytes
-    name: tp.Hashable
+    name: TLabel
     config: StoreConfigHE
     constructor: FrameConstructor
 
@@ -42,7 +43,7 @@ class PayloadFrameToBytes(tp.NamedTuple):
     '''
     Defines the necessary objects to construct writeable Frame bytes. Used for multiprocessing.
     '''
-    name: tp.Hashable
+    name: TLabel
     config: StoreConfigHE
     frame: Frame
     exporter: FrameExporter
@@ -61,7 +62,7 @@ class _StoreZip(Store):
     @staticmethod
     def _build_frame(
             src: bytes,
-            name: tp.Hashable,
+            name: TLabel,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
             ) -> Frame:
@@ -93,7 +94,7 @@ class _StoreZip(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
 
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -106,7 +107,7 @@ class _StoreZip(Store):
 
     @store_coherent_non_write
     def _read_many_single_thread(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config_map: StoreConfigMap,
             constructor: FrameConstructor,
@@ -143,7 +144,7 @@ class _StoreZip(Store):
 
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
@@ -165,7 +166,7 @@ class _StoreZip(Store):
         count_cache: int = 0
         if self._weak_cache:
             count_labels: int = 0
-            results: tp.Dict[tp.Hashable, tp.Optional[Frame]] = {}
+            results: tp.Dict[TLabel, tp.Optional[Frame]] = {}
             for label in labels:
                 count_labels += 1
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
@@ -238,7 +239,7 @@ class _StoreZip(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -305,7 +306,7 @@ class _StoreZipDelimited(_StoreZip):
     @staticmethod
     def _build_frame(
             src: bytes,
-            name: tp.Hashable,
+            name: TLabel,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
             ) -> Frame:
@@ -372,7 +373,7 @@ class StoreZipPickle(_StoreZip):
     @staticmethod
     def _build_frame(
             src: bytes,
-            name: tp.Hashable,
+            name: TLabel,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
@@ -380,7 +381,7 @@ class StoreZipPickle(_StoreZip):
 
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,
@@ -416,7 +417,7 @@ class StoreZipNPZ(_StoreZip):
     @staticmethod
     def _build_frame(
             src: bytes,
-            name: tp.Hashable,
+            name: TLabel,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
@@ -450,7 +451,7 @@ class StoreZipParquet(_StoreZip):
     @staticmethod
     def _build_frame(
             src: bytes,
-            name: tp.Hashable,
+            name: TLabel,
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
@@ -491,7 +492,7 @@ class StoreZipNPY(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -529,7 +530,7 @@ class StoreZipNPY(Store):
     def labels(self, *,
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True, # not used
-            ) -> tp.Iterator[tp.Hashable]:
+            ) -> tp.Iterator[TLabel]:
 
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -545,7 +546,7 @@ class StoreZipNPY(Store):
 
     @store_coherent_non_write
     def read_many(self,
-            labels: tp.Iterable[tp.Hashable],
+            labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             container_type: tp.Type[Frame] = Frame,

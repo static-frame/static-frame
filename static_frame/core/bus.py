@@ -24,7 +24,8 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItemILoc
+from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -50,13 +51,14 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IntegerLocType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TILocSelector
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
@@ -74,7 +76,7 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
 
 BusItemsType = tp.Iterable[tp.Tuple[
-        tp.Hashable, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+        TLabel, tp.Union[Frame, tp.Type[FrameDeferred]]]]
 
 FrameIterType = tp.Iterator[Frame]
 
@@ -107,7 +109,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Frame]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, Frame]],
             *,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
@@ -152,7 +154,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, Frame],
+            mapping: tp.Dict[TLabel, Frame],
             *,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
@@ -439,7 +441,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         if max_persist is not None:
             # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
-            self._last_accessed: tp.Dict[tp.Hashable, None] = {}
+            self._last_accessed: tp.Dict[TLabel, None] = {}
 
         if own_index:
             self._index = index #type: ignore
@@ -533,7 +535,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+    def __reversed__(self) -> tp.Iterator[TLabel]:
         '''
         Returns a reverse iterator on the :obj:`Bus` index.
 
@@ -580,12 +582,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLoc['Bus']:
+        return InterfaceGetItemLoc(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem['Bus']:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemILoc['Bus']:
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Bus']:
@@ -682,7 +684,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
-            level: tp.Hashable
+            level: TLabel
             ) -> 'Bus':
         '''
         {doc}
@@ -734,7 +736,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _store_reader(
             store: Store,
             config: StoreConfigMap,
-            labels: tp.Iterator[tp.Hashable],
+            labels: tp.Iterator[TLabel],
             max_persist: tp.Optional[int],
             ) -> FrameIterType:
         '''
@@ -760,21 +762,21 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 yield store.read(label, config=config[label])
 
 
-    def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
+    def _update_series_cache_iloc(self, key: TILocSelector) -> None:
         '''
-        Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
+        Update the Series cache with the key specified, where key can be any iloc.
 
         Args:
             key: always an iloc key.
         '''
         max_persist_active = self._max_persist is not None
 
-        load = False if self._loaded_all else not self._loaded[key].all() # type: ignore
+        load = False if self._loaded_all else not self._loaded[key].all()
         if not load and not max_persist_active:
             return
 
         index = self._index
-        label: tp.Hashable
+        label: TLabel
 
         if not load and max_persist_active: # must update LRU position
             labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
@@ -788,8 +790,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values: NDArrayAny | Frame = array[key] # type: ignore
-        target_labels: IndexBase | tp.Hashable = self._index.iloc[key]
+        target_values: NDArrayAny | Frame = array[key]
+        target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
         store_reader: FrameIterType
@@ -862,7 +864,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Bus':
+    def _extract_iloc(self, key: TILocSelector) -> 'Bus':
         '''
         Returns:
             Bus or, if an element is selected, a Frame
@@ -870,7 +872,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._update_series_cache_iloc(key=key)
 
         # iterable selection should be handled by NP
-        values: tp.Any = self._values_mutable[key] # type: ignore
+        values: tp.Any = self._values_mutable[key]
 
         # NOTE: Bus only stores Frame and FrameDeferred, can rely on check with values
         if not values.__class__ is np.ndarray: # if we have a single element
@@ -886,12 +888,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_data=False, # force immutable copy
                 )
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
+    def _extract_loc(self, key: TLocSelector) -> 'Bus':
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> 'Bus':
+    def __getitem__(self, key: TLocSelector) -> 'Bus':
         '''Selector of values by label.
 
         Args:
@@ -902,18 +904,18 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: IntegerLocType) -> 'Bus':
+    def _drop_iloc(self, key: TILocSelector) -> 'Bus':
         series = self._to_series_state()._drop_iloc(key)
         return self._derive_from_series(series, own_data=True)
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'Bus':
+    def _drop_loc(self, key: TLocSelector) -> 'Bus':
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -944,7 +946,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._loaded_all:
@@ -1046,7 +1048,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not self._loaded.any():
             return Series.from_element(None, index=self._index)
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Optional[tp.Tuple[int, ...]]]]:
             for label, f in zip(self._index, self._values_mutable):
                 if f is FrameDeferred:
                     yield label, None
@@ -1180,7 +1182,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -1189,7 +1191,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: tp.Hashable) -> bool:
+    def __contains__(self, value: TLabel) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -1198,7 +1200,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return self._index.__contains__(value)
 
-    def get(self, key: tp.Hashable,
+    def get(self, key: TLabel,
             default: tp.Any = None,
             ) -> tp.Any:
         '''

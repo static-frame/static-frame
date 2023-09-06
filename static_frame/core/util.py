@@ -247,9 +247,12 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
-# use this as a repalcement for tp.Hashable
+
+TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
+TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
+
 # NOTE: slice is not hashable
-LabelType = tp.Union[
+TLabel = tp.Union[
         tp.Hashable,
         int,
         bool,
@@ -264,51 +267,31 @@ LabelType = tp.Union[
         np.datetime64,
         np.timedelta64,
         datetime.date,
-        tp.Tuple['LabelType'],
+        tp.Tuple['TLabel'],
 ]
 
-
-# for type hinting
-CompoundLabelType = tp.Tuple[tp.Union[slice, tp.Hashable, tp.List[tp.Hashable]], ...]
-
-# keys once dimension has been isolated
-GetItemKeyType = tp.Union[
-        int,
-        np.integer,
-        str,
+TLocSelectorNonContainer = tp.Union[
+        TLabel,
         slice,
-        tp.Hashable,
-        tp.List[tp.Any],
-        tp.Tuple[tp.Any, ...], # might be CompoundLabelType
-        None,
-        'IndexBase',
-        'Series',
+        tp.List[TLabel],
         np.ndarray,
         np.datetime64,
         datetime.date,
+        ]
+
+# keys once dimension has been isolated
+TLocSelector = tp.Union[
+        TLocSelectorNonContainer,
+        'IndexBase',
+        'Series',
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-GetItemKeyTypeCompound = tp.Union[
-        tp.Tuple[tp.Any, ...],
-        int,
-        str,
-        np.integer,
-        slice,
-        tp.Hashable,
-        tp.List[tp.Any],
-        None,
-        'IndexBase',
-        'Series',
-        np.ndarray,
-        np.datetime64,
-        datetime.date,
-        ]
+TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, ...]]
 
-IntegerLocType = tp.Union[int, np.ndarray, tp.List[int], slice, None]
+KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
+NameType = TLabel # include None
 
-KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
-NameType = tp.Optional[tp.Hashable]
 TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
 TBlocKey = tp.Union['Frame', np.ndarray, None]
@@ -317,8 +300,8 @@ TBlocKey = tp.Union['Frame', np.ndarray, None]
 UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
-Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
-CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
+Mapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
+CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[TLabel, tp.Any], 'Series']
 
 ShapeType = tp.Union[int, tp.Tuple[int, ...]]
 
@@ -336,20 +319,20 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
-CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallable]]
+CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[TLabel, AnyCallable]]
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
-KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
+KeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 BoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
 PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
-DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
-DtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
+TDtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
 
-def validate_dtype_specifier(value: tp.Any) -> DtypeSpecifier:
+def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
     if value is None or isinstance(value, np.dtype):
         return value
 
@@ -365,7 +348,7 @@ DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
 def is_dtype_specifier(value: tp.Any) -> bool:
     return isinstance(value, DTYPE_SPECIFIER_TYPES)
 
-def is_neither_slice_nor_mask(value: tp.Union[slice, tp.Hashable]) -> bool:
+def is_neither_slice_nor_mask(value: TLocSelectorNonContainer) -> bool:
     is_slice = value.__class__ is slice
     is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL # type: ignore
     return not is_slice and not is_mask
@@ -379,58 +362,64 @@ def is_strict_int(value: tp.Any) -> bool:
         return False
     return isinstance(value, INT_TYPES)
 
-def validate_depth_selection(
-        key: GetItemKeyType,
-        ) -> None:
+def depth_level_from_specifier(
+        key: TDepthLevelSpecifier,
+        size: int,
+        ) -> TDepthLevel:
     '''Determine if a key is strictly an ILoc-style key. This is used in `IndexHierarchy`, where at times we select "columns" (or depths) by integer (not name or per-depth names, as such attributes are not required), and we cannot assume the caller gives us integers, as some types of inputs (Python lists of Booleans) might work due to low-level duckyness.
 
     This does not permit selection by tuple elements at this time, as that is not possible for IndexHierarchy depth selection.
     '''
-    if key.__class__ is np.ndarray:
+    if key is None:
+        return list(range(size))
+    elif key.__class__ is np.ndarray:
         # let object dtype use iterable path
-        if key.dtype.kind in DTYPE_INT_KINDS or key.dtype == DTYPE_BOOL: # type: ignore
-            return
+        if key.dtype.kind in DTYPE_INT_KINDS: #type: ignore
+            return key.tolist() # type: ignore
+        elif key.dtype == DTYPE_BOOL: # type: ignore
+            return PositionsAllocator.get(size)[key].tolist() # type: ignore
         elif key.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
             for e in key: # type: ignore
                 if not is_strict_int(e):
                     raise KeyError(f'Cannot select depths by non integer: {e!r}')
-            return
+            return key.tolist() # type: ignore
         raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}') # type: ignore
     elif key.__class__ is slice:
         if key.start is not None and not is_strict_int(key.start): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
         if key.stop is not None and not is_strict_int(key.stop): # type: ignore
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
-        return
+        return list(range(*key.indices(size))) # type: ignore
     elif isinstance(key, list):
         # an iterable, or an object dtype array
         for e in key:
             if not is_strict_int(e):
                 raise KeyError(f'Cannot select depths by non integer: {e!r}')
-    else: # an element
-        if not is_strict_int(key):
-            raise KeyError(f'Cannot select depths by non integer: {key!r}')
-
+        return key
+    if not is_strict_int(key):
+        raise KeyError(f'Cannot select depths by non integer: {key!r}')
+    return key # type: ignore
 
 # support an iterable of specifiers, or mapping based on column names
-DtypesSpecifier = tp.Optional[tp.Union[
-        DtypeSpecifier,
-        tp.Iterable[DtypeSpecifier],
-        tp.Dict[tp.Hashable, DtypeSpecifier]
+TDtypesSpecifier = tp.Optional[tp.Union[
+        TDtypeSpecifier,
+        tp.Iterable[TDtypeSpecifier],
+        tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
 
-DepthLevelSpecifier = tp.Union[int, tp.List[int]]
+TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
+TDepthLevel = tp.Union[int, tp.List[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
-IndexSpecifier = tp.Union[int, tp.Hashable] # specify a postiion in an index
+IndexSpecifier = tp.Union[int, TLabel] # specify a postiion in an index
 IndexInitializer = tp.Union[
         'IndexBase',
-        tp.Iterable[tp.Hashable],
-        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarchy
+        tp.Iterable[TLabel],
+        tp.Iterable[tp.Sequence[TLabel]], # only for IndexHierarchy
         # tp.Type['IndexAutoFactory'],
         ]
 
@@ -454,7 +443,7 @@ ExplicitConstructor = tp.Union[
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
         np.ndarray,
-        tp.Mapping[tp.Hashable, tp.Any],
+        tp.Mapping[TLabel, tp.Any],
         int, float, str, bool]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
@@ -733,7 +722,7 @@ class Join(Enum):
     OUTER = 3
 
 
-class Pair(tp.Tuple[tp.Hashable, tp.Hashable]):
+class Pair(tp.Tuple[TLabel, TLabel]):
     pass
 
 
@@ -761,7 +750,7 @@ def bytes_to_size_label(size_bytes: int) -> str:
 
 #-------------------------------------------------------------------------------
 
-_T = tp.TypeVar('_T', bound=tp.Hashable)
+_T = tp.TypeVar('_T', bound=TLabel)
 
 def frozenset_filter(src: tp.Iterable[_T]) -> tp.FrozenSet[_T]:
     '''
@@ -1119,7 +1108,7 @@ def full_for_fill(
 
     return array
 
-def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
+def dtype_to_fill_value(dtype: TDtypeSpecifier) -> tp.Any:
     '''Given a dtype, return an appropriate and compatible null value. This is used to provide temporary, "dummy" fill values that reduce type coercions.
     '''
     if not isinstance(dtype, np.dtype):
@@ -1310,7 +1299,7 @@ def ufunc_unique1d_counts(array: NDArrayAny,
 
         if not sortable:
             # Use a dict to retain order; this will break for non hashables
-            store: tp.Dict[tp.Hashable, int] = Counter(array)
+            store: tp.Dict[TLabel, int] = Counter(array)
 
             counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
             array = np.empty(len(store), dtype=DTYPE_OBJECT)
@@ -1601,9 +1590,9 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 def prepare_iter_for_array(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
-        ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
+        ) -> tp.Tuple[TDtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
-    Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
+    Determine an appropriate TDtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the TDtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
 
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values.
@@ -1674,7 +1663,7 @@ def prepare_iter_for_array(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier = None,
+        dtype: TDtypeSpecifier = None,
         count: tp.Optional[int] = None,
         ) -> tp.Tuple[NDArrayAny, bool]:
     '''
@@ -1897,7 +1886,7 @@ def pos_loc_slice_to_iloc_slice(
         stop = key.stop + 1
     return slice(start, stop, key.step)
 
-def key_to_str(key: GetItemKeyType) -> str:
+def key_to_str(key: TLocSelector) -> str:
     if key.__class__ is not slice:
         return str(key)
     if key == NULL_SLICE:
@@ -1944,7 +1933,7 @@ DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
         value: DateInitializer,
-        dtype: tp.Optional[DtypeOrDT64] = None
+        dtype: tp.Optional[TDtypeOrDT64] = None
         ) -> np.datetime64:
     '''
     Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
@@ -2009,7 +1998,7 @@ def timedelta64_not_aligned(array: NDArrayAny, other: NDArrayAny) -> bool:
 
 
 def _slice_to_datetime_slice_args(key: slice,
-        dtype: tp.Optional[DtypeOrDT64] = None
+        dtype: tp.Optional[TDtypeOrDT64] = None
         ) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
@@ -2025,9 +2014,9 @@ def _slice_to_datetime_slice_args(key: slice,
             yield to_datetime64(value, dtype=dtype)
 
 def key_to_datetime_key(
-        key: GetItemKeyType,
-        dtype: DtypeOrDT64 = np.datetime64,
-        ) -> GetItemKeyType:
+        key: TLocSelector,
+        dtype: TDtypeOrDT64 = np.datetime64,
+        ) -> TLocSelector:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''
@@ -2316,9 +2305,9 @@ def _array_to_duplicated_hashable(
     # could exit early with a set, but would have to hash all array twice to go to set and dictionary
     # creating a list for each entry and tracking indices would be very expensive
 
-    unique_to_first: tp.Dict[tp.Hashable, int] = {} # value to first occurence
-    dupe_to_first: tp.Dict[tp.Hashable, int] = {}
-    dupe_to_last: tp.Dict[tp.Hashable, int] = {}
+    unique_to_first: tp.Dict[TLabel, int] = {} # value to first occurence
+    dupe_to_first: tp.Dict[TLabel, int] = {}
+    dupe_to_last: tp.Dict[TLabel, int] = {}
 
     for idx, v in enumerate(value_source):
 
@@ -2749,7 +2738,7 @@ def _ufunc_set_2d(
         # NOTE: this sort may not always be successful
         try:
             with WarningsSilent():
-                values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
+                values: tp.Sequence[tp.Tuple[TLabel, ...]] = sorted(result)
         except TypeError:
             values = tuple(result)
 
@@ -3417,7 +3406,7 @@ class JSONFilter:
 
     @classmethod
     def encode_items(cls,
-            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]],
+            items: tp.Iterator[tp.Tuple[TLabel, tp.Any]],
             ) -> tp.Any:
         '''Return a key-value mapping. Saves on isinstance checks when we no what the outer container is.
         '''
@@ -3666,7 +3655,7 @@ def get_tuple_constructor(
         pass
     raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
-def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
+def key_normalize(key: KeyOrKeys) -> tp.List[TLabel]:
     '''
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''
@@ -3674,7 +3663,10 @@ def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
         return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
-def iloc_to_insertion_iloc(key: int, size: int) -> int:
+def iloc_to_insertion_iloc(
+        key: int | np.integer[tp.Any],
+        size: int,
+        ) -> int | np.integer[tp.Any]:
     '''
     Given an iloc (possibly bipolar), return the appropriate insertion iloc (always positive)
     '''

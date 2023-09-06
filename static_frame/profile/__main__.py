@@ -28,6 +28,7 @@ import static_frame as sf
 from static_frame.core.display_color import HexColor
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TLabel
 
 
 class PerfStatus(Enum):
@@ -1579,7 +1580,7 @@ class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
 
 class _IndexHierarchyConstructionMixin:
 
-    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
         raise NotImplementedError()
 
     def __init__(self) -> None:
@@ -1631,7 +1632,7 @@ class IndexHierarchyConstructionSmall(Perf, _IndexHierarchyConstructionMixin):
 
     NUMBER = 1000
 
-    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
         return ( # (280, 3)
                 range(10),
                 tuple('abcdefg'),
@@ -1670,7 +1671,7 @@ class IndexHierarchyConstructionLarge(Perf, _IndexHierarchyConstructionMixin):
 
     NUMBER = 10
 
-    def _get_product_data(self) -> tp.Tuple[tp.Sequence[tp.Hashable], ...]:
+    def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
         return ( # (360000, 3)
                 range(900),
                 tuple(string.printable),

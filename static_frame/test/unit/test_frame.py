@@ -62,6 +62,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
@@ -11836,7 +11837,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_items_a(self) -> None:
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Dict[tp.Hashable, tp.Any]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Dict[TLabel, tp.Any]]]:
             for i in range(3):
                 yield f'000{i}', {'squared': i**2, 'cubed': i**3}
 
@@ -11849,7 +11850,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_items_b(self) -> None:
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Tuple[str, str]]]:
+        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Tuple[str, str]]]:
             for i in range(3):
                 yield f'000{i}', ('a' * i, 'b' * i)
 

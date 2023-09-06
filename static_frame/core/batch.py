@@ -20,7 +20,8 @@ from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemCompound
+from static_frame.core.node_selector import InterfaceGetItemILocCompound
+from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -46,9 +47,6 @@ from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
@@ -56,11 +54,16 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TLabel
+from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import UFunc
 from static_frame.core.util import get_concurrent_executor
 
 FrameOrSeries = tp.Union[Frame, Series]
-IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
+IteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
 if tp.TYPE_CHECKING:
@@ -89,7 +92,7 @@ def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
     container, func = bundle
     return func(container) # type: ignore
 
-def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
+def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, TLabel]
         ) -> FrameOrSeries:
     container, func, label = bundle
     return func(label, container) # type: ignore
@@ -511,7 +514,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             yield label, frame
 
     def _apply_pool(self,
-            labels: tp.List[tp.Hashable],
+            labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
             caller: tp.Callable[..., FrameOrSeries],
             ) -> 'Batch':
@@ -530,7 +533,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._derive(gen_pool)
 
     def _apply_pool_except(self,
-            labels: tp.List[tp.Hashable],
+            labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
             caller: tp.Callable[..., FrameOrSeries],
             exception: tp.Type[Exception],
@@ -639,7 +642,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -663,7 +666,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -677,12 +680,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _extract_iloc(self, key: TILocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_extract_iloc',
                 key=key
                 )
-    def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _extract_loc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_extract_loc',
                 key=key
@@ -694,7 +697,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 key=key
                 )
 
-    def __getitem__(self, key: GetItemKeyType) -> 'Batch':
+    def __getitem__(self, key: TLocSelector) -> 'Batch':
         ''
         return self._apply_attr(
                 attr='__getitem__',
@@ -702,19 +705,19 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_iloc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_iloc',
                 key=key
                 )
 
-    def _drop_loc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_loc(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_loc',
                 key=key
                 )
 
-    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> 'Batch':
+    def _drop_getitem(self, key: TLocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_getitem',
                 key=key
@@ -724,12 +727,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemCompound['Batch']:
-        return InterfaceGetItemCompound(self._extract_loc)
+    def loc(self) -> InterfaceGetItemLocCompound['Batch']:
+        return InterfaceGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemCompound['Batch']:
-        return InterfaceGetItemCompound(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItemILocCompound['Batch']:
+        return InterfaceGetItemILocCompound(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Batch']:
@@ -748,14 +751,14 @@ class Batch(ContainerOperand, StoreClientMixin):
     # dictionary-like interface
     # these methods operate on the Batch itself, not the contained Frames
 
-    def keys(self) -> tp.Iterator[tp.Hashable]:
+    def keys(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of :obj:`Frame` labels.
         '''
         for k, _ in self._iter_items():
             yield k
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         '''
         Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
         '''
@@ -1357,7 +1360,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def unset_index(self,
             *,
-            names: tp.Iterable[tp.Hashable] = (),
+            names: tp.Iterable[TLabel] = (),
             consolidate_blocks: bool = False,
             columns_constructors: IndexConstructors = None
             ) -> 'Batch':
@@ -1401,8 +1404,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             )
 
     def relabel_level_add(self,
-            index: tp.Hashable = None,
-            columns: tp.Hashable = None,
+            index: TLabel = None,
+            columns: TLabel = None,
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None
@@ -1428,7 +1431,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             )
 
     def relabel_shift_in(self,
-            key: GetItemKeyType,
+            key: TLocSelector,
             *,
             axis: int = 0,
             ) -> 'Batch':
@@ -1718,7 +1721,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # exporter
 
     def to_series(self, *,
-        dtype: DtypeSpecifier = None,
+        dtype: TDtypeSpecifier = None,
         name: NameType = None,
         index_constructor: IndexConstructor = None
         ) -> Series:
