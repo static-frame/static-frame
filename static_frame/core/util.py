@@ -248,7 +248,9 @@ KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 
-TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
+TILocSelectorOne = tp.Union[int, np.integer]
+TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
+TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
 TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
 
 # NOTE: slice is not hashable

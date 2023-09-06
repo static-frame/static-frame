@@ -3,7 +3,6 @@ import typing as tp
 import static_frame as sf
 
 
-
 def test_index_len_a() -> None:
 
     idx = sf.Index(('a', 'b', 'c'))
