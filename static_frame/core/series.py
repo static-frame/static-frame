@@ -95,6 +95,7 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
@@ -1084,8 +1085,13 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
+        iloc_many: TILocSelectorMany
+        if isinstance(iloc_key, INT_TYPES):
+            iloc_many = [iloc_key] # type: ignore[list-item]
+        else:
+            iloc_many = iloc_key
         return value.reindex(
-                self._index._extract_iloc(iloc_key),
+                self._index._extract_iloc(iloc_many),
                 fill_value=fill_value
                 )
 
@@ -3099,7 +3105,7 @@ class Series(ContainerOperand):
             if self._index.ndim == 1:
                 return self._index.values[sel]
             elif found.sum() == 1:
-                return self._index._extract_iloc(sel) # type: ignore
+                return self._index._extract_iloc(sel)
 
         if self._index.ndim == 1:
             post = np.full(len(sel),

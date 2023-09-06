@@ -245,8 +245,7 @@ KEY_ITERABLE_TYPES = (list, np.ndarray)
 KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 
 # types of keys that return multiple items, even if the selection reduces to 1
-KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
-
+KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
 
 TILocSelectorOne = tp.Union[int, np.integer]
 TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]

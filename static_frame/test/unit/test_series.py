@@ -1697,8 +1697,10 @@ class TestUnit(TestCase):
         post2 = s1.assign.iloc[1:](np.array(()))
         self.assertTrue(s1.equals(post2))
 
-
-
+    def test_series_assign_o(self) -> None:
+        s1 = Series((10, 20, 30), index=('a', 'b', 'c'))
+        post1 = s1.assign.loc['b'](Series((2.5,), index=('b',)))
+        self.assertEqual(post1.to_pairs(), (('a', 10.0), ('b', 2.5), ('c', 30.0)))
 
     #---------------------------------------------------------------------------
 
