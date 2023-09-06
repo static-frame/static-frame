@@ -2,6 +2,7 @@ import typing as tp
 
 import static_frame as sf
 
+
 def test_frame_from_dict() -> None:
 
     d: tp.Dict[int, tp.Tuple[bool, ...]] = {10: (False, True,), 20: (True, False)}
