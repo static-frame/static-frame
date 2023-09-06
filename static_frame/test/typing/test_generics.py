@@ -37,5 +37,8 @@ def test_generics_index_hierarchy_a() -> None:
     def proc(ih1: TIH) -> sf.Index[np.unicode_]:
         return ih1.index_at_depth(0)
 
-
     ih2 = proc(ih1)
+
+
+
+
