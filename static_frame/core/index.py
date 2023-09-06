@@ -228,10 +228,10 @@ class Index(IndexBase):
     @staticmethod
     def _extract_positions(
             size: int,
-            positions: tp.Optional[tp.Sequence[int]]
+            positions: tp.Optional[NDArrayAny]
             ) -> NDArrayAny:
         # positions is either None or an ndarray
-        if positions.__class__ is np.ndarray: # type: ignore
+        if positions.__class__ is np.ndarray:
             return immutable_filter(positions) # type: ignore
         return PositionsAllocator.get(size)
 
@@ -1497,7 +1497,7 @@ class _IndexGOMixin:
 
     def _extract_positions(self,
             size: int,
-            positions: tp.Optional[tp.Sequence[int]]
+            positions: tp.Optional[NDArrayAny]
             ) -> NDArrayAny:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''
