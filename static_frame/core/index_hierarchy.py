@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools
 import operator
 import typing as tp
+import typing_extensions as tpe
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
@@ -220,10 +221,10 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-# TDtypes = tp.TypeVarTuple('TDtypes')
+TVIndices = tpe.TypeVarTuple('TVIndices', default=Index[tp.Any])
 # can use tp.Unpack
-# class IndexHierarchy(IndexBase, tp.Generic[*TDtypes]):
-class IndexHierarchy(IndexBase):
+class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
+# class IndexHierarchy(IndexBase):
     '''
     A hierarchy of :obj:`Index` objects.
     '''
