@@ -255,7 +255,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @property
     def iloc(self) -> InterfaceGetItemILoc['Yarn']:
-        return InterfaceGetItemILoc(self._extract_iloc) # type: ignore
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Yarn']:

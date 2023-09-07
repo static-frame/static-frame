@@ -4437,7 +4437,7 @@ class Frame(ContainerOperand):
                 new_target = IndexAutoFactory
             elif remain_columns == 1:
                 target_ctor = target_ctors.drop.iloc[depth_level].iloc[0]
-                new_target = target_ctor( # type: ignore
+                new_target = target_ctor(
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:

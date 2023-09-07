@@ -1044,8 +1044,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # type: ignore
-            frame_labels = (axis_map_sub[0],) # type: ignore
+        if isinstance(axis_map_sub, tuple):
+            frame_labels = (axis_map_sub[0],)
         else:
             # get the outer level, or just the unique frame labels needed
             frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
