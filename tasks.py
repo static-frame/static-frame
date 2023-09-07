@@ -127,7 +127,7 @@ def mypy(context,
 
 
 @invoke.task
-def testtypes(context,
+def testtyping(context,
         pty=False,
          ):
     '''Run mypy on targetted typing tests

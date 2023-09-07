@@ -1901,10 +1901,10 @@ class Series(ContainerOperand):
     #     return self.values[key]
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorOne) -> tp.Any: ...
+    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract_iloc(self, key: TILocSelectorOne) -> tp.Any: ...
 
     def _extract_iloc(self, key: TILocSelector) -> tp.Any:
         try:
@@ -1920,12 +1920,11 @@ class Series(ContainerOperand):
                 index=self._index.iloc[key],
                 name=self._name)
 
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tpe.Self: ...
 
     @tp.overload
     def _extract_loc(self, key: TLabel) -> tp.Any: ...
-
-    @tp.overload
-    def _extract_loc(self, key: TLocSelectorMany) -> tpe.Self: ...
 
     def _extract_loc(self, key: TLocSelector) -> tp.Any:
         '''
@@ -1947,6 +1946,12 @@ class Series(ContainerOperand):
         #         index=self._index.iloc[iloc_key],
         #         own_index=True,
         #         name=self._name)
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> tp.Any: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> tp.Any:

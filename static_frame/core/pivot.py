@@ -82,7 +82,7 @@ def extrapolate_column_fields(
     return sub_columns
 
 def pivot_records_dtypes(
-        dtype_map: 'Series',
+        dtype_map: Series,
         data_fields: tp.Iterable[TLabel],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]]
@@ -91,7 +91,7 @@ def pivot_records_dtypes(
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
     for field in data_fields:
-        dtype: DtypeAny = dtype_map[field]
+        dtype: DtypeAny = dtype_map[field] # type: ignore
         if func_single:
             yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
@@ -427,7 +427,7 @@ def pivot_core(
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
-            dtype_single = dtype_map[data_fields[0]]
+            dtype_single = dtype_map[data_fields[0]] # type: ignore
     else:
         dtypes_per_data_fields = tuple(pivot_records_dtypes(
                 dtype_map=dtype_map,
@@ -436,7 +436,7 @@ def pivot_core(
                 func_map=func_map,
                 ))
         if func_single and data_fields_len == 1:
-            dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]])
+            dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]]) # type: ignore
 
     fill_value_dtype = dtype_from_element(fill_value)
 

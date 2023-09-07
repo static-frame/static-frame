@@ -9,3 +9,19 @@ def test_series_from_dict() -> None:
     assert len(s) == 3
 
 
+def test_series_getitem() -> None:
+    s = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
+
+    v1: int = s['b']
+    v2: sf.Series = s['b':]
+
+    def proc(x: sf.Series) -> sf.Series:
+        return x
+
+
+    y = proc(s['b':])
+
+
+
+
+
