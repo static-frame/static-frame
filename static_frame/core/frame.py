@@ -168,6 +168,7 @@ from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -3999,28 +4000,48 @@ class Frame(ContainerOperand):
         assert is_series ^ is_frame # one must be True
 
         row_key: TILocSelector
-        column_key: TILocSelector
-        row_key, column_key = iloc_key # type: ignore
+        col_key: TILocSelector
+        row_key, col_key = iloc_key # type: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
-        nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
+        nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
         v: None | Series | Frame = None
+        col_key_many: TILocSelectorMany
+        row_key_many: TILocSelectorMany
 
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
             if is_series:
-                v = value.reindex(self._columns._extract_iloc(column_key),
+                if isinstance(col_key, INT_TYPES):
+                    col_key_many = [col_key] # type: ignore[list-item]
+                else:
+                    col_key_many = col_key
+                v = value.reindex(self._columns._extract_iloc(col_key_many),
                         fill_value=fill_value)
         elif not nm_row and nm_column:
             # only row is multi selection, reindex by index
             if is_series:
-                v = value.reindex(self._index._extract_iloc(row_key),
+                if isinstance(row_key, INT_TYPES):
+                    row_key_many = [row_key] # type: ignore[list-item]
+                else:
+                    row_key_many = row_key
+                v = value.reindex(self._index._extract_iloc(row_key_many),
                         fill_value=fill_value)
         elif not nm_row and not nm_column:
             # both multi, must be a Frame
             if is_frame:
-                target_column_index = self._columns._extract_iloc(column_key)
-                target_row_index = self._index._extract_iloc(row_key)
+                if isinstance(col_key, INT_TYPES):
+                    col_key_many = [col_key] # type: ignore[list-item]
+                else:
+                    col_key_many = col_key
+
+                if isinstance(row_key, INT_TYPES):
+                    row_key_many = [row_key] # type: ignore[list-item]
+                else:
+                    row_key_many = row_key
+
+                target_column_index = self._columns._extract_iloc(col_key_many)
+                target_row_index = self._index._extract_iloc(row_key_many)
                 # this will use the default fillna type, which may or may not be what is wanted
                 v = value.reindex( # type: ignore
                         index=target_row_index,
