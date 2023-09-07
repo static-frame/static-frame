@@ -26,4 +26,7 @@ def test_series_drop() -> None:
     s1 = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
     s2: sf.Series = s1.drop['b'] # dropping always returns a series
 
+    def proc(x: sf.Series) -> sf.Series:
+        return x.dropna()
 
+    y = proc(s1.drop['b'])
