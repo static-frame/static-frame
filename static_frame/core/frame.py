@@ -4034,7 +4034,6 @@ class Frame(ContainerOperand):
                     col_key_many = [col_key] # type: ignore[list-item]
                 else:
                     col_key_many = col_key
-
                 if isinstance(row_key, INT_TYPES):
                     row_key_many = [row_key] # type: ignore[list-item]
                 else:
@@ -5031,10 +5030,10 @@ class Frame(ContainerOperand):
         row_key_is_slice = row_key.__class__ is slice
         if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
+        elif not row_key_is_slice and isinstance(row_key, INT_TYPES):
+            name_row = self._index._extract_iloc_by_int(row_key)
         else:
-            index = self._index._extract_iloc(row_key)
-            if not row_key_is_slice and isinstance(row_key, INT_TYPES):
-                name_row = self._index._extract_iloc_by_int(row_key)
+            index = self._index._extract_iloc(row_key) # type: ignore
 
         columns: IndexBase
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
@@ -5042,11 +5041,11 @@ class Frame(ContainerOperand):
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
             own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
+        elif not column_key_is_slice and isinstance(column_key, INT_TYPES):
+            name_column = self._columns._extract_iloc_by_int(column_key)
         else:
-            columns = self._columns._extract_iloc(column_key)
+            columns = self._columns._extract_iloc(column_key) # type: ignore
             own_columns = True
-            if not column_key_is_slice and isinstance(column_key, INT_TYPES):
-                name_column = self._columns._extract_iloc_by_int(column_key)
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
