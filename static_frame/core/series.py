@@ -95,10 +95,11 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
@@ -704,14 +705,14 @@ class Series(ContainerOperand):
         '''
         Interface for label-based selection.
         '''
-        return InterfaceGetItemLoc(self._extract_loc)
+        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
 
     @property
     def iloc(self) -> InterfaceGetItemILoc[Series]:
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItemILoc(self._extract_iloc) # type: ignore[arg-type]
+        return InterfaceGetItemILoc(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Series']:
@@ -1920,11 +1921,11 @@ class Series(ContainerOperand):
                 name=self._name)
 
 
-    # @tp.overload
-    # def _extract_loc(self, key: TILocSelectorOne) -> tp.Any: ...
+    @tp.overload
+    def _extract_loc(self, key: TLabel) -> tp.Any: ...
 
-    # @tp.overload
-    # def _extract_loc(self, key: TILocSelectorMany) -> tpe.Self: ...
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tpe.Self: ...
 
     def _extract_loc(self, key: TLocSelector) -> tp.Any:
         '''

@@ -12,10 +12,10 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 
@@ -96,11 +96,11 @@ class InterfaceGetItemILoc(Interface[TContainer]):
     INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Union[
-            tp.Callable[[TILocSelector], TContainer],
-            tp.Callable[[TILocSelector], tp.Any]]) -> None:
+            tp.Callable[[TILocSelectorOne], tp.Any],
+            tp.Callable[[TILocSelectorMany], TContainer]]) -> None:
         self._func: tp.Union[
-            tp.Callable[[TILocSelector], TContainer],
-            tp.Callable[[TILocSelector], tp.Any]] = func
+            tp.Callable[[TILocSelectorOne], tp.Any],
+            tp.Callable[[TILocSelectorMany], TContainer]] = func
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorOne) -> tp.Any: ...
@@ -109,7 +109,7 @@ class InterfaceGetItemILoc(Interface[TContainer]):
     def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
 
     def __getitem__(self, key: TILocSelector) -> TContainer:
-        return self._func(key)
+        return self._func(key) # type: ignore
 
 
 class InterfaceGetItemLocCompound(Interface[TContainer]):

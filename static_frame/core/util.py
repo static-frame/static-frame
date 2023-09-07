@@ -253,6 +253,7 @@ TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
 TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
 
 # NOTE: slice is not hashable
+# NOTE: this is TLocSelectorOne
 TLabel = tp.Union[
         tp.Hashable,
         int,
@@ -271,6 +272,16 @@ TLabel = tp.Union[
         tp.Tuple['TLabel'],
 ]
 
+TLocSelectorMany = tp.Union[
+        slice,
+        tp.List[TLabel],
+        np.ndarray,
+        np.datetime64,
+        datetime.date,
+        'IndexBase',
+        'Series',
+        ]
+
 TLocSelectorNonContainer = tp.Union[
         TLabel,
         slice,
@@ -282,9 +293,8 @@ TLocSelectorNonContainer = tp.Union[
 
 # keys once dimension has been isolated
 TLocSelector = tp.Union[
-        TLocSelectorNonContainer,
-        'IndexBase',
-        'Series',
+        TLabel,
+        TLocSelectorMany
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
