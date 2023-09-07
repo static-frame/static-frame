@@ -69,9 +69,9 @@ from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILoc
+from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
@@ -859,7 +859,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
-        For root __getitem__ methods, as well as __getitem__ on InterfaceGetItemLoc objects.
+        For root __getitem__ methods, as well as __getitem__ on InterGetItemLocReduces objects.
         '''
         if name != Features.GETITEM:
             target = obj.__getitem__ #type: ignore
@@ -1202,9 +1202,9 @@ class InterfaceSummary(Features):
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, (
-                    InterfaceGetItemLoc,
+                    InterGetItemLocReduces,
                     InterfaceGetItemLocCompound,
-                    InterfaceGetItemILoc,
+                    InterGetItemILocReduces,
                     InterfaceGetItemILocCompound,
                     InterfaceGetItemBLoc,
                     )) or name == cls.GETITEM:

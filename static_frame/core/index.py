@@ -37,7 +37,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
@@ -435,12 +435,12 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLoc[TContainer]:
-        return InterfaceGetItemLoc(self._extract_loc)
+    def loc(self) -> InterGetItemLocReduces[TContainer]:
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
-        return InterfaceGetItemLoc(self._extract_iloc) #type: ignore
+    def iloc(self) -> InterGetItemLocReduces[TContainer]:
+        return InterGetItemLocReduces(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 

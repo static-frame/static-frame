@@ -63,8 +63,8 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceGetItemILoc
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
@@ -701,18 +701,18 @@ class Series(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLoc[Series]:
+    def loc(self) -> InterGetItemLocReduces[Series]:
         '''
         Interface for label-based selection.
         '''
-        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
+        return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItemILoc[Series]:
+    def iloc(self) -> InterGetItemILocReduces[Series]:
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItemILoc(self._extract_iloc)
+        return InterGetItemILocReduces(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Series']:

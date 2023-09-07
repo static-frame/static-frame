@@ -64,7 +64,7 @@ class IndexBase(ContainerOperandSequence):
     _NDIM: int
 
     loc: tp.Any
-    iloc: tp.Any # this does not work: InterfaceGetItemLoc[I]
+    iloc: tp.Any # this does not work: InterGetItemLocReduces[I]
 
     #---------------------------------------------------------------------------
     def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:

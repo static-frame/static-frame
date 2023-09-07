@@ -30,7 +30,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -679,8 +679,8 @@ class TypeBlocks(ContainerOperand):
     # interfaces
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc: #type: ignore
-        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterGetItemLocReduces: #type: ignore
+        return InterGetItemLocReduces(self._extract_iloc) # type: ignore
 
     #---------------------------------------------------------------------------
     # common NP-style properties

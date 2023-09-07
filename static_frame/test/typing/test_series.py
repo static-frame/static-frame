@@ -16,12 +16,14 @@ def test_series_getitem() -> None:
     v2: sf.Series = s['b':]
 
     def proc(x: sf.Series) -> sf.Series:
-        return x
+        return x.dropna()
+
+    y = proc(s['b':]) # this checks that x.dropna() is on a Series
 
 
-    y = proc(s['b':])
 
-
-
+def test_series_drop() -> None:
+    s1 = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
+    s2: sf.Series = s1.drop['b'] # dropping always returns a series
 
 
