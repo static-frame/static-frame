@@ -3988,7 +3988,7 @@ class Frame(ContainerOperand):
 
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
-            iloc_key: TLocSelectorCompound,
+            iloc_key: TILocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
