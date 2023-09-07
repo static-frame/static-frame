@@ -963,11 +963,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -1056,7 +1056,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key].iloc[sel_component, opposite_key] # type: ignore
+                component = self._bus.loc[key].iloc[sel_component, opposite_key]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1065,7 +1065,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
-                component = self._bus.loc[key].iloc[opposite_key, sel_component] # type: ignore
+                component = self._bus.loc[key].iloc[opposite_key, sel_component]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:

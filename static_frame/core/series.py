@@ -63,9 +63,9 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.rank import RankMethod
@@ -715,9 +715,9 @@ class Series(ContainerOperand):
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Series']:
+    def drop(self) -> InterfaceSelectTrio[Series]:
         '''
-        Interface for dropping elements from :obj:`static_frame.Series`.
+        Interface for dropping elements from :obj:`static_frame.Series`. This alway returns a `Series`.
         '''
         return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._drop_iloc,

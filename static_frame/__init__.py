@@ -87,10 +87,10 @@ from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterGetItemLocReduces as InterGetItemLocReduces
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemLocReduces as InterGetItemLocReduces
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose

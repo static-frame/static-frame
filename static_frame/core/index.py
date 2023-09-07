@@ -37,8 +37,8 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues

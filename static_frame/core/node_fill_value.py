@@ -172,7 +172,7 @@ class InterfaceFillValue(Interface[TContainer]):
                     )
         elif not row_is_multiple and not column_is_multiple: # selecting an element
             try:
-                return container.loc[row_key, column_key]
+                return container.loc[row_key, column_key] # type: ignore
             except KeyError:
                 fv = get_col_fill_value_factory(fill_value, None)(0, None)
                 return fv #type: ignore

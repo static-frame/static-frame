@@ -24,9 +24,9 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
