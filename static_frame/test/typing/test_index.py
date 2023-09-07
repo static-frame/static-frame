@@ -1,7 +1,8 @@
 import typing as tp
 
-import static_frame as sf
 import numpy as np
+
+import static_frame as sf
 
 
 def test_index_len_a() -> None:
