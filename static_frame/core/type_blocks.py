@@ -49,6 +49,8 @@ from static_frame.core.util import ShapeType
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -2861,6 +2863,32 @@ class TypeBlocks(ContainerOperand):
                             yield a[NULL_SLICE, i]
 
             yield from map(constructor, chainer()) # type: ignore
+
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
 
     def _extract(self,
             row_key: TILocSelector = None,
