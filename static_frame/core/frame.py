@@ -169,6 +169,7 @@ from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -5014,16 +5015,46 @@ class Frame(ContainerOperand):
         return row_nm, column_nm
 
 
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> Frame: ...
+
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelector) -> tp.Any: ...
+
     def _extract(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
-            ) -> tp.Union['Frame', Series]:
+            ) -> tp.Any:
         '''
         Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
         if blocks.__class__ is not TypeBlocks:
-            return blocks # type: ignore # reduced to an element
+            return blocks
 
         index: IndexBase
         own_index = True # the extracted Frame can always own this index
@@ -5096,9 +5127,18 @@ class Frame(ContainerOperand):
                 )
 
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union['Frame', Series]:
+    # @tp.overload
+    # def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
+
+    # @tp.overload
+    # def _extract_iloc(self, key: TILocSelectorMany) -> Frame: ...
+
+    # @tp.overload
+    # def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
+
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
         '''
-        Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
+        Give a compound key, return a new Frame. This method simply handles the variability of single or compound selectors.
         '''
         if isinstance(key, tuple):
             return self._extract(*key)
@@ -5119,10 +5159,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union['Frame', Series]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union[Frame, Series]:
         return self._extract(*self._compound_loc_to_iloc(key))
 
-    def _extract_loc_columns(self, key: TLocSelector) -> tp.Union['Frame', Series]:
+    def _extract_loc_columns(self, key: TLocSelector) -> tp.Union[Frame, Series]:
         '''Alternate extract of a columns only selection.
         '''
         return self._extract(None,
