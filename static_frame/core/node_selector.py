@@ -20,6 +20,8 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
+from static_frame.core.util import TDtypeSpecifier
+
 
 # from static_frame.core.util import AnyCallable
 
@@ -445,7 +447,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
         return self._func_getitem(key)
 
     def __call__(self,
-            dtype: DtypeAny,
+            dtype: TDtypeSpecifier,
             *,
             consolidate_blocks: bool = False,
             ) -> 'Frame':

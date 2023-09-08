@@ -705,7 +705,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable['Frame'],
+            containers: tp.Iterable[Frame],
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -3479,21 +3479,21 @@ class Frame(ContainerOperand):
         return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Frame']:
+    def drop(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not reuturn Frame, but a delegate
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
-    def mask(self) -> InterfaceSelectTrio['Frame']:
+    def mask(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not return Frame, but a delegate
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
 
     @property
-    def masked_array(self) -> InterfaceSelectTrio['Frame']:
+    def masked_array(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
@@ -3512,7 +3512,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(select='astype')
-    def astype(self) -> InterfaceFrameAsType['Frame']:
+    def astype(self) -> InterfaceFrameAsType[Frame]:
         '''
         Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
@@ -3523,7 +3523,7 @@ class Frame(ContainerOperand):
         return InterfaceFrameAsType(func_getitem=self._extract_getitem_astype)
 
     @property
-    def consolidate(self) -> InterfaceConsolidate['Frame']:
+    def consolidate(self) -> InterfaceConsolidate[Frame]:
         '''
         Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
 
@@ -3537,7 +3537,7 @@ class Frame(ContainerOperand):
     # via interfaces
 
     @property
-    def via_values(self) -> InterfaceValues['Frame']:
+    def via_values(self) -> InterfaceValues[Frame]:
         '''
         Interface for applying functions to values (as arrays) in this container.
 
@@ -3549,7 +3549,7 @@ class Frame(ContainerOperand):
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString['Frame']:
+    def via_str(self) -> InterfaceString[Frame]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -3572,7 +3572,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime['Frame']:
+    def via_dt(self) -> InterfaceDatetime[Frame]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -3596,7 +3596,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose['Frame']:
+    def via_T(self) -> InterfaceTranspose[Frame]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -3607,7 +3607,7 @@ class Frame(ContainerOperand):
 
     def via_fill_value(self,
             fill_value: tp.Any = np.nan,
-            ) -> InterfaceFillValue['Frame']:
+            ) -> InterfaceFillValue[Frame]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -3619,7 +3619,7 @@ class Frame(ContainerOperand):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe['Frame']:
+            ) -> InterfaceRe[Frame]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
@@ -3644,7 +3644,7 @@ class Frame(ContainerOperand):
     # iterators
 
     @property
-    def iter_array(self) -> IterNodeAxis['Frame']:
+    def iter_array(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3657,7 +3657,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_array_items(self) -> IterNodeAxis['Frame']:
+    def iter_array_items(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3670,7 +3670,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeConstructorAxis['Frame']:
+    def iter_tuple(self) -> IterNodeConstructorAxis[Frame]:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -3683,7 +3683,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeConstructorAxis['Frame']:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3696,7 +3696,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_series(self) -> IterNodeAxis['Frame']:
+    def iter_series(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3709,7 +3709,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_series_items(self) -> IterNodeAxis['Frame']:
+    def iter_series_items(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3723,7 +3723,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3736,7 +3736,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_items(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3750,7 +3750,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_array(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_array(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3763,7 +3763,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_array_items(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_array_items(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3777,7 +3777,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3790,7 +3790,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3804,7 +3804,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3817,7 +3817,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3832,7 +3832,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3845,7 +3845,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_other_items(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_items(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3859,7 +3859,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_array(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3874,7 +3874,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_array_items(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3891,7 +3891,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow['Frame']:
+    def iter_window(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -3909,7 +3909,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow['Frame']:
+    def iter_window_items(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -3927,7 +3927,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow['Frame']:
+    def iter_window_array(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -3945,7 +3945,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow['Frame']:
+    def iter_window_array_items(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -3963,7 +3963,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxisElement['Frame']:
+    def iter_element(self) -> IterNodeAxisElement[Frame]:
         '''Iterator of elements, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -3975,7 +3975,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxisElement['Frame']:
+    def iter_element_items(self) -> IterNodeAxisElement[Frame]:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -5794,7 +5794,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             drop: bool = False,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_loc_items(
                 key=key,
                 axis=axis,
@@ -5887,7 +5887,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 axis=axis,
@@ -5963,7 +5963,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_other_items(
                 axis=axis,
                 as_array=as_array,
@@ -6018,7 +6018,7 @@ class Frame(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 size=size,
@@ -8527,7 +8527,7 @@ class Frame(ContainerOperand):
         return xarray.Dataset(data_vars, coords=coords)
 
     def _to_frame(self,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[Frame],
             *,
             name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
@@ -9314,7 +9314,7 @@ class FrameGO(Frame):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object = np.nan,
-            ) -> InterfaceFillValueGO['Frame']:
+            ) -> InterfaceFillValueGO[Frame]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''

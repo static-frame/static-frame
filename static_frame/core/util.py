@@ -337,7 +337,7 @@ PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
-TDtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
 TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
 
 def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:

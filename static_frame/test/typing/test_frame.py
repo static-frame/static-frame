@@ -76,3 +76,15 @@ def test_frame_loc_a() -> None:
     f3: sf.Frame = f1.loc[0:1, 1:]
 
     f4: sf.Frame = f1.loc[f1.index.values == 2]
+
+
+
+
+def test_frame_astype_a() -> None:
+    records = (
+            (1, 2, False),
+            (30, 34,True),
+            (54, 95, False),
+            )
+    f1 = sf.Frame.from_records(records)
+    f2 = f1.astype(int)
