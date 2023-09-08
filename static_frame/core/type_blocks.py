@@ -93,7 +93,7 @@ def group_match(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union['TypeBlocks', NDArrayAny]]]:
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]:
     '''
     Args:
         key: iloc selector on opposite axis
@@ -144,7 +144,7 @@ def group_match(
     row_key: tp.Union[int, NDArrayAny, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
 
-    func = blocks._extract_array if as_array else blocks._extract
+    func: tp.Callable[..., tp.Union[TypeBlocks, NDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
 
     if axis == 0:
         if extract is not None:
@@ -230,7 +230,8 @@ def group_sorted(
     column_key: tp.Union[int, NDArrayAny, None]
     row_key: tp.Union[int, NDArrayAny, None]
 
-    func = blocks._extract_array if as_array else blocks._extract
+    func: tp.Callable[..., tp.Union[TypeBlocks, NDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
+
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:

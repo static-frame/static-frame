@@ -2167,7 +2167,7 @@ class IndexHierarchy(IndexBase):
             # if skipna, drop rows with any NaNs
             blocks = self._blocks._extract(row_key=order)
             # NOTE: this could return a tuple rather than an array
-            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0)) # type: ignore
+            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
 
         # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
         raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')
