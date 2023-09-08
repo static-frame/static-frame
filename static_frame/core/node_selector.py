@@ -150,8 +150,8 @@ class InterGetItemLoc(Interface[TContainer]):
         return self._func(key)
 
 
-class InterfaceGetItemLocCompound(Interface[TContainer]):
-    '''Interface for loc selection that reduces dimensionality.
+class InterGetItemLocCompound(Interface[TContainer]):
+    '''Interface for compound loc selection that reduces dimensionality. TContainer is the outermost container
     '''
 
     __slots__ = ('_func',)
@@ -161,6 +161,25 @@ class InterfaceGetItemLocCompound(Interface[TContainer]):
 
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
         self._func = func
+
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
 
     def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
         return self._func(key)

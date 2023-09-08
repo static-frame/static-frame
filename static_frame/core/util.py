@@ -269,6 +269,7 @@ TLabel = tp.Union[
         np.datetime64,
         np.timedelta64,
         datetime.date,
+        datetime.datetime,
         tp.Tuple['TLabel'],
 ]
 
@@ -276,8 +277,6 @@ TLocSelectorMany = tp.Union[
         slice,
         tp.List[TLabel],
         np.ndarray,
-        np.datetime64,
-        datetime.date,
         'IndexBase',
         'Series',
         ]
@@ -287,8 +286,6 @@ TLocSelectorNonContainer = tp.Union[
         slice,
         tp.List[TLabel],
         np.ndarray,
-        np.datetime64,
-        datetime.date,
         ]
 
 # keys once dimension has been isolated

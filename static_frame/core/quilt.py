@@ -35,7 +35,7 @@ from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -137,13 +137,13 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
                     label = label_extractor(f.index)
-                    axis_map_components[label] = f.index # type: ignore
+                    axis_map_components[label] = f.index
                     if opposite is None:
-                        opposite = f.columns # type: ignore
+                        opposite = f.columns
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns) # type: ignore
-                    axis_map_components[label] = f.columns # type: ignore
+                    label = label_extractor(f.columns)
+                    axis_map_components[label] = f.columns
                     if opposite is None:
                         opposite = f.index
                 else:
@@ -1174,8 +1174,8 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLocCompound[Frame | Series]:
-        return InterfaceGetItemLocCompound(self._extract_loc)
+    def loc(self) -> InterGetItemLocCompound[Frame | Series]:
+        return InterGetItemLocCompound(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItemILocCompound[Frame | Series]:

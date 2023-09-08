@@ -324,7 +324,7 @@ class DFIDataFrame(DataFrame):
             indices = list(indices)
 
         return self.__class__(
-                self._frame.iloc[NULL_SLICE, indices], # type: ignore
+                self._frame.iloc[NULL_SLICE, indices],
                 nan_as_null=self._nan_as_null,
                 allow_copy=self._allow_copy,
                 recast_blocks=False,
@@ -348,7 +348,7 @@ class DFIDataFrame(DataFrame):
 
             for start in range(0, step * n_chunks, step):
                 yield DFIDataFrame(
-                        self._frame.iloc[start: start + step, NULL_SLICE], # type: ignore
+                        self._frame.iloc[start: start + step, NULL_SLICE],
                         nan_as_null=self._nan_as_null,
                         allow_copy=self._allow_copy,
                         recast_blocks=True,

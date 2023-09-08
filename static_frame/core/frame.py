@@ -103,7 +103,7 @@ from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -173,6 +173,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -796,7 +797,7 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key) # type: ignore
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = get_col_fill_value(col_count, col_series.dtype) # type: ignore
+                    fill_value = get_col_fill_value(col_count, col_series.dtype)
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
@@ -3466,11 +3467,11 @@ class Frame(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLocCompound[FrameOrSeries]:
-        return InterfaceGetItemLocCompound(self._extract_loc)
+    def loc(self) -> InterGetItemLocCompound[tp.Any]:
+        return InterGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILocCompound[FrameOrSeries]:
+    def iloc(self) -> InterfaceGetItemILocCompound[tp.Any]:
         return InterfaceGetItemILocCompound(self._extract_iloc)
 
     @property
@@ -5127,14 +5128,26 @@ class Frame(ContainerOperand):
                 )
 
 
-    # @tp.overload
-    # def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
 
-    # @tp.overload
-    # def _extract_iloc(self, key: TILocSelectorMany) -> Frame: ...
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> Frame: ...
 
-    # @tp.overload
-    # def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> Frame: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
 
     def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
         '''
@@ -5159,10 +5172,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union[Frame, Series]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
         return self._extract(*self._compound_loc_to_iloc(key))
 
-    def _extract_loc_columns(self, key: TLocSelector) -> tp.Union[Frame, Series]:
+    def _extract_loc_columns(self, key: TLocSelector) -> FrameOrSeries:
         '''Alternate extract of a columns only selection.
         '''
         return self._extract(None,
@@ -5187,8 +5200,17 @@ class Frame(ContainerOperand):
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelector) -> FrameOrSeries: ...
+
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Union['Frame', Series]:
+    def __getitem__(self, key: TLocSelector) -> FrameOrSeries:
         '''Selector of columns by label.
 
         Args:
@@ -5345,7 +5367,7 @@ class Frame(ContainerOperand):
         '''
         if key not in self._columns:
             return default # type: ignore
-        return self.__getitem__(key) # type: ignore
+        return self.__getitem__(key)
 
 
     #---------------------------------------------------------------------------

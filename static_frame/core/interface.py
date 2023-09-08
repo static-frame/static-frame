@@ -70,7 +70,7 @@ from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -1203,7 +1203,7 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, (
                     InterGetItemLocReduces,
-                    InterfaceGetItemLocCompound,
+                    InterGetItemLocCompound,
                     InterGetItemILocReduces,
                     InterfaceGetItemILocCompound,
                     InterfaceGetItemBLoc,
@@ -1281,7 +1281,7 @@ class InterfaceSummary(Features):
         f = Frame.from_concat((f, sna_label), axis=1)
 
         if minimized:
-            return f[['cls_name', 'group', 'doc']] #type: ignore
+            return f[['cls_name', 'group', 'doc']]
         return f
 
 
