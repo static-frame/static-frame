@@ -34,7 +34,7 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -114,6 +114,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             label_extractor: Function that, given the partitioned index component along the specified axis, returns a string label for that chunk.
         '''
+        if axis == 0 and frame._index._NDIM != 1:
+            raise ValueError('Index must be 1D.')
+        elif axis == 1 and frame._columns._NDIM != 1:
+            raise ValueError('Columns must be 1D.')
+
         vector = frame._index if axis == 0 else frame._columns
         vector_len = len(vector)
 
@@ -136,14 +141,14 @@ class Quilt(ContainerBase, StoreClientMixin):
                 # NOTE: index / columns cannot be IndexHierarchy
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
-                    label = label_extractor(f.index)
-                    axis_map_components[label] = f.index
+                    label = label_extractor(f._index)
+                    axis_map_components[label] = f._index # type: ignore[assignment]
                     if opposite is None:
-                        opposite = f.columns
+                        opposite = f._columns
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns)
-                    axis_map_components[label] = f.columns
+                    label = label_extractor(f._columns)
+                    axis_map_components[label] = f._columns # type: ignore[assignment]
                     if opposite is None:
                         opposite = f.index
                 else:
@@ -1178,8 +1183,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILocCompound[Frame | Series]:
-        return InterfaceGetItemILocCompound(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocCompoundReduces[Frame | Series]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators
@@ -1366,7 +1371,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[:count] # type: ignore
+        return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Quilt')
     def tail(self, count: int = 5) -> 'Frame':
@@ -1375,7 +1380,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[-count:] # type: ignore
+        return self.iloc[-count:]
 
     #---------------------------------------------------------------------------
     @doc_inject()

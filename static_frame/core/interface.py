@@ -69,7 +69,7 @@ from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
@@ -1205,7 +1205,7 @@ class InterfaceSummary(Features):
                     InterGetItemLocReduces,
                     InterGetItemLocCompoundReduces,
                     InterGetItemILocReduces,
-                    InterfaceGetItemILocCompound,
+                    InterGetItemILocCompoundReduces,
                     InterfaceGetItemBLoc,
                     )) or name == cls.GETITEM:
                 yield from InterfaceRecord.gen_from_getitem(**kwargs)

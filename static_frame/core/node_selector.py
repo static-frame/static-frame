@@ -203,7 +203,42 @@ class InterGetItemLocCompound(Interface[TContainer]):
 
 
 
-class InterfaceGetItemILocCompound(Interface[TContainer]):
+class InterGetItemILocCompoundReduces(Interface[TContainer]):
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TILocSelectorCompound], TContainer]
+
+    def __init__(self, func: tp.Callable[[TILocSelectorCompound], TContainer]) -> None:
+        self._func = func
+
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorCompound) -> TContainer: ...
+
+    def __getitem__(self, key: TILocSelectorCompound) -> TContainer:
+        return self._func(key)
+
+class InterGetItemILocCompound(Interface[TContainer]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
@@ -215,6 +250,7 @@ class InterfaceGetItemILocCompound(Interface[TContainer]):
 
     def __getitem__(self, key: TILocSelectorCompound) -> TContainer:
         return self._func(key)
+
 
 class InterfaceGetItemBLoc(Interface[TContainer]):
 

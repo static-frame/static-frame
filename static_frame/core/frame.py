@@ -102,7 +102,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
@@ -3471,8 +3471,8 @@ class Frame(ContainerOperand):
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILocCompound[tp.Any]:
-        return InterfaceGetItemILocCompound(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocCompoundReduces[tp.Any]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Series']:
@@ -7175,22 +7175,22 @@ class Frame(ContainerOperand):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Frame')
-    def head(self, count: int = 5) -> 'Frame':
+    def head(self, count: int = 5) -> Frame:
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[:count] # type: ignore
+        return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Frame')
-    def tail(self, count: int = 5) -> 'Frame':
+    def tail(self, count: int = 5) -> Frame:
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[-count:] # type: ignore
+        return self.iloc[-count:]
 
 
     def count(self, *,
