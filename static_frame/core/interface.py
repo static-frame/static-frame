@@ -69,12 +69,16 @@ from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
+from static_frame.core.node_selector import InterGetItemILocCompound
 from static_frame.core.node_selector import InterGetItemILocCompoundReduces
+from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemILoc
 from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLoc
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceBatchString
@@ -1202,9 +1206,13 @@ class InterfaceSummary(Features):
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, (
+                    InterGetItemLoc,
                     InterGetItemLocReduces,
+                    InterGetItemLocCompound,
                     InterGetItemLocCompoundReduces,
+                    InterGetItemILoc,
                     InterGetItemILocReduces,
+                    InterGetItemILocCompound,
                     InterGetItemILocCompoundReduces,
                     InterfaceGetItemBLoc,
                     )) or name == cls.GETITEM:

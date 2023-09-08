@@ -136,6 +136,7 @@ class InterGetItemLocReduces(Interface[TContainer]):
     def __getitem__(self, key: TLocSelector) -> TContainer:
         return self._func(key)
 
+
 class InterGetItemLoc(Interface[TContainer]):
 
     __slots__ = ('_func',)
@@ -162,13 +163,6 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
         self._func = func
 
-
-    @tp.overload
-    def __getitem__(self, key: TLabel) -> Series: ...
-
-    @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
-
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series: ...
 
@@ -180,6 +174,12 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
 
     def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
         return self._func(key)
