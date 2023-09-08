@@ -211,7 +211,7 @@ class IndexBase(ContainerOperandSequence):
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
 
-    def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
+    def _extract_iloc(self, key: TILocSelector) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> TLabel:

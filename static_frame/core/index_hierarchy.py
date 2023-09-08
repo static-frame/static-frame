@@ -1998,7 +1998,7 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: TILocSelector | None,
+            key: TILocSelector,
             ) -> tp.Any:
         '''
         Extract a new index given an iloc key

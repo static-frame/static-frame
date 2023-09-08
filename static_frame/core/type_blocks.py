@@ -2933,8 +2933,14 @@ class TypeBlocks(ContainerOperand):
                 shape_reference=self._index.shape
                 )
 
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelector) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
+
     def _extract_iloc(self,
-            key: TILocSelector | None
+            key: TILocSelectorCompound
             ) -> tp.Any:
         if isinstance(key, tuple):
             return self._extract(*key) # type: ignore # NOTE: needs specialization for 2D input
@@ -3134,6 +3140,7 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
+    # TODO: implement on BlockIndex in array kit
     def _block_shape_slices(self) -> tp.Iterator[slice]:
         '''Generator of slices necessary to slice a 1d array of length equal to the number of columns into a length suitable for each block.
         '''
