@@ -3140,7 +3140,6 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    # TODO: implement on BlockIndex in array kit
     def _block_shape_slices(self) -> tp.Iterator[slice]:
         '''Generator of slices necessary to slice a 1d array of length equal to the number of columns into a length suitable for each block.
         '''
