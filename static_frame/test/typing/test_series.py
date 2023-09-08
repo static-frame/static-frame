@@ -30,3 +30,8 @@ def test_series_drop() -> None:
         return x.dropna()
 
     y = proc(s1.drop['b'])
+
+
+
+
+
