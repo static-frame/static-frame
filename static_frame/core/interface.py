@@ -70,7 +70,7 @@ from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -1203,7 +1203,7 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, (
                     InterGetItemLocReduces,
-                    InterGetItemLocCompound,
+                    InterGetItemLocCompoundReduces,
                     InterGetItemILocReduces,
                     InterfaceGetItemILocCompound,
                     InterfaceGetItemBLoc,

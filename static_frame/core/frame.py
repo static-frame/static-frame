@@ -103,7 +103,7 @@ from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
@@ -3467,8 +3467,8 @@ class Frame(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocCompound[tp.Any]:
-        return InterGetItemLocCompound(self._extract_loc)
+    def loc(self) -> InterGetItemLocCompoundReduces[tp.Any]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItemILocCompound[tp.Any]:
@@ -5015,18 +5015,6 @@ class Frame(ContainerOperand):
             column_nm = True # axis 1
         return row_nm, column_nm
 
-
-
-    @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
-
-    @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
-
-    @tp.overload
-    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
-
-
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne) -> Series: ...
 
@@ -5039,6 +5027,14 @@ class Frame(ContainerOperand):
     @tp.overload
     def _extract(self, column_key: TILocSelectorMany) -> Frame: ...
 
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...

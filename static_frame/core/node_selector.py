@@ -150,7 +150,7 @@ class InterGetItemLoc(Interface[TContainer]):
         return self._func(key)
 
 
-class InterGetItemLocCompound(Interface[TContainer]):
+class InterGetItemLocCompoundReduces(Interface[TContainer]):
     '''Interface for compound loc selection that reduces dimensionality. TContainer is the outermost container
     '''
 
@@ -183,6 +183,25 @@ class InterGetItemLocCompound(Interface[TContainer]):
 
     def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
         return self._func(key)
+
+
+
+class InterGetItemLocCompound(Interface[TContainer]):
+    '''Interface for compound loc selection that does not reduce dimensionality. TContainer is the only delivered container container
+    '''
+
+    __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TLocSelectorCompound], TContainer]
+
+    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
+        return self._func(key)
+
+
 
 class InterfaceGetItemILocCompound(Interface[TContainer]):
 
