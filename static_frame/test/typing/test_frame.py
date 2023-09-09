@@ -109,3 +109,15 @@ def test_frame_astype_a() -> None:
             )
     f1 = sf.Frame.from_records(records)
     f2 = f1.astype(int)
+
+
+
+
+
+
+
+
+
+
+
+
