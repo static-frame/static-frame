@@ -1058,7 +1058,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
-            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1102,7 +1102,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
-            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -3465,13 +3465,12 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # interfaces
-
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[tp.Any]:
+    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[tp.Any]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     @property
@@ -9322,6 +9321,17 @@ class FrameGO(Frame):
                 container=self,
                 fill_value=fill_value,
                 )
+
+    #---------------------------------------------------------------------------
+    # interfaces
+    # @property
+    # def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
+    #     return InterGetItemLocCompoundReduces(self._extract_loc)
+
+    # @property
+    # def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
+    #     return InterGetItemILocCompoundReduces(self._extract_iloc)
+
 
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.

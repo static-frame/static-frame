@@ -57,9 +57,12 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
@@ -750,7 +753,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         if key not in self._columns:
             return default
-        return self.__getitem__(key) #type: ignore
+        return self.__getitem__(key)
 
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
@@ -994,10 +997,38 @@ class Quilt(ContainerBase, StoreClientMixin):
             return concat_resolved(parts)
         return concat_resolved(parts, axis=self._axis)
 
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelector) -> tp.Any: ...
+
     def _extract(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
-            ) -> tp.Union[Frame, Series]:
+            ) -> tp.Any:
         '''
         Extract Container based on iloc selection.
         '''
@@ -1087,7 +1118,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             parts.append(extractor(component))
 
         if len(parts) == 1:
-            return parts.pop() #type: ignore
+            return parts.pop()
 
         # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
@@ -1123,11 +1154,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             columns_key = None
 
-        return self._extract(row_key=index_key, column_key=columns_key) #type: ignore
+        return self._extract(row_key=index_key, column_key=columns_key)
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union[Series, Frame]:
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -1152,10 +1183,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union[Series, Frame]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(*self._compound_loc_to_iloc(key))
+        r, c = self._compound_loc_to_iloc(key)
+        return self._extract(r, c)
 
     def _compound_loc_to_getitem_iloc(self,
             key: TLocSelectorCompound) -> tp.Tuple[TILocSelector, TILocSelector]:
@@ -1163,6 +1195,13 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
+
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, Series]:
@@ -1173,17 +1212,18 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(*self._compound_loc_to_getitem_iloc(key))
+        r, c = self._compound_loc_to_getitem_iloc(key)
+        return self._extract(r, c)
 
     #---------------------------------------------------------------------------
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[Frame | Series]:
+    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[Frame | Series]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     #---------------------------------------------------------------------------
@@ -1460,7 +1500,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
+        return self._extract(NULL_SLICE, NULL_SLICE)
 
     def _to_signature_bytes(self,
             include_name: bool = True,

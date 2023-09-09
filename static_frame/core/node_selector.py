@@ -11,6 +11,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevelSpecifier
+from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
@@ -20,8 +21,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TDtypeSpecifier
-
 
 # from static_frame.core.util import AnyCallable
 
@@ -160,9 +159,9 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TLocSelectorCompound], TContainer]
+    _func: tp.Callable[[TLocSelectorCompound], tp.Any]
 
-    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
     @tp.overload
@@ -172,7 +171,7 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> Frame: ...
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TContainer: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
@@ -181,9 +180,12 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: TLabel) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
+    def __getitem__(self, key: TLocSelectorMany) -> TContainer: ...
 
-    def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorCompound) -> tp.Any: ...
+
+    def __getitem__(self, key: TLocSelectorCompound) -> tp.Any:
         return self._func(key)
 
 
@@ -210,9 +212,9 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TILocSelectorCompound], TContainer]
+    _func: tp.Callable[[TILocSelectorCompound], tp.Any]
 
-    def __init__(self, func: tp.Callable[[TILocSelectorCompound], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TILocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
 
@@ -220,7 +222,7 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> Frame: ...
+    def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
@@ -229,15 +231,18 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> Frame: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> TContainer: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorCompound) -> TContainer: ...
+    def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
 
-    def __getitem__(self, key: TILocSelectorCompound) -> TContainer:
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorCompound) -> tp.Any: ...
+
+    def __getitem__(self, key: TILocSelectorCompound) -> tp.Any:
         return self._func(key)
 
 class InterGetItemILocCompound(Interface[TContainer]):
