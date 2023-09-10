@@ -346,6 +346,15 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             q1 = Quilt.from_frame(f1, chunksize=10, axis=2, retain_labels=False)
 
+    def test_quilt_from_frame_e(self) -> None:
+
+        f1 = ff.parse('s(100,4)|v(int)|i(IH,(str,int))|c(IH,(str, int))').rename('foo')
+
+        with self.assertRaises(ValueError):
+            q1 = Quilt.from_frame(f1, chunksize=10, retain_labels=True, axis=0)
+        with self.assertRaises(ValueError):
+            q1 = Quilt.from_frame(f1, chunksize=10, retain_labels=True, axis=1)
+
     #---------------------------------------------------------------------------
 
     def test_quilt_extract_a1(self) -> None:
