@@ -9,13 +9,25 @@ def test_series_from_dict() -> None:
     assert len(s) == 3
 
 
-def test_series_getitem() -> None:
+def test_series_getitem_a() -> None:
     s = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
 
     v1: int = s['b']
     v2: sf.Series = s['b':]
 
     def proc(x: sf.Series) -> sf.Series:
+        return x.dropna()
+
+    y = proc(s['b':]) # this checks that x.dropna() is on a Series
+
+
+def test_series_getitem_b() -> None:
+    s = sf.SeriesHE((10, 20, 30), index=('a', 'b', 'c'))
+
+    v1: int = s['b']
+    v2: sf.SeriesHE = s['b':]
+
+    def proc(x: sf.SeriesHE) -> sf.SeriesHE:
         return x.dropna()
 
     y = proc(s['b':]) # this checks that x.dropna() is on a Series

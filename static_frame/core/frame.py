@@ -5187,13 +5187,13 @@ class Frame(ContainerOperand):
     def __getitem__(self, key: TLabel) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
+    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelector) -> FrameOrSeries: ...
+    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> FrameOrSeries:
+    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series:
         '''Selector of columns by label.
 
         Args:
@@ -9253,7 +9253,6 @@ class FrameGO(Frame):
         self._columns.append(key)
         self._blocks.append(block)
 
-
     def extend_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, Series]],
             fill_value: tp.Any = np.nan,
@@ -9263,7 +9262,6 @@ class FrameGO(Frame):
         '''
         for k, v in pairs:
             self.__setitem__(k, v, fill_value)
-
 
     def extend(self,
             container: tp.Union['Frame', Series],
@@ -9311,7 +9309,59 @@ class FrameGO(Frame):
                 )
 
     #---------------------------------------------------------------------------
-    # interfaces
+    # interfaces are redefined to show type returned type
+
+
+    # @property
+    # def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
+    #     return InterGetItemLocCompoundReduces(self._extract_loc)
+
+    # @property
+    # def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
+    #     return InterGetItemILocCompoundReduces(self._extract_iloc)
+
+#-------------------------------------------------------------------------------
+class FrameHE(Frame):
+    '''
+    A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
+    '''
+
+    __slots__ = (
+            '_hash',
+            )
+
+    _hash: int
+
+    def __eq__(self, other: tp.Any) -> bool:
+        '''
+        Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
+        return self.equals(other,
+                compare_name=True,
+                compare_dtype=False,
+                compare_class=False,
+                skipna=True,
+                )
+
+    def __ne__(self, other: tp.Any) -> bool:
+        '''
+        Return False if other is a ``Frame`` with the different labels, values, or name. Container class and underlying dtypes are not independently compared.
+        '''
+        return not self.__eq__(other)
+
+    def __hash__(self) -> int:
+        if not hasattr(self, '_hash'):
+            # NOTE: we hash based on labels, which we use a faster-than full identity check
+            self._hash = hash((
+                    tuple(self.index),
+                    tuple(self.columns),
+                    ))
+        return self._hash
+
+
+    #---------------------------------------------------------------------------
+    # interfaces are redefined to show type returned type
+
     # @property
     # def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
     #     return InterGetItemLocCompoundReduces(self._extract_loc)
@@ -9621,41 +9671,3 @@ class FrameAsType:
                 name=self.container._name,
                 own_data=True,
                 )
-
-#-------------------------------------------------------------------------------
-class FrameHE(Frame):
-    '''
-    A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
-    '''
-
-    __slots__ = (
-            '_hash',
-            )
-
-    _hash: int
-
-    def __eq__(self, other: tp.Any) -> bool:
-        '''
-        Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
-        '''
-        return self.equals(other,
-                compare_name=True,
-                compare_dtype=False,
-                compare_class=False,
-                skipna=True,
-                )
-
-    def __ne__(self, other: tp.Any) -> bool:
-        '''
-        Return False if other is a ``Frame`` with the different labels, values, or name. Container class and underlying dtypes are not independently compared.
-        '''
-        return not self.__eq__(other)
-
-    def __hash__(self) -> int:
-        if not hasattr(self, '_hash'):
-            # NOTE: we hash based on labels, which we use a faster-than full identity check
-            self._hash = hash((
-                    tuple(self.index),
-                    tuple(self.columns),
-                    ))
-        return self._hash

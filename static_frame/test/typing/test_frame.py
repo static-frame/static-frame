@@ -47,6 +47,32 @@ def test_frame_getitem_a() -> None:
     f4: sf.Frame = f1[1:]
 
 
+def test_frame_getitem_b() -> None:
+    records = (
+            (1, 2, 'a', False),
+            (30, 34, 'b', True),
+            (54, 95, 'c', False),
+            )
+    f1 = sf.FrameGO.from_records(records)
+    f2: sf.FrameGO = f1[2:]
+    assert isinstance(f2, sf.FrameGO)
+
+    f3: sf.FrameGO = f1[f1.columns.values % 2 == 0]
+    assert isinstance(f3, sf.FrameGO)
+
+def test_frame_getitem_c() -> None:
+    records = (
+            (1, 2, 'a', False),
+            (30, 34, 'b', True),
+            (54, 95, 'c', False),
+            )
+    f1 = sf.FrameHE.from_records(records)
+    f2: sf.FrameHE = f1[2:]
+    assert isinstance(f2, sf.FrameHE)
+
+    f3: sf.FrameHE = f1[f1.columns.values % 2 == 0]
+    assert isinstance(f3, sf.FrameHE)
+
 
 def test_frame_iloc_a() -> None:
     records = (
@@ -96,9 +122,14 @@ def test_frame_go_loc_a() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.FrameGO.from_records(records)
+    f2: sf.FrameGO = f1[2:]
+    assert isinstance(f2, sf.FrameGO)
+
+    f3: sf.FrameGO = f1[f1.columns.values % 2 == 0]
+    assert isinstance(f3, sf.FrameGO)
+
     # NOTE: typing this still does not work
     # f2: sf.FrameGO = f1.loc[1:, 1:]
-    # assert isinstance(f2, sf.FrameGO)
 
 
 def test_frame_astype_a() -> None:
