@@ -4005,6 +4005,7 @@ class Frame(ContainerOperand):
         row_key, col_key = iloc_key # type: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
+        # NOTE: NM (not many) means an integer or label
         nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
         v: None | Series | Frame = None
         col_key_many: TILocSelectorMany
@@ -4013,33 +4014,20 @@ class Frame(ContainerOperand):
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
             if is_series:
-                if isinstance(col_key, INT_TYPES):
-                    col_key_many = [col_key] # type: ignore[list-item]
-                else:
-                    col_key_many = col_key
+                col_key_many = col_key # type: ignore[assignment]
                 v = value.reindex(self._columns._extract_iloc(col_key_many),
                         fill_value=fill_value)
         elif not nm_row and nm_column:
             # only row is multi selection, reindex by index
             if is_series:
-                if isinstance(row_key, INT_TYPES):
-                    row_key_many = [row_key] # type: ignore[list-item]
-                else:
-                    row_key_many = row_key
+                row_key_many = row_key # type: ignore[assignment]
                 v = value.reindex(self._index._extract_iloc(row_key_many),
                         fill_value=fill_value)
         elif not nm_row and not nm_column:
             # both multi, must be a Frame
             if is_frame:
-                if isinstance(col_key, INT_TYPES):
-                    col_key_many = [col_key] # type: ignore[list-item]
-                else:
-                    col_key_many = col_key
-                if isinstance(row_key, INT_TYPES):
-                    row_key_many = [row_key] # type: ignore[list-item]
-                else:
-                    row_key_many = row_key
-
+                col_key_many = col_key # type: ignore[assignment]
+                row_key_many = row_key # type: ignore[assignment]
                 target_column_index = self._columns._extract_iloc(col_key_many)
                 target_row_index = self._index._extract_iloc(row_key_many)
                 # this will use the default fillna type, which may or may not be what is wanted
