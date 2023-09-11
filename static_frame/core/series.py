@@ -259,7 +259,7 @@ class Series(ContainerOperand):
                 quoting=quoting,
                 quotechar=quote_char,
                 doublequote=quote_double,
-                escapechar=escape_char, # type: ignore
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
                 skipinitialspace=skip_initial_space,
