@@ -46,9 +46,9 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItemILoc
-from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
+from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
@@ -1153,12 +1153,12 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self: IH) -> InterfaceGetItemLoc['IndexHierarchy']:
-        return InterfaceGetItemLoc(self._extract_loc) # type: ignore
+    def loc(self: IH) -> InterGetItemLocReduces['IndexHierarchy']:
+        return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self: IH) -> InterfaceGetItemILoc['IndexHierarchy']:
-        return InterfaceGetItemILoc(self._extract_iloc)
+    def iloc(self: IH) -> InterGetItemILocReduces['IndexHierarchy']:
+        return InterGetItemILocReduces(self._extract_iloc)
 
     def _iter_label(self: IH,
             depth_level: TDepthLevelSpecifier = None,
@@ -1998,7 +1998,7 @@ class IndexHierarchy(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: TILocSelector | None,
+            key: TILocSelector,
             ) -> tp.Any:
         '''
         Extract a new index given an iloc key
@@ -2167,7 +2167,7 @@ class IndexHierarchy(IndexBase):
             # if skipna, drop rows with any NaNs
             blocks = self._blocks._extract(row_key=order)
             # NOTE: this could return a tuple rather than an array
-            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0)) # type: ignore
+            return blocks._extract_array(row_key=(-1 if ufunc is np.max else 0))
 
         # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
         raise NotImplementedError(f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.')

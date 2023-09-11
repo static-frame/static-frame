@@ -63,9 +63,9 @@ from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceGetItemILoc
-from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.rank import RankMethod
@@ -95,8 +95,11 @@ from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
 from static_frame.core.util import argmax_1d
@@ -256,7 +259,7 @@ class Series(ContainerOperand):
                 quoting=quoting,
                 quotechar=quote_char,
                 doublequote=quote_double,
-                escapechar=escape_char, # type: ignore
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
                 skipinitialspace=skip_initial_space,
@@ -641,7 +644,7 @@ class Series(ContainerOperand):
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> 'Series':
+    # def __copy__(self) -> tpe.Self:
     #     '''
     #     Return shallow copy of this Series.
     #     '''
@@ -698,23 +701,23 @@ class Series(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLoc['Series']:
+    def loc(self) -> InterGetItemLocReduces[Series]:
         '''
         Interface for label-based selection.
         '''
-        return InterfaceGetItemLoc(self._extract_loc)
+        return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItemILoc['Series']:
+    def iloc(self) -> InterGetItemILocReduces[Series]:
         '''
         Interface for position-based selection.
         '''
-        return InterfaceGetItemILoc(self._extract_iloc)
+        return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Series']:
+    def drop(self) -> InterfaceSelectTrio[Series]:
         '''
-        Interface for dropping elements from :obj:`static_frame.Series`.
+        Interface for dropping elements from :obj:`static_frame.Series`. This alway returns a `Series`.
         '''
         return InterfaceSelectTrio( # type: ignore
                 func_iloc=self._drop_iloc,
@@ -770,7 +773,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -790,7 +793,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -821,7 +824,7 @@ class Series(ContainerOperand):
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Series':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -1078,14 +1081,19 @@ class Series(ContainerOperand):
     # index manipulation
 
     def _reindex_other_like_iloc(self,
-            value: 'Series',
+            value: Series,
             iloc_key: TILocSelector,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> Series:
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
+        iloc_many: TILocSelectorMany
+        if isinstance(iloc_key, INT_TYPES):
+            iloc_many = [iloc_key] # type: ignore[list-item]
+        else:
+            iloc_many = iloc_key
         return value.reindex(
-                self._index._extract_iloc(iloc_key),
+                self._index._extract_iloc(iloc_many),
                 fill_value=fill_value
                 )
 
@@ -1125,7 +1133,7 @@ class Series(ContainerOperand):
         ic = IndexCorrespondence.from_correspondence(self._index, index_owned)
         if not ic.size:
             # NOTE: take slice to ensure same type of index and array
-            return self._extract_iloc(EMPTY_SLICE) # type: ignore
+            return self._extract_iloc(EMPTY_SLICE)
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src]
@@ -1157,7 +1165,7 @@ class Series(ContainerOperand):
             index: tp.Optional[RelabelInput],
             *,
             index_constructor: IndexConstructor = None,
-            ) -> 'Series':
+            ) -> tpe.Self:
         '''
         {doc}
 
@@ -1187,7 +1195,7 @@ class Series(ContainerOperand):
                 )
 
     @doc_inject(selector='relabel_flat', class_name='Series')
-    def relabel_flat(self) -> 'Series':
+    def relabel_flat(self) -> tpe.Self:
         '''
         {doc}
         '''
@@ -1202,7 +1210,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
             level: TLabel
-            ) -> 'Series':
+            ) -> tpe.Self:
         '''
         {doc}
 
@@ -1217,7 +1225,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='relabel_level_drop', class_name='Series')
     def relabel_level_drop(self,
             count: int = 1
-            ) -> 'Series':
+            ) -> tpe.Self:
         '''
         {doc}
 
@@ -1236,7 +1244,7 @@ class Series(ContainerOperand):
             depth_map: tp.Sequence[int],
             *,
             index_constructors: IndexConstructors = None,
-            ) -> 'Series':
+            ) -> tpe.Self:
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
@@ -1892,12 +1900,19 @@ class Series(ContainerOperand):
     # def _extract_array(self, key: TLocSelector) -> NDArrayAny:
     #     return self.values[key]
 
-    def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
-        # iterable selection should be handled by NP
-        values = self.values[key]
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> tp.Any: ...
+
+    def _extract_iloc(self, key: TILocSelector) -> tp.Any:
+        try:
+            values = self.values[key]
+        except IndexError as e:
+            raise KeyError(key) from e
 
         if isinstance(key, INT_TYPES): # if we have a single element
-            # NOTE: cannot check if we have an array as an array might be an element
             return values
 
         return self.__class__(
@@ -1905,28 +1920,41 @@ class Series(ContainerOperand):
                 index=self._index.iloc[key],
                 name=self._name)
 
-    def _extract_loc(self, key: TLocSelector) -> 'Series':
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract_loc(self, key: TLabel) -> tp.Any: ...
+
+    def _extract_loc(self, key: TLocSelector) -> tp.Any:
         '''
         Compatibility:
             Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
         '''
         iloc_key = self._index._loc_to_iloc(key)
-        try:
-            values = self.values[iloc_key]
-        except IndexError as e:
-            raise KeyError(iloc_key) from e
+        return self._extract_iloc(iloc_key)
 
-        if isinstance(iloc_key, INT_TYPES): # if we have a single element
-            # NOTE: cannot check if we have an array as an array might be an element
-            return values #type: ignore
+        # try:
+        #     values = self.values[iloc_key]
+        # except IndexError as e:
+        #     raise KeyError(iloc_key) from e
 
-        return self.__class__(values,
-                index=self._index.iloc[iloc_key],
-                own_index=True,
-                name=self._name)
+        # if isinstance(iloc_key, INT_TYPES): # if we have a single element
+        #     return values
+
+        # return self.__class__(values,
+        #         index=self._index.iloc[iloc_key],
+        #         own_index=True,
+        #         name=self._name)
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> tp.Any: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'Series':
+    def __getitem__(self, key: TLocSelector) -> tp.Any:
         '''Selector of values by label.
 
         Args:
@@ -1940,7 +1968,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
 
-    def _drop_iloc(self, key: TILocSelector) -> 'Series':
+    def _drop_iloc(self, key: TILocSelector) -> tpe.Self:
         if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
@@ -1956,12 +1984,12 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def _drop_loc(self, key: TLocSelector) -> 'Series':
+    def _drop_loc(self, key: TLocSelector) -> tpe.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_mask(self, key: TILocSelector) -> 'Series':
+    def _extract_iloc_mask(self, key: TILocSelector) -> tpe.Self:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True. The `name` attribute is not propagated.
         '''
         mask = np.full(self.values.shape, False, dtype=bool)
@@ -1969,7 +1997,7 @@ class Series(ContainerOperand):
         mask.flags.writeable = False
         return self.__class__(mask, index=self._index)
 
-    def _extract_loc_mask(self, key: TLocSelector) -> 'Series':
+    def _extract_loc_mask(self, key: TLocSelector) -> tpe.Self:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True. The `name` attribute is not propagated.
         '''
         iloc_key = self._index._loc_to_iloc(key)
@@ -3099,7 +3127,7 @@ class Series(ContainerOperand):
             if self._index.ndim == 1:
                 return self._index.values[sel]
             elif found.sum() == 1:
-                return self._index._extract_iloc(sel) # type: ignore
+                return self._index._extract_iloc(sel)
 
         if self._index.ndim == 1:
             post = np.full(len(sel),
@@ -3613,7 +3641,7 @@ class SeriesAssign(Assign):
             func: AnyCallable,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> Series:
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
 
@@ -3631,7 +3659,7 @@ class SeriesAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> Series:
         '''
         Provide a function to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -3650,7 +3678,7 @@ class SeriesAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> 'Series':
+            ) -> Series:
         '''
         Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -3706,5 +3734,19 @@ class SeriesHE(Series):
                 own_index=True,
                 )
 
+    #---------------------------------------------------------------------------
+    # interfaces are redefined to show type returned type
 
+    @property
+    def loc(self) -> InterGetItemLocReduces[SeriesHE]:
+        '''
+        Interface for label-based selection.
+        '''
+        return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
+    @property
+    def iloc(self) -> InterGetItemILocReduces[SeriesHE]:
+        '''
+        Interface for position-based selection.
+        '''
+        return InterGetItemILocReduces(self._extract_iloc)

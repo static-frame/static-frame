@@ -24,9 +24,9 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_selector import InterfaceGetItemILoc
-from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -582,12 +582,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLoc['Bus']:
-        return InterfaceGetItemLoc(self._extract_loc)
+    def loc(self) -> InterGetItemLocReduces['Bus']:
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILoc['Bus']:
-        return InterfaceGetItemILoc(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocReduces['Bus']:
+        return InterGetItemILocReduces(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio['Bus']:

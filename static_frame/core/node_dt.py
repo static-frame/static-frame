@@ -10,7 +10,7 @@ from arraykit import resolve_dtype
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.util import DT64_AS
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_FS
@@ -48,7 +48,7 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
 INTERFACE_DT = (
         '__call__',
@@ -75,7 +75,7 @@ INTERFACE_DT = (
         'strpdate',
         )
 
-class InterfaceDatetime(Interface[TContainer]):
+class InterfaceDatetime(Interface[TVContainer_co]):
 
     __slots__ = (
             '_blocks', # function that returns iterable of arrays
@@ -111,11 +111,11 @@ class InterfaceDatetime(Interface[TContainer]):
     def __init__(self,
             *,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer],
+            blocks_to_container: ToContainerType[TVContainer_co],
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
         self._fill_value: tp.Any = fill_value
 
         # only set attr if we will need to use the value
@@ -129,7 +129,7 @@ class InterfaceDatetime(Interface[TContainer]):
     def __call__(self,
             *,
             fill_value: tp.Any,
-            ) -> 'InterfaceDatetime[TContainer]':
+            ) -> 'InterfaceDatetime[TVContainer_co]':
         '''
         Args:
             fill_value: If NAT are encountered, use this value.
@@ -258,7 +258,7 @@ class InterfaceDatetime(Interface[TContainer]):
     # date, datetime attributes
 
     @property
-    def year(self) -> TContainer:
+    def year(self) -> TVContainer_co:
         'Return the year of each element.'
 
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -278,7 +278,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     @property
-    def month(self) -> TContainer:
+    def month(self) -> TVContainer_co:
         '''
         Return the month of each element, between 1 and 12 inclusive.
         '''
@@ -300,7 +300,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     @property
-    def year_month(self) -> TContainer:
+    def year_month(self) -> TVContainer_co:
         '''
         Return the year and month of each element as string formatted YYYY-MM.
         '''
@@ -324,7 +324,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
 
     @property
-    def day(self) -> TContainer:
+    def day(self) -> TVContainer_co:
         '''
         Return the day of each element, between 1 and the number of days in the given month of the given year.
         '''
@@ -352,7 +352,7 @@ class InterfaceDatetime(Interface[TContainer]):
     # datetime attributes
 
     @property
-    def hour(self) -> TContainer:
+    def hour(self) -> TVContainer_co:
         '''
         Return the hour of each element, between 0 and 24.
         '''
@@ -377,7 +377,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     @property
-    def minute(self) -> TContainer:
+    def minute(self) -> TVContainer_co:
         '''
         Return the minute of each element, between 0 and 60.
         '''
@@ -401,7 +401,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
     @property
-    def second(self) -> TContainer:
+    def second(self) -> TVContainer_co:
         '''
         Return the second of each element, between 0 and 60.
         '''
@@ -430,7 +430,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
     # replace: awkward to implement, as cannot provide None for the parameters that you do not want to set
 
-    def weekday(self) -> TContainer:
+    def weekday(self) -> TVContainer_co:
         '''
         Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
         '''
@@ -456,7 +456,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def quarter(self) -> TContainer:
+    def quarter(self) -> TVContainer_co:
         '''
         Return the quarter of the year as an integer, where January through March is quarter 1.
         '''
@@ -487,7 +487,7 @@ class InterfaceDatetime(Interface[TContainer]):
     #---------------------------------------------------------------------------
     # boolean matches
 
-    def is_month_end(self) -> TContainer:
+    def is_month_end(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the month end.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -506,7 +506,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def is_month_start(self) -> TContainer:
+    def is_month_start(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the month start.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -525,7 +525,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
 
-    def is_year_end(self) -> TContainer:
+    def is_year_end(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the year end.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -544,7 +544,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def is_year_start(self) -> TContainer:
+    def is_year_start(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the year start.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -564,7 +564,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
 
-    def is_quarter_end(self) -> TContainer:
+    def is_quarter_end(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the quarter end.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -593,7 +593,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def is_quarter_start(self) -> TContainer:
+    def is_quarter_start(self) -> TVContainer_co:
         '''Return Boolean indicators if the day is the quarter start.
         '''
         def blocks() -> tp.Iterator[NDArrayAny]:
@@ -625,7 +625,7 @@ class InterfaceDatetime(Interface[TContainer]):
     #---------------------------------------------------------------------------
     # time methods
 
-    def timetuple(self) -> TContainer:
+    def timetuple(self) -> TVContainer_co:
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
         '''
@@ -649,7 +649,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> TContainer:
+    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> TVContainer_co:
         '''
         Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
         '''
@@ -679,7 +679,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def fromisoformat(self) -> TContainer:
+    def fromisoformat(self) -> TVContainer_co:
         '''
         Return a :obj:`datetime.date` object from an ISO 8601 format.
         '''
@@ -700,7 +700,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def strftime(self, format: str) -> TContainer:
+    def strftime(self, format: str) -> TVContainer_co:
         '''
         Return a string representing the date, controlled by an explicit ``format`` string.
         '''
@@ -727,7 +727,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
-    def strptime(self, format: str) -> TContainer:
+    def strptime(self, format: str) -> TVContainer_co:
         '''
         Return a Python datetime object from parsing a string defined with ``format``.
         '''
@@ -750,7 +750,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
 
-    def strpdate(self, format: str) -> TContainer:
+    def strpdate(self, format: str) -> TVContainer_co:
         '''
         Return a Python date object from parsing a string defined with ``format``.
         '''

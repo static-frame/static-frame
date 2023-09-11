@@ -245,13 +245,15 @@ KEY_ITERABLE_TYPES = (list, np.ndarray)
 KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 
 # types of keys that return multiple items, even if the selection reduces to 1
-KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
+KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
 
-
-TILocSelector = tp.Union[int, np.integer, np.ndarray, tp.List[int], slice, None]
+TILocSelectorOne = tp.Union[int, np.integer]
+TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
+TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
 TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
 
 # NOTE: slice is not hashable
+# NOTE: this is TLocSelectorOne
 TLabel = tp.Union[
         tp.Hashable,
         int,
@@ -267,23 +269,29 @@ TLabel = tp.Union[
         np.datetime64,
         np.timedelta64,
         datetime.date,
+        datetime.datetime,
         tp.Tuple['TLabel'],
 ]
+
+TLocSelectorMany = tp.Union[
+        slice,
+        tp.List[TLabel],
+        np.ndarray,
+        'IndexBase',
+        'Series',
+        ]
 
 TLocSelectorNonContainer = tp.Union[
         TLabel,
         slice,
         tp.List[TLabel],
         np.ndarray,
-        np.datetime64,
-        datetime.date,
         ]
 
 # keys once dimension has been isolated
 TLocSelector = tp.Union[
-        TLocSelectorNonContainer,
-        'IndexBase',
-        'Series',
+        TLabel,
+        TLocSelectorMany
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
@@ -329,7 +337,7 @@ PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
 PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
-TDtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
 TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
 
 def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:

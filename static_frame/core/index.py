@@ -37,9 +37,9 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceGetItemLoc
 from static_frame.core.node_selector import InterfaceSelectDuo
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.style_config import StyleConfig
@@ -228,10 +228,10 @@ class Index(IndexBase):
     @staticmethod
     def _extract_positions(
             size: int,
-            positions: tp.Optional[tp.Sequence[int]]
+            positions: tp.Optional[NDArrayAny]
             ) -> NDArrayAny:
         # positions is either None or an ndarray
-        if positions.__class__ is np.ndarray: # type: ignore
+        if positions.__class__ is np.ndarray:
             return immutable_filter(positions) # type: ignore
         return PositionsAllocator.get(size)
 
@@ -435,12 +435,12 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLoc[TContainer]:
-        return InterfaceGetItemLoc(self._extract_loc)
+    def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc[TContainer]:
-        return InterfaceGetItemLoc(self._extract_iloc) #type: ignore
+    def iloc(self) -> InterGetItemLocReduces[TVContainer_co]:
+        return InterGetItemLocReduces(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
@@ -567,7 +567,7 @@ class Index(IndexBase):
 
 
     @property
-    def drop(self) -> InterfaceSelectDuo[TContainer]:
+    def drop(self) -> InterfaceSelectDuo[TVContainer_co]:
         return InterfaceSelectDuo( #type: ignore
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
@@ -922,7 +922,7 @@ class Index(IndexBase):
         return self._loc_to_iloc(key)
 
     def _extract_iloc(self,
-            key: TILocSelector | None,
+            key: TILocSelector,
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -1497,7 +1497,7 @@ class _IndexGOMixin:
 
     def _extract_positions(self,
             size: int,
-            positions: tp.Optional[tp.Sequence[int]]
+            positions: tp.Optional[NDArrayAny]
             ) -> NDArrayAny:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''

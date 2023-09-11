@@ -1,6 +1,6 @@
 numpy==1.25.2
 arraymap==0.1.9
-arraykit==0.4.9
+arraykit==0.4.10
 typing-extensions>=4.7.1
 
 pytest==7.1.2

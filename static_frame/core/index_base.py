@@ -5,6 +5,7 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tpe
 
 from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import IMTOAdapter
@@ -30,6 +31,8 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
@@ -61,7 +64,7 @@ class IndexBase(ContainerOperandSequence):
     _NDIM: int
 
     loc: tp.Any
-    iloc: tp.Any # this does not work: InterfaceGetItemLoc[I]
+    iloc: tp.Any # this does not work: InterGetItemLocReduces[I]
 
     #---------------------------------------------------------------------------
     def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:
@@ -201,7 +204,14 @@ class IndexBase(ContainerOperandSequence):
         from static_frame.core.series import Series
         return Series(()) # pragma: no cover
 
-    def _extract_iloc(self, key: TILocSelector | None) -> tp.Any:
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> TLabel: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+
+    def _extract_iloc(self, key: TILocSelector) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
 
     def _extract_iloc_by_int(self, key: int | np.integer[tp.Any]) -> TLabel:
