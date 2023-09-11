@@ -25,11 +25,11 @@ TDtype = tpe.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
 class Index(IndexBase, tp.Generic[TDtype]):
     ...
 
-class IndexDate(Index, tp.Generic[TDtype]):
+class IndexDate(Index):
     ...
 
 x: Index[np.bool_]
-y: IndexDate[np.datetime64]
+y: IndexDate
 
 
 
