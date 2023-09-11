@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+1.6.4
+-----------
+
+Improvements to typing through usage of ``overload`` signature definitions.
+
+Set ``arraykit`` to 0.4.10.
+
+
 1.6.3
 -----------
 

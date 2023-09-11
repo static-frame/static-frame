@@ -9,7 +9,7 @@ from numpy import char as npc
 from static_frame.core.container_util import get_col_format_factory
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
@@ -30,7 +30,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
 INTERFACE_STR = (
         '__getitem__',
@@ -75,7 +75,7 @@ INTERFACE_STR = (
 )
 
 
-class InterfaceString(Interface[TContainer]):
+class InterfaceString(Interface[TVContainer_co]):
 
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 
@@ -89,12 +89,12 @@ class InterfaceString(Interface[TContainer]):
 
     def __init__(self,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer],
+            blocks_to_container: ToContainerType[TVContainer_co],
             ndim: int,
             labels: tp.Sequence[TLabel] | IndexBase,
             ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
         self._ndim: int = ndim
         self._labels: tp.Sequence[TLabel] | IndexBase = labels
 
@@ -166,7 +166,7 @@ class InterfaceString(Interface[TContainer]):
 
 
     #---------------------------------------------------------------------------
-    def __getitem__(self,  key: TLocSelector) -> TContainer:
+    def __getitem__(self,  key: TLocSelector) -> TVContainer_co:
         '''
         Return a container with the provided selection or slice of each element.
         '''
@@ -178,7 +178,7 @@ class InterfaceString(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def capitalize(self) -> TContainer:
+    def capitalize(self) -> TVContainer_co:
         '''
         Return a container with only the first character of each element capitalized.
         '''
@@ -189,14 +189,14 @@ class InterfaceString(Interface[TContainer]):
     def center(self,
             width: int,
             fillchar: str = ' '
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Return a container with its elements centered in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
         return self._blocks_to_container(block_gen)
 
-    def contains(self,  item: str) -> TContainer:
+    def contains(self,  item: str) -> TVContainer_co:
         '''
         Return a Boolean container showing True of item is a substring of elements.
         '''
@@ -212,7 +212,7 @@ class InterfaceString(Interface[TContainer]):
             sub: str,
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
@@ -222,7 +222,7 @@ class InterfaceString(Interface[TContainer]):
     def decode(self,
             encoding: tp.Optional[str] = None,
             errors: tp.Optional[str] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Apply str.decode() to each element. Elements must be bytes.
         '''
@@ -237,7 +237,7 @@ class InterfaceString(Interface[TContainer]):
     def encode(self,
             encoding: tp.Optional[str] = None,
             errors: tp.Optional[str] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Apply str.encode() to each element. Elements must be strings.
         '''
@@ -248,7 +248,7 @@ class InterfaceString(Interface[TContainer]):
             suffix: tp.Union[str, tp.Iterable[str]],
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
         '''
@@ -273,14 +273,14 @@ class InterfaceString(Interface[TContainer]):
             sub: str,
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return the lowest index in the string where substring ``sub`` is found.
         '''
         block_gen = self._process_blocks(self._blocks, npc.find, (sub, start, end))
         return self._blocks_to_container(block_gen)
 
-    def format(self, format: str) -> TContainer:
+    def format(self, format: str) -> TVContainer_co:
         '''
         For each element, return a string resulting from calling the string ``format`` argument's ``format`` method with the the element. Format strings (given within curly braces) can use Python's format mini language: https://docs.python.org/3/library/string.html#formatspec
 
@@ -323,77 +323,77 @@ class InterfaceString(Interface[TContainer]):
             sub: str,
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Like ``find``, but raises ``ValueError`` when the substring is not found.
         '''
         block_gen = self._process_blocks(self._blocks, npc.index, (sub, start, end))
         return self._blocks_to_container(block_gen)
 
-    def isalnum(self) -> TContainer:
+    def isalnum(self) -> TVContainer_co:
         '''
         Returns true for each element if all characters in the string are alphanumeric and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isalnum)
         return self._blocks_to_container(block_gen)
 
-    def isalpha(self) -> TContainer:
+    def isalpha(self) -> TVContainer_co:
         '''
         Returns true for each element if all characters in the string are alphabetic and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isalpha)
         return self._blocks_to_container(block_gen)
 
-    def isdecimal(self) -> TContainer:
+    def isdecimal(self) -> TVContainer_co:
         '''
         For each element, return True if there are only decimal characters in the element.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isdecimal)
         return self._blocks_to_container(block_gen)
 
-    def isdigit(self) -> TContainer:
+    def isdigit(self) -> TVContainer_co:
         '''
         Returns true for each element if all characters in the string are digits and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isdigit)
         return self._blocks_to_container(block_gen)
 
-    def islower(self) -> TContainer:
+    def islower(self) -> TVContainer_co:
         '''
         Returns true for each element if all cased characters in the string are lowercase and there is at least one cased character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.islower)
         return self._blocks_to_container(block_gen)
 
-    def isnumeric(self) -> TContainer:
+    def isnumeric(self) -> TVContainer_co:
         '''
         For each element in self, return True if there are only numeric characters in the element.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isnumeric)
         return self._blocks_to_container(block_gen)
 
-    def isspace(self) -> TContainer:
+    def isspace(self) -> TVContainer_co:
         '''
         Returns true for each element if there are only whitespace characters in the string and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isspace)
         return self._blocks_to_container(block_gen)
 
-    def istitle(self) -> TContainer:
+    def istitle(self) -> TVContainer_co:
         '''
         Returns true for each element if the element is a titlecased string and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.istitle)
         return self._blocks_to_container(block_gen)
 
-    def isupper(self) -> TContainer:
+    def isupper(self) -> TVContainer_co:
         '''
         Returns true for each element if all cased characters in the string are uppercase and there is at least one character, false otherwise.
         '''
         block_gen = self._process_blocks(self._blocks, npc.isupper)
         return self._blocks_to_container(block_gen)
 
-    def len(self) -> TContainer:
+    def len(self) -> TVContainer_co:
         '''
         Return the length of the string.
         '''
@@ -403,14 +403,14 @@ class InterfaceString(Interface[TContainer]):
     def ljust(self,
             width: int,
             fillchar: str = ' '
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Return a container with its elements ljusted in a string of length ``width``.
         '''
         block_gen = self._process_blocks(self._blocks, npc.ljust, (width, fillchar))
         return self._blocks_to_container(block_gen)
 
-    def lower(self) -> TContainer:
+    def lower(self) -> TVContainer_co:
         '''
         Return an array with the elements of self converted to lowercase.
         '''
@@ -419,7 +419,7 @@ class InterfaceString(Interface[TContainer]):
 
     def lstrip(self,
             chars: tp.Optional[str] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return a copy with the leading characters removed.
         '''
@@ -428,7 +428,7 @@ class InterfaceString(Interface[TContainer]):
 
     def partition(self,
             sep: str,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Partition each element around ``sep``.
         '''
@@ -445,7 +445,7 @@ class InterfaceString(Interface[TContainer]):
             old: str,
             new: str,
             count: tp.Optional[int] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Return a container with its elements replaced in a string of length ``width``.
         '''
@@ -456,7 +456,7 @@ class InterfaceString(Interface[TContainer]):
             sub: str,
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return the highest index in the string where substring ``sub`` is found, such that sub is contained within ``start``, ``end``.
         '''
@@ -467,7 +467,7 @@ class InterfaceString(Interface[TContainer]):
             sub: str,
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Like ``rfind``, but raises ``ValueError`` when the substring ``sub`` is not found.
         '''
@@ -477,7 +477,7 @@ class InterfaceString(Interface[TContainer]):
     def rjust(self,
             width: int,
             fillchar: str = ' '
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Return a container with its elements rjusted in a string of length ``width``.
         '''
@@ -486,7 +486,7 @@ class InterfaceString(Interface[TContainer]):
 
     def rpartition(self,
             sep: str,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Partition (split) each element around the right-most separator.
         '''
@@ -502,7 +502,7 @@ class InterfaceString(Interface[TContainer]):
     def rsplit(self,
             sep: str,
             maxsplit: int = -1,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return a tuple of the words in the string, using sep as the delimiter string.
         '''
@@ -517,7 +517,7 @@ class InterfaceString(Interface[TContainer]):
 
     def rstrip(self,
             chars: tp.Optional[str] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return a copy with the trailing characters removed.
         '''
@@ -527,7 +527,7 @@ class InterfaceString(Interface[TContainer]):
     def split(self,
             sep: str,
             maxsplit: int = -1,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return a tuple of the words in the string, using sep as the delimiter string.
         '''
@@ -546,7 +546,7 @@ class InterfaceString(Interface[TContainer]):
             prefix: tp.Union[str, tp.Iterable[str]],
             start: tp.Optional[int] = None,
             end: tp.Optional[int] = None
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an interable of prefixes) in the optional range ``start``, ``end``.
         '''
@@ -568,21 +568,21 @@ class InterfaceString(Interface[TContainer]):
 
     def strip(self,
             chars: tp.Optional[str] = None,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         For each element, return a copy with the leading and trailing characters removed.
         '''
         block_gen = self._process_blocks(self._blocks, npc.strip, (chars,))
         return self._blocks_to_container(block_gen)
 
-    def swapcase(self) -> TContainer:
+    def swapcase(self) -> TVContainer_co:
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
         block_gen = self._process_blocks(self._blocks, npc.swapcase)
         return self._blocks_to_container(block_gen)
 
-    def title(self) -> TContainer:
+    def title(self) -> TVContainer_co:
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
@@ -591,7 +591,7 @@ class InterfaceString(Interface[TContainer]):
 
     # translate: akward input
 
-    def upper(self) -> TContainer:
+    def upper(self) -> TVContainer_co:
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
@@ -600,7 +600,7 @@ class InterfaceString(Interface[TContainer]):
 
     def zfill(self,
             width: int,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''
         Return the string left-filled with zeros.
         '''

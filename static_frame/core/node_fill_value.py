@@ -29,7 +29,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
-TContainer = tp.TypeVar('TContainer',
+TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'Series',
         )
@@ -65,7 +65,7 @@ INTERFACE_FILL_VALUE = (
         )
 
 
-class InterfaceFillValue(Interface[TContainer]):
+class InterfaceFillValue(Interface[TVContainer_co]):
 
     __slots__ = (
             '_container',
@@ -76,12 +76,12 @@ class InterfaceFillValue(Interface[TContainer]):
     INTERFACE = INTERFACE_FILL_VALUE
 
     def __init__(self,
-            container: TContainer,
+            container: TVContainer_co,
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0,
             ) -> None:
-        self._container: TContainer = container
+        self._container: TVContainer_co = container
         self._fill_value = fill_value
         self._axis = axis
 
@@ -425,7 +425,7 @@ class InterfaceFillValue(Interface[TContainer]):
                 )
 
 #---------------------------------------------------------------------------
-class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is FrameGO
+class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is FrameGO
 
     __slots__ = ()
     INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore

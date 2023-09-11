@@ -7,7 +7,7 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
@@ -25,7 +25,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TContainer] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
 
 INTERFACE_RE = (
@@ -39,7 +39,7 @@ INTERFACE_RE = (
         )
 
 
-class InterfaceRe(Interface[TContainer]):
+class InterfaceRe(Interface[TVContainer_co]):
 
     __slots__ = (
             '_blocks',
@@ -50,12 +50,12 @@ class InterfaceRe(Interface[TContainer]):
 
     def __init__(self,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TContainer],
+            blocks_to_container: ToContainerType[TVContainer_co],
             pattern: str,
             flags: int = 0,
             ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
         self._pattern = re.compile(pattern, flags)
 
     @staticmethod
@@ -80,7 +80,7 @@ class InterfaceRe(Interface[TContainer]):
             yield array
 
     #---------------------------------------------------------------------------
-    def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+    def search(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TVContainer_co:
         '''
         Scan through string looking for the first location where this regular expression produces a match and return True, else False. Note that this is different from finding a zero-length match at some point in the string.
 
@@ -103,7 +103,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+    def match(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TVContainer_co:
         '''
         If zero or more characters at the beginning of string match this regular expression return True, else False. Note that this is different from a zero-length match.
 
@@ -126,7 +126,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TVContainer_co:
         '''
         If the whole string matches this regular expression, return True, else False. Note that this is different from a zero-length match.
 
@@ -149,7 +149,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def split(self, maxsplit: int = 0) -> TContainer:
+    def split(self, maxsplit: int = 0) -> TVContainer_co:
         '''
         Split string by the occurrences of pattern. If capturing parentheses are used in pattern, then the text of all groups in the pattern are also returned as part of the resulting tuple.
 
@@ -165,7 +165,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TContainer:
+    def findall(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TVContainer_co:
         '''
         Return all non-overlapping matches of pattern in string, as a tuple of strings. The string is scanned left-to-right, and matches are returned in the order found. If one or more groups are present in the pattern, return a tuple of groups; this will be a tuple of tuples if the pattern has more than one group. Empty matches are included in the result.
 
@@ -188,7 +188,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def sub(self, repl: str, count: int = 0) -> TContainer:
+    def sub(self, repl: str, count: int = 0) -> TVContainer_co:
         '''
         Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement ``repl``. If the pattern is not found, the string is returned unchanged.
 
@@ -205,7 +205,7 @@ class InterfaceRe(Interface[TContainer]):
                 )
         return self._blocks_to_container(block_gen)
 
-    def subn(self, repl: str, count: int = 0) -> TContainer:
+    def subn(self, repl: str, count: int = 0) -> TVContainer_co:
         '''
         Perform the same operation as sub(), but return a tuple (new_string, number_of_subs_made).
 

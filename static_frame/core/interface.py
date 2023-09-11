@@ -80,7 +80,7 @@ from static_frame.core.node_selector import InterGetItemLoc
 from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -774,7 +774,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
@@ -897,7 +897,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
@@ -946,11 +946,11 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: tp.Union[InterfaceAssignTrio[TContainer],
-                    InterfaceAssignQuartet[TContainer]],
+            obj: tp.Union[InterfaceAssignTrio[TVContainer_co],
+                    InterfaceAssignQuartet[TVContainer_co]],
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:

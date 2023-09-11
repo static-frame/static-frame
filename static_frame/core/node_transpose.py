@@ -20,7 +20,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
-TContainer = tp.TypeVar('TContainer',
+TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'IndexHierarchy',
         )
@@ -54,7 +54,7 @@ INTERFACE_TRANSPOSE = (
         '__rfloordiv__',
         )
 
-class InterfaceTranspose(Interface[TContainer]):
+class InterfaceTranspose(Interface[TVContainer_co]):
 
     __slots__ = (
             '_container',
@@ -63,11 +63,11 @@ class InterfaceTranspose(Interface[TContainer]):
     INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
-            container: TContainer,
+            container: TVContainer_co,
             *,
             fill_value: object = np.nan,
             ) -> None:
-        self._container: TContainer = container
+        self._container: TVContainer_co = container
         self._fill_value = fill_value
 
     #---------------------------------------------------------------------------

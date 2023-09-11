@@ -48,7 +48,7 @@ if tp.TYPE_CHECKING:
 #-------------------------------------------------------------------------------
 FrameOrSeries = tp.Union['Frame', 'Series']
 
-TContainer = tp.TypeVar('TContainer',
+TVContainer_co = tp.TypeVar('TVContainer_co',
         'Index',
         'Series',
         'SeriesHE',
@@ -70,15 +70,15 @@ TContainer = tp.TypeVar('TContainer',
         covariant=True,
         )
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
-        bound=tp.Callable[[TLocSelector], TContainer]
+        bound=tp.Callable[[TLocSelector], TVContainer_co]
         )
 
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
-        bound=tp.Callable[[TILocSelector], TContainer]
+        bound=tp.Callable[[TILocSelector], TVContainer_co]
         )
 
 
-class Interface(tp.Generic[TContainer]):
+class Interface(tp.Generic[TVContainer_co]):
     __slots__ = ()
     INTERFACE: tp.Tuple[str, ...] = ()
 
@@ -86,7 +86,7 @@ class InterfaceBatch:
     __slots__ = ()
     INTERFACE: tp.Tuple[str, ...] = ()
 
-class InterGetItemILocReduces(Interface[TContainer]):
+class InterGetItemILocReduces(Interface[TVContainer_co]):
     '''Interface for iloc selection that reduces dimensionality.
     '''
     __slots__ = ('_func',)
@@ -94,21 +94,21 @@ class InterGetItemILocReduces(Interface[TContainer]):
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
-            tp.Callable[[TILocSelectorMany], TContainer]]) -> None:
+            tp.Callable[[TILocSelectorMany], TVContainer_co]]) -> None:
         self._func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
-            tp.Callable[[TILocSelectorMany], TContainer]] = func
+            tp.Callable[[TILocSelectorMany], TVContainer_co]] = func
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
+    def __getitem__(self, key: TILocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorOne) -> tp.Any: ...
 
-    def __getitem__(self, key: TILocSelector) -> TContainer:
+    def __getitem__(self, key: TILocSelector) -> TVContainer_co:
         return self._func(key) # type: ignore
 
-class InterGetItemILoc(Interface[TContainer]):
+class InterGetItemILoc(Interface[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
     '''
     __slots__ = ('_func',)
@@ -116,51 +116,51 @@ class InterGetItemILoc(Interface[TContainer]):
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
-            tp.Callable[[TILocSelectorMany], TContainer]]) -> None:
+            tp.Callable[[TILocSelectorMany], TVContainer_co]]) -> None:
         self._func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
-            tp.Callable[[TILocSelectorMany], TContainer]] = func
+            tp.Callable[[TILocSelectorMany], TVContainer_co]] = func
 
-    def __getitem__(self, key: TILocSelector) -> TContainer:
+    def __getitem__(self, key: TILocSelector) -> TVContainer_co:
         return self._func(key) # type: ignore
 
 
-class InterGetItemLocReduces(Interface[TContainer]):
+class InterGetItemLocReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TLocSelector], TContainer]
+    _func: tp.Callable[[TLocSelector], TVContainer_co]
 
-    def __init__(self, func: tp.Callable[[TLocSelector], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelector], TVContainer_co]) -> None:
         self._func = func
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> TContainer: ...
+    def __getitem__(self, key: TLocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: TLabel) -> tp.Any: ...
 
-    def __getitem__(self, key: TLocSelector) -> TContainer:
+    def __getitem__(self, key: TLocSelector) -> TVContainer_co:
         return self._func(key)
 
 
-class InterGetItemLoc(Interface[TContainer]):
+class InterGetItemLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TLocSelector], TContainer]
+    _func: tp.Callable[[TLocSelector], TVContainer_co]
 
-    def __init__(self, func: tp.Callable[[TLocSelector], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelector], TVContainer_co]) -> None:
         self._func = func
 
-    def __getitem__(self, key: TLocSelector) -> TContainer:
+    def __getitem__(self, key: TLocSelector) -> TVContainer_co:
         return self._func(key)
 
 
-class InterGetItemLocCompoundReduces(Interface[TContainer]):
-    '''Interface for compound loc selection that reduces dimensionality. TContainer is the outermost container
+class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
+    '''Interface for compound loc selection that reduces dimensionality. TVContainer_co is the outermost container
     '''
 
     __slots__ = ('_func',)
@@ -178,7 +178,7 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TContainer: ...
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
@@ -187,7 +187,7 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: TLabel) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> TContainer: ...
+    def __getitem__(self, key: TLocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorCompound) -> tp.Any: ...
@@ -197,24 +197,24 @@ class InterGetItemLocCompoundReduces(Interface[TContainer]):
 
 
 
-class InterGetItemLocCompound(Interface[TContainer]):
-    '''Interface for compound loc selection that does not reduce dimensionality. TContainer is the only delivered container container
+class InterGetItemLocCompound(Interface[TVContainer_co]):
+    '''Interface for compound loc selection that does not reduce dimensionality. TVContainer_co is the only delivered container container
     '''
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TLocSelectorCompound], TContainer]
+    _func: tp.Callable[[TLocSelectorCompound], TVContainer_co]
 
-    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TVContainer_co]) -> None:
         self._func = func
 
-    def __getitem__(self, key: TLocSelectorCompound) -> TContainer:
+    def __getitem__(self, key: TLocSelectorCompound) -> TVContainer_co:
         return self._func(key)
 
 
 
-class InterGetItemILocCompoundReduces(Interface[TContainer]):
+class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
@@ -229,7 +229,7 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
+    def __getitem__(self, key: TILocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
@@ -238,13 +238,13 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> TContainer: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> TContainer: ...
+    def __getitem__(self, key: TILocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorCompound) -> tp.Any: ...
@@ -252,37 +252,37 @@ class InterGetItemILocCompoundReduces(Interface[TContainer]):
     def __getitem__(self, key: TILocSelectorCompound) -> tp.Any:
         return self._func(key)
 
-class InterGetItemILocCompound(Interface[TContainer]):
+class InterGetItemILocCompound(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TILocSelectorCompound], TContainer]
+    _func: tp.Callable[[TILocSelectorCompound], TVContainer_co]
 
-    def __init__(self, func: tp.Callable[[TILocSelectorCompound], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TILocSelectorCompound], TVContainer_co]) -> None:
         self._func = func
 
-    def __getitem__(self, key: TILocSelectorCompound) -> TContainer:
+    def __getitem__(self, key: TILocSelectorCompound) -> TVContainer_co:
         return self._func(key)
 
 
-class InterfaceGetItemBLoc(Interface[TContainer]):
+class InterfaceGetItemBLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
     INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TBlocKey], TContainer]
+    _func: tp.Callable[[TBlocKey], TVContainer_co]
 
-    def __init__(self, func: tp.Callable[[TBlocKey], TContainer]) -> None:
+    def __init__(self, func: tp.Callable[[TBlocKey], TVContainer_co]) -> None:
         self._func = func
 
-    def __getitem__(self, key: TBlocKey) -> TContainer:
+    def __getitem__(self, key: TBlocKey) -> TVContainer_co:
         return self._func(key)
 
 
 #-------------------------------------------------------------------------------
 
-class InterfaceSelectDuo(Interface[TContainer]):
+class InterfaceSelectDuo(Interface[TVContainer_co]):
     '''An instance to serve as an interface to all of iloc and loc
     '''
 
@@ -300,14 +300,14 @@ class InterfaceSelectDuo(Interface[TContainer]):
         self._func_loc = func_loc
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TContainer]:
+    def iloc(self) -> InterGetItemILocReduces[TVContainer_co]:
         return InterGetItemILocReduces(self._func_iloc)
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TContainer]:
+    def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
         return InterGetItemLocReduces(self._func_loc)
 
-class InterfaceSelectTrio(Interface[TContainer]):
+class InterfaceSelectTrio(Interface[TVContainer_co]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors. It is assumed that functionality that uses this interface returns containers that do not reduce their dimensionality.
     '''
 
@@ -334,18 +334,18 @@ class InterfaceSelectTrio(Interface[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> InterGetItemILoc[TContainer]:
+    def iloc(self) -> InterGetItemILoc[TVContainer_co]:
         '''Integer-position based selection.'''
         return InterGetItemILoc(self._func_iloc)
 
     @property
-    def loc(self) -> InterGetItemLoc[TContainer]:
+    def loc(self) -> InterGetItemLoc[TVContainer_co]:
         '''Label-based selection.
         '''
         return InterGetItemLoc(self._func_loc)
 
 
-class InterfaceSelectQuartet(Interface[TContainer]):
+class InterfaceSelectQuartet(Interface[TVContainer_co]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -375,17 +375,17 @@ class InterfaceSelectQuartet(Interface[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def bloc(self) -> InterGetItemLocReduces[TContainer]:
+    def bloc(self) -> InterGetItemLocReduces[TVContainer_co]:
         '''Boolean based assignment.'''
         return InterGetItemLocReduces(self._func_bloc)
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TContainer]:
+    def iloc(self) -> InterGetItemILocReduces[TVContainer_co]:
         '''Integer-position based assignment.'''
         return InterGetItemILocReduces(self._func_iloc)
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TContainer]:
+    def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
         '''Label-based assignment.
         '''
         return InterGetItemLocReduces(self._func_loc)
@@ -393,7 +393,7 @@ class InterfaceSelectQuartet(Interface[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
+class InterfaceAssignTrio(InterfaceSelectTrio[TVContainer_co]):
     '''For assignment with __getitem__, iloc, loc.
     '''
 
@@ -413,7 +413,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
         self.delegate = delegate #pylint: disable=E0237
 
 
-class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
+class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
     '''For assignment with __getitem__, iloc, loc, bloc.
     '''
     __slots__ = ('delegate',)
@@ -436,7 +436,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceFrameAsType(Interface[TContainer]):
+class InterfaceFrameAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
     INTERFACE = ('__getitem__', '__call__')
 
@@ -473,7 +473,7 @@ class InterfaceFrameAsType(Interface[TContainer]):
                 )
 
 
-class InterfaceIndexHierarchyAsType(Interface[TContainer]):
+class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
     INTERFACE = ('__getitem__', '__call__')
 
@@ -533,7 +533,7 @@ class BatchAsType:
                     )
                 )
 
-class InterfaceBatchAsType(Interface[TContainer]):
+class InterfaceBatchAsType(Interface[TVContainer_co]):
     '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
     '''
 
@@ -566,7 +566,7 @@ class InterfaceBatchAsType(Interface[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceConsolidate(Interface[TContainer]):
+class InterfaceConsolidate(Interface[TVContainer_co]):
     '''An instance to serve as an interface to __getitem__ extractors.
     '''
 
@@ -582,14 +582,14 @@ class InterfaceConsolidate(Interface[TContainer]):
             )
 
     def __init__(self,
-            container: TContainer,
+            container: TVContainer_co,
             func_getitem: tp.Callable[[TLocSelector], 'Frame']
             ) -> None:
         '''
         Args:
             _func_getitem: a callable that expects a _func_getitem key and returns a Frame interface.
         '''
-        self._container: TContainer = container
+        self._container: TVContainer_co = container
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')

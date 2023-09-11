@@ -21,7 +21,7 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-TContainer = tp.TypeVar('TContainer',
+TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'IndexHierarchy',
         'Series',
@@ -37,7 +37,7 @@ INTERFACE_VALUES = (
 VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__',))
 
 
-class InterfaceValues(Interface[TContainer]):
+class InterfaceValues(Interface[TVContainer_co]):
     '''
     If a user wants to call a ufunc and get back an array of variable dimensionality, they have to call that ufunc on one consolidated array via .values; any attempt at block-level manipulation will have to, under some scenarios, figure out how to combine the per-block results (and an appropriate type) into an array. This is undesirable. Instead, all applications of this interface must use UFuncs that retain dimensionality.
     '''
@@ -50,13 +50,13 @@ class InterfaceValues(Interface[TContainer]):
     INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
-            container: TContainer,
+            container: TVContainer_co,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeAny | None = None,
             ) -> None:
-        self._container: TContainer = container
+        self._container: TVContainer_co = container
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
         self._dtype: DtypeAny | None = dtype
@@ -66,7 +66,7 @@ class InterfaceValues(Interface[TContainer]):
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
             dtype: DtypeAny | None = None,
-            ) -> 'InterfaceValues[TContainer]':
+            ) -> 'InterfaceValues[TVContainer_co]':
         '''
         Args:
             consolidate_blocks: Group adjacent same-typed arrays into 2D arrays.
@@ -84,7 +84,7 @@ class InterfaceValues(Interface[TContainer]):
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         '''Support for applying NumPy functions directly on containers.
         '''
         from static_frame.core.frame import Frame
@@ -175,7 +175,7 @@ class InterfaceValues(Interface[TContainer]):
             func: UFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
-            ) -> TContainer:
+            ) -> TVContainer_co:
         return self.__array_ufunc__(
                 func,
                 '__call__',
@@ -250,7 +250,7 @@ class InterfaceBatchValues(InterfaceBatch):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(c: TContainer) -> TContainer:
+        def func(c: TVContainer_co) -> TVContainer_co:
             return c.via_values(
                     consolidate_blocks=self._consolidate_blocks,
                     unify_blocks=self._unify_blocks,
