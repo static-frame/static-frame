@@ -1,0 +1,18 @@
+[tool.pyright]
+exclude = [
+    "**/__pycache__",
+    "static_frame/test/unit",
+    "static_frame/test/integration",
+    "static_frame/test/property",
+    "static_frame/profile"
+]
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnboundVariable = "none"
+
+pythonVersion = "3.11"
+pythonPlatform = "Linux"
+
+
+
