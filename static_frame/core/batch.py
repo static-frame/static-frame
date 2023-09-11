@@ -20,9 +20,9 @@ from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
 from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemILocCompound
+from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
@@ -727,12 +727,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLocCompound['Batch']:
-        return InterfaceGetItemLocCompound(self._extract_loc)
+    def loc(self) -> InterGetItemLocCompound['Batch']:
+        return InterGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILocCompound['Batch']:
-        return InterfaceGetItemILocCompound(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocCompound['Batch']:
+        return InterGetItemILocCompound(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Batch']:

@@ -97,7 +97,7 @@ def testex(context,
         ):
     '''Test example generation
     '''
-    cmd = f'pytest -s --tb=native doc/test_example_gen.py'
+    cmd = 'pytest -s --tb=native doc/test_example_gen.py'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
@@ -124,6 +124,17 @@ def mypy(context,
     '''Run mypy static analysis.
     '''
     context.run('mypy --strict', pty=pty)
+
+
+@invoke.task
+def testtyping(context,
+        pty=False,
+         ):
+    '''Run mypy on targetted typing tests
+    '''
+    context.run('pytest -s --tb=native static_frame/test/typing')
+    context.run('mypy --strict static_frame/test/typing', pty=pty)
+
 
 @invoke.task
 def isort(context):

@@ -34,8 +34,8 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
+from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -57,9 +57,12 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
@@ -114,6 +117,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             label_extractor: Function that, given the partitioned index component along the specified axis, returns a string label for that chunk.
         '''
+        if axis == 0 and frame._index._NDIM != 1:
+            raise ValueError('Index must be 1D.')
+        elif axis == 1 and frame._columns._NDIM != 1:
+            raise ValueError('Columns must be 1D.')
+
         vector = frame._index if axis == 0 else frame._columns
         vector_len = len(vector)
 
@@ -136,14 +144,14 @@ class Quilt(ContainerBase, StoreClientMixin):
                 # NOTE: index / columns cannot be IndexHierarchy
                 if axis == 0: # along rows
                     f = frame.iloc[start:end]
-                    label = label_extractor(f.index)
-                    axis_map_components[label] = f.index # type: ignore
+                    label = label_extractor(f._index)
+                    axis_map_components[label] = f._index # type: ignore[assignment]
                     if opposite is None:
-                        opposite = f.columns # type: ignore
+                        opposite = f._columns
                 elif axis == 1: # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
-                    label = label_extractor(f.columns) # type: ignore
-                    axis_map_components[label] = f.columns # type: ignore
+                    label = label_extractor(f._columns)
+                    axis_map_components[label] = f._columns # type: ignore[assignment]
                     if opposite is None:
                         opposite = f.index
                 else:
@@ -745,7 +753,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         if key not in self._columns:
             return default
-        return self.__getitem__(key) #type: ignore
+        return self.__getitem__(key)
 
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
@@ -963,11 +971,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) #type: ignore
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) #type: ignore
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -989,10 +997,38 @@ class Quilt(ContainerBase, StoreClientMixin):
             return concat_resolved(parts)
         return concat_resolved(parts, axis=self._axis)
 
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelector) -> tp.Any: ...
+
     def _extract(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
-            ) -> tp.Union[Frame, Series]:
+            ) -> tp.Any:
         '''
         Extract Container based on iloc selection.
         '''
@@ -1044,8 +1080,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         # get ordered unique Bus labels
         axis_map_sub = self._axis_hierarchy.iloc[sel_key]
-        if isinstance(axis_map_sub, tuple): # type: ignore
-            frame_labels = (axis_map_sub[0],) # type: ignore
+        if isinstance(axis_map_sub, tuple):
+            frame_labels = (axis_map_sub[0],)
         else:
             # get the outer level, or just the unique frame labels needed
             frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
@@ -1056,7 +1092,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key].iloc[sel_component, opposite_key] # type: ignore
+                component = self._bus.loc[key].iloc[sel_component, opposite_key]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1065,7 +1101,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
-                component = self._bus.loc[key].iloc[opposite_key, sel_component] # type: ignore
+                component = self._bus.loc[key].iloc[opposite_key, sel_component]
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1082,7 +1118,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             parts.append(extractor(component))
 
         if len(parts) == 1:
-            return parts.pop() #type: ignore
+            return parts.pop()
 
         # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
@@ -1118,11 +1154,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             columns_key = None
 
-        return self._extract(row_key=index_key, column_key=columns_key) #type: ignore
+        return self._extract(row_key=index_key, column_key=columns_key)
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union[Series, Frame]:
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
         '''
         Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
         '''
@@ -1147,10 +1183,11 @@ class Quilt(ContainerBase, StoreClientMixin):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union[Series, Frame]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(*self._compound_loc_to_iloc(key))
+        r, c = self._compound_loc_to_iloc(key)
+        return self._extract(r, c)
 
     def _compound_loc_to_getitem_iloc(self,
             key: TLocSelectorCompound) -> tp.Tuple[TILocSelector, TILocSelector]:
@@ -1158,6 +1195,13 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
+
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, Series]:
@@ -1168,18 +1212,19 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(*self._compound_loc_to_getitem_iloc(key))
+        r, c = self._compound_loc_to_getitem_iloc(key)
+        return self._extract(r, c)
 
     #---------------------------------------------------------------------------
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItemLocCompound[Frame | Series]:
-        return InterfaceGetItemLocCompound(self._extract_loc)
+    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItemILocCompound[Frame | Series]:
-        return InterfaceGetItemILocCompound(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # iterators
@@ -1366,7 +1411,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[:count] # type: ignore
+        return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Quilt')
     def tail(self, count: int = 5) -> 'Frame':
@@ -1375,7 +1420,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Args:
             {count}
         '''
-        return self.iloc[-count:] # type: ignore
+        return self.iloc[-count:]
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -1455,7 +1500,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         if self._assign_axis:
             self._update_axis_labels()
-        return self._extract(NULL_SLICE, NULL_SLICE) #type: ignore
+        return self._extract(NULL_SLICE, NULL_SLICE)
 
     def _to_signature_bytes(self,
             include_name: bool = True,

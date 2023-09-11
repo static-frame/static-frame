@@ -30,7 +30,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -49,6 +49,8 @@ from static_frame.core.util import ShapeType
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -91,7 +93,7 @@ def group_match(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union['TypeBlocks', NDArrayAny]]]:
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]:
     '''
     Args:
         key: iloc selector on opposite axis
@@ -142,7 +144,7 @@ def group_match(
     row_key: tp.Union[int, NDArrayAny, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
 
-    func = blocks._extract_array if as_array else blocks._extract
+    func: tp.Callable[..., tp.Union[TypeBlocks, NDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
 
     if axis == 0:
         if extract is not None:
@@ -228,7 +230,8 @@ def group_sorted(
     column_key: tp.Union[int, NDArrayAny, None]
     row_key: tp.Union[int, NDArrayAny, None]
 
-    func = blocks._extract_array if as_array else blocks._extract
+    func: tp.Callable[..., tp.Union[TypeBlocks, NDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
+
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
@@ -679,8 +682,8 @@ class TypeBlocks(ContainerOperand):
     # interfaces
 
     @property
-    def iloc(self) -> InterfaceGetItemLoc: #type: ignore
-        return InterfaceGetItemLoc(self._extract_iloc) # type: ignore
+    def iloc(self) -> InterGetItemLocReduces: #type: ignore
+        return InterGetItemLocReduces(self._extract_iloc) # type: ignore
 
     #---------------------------------------------------------------------------
     # common NP-style properties
@@ -2862,6 +2865,32 @@ class TypeBlocks(ContainerOperand):
 
             yield from map(constructor, chainer()) # type: ignore
 
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
+
     def _extract(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None
@@ -2904,8 +2933,14 @@ class TypeBlocks(ContainerOperand):
                 shape_reference=self._index.shape
                 )
 
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelector) -> TypeBlocks: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
+
     def _extract_iloc(self,
-            key: TILocSelector | None
+            key: TILocSelectorCompound
             ) -> tp.Any:
         if isinstance(key, tuple):
             return self._extract(*key) # type: ignore # NOTE: needs specialization for 2D input

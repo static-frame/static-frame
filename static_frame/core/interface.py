@@ -69,14 +69,18 @@ from static_frame.core.node_selector import InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILoc
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLoc
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import InterGetItemILoc
+from static_frame.core.node_selector import InterGetItemILocCompound
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
+from static_frame.core.node_selector import InterGetItemILocReduces
+from static_frame.core.node_selector import InterGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocCompound
+from static_frame.core.node_selector import InterGetItemLocCompoundReduces
+from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
@@ -770,7 +774,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
@@ -859,7 +863,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
-        For root __getitem__ methods, as well as __getitem__ on InterfaceGetItemLoc objects.
+        For root __getitem__ methods, as well as __getitem__ on InterGetItemLocReduces objects.
         '''
         if name != Features.GETITEM:
             target = obj.__getitem__ #type: ignore
@@ -893,7 +897,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
@@ -942,11 +946,11 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: tp.Union[InterfaceAssignTrio[TContainer],
-                    InterfaceAssignQuartet[TContainer]],
+            obj: tp.Union[InterfaceAssignTrio[TVContainer_co],
+                    InterfaceAssignQuartet[TVContainer_co]],
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]],
+            cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator['InterfaceRecord']:
@@ -1202,10 +1206,14 @@ class InterfaceSummary(Features):
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, (
-                    InterfaceGetItemLoc,
-                    InterfaceGetItemLocCompound,
-                    InterfaceGetItemILoc,
-                    InterfaceGetItemILocCompound,
+                    InterGetItemLoc,
+                    InterGetItemLocReduces,
+                    InterGetItemLocCompound,
+                    InterGetItemLocCompoundReduces,
+                    InterGetItemILoc,
+                    InterGetItemILocReduces,
+                    InterGetItemILocCompound,
+                    InterGetItemILocCompoundReduces,
                     InterfaceGetItemBLoc,
                     )) or name == cls.GETITEM:
                 yield from InterfaceRecord.gen_from_getitem(**kwargs)
@@ -1281,7 +1289,7 @@ class InterfaceSummary(Features):
         f = Frame.from_concat((f, sna_label), axis=1)
 
         if minimized:
-            return f[['cls_name', 'group', 'doc']] #type: ignore
+            return f[['cls_name', 'group', 'doc']]
         return f
 
 

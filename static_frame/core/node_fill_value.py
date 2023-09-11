@@ -6,7 +6,7 @@ import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import InterfaceGetItemLoc
+from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
@@ -29,9 +29,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
 
-TContainer = tp.TypeVar('TContainer',
+TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'Series',
+        covariant=True,
         )
 INTERFACE_FILL_VALUE = (
         'loc',
@@ -65,7 +66,7 @@ INTERFACE_FILL_VALUE = (
         )
 
 
-class InterfaceFillValue(Interface[TContainer]):
+class InterfaceFillValue(Interface[TVContainer_co]):
 
     __slots__ = (
             '_container',
@@ -76,12 +77,12 @@ class InterfaceFillValue(Interface[TContainer]):
     INTERFACE = INTERFACE_FILL_VALUE
 
     def __init__(self,
-            container: TContainer,
+            container: TVContainer_co,
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0,
             ) -> None:
-        self._container: TContainer = container
+        self._container: TVContainer_co = container
         self._fill_value = fill_value
         self._axis = axis
 
@@ -172,7 +173,7 @@ class InterfaceFillValue(Interface[TContainer]):
                     )
         elif not row_is_multiple and not column_is_multiple: # selecting an element
             try:
-                return container.loc[row_key, column_key]
+                return container.loc[row_key, column_key] # type: ignore
             except KeyError:
                 fv = get_col_fill_value_factory(fill_value, None)(0, None)
                 return fv #type: ignore
@@ -208,12 +209,12 @@ class InterfaceFillValue(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItemLoc[FrameOrSeries]:
+    def loc(self) -> InterGetItemLocReduces[FrameOrSeries]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
-            return InterfaceGetItemLoc(self._extract_loc1d)
-        return InterfaceGetItemLoc(self._extract_loc2d_compound)
+            return InterGetItemLocReduces(self._extract_loc1d)
+        return InterGetItemLocReduces(self._extract_loc2d_compound)
 
     def __getitem__(self,  key: TLocSelector) -> FrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
@@ -425,7 +426,7 @@ class InterfaceFillValue(Interface[TContainer]):
                 )
 
 #---------------------------------------------------------------------------
-class InterfaceFillValueGO(InterfaceFillValue[TContainer]): # only type is FrameGO
+class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is FrameGO
 
     __slots__ = ()
     INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
@@ -477,7 +478,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterfaceGetItemLoc['Batch']:
+    def loc(self) -> InterGetItemLocReduces['Batch']:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         def func(key: TLocSelector) -> 'Batch':
@@ -486,7 +487,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
                             fill_value=self._fill_value,
                             axis=self._axis).loc[key]
                     )
-        return InterfaceGetItemLoc(func)
+        return InterGetItemLocReduces(func)
 
     def __getitem__(self,  key: TLocSelector) -> 'Batch':
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.

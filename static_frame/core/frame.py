@@ -102,9 +102,9 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceGetItemILocCompound
-from static_frame.core.node_selector import InterfaceGetItemLocCompound
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterGetItemILocCompoundReduces
+from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
@@ -168,9 +168,12 @@ from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -703,7 +706,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable['Frame'],
+            containers: tp.Iterable[Frame],
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -795,7 +798,7 @@ class Frame(ContainerOperand):
                     array = container._blocks._extract_array_column(iloc_column_key) # type: ignore
                 else: # need to reindex
                     col_series = container[col]
-                    fill_value = get_col_fill_value(col_count, col_series.dtype) # type: ignore
+                    fill_value = get_col_fill_value(col_count, col_series.dtype)
                     array = col_series.reindex(index, fill_value=fill_value).values
                     array.flags.writeable = False
                 values.append(array)
@@ -1056,7 +1059,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
-            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1100,7 +1103,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
-            items: tp.Iterator[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -2224,7 +2227,7 @@ class Frame(ContainerOperand):
                             quoting=quoting,
                             quotechar=quote_char,
                             doublequote=quote_double,
-                            escapechar=escape_char, # type: ignore
+                            escapechar=escape_char,
                             )
 
                 [array_right] = delimited_to_arrays(
@@ -2234,7 +2237,7 @@ class Frame(ContainerOperand):
                         quoting=quoting,
                         quotechar=quote_char,
                         doublequote=quote_double,
-                        escapechar=escape_char, # type: ignore
+                        escapechar=escape_char,
                         thousandschar=thousands_char,
                         decimalchar=decimal_char,
                         skipinitialspace=skip_initial_space,
@@ -2249,7 +2252,7 @@ class Frame(ContainerOperand):
                             quoting=quoting,
                             quotechar=quote_char,
                             doublequote=quote_double,
-                            escapechar=escape_char, # type: ignore
+                            escapechar=escape_char,
                             thousandschar=thousands_char,
                             decimalchar=decimal_char,
                             skipinitialspace=skip_initial_space,
@@ -2334,7 +2337,7 @@ class Frame(ContainerOperand):
                 quoting=quoting,
                 quotechar=quote_char,
                 doublequote=quote_double,
-                escapechar=escape_char, # type: ignore
+                escapechar=escape_char,
                 thousandschar=thousands_char,
                 decimalchar=decimal_char,
                 skipinitialspace=skip_initial_space,
@@ -3463,35 +3466,34 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # interfaces
+    @property
+    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def loc(self) -> InterfaceGetItemLocCompound[FrameOrSeries]:
-        return InterfaceGetItemLocCompound(self._extract_loc)
-
-    @property
-    def iloc(self) -> InterfaceGetItemILocCompound[FrameOrSeries]:
-        return InterfaceGetItemILocCompound(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     @property
     def bloc(self) -> InterfaceGetItemBLoc['Series']:
         return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Frame']:
+    def drop(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not reuturn Frame, but a delegate
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
-    def mask(self) -> InterfaceSelectTrio['Frame']:
+    def mask(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not return Frame, but a delegate
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
 
     @property
-    def masked_array(self) -> InterfaceSelectTrio['Frame']:
+    def masked_array(self) -> InterfaceSelectTrio[Frame]:
         return InterfaceSelectTrio( # type: ignore
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
@@ -3510,7 +3512,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(select='astype')
-    def astype(self) -> InterfaceFrameAsType['Frame']:
+    def astype(self) -> InterfaceFrameAsType[Frame]:
         '''
         Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
@@ -3521,7 +3523,7 @@ class Frame(ContainerOperand):
         return InterfaceFrameAsType(func_getitem=self._extract_getitem_astype)
 
     @property
-    def consolidate(self) -> InterfaceConsolidate['Frame']:
+    def consolidate(self) -> InterfaceConsolidate[Frame]:
         '''
         Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
 
@@ -3535,7 +3537,7 @@ class Frame(ContainerOperand):
     # via interfaces
 
     @property
-    def via_values(self) -> InterfaceValues['Frame']:
+    def via_values(self) -> InterfaceValues[Frame]:
         '''
         Interface for applying functions to values (as arrays) in this container.
 
@@ -3547,7 +3549,7 @@ class Frame(ContainerOperand):
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString['Frame']:
+    def via_str(self) -> InterfaceString[Frame]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -3570,7 +3572,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime['Frame']:
+    def via_dt(self) -> InterfaceDatetime[Frame]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -3594,7 +3596,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose['Frame']:
+    def via_T(self) -> InterfaceTranspose[Frame]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -3605,7 +3607,7 @@ class Frame(ContainerOperand):
 
     def via_fill_value(self,
             fill_value: tp.Any = np.nan,
-            ) -> InterfaceFillValue['Frame']:
+            ) -> InterfaceFillValue[Frame]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -3617,7 +3619,7 @@ class Frame(ContainerOperand):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe['Frame']:
+            ) -> InterfaceRe[Frame]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
@@ -3642,7 +3644,7 @@ class Frame(ContainerOperand):
     # iterators
 
     @property
-    def iter_array(self) -> IterNodeAxis['Frame']:
+    def iter_array(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3655,7 +3657,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_array_items(self) -> IterNodeAxis['Frame']:
+    def iter_array_items(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3668,7 +3670,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeConstructorAxis['Frame']:
+    def iter_tuple(self) -> IterNodeConstructorAxis[Frame]:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -3681,7 +3683,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeConstructorAxis['Frame']:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3694,7 +3696,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_series(self) -> IterNodeAxis['Frame']:
+    def iter_series(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3707,7 +3709,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_series_items(self) -> IterNodeAxis['Frame']:
+    def iter_series_items(self) -> IterNodeAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3721,7 +3723,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3734,7 +3736,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_items(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3748,7 +3750,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_array(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_array(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3761,7 +3763,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_array_items(self) -> IterNodeGroupAxis['Frame']:
+    def iter_group_array_items(self) -> IterNodeGroupAxis[Frame]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3775,7 +3777,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3788,7 +3790,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3802,7 +3804,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3815,7 +3817,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis['Frame']:
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis[Frame]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3830,7 +3832,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3843,7 +3845,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_other_items(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_items(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3857,7 +3859,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_array(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3872,7 +3874,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther['Frame']:
+    def iter_group_other_array_items(self) -> IterNodeGroupOther[Frame]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3889,7 +3891,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow['Frame']:
+    def iter_window(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -3907,7 +3909,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow['Frame']:
+    def iter_window_items(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -3925,7 +3927,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow['Frame']:
+    def iter_window_array(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -3943,7 +3945,7 @@ class Frame(ContainerOperand):
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow['Frame']:
+    def iter_window_array_items(self) -> IterNodeWindow[Frame]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -3961,7 +3963,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxisElement['Frame']:
+    def iter_element(self) -> IterNodeAxisElement[Frame]:
         '''Iterator of elements, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -3973,7 +3975,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxisElement['Frame']:
+    def iter_element_items(self) -> IterNodeAxisElement[Frame]:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -3989,7 +3991,7 @@ class Frame(ContainerOperand):
 
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
-            iloc_key: TLocSelectorCompound,
+            iloc_key: TILocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
@@ -4000,28 +4002,35 @@ class Frame(ContainerOperand):
         assert is_series ^ is_frame # one must be True
 
         row_key: TILocSelector
-        column_key: TILocSelector
-        row_key, column_key = iloc_key # type: ignore
+        col_key: TILocSelector
+        row_key, col_key = iloc_key # type: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
-        nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
+        # NOTE: NM (not many) means an integer or label
+        nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
         v: None | Series | Frame = None
+        col_key_many: TILocSelectorMany
+        row_key_many: TILocSelectorMany
 
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
             if is_series:
-                v = value.reindex(self._columns._extract_iloc(column_key),
+                col_key_many = col_key # type: ignore[assignment]
+                v = value.reindex(self._columns._extract_iloc(col_key_many),
                         fill_value=fill_value)
         elif not nm_row and nm_column:
             # only row is multi selection, reindex by index
             if is_series:
-                v = value.reindex(self._index._extract_iloc(row_key),
+                row_key_many = row_key # type: ignore[assignment]
+                v = value.reindex(self._index._extract_iloc(row_key_many),
                         fill_value=fill_value)
         elif not nm_row and not nm_column:
             # both multi, must be a Frame
             if is_frame:
-                target_column_index = self._columns._extract_iloc(column_key)
-                target_row_index = self._index._extract_iloc(row_key)
+                col_key_many = col_key # type: ignore[assignment]
+                row_key_many = row_key # type: ignore[assignment]
+                target_column_index = self._columns._extract_iloc(col_key_many)
+                target_row_index = self._index._extract_iloc(row_key_many)
                 # this will use the default fillna type, which may or may not be what is wanted
                 v = value.reindex( # type: ignore
                         index=target_row_index,
@@ -4418,7 +4427,7 @@ class Frame(ContainerOperand):
                 new_target = IndexAutoFactory
             elif remain_columns == 1:
                 target_ctor = target_ctors.drop.iloc[depth_level].iloc[0]
-                new_target = target_ctor( # type: ignore
+                new_target = target_ctor(
                         column_1d_filter(remain_blocks._blocks[0]),
                         name=remain_labels[0])
             else:
@@ -4574,7 +4583,7 @@ class Frame(ContainerOperand):
             if ((column_key is None and row_key.all()) or # type: ignore
                     (row_key is None and column_key.all())): # type: ignore
                 return self
-        return self._extract(row_key, column_key) # type: ignore
+        return self._extract(row_key, column_key)
 
 
     #---------------------------------------------------------------------------
@@ -4629,7 +4638,7 @@ class Frame(ContainerOperand):
             if ((column_key is None and row_key.all()) or # type: ignore
                     (row_key is None and column_key.all())): # type: ignore
                 return self
-        return self._extract(row_key, column_key) # type: ignore
+        return self._extract(row_key, column_key)
 
     #---------------------------------------------------------------------------
     def _fill_missing(self,
@@ -4994,27 +5003,53 @@ class Frame(ContainerOperand):
             column_nm = True # axis 1
         return row_nm, column_nm
 
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, column_key: TILocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
+
+    @tp.overload
+    def _extract(self, row_key: TILocSelector) -> tp.Any: ...
 
     def _extract(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
-            ) -> tp.Union['Frame', Series]:
+            ) -> tp.Any:
         '''
         Extract Container based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
         if blocks.__class__ is not TypeBlocks:
-            return blocks # type: ignore # reduced to an element
+            return blocks
 
         index: IndexBase
         own_index = True # the extracted Frame can always own this index
         row_key_is_slice = row_key.__class__ is slice
         if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
+        elif not row_key_is_slice and isinstance(row_key, INT_TYPES):
+            name_row = self._index._extract_iloc_by_int(row_key)
         else:
-            index = self._index._extract_iloc(row_key)
-            if not row_key_is_slice and isinstance(row_key, INT_TYPES):
-                name_row = self._index._extract_iloc_by_int(row_key)
+            index = self._index._extract_iloc(row_key) # type: ignore
 
         columns: IndexBase
         # can only own columns if _COLUMNS_CONSTRUCTOR is static
@@ -5022,11 +5057,11 @@ class Frame(ContainerOperand):
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
             own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
+        elif not column_key_is_slice and isinstance(column_key, INT_TYPES):
+            name_column = self._columns._extract_iloc_by_int(column_key)
         else:
-            columns = self._columns._extract_iloc(column_key)
+            columns = self._columns._extract_iloc(column_key) # type: ignore
             own_columns = True
-            if not column_key_is_slice and isinstance(column_key, INT_TYPES):
-                name_column = self._columns._extract_iloc_by_int(column_key)
 
         # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
@@ -5077,9 +5112,30 @@ class Frame(ContainerOperand):
                 )
 
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Union['Frame', Series]:
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> tpe.Self: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
+
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
         '''
-        Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
+        Give a compound key, return a new Frame. This method simply handles the variability of single or compound selectors.
         '''
         if isinstance(key, tuple):
             return self._extract(*key)
@@ -5100,10 +5156,10 @@ class Frame(ContainerOperand):
         iloc_row_key = self._index._loc_to_iloc(loc_row_key)
         return iloc_row_key, iloc_column_key
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Union['Frame', Series]:
+    def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
         return self._extract(*self._compound_loc_to_iloc(key))
 
-    def _extract_loc_columns(self, key: TLocSelector) -> tp.Union['Frame', Series]:
+    def _extract_loc_columns(self, key: TLocSelector) -> FrameOrSeries:
         '''Alternate extract of a columns only selection.
         '''
         return self._extract(None,
@@ -5128,8 +5184,17 @@ class Frame(ContainerOperand):
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Series: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series: ...
+
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Union['Frame', Series]:
+    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series:
         '''Selector of columns by label.
 
         Args:
@@ -5286,7 +5351,7 @@ class Frame(ContainerOperand):
         '''
         if key not in self._columns:
             return default # type: ignore
-        return self.__getitem__(key) # type: ignore
+        return self.__getitem__(key)
 
 
     #---------------------------------------------------------------------------
@@ -5717,7 +5782,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             drop: bool = False,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_loc_items(
                 key=key,
                 axis=axis,
@@ -5810,7 +5875,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 axis=axis,
@@ -5886,7 +5951,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in self._axis_group_other_items(
                 axis=axis,
                 as_array=as_array,
@@ -5941,7 +6006,7 @@ class Frame(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[Frame]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 size=size,
@@ -7098,22 +7163,22 @@ class Frame(ContainerOperand):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Frame')
-    def head(self, count: int = 5) -> 'Frame':
+    def head(self, count: int = 5) -> Frame:
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[:count] # type: ignore
+        return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Frame')
-    def tail(self, count: int = 5) -> 'Frame':
+    def tail(self, count: int = 5) -> Frame:
         '''{doc}
 
         Args:
             {count}
         '''
-        return self.iloc[-count:] # type: ignore
+        return self.iloc[-count:]
 
 
     def count(self, *,
@@ -8450,7 +8515,7 @@ class Frame(ContainerOperand):
         return xarray.Dataset(data_vars, coords=coords)
 
     def _to_frame(self,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[Frame],
             *,
             name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
@@ -9189,7 +9254,6 @@ class FrameGO(Frame):
         self._columns.append(key)
         self._blocks.append(block)
 
-
     def extend_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, Series]],
             fill_value: tp.Any = np.nan,
@@ -9199,7 +9263,6 @@ class FrameGO(Frame):
         '''
         for k, v in pairs:
             self.__setitem__(k, v, fill_value)
-
 
     def extend(self,
             container: tp.Union['Frame', Series],
@@ -9237,7 +9300,7 @@ class FrameGO(Frame):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object = np.nan,
-            ) -> InterfaceFillValueGO['Frame']:
+            ) -> InterfaceFillValueGO[Frame]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -9245,6 +9308,68 @@ class FrameGO(Frame):
                 container=self,
                 fill_value=fill_value,
                 )
+
+    #---------------------------------------------------------------------------
+    # interfaces are redefined to show type returned type
+
+    @property
+    def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
+
+    @property
+    def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
+
+#-------------------------------------------------------------------------------
+class FrameHE(Frame):
+    '''
+    A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
+    '''
+
+    __slots__ = (
+            '_hash',
+            )
+
+    _hash: int
+
+    def __eq__(self, other: tp.Any) -> bool:
+        '''
+        Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
+        '''
+        return self.equals(other,
+                compare_name=True,
+                compare_dtype=False,
+                compare_class=False,
+                skipna=True,
+                )
+
+    def __ne__(self, other: tp.Any) -> bool:
+        '''
+        Return False if other is a ``Frame`` with the different labels, values, or name. Container class and underlying dtypes are not independently compared.
+        '''
+        return not self.__eq__(other)
+
+    def __hash__(self) -> int:
+        if not hasattr(self, '_hash'):
+            # NOTE: we hash based on labels, which we use a faster-than full identity check
+            self._hash = hash((
+                    tuple(self.index),
+                    tuple(self.columns),
+                    ))
+        return self._hash
+
+
+    #---------------------------------------------------------------------------
+    # interfaces are redefined to show type returned type
+
+    @property
+    def loc(self) -> InterGetItemLocCompoundReduces[FrameHE]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
+
+    @property
+    def iloc(self) -> InterGetItemILocCompoundReduces[FrameHE]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
+
 
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.
@@ -9546,41 +9671,3 @@ class FrameAsType:
                 name=self.container._name,
                 own_data=True,
                 )
-
-#-------------------------------------------------------------------------------
-class FrameHE(Frame):
-    '''
-    A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
-    '''
-
-    __slots__ = (
-            '_hash',
-            )
-
-    _hash: int
-
-    def __eq__(self, other: tp.Any) -> bool:
-        '''
-        Return True if other is a ``Frame`` with the same labels, values, and name. Container class and underlying dtypes are not independently compared.
-        '''
-        return self.equals(other,
-                compare_name=True,
-                compare_dtype=False,
-                compare_class=False,
-                skipna=True,
-                )
-
-    def __ne__(self, other: tp.Any) -> bool:
-        '''
-        Return False if other is a ``Frame`` with the different labels, values, or name. Container class and underlying dtypes are not independently compared.
-        '''
-        return not self.__eq__(other)
-
-    def __hash__(self) -> int:
-        if not hasattr(self, '_hash'):
-            # NOTE: we hash based on labels, which we use a faster-than full identity check
-            self._hash = hash((
-                    tuple(self.index),
-                    tuple(self.columns),
-                    ))
-        return self._hash
