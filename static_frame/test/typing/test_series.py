@@ -33,7 +33,7 @@ def test_series_getitem_b() -> None:
     y = proc(s['b':]) # this checks that x.dropna() is on a Series
 
 
-def test_series_iloc() -> None:
+def test_series_iloc_a() -> None:
     s = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
 
     v1: int = s.iloc[0]
@@ -43,6 +43,15 @@ def test_series_iloc() -> None:
     v3: sf.Series = s.iloc[1:]
     assert len(v3) == 2
 
+def test_series_he_iloc_a() -> None:
+    s = sf.SeriesHE((10, 20, 30), index=('a', 'b', 'c'))
+
+    v1: int = s.iloc[0]
+    v2: sf.SeriesHE = s.iloc[[0, 2]]
+    assert len(v2) == 2
+
+    v3: sf.SeriesHE = s.iloc[1:]
+    assert len(v3) == 2
 
 
 def test_series_drop() -> None:

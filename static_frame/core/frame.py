@@ -9311,14 +9311,13 @@ class FrameGO(Frame):
     #---------------------------------------------------------------------------
     # interfaces are redefined to show type returned type
 
+    @property
+    def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
 
-    # @property
-    # def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
-    #     return InterGetItemLocCompoundReduces(self._extract_loc)
-
-    # @property
-    # def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
-    #     return InterGetItemILocCompoundReduces(self._extract_iloc)
+    @property
+    def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 #-------------------------------------------------------------------------------
 class FrameHE(Frame):
@@ -9362,13 +9361,13 @@ class FrameHE(Frame):
     #---------------------------------------------------------------------------
     # interfaces are redefined to show type returned type
 
-    # @property
-    # def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
-    #     return InterGetItemLocCompoundReduces(self._extract_loc)
+    @property
+    def loc(self) -> InterGetItemLocCompoundReduces[FrameHE]:
+        return InterGetItemLocCompoundReduces(self._extract_loc)
 
-    # @property
-    # def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
-    #     return InterGetItemILocCompoundReduces(self._extract_iloc)
+    @property
+    def iloc(self) -> InterGetItemILocCompoundReduces[FrameHE]:
+        return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 
 #-------------------------------------------------------------------------------

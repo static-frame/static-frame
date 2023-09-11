@@ -30,12 +30,15 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAssignILoc  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.frame import FrameHE  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import SeriesAssign  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.series import SeriesHE  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
@@ -48,7 +51,10 @@ FrameOrSeries = tp.Union['Frame', 'Series']
 TContainer = tp.TypeVar('TContainer',
         'Index',
         'Series',
+        'SeriesHE',
         'Frame',
+        'FrameGO',
+        'FrameHE',
         'TypeBlocks',
         'Bus',
         'Batch',
@@ -61,6 +67,7 @@ TContainer = tp.TypeVar('TContainer',
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
         FrameOrSeries,
+        covariant=True,
         )
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TContainer]

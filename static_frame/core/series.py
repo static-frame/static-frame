@@ -3734,5 +3734,19 @@ class SeriesHE(Series):
                 own_index=True,
                 )
 
+    #---------------------------------------------------------------------------
+    # interfaces are redefined to show type returned type
 
+    @property
+    def loc(self) -> InterGetItemLocReduces[SeriesHE]:
+        '''
+        Interface for label-based selection.
+        '''
+        return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
+    @property
+    def iloc(self) -> InterGetItemILocReduces[SeriesHE]:
+        '''
+        Interface for position-based selection.
+        '''
+        return InterGetItemILocReduces(self._extract_iloc)

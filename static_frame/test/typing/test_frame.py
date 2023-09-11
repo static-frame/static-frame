@@ -122,10 +122,19 @@ def test_frame_go_loc_a() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.FrameGO.from_records(records)
+    f2: sf.FrameGO = f1.loc[1:, 1:]
+    assert isinstance(f2, sf.FrameGO)
 
-    # NOTE: typing this still does not work
-    # f2: sf.FrameGO = f1.loc[1:, 1:]
-    # assert isinstance(f2, sf.FrameGO)
+
+def test_frame_he_loc_a() -> None:
+    records = (
+            (1, 2, 'a', False),
+            (30, 34, 'b', True),
+            (54, 95, 'c', False),
+            )
+    f1 = sf.FrameHE.from_records(records)
+    f2: sf.FrameHE = f1.loc[1:, 1:]
+    assert isinstance(f2, sf.FrameHE)
 
 
 def test_frame_astype_a() -> None:
