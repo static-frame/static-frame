@@ -23,6 +23,7 @@ if tp.TYPE_CHECKING:
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'IndexHierarchy',
+        covariant=True,
         )
 
 INTERFACE_TRANSPOSE = (

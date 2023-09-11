@@ -32,6 +32,7 @@ if tp.TYPE_CHECKING:
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'Series',
+        covariant=True,
         )
 INTERFACE_FILL_VALUE = (
         'loc',

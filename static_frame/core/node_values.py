@@ -26,6 +26,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'IndexHierarchy',
         'Series',
         'Index',
+        covariant=True,
         )
 
 INTERFACE_VALUES = (
