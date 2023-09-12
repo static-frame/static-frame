@@ -2,13 +2,15 @@
 
 
 
-
-
 Typing DataFrames with Generics and TypeVarTuple
 
 Better DataFrame Typing with Generics and TypeVarTuple
 
 Better DataFrame Typing (and Runtime Validation) with Composite Generics and TypeVarTuple
+
+Typing Arrays and DataFrames
+.. Using `TypeVarTuple`
+.. for Variadic Columnar dtype Specfication
 
 
 
@@ -22,9 +24,6 @@ Use `generic` insteead of `dtype[generic]` provides a more concise representatio
 
 
 
-
-Typing Arrays and DataFrames Using `TypeVarTuple`
-.. for Variadic Columnar dtype Specfication
 
 
 A goal of StaticFrame is to provide an explicit interface that supports creating maintainable libraries using DataFrames. As Python standard library tools for typing have evolved, using type hints to make DataFrame interfaces explicit and statically checkable is now (nearly!) possible.
