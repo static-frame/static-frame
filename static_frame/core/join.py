@@ -131,7 +131,7 @@ def join(frame: 'Frame',
 
     #-----------------------------------------------------------------------
     # get final_index; if is_many is True, many_loc (and Pair instances) will be used
-    final_index: Index
+    final_index: Index[tp.Any]
 
     if join_type is Join.INNER:
         if is_many:

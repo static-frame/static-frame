@@ -16,7 +16,6 @@ from arraykit import resolve_dtype
 from arraymap import AutoMap  # pylint: disable=E0611
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
-import typing_extensions as tpe
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -64,6 +63,8 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
@@ -94,7 +95,7 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-I = tp.TypeVar('I', bound='Index')
+I = tp.TypeVar('I', bound='Index[tp.Any]')
 
 
 class ILocMeta(type):
@@ -480,7 +481,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return mloc(self._labels)
 
     @property
-    def dtype(self) -> np.dtype[TDtype]:
+    def dtype(self) -> np.dtype[TVDtype]:
         '''
         Return the dtype of the underlying NumPy array.
 
@@ -540,7 +541,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self._labels.nbytes
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: TILocSelector) -> 'Index':
+    def _drop_iloc(self, key: TILocSelector) -> tpe.Self:
         '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
@@ -562,7 +563,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         # from labels will work with both Index and IndexHierarchy
         return self.__class__.from_labels(labels, name=self._name)
 
-    def _drop_loc(self, key: TLocSelector) -> 'IndexBase':
+    def _drop_loc(self, key: TLocSelector) -> tpe.Self:
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -577,7 +578,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
 
     # @doc_inject(select='astype')
-    def astype(self, dtype: TDtypeSpecifier) -> 'Index':
+    def astype(self, dtype: TDtypeSpecifier) -> Index[tp.Any]:
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 
@@ -600,7 +601,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     #---------------------------------------------------------------------------
 
     @property
-    def via_values(self) -> InterfaceValues['Index']:
+    def via_values(self) -> InterfaceValues[Index[tp.Any]]:
         '''
         Interface for applying functions to values (as arrays) in this container.
         '''
@@ -823,7 +824,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     #---------------------------------------------------------------------------
 
-    def relabel(self, mapper: 'RelabelInput') -> 'Index':
+    def relabel(self, mapper: 'RelabelInput') -> Index[tp.Any]:
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -969,6 +970,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             key: TLocSelector
             ) -> tp.Any:
         return self._extract_iloc(self._loc_to_iloc(key))
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorOne) -> TVDtype: ...
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorMany) -> tpe.Self: ...
 
     def __getitem__(self,
             key: TILocSelector
@@ -1180,7 +1187,10 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def sort(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['Index'], tp.Union[NDArrayAny, 'Index']]] = None,
+            key: tp.Optional[tp.Callable[
+                    [Index[tp.Any]],
+                    tp.Union[NDArrayAny, Index[tp.Any]]
+                    ]] = None,
             ) -> tpe.Self:
         '''Return a new Index with the labels sorted.
 
@@ -1198,7 +1208,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         return isin(self.values, other, array_is_unique=True)
 
-    def roll(self, shift: int) -> 'Index':
+    def roll(self, shift: int) -> tpe.Self:
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
         '''
         values = self.values # force usage of property for cache update
@@ -1262,7 +1272,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _fill_missing(self,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             value: tp.Any,
-            ) -> 'Index':
+            ) -> Index[tp.Any]:
         values = self.values # force usage of property for cache update
         sel = func(values)
         if not np.any(sel):
@@ -1281,7 +1291,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self.__class__(assigned, name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> 'Index':
+    def fillna(self, value: tp.Any) -> Index[tp.Any]:
         '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
 
         Args:
@@ -1290,7 +1300,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self._fill_missing(isna_array, value)
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self, value: tp.Any) -> 'Index':
+    def fillfalsy(self, value: tp.Any) -> Index[tp.Any]:
         '''Return an :obj:`Index` with replacing falsy values with the supplied value.
 
         Args:
@@ -1573,7 +1583,7 @@ INDEX_GO_LEAF_SLOTS = (
         '_positions_mutable_count',
         )
 
-class IndexGO(_IndexGOMixin, Index):
+class IndexGO(_IndexGOMixin, Index[tp.Any]):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
     '''
 

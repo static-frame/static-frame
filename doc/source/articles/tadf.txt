@@ -5,6 +5,13 @@
 
 
 
+Use `generic` insteead of `dtype[generic]` provides a more concise representation.
+
+
+
+
+
+
 Typing Arrays and DataFrames Using `TypeVarTuple`
 .. for Variadic Columnar dtype Specfication
 

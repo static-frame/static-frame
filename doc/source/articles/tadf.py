@@ -1,13 +1,12 @@
 
-import typing_extensions as tpe
 import typing as tp
+
 import numpy as np
 import numpy.typing as npt
-from static_frame.core.index_base import IndexBase
+import typing_extensions as tpe
+
 from static_frame.core.container import ContainerOperand
-
-
-
+from static_frame.core.index_base import IndexBase
 
 a1: np.ndarray[tp.Any, np.int64]
 

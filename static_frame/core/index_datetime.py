@@ -55,7 +55,7 @@ I = tp.TypeVar('I', bound='IndexDatetime')
 #-------------------------------------------------------------------------------
 # Specialized index for dates
 
-class IndexDatetime(Index):
+class IndexDatetime(Index[np.datetime64]):
     '''
     Derivation of Index to support Datetime operations. Derived classes must define _DTYPE.
     '''
@@ -568,7 +568,7 @@ IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 
 
 #-------------------------------------------------------------------------------
-_DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index]] = {cls._DTYPE: cls for cls in (
+_DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index[np.datetime64]]] = {cls._DTYPE: cls for cls in (
         IndexYear,
         IndexYearMonth,
         IndexDate,
@@ -580,12 +580,12 @@ _DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index]] = {cls._DTYPE: cls for cls in
         IndexNanosecond
         )}
 
-def dtype_to_index_cls(static: bool, dtype: DtypeAny) -> tp.Type[Index]:
+def dtype_to_index_cls(static: bool, dtype: DtypeAny) -> tp.Type[Index[tp.Any]]:
     '''
     Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''
 
-    resolved_static: tp.Type[Index] | None = _DTYPE_TO_CLASS.get(dtype)
+    resolved_static: tp.Type[Index[tp.Any]] | None = _DTYPE_TO_CLASS.get(dtype)
     if resolved_static is not None:
         if static:
             return resolved_static

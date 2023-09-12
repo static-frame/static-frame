@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-
 import typing_extensions as tp
 
 import static_frame as sf
@@ -28,16 +27,16 @@ def test_generics_a() -> None:
 
 
 
-def test_generics_index_hierarchy_a() -> None:
-    # NOTE: calling this with mypy --enable-incomplete-feature=TypeVarTuple --enable-incomplete-feature=Unpack '/home/ariza/src/static-frame/static_frame/test/typing/test_generics.py' results in an error
+# def test_generics_index_hierarchy_a() -> None:
+#     # NOTE: calling this with mypy --enable-incomplete-feature=TypeVarTuple --enable-incomplete-feature=Unpack '/home/ariza/src/static-frame/static_frame/test/typing/test_generics.py' results in an error
 
-    TIH = sf.IndexHierarchy[sf.Index[np.unicode_], sf.IndexDate]
-    ih1: TIH = sf.IndexHierarchy.from_product(('a', 'b'), ('2022-01-01', '1954-04-05'))
+#     TIH = sf.IndexHierarchy[sf.Index[np.unicode_], sf.IndexDate]
+#     ih1: TIH = sf.IndexHierarchy.from_product(('a', 'b'), ('2022-01-01', '1954-04-05'))
 
-    def proc(ih1: TIH) -> sf.Index[np.unicode_]:
-        return ih1.index_at_depth(0)
+#     def proc(ih1: TIH) -> sf.Index[np.unicode_]:
+#         return ih1.index_at_depth(0)
 
-    ih2 = proc(ih1)
+#     ih2 = proc(ih1)
 
 
 

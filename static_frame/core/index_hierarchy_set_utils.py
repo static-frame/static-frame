@@ -96,7 +96,7 @@ def _validate_and_process_indices(
             )
 
 
-def get_encoding_invariants(indices: tp.List[Index]
+def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
         ) -> tp.Tuple[NDArrayAny, DtypeAny]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
@@ -124,8 +124,8 @@ def build_union_indices(
         indices: tp.Sequence[IndexHierarchy],
         index_constructors: tp.List[IndexConstructor],
         depth: int,
-        ) -> tp.List[Index]:
-    union_indices: tp.List[Index] = []
+        ) -> tp.List[Index[tp.Any]]:
+    union_indices: tp.List[Index[tp.Any]] = []
 
     for i in range(depth):
         union = index_many_to_one(
@@ -141,7 +141,7 @@ def build_union_indices(
 def _get_encodings(
         ih: IndexHierarchy,
         *,
-        union_indices: tp.List[Index],
+        union_indices: tp.List[Index[tp.Any]],
         depth: int,
         bit_offset_encoders: NDArrayAny,
         encoding_dtype: DtypeAny,
@@ -149,8 +149,8 @@ def _get_encodings(
     '''Encode `ih` based on the union indices'''
     remapped_indexers: tp.List[NDArrayAny] = []
 
-    union_idx: Index
-    idx: Index
+    union_idx: Index[tp.Any]
+    idx: Index[tp.Any]
     indexer: NDArrayAny
     depth_level = list(range(depth))
     for ( # type: ignore
@@ -173,14 +173,14 @@ def _get_encodings(
 
 
 def _remove_union_bloat(
-        indices: tp.List[Index],
+        indices: tp.List[Index[tp.Any]],
         indexers: tp.List[NDArrayAny] | NDArrayAny,
-        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], NDArrayAny]:
     # There is potentially a LOT of leftover bloat from all the unions. Clean up.
-    final_indices: tp.List[Index] = []
+    final_indices: tp.List[Index[tp.Any]] = []
     final_indexers: tp.List[NDArrayAny] = []
 
-    index: Index
+    index: Index[tp.Any]
     indexer: NDArrayAny
 
     for index, indexer in zip(indices, indexers):

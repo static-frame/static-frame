@@ -8478,7 +8478,9 @@ class Frame(ContainerOperand):
             coords = {index_name[d]: ufunc_unique1d(index.values_at_depth(d))
                     for d in range(index.depth)}
             # create dictionary version
-            coords_index = {k: Index(v) for k, v in coords.items()}
+            coords_index: tp.Dict[TLabel, Index[tp.Any]] = {
+                    k: Index(v) for k, v in coords.items()
+                    }
 
         # columns form the keys in data_vars dict
         columns_values: tp.Iterable[tp.Any]

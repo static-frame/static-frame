@@ -3,13 +3,13 @@ from __future__ import annotations
 import itertools
 import operator
 import typing as tp
-import typing_extensions as tpe
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tpe
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
@@ -116,7 +116,7 @@ IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
 IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
 SingleLabelType = tp.Sequence[TLabel]
-TreeNodeT = tp.Dict[TLabel, tp.Union[Index, 'TreeNodeT']]
+TreeNodeT = tp.Dict[TLabel, tp.Union[Index[tp.Any], 'TreeNodeT']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
@@ -180,8 +180,8 @@ def construct_indices_and_indexers_from_column_arrays(
         *,
         column_iter: tp.Iterable[NDArrayAny],
         index_constructors_iter: tp.Iterable[IndexConstructor],
-        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
-    indices: tp.List[Index] = []
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], NDArrayAny]:
+    indices: tp.List[Index[tp.Any]] = []
     indexers_coll: tp.List[NDArrayAny] = []
 
     for column, constructor in zip(column_iter, index_constructors_iter):
@@ -241,7 +241,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             '_pending_extensions',
             )
 
-    _indices: tp.List[Index] # Of index objects
+    _indices: tp.List[Index[tp.Any]] # Of index objects
     _indexers: NDArrayAny # 2D - integer arrays
     _name: NameType
     _blocks: TypeBlocks
@@ -295,7 +295,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     @staticmethod
     def _build_name_from_indices(
-            indices: tp.List[Index],
+            indices: tp.List[Index[tp.Any]],
             ) -> tp.Optional[SingleLabelType]:
         '''
         Builds the IndexHierarchy name from the names of `indices`. If one is not specified, the name is None
@@ -330,20 +330,20 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if all(n is None for n in name): #type: ignore
             name = None
 
-        def build_index(pd_idx: pandas.Index) -> Index:
+        def build_index(pd_idx: pandas.Index) -> Index[tp.Any]:
             # NOTE: Newer versions of pandas will not require Python date objects to live inside
             # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
             # Only numpy datetime objects are put into a DatetimeIndex.
             if isinstance(pd_idx, pandas.DatetimeIndex):
-                constructor: tp.Type[Index] = IndexNanosecond
+                constructor: tp.Type[Index[tp.Any]] = IndexNanosecond
             else:
                 constructor = Index
 
             if cls.STATIC:
                 return constructor(pd_idx, name=pd_idx.name)
-            return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
+            return tp.cast(Index[tp.Any], constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
-        indices: tp.List[Index] = []
+        indices: tp.List[Index[tp.Any]] = []
         indexers: NDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
@@ -379,7 +379,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if len(levels) == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
-        indices: tp.List[Index] = [] # store in a list, where index is depth
+        indices: tp.List[Index[tp.Any]] = [] # store in a list, where index is depth
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -479,7 +479,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 index_constructors=index_constructors,
                 depth=depth_reference,
                 )
-        indices: tp.List[Index] = [ctr(()) for ctr in index_constructors_iter]
+        indices: tp.List[Index[tp.Any]] = [ctr(()) for ctr in index_constructors_iter]
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -660,7 +660,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 index_constructors=index_constructors,
                 depth=depth,
                 )
-        indices: tp.List[Index] = [constructor(hash_map)
+        indices: tp.List[Index[tp.Any]] = [constructor(hash_map)
                 for constructor, hash_map in zip(index_constructors_iter, hash_maps)
                 ]
 
@@ -675,7 +675,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     @classmethod
     def _from_index_items_1d(cls: tp.Type[IH],
-            items: tp.Iterable[tp.Tuple[TLabel, Index]],
+            items: tp.Iterable[tp.Tuple[TLabel, Index[tp.Any]]],
             *,
             index_constructor: tp.Optional[IndexConstructor] = None,
             name: NameType = None,
@@ -963,7 +963,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     # --------------------------------------------------------------------------
     def __init__(self: IH,
-            indices: tp.Union[IndexHierarchy, tp.List[Index]],
+            indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
             *,
             indexers: NDArrayAny = EMPTY_ARRAY_INT,
             name: NameType = NAME_DEFAULT,
@@ -1416,7 +1416,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     # --------------------------------------------------------------------------
     @property
-    def _index_constructors(self: IH) -> tp.Iterator[tp.Type[Index]]:
+    def _index_constructors(self: IH) -> tp.Iterator[tp.Type[Index[tp.Any]]]:
         '''
         Yields the index constructors for each depth.
         '''
@@ -1498,7 +1498,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     def index_at_depth(self: IH,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> tp.Union[Index, tp.Tuple[Index, ...]]:
+            ) -> tp.Union[Index[tp.Any], tp.Tuple[Index[tp.Any], ...]]:
         '''
         Return an index, or a tuple of indices for the ``depth_level`` specified.
 
@@ -2025,7 +2025,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                     index_constructors=self._index_constructors,
                     )
 
-        new_indices: tp.List[Index] = []
+        new_indices: tp.List[Index[tp.Any]] = []
         new_indexers: NDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
@@ -2731,7 +2731,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def _build_tree_at_depth_from_mask(self: IH,
             depth: int,
             mask: NDArrayAny,
-            ) -> tp.Union[TreeNodeT, Index]:
+            ) -> tp.Union[TreeNodeT, Index[tp.Any]]:
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
         '''
@@ -2767,7 +2767,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 )
         return tree # type: ignore
 
-    def flat(self: IH) -> Index:
+    def flat(self: IH) -> Index[np.object_]:
         '''
         Return a flat, one-dimensional index of tuples for each level.
         '''
@@ -2813,7 +2813,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
     def level_drop(self: IH,
             count: int = 1,
-            ) -> tp.Union[Index, IH]:
+            ) -> tp.Union[Index[tp.Any], IH]:
         '''
         Return an IndexHierarchy with one or more leaf levels removed.
 

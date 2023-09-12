@@ -346,6 +346,12 @@ class IndexBase(ContainerOperandSequence):
             ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
 
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorOne) -> tp.Any: ...
+
+    @tp.overload
+    def __getitem__(self, key: TILocSelectorMany) -> tpe.Self: ...
+
     def __getitem__(self: I,
             key: TILocSelector
             ) -> tp.Any:

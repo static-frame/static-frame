@@ -25,7 +25,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'IndexHierarchy',
         'Series',
-        'Index',
+        'Index[tp.Any]',
         covariant=True,
         )
 

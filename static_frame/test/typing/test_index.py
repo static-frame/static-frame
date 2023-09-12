@@ -7,7 +7,7 @@ import static_frame as sf
 
 def test_index_len_a() -> None:
 
-    idx = sf.Index(('a', 'b', 'c'))
+    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
     l: int = len(idx)
     assert l == 3
 
@@ -20,14 +20,14 @@ def test_index_len_b() -> None:
 
 def test_index_c() -> None:
 
-    idx = sf.Index(('a', 'b', 'c'))
+    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
     assert len(idx) == 3
 
     x1: str = idx[1]
 
-    x2: sf.Index = idx[1:]
-    x3: sf.Index = idx[[0, 1]]
-    x4: sf.Index = idx[idx.values == 'b']
+    x2: sf.Index[np.unicode_] = idx[1:]
+    x3: sf.Index[np.unicode_] = idx[[0, 1]]
+    x4: sf.Index[np.unicode_] = idx[idx.values == 'b']
 
 
 def test_index_d() -> None:

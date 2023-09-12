@@ -145,7 +145,8 @@ if tp.TYPE_CHECKING:
 TVDtype = tpe.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 TVIndex = tpe.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
-class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
+# class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
+class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
     '''
     __slots__ = (

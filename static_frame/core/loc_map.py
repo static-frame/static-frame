@@ -217,7 +217,7 @@ class HierarchicalLocMap:
 
     def __init__(self: _HLMap,
             *,
-            indices: tp.List['Index'],
+            indices: tp.List[Index[tp.Any]],
             indexers: NDArrayAny,
             ) -> None:
 
@@ -384,7 +384,7 @@ class HierarchicalLocMap:
 
     def build_key_indexers(self: _HLMap,
             key: HierarchicalLocMapKey,
-            indices: tp.List['Index'],
+            indices: tp.List[Index[tp.Any]],
             ) -> NDArrayAny:
         key_indexers: tp.List[tp.Sequence[int]] = []
 
@@ -415,7 +415,7 @@ class HierarchicalLocMap:
 
     def loc_to_iloc(self: _HLMap,
             key: HierarchicalLocMapKey,
-            indices: tp.List['Index'],
+            indices: tp.List[Index[tp.Any]],
             ) -> tp.Union[int, tp.List[int]]:
         key_indexers = self.build_key_indexers(key=key, indices=indices)
 

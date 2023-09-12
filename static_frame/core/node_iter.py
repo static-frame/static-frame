@@ -860,7 +860,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            other: tp.Union[NDArrayAny, 'Index', 'Series', tp.Iterable[tp.Any]],
+            other: tp.Union[NDArrayAny, Index[tp.Any], Series, tp.Iterable[tp.Any]],
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0

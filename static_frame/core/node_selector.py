@@ -49,7 +49,7 @@ if tp.TYPE_CHECKING:
 FrameOrSeries = tp.Union['Frame', 'Series']
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Index',
+        'Index[tp.Any]',
         'Series',
         'SeriesHE',
         'Frame',
