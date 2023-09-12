@@ -4,6 +4,12 @@
 
 
 
+Typing DataFrames with Generics and TypeVarTuple
+
+Better DataFrame Typing with Generics and TypeVarTuple
+
+Better DataFrame Typing (and Runtime Validation) with Generics and TypeVarTuple
+
 
 Use `generic` insteead of `dtype[generic]` provides a more concise representation.
 
