@@ -431,17 +431,20 @@ IndexInitializer = tp.Union[
         # tp.Type['IndexAutoFactory'],
         ]
 
-IndexConstructor = tp.Optional[tp.Union[tp.Callable[..., 'IndexBase'], tp.Callable[..., 'Index'], tp.Type['Index']]]
-IndexConstructors = tp.Union[IndexConstructor,
-        tp.Sequence[IndexConstructor],
-        tp.Iterator[IndexConstructor],
+TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Callable[..., 'Index'], tp.Type['Index']]
+
+TIndexCtorSpecifier = tp.Optional[TIndexCtor]
+
+TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
+        tp.Sequence[TIndexCtorSpecifier],
+        tp.Iterator[TIndexCtorSpecifier],
         np.ndarray, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],
         ]
 
 ExplicitConstructor = tp.Union[
-        IndexConstructor,
+        TIndexCtorSpecifier,
         'IndexConstructorFactoryBase',
         tp.Type['IndexConstructorFactoryBase'],
         None,

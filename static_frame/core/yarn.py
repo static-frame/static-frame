@@ -38,11 +38,11 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import is_callable_or_mapping
@@ -150,7 +150,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             series: tp.Union[Series, tp.Iterable[Bus]],
             *,
             index: IndexInitializer | IndexAutoFactoryType | None = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
             own_index: bool = False,
@@ -807,7 +807,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> 'Yarn':
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.

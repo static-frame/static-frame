@@ -51,12 +51,12 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
@@ -137,7 +137,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def from_frames(cls,
             frames: tp.Iterable[Frame],
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
             ) -> 'Bus':
@@ -219,7 +219,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         return cls(None, # will generate FrameDeferred array
                 index=store.labels(config=config),
@@ -237,7 +237,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -258,7 +258,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -279,7 +279,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -300,7 +300,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped NPZ :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -321,7 +321,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped NPY :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -342,7 +342,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -363,7 +363,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -385,7 +385,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -406,7 +406,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
@@ -425,7 +425,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             frames: NDArrayAny | tp.Iterable[Frame | tp.Type[FrameDeferred]] | None,
             *,
             index: IndexInitializer,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
@@ -661,7 +661,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def relabel(self,
             index: tp.Optional[RelabelInput],
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''
         {doc}
@@ -712,7 +712,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> 'Bus':
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.

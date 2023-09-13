@@ -85,8 +85,6 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -97,6 +95,8 @@ from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
@@ -166,7 +166,7 @@ class Series(ContainerOperand):
             index: tp.Union[IndexInitializer, IndexAutoFactory],
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             own_index: bool = False,
             ) -> tpe.Self:
         '''
@@ -240,7 +240,7 @@ class Series(ContainerOperand):
             index: tp.Optional[IndexInitOrAutoType] = None,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
             quote_char: str = '"',
@@ -310,7 +310,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable[tp.Union['Series', 'Bus']],
             *,
             index: tp.Optional[IndexInitOrAutoType] = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             name: NameType = NAME_DEFAULT,
             ) -> tpe.Self:
         '''
@@ -377,7 +377,7 @@ class Series(ContainerOperand):
             items: tp.Iterable[tp.Tuple[TLabel, 'Series']],
             *,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None
             ) -> tpe.Self:
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
@@ -476,7 +476,7 @@ class Series(ContainerOperand):
             value: 'pandas.Series',
             *,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> tpe.Self:
         '''Given a Pandas Series, return a Series.
@@ -533,7 +533,7 @@ class Series(ContainerOperand):
             index: tp.Union[IndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
             name: NameType = NAME_DEFAULT,
             dtype: TDtypeSpecifier = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             own_index: bool = False
             ) -> None:
         '''Initializer.
@@ -1168,7 +1168,7 @@ class Series(ContainerOperand):
     def relabel(self,
             index: tp.Optional[RelabelInput],
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''
         {doc}
@@ -1247,7 +1247,7 @@ class Series(ContainerOperand):
     def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> tpe.Self:
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
@@ -3325,9 +3325,9 @@ class Series(ContainerOperand):
             constructor: tp.Type[FrameType],
             axis: int = 1,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             ) -> FrameType:
         '''
@@ -3403,9 +3403,9 @@ class Series(ContainerOperand):
             axis: int = 1,
             *,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'Frame':
         '''
@@ -3435,9 +3435,9 @@ class Series(ContainerOperand):
             axis: int = 1,
             *,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'FrameGO':
         '''
@@ -3465,9 +3465,9 @@ class Series(ContainerOperand):
             axis: int = 1,
             *,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
             ) -> 'FrameHE':
         '''

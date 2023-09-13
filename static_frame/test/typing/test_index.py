@@ -39,6 +39,7 @@ def test_index_d() -> None:
     x2: sf.IndexDate = idx[1:]
     x3: sf.IndexDate = idx[[0, 1]]
     x4: sf.IndexDate = idx[idx.values == 'b']
+    dt: np.dtype[np.datetime64] = idx.dtype
 
 
 def test_index_e() -> None:
@@ -51,3 +52,15 @@ def test_index_e() -> None:
     x2: sf.IndexHierarchy = idx[1:]
     x3: sf.IndexHierarchy = idx[[0, 1]]
     x4: sf.IndexHierarchy = idx[idx.values_at_depth(1) == 20]
+
+
+def test_index_go_c() -> None:
+
+    idx = sf.IndexGO[np.unicode_](('a', 'b', 'c'))
+    assert len(idx) == 3
+
+    x1: str = idx[1]
+
+    x2: sf.IndexGO[np.unicode_] = idx[1:]
+    x3: sf.IndexGO[np.unicode_] = idx[[0, 1]]
+    x4: sf.IndexGO[np.unicode_] = idx[idx.values == 'b']

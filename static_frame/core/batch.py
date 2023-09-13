@@ -47,8 +47,6 @@ from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import NameType
@@ -56,6 +54,8 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelectorCompound
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -1346,8 +1346,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             index: tp.Optional[RelabelInput] = None,
             columns: tp.Optional[RelabelInput] = None,
             *,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> 'Batch':
 
         return self._apply_attr(
@@ -1362,7 +1362,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             names: tp.Iterable[TLabel] = (),
             consolidate_blocks: bool = False,
-            columns_constructors: IndexConstructors = None
+            columns_constructors: TIndexCtorSpecifiers = None
             ) -> 'Batch':
 
         return self._apply_attr(
@@ -1407,8 +1407,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             index: TLabel = None,
             columns: TLabel = None,
             *,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None
             ) -> 'Batch':
 
         return self._apply_attr(
@@ -1723,7 +1723,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_series(self, *,
         dtype: TDtypeSpecifier = None,
         name: NameType = None,
-        index_constructor: IndexConstructor = None
+        index_constructor: TIndexCtorSpecifier = None
         ) -> Series:
         '''
         Consolidate stored values into a new :obj:`Series` using the stored labels as the index.
@@ -1739,8 +1739,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             union: bool = True,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             columns: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
@@ -1794,7 +1794,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def to_bus(self,
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''

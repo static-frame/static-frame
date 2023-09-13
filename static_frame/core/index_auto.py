@@ -13,10 +13,10 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import ExplicitConstructor
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import iterable_to_array_1d
 
@@ -109,7 +109,7 @@ class IndexAutoFactory:
     def from_optional_constructor(cls,
             initializer: IndexAutoInitializer, # size
             *,
-            default_constructor: IndexConstructor,
+            default_constructor: TIndexCtorSpecifier,
             explicit_constructor: ExplicitConstructor = None,
             ) -> IndexBase:
 
@@ -129,7 +129,8 @@ class IndexAutoFactory:
 
         else: # get from default constructor
             assert default_constructor is not None
-            constructor = Index if default_constructor.STATIC else IndexGO # type: ignore
+            constructor: tp.Type[Index[tp.Any]] = (Index
+                    if default_constructor.STATIC else IndexGO) # type: ignore[union-attr]
             return constructor(
                     labels=labels,
                     loc_is_iloc=True,
@@ -146,7 +147,7 @@ class IndexAutoFactory:
 
     def to_index(self,
             *,
-            default_constructor: IndexConstructor,
+            default_constructor: TIndexCtorSpecifier,
             explicit_constructor: ExplicitConstructor = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.

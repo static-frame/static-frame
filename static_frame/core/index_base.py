@@ -24,7 +24,6 @@ from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -33,6 +32,7 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
@@ -251,7 +251,7 @@ class IndexBase(ContainerOperandSequence):
     def level_add(self,
             level: TLabel,
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 

@@ -14,11 +14,11 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import get_concurrent_executor
@@ -211,8 +211,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
-            columns_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
+            columns_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -255,7 +255,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False
@@ -358,7 +358,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -427,7 +427,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             fill_value: tp.Any = np.nan,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -492,7 +492,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -557,7 +557,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             axis: int = 0,
             ) -> 'Series':
         from static_frame.core.series import Series
@@ -590,7 +590,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             axis: int = 0,
             ) -> 'Series':
         from static_frame.core.series import Series
@@ -626,7 +626,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             name_index: NameType = None,
             ) -> 'Series':
         from static_frame.core.index import Index
@@ -651,8 +651,8 @@ class IterNode(tp.Generic[FrameOrSeries]):
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
-            columns_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
+            columns_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             axis: int = 0,
             ) -> 'Frame':
         # NOTE: this is only called from `Frame` to produce a new `Frame`
@@ -685,7 +685,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             values: tp.Iterator[TLabel], #pylint: disable=function-redefined
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: tp.Optional[IndexConstructor]= None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             ) -> NDArrayAny:
         # NOTE: name argument is for common interface
         if index_constructor is not None:

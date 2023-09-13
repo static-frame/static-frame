@@ -5,9 +5,9 @@ import typing as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypesSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 
 #-------------------------------------------------------------------------------
@@ -19,10 +19,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
 
     index_depth: int
     index_name_depth_level: tp.Optional[TDepthLevel]
-    index_constructors: IndexConstructors
+    index_constructors: TIndexCtorSpecifiers
     columns_depth: int
     columns_name_depth_level: tp.Optional[TDepthLevel]
-    columns_constructors: IndexConstructors
+    columns_constructors: TIndexCtorSpecifiers
     columns_select: tp.Optional[tp.Iterable[str]]
     dtypes: TDtypesSpecifier
     consolidate_blocks: bool
@@ -71,10 +71,10 @@ class StoreConfigHE(metaclass=InterfaceMeta):
             # constructors
             index_depth: int = 0, # this default does not permit round trip
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
@@ -223,10 +223,10 @@ class StoreConfig(StoreConfigHE):
     def __init__(self, *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,

@@ -13,8 +13,8 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -31,7 +31,7 @@ class ValidationResult(tp.NamedTuple):
     any_dropped: bool
     any_shallow_copies: bool
     name: TLabel
-    index_constructors: tp.List[IndexConstructor]
+    index_constructors: tp.List[TIndexCtorSpecifier]
 
 
 def _validate_and_process_indices(
@@ -109,7 +109,7 @@ def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
 
 
 def get_empty(
-        index_constructors: tp.List[IndexConstructor],
+        index_constructors: tp.List[TIndexCtorSpecifier],
         name: TLabel,
         ) -> IndexHierarchy:
     return IndexHierarchy._from_empty(
@@ -122,7 +122,7 @@ def get_empty(
 
 def build_union_indices(
         indices: tp.Sequence[IndexHierarchy],
-        index_constructors: tp.List[IndexConstructor],
+        index_constructors: tp.List[TIndexCtorSpecifier],
         depth: int,
         ) -> tp.List[Index[tp.Any]]:
     union_indices: tp.List[Index[tp.Any]] = []

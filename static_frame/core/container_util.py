@@ -37,8 +37,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
@@ -46,6 +44,8 @@ from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
@@ -327,7 +327,7 @@ def is_fill_value_factory_initializer(value: tp.Any) -> bool:
             or isinstance(value, FillValueAuto)
             )
 
-def is_static(value: IndexConstructor) -> bool:
+def is_static(value: TIndexCtorSpecifier) -> bool:
     try:
         # if this is a class constructor
         return getattr(value, STATIC_ATTR) #type: ignore
@@ -457,7 +457,7 @@ def df_slice_to_arrays(*,
 def index_from_optional_constructor(
         value: 'IndexInitOrAutoType',
         *,
-        default_constructor: IndexConstructor,
+        default_constructor: TIndexCtorSpecifier,
         explicit_constructor: ExplicitConstructor = None,
         ) -> 'IndexBase':
     '''
@@ -508,9 +508,9 @@ def index_from_optional_constructor(
     return default_constructor(value) # type: ignore
 
 def constructor_from_optional_constructor(
-        default_constructor: IndexConstructor,
+        default_constructor: TIndexCtorSpecifier,
         explicit_constructor: ExplicitConstructor = None,
-        ) -> IndexConstructor:
+        ) -> TIndexCtorSpecifier:
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
@@ -526,8 +526,8 @@ def index_from_optional_constructors(
         value: IndexInitializer,
         *,
         depth: int,
-        default_constructor: IndexConstructor,
-        explicit_constructors: IndexConstructors = None,
+        default_constructor: TIndexCtorSpecifier,
+        explicit_constructors: TIndexCtorSpecifiers = None,
         ) -> tp.Tuple[tp.Optional['IndexBase'], bool]:
     '''For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed.
     '''
@@ -566,8 +566,8 @@ def index_from_optional_constructors(
 def constructor_from_optional_constructors(
         *,
         depth: int,
-        default_constructor: IndexConstructor,
-        explicit_constructors: IndexConstructors = None,
+        default_constructor: TIndexCtorSpecifier,
+        explicit_constructors: TIndexCtorSpecifiers = None,
         ) -> tp.Callable[..., tp.Optional['IndexBase']]:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
@@ -1077,7 +1077,7 @@ def rehierarch_from_type_blocks(*,
 def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
-        index_constructors: IndexConstructors = None,
+        index_constructors: TIndexCtorSpecifiers = None,
         name: tp.Optional[TLabel] = None,
         ) -> tp.Tuple['IndexBase', NDArrayAny]:
     '''
@@ -1453,7 +1453,7 @@ def index_many_to_one(
         indices: tp.Iterable[IndexBase | IMTOAdapter],
         cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
+        explicit_constructor: tp.Optional[TIndexCtorSpecifier] = None,
         ) -> 'IndexBase':
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
@@ -1623,7 +1623,7 @@ def index_many_to_one(
 def index_many_concat(
         indices: tp.Iterable['IndexBase'],
         cls_default: tp.Type['IndexBase'],
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
+        explicit_constructor: tp.Optional[TIndexCtorSpecifier] = None,
         ) -> tp.Optional['IndexBase']:
     return index_many_to_one(indices,
             cls_default,

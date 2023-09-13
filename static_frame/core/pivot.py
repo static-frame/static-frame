@@ -18,9 +18,9 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import UFunc
@@ -108,9 +108,9 @@ def pivot_records_items_to_frame(
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
         func_no: bool,
         kind: TSortKinds,
-        columns_constructor: IndexConstructor,
+        columns_constructor: TIndexCtorSpecifier,
         columns: tp.Sequence[TLabel],
-        index_constructor: IndexConstructor,
+        index_constructor: TIndexCtorSpecifier,
         dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
         frame_cls: tp.Type['Frame'],
         ) -> 'Frame':
@@ -322,8 +322,8 @@ def pivot_items_to_frame(*,
         frame_cls: tp.Type['Frame'],
         name: NameType,
         dtype: DtypeAny | None,
-        index_constructor: IndexConstructor,
-        columns_constructor: IndexConstructor,
+        index_constructor: TIndexCtorSpecifier,
+        columns_constructor: TIndexCtorSpecifier,
         kind: TSortKinds,
         ) -> 'Frame':
     '''
@@ -383,7 +383,7 @@ def pivot_core(
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
         fill_value: object = np.nan,
-        index_constructor: IndexConstructor = None,
+        index_constructor: TIndexCtorSpecifier = None,
         kind: TSortKinds = DEFAULT_FAST_SORT_KIND,
         ) -> 'Frame':
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
@@ -568,7 +568,7 @@ def pivot_outer_index(
         frame: 'Frame',
         index_fields: tp.Sequence[TLabel],
         index_depth: int,
-        index_constructor: IndexConstructor = None,
+        index_constructor: TIndexCtorSpecifier = None,
         ) -> IndexBase:
 
     index_loc = index_fields if index_depth > 1 else index_fields[0]
@@ -690,8 +690,8 @@ def pivot_index_map(*,
 #-------------------------------------------------------------------------------
 class PivotDeriveConstructors(tp.NamedTuple):
     contract_dst: tp.Optional[tp.Iterable[TLabel]]
-    contract_constructor: IndexConstructor
-    expand_constructor: IndexConstructor
+    contract_constructor: TIndexCtorSpecifier
+    expand_constructor: TIndexCtorSpecifier
 
 def pivot_derive_constructors(*,
         contract_src: IndexBase,

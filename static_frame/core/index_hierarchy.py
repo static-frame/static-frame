@@ -67,8 +67,6 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
@@ -77,6 +75,8 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorNonContainer
@@ -179,7 +179,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> NDArrayAny:
 def construct_indices_and_indexers_from_column_arrays(
         *,
         column_iter: tp.Iterable[NDArrayAny],
-        index_constructors_iter: tp.Iterable[IndexConstructor],
+        index_constructors_iter: tp.Iterable[TIndexCtorSpecifier],
         ) -> tp.Tuple[tp.List[Index[tp.Any]], NDArrayAny]:
     indices: tp.List[Index[tp.Any]] = []
     indexers_coll: tp.List[NDArrayAny] = []
@@ -254,7 +254,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
-    _INDEX_CONSTRUCTOR: IndexConstructor = Index
+    _INDEX_CONSTRUCTOR: TIndexCtorSpecifier = Index
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------
@@ -263,9 +263,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     @classmethod
     def _build_index_constructors(cls: tp.Type[IH],
             *,
-            index_constructors: IndexConstructors,
+            index_constructors: TIndexCtorSpecifiers,
             depth: int,
-            ) -> tp.Iterator[IndexConstructor]:
+            ) -> tp.Iterator[TIndexCtorSpecifier]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided ``index_constructors``.
 
@@ -362,7 +362,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def from_product(cls: tp.Type[IH],
             *levels: IndexInitializer,
             name: NameType = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
@@ -423,7 +423,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             tree: TreeNodeT,
             *,
             name: NameType = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
@@ -443,7 +443,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
@@ -496,7 +496,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             *,
             name: NameType = None,
             depth_reference: tp.Optional[int] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays per depth.
@@ -574,7 +574,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             *,
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             depth_reference: tp.Optional[int] = None,
             continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             ) -> IH:
@@ -677,11 +677,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def _from_index_items_1d(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[TLabel, Index[tp.Any]]],
             *,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             name: NameType = None,
             ) -> IH:
         labels: tp.List[TLabel] = []
-        index_inner: tp.Optional[IndexGO] = None  # We will grow this in-place
+        index_inner: tp.Optional[IndexGO[tp.Any]] = None  # We will grow this in-place
         indexers_inner: tp.List[NDArrayAny] = []
 
         # Contains the len of the index for each label. Used to generate the outermost indexer
@@ -695,7 +695,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
             if index_inner is None:
                 # This is the first index. Convert to IndexGO
-                index_inner = tp.cast(IndexGO, mutable_immutable_index_filter(False, index))
+                index_inner = tp.cast(
+                        IndexGO[tp.Any],
+                        mutable_immutable_index_filter(False, index),
+                        )
                 new_indexer = PositionsAllocator.get(len(index_inner))
             else:
                 new_labels = index.difference(index_inner) # Retains order!
@@ -735,7 +738,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def from_index_items(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[TLabel, IndexBase]],
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             name: NameType = None,
             ) -> IH:
         '''
@@ -763,7 +766,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         depth = index.depth
         labels: tp.List[TLabel] = [label]
         repeats: tp.List[int] = [len(index)]
-        existing_index_constructors: tp.List[IndexConstructor] = list(index._index_constructors)
+        existing_index_constructors: tp.List[TIndexCtorSpecifier] = list(index._index_constructors)
 
         blocks = [index._blocks]
         for label, index in items:
@@ -774,7 +777,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             repeats.append(len(index))
             blocks.append(index._blocks)  # type: ignore
 
-            # If the IndexConstructor differs for any level, downcast to the
+            # If the TIndexCtorSpecifier differs for any level, downcast to the
             # default constructor.
             for i, constructor in enumerate(index._index_constructors):  # type: ignore
                 if constructor != existing_index_constructors[i]:
@@ -825,7 +828,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             *,
             delimiter: str = ' ',
             name: NameType = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Construct an :obj:`IndexHierarchy` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
@@ -874,7 +877,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         Args:
             names: Iterable of hashable names per depth.
         '''
-        # NOTE: this might take dtypes and/or IndexConstructors.
+        # NOTE: this might take dtypes and/or TIndexCtorSpecifiers.
         name = tuple(names)
         if len(name) == 0:
             raise ErrorInitIndex('names must be non-empty.')
@@ -886,7 +889,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             blocks: TypeBlocks,
             *,
             name: NameType = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             own_blocks: bool = False,
             name_interleave: bool = False,
             ) -> IH:
@@ -1737,7 +1740,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def rehierarch(self: IH,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
@@ -2776,7 +2779,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     def level_add(self: IH,
             level: TLabel,
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> IH:
         '''
         Return an IndexHierarchy with a new root (outer) level added.

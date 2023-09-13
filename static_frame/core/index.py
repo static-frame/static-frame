@@ -54,7 +54,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
@@ -65,6 +64,8 @@ from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TIndexCtor
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import UFunc
@@ -1383,7 +1384,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def level_add(self,
             level: TLabel,
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'IndexHierarchy':
         '''Return an IndexHierarchy with an added root level.
 
@@ -1398,13 +1399,16 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-        cls_depth = Index if self.STATIC else IndexGO
+        cls_depth: tp.Type[Index[tp.Any]] = Index if self.STATIC else IndexGO
 
+        idx_ctor: TIndexCtor
         if index_constructor is None:
             # cannot assume new depth is the same index subclass
-            index_constructor = cls_depth
+            idx_ctor = cls_depth
+        else:
+            idx_ctor = index_constructor
 
-        indices: tp.List[Index] = [index_constructor((level,)), immutable_index_filter(self)] # type: ignore
+        indices: tp.List[Index] = [idx_ctor((level,)), immutable_index_filter(self)] # type: ignore
 
         indexers = np.array(
                 [
@@ -1583,7 +1587,7 @@ INDEX_GO_LEAF_SLOTS = (
         '_positions_mutable_count',
         )
 
-class IndexGO(_IndexGOMixin, Index[tp.Any]):
+class IndexGO(_IndexGOMixin, Index[TVDtype]):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
     '''
 

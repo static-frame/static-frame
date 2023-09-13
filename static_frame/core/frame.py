@@ -149,8 +149,6 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import FrameInitializer
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
@@ -170,6 +168,8 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -242,7 +242,7 @@ class Frame(ContainerOperand):
             series: Series,
             *,
             name: TLabel = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''
         Frame constructor from a Series:
@@ -269,8 +269,8 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> tpe.Self:
@@ -318,8 +318,8 @@ class Frame(ContainerOperand):
             columns: IndexInitializer,
             dtype: TDtypeSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> tpe.Self:
@@ -368,8 +368,8 @@ class Frame(ContainerOperand):
             columns: IndexInitOrAutoType = None,
             dtype: TDtypeSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> tpe.Self:
@@ -443,8 +443,8 @@ class Frame(ContainerOperand):
             union: bool = True,
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
@@ -627,8 +627,8 @@ class Frame(ContainerOperand):
             union: bool = True,
             name: NameType = None,
             fill_value: tp.Any = np.nan,
-            index_constructor: tp.Optional[IndexConstructor] = None,
-            columns_constructor: tp.Optional[IndexConstructor] = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
+            columns_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             consolidate_blocks: bool = False,
             ) -> tpe.Self:
         '''
@@ -828,8 +828,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> tpe.Self:
@@ -969,8 +969,8 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             ) -> tpe.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a row; column names will be derived from the union of all row dictionary keys.
@@ -1065,8 +1065,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_columns: bool = False,
             ) -> tpe.Self:
         '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
@@ -1143,8 +1143,8 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             consolidate_blocks: bool = False
             ) -> tpe.Self:
         '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
@@ -1238,8 +1238,8 @@ class Frame(ContainerOperand):
             fill_value: object = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             consolidate_blocks: bool = False
             ) -> tpe.Self:
         '''
@@ -1276,8 +1276,8 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False,
             consolidate_blocks: bool = False
@@ -1363,8 +1363,8 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             ) -> tpe.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a column; index labels will be derived from the union of all column dictionary keys.
@@ -1541,16 +1541,16 @@ class Frame(ContainerOperand):
             data: TypeBlocks,
             index_depth: int,
             index_arrays: tp.Sequence[NDArrayAny],
-            index_constructors: IndexConstructors,
+            index_constructors: TIndexCtorSpecifiers,
             columns_depth: int,
             columns_labels: tp.Sequence[TLabel],
-            columns_constructors: IndexConstructors,
+            columns_constructors: TIndexCtorSpecifiers,
             name: TLabel,
             ) -> tpe.Self:
         '''
         Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
         '''
-        columns_default_constructor: IndexConstructor
+        columns_default_constructor: TIndexCtorSpecifier
         if columns_depth <= 1:
             columns_default_constructor = cls._COLUMNS_CONSTRUCTOR
         else:
@@ -1598,9 +1598,9 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[IndexSpecifier] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -1652,8 +1652,8 @@ class Frame(ContainerOperand):
             axis: tp.Optional[int] = None,
             name: NameType = None,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False,
             ) -> tpe.Self:
@@ -1766,10 +1766,10 @@ class Frame(ContainerOperand):
             *,
             connection: sqlite3.Connection,
             index_depth: int = 0,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_select: tp.Iterable[str | tp.Tuple[str, ...]] | None = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -1853,7 +1853,7 @@ class Frame(ContainerOperand):
                         )
 
             row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]]
-            index_constructor: IndexConstructor | None
+            index_constructor: TIndexCtorSpecifier | None
             if index_depth == 0:
                 index = None
                 row_gen = lambda: cursor # type: ignore
@@ -1876,7 +1876,7 @@ class Frame(ContainerOperand):
 
                 def default_constructor(
                         iterables: tp.Iterable[tp.Iterable[TLabel]],
-                        index_constructors: IndexConstructors,
+                        index_constructors: TIndexCtorSpecifiers,
                         ) -> IndexHierarchy: #pylint: disable=function-redefined
                     if get_col_dtype:
                         blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
@@ -1929,8 +1929,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_index}
 
@@ -1972,8 +1972,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
 
@@ -2015,8 +2015,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
@@ -2053,8 +2053,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_records}
 
@@ -2091,8 +2091,8 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_values}
 
@@ -2130,11 +2130,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             index_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_continuation_token: tp.Optional[TLabel] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
@@ -2445,11 +2445,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
@@ -2507,11 +2507,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
@@ -2570,11 +2570,11 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             index_column_first: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             index_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
             columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
             skip_header: int = 0,
@@ -2645,10 +2645,10 @@ class Frame(ContainerOperand):
             label: TLabel = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
@@ -2691,9 +2691,9 @@ class Frame(ContainerOperand):
             *,
             label: TLabel,
             index_depth: int = 0,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -2725,9 +2725,9 @@ class Frame(ContainerOperand):
             *,
             label: TLabel,
             index_depth: int = 0,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> tpe.Self:
@@ -2821,9 +2821,9 @@ class Frame(ContainerOperand):
             value: 'pandas.DataFrame',
             *,
             index: IndexInitOrAutoType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             dtypes: TDtypesSpecifier = None,
             name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
@@ -2951,10 +2951,10 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -3073,7 +3073,7 @@ class Frame(ContainerOperand):
 
             def index_default_constructor(values: tp.Iterable[NDArrayAny],
                     *,
-                    index_constructors: IndexConstructors = None,
+                    index_constructors: TIndexCtorSpecifiers = None,
                     ) -> IndexBase:
                 return IndexHierarchy._from_type_blocks(
                     TypeBlocks.from_blocks(values),
@@ -3107,10 +3107,10 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -3245,8 +3245,8 @@ class Frame(ContainerOperand):
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
             name: NameType = NAME_DEFAULT,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False,
@@ -4137,8 +4137,8 @@ class Frame(ContainerOperand):
             index: tp.Optional[RelabelInput] = None,
             columns: tp.Optional[RelabelInput] = None,
             *,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''
         {doc}
@@ -4217,8 +4217,8 @@ class Frame(ContainerOperand):
             index: TLabel = None,
             columns: TLabel = None,
             *,
-            index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> tpe.Self:
         '''
         {doc}
@@ -4277,7 +4277,7 @@ class Frame(ContainerOperand):
             key: TLocSelector,
             *,
             axis: int = 0,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> tpe.Self:
         '''
         Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections from the Frame (via axis-appropriate ``loc`` selections) to move into the :obj:`Index`.
@@ -4480,8 +4480,8 @@ class Frame(ContainerOperand):
             index: tp.Optional[tp.Sequence[int]] = None,
             columns: tp.Optional[tp.Sequence[int]] = None,
             *,
-            index_constructors: IndexConstructors = None,
-            columns_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             ) -> tpe.Self:
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
@@ -6403,7 +6403,7 @@ class Frame(ContainerOperand):
             column: TLabel,
             *,
             drop: bool = False,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
@@ -6459,7 +6459,7 @@ class Frame(ContainerOperand):
             columns: TLocSelector,
             *,
             drop: bool = False,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
@@ -6539,7 +6539,7 @@ class Frame(ContainerOperand):
             names: tp.Sequence[TLabel] = (),
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
@@ -6625,7 +6625,7 @@ class Frame(ContainerOperand):
             index: TLabel,
             *,
             drop: bool = False,
-            columns_constructor: IndexConstructor = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` produced by setting the given row as the columns, optionally removing that row from the new :obj:`Frame`.
@@ -6680,7 +6680,7 @@ class Frame(ContainerOperand):
             index: TLocSelector,
             *,
             drop: bool = False,
-            columns_constructors: IndexConstructors = None,
+            columns_constructors: TIndexCtorSpecifiers = None,
             reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
@@ -6760,7 +6760,7 @@ class Frame(ContainerOperand):
     def unset_columns(self, *,
             names: tp.Sequence[TLabel] = (),
             # consolidate_blocks: bool = False,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` where columns are added to the top of the data, and an :obj:`IndexAutoFactory` is used to populate new columns. This operation potentially forces a complete copy of all data.
@@ -6787,7 +6787,7 @@ class Frame(ContainerOperand):
         if len(names) != columns_depth:
             raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of columns.')
 
-        index_default_constructor: IndexConstructor
+        index_default_constructor: TIndexCtorSpecifier
 
         if index_depth > 1:
             if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
@@ -7658,7 +7658,7 @@ class Frame(ContainerOperand):
             *,
             func: tp.Optional[CallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
@@ -8568,7 +8568,7 @@ class Frame(ContainerOperand):
 
     def to_series(self,
             *,
-            index_constructor: IndexConstructor = Index,
+            index_constructor: TIndexCtorSpecifier = Index,
             name: NameType = NAME_DEFAULT,
             ) -> Series:
         '''
@@ -9208,7 +9208,7 @@ class FrameGO(Frame):
     _COLUMNS_CONSTRUCTOR = IndexGO
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
 
-    _columns: IndexGO
+    _columns: IndexGO[tp.Any] # TODO: replace with TypeVar
 
 
     def __setitem__(self,
