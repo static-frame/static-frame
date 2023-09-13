@@ -669,7 +669,7 @@ def ufunc_dtype_to_dtype(func: UFunc, dtype: DtypeAny) -> tp.Optional[DtypeAny]:
     return None
 
 #-------------------------------------------------------------------------------
-FGItemT = tp.TypeVar('FGItemT')
+TVFGItem = tp.TypeVar('TVFGItem')
 
 class FrozenGenerator:
     '''
@@ -680,16 +680,16 @@ class FrozenGenerator:
         '_src',
         )
 
-    def __init__(self, gen: tp.Iterable[FGItemT]):
+    def __init__(self, gen: tp.Iterable[TVFGItem]):
         # NOTE: while generally called with an iterator, some iterables such as dict_values need to be converted to an iterator
-        self._gen: tp.Iterator[FGItemT]
+        self._gen: tp.Iterator[TVFGItem]
         if hasattr(gen, '__next__'):
             self._gen = gen #type: ignore
         else:
             self._gen = iter(gen)
-        self._src: tp.List[FGItemT] = []
+        self._src: tp.List[TVFGItem] = []
 
-    def __getitem__(self, key: int) -> FGItemT: # type: ignore
+    def __getitem__(self, key: int) -> TVFGItem: # type: ignore
         start = len(self._src)
         if key >= start:
             for k in range(start, key + 1):
@@ -697,7 +697,7 @@ class FrozenGenerator:
                     self._src.append(next(self._gen))
                 except StopIteration:
                     raise IndexError(k) from None
-        return self._src[key]
+        return self._src[key] # pyright: ignore
 
 #-------------------------------------------------------------------------------
 def get_concurrent_executor(
@@ -717,7 +717,7 @@ def get_concurrent_executor(
         from concurrent.futures import ProcessPoolExecutor
         exe = partial(ProcessPoolExecutor,
                 max_workers=max_workers,
-                mp_context=mp_context)
+                mp_context=mp_context) # pyright: ignore
     return exe #type: ignore
 
 #-------------------------------------------------------------------------------
@@ -1170,7 +1170,7 @@ def array_ufunc_axis_skipna(
     elif kind == 'O':
         # replace None with nan
         if skipna:
-            is_not_none = np.not_equal(array, None) # type: ignore
+            is_not_none: NDArrayAny = np.not_equal(array, None) # type: ignore
 
         if array.ndim == 1:
             if skipna:
@@ -1183,7 +1183,7 @@ def array_ufunc_axis_skipna(
             # for 2D array, replace None with NaN
             if skipna:
                 v = array.copy() # already an object type
-                v[~is_not_none] = np.nan
+                v[~is_not_none] = np.nan # pyright: ignore
             else:
                 v = array
 
@@ -2058,7 +2058,7 @@ def key_to_datetime_key(
 
     if hasattr(key, '__iter__'): # a generator-like
         if dtype == DT64_YEAR:
-            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype)
+            return np.array([to_datetime64(v, dtype) for v in key], dtype=dtype) # pyright: ignore
         return np.array(tuple(key), dtype=dtype) #type: ignore
 
     # could be None
@@ -2241,7 +2241,7 @@ def binary_transition(
 
         # this dictionary could be very sparse compared to axis dimensionality
         indices_by_axis: tp.DefaultDict[int, tp.List[int]] = defaultdict(list)
-        for y, x in zip(*np.nonzero(target_sel_leading | target_sel_trailing)):
+        for y, x in zip(*np.nonzero(target_sel_leading | target_sel_trailing)): # pyright: ignore
             if axis == 0:
                 # store many rows values for each column
                 indices_by_axis[x].append(y)
@@ -2900,12 +2900,12 @@ def ufunc_set_iter(
         a1, a2 = arrays
         if a1.ndim != a2.ndim:
             raise RuntimeError('arrays do not all have the same ndim')
-        ufunc = MANY_TO_ONE_MAP[(a1.ndim, many_to_one_type)]
+        ufunc = MANY_TO_ONE_MAP[(a1.ndim, many_to_one_type)] # pyright: ignore
         result = ufunc(a1, a2, assume_unique=assume_unique)
     else:
         arrays = iter(arrays)
         result = next(arrays)
-        ufunc = MANY_TO_ONE_MAP[(result.ndim, many_to_one_type)]
+        ufunc = MANY_TO_ONE_MAP[(result.ndim, many_to_one_type)] # pyright: ignore
 
         # skip processing for the same array instance
         array_id = id(result)

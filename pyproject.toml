@@ -31,6 +31,7 @@ typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false
 reportUnboundVariable = "none"
+reportInvalidTypeVarUse = false
 
 pythonVersion = "3.11"
 pythonPlatform = "Linux"
