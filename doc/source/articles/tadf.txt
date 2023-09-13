@@ -1,6 +1,7 @@
 
 
 
+# article
 
 Typing DataFrames with Generics and TypeVarTuple
 
@@ -11,7 +12,14 @@ Better DataFrame Typing (and Runtime Validation) with Composite Generics and Typ
 Better DataFrame Typing with Composite Generics and TypeVarTuple
 
 
+
+
+# presentation
+
 Typing Arrays and DataFrames
+
+Using Generics and TypeVarTuple for Better Typing of Arrays and DataFrames
+
 .. Using `TypeVarTuple`
 .. for Variadic Columnar dtype Specfication
 
