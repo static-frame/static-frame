@@ -1,12 +1,33 @@
 [tool.pyright]
 exclude = [
     "**/__pycache__",
+    "doc/**",
+    "tasks.py",
     "static_frame/test/unit",
     "static_frame/test/integration",
     "static_frame/test/property",
-    "static_frame/profile"
+    "static_frame/profile",
+    "static_frame/core/index*",
+    "static_frame/core/node*",
+    "static_frame/core/store*",
+    "static_frame/core/display*",
+    "static_frame/core/type_blocks.py",
+    "static_frame/core/frame.py",
+    "static_frame/core/series.py",
+    "static_frame/core/yarn.py",
+    "static_frame/core/quilt.py",
+    "static_frame/core/pivot.py",
+    "static_frame/core/interface.py",
+    "static_frame/core/container_util.py",
+    "static_frame/core/bus.py",
+    "static_frame/core/loc_map.py",
+    "static_frame/core/batch.py",
+    "static_frame/core/protocol_dfi.py",
+    "static_frame/core/axis_map.py",
+    "static_frame/core/memory_measure.py",
 ]
 
+typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false
 reportUnboundVariable = "none"

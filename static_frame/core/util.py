@@ -415,9 +415,6 @@ TDtypesSpecifier = tp.Optional[tp.Union[
         tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
-# specifiers that are equivalent to object
-DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
-
 TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
 TDepthLevel = tp.Union[int, tp.List[int]]
 
@@ -484,7 +481,7 @@ NOT_IN_CACHE_SENTINEL = object()
 
 #-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
-OPERATORS: tp.Dict[str, UFunc] = {
+OPERATORS: tp.Dict[str, UFunc] = { # pyright: ignore
     '__pos__': operator.__pos__,
     '__neg__': operator.__neg__,
     '__abs__': operator.__abs__,
