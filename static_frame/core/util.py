@@ -451,8 +451,7 @@ ExplicitConstructor = tp.Union[
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
         np.ndarray,
-        tp.Mapping[TLabel, tp.Any],
-        int, float, str, bool]
+        ]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
 FRAME_INITIALIZER_DEFAULT = object()

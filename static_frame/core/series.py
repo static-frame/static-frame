@@ -145,6 +145,9 @@ if tp.TYPE_CHECKING:
 TVDtype = tpe.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 TVIndex = tpe.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
+def _NA_VALUES_CONSTRCTOR(count: int) -> None: ...
+
+
 # class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
@@ -397,10 +400,10 @@ class Series(ContainerOperand):
                     array_values.append(series.values)
                     yield label, series._index
         else:
-            def gen() -> tp.Iterator[TLabel]: #type: ignore
+            def gen() -> tp.Iterator[tp.Tuple[TLabel, IndexBase]]:
                 for label, series in items:
                     array_values.append(series.values)
-                    yield from product((label,), series._index)
+                    yield from product((label,), series._index) # pyright: ignore
         values: NDArrayAny
         try:
             # populates array_values as side
@@ -495,12 +498,13 @@ class Series(ContainerOperand):
         if not isinstance(value, pandas.Series):
             raise ErrorInitSeries(f'from_pandas must be called with a Pandas Series object, not: {type(value)}')
 
+        data: NDArrayAny
         if pandas_version_under_1():
             if own_data:
-                data = value.values
+                data = value.values # pyright: ignore
                 data.flags.writeable = False
             else:
-                data = immutable_filter(value.values)
+                data = immutable_filter(value.values) # pyright: ignore
         else:
             data = pandas_to_numpy(value, own_data=own_data)
 
@@ -553,7 +557,7 @@ class Series(ContainerOperand):
         #-----------------------------------------------------------------------
         # values assignment
 
-        values_constructor: tp.Optional[tp.Callable[[int], None]] = None # if deferred
+        values_constructor = _NA_VALUES_CONSTRCTOR
 
         if not values.__class__ is np.ndarray:
             if isinstance(values, dict):
@@ -586,7 +590,7 @@ class Series(ContainerOperand):
             else:
                 self.values = immutable_filter(values) # type: ignore
 
-        self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
         #-----------------------------------------------------------------------
         # index assignment
@@ -596,7 +600,7 @@ class Series(ContainerOperand):
             self._index = index # type: ignore
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
-            if values_constructor:
+            if values_constructor is not _NA_VALUES_CONSTRCTOR:
                 value_count = 1
             else:
                 value_count = len(self.values)
@@ -610,12 +614,12 @@ class Series(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        index_count = self._index.__len__()
+        index_count = self._index.__len__() # pyright: ignore
 
-        if not self._index.STATIC:
+        if not self._index.STATIC: # pyright: ignore
             raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
-        if values_constructor:
+        if values_constructor is not _NA_VALUES_CONSTRCTOR:
             values_constructor(index_count) # updates self.values
             # must update after calling values constructor
         value_count = len(self.values)
@@ -2082,7 +2086,7 @@ class Series(ContainerOperand):
             depth_level: tp.Optional[TDepthLevel] = None,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Series']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
 
         if depth_level is None:
             depth_level = 0
@@ -2104,7 +2108,7 @@ class Series(ContainerOperand):
             depth_level: TDepthLevel = 0,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[TLabel]:
+            ) -> tp.Iterator[Series]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 as_array=as_array,
@@ -3098,7 +3102,7 @@ class Series(ContainerOperand):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        post: NDArrayAny = np.searchsorted(self.values,
+        post: NDArrayAny = np.searchsorted(self.values, # pyright: ignore
                 values,
                 'left' if side_left else 'right',
                 )
@@ -3131,7 +3135,7 @@ class Series(ContainerOperand):
             if self._index.ndim == 1:
                 return self._index.values[sel]
             elif found.sum() == 1:
-                return self._index._extract_iloc(sel)
+                return self._index._extract_iloc(sel) # pyright: ignore
 
         if self._index.ndim == 1:
             post = np.full(len(sel),
