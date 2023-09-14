@@ -226,7 +226,7 @@ class MemoryDisplay:
                 for format in MeasureFormat:
                     # NOTE: not sharing seen accross evaluations
                     sizes.append(memory_total(part, format=format))
-                yield label, sizes
+                yield label, sizes # pyright: ignore
 
         if hasattr(obj, 'name') and obj.name is not None:
             name = f'<{obj.__class__.__name__}: {obj.name}>'
