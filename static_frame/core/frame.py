@@ -3271,7 +3271,7 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # blocks assignment
 
-        blocks_constructor: tp.Optional[tp.Callable[[ShapeType], None]] = None
+        blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, int]], None]] = None
 
         if data.__class__ is TypeBlocks:
             if own_data:
@@ -3286,8 +3286,8 @@ class Frame(ContainerOperand):
             self._blocks = TypeBlocks.from_blocks(data) # type: ignore
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
-            def blocks_constructor(shape: ShapeType) -> None: #pylint: disable=E0102
-                if shape[0] > 0 and shape[1] > 0: # type: ignore
+            def blocks_constructor(shape: tp.Tuple[int, int]) -> None: #pylint: disable=E0102
+                if shape[0] > 0 and shape[1] > 0:
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)

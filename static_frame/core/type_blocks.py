@@ -175,9 +175,8 @@ def group_match(
                     column_key=selection,
                     )
 
-
 def group_sorted(
-        blocks: 'TypeBlocks',
+        blocks: TypeBlocks,
         *,
         axis: int,
         key: TILocSelector,
@@ -185,7 +184,7 @@ def group_sorted(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, slice, tp.Union['TypeBlocks', NDArrayAny]]]:
+        ) -> tp.Iterator[tp.Tuple[NDArrayAny, slice, TypeBlocks | NDArrayAny]]:
     '''
     This method must be called on sorted TypeBlocks instance.
 
@@ -266,7 +265,7 @@ def group_sorted(
         else:
             chunk = func(row_key=row_key, column_key=slc)
         if group_to_tuple:
-            yield tuple(group_source[start]), slc, chunk
+            yield tuple(group_source[start]), slc, chunk # pyright: ignore
         else:
             yield group_source[start], slc, chunk
         start = t
@@ -278,7 +277,7 @@ def group_sorted(
         else:
             chunk = func(row_key=row_key, column_key=slc)
         if group_to_tuple:
-            yield tuple(group_source[start]), slc, chunk
+            yield tuple(group_source[start]), slc, chunk # pyright: ignore
         else:
             yield group_source[start], slc, chunk
 
@@ -454,7 +453,7 @@ class TypeBlocks(ContainerOperand):
 
         '''
         blocks: tp.List[NDArrayAny] = [] # ordered blocks
-        index = BlockIndex()
+        index = BlockIndex() # pyright: ignore
 
         # if a single block, no need to loop
         if raw_blocks.__class__ is np.ndarray:
@@ -497,7 +496,7 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def from_zero_size_shape(cls,
-            shape: ShapeType = (0, 0),
+            shape: tp.Tuple[int, int] = (0, 0),
             get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]] = None,
             ) -> 'TypeBlocks':
         '''
@@ -781,7 +780,7 @@ class TypeBlocks(ContainerOperand):
 
     def element_items(self,
             axis: int = 0,
-            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, ...], tp.Any]]:
         '''
         Generator of pairs of iloc locations, values across entire TypeBlock. Used in creating a IndexHierarchy instance from a TypeBlocks.
 
@@ -826,6 +825,8 @@ class TypeBlocks(ContainerOperand):
                 group_cols += 1
             else:
                 group_cols += block.shape[1]
+
+        assert group_dtype is not None
         if group_cols > 0:
             yield (group_dtype, group_cols)
 
@@ -993,13 +994,13 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src]
+                    yield b[NULL_SLICE, columns_ic.iloc_src]
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
                 for idx in range(columns_ic.size):
                     if idx in dst_to_src:
-                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        block_idx, block_col = self._index[dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
                         if b.ndim == 1:
                             yield b
@@ -1032,7 +1033,7 @@ class TypeBlocks(ContainerOperand):
 
                 for idx in range(columns_ic.size):
                     if idx in columns_dst_to_src:
-                        block_idx, block_col = self._index[columns_dst_to_src[idx]]
+                        block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
 
                         if index_ic.is_subset:
@@ -1114,7 +1115,7 @@ class TypeBlocks(ContainerOperand):
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
                 for idx in range(columns_ic.size):
                     if idx in dst_to_src:
-                        block_idx, block_col = self._index[dst_to_src[idx]]
+                        block_idx, block_col = self._index[dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
                         if b.ndim == 1:
                             yield b
@@ -1151,7 +1152,7 @@ class TypeBlocks(ContainerOperand):
 
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
-                            block_idx, block_col = self._index[columns_dst_to_src[idx]]
+                            block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
                             b = self._blocks[block_idx]
                             if index_ic.is_subset:
                                 if b.ndim == 1:
@@ -1227,7 +1228,7 @@ class TypeBlocks(ContainerOperand):
             key: TILocSelector,
             drop: bool = False,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, 'TypeBlocks']]:
+            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny | slice, TypeBlocks]]:
         '''
         Axis 0 groups on column values, axis 1 groups on row values
 
@@ -1240,10 +1241,11 @@ class TypeBlocks(ContainerOperand):
         except TypeError: # raised on sorting issue
             use_sorted = False
 
+        # when calling these group function, as_array is False, and thus the third-returned item is always a TypeBlocks
         if use_sorted:
-            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
+            yield from group_sorted(blocks, axis=axis, key=key, drop=drop) # pyright: ignore
         else:
-            yield from group_match(self, axis=axis, key=key, drop=drop)
+            yield from group_match(self, axis=axis, key=key, drop=drop) # pyright: ignore
 
 
     def group_extract(self,
@@ -1251,7 +1253,7 @@ class TypeBlocks(ContainerOperand):
             key: int,
             extract: int,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny | slice, NDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
 
@@ -1265,8 +1267,9 @@ class TypeBlocks(ContainerOperand):
         except TypeError:
             use_sorted = False
 
+        # when calling these group function, as_array is True, and thus the third-returned item is always an array
         if use_sorted:
-            yield from group_sorted(blocks,
+            yield from group_sorted(blocks, # pyright: ignore
                     axis=axis,
                     key=key,
                     drop=False,
@@ -1274,7 +1277,7 @@ class TypeBlocks(ContainerOperand):
                     as_array=True,
                     )
         else:
-            yield from group_match(self,
+            yield from group_match(self, # pyright: ignore
                     axis=axis,
                     key=key,
                     drop=False,
@@ -1563,6 +1566,7 @@ class TypeBlocks(ContainerOperand):
 
         target_block_idx = target_slice = None
         targets_remain = True
+        target_start: int
 
         for block_idx, b in enumerate(self._blocks):
             parts = []
@@ -1596,7 +1600,7 @@ class TypeBlocks(ContainerOperand):
                     target_start = target_slice.start #type: ignore
                     target_stop = target_slice.stop #type: ignore
                 else: # it is an integer
-                    target_start = target_slice
+                    target_start = target_slice # type: ignore
                     target_stop = target_slice + 1 #type: ignore
 
                 assert target_start is not None and target_stop is not None
@@ -1619,7 +1623,7 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
+            dtype_factory: tp.Callable[[int], TDtypeSpecifier],
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Generator producer of np.ndarray.
@@ -1674,7 +1678,7 @@ class TypeBlocks(ContainerOperand):
 
         target_block_idx = target_slice = None
         targets_remain = True
-
+        target_start: int
         consolidate: tp.List[NDArrayAny] = []
 
         def consolidate_and_clear() -> tp.Iterator[NDArrayAny]:
@@ -1711,8 +1715,8 @@ class TypeBlocks(ContainerOperand):
                     target_start = target_slice.start if target_slice.start is not None else part_start_last #type: ignore
                     target_stop = target_slice.stop if target_slice.stop is not None else b.shape[1] #type: ignore
                 else: # it is an integer
-                    target_start = target_slice
-                    target_stop = target_slice + 1 #type: ignore
+                    target_start = target_slice # type: ignore
+                    target_stop = target_slice + 1 # type: ignore
 
                 assert target_start is not None and target_stop is not None
 
@@ -1758,6 +1762,7 @@ class TypeBlocks(ContainerOperand):
 
         target_block_idx = target_slice = None
         targets_remain = True
+        target_start: int
 
         for block_idx, b in enumerate(self._blocks):
             parts = []
@@ -1840,6 +1845,7 @@ class TypeBlocks(ContainerOperand):
 
         target_block_idx = target_slice = None
         targets_remain = True
+        target_start: int
 
         for block_idx, b in enumerate(self._blocks):
             # for each block, we evaluate if we have any targets in that block and update the block accordingly; otherwise, we yield the block unchanged
@@ -2119,7 +2125,7 @@ class TypeBlocks(ContainerOperand):
                         t_width = t_stop - t_start
                 else:
                     t_start = target_key # type: ignore
-                    t_stop = t_start + 1
+                    t_stop = t_start + 1 # pyright: ignore
                     t_width = 1
 
                 # yield all block slices up to the target, then then the target; remain components of this block will be yielded on next iteration (if there is another target) or out of while by looking at assigned stop
@@ -2226,7 +2232,7 @@ class TypeBlocks(ContainerOperand):
                     t_shape = b.shape[0]
 
                 value, block = assign_inner( # type: ignore
-                        value=value,
+                        value=value, # pyright: ignore
                         block=b,
                         row_target=row_target,
                         target_key=target_key,
@@ -2624,7 +2630,7 @@ class TypeBlocks(ContainerOperand):
                     for row_pos in np.nonzero(target)[0]:
                         assigned[row_pos] = values_map[(row_pos, t_start)]
                 else:
-                    for row_pos, col_pos in zip(*np.nonzero(target)):
+                    for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
                         assigned[row_pos, col_pos] = values_map[
                                 (row_pos, t_start + col_pos)]
 
@@ -2827,7 +2833,7 @@ class TypeBlocks(ContainerOperand):
         if len(arrays) == 1:
             array = arrays[0]
             for i in range(array.shape[0]):
-                yield constructor(array[i]) # works for 1D, 2D
+                yield constructor(array[i]) # pyright: ignore # works for 1D, 2D
         else:
             def chainer(i: int) -> tp.Any:
                 for a in arrays:
@@ -2836,7 +2842,7 @@ class TypeBlocks(ContainerOperand):
                     else:
                         yield a[i]
             for i in range(self._index.rows):
-                yield constructor(chainer(i))
+                yield constructor(chainer(i)) # pyright: ignore
 
     def iter_columns_tuples(self,
             key: TILocSelector,
@@ -2853,7 +2859,7 @@ class TypeBlocks(ContainerOperand):
         if len(arrays) == 1:
             array = arrays[0]
             for i in range(array.shape[1]):
-                yield constructor(array[NULL_SLICE, i])
+                yield constructor(array[NULL_SLICE, i]) # pyright: ignore
         else:
             def chainer() -> tp.Iterator[NDArrayAny]:
                 for a in arrays:
@@ -2875,7 +2881,6 @@ class TypeBlocks(ContainerOperand):
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TypeBlocks: ...
 
-
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne) -> TypeBlocks: ...
 
@@ -2891,7 +2896,7 @@ class TypeBlocks(ContainerOperand):
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
 
-    def _extract(self,
+    def _extract(self, # pyright: ignore
             row_key: TILocSelector = None,
             column_key: TILocSelector = None
             ) -> tp.Any:
@@ -2995,7 +3000,7 @@ class TypeBlocks(ContainerOperand):
                 for row_pos in np.nonzero(target)[0]:
                     coords.append((row_pos, t_start))
             else:
-                for row_pos, col_pos in zip(*np.nonzero(target)):
+                for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
                     coords.append((row_pos, t_start + col_pos))
             t_start = t_end
 
@@ -3192,7 +3197,7 @@ class TypeBlocks(ContainerOperand):
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1): #type: ignore
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
-                other_operands = (other for _ in range(len(self._blocks)))
+                other_operands = (other for _ in range(len(self._blocks))) # pyright: ignore
             elif other.ndim == 1: #type: ignore
                 if axis == 0 and len(other) == self._index.columns: #type: ignore
                     # 1d array applied to the rows: chop to block width

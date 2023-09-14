@@ -123,6 +123,7 @@ def pivot_records_items_to_frame(
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
+    part: TypeBlocks
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
         index_labels.append(label) # type: ignore
         if func_no:
