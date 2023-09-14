@@ -125,6 +125,13 @@ def mypy(context,
     '''
     context.run('mypy --strict', pty=pty)
 
+@invoke.task
+def pyright(context,
+        pty=False,
+         ):
+    '''Run pyright static analysis.
+    '''
+    context.run('pyright', pty=pty)
 
 @invoke.task
 def testtyping(context,
@@ -133,6 +140,7 @@ def testtyping(context,
     '''Run mypy on targetted typing tests
     '''
     context.run('pytest -s --tb=native static_frame/test/typing')
+    context.run('pyright static_frame/test/typing', pty=pty)
     context.run('mypy --strict static_frame/test/typing', pty=pty)
 
 
@@ -148,7 +156,7 @@ def lint(context):
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, lint, isort))
+@invoke.task(pre=(mypy, pyright, lint, isort))
 def quality(context):
     '''Perform all quality checks.
     '''
