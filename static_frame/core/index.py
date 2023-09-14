@@ -196,7 +196,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _extract_labels(
             mapping: tp.Optional[tp.Dict[TLabel, int]],
             labels: tp.Iterable[TLabel],
-            dtype: tp.Optional[DtypeAny] = None
+            dtype: TDtypeSpecifier = None
             ) -> NDArrayAny:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
@@ -287,7 +287,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self._map: tp.Optional[FrozenAutoMap] = None
         self._argsort_cache: tp.Optional[_ArgsortCache] = None
 
-        positions = None
+        positions: NDArrayAny | None = None
         is_typed = self._DTYPE is not None # only True for datetime64 indices
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
@@ -343,7 +343,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 labels = labels.astype(dtype_extract) #type: ignore
                 labels.flags.writeable = False
 
-        self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
@@ -360,7 +360,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
                 if positions is None:
-                    positions = labels
+                    positions = labels # type: ignore
         else: # map shared from another Index
             size = len(self._map)
 
@@ -1441,7 +1441,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         # must copy to remove immutability, decouple reference
         if self._map is None:
-            return pandas.RangeIndex(self.__len__(), name=self._name)
+            return pandas.RangeIndex(self.__len__(), name=self._name) # pyright: ignore
         return pandas.Index(self.values.copy(),
                 name=self._name)
 

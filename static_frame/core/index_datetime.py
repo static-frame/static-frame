@@ -134,7 +134,7 @@ class IndexDatetime(Index[np.datetime64]):
             if not other_is_array and hasattr(other, '__len__') and len(other) == len(self): # type: ignore
                 # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
-            elif other_is_array and other.size == 1:
+            elif other_is_array and other.size == 1: # pyright: ignore
                 # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
             else:
@@ -164,8 +164,7 @@ class IndexDatetime(Index[np.datetime64]):
         '''Return a Pandas Index.
         '''
         import pandas
-        return pandas.DatetimeIndex(self.values.copy(),
-                name=self._name)
+        return pandas.DatetimeIndex(self.values.copy(), name=self._name) # pyright: ignore
 
 
     #---------------------------------------------------------------------------
