@@ -21,7 +21,6 @@ exclude = [
     "static_frame/core/bus.py",
     "static_frame/core/batch.py",
     "static_frame/core/protocol_dfi.py",
-    "static_frame/core/axis_map.py",
     "static_frame/core/node*",
     "static_frame/core/store*",
 ]

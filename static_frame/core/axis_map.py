@@ -33,7 +33,7 @@ def get_extractor(
     if deepcopy_from_bus:
         memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
         if is_array:
-            return partial(array_deepcopy, memo=memo)
+            return partial(array_deepcopy, memo=memo) # pyright: ignore
         return partial(deepcopy, memo=memo)
     return lambda x: x
 
@@ -118,9 +118,10 @@ def bus_to_hierarchy(
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-    # NOTE: we could try to collect index constructors by using the index of the Bus and observing the inidices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
+    assert opposite is not None
+    # NOTE: we could try to collect index constructors by using the index of the Bus and observing the indices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
 
-    return IndexHierarchy.from_tree(tree,  # type: ignore
+    return IndexHierarchy.from_tree(tree,
             index_constructors=IndexAutoConstructorFactory), opposite
 
 
