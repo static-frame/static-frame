@@ -75,6 +75,7 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
@@ -221,7 +222,9 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-TVIndices = tpe.TypeVarTuple('TVIndices', default=Index[tp.Any])
+# TVIndices = tpe.TypeVarTuple('TVIndices', default=tp.Unpack[tp.Tuple[Index[tp.Any], ...]])
+TVIndices = tpe.TypeVarTuple('TVIndices')
+
 # can use tp.Unpack
 class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 # class IndexHierarchy(IndexBase):
@@ -254,7 +257,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
-    _INDEX_CONSTRUCTOR: TIndexCtorSpecifier = Index
+    _INDEX_CONSTRUCTOR: tp.Callable[..., 'IndexBase'] = Index
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------
@@ -265,7 +268,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             *,
             index_constructors: TIndexCtorSpecifiers,
             depth: int,
-            ) -> tp.Iterator[TIndexCtorSpecifier]:
+            ) -> tp.Iterator[TIndexCtor]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided ``index_constructors``.
 
@@ -276,21 +279,21 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
         elif callable(index_constructors): # support a single constructor
-            ctr = constructor_from_optional_constructor(
+            ctor = constructor_from_optional_constructor(
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructors
                     )
-            yield from (ctr for _ in range(depth))
+            yield from (ctor for _ in range(depth))
         else:
             index_constructors = tuple(index_constructors)
             if len(index_constructors) != depth:
                 raise ErrorInitIndex(
                     f'When providing multiple index constructors, their number ({len(index_constructors)}) must equal the depth of the IndexHierarchy ({depth}).'
                     )
-            for ctr in index_constructors:
+            for ctor_specifier in index_constructors:
                 yield constructor_from_optional_constructor(
                         default_constructor=cls._INDEX_CONSTRUCTOR,
-                        explicit_constructor=ctr
+                        explicit_constructor=ctor_specifier
                         )
 
     @staticmethod
@@ -479,7 +482,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 index_constructors=index_constructors,
                 depth=depth_reference,
                 )
-        indices: tp.List[Index[tp.Any]] = [ctr(()) for ctr in index_constructors_iter]
+        indices: tp.List[Index[tp.Any]] = [ctr(()) for ctr in index_constructors_iter] # pyright: ignore
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -495,7 +498,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             values: tp.Union[NDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | NDArrayAny],
             *,
             name: NameType = None,
-            depth_reference: tp.Optional[int] = None,
+            depth_reference: int | None = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> IH:
         '''
@@ -507,6 +510,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             :obj:`IndexHierarchy`
         '''
         arrays: NDArrayAny | tp.Iterable[NDArrayAny]
+        depth: int | None
         if values.__class__ is np.ndarray:
             size, depth = values.shape # type: ignore
             column_iter = values.T # type: ignore
@@ -540,7 +544,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
-                depth=depth,
+                depth=depth, # type: ignore
                 )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
@@ -660,7 +664,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 index_constructors=index_constructors,
                 depth=depth,
                 )
-        indices: tp.List[Index[tp.Any]] = [constructor(hash_map)
+        indices: tp.List[Index[tp.Any]] = [constructor(hash_map) # pyright: ignore
                 for constructor, hash_map in zip(index_constructors_iter, hash_maps)
                 ]
 
@@ -1000,7 +1004,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             if indices._recache:
                 indices._update_array_cache()
 
-            self._indices = [
+            self._indices = [ # pyright: ignore
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
                 ]
@@ -1022,12 +1026,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if len(indices) <= 1:
             raise ErrorInitIndex('Index Hierarchies must have at least two levels!')
 
-        self._indices = [
+        self._indices = [ # pyright: ignore
             mutable_immutable_index_filter(self.STATIC, index) # type: ignore
             for index in indices
             ]
         self._indexers = indexers
-        self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
         if blocks is None:
             self._blocks = self._to_type_blocks()
@@ -1037,7 +1041,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             self._blocks = blocks.copy()
 
         self._values = None
-        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
+        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers) # pyright: ignore
 
     def _update_array_cache(self: IH) -> None:
         # This MUST be set before entering this context
@@ -1934,7 +1938,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
             return slice(*LocMap.map_slice_args(self._loc_to_iloc, key)) # type: ignore
 
         if isinstance(key, list):
-            return [self._loc_to_iloc(k) for k in key]
+            return [self._loc_to_iloc(k) for k in key] # pyright: ignore
 
         if key.__class__ is np.ndarray and key.ndim == 2: # type: ignore
             if key.dtype != DTYPE_OBJECT: # type: ignore
@@ -1980,7 +1984,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 key = tuple(key) # type: ignore
 
                 for subkey in key:
-                    if len(subkey) != self.depth:
+                    if len(subkey) != self.depth: # pyright: ignore
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
@@ -2442,7 +2446,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_union(self, *others) # type: ignore
 
-        return IndexBase.union(self, *others)
+        return IndexBase.union(self, *others) # pyright: ignore
 
     def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
@@ -2450,7 +2454,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_intersection(self, *others) # type: ignore
 
-        return IndexBase.intersection(self, *others)
+        return IndexBase.intersection(self, *others) # pyright: ignore
 
     def difference(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
@@ -2458,7 +2462,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_difference(self, *others) # type: ignore
 
-        return IndexBase.difference(self, *others)
+        return IndexBase.difference(self, *others) # pyright: ignore
 
     #---------------------------------------------------------------------------
 
@@ -2711,7 +2715,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 ))
 
     # --------------------------------------------------------------------------
-    def to_pandas(self: IH) -> 'DataFrame':
+    def to_pandas(self: IH) -> pandas.MultiIndex:
         '''
         Return a Pandas MultiIndex.
         '''
@@ -2725,7 +2729,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tpe.Unpack[TVIndices]]):
                 levels=[index.values.copy() for index in self._indices],
                 codes=[arr.copy() for arr in self._indexers],
                 )
-        mi.name = self._name
+        mi.name = self._name # pyright: ignore
         mi.names = self.names
         return mi
 

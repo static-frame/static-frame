@@ -44,6 +44,7 @@ from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
@@ -510,7 +511,7 @@ def index_from_optional_constructor(
 def constructor_from_optional_constructor(
         default_constructor: TIndexCtorSpecifier,
         explicit_constructor: ExplicitConstructor = None,
-        ) -> TIndexCtorSpecifier:
+        ) -> TIndexCtor:
     '''Return a constructor, resolving default and explicit constructor .
     '''
     def func(
@@ -1453,7 +1454,7 @@ def index_many_to_one(
         indices: tp.Iterable[IndexBase | IMTOAdapter],
         cls_default: tp.Type[IndexBase],
         many_to_one_type: ManyToOneType,
-        explicit_constructor: tp.Optional[TIndexCtorSpecifier] = None,
+        explicit_constructor: TIndexCtorSpecifier = None,
         ) -> 'IndexBase':
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
