@@ -159,7 +159,6 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
-from static_frame.core.util import ShapeType
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
