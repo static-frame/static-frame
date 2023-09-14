@@ -1,6 +1,4 @@
 import numpy as np
-import numpy.typing as npt
-import typing_extensions as tp
 
 import static_frame as sf
 

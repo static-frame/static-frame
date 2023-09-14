@@ -64,3 +64,8 @@ def test_index_go_c() -> None:
     x2: sf.IndexGO[np.unicode_] = idx[1:]
     x3: sf.IndexGO[np.unicode_] = idx[[0, 1]]
     x4: sf.IndexGO[np.unicode_] = idx[idx.values == 'b']
+
+
+
+
+
