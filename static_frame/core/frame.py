@@ -5149,7 +5149,7 @@ class Frame(ContainerOperand):
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
         if isinstance(key, tuple):
-            loc_row_key, loc_column_key = key
+            loc_row_key, loc_column_key = key # pyright: ignore
             iloc_column_key = self._columns._loc_to_iloc(loc_column_key)
         else:
             loc_row_key = key
@@ -5579,7 +5579,7 @@ class Frame(ContainerOperand):
     def _axis_tuple(self, *,
             axis: int,
             constructor: tp.Optional[TupleConstructorType] = None,
-            ) -> tp.Iterator[tp.NamedTuple]:
+            ) -> tp.Iterator[tp.Sequence[tp.Any]]:
         '''Generator of named tuples across an axis.
 
         Args:
@@ -5609,15 +5609,15 @@ class Frame(ContainerOperand):
 
         # NOTE: if all types are the same, it will be faster to use axis_values
         if axis == 1 and not self._blocks.unified_dtypes:
-            yield from self._blocks.iter_row_tuples(key=None, constructor=ctor)
+            yield from self._blocks.iter_row_tuples(key=None, constructor=ctor) # pyright: ignore
         else: # for columns, slicing arrays from blocks should be cheap
             for axis_values in self._blocks.axis_values(axis):
-                yield ctor(axis_values)
+                yield ctor(axis_values) # pyright: ignore
 
     def _axis_tuple_items(self, *,
             axis: int,
             constructor: tp.Optional[TupleConstructorType] = None,
-            ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Sequence[tp.Any]]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
@@ -5638,7 +5638,7 @@ class Frame(ContainerOperand):
             # NOTE: axis_values here are already immutable
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -5649,15 +5649,15 @@ class Frame(ContainerOperand):
     def _axis_group_final_iter(self, *,
             axis: int,
             as_array: bool,
-            group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]],
+            group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]],
             index: IndexBase,
             columns: IndexBase,
             ordering: tp.Optional[NDArrayAny],
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
         '''Utility for final iteration of the group_iter, shared by three methods.
         '''
         if as_array:
-            yield from ((group, array) for group, _, array in group_iter)
+            yield from ((group, array) for group, _, array in group_iter) # pyright: ignore
         else:
             for group, selection, tb in group_iter:
                 # NOTE: selection can be a Boolean array or a slice
@@ -5692,7 +5692,7 @@ class Frame(ContainerOperand):
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
         '''
         Core group implementation.
 
@@ -5718,7 +5718,7 @@ class Frame(ContainerOperand):
         columns: IndexBase
         index: IndexBase
 
-        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, tp.Union['TypeBlocks', NDArrayAny]]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]
         if use_sorted:
             group_iter = group_sorted(
                     blocks=blocks,
@@ -5765,7 +5765,7 @@ class Frame(ContainerOperand):
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
         '''
         Args:
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
@@ -5791,7 +5791,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             drop: bool = False,
             as_array: bool = False,
-            ) -> tp.Iterator[Frame]:
+            ) -> tp.Iterator[Frame | NDArrayAny]:
         yield from (x for _, x in self._axis_group_loc_items(
                 key=key,
                 axis=axis,
@@ -5805,7 +5805,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
         # NOTE: simlar to _axis_group_iloc_items
 
         blocks = self._blocks
@@ -5845,7 +5845,7 @@ class Frame(ContainerOperand):
             if use_sorted:
                 group_source = group_source[ordering]
 
-        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -5884,7 +5884,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[Frame]:
+            ) -> tp.Iterator[Frame | NDArrayAny]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 axis=axis,
@@ -5897,7 +5897,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Frame']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
 
         blocks = self._blocks
         index = self._index
@@ -5921,7 +5921,7 @@ class Frame(ContainerOperand):
         if use_sorted:
             group_source = group_source[ordering]
 
-        group_iter: tp.Iterator[tp.Tuple[NDArrayAny, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -5960,7 +5960,7 @@ class Frame(ContainerOperand):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[Frame]:
+            ) -> tp.Iterator[Frame | NDArrayAny]:
         yield from (x for _, x in self._axis_group_other_items(
                 axis=axis,
                 as_array=as_array,
@@ -6038,7 +6038,7 @@ class Frame(ContainerOperand):
 
     def _iter_element_iloc_items(self,
             axis: int = 0,
-            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, ...], tp.Any]]:
         yield from self._blocks.element_items(axis=axis)
 
     # def _iter_element_iloc(self):
@@ -6155,7 +6155,7 @@ class Frame(ContainerOperand):
             if key:
                 cfs = key(self._extract(row_key=iloc_key))
                 cfs_is_array = cfs.__class__ is np.ndarray
-                if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]):
+                if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (cfs.ndim == 2 and cfs.shape[1] != self.shape[1]): # pyright: ignore
                     raise RuntimeError('key function returned a container of invalid length')
             else: # go straight to array as, since this is row-wise, have to find a consolidated
                 cfs = self._blocks._extract_array(row_key=iloc_key)

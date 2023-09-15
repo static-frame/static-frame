@@ -51,6 +51,7 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
 from static_frame.core.util import UFunc
@@ -93,7 +94,7 @@ def group_match(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]:
+        ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]:
     '''
     Args:
         key: iloc selector on opposite axis
@@ -184,7 +185,7 @@ def group_sorted(
         extract: tp.Optional[int] = None,
         as_array: bool = False,
         group_source: tp.Optional[NDArrayAny] = None,
-        ) -> tp.Iterator[tp.Tuple[NDArrayAny, slice, TypeBlocks | NDArrayAny]]:
+        ) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks | NDArrayAny]]:
     '''
     This method must be called on sorted TypeBlocks instance.
 
