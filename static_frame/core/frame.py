@@ -166,6 +166,7 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
@@ -1853,11 +1854,10 @@ class Frame(ContainerOperand):
                         [col for (col, *_) in cursor.description],
                         )
 
-            row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]]
-            index_constructor: TIndexCtorSpecifier | None
+            index_constructor: TIndexCtorSpecifier
             if index_depth == 0:
                 index = None
-                row_gen = lambda: cursor # type: ignore
+                row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] = lambda: cursor # type: ignore
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
@@ -2182,27 +2182,27 @@ class Frame(ContainerOperand):
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
-        fp = path_filter(fp) # normalize Path to strings
+        fpf = path_filter(fp) # normalize Path to strings
 
         if not skip_footer:
             def file_like() -> tp.Iterator[str]:
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding=encoding) as f:
+                if isinstance(fpf, str):
+                    with open(fpf, 'r', encoding=encoding) as f:
                         yield from f
                 else: # iterable of string lines, StringIO
-                    yield from fp
+                    yield from fpf
         else:
             def file_like() -> tp.Iterator[str]:
                 row_buffer: tp.Deque[str] = deque(maxlen=skip_footer)
 
-                if isinstance(fp, str):
-                    with open(fp, 'r', encoding=encoding) as f:
+                if isinstance(fpf, str):
+                    with open(fpf, 'r', encoding=encoding) as f:
                         for i, row in enumerate(f):
                             if i >= skip_footer:
                                 yield row_buffer.popleft()
                             row_buffer.append(row)
                 else:
-                    for i, row in enumerate(fp):
+                    for i, row in enumerate(fpf):
                         if i >= skip_footer:
                             yield row_buffer.popleft()
                         row_buffer.append(row)
@@ -3138,13 +3138,13 @@ class Frame(ContainerOperand):
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
-        fp: str = path_filter(fp) # type: ignore
+        fpf: str = path_filter(fp) # type: ignore
 
         if columns_select is not None and not isinstance(columns_select, list):
             columns_select = list(columns_select)
 
         # NOTE: the order of columns_select will determine their order
-        table = pq.read_table(fp,
+        table = pq.read_table(fpf,
                 columns=columns_select,
                 use_pandas_metadata=False,
                 )
@@ -6830,7 +6830,7 @@ class Frame(ContainerOperand):
             index_default_constructor = Index
 
         index, own_index = index_from_optional_constructors(
-                index_labels,
+                index_labels, # pyright: ignore
                 depth=index_depth,
                 default_constructor=index_default_constructor,
                 explicit_constructors=index_constructors, # cannot supply name
@@ -6983,7 +6983,7 @@ class Frame(ContainerOperand):
                 if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
                     yield rank_1d(array,
                             method=method,
-                            ascending=asc,
+                            ascending=asc, # pyright: ignore
                             start=start,
                             )
                 else:
@@ -6993,7 +6993,7 @@ class Frame(ContainerOperand):
                     fv = fill_value if axis == 1 else fill_value_factory(idx, array.dtype)
                     yield s._rank(method=method,
                             skipna=skipna,
-                            ascending=asc,
+                            ascending=asc, # pyright: ignore
                             start=start,
                             fill_value=fv,
                             ).values
@@ -8399,9 +8399,9 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 include_columns_name=include_columns_name,
                 )
-        fp = path_filter(fp) # type: ignore
+        fpf = path_filter(fp) # type: ignore
         # NOTE:  compression='none' shown to not provide a clear performance improvement over the assumed default, 'snappy'
-        pq.write_table(table, fp)
+        pq.write_table(table, fpf)
 
 
     def to_msgpack(self) -> bytes:
@@ -8577,7 +8577,7 @@ class Frame(ContainerOperand):
 
     def to_series(self,
             *,
-            index_constructor: TIndexCtorSpecifier = Index,
+            index_constructor: TIndexCtor = Index,
             name: NameType = NAME_DEFAULT,
             ) -> Series:
         '''
@@ -8718,7 +8718,7 @@ class Frame(ContainerOperand):
                     # only have apex space if include columns and index
                     if include_index_name:
                         # index_names serves as a proxy for the index_depth
-                        for name in index_names:
+                        for name in index_names: # pyright: ignore
                             # we always write index name labels on the top-most
                             row.append(f'{name}' if row_idx == 0 else '')
                     elif include_columns_name:
@@ -9519,8 +9519,8 @@ class FrameAssignILoc(FrameAssign):
                     key,
                     is_series=is_series,
                     is_frame=is_frame,
-                    fill_value=fill_value)._blocks._blocks
-            blocks = self.container._blocks.extract_iloc_assign_by_blocks(
+                    fill_value=fill_value)._blocks._blocks # pyright: ignore
+            blocks = self.container._blocks.extract_iloc_assign_by_blocks( # pyright: ignore
                     key,
                     assigned,
                     )

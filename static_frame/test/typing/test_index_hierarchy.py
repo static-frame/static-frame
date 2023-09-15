@@ -1,7 +1,9 @@
 import numpy as np
-# import typing_extensions as tp
 
 import static_frame as sf
+
+# import typing_extensions as tp
+
 
 IH = sf.IndexHierarchy
 I = sf.Index
