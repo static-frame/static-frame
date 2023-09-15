@@ -5,8 +5,8 @@ import hashlib
 import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
-    from hashlib import _Hash  # pylint: disable = W0611 #pragma: no cover
-    from hashlib import _VarLenHash  # pylint: disable = W0611 #pragma: no cover
+    from hashlib import _Hash  # pylint: disable = E0611 #pragma: no cover
+    from hashlib import _VarLenHash  # pylint: disable = E0611 #pragma: no cover
 
 
 class InterfaceHashlib:
