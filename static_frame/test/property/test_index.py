@@ -1,6 +1,5 @@
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from arraykit import isna_element
 from hypothesis import given
 

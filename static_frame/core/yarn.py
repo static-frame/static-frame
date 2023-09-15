@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from collections.abc import Set
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.bus import Bus

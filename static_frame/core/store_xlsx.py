@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import datetime
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import index_from_optional_constructors

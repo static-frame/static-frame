@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.protocol_dfi_abc import Buffer
 from static_frame.core.protocol_dfi_abc import CategoricalDescription

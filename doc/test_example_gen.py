@@ -1,5 +1,6 @@
-import typing as tp
 from collections import Counter
+
+import typing_extensions as tp
 
 from doc.build_example import TAG_END
 from doc.build_example import TAG_START

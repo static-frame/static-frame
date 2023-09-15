@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as tp
+import typing_extensions as tp
 
 
 class Assign:

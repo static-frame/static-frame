@@ -1,8 +1,8 @@
 import datetime
 import fractions
-import typing as tp
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype

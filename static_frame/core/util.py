@@ -8,7 +8,6 @@ import operator
 import os
 import re
 import tempfile
-import typing as tp
 import warnings
 from collections import Counter
 from collections import abc
@@ -25,6 +24,7 @@ from os import PathLike
 from types import TracebackType
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
 from arraykit import isna_element

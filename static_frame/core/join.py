@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from itertools import chain
 from itertools import product
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import resolve_dtype
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT

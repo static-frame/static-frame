@@ -5,7 +5,6 @@ import mmap
 import os
 import shutil
 import struct
-import typing as tp
 from ast import literal_eval
 from io import BytesIO
 from io import UnsupportedOperation
@@ -14,6 +13,7 @@ from zipfile import ZIP_STORED
 from zipfile import ZipFile
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat

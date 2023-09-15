@@ -1,9 +1,9 @@
 
 
 import os
-import typing as tp
 
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.util import TLabel

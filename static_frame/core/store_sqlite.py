@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import os
 import sqlite3
-import typing as tp
 from contextlib import suppress
 from fractions import Fraction
 
 import numpy as np
+import typing_extensions as tp
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame

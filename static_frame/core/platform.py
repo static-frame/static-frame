@@ -3,7 +3,8 @@ from __future__ import annotations
 import importlib
 import platform as platform_mod
 import sys
-import typing as tp
+
+import typing_extensions as tp
 
 import static_frame
 from static_frame.core.display import Display

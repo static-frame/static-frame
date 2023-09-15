@@ -5,11 +5,11 @@ DOC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
 
 import argparse
-import typing as tp
 from io import StringIO
 
 import numpy as np
 import pandas as pd
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.container import ContainerBase

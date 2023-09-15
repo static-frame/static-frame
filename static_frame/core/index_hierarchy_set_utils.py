@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex

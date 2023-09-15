@@ -3,7 +3,7 @@ Storage for common doc strings and templates shared in non-related classes and m
 '''
 from __future__ import annotations
 
-import typing as tp
+import typing_extensions as tp
 
 #-------------------------------------------------------------------------------
 # common strings

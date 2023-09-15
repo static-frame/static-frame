@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import typing as tp
 from collections import abc
 from itertools import chain
 from sys import getsizeof
 from typing import NamedTuple
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.util import DTYPE_OBJECT_KIND

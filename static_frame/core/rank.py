@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from enum import Enum
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL

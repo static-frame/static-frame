@@ -4,10 +4,10 @@ import os
 import pickle
 import tempfile
 import timeit
-import typing as tp
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor

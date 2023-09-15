@@ -1,6 +1,5 @@
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from hypothesis import given
 from hypothesis import settings as hypo_settings
 

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.index import Index

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import typing as tp
 import zipfile
+
+import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.store_config import StoreConfigMap

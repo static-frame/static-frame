@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from fractions import Fraction
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy

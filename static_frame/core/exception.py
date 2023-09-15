@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import typing as tp
 import warnings
+
+import typing_extensions as tp
 
 
 class ErrorInit(RuntimeError):

@@ -1,10 +1,11 @@
 import argparse
 import json
 import tempfile
-import typing as tp
 from collections import defaultdict
 from pathlib import Path
 from zipfile import ZipFile
+
+import typing_extensions as tp
 
 from doc.build_example import to_json_bundle
 # from doc.build_source import name_to_snake_case

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import json
-import typing as tp
 import unittest
 import warnings
 from enum import Enum
@@ -12,6 +11,7 @@ from itertools import repeat
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import column_1d_filter
 from arraykit import resolve_dtype

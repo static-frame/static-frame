@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import typing as tp
 from collections import Counter
 from copy import deepcopy
 from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
-import typing_extensions as tpe
+import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import immutable_filter
 from arraykit import mloc
@@ -160,7 +159,7 @@ class _ArgsortCache(tp.NamedTuple):
         memo[id(self)] = obj
         return obj
 
-TVDtype = tpe.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 
 class Index(IndexBase, tp.Generic[TVDtype]):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
@@ -542,7 +541,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self._labels.nbytes
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: TILocSelector) -> tpe.Self:
+    def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         '''Create a new index after removing the values specified by the iloc key.
         '''
         if self._recache:
@@ -564,7 +563,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         # from labels will work with both Index and IndexHierarchy
         return self.__class__.from_labels(labels, name=self._name)
 
-    def _drop_loc(self, key: TLocSelector) -> tpe.Self:
+    def _drop_loc(self, key: TLocSelector) -> tp.Self:
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self._loc_to_iloc(key))
@@ -976,7 +975,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def __getitem__(self, key: TILocSelectorOne) -> TVDtype: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def __getitem__(self, key: TILocSelectorMany) -> tp.Self: ...
 
     def __getitem__(self,
             key: TILocSelector
@@ -1192,7 +1191,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                     [Index[tp.Any]],
                     tp.Union[NDArrayAny, Index[tp.Any]]
                     ]] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -1209,7 +1208,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         return isin(self.values, other, array_is_unique=True)
 
-    def roll(self, shift: int) -> tpe.Self:
+    def roll(self, shift: int) -> tp.Self:
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
         '''
         values = self.values # force usage of property for cache update
@@ -1229,7 +1228,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _drop_missing(self,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
             dtype_kind_targets: tp.Optional[tp.FrozenSet[str]],
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Args:
             func: UFunc that returns True for missing values
@@ -1256,13 +1255,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 name=self._name,
                 )
 
-    def dropna(self) -> tpe.Self:
+    def dropna(self) -> tp.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
         return self._drop_missing(isna_array, DTYPE_NA_KINDS)
 
-    def dropfalsy(self) -> tpe.Self:
+    def dropfalsy(self) -> tp.Self:
         '''
         Return a new :obj:`Index` after removing values of NaN or None.
         '''
@@ -1314,7 +1313,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[tpe.Self, NDArrayAny]:
+            ) -> tp.Tuple[tp.Self, NDArrayAny]:
         # NOTE: base class defines pubic method
         # force usage of property for cache update
         # sort positions to avoid uncomparable objects

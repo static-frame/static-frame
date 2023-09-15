@@ -4,11 +4,11 @@ Tools for documenting the SF interface.
 from __future__ import annotations
 
 import inspect
-import typing as tp
 from collections import namedtuple
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.archive_npy import NPY
 from static_frame.core.archive_npy import NPZ

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-import typing as tp
 from functools import partial
 from functools import wraps
 from itertools import chain
 from weakref import WeakValueDictionary
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import StoreFileMutation

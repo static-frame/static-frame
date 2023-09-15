@@ -1,6 +1,5 @@
-import typing as tp  # pylint: disable=W0611
-
 import numpy as np
+import typing_extensions as tp  # pylint: disable=W0611
 from hypothesis import given
 
 from static_frame.core.archive_npy import NPYConverter

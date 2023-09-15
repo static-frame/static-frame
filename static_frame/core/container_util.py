@@ -4,13 +4,13 @@ This module us for utilty functions that take as input and / or return Container
 from __future__ import annotations
 
 import datetime
-import typing as tp
 from collections import defaultdict
 from fractions import Fraction
 from functools import partial
 from itertools import zip_longest
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import column_2d_filter
 from arraykit import resolve_dtype_iter
 from arraykit import slice_to_ascending_slice

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from datetime import date
 from datetime import datetime
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import isna_element
 from arraykit import resolve_dtype
 

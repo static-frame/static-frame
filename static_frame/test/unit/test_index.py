@@ -3,12 +3,12 @@ from __future__ import annotations
 import copy
 import datetime
 import pickle
-import typing as tp
 import unittest
 from hashlib import sha256
 from io import StringIO
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import mloc
 
 from static_frame import DisplayConfig

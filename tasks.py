@@ -1,5 +1,5 @@
 import sys
-import typing as tp
+import typing_extensions as tp
 
 import invoke
 

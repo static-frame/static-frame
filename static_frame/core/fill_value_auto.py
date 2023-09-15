@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64

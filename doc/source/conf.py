@@ -14,7 +14,8 @@
 
 import datetime
 import os
-import typing as tp
+
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.interface import DOCUMENTED_COMPONENTS

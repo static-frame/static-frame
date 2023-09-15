@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import doctest
 import os
-import typing as tp
+
+import typing_extensions as tp
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win

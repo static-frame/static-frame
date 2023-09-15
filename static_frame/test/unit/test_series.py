@@ -5,7 +5,6 @@ import datetime
 import pickle
 import re
 import string
-import typing as tp
 from collections import OrderedDict
 from enum import Enum
 from hashlib import sha256
@@ -13,6 +12,7 @@ from io import StringIO
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame import DisplayConfig

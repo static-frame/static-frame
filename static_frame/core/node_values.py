@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from arraykit import column_2d_filter
 
 from static_frame.core.node_selector import Interface

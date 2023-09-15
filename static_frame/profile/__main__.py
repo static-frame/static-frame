@@ -12,13 +12,13 @@ import string
 import sys
 import tempfile
 import timeit
-import typing as tp
 from enum import Enum
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
 import numpy as np
 import pandas as pd
+import typing_extensions as tp
 from line_profiler import LineProfiler  # type: ignore
 from pyinstrument import Profiler  # type: ignore
 

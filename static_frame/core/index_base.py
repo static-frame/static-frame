@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import partial
 from itertools import chain
 
 import numpy as np
-import typing_extensions as tpe
+import typing_extensions as tp
 
 from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import IMTOAdapter
@@ -209,7 +208,7 @@ class IndexBase(ContainerOperandSequence):
     def _extract_iloc(self, key: TILocSelectorOne) -> TLabel: ...
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
     def _extract_iloc(self, key: TILocSelector) -> tp.Any:
         raise NotImplementedError() #pragma: no cover
@@ -350,7 +349,7 @@ class IndexBase(ContainerOperandSequence):
     def __getitem__(self, key: TILocSelectorOne) -> tp.Any: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def __getitem__(self, key: TILocSelectorMany) -> tp.Self: ...
 
     def __getitem__(self: I,
             key: TILocSelector

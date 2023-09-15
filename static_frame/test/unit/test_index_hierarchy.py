@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import datetime
 import pickle
-import typing as tp
 import unittest
 from collections import OrderedDict
 from functools import wraps
@@ -11,6 +10,7 @@ from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 from static_frame import DisplayConfig
 from static_frame import Frame

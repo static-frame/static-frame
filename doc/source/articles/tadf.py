@@ -1,9 +1,7 @@
 
-import typing as tp
-
 import numpy as np
 import numpy.typing as npt
-import typing_extensions as tpe
+import typing_extensions as tp
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.index_base import IndexBase
@@ -20,7 +18,7 @@ a2: NDArray[np.int64]
 
 
 
-TDtype = tpe.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
+TDtype = tp.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
 class Index(IndexBase, tp.Generic[TDtype]):
     ...
 
@@ -33,7 +31,7 @@ y: IndexDate
 
 
 
-TIndices = tpe.TypeVarTuple('TIndices', default=tp.Any) # bound=IndexBase,
+TIndices = tp.TypeVarTuple('TIndices', default=tp.Any) # bound=IndexBase,
 class IndexHierarchy(IndexBase, tp.Generic[*TIndices]):
     ...
 
@@ -44,8 +42,8 @@ z: IndexHierarchy[Index[np.int64], Index[np.unicode_], Index[np.float256]]
 
 
 
-TIndex = tpe.TypeVar('TIndex', bound=IndexBase, default=tp.Any)
-TDtype = tpe.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
+TIndex = tp.TypeVar('TIndex', bound=IndexBase, default=tp.Any)
+TDtype = tp.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
 
 class Series(ContainerOperand, tp.Generic[TIndex, TDtype]):
     ...
@@ -54,9 +52,9 @@ a: Series[Index[np.int64], np.unicode_]
 b: Series[IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]], np.float64]
 
 
-TIndex = tpe.TypeVar('TIndex', bound=IndexBase, default=tp.Any)
-TColumns = tpe.TypeVar('TColumns', bound=IndexBase, default=tp.Any)
-TDtypes = tpe.TypeVarTuple('TDtype', default=tp.Any) # bound=np.dtype
+TIndex = tp.TypeVar('TIndex', bound=IndexBase, default=tp.Any)
+TColumns = tp.TypeVar('TColumns', bound=IndexBase, default=tp.Any)
+TDtypes = tp.TypeVarTuple('TDtype', default=tp.Any) # bound=np.dtype
 
 class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
     ...

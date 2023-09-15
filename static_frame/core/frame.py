@@ -4,7 +4,6 @@ import csv
 import json
 import pickle
 import sqlite3
-import typing as tp
 from collections import deque
 from collections.abc import Set
 from copy import deepcopy
@@ -18,7 +17,7 @@ from itertools import zip_longest
 from operator import itemgetter
 
 import numpy as np
-import typing_extensions as tpe
+import typing_extensions as tp
 from arraykit import column_1d_filter
 from arraykit import delimited_to_arrays
 from arraykit import first_true_2d
@@ -242,7 +241,7 @@ class Frame(ContainerOperand):
             *,
             name: TLabel = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Frame constructor from a Series:
 
@@ -272,7 +271,7 @@ class Frame(ContainerOperand):
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a zero-sized Frame based on ``index`` or ``columns`` (though not both of size).
         '''
@@ -321,7 +320,7 @@ class Frame(ContainerOperand):
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a Frame from an element, i.e., a single value stored in a single cell. Both ``index`` and ``columns`` are required, and cannot be specified with ``IndexAutoFactory``.
         '''
@@ -371,7 +370,7 @@ class Frame(ContainerOperand):
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
         '''
@@ -435,7 +434,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
-    def from_concat(cls: tp.Type[tpe.Self],
+    def from_concat(cls: tp.Type[tp.Self],
             frames: tp.Iterable[tp.Union['Frame', Series]],
             *,
             axis: int = 0,
@@ -447,7 +446,7 @@ class Frame(ContainerOperand):
             name: NameType = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Frame` or :obj:`Series` into a new :obj:`Frame`. If index or columns are provided and appropriately sized, the resulting :obj:`Frame` will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved; otherwise, a new index or an :obj:`IndexAutoFactory` must be supplied.
 
@@ -629,7 +628,7 @@ class Frame(ContainerOperand):
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             columns_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             consolidate_blocks: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Produce a :obj:`Frame` with a hierarchical index from an iterable of pairs of labels, :obj:`Frame`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Frame`.
 
@@ -713,7 +712,7 @@ class Frame(ContainerOperand):
             name: NameType = None,
             func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new :obj:`Frame` made by overlaying containers, filling in values with aligned values from subsequent containers. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
@@ -831,7 +830,7 @@ class Frame(ContainerOperand):
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Construct a :obj:`Frame` from an iterable of rows, where rows are defined as iterables, including tuples, lists, and arrays. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields.
 
         Supplying ``dtypes`` will significantly improve performance, as otherwise columnar array types must be derived by element-wise examination.
@@ -971,7 +970,7 @@ class Frame(ContainerOperand):
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a row; column names will be derived from the union of all row dictionary keys.
 
         Args:
@@ -1067,7 +1066,7 @@ class Frame(ContainerOperand):
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             own_columns: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
 
         Args:
@@ -1106,7 +1105,7 @@ class Frame(ContainerOperand):
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
-            consolidate_blocks: bool = False) -> tpe.Self:
+            consolidate_blocks: bool = False) -> tp.Self:
         '''Frame constructor from iterable of pairs of index label, row, where row is a dictionary. Column names will be derived from the union of all row dictionary keys.
 
         Args:
@@ -1145,7 +1144,7 @@ class Frame(ContainerOperand):
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             consolidate_blocks: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
@@ -1240,7 +1239,7 @@ class Frame(ContainerOperand):
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             consolidate_blocks: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a Frame from a dictionary (or any object that has an items() method) where keys are column labels and values are columns values (either sequence types or :obj:`Series`).
 
@@ -1280,7 +1279,7 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False,
             consolidate_blocks: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied. This constructor is similar to ``from_items()``, though here columns are provided through an independent ``columns`` argument.
 
         Args:
@@ -1365,7 +1364,7 @@ class Frame(ContainerOperand):
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an iterable of dictionaries, where each dictionary represents a column; index labels will be derived from the union of all column dictionary keys.
 
         Args:
@@ -1545,7 +1544,7 @@ class Frame(ContainerOperand):
             columns_labels: tp.Sequence[TLabel],
             columns_constructors: TIndexCtorSpecifiers,
             name: TLabel,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
         '''
@@ -1604,7 +1603,7 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Convert a NumPy structed array into a Frame.
 
@@ -1655,7 +1654,7 @@ class Frame(ContainerOperand):
             columns_constructor: TIndexCtorSpecifier = None,
             own_index: bool = False,
             own_columns: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from an iterable of key, value, where key is a pair of row, column labels.
 
@@ -1773,7 +1772,7 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             consolidate_blocks: bool = False,
             parameters: tp.Any = (),
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Frame constructor from an SQL query and a database connection object.
 
@@ -1930,7 +1929,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_index}
 
         Args:
@@ -1973,7 +1972,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_columns}
 
         Args:
@@ -2016,7 +2015,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
         Args:
@@ -2054,7 +2053,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_records}
 
         Args:
@@ -2092,7 +2091,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_values}
 
         Args:
@@ -2150,7 +2149,7 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from a file path or a file-like object defining a delimited (CSV, TSV) data file.
 
@@ -2465,7 +2464,7 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
 
@@ -2527,7 +2526,7 @@ class Frame(ContainerOperand):
             name: TLabel = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
 
@@ -2590,7 +2589,7 @@ class Frame(ContainerOperand):
             name: NameType = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
 
@@ -2654,7 +2653,7 @@ class Frame(ContainerOperand):
             skip_footer: int = 0,
             trim_nadir: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a sheet in an XLSX workbook.
 
@@ -2696,7 +2695,7 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a table in an SQLite database file.
         '''
@@ -2729,7 +2728,7 @@ class Frame(ContainerOperand):
             columns_constructors: TIndexCtorSpecifiers = None,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Load Frame from the contents of a table in an HDF5 file.
         '''
@@ -2827,7 +2826,7 @@ class Frame(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Given a Pandas DataFrame, return a Frame.
 
         Args:
@@ -2957,7 +2956,7 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Realize a ``Frame`` from an Arrow Table.
 
         Args:
@@ -3114,7 +3113,7 @@ class Frame(ContainerOperand):
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Realize a ``Frame`` from a Parquet file.
 
@@ -3390,7 +3389,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tpe.Self:
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         obj = self.__class__.__new__(self.__class__)
         obj._blocks = deepcopy(self._blocks, memo)
         obj._columns = deepcopy(self._columns, memo)
@@ -4048,7 +4047,7 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False,
             check_equals: bool = True,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4138,7 +4137,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4188,7 +4187,7 @@ class Frame(ContainerOperand):
     def relabel_flat(self,
             index: bool = False,
             columns: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4218,7 +4217,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4251,7 +4250,7 @@ class Frame(ContainerOperand):
     def relabel_level_drop(self,
             index: int = 0,
             columns: int = 0
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -4277,7 +4276,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 0,
             index_constructors: TIndexCtorSpecifiers = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create, or augment, an :obj:`IndexHierarchy` by providing one or more selections from the Frame (via axis-appropriate ``loc`` selections) to move into the :obj:`Index`.
 
@@ -4368,7 +4367,7 @@ class Frame(ContainerOperand):
             depth_level: TDepthLevel,
             *,
             axis: int = 0,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Shift values from an index on an axis to the Frame by providing one or more depth level selections.
 
@@ -4481,7 +4480,7 @@ class Frame(ContainerOperand):
             *,
             index_constructors: TIndexCtorSpecifiers = None,
             columns_constructors: TIndexCtorSpecifiers = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
 
@@ -4535,7 +4534,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # na handling
 
-    def isna(self) -> tpe.Self:
+    def isna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are NaN or None.
         '''
@@ -4548,7 +4547,7 @@ class Frame(ContainerOperand):
                 )
 
 
-    def notna(self) -> tpe.Self:
+    def notna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are not NaN or None.
         '''
@@ -4562,7 +4561,7 @@ class Frame(ContainerOperand):
 
     def dropna(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tpe.Self:
+            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tp.Self:
         '''
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -4588,7 +4587,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # falsy handling
 
-    def isfalsy(self) -> tpe.Self:
+    def isfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are falsy.
         '''
@@ -4602,7 +4601,7 @@ class Frame(ContainerOperand):
                 )
 
 
-    def notfalsy(self) -> tpe.Self:
+    def notfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean Frame indicating True which values are not falsy.
         '''
@@ -4617,7 +4616,7 @@ class Frame(ContainerOperand):
 
     def dropfalsy(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tpe.Self:
+            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tp.Self:
         '''
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
 
@@ -4643,7 +4642,7 @@ class Frame(ContainerOperand):
     def _fill_missing(self,
             value: tp.Any,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Args:
             func: function to return True for missing values
@@ -4692,7 +4691,7 @@ class Frame(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> tpe.Self:
+    def fillna(self, value: tp.Any) -> tp.Self:
         '''Return a new ``Frame`` after replacing null (NaN or None) values with the supplied value.
 
         Args:
@@ -4701,7 +4700,7 @@ class Frame(ContainerOperand):
         return self._fill_missing(value, func=isna_array)
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self, value: tp.Any) -> tpe.Self:
+    def fillfalsy(self, value: tp.Any) -> tp.Self:
         '''Return a new ``Frame`` after replacing falsy values with the supplied value.
 
         Args:
@@ -4714,7 +4713,7 @@ class Frame(ContainerOperand):
     def fillna_leading(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
 
@@ -4732,7 +4731,7 @@ class Frame(ContainerOperand):
     def fillna_trailing(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
 
@@ -4750,7 +4749,7 @@ class Frame(ContainerOperand):
     def fillfalsy_leading(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling leading (and only leading) falsy values with the provided ``value``.
 
@@ -4768,7 +4767,7 @@ class Frame(ContainerOperand):
     def fillfalsy_trailing(self,
             value: tp.Any,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) falsy values with the provided ``value``.
 
@@ -4787,7 +4786,7 @@ class Frame(ContainerOperand):
     def fillna_forward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling forward null (NaN or None) with the last observed value.
 
@@ -4805,7 +4804,7 @@ class Frame(ContainerOperand):
     def fillna_backward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling backward null (NaN or None) with the first observed value.
 
@@ -4824,7 +4823,7 @@ class Frame(ContainerOperand):
     def fillfalsy_forward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling forward falsy values with the last observed value.
 
@@ -4842,7 +4841,7 @@ class Frame(ContainerOperand):
     def fillfalsy_backward(self,
             limit: int = 0,
             *,
-            axis: int = 0) -> tpe.Self:
+            axis: int = 0) -> tp.Self:
         '''
         Return a new ``Frame`` after filling backward falsy values with the first observed value.
 
@@ -5006,13 +5005,13 @@ class Frame(ContainerOperand):
     def _extract(self, row_key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract(self, row_key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract(self, column_key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def _extract(self, column_key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract(self, column_key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
@@ -5021,7 +5020,7 @@ class Frame(ContainerOperand):
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
@@ -5115,7 +5114,7 @@ class Frame(ContainerOperand):
     def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
@@ -5124,7 +5123,7 @@ class Frame(ContainerOperand):
     def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
 
     @tp.overload
-    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> tpe.Self: ...
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> tp.Self: ...
 
     @tp.overload
     def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorOne]) -> tp.Any: ...
@@ -5187,19 +5186,19 @@ class Frame(ContainerOperand):
     def __getitem__(self, key: TLabel) -> Series: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.List[int]) -> tpe.Self: ...
+    def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.List[str]) -> tpe.Self: ...
+    def __getitem__(self, key: tp.List[str]) -> tp.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
+    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series: ...
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Series: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tpe.Self | Series:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Series:
         '''Selector of columns by label.
 
         Args:
@@ -5210,7 +5209,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _drop_iloc(self, key: TILocSelectorCompound) -> tpe.Self:
+    def _drop_iloc(self, key: TILocSelectorCompound) -> tp.Self:
         '''
         Args:
             key: If a Boolean Series was passed, it has been converted to Boolean NumPy array already in loc to iloc.
@@ -5244,11 +5243,11 @@ class Frame(ContainerOperand):
                 own_index=own_index
                 )
 
-    def _drop_loc(self, key: TLocSelectorCompound) -> tpe.Self:
+    def _drop_loc(self, key: TLocSelectorCompound) -> tp.Self:
         key_iloc = self._compound_loc_to_iloc(key)
         return self._drop_iloc(key=key_iloc)
 
-    def _drop_getitem(self, key: TLocSelectorCompound) -> tpe.Self:
+    def _drop_getitem(self, key: TLocSelectorCompound) -> tp.Self:
         key_iloc = self._compound_loc_to_getitem_iloc(key)
         return self._drop_iloc(key=key_iloc)
 
@@ -6130,7 +6129,7 @@ class Frame(ContainerOperand):
             axis: int = 1,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[NDArrayAny, 'Series', 'Frame']]] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
@@ -7592,7 +7591,7 @@ class Frame(ContainerOperand):
             *,
             axis: int = 1,
             ddof: int = 1,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Compute a covariance matrix.
 
         Args:
@@ -7625,7 +7624,7 @@ class Frame(ContainerOperand):
     def corr(self,
             *,
             axis: int = 1,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Compute a correlation matrix.
 
         Args:
@@ -7734,7 +7733,7 @@ class Frame(ContainerOperand):
             depth_level: TDepthLevel = -1,
             *,
             fill_value: object = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Move labels from the columns to the index, creating or extending an :obj:`IndexHierarchy` on the index.
 
@@ -7814,7 +7813,7 @@ class Frame(ContainerOperand):
             depth_level: TDepthLevel = -1,
             *,
             fill_value: object = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Move labels from the index to the columns, creating or extending an :obj:`IndexHierarchy` on the columns.
 
@@ -8072,7 +8071,7 @@ class Frame(ContainerOperand):
             *,
             after: bool,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new Frame with the provided container inserted at the position (or after the position) determined by the column key.
 
@@ -8134,7 +8133,7 @@ class Frame(ContainerOperand):
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position before the label specified by ``key``.
 
@@ -8157,7 +8156,7 @@ class Frame(ContainerOperand):
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position after the label specified by ``key``.
 

@@ -2,11 +2,11 @@ import argparse
 import enum
 import shutil
 import time
-import typing as tp
 from pathlib import Path
 
 import numpy as np
 import psutil
+import typing_extensions as tp
 
 import static_frame as sf
 

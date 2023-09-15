@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as tp
+import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import typing as tp
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
@@ -9,7 +8,7 @@ from itertools import chain
 from itertools import product
 
 import numpy as np
-import typing_extensions as tpe
+import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import delimited_to_arrays
 from arraykit import first_true_1d
@@ -142,8 +141,8 @@ if tp.TYPE_CHECKING:
 
 
 #-------------------------------------------------------------------------------
-TVDtype = tpe.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
-TVIndex = tpe.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 def _NA_VALUES_CONSTRCTOR(count: int) -> None: ...
 
@@ -171,7 +170,7 @@ class Series(ContainerOperand):
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             own_index: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a :obj:`static_frame.Series` from a single element. The size of the resultant container will be determined by the ``index`` argument.
 
@@ -208,7 +207,7 @@ class Series(ContainerOperand):
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
         Args:
@@ -252,7 +251,7 @@ class Series(ContainerOperand):
             thousands_char: str = '',
             decimal_char: str = '.',
             own_index: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Series construction from a delimited string.
 
         Args:
@@ -293,7 +292,7 @@ class Series(ContainerOperand):
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
 
         Args:
@@ -315,7 +314,7 @@ class Series(ContainerOperand):
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             name: NameType = NAME_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
 
@@ -381,7 +380,7 @@ class Series(ContainerOperand):
             *,
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
 
@@ -425,14 +424,14 @@ class Series(ContainerOperand):
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable[tpe.Self],
+            containers: tp.Iterable[tp.Self],
             *,
             index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
 
         Args:
@@ -481,7 +480,7 @@ class Series(ContainerOperand):
             index: IndexInitOrAutoType = None,
             index_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
-            own_data: bool = False) -> tpe.Self:
+            own_data: bool = False) -> tp.Self:
         '''Given a Pandas Series, return a Series.
 
         Args:
@@ -643,7 +642,7 @@ class Series(ContainerOperand):
             setattr(self, key, value)
         self.values.flags.writeable = False
 
-    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tpe.Self:
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         obj = self.__class__.__new__(self.__class__)
         obj.values = array_deepcopy(self.values, memo)
         obj._index = deepcopy(self._index, memo)
@@ -652,7 +651,7 @@ class Series(ContainerOperand):
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> tpe.Self:
+    # def __copy__(self) -> tp.Self:
     #     '''
     #     Return shallow copy of this Series.
     #     '''
@@ -693,7 +692,7 @@ class Series(ContainerOperand):
             name: NameType = NAME_DEFAULT,
             *,
             index: NameType = NAME_DEFAULT,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new Series with an updated name attribute.
         '''
@@ -1112,7 +1111,7 @@ class Series(ContainerOperand):
             fill_value: tp.Any = np.nan,
             own_index: bool = False,
             check_equals: bool = True
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1173,7 +1172,7 @@ class Series(ContainerOperand):
             index: tp.Optional[RelabelInput],
             *,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1203,7 +1202,7 @@ class Series(ContainerOperand):
                 )
 
     @doc_inject(selector='relabel_flat', class_name='Series')
-    def relabel_flat(self) -> tpe.Self:
+    def relabel_flat(self) -> tp.Self:
         '''
         {doc}
         '''
@@ -1218,7 +1217,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
             level: TLabel
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1233,7 +1232,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='relabel_level_drop', class_name='Series')
     def relabel_level_drop(self,
             count: int = 1
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -1252,7 +1251,7 @@ class Series(ContainerOperand):
             depth_map: tp.Sequence[int],
             *,
             index_constructors: TIndexCtorSpecifiers = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
@@ -1275,7 +1274,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # na handling
 
-    def isna(self) -> tpe.Self:
+    def isna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
@@ -1283,7 +1282,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notna(self) -> tpe.Self:
+    def notna(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are NaN or None.
         '''
@@ -1291,7 +1290,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def dropna(self) -> tpe.Self:
+    def dropna(self) -> tp.Self:
         '''
         Return a new :obj:`Series` after removing values of NaN or None.
         '''
@@ -1328,7 +1327,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # falsy handling
 
-    def isfalsy(self) -> tpe.Self:
+    def isfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1336,7 +1335,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def notfalsy(self) -> tpe.Self:
+    def notfalsy(self) -> tp.Self:
         '''
         Return a same-indexed, Boolean :obj:`Series` indicating which values are falsy.
         '''
@@ -1344,7 +1343,7 @@ class Series(ContainerOperand):
         values.flags.writeable = False
         return self.__class__(values, index=self._index, own_index=True)
 
-    def dropfalsy(self) -> tpe.Self:
+    def dropfalsy(self) -> tp.Self:
         '''
         Return a new :obj:`Series` after removing values of falsy.
         '''
@@ -1376,7 +1375,7 @@ class Series(ContainerOperand):
     def _fill_missing(self,
             value: tp.Any, # an element or a Series
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Args:
             func: A function that returns a same-shaped array of Booleans.
@@ -1425,7 +1424,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillna(self,
             value: tp.Any # an element or a Series
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing NA (NaN or None) with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1436,7 +1435,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='fillna')
     def fillfalsy(self,
             value: tp.Any # an element or a Series
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a new :obj:`Series` after replacing falsy values with the supplied value. The ``value`` can be an element or :obj:`Series`.
 
         Args:
@@ -1487,7 +1486,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_forward(self, limit: int = 0) -> tpe.Self:
+    def fillna_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1502,7 +1501,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_backward(self, limit: int = 0) -> tpe.Self:
+    def fillna_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1518,7 +1517,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_forward(self, limit: int = 0) -> tpe.Self:
+    def fillfalsy_forward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1533,7 +1532,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_backward(self, limit: int = 0) -> tpe.Self:
+    def fillfalsy_backward(self, limit: int = 0) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1596,7 +1595,7 @@ class Series(ContainerOperand):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_leading(self, value: tp.Any) -> tpe.Self:
+    def fillna_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) null (NaN or None) with the supplied value.
 
         Args:
@@ -1611,7 +1610,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_trailing(self, value: tp.Any) -> tpe.Self:
+    def fillna_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
 
         Args:
@@ -1627,7 +1626,7 @@ class Series(ContainerOperand):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_leading(self, value: tp.Any) -> tpe.Self:
+    def fillfalsy_leading(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling leading (and only leading) falsy values with the supplied value.
 
         Args:
@@ -1642,7 +1641,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_trailing(self, value: tp.Any) -> tpe.Self:
+    def fillfalsy_trailing(self, value: tp.Any) -> tp.Self:
         '''Return a new :obj:`Series` after filling trailing (and only trailing) falsy values with the supplied value.
 
         Args:
@@ -1660,7 +1659,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: UFunc) -> tpe.Self:
+    def _ufunc_unary_operator(self, operator: UFunc) -> tp.Self:
         '''
         For unary operations, the `name` attribute propagates.
         '''
@@ -1676,7 +1675,7 @@ class Series(ContainerOperand):
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         For binary operations, the `name` attribute does not propagate unless other is a scalar.
         '''
@@ -1758,7 +1757,7 @@ class Series(ContainerOperand):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         NumPy ufunc proccessors that retain the shape of the processed.
 
@@ -1909,7 +1908,7 @@ class Series(ContainerOperand):
     #     return self.values[key]
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorMany) -> tpe.Self: ...
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorOne) -> tp.Any: ...
@@ -1929,7 +1928,7 @@ class Series(ContainerOperand):
                 name=self._name)
 
     @tp.overload
-    def _extract_loc(self, key: TLocSelectorMany) -> tpe.Self: ...
+    def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def _extract_loc(self, key: TLabel) -> tp.Any: ...
@@ -1956,7 +1955,7 @@ class Series(ContainerOperand):
         #         name=self._name)
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> tpe.Self: ...
+    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @tp.overload
     def __getitem__(self, key: TLabel) -> tp.Any: ...
@@ -1976,7 +1975,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
 
-    def _drop_iloc(self, key: TILocSelector) -> tpe.Self:
+    def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         if key.__class__ is np.ndarray and key.dtype == bool: # type: ignore
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
@@ -1992,12 +1991,12 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def _drop_loc(self, key: TLocSelector) -> tpe.Self:
+    def _drop_loc(self, key: TLocSelector) -> tp.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
 
-    def _extract_iloc_mask(self, key: TILocSelector) -> tpe.Self:
+    def _extract_iloc_mask(self, key: TILocSelector) -> tp.Self:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True. The `name` attribute is not propagated.
         '''
         mask = np.full(self.values.shape, False, dtype=bool)
@@ -2005,7 +2004,7 @@ class Series(ContainerOperand):
         mask.flags.writeable = False
         return self.__class__(mask, index=self._index)
 
-    def _extract_loc_mask(self, key: TLocSelector) -> tpe.Self:
+    def _extract_loc_mask(self, key: TLocSelector) -> tp.Self:
         '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True. The `name` attribute is not propagated.
         '''
         iloc_key = self._index._loc_to_iloc(key)
@@ -2252,7 +2251,7 @@ class Series(ContainerOperand):
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted Index.
 
@@ -2284,7 +2283,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']]] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted values.
 
@@ -2323,7 +2322,7 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> tpe.Self:
+    def isin(self, other: tp.Iterable[tp.Any]) -> tp.Self:
         '''
         Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
 
@@ -2338,7 +2337,7 @@ class Series(ContainerOperand):
     def clip(self, *,
             lower: tp.Optional[tp.Union[float, 'Series']] = None,
             upper: tp.Optional[tp.Union[float, 'Series']] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''{}
 
         Args:
@@ -2365,7 +2364,7 @@ class Series(ContainerOperand):
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 
-    def transpose(self) -> tpe.Self:
+    def transpose(self) -> tp.Self:
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
@@ -2374,7 +2373,7 @@ class Series(ContainerOperand):
         return self
 
     @property
-    def T(self) -> tpe.Self:
+    def T(self) -> tp.Self:
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
@@ -2386,7 +2385,7 @@ class Series(ContainerOperand):
     def duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a same-sized Boolean Series that shows True for all values that are duplicated.
 
@@ -2407,7 +2406,7 @@ class Series(ContainerOperand):
     def drop_duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Return a Series with duplicated values removed.
 
@@ -2428,7 +2427,7 @@ class Series(ContainerOperand):
                 )
 
     @doc_inject(select='astype')
-    def astype(self, dtype: TDtypeSpecifier) -> tpe.Self:
+    def astype(self, dtype: TDtypeSpecifier) -> tp.Self:
         '''
         Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for ``Frame``, this is an interface exposing both a callable and a getitem interface.
 
@@ -2447,7 +2446,7 @@ class Series(ContainerOperand):
                 name=self._name
                 )
 
-    def __round__(self, decimals: int = 0) -> tpe.Self:
+    def __round__(self, decimals: int = 0) -> tp.Self:
         '''
         Return a Series rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
@@ -2467,7 +2466,7 @@ class Series(ContainerOperand):
             shift: int,
             *,
             include_index: bool = False,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a Series with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
@@ -2503,7 +2502,7 @@ class Series(ContainerOperand):
             shift: int,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
@@ -2542,7 +2541,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
 
         if is_fill_value_factory_initializer(fill_value):
             fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
@@ -2586,7 +2585,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
 
         Args:
@@ -2612,7 +2611,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
 
         Args:
@@ -2638,7 +2637,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -2664,7 +2663,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -2690,7 +2689,7 @@ class Series(ContainerOperand):
             ascending: bool = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
 
         Args:
@@ -2779,7 +2778,7 @@ class Series(ContainerOperand):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''{doc}
 
         Args:
@@ -3160,7 +3159,7 @@ class Series(ContainerOperand):
             container: 'Series',
             *,
             after: bool,
-            ) -> tpe.Self:
+            ) -> tp.Self:
         if not isinstance(container, Series):
             raise NotImplementedError(
                     f'No support for inserting with {type(container)}')
@@ -3200,7 +3199,7 @@ class Series(ContainerOperand):
     def insert_before(self,
             key: TLabel,
             container: 'Series',
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position before the label specified by ``key``.
 
@@ -3220,7 +3219,7 @@ class Series(ContainerOperand):
     def insert_after(self,
             key: TLabel, # iloc positions
             container: 'Series',
-            ) -> tpe.Self:
+            ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position after the label specified by ``key``.
 

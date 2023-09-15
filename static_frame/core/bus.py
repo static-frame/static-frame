@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor

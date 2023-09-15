@@ -1,12 +1,12 @@
 
 import calendar
 import timeit
-import typing as tp
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 

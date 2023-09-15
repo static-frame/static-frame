@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import hashlib
-import typing as tp
+
+import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
     from hashlib import _Hash  # pylint: disable = W0611 #pragma: no cover

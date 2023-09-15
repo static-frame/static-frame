@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import datetime
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 from arraymap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject

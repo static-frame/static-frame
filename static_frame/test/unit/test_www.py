@@ -4,12 +4,13 @@ import gzip
 import io
 # import json
 import os
-import typing as tp
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import patch
 from zipfile import ZipFile
+
+import typing_extensions as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.www import WWW

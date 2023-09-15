@@ -6,11 +6,11 @@ import os
 import platform
 import re
 import sys
-import typing as tp
 from collections import namedtuple
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import _DISPLAY_FORMAT_HTML

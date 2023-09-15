@@ -9,7 +9,6 @@ import os
 import pickle
 import sqlite3
 import string
-import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import defaultdict
@@ -23,6 +22,7 @@ from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame import DisplayConfig

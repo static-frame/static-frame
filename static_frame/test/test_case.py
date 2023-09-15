@@ -10,13 +10,13 @@ import string
 import sys
 import tempfile
 import time
-import typing as tp
 import unittest
 from itertools import zip_longest
 from pathlib import Path
 
 import numpy as np
 import pytest
+import typing_extensions as tp
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerBase

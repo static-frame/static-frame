@@ -3,11 +3,11 @@ Tools for iterators in Series and Frame. These components are imported by both s
 '''
 from __future__ import annotations
 
-import typing as tp
 from enum import Enum
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import name_filter
 
 from static_frame.core.container_util import group_from_container

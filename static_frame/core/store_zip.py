@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import os
 import pickle
-import typing as tp
 import zipfile
 from io import BytesIO
 from io import StringIO
+
+import typing_extensions as tp
 
 from static_frame.core.archive_npy import ArchiveFrameConverter
 from static_frame.core.archive_npy import ArchiveZipWrapper

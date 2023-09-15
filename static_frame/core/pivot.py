@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as tp
 from collections import defaultdict
 from functools import partial
 from itertools import chain
@@ -8,6 +7,7 @@ from itertools import product
 from itertools import repeat
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 

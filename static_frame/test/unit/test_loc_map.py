@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from copy import deepcopy
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame import IndexHierarchy
 from static_frame.core.exception import ErrorInitIndexNonUnique

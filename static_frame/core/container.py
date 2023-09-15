@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import partial
 
 import numpy as np
-import typing_extensions as tpe
+import typing_extensions as tp
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -589,16 +588,16 @@ class ContainerOperand(ContainerOperandSequence):
     __slots__ = ()
 
     #---------------------------------------------------------------------------
-    def __pos__(self) -> tpe.Self:
+    def __pos__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
 
-    def __neg__(self) -> tpe.Self:
+    def __neg__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__neg__'])
 
-    def __abs__(self) -> tpe.Self:
+    def __abs__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
-    def __invert__(self) -> tpe.Self:
+    def __invert__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
     #---------------------------------------------------------------------------

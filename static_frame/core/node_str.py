@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import reduce
 
 import numpy as np
+import typing_extensions as tp
 from numpy import char as npc
 
 from static_frame.core.container_util import get_col_format_factory

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign

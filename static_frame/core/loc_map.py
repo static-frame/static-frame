@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import itertools
 import sys
-import typing as tp
 from copy import deepcopy
 from functools import reduce
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraymap import FrozenAutoMap  # pylint: disable = E0611

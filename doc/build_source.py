@@ -1,6 +1,6 @@
 import os
 import sys
-# import typing as tp
+# import typing_extensions as tp
 from collections import deque
 
 HEADER = '.. NOTE: auto-generated file, do not edit'

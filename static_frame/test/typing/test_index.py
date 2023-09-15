@@ -1,6 +1,5 @@
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
-import typing as tp
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
