@@ -6167,7 +6167,7 @@ class Frame(ContainerOperand):
                 elif cfs.ndim == 2 and cfs.shape[0] == 1:
                     values_for_sort = cfs[0] # type: ignore
                 else:
-                    values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)]
+                    values_for_lex = [cfs[i] for i in range(cfs.shape[0]-1, -1, -1)] # pyright: ignore
             elif cfs.ndim == 1: # Series
                 values_for_sort = cfs.values # type: ignore
             elif isinstance(cfs, Frame):
@@ -6192,7 +6192,7 @@ class Frame(ContainerOperand):
             if cfs_is_array:
                 if cfs.ndim == 1:
                     values_for_sort = cfs # type: ignore
-                elif cfs.ndim == 2 and cfs.shape[1] == 1:
+                elif cfs.ndim == 2 and cfs.shape[1] == 1: # pyright: ignore
                     values_for_sort = cfs[:, 0] # type: ignore
                 else:
                     values_for_lex = [cfs[:, i] for i in range(cfs.shape[1]-1, -1, -1)] #type: ignore
@@ -6201,11 +6201,11 @@ class Frame(ContainerOperand):
             else: #Frame/TypeBlocks from here
                 if isinstance(cfs, Frame):
                     cfs = cfs._blocks
-                if cfs.shape[1] == 1:
+                if cfs.shape[1] == 1: # pyright: ignore
                     values_for_sort = cfs._extract_array_column(0) # type: ignore
                 else:
                     values_for_lex = [cfs._extract_array_column(i) # type: ignore
-                            for i in range(cfs.shape[1]-1, -1, -1)]
+                            for i in range(cfs.shape[1]-1, -1, -1)] # pyright: ignore
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
@@ -6615,7 +6615,7 @@ class Frame(ContainerOperand):
             columns_default_constructor = self._COLUMNS_CONSTRUCTOR # type: ignore
 
         columns, own_columns = index_from_optional_constructors(
-                columns_labels,
+                columns_labels, # pyright: ignore
                 depth=columns_depth,
                 default_constructor=columns_default_constructor,
                 explicit_constructors=columns_constructors, # cannot supply name
