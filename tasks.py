@@ -19,6 +19,7 @@ def clean(context):
     context.run('rm -rf .pytest_cache')
     context.run('rm -rf .hypothesis')
     context.run('rm -rf .ipynb_checkpoints')
+    context.run('rm -rf .ruff_cache')
 
 
 @invoke.task()
