@@ -211,6 +211,9 @@ if tp.TYPE_CHECKING:
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
     TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+
+def _NA_BLOCKS_CONSTRCTOR(shape: tp.Tuple[int, int]) -> None: ...
+
 class Frame(ContainerOperand):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
     '''
@@ -3269,7 +3272,8 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # blocks assignment
 
-        blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, int]], None]] = None
+        # blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, int]], None]] = None
+        blocks_constructor = _NA_BLOCKS_CONSTRCTOR
 
         if data.__class__ is TypeBlocks:
             if own_data:
@@ -3311,7 +3315,7 @@ class Frame(ContainerOperand):
 
         # counts can be zero (not None) if _block was created but is empty
         row_count, col_count = (self._blocks.shape
-                if not blocks_constructor else (None, None))
+                if blocks_constructor is _NA_BLOCKS_CONSTRCTOR else (None, None))
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)
 
@@ -3372,7 +3376,7 @@ class Frame(ContainerOperand):
         columns_empty = col_count == 0
         index_empty = row_count == 0
 
-        if blocks_constructor:
+        if blocks_constructor is not _NA_BLOCKS_CONSTRCTOR:
             # if we have a blocks_constructor if is because data remained FRAME_INITIALIZER_DEFAULT
             blocks_constructor((row_count, col_count))
 
@@ -5028,7 +5032,7 @@ class Frame(ContainerOperand):
     @tp.overload
     def _extract(self, row_key: TILocSelector) -> tp.Any: ...
 
-    def _extract(self,
+    def _extract(self, # pyright: ignore
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
             ) -> tp.Any:
@@ -5131,7 +5135,7 @@ class Frame(ContainerOperand):
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: ...
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any:
+    def _extract_iloc(self, key: TILocSelectorCompound) -> tp.Any: # pyright: ignore
         '''
         Give a compound key, return a new Frame. This method simply handles the variability of single or compound selectors.
         '''
@@ -5176,7 +5180,7 @@ class Frame(ContainerOperand):
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
-            key: TLocSelectorCompound) -> TILocSelectorCompound:
+            key: TLocSelectorCompound) -> tp.Tuple[None, TILocSelector]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         iloc_column_key = self._columns._loc_to_iloc(key)
@@ -5198,13 +5202,14 @@ class Frame(ContainerOperand):
     def __getitem__(self, key: TLocSelector) -> tp.Self | Series: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Series: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
             key: {key_loc}
         '''
-        return self._extract(*self._compound_loc_to_getitem_iloc(key))
+        r, c = self._compound_loc_to_getitem_iloc(key)
+        return self._extract(r, c)
 
 
     #---------------------------------------------------------------------------

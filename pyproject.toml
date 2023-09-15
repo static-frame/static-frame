@@ -13,7 +13,6 @@ exclude = [
     "static_frame/test/property",
     "static_frame/profile",
 
-    "static_frame/core/frame.py",
     "static_frame/core/container_util.py",
     "static_frame/core/bus.py",
     "static_frame/core/yarn.py",
