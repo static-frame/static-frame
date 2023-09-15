@@ -450,7 +450,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        count = len(self._index)
+        count = len(self._index) # pyright: ignore
         frames_array: NDArrayAny
         self._loaded: NDArrayAny
         load_array: bool | np.bool_
@@ -800,7 +800,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not target_values.__class__ is np.ndarray:
             targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
-                    config=self._config[target_labels]) for _ in range(1))
+                    config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
         else: # more than one Frame
             store_reader = self._store_reader(
                     store=self._store,
@@ -812,7 +812,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             targets_items = zip(target_labels, target_values) # type: ignore
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
-        for label, frame in targets_items:
+        for label, frame in targets_items: # pyright: ignore
             idx = index._loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
@@ -828,7 +828,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 if max_persist_active:
                     loaded_count += 1
 
-            if max_persist_active and loaded_count > self._max_persist:
+            if max_persist_active and loaded_count > self._max_persist: # pyright: ignore
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
                 idx_remove = index._loc_to_iloc(label_remove)
@@ -836,7 +836,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
 
-        self._loaded_all: bool = self._loaded.all() # type: ignore
+        self._loaded_all = self._loaded.all()
 
     def unpersist(self) -> None:
         '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
