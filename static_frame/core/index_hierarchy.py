@@ -36,7 +36,6 @@ from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
-# from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_datetime import IndexNanosecond
 from static_frame.core.loc_map import HierarchicalLocMap
