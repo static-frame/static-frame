@@ -154,7 +154,7 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
 
 def get_col_dtype_factory(
         dtypes: TDtypesSpecifier,
-        columns: tp.Optional[tp.Sequence[TLabel] | IndexBase],
+        columns: tp.Optional[tp.Sequence[TLabel] | IndexBase | NDArrayAny],
         index_depth: int = 0,
         ) -> tp.Callable[[int], TDtypeSpecifier]:
     '''

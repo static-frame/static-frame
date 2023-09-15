@@ -664,12 +664,12 @@ class Frame(ContainerOperand):
                 frames.append(frame)
                 if axis == 0:
                     if yield_elements:
-                        yield from product((label,), frame._index)
+                        yield from product((label,), frame._index) # pyright: ignore
                     else:
                         yield label, frame._index
                 elif axis == 1:
                     if yield_elements:
-                        yield from product((label,), frame._columns)
+                        yield from product((label,), frame._columns) # pyright: ignore
                     else:
                         yield label, frame._columns
 
@@ -866,13 +866,13 @@ class Frame(ContainerOperand):
                     name=name,
                     )
 
-        rows: tp.Iterable[tp.Any]
+        rows: tp.Sequence[tp.Any]
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
         else: # could be a sequence, or something like a dict view
-            rows = records
-        row_count = len(rows) # type: ignore
+            rows = records # type: ignore
+        row_count = len(rows)
 
         if not row_count:
             if columns is not None: # we can create a zero-record Frame
@@ -1086,7 +1086,7 @@ class Frame(ContainerOperand):
         '''
         index = []
 
-        def gen() -> tp.Iterator[NDArrayAny]:
+        def gen() -> tp.Iterator[tp.Iterable[tp.Any]]:
             for label, values in items:
                 index.append(label)
                 yield values
@@ -1105,7 +1105,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
-            items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Mapping[tp.Any, tp.Any]]],
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1124,12 +1124,12 @@ class Frame(ContainerOperand):
         '''
         index = []
 
-        def gen() -> tp.Iterator[NDArrayAny]:
+        def gen() -> tp.Iterator[tp.Mapping[tp.Any, tp.Any]]:
             for label, values in items:
                 index.append(label)
                 yield values
 
-        return cls.from_dict_records(gen(), # type: ignore
+        return cls.from_dict_records(gen(),
                 index=index,
                 dtypes=dtypes,
                 name=name,
@@ -1189,7 +1189,7 @@ class Frame(ContainerOperand):
                     if column_type is not None:
                         yield v.astype(column_type) # type: ignore
                     else:
-                        yield v
+                        yield v # pyright: ignore
                 elif isinstance(v, Series):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
@@ -1316,7 +1316,7 @@ class Frame(ContainerOperand):
                     if column_type is not None:
                         yield v.astype(column_type) # type: ignore
                     else:
-                        yield v
+                        yield v # pyright: ignore
                 elif isinstance(v, Series):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_fields if an Index is provided.')
@@ -1735,7 +1735,7 @@ class Frame(ContainerOperand):
                     )
 
         elif axis == 1: # column wise, use from_fields
-            def fields() -> tp.Iterator[tp.Tuple[TLabel, tp.List[tp.Any]]]:
+            def fields() -> tp.Iterator[tp.List[tp.Any]]:
                 items_iter = iter(items)
                 first = next(items_iter)
                 (_, c_last), value = first
@@ -1843,7 +1843,7 @@ class Frame(ContainerOperand):
                 if columns_select:
                     iloc_sel = columns._loc_to_iloc(columns.isin(columns_select)) # type: ignore
                     selector = itemgetter(*iloc_sel)
-                    selector_reduces = len(iloc_sel) == 1
+                    selector_reduces = len(iloc_sel) == 1 # pyright: ignore
                     columns = columns.iloc[iloc_sel] # type: ignore
 
             # NOTE: cannot own_index as we defer calling the constructor until after call Frame
@@ -2280,7 +2280,7 @@ class Frame(ContainerOperand):
             elif columns_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
                 if store_filter is not None:
                     labels = zip_longest(
-                            *(store_filter.to_type_filter_array(x) for x in columns_arrays),
+                            *(store_filter.to_type_filter_array(x) for x in columns_arrays), # pyright: ignore
                             fillvalue=columns_continuation_token,
                             )
                 else:
@@ -2301,13 +2301,13 @@ class Frame(ContainerOperand):
                         )
             else:
                 if store_filter is not None:
-                    columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays]
+                    columns_arrays = [store_filter.to_type_filter_array(x) for x in columns_arrays] # pyright: ignore
                 columns_constructor = partial(
                         cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_values_per_depth,
                         name=columns_name,
                         )
                 columns, own_columns = index_from_optional_constructors(
-                        columns_arrays,
+                        columns_arrays, # pyright: ignore
                         depth=columns_depth,
                         default_constructor=columns_constructor,
                         explicit_constructors=columns_constructors,
@@ -2852,10 +2852,10 @@ class Frame(ContainerOperand):
 
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
-                value.columns.values, # should be an array
+                value.columns.values, # pyright: ignore # should be an array
                 )
         # create generator of contiguous typed data
-        # calling .values will force type unification accross all columns
+        # calling .values will force type unification across all columns
         def gen() -> tp.Iterator[NDArrayAny]:
             pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
@@ -3068,7 +3068,7 @@ class Frame(ContainerOperand):
 
         if index_depth == 1:
             index_values = index_arrays[0] # type: ignore
-            index_default_constructor = partial(Index, name=index_name)
+            index_default_constructor = partial(Index, name=index_name) # pyright: ignore
         else: # > 1
             index_values = index_arrays
 
@@ -3084,7 +3084,7 @@ class Frame(ContainerOperand):
                     )
 
         index, own_index = index_from_optional_constructors(
-                index_values,
+                index_values, # pyright: ignore
                 depth=index_depth,
                 default_constructor=index_default_constructor,
                 explicit_constructors=index_constructors, # cannot supply name
@@ -3197,7 +3197,7 @@ class Frame(ContainerOperand):
                             own_data=True,
                             )
                 elif issubclass(cls, IndexHierarchy):
-                    index_constructors: tp.List[tp.Type[TIndexAny]] = [
+                    index_constructors: tp.List[tp.Type[TIndexAny]] = [ # pyright: ignore
                             ContainerMap.get(cls_name) for cls_name in unpackb(
                                    obj[b'index_constructors'])]
                     blocks = unpackb(obj[b'blocks'])
@@ -3272,7 +3272,6 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # blocks assignment
 
-        # blocks_constructor: tp.Optional[tp.Callable[[tp.Tuple[int, int]], None]] = None
         blocks_constructor = _NA_BLOCKS_CONSTRCTOR
 
         if data.__class__ is TypeBlocks:
@@ -3314,17 +3313,17 @@ class Frame(ContainerOperand):
             raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
 
         # counts can be zero (not None) if _block was created but is empty
-        row_count, col_count = (self._blocks.shape
+        row_count, col_count = (self._blocks.shape # pyright: ignore
                 if blocks_constructor is _NA_BLOCKS_CONSTRCTOR else (None, None))
 
-        self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
         #-----------------------------------------------------------------------
         # columns assignment
 
         if own_columns:
             self._columns = columns # type: ignore
-            col_count = len(self._columns)
+            col_count = len(self._columns) # pyright: ignore
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
             self._columns = IndexAutoFactory.from_optional_constructor(
@@ -3343,7 +3342,7 @@ class Frame(ContainerOperand):
 
             col_count = len(self._columns)
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
-        if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
+        if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC: # pyright: ignore
             raise ErrorInitFrame(f'Supplied `columns_constructor` does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
 
         #-----------------------------------------------------------------------
@@ -3351,7 +3350,7 @@ class Frame(ContainerOperand):
 
         if own_index:
             self._index = index # type: ignore
-            row_count = len(self._index)
+            row_count = len(self._index) # pyright: ignore
         elif index_empty:
             row_count = 0 if row_count is None else row_count
             self._index = IndexAutoFactory.from_optional_constructor(
@@ -3366,7 +3365,7 @@ class Frame(ContainerOperand):
                     )
             row_count = len(self._index)
 
-        if not self._index.STATIC:
+        if not self._index.STATIC: # pyright: ignore
             raise ErrorInitFrame('non-static index cannot be assigned to Frame')
 
         #-----------------------------------------------------------------------
@@ -3381,14 +3380,14 @@ class Frame(ContainerOperand):
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
-        if self._blocks.shape[0] != row_count:
+        if self._blocks.shape[0] != row_count: # pyright: ignore
             # row count might be 0 for an empty DF
             raise ErrorInitFrame(
-                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})'
+                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})' # pyright: ignore
                 )
-        if self._blocks.shape[1] != col_count:
+        if self._blocks.shape[1] != col_count: # pyright: ignore
             raise ErrorInitFrame(
-                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
+                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})' # pyright: ignore
                 )
 
     #---------------------------------------------------------------------------
@@ -3992,12 +3991,12 @@ class Frame(ContainerOperand):
     # index manipulation
 
     def _reindex_other_like_iloc(self,
-            value: tp.Union[Series, 'Frame'],
+            value: tp.Union[Series, Frame],
             iloc_key: TILocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[Series, 'Frame']:
+            ) -> tp.Union[Series, Frame]:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
         # assert iloc_key.__class__ is tuple # must already be normalized
@@ -4036,7 +4035,7 @@ class Frame(ContainerOperand):
                 # this will use the default fillna type, which may or may not be what is wanted
                 v = value.reindex( # type: ignore
                         index=target_row_index,
-                        columns=target_column_index,
+                        columns=target_column_index, # pyright: ignore
                         fill_value=fill_value)
         if v is None:
             raise RuntimeError(f'cannot assign {value.__class__.__name__} with key configuration: {nm_row}, {nm_column}')
@@ -4232,19 +4231,19 @@ class Frame(ContainerOperand):
             index_constructor:
             columns_constructor:
         '''
-        index = (self._index.level_add(
+        index_final = (self._index.level_add(
                 index, index_constructor=index_constructor)
                 if index is not None else self._index
                 )
-        columns = (self._columns.level_add(
+        columns_final = (self._columns.level_add(
                 columns, index_constructor=columns_constructor)
                 if columns is not None else self._columns
                 )
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
-                index=index,
-                columns=columns,
+                index=index_final,
+                columns=columns_final,
                 name=self._name,
                 own_data=True,
                 own_index=True,
@@ -4299,6 +4298,8 @@ class Frame(ContainerOperand):
             target_default_ctr = self._COLUMNS_CONSTRUCTOR
 
         name_prior: tp.Tuple[NameType, ...]
+        ih_index_constructors: tp.List[TIndexCtorSpecifier]
+
         if index_target.depth == 1:
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = index_target.names if index_target.name is None else (index_target.name,)
@@ -4323,9 +4324,9 @@ class Frame(ContainerOperand):
         if index_constructors is None:
             ih_index_constructors.extend(target_default_ctr for _ in name_posterior)
         elif callable(index_constructors): # one constructor
-            ih_index_constructors.extend(index_constructors for _ in name_posterior)
+            ih_index_constructors.extend(index_constructors for _ in name_posterior) # pyright: ignore
         else: # assume properly sized iterable
-            ih_index_constructors.extend(index_constructors) # type: ignore
+            ih_index_constructors.extend(index_constructors)
             if len(ih_index_constructors) != len(ih_name):
                 raise RuntimeError('Incorrect number of values in index_constructors.')
 
