@@ -372,7 +372,7 @@ def pandas_to_numpy(
         is_extension_dtype = False
     elif hasattr(dtype_src, 'numpy_dtype'):
         # only int, uint dtypes have this attribute
-        dtype = dtype_src.numpy_dtype
+        dtype = dtype_src.numpy_dtype # pyright: ignore
         is_extension_dtype = True
     else:
         dtype = None # resolve below
@@ -384,7 +384,7 @@ def pandas_to_numpy(
         isna = container.isna() # returns a NumPy Boolean type sometimes
         if not isinstance(isna, np.ndarray):
             isna = isna.values
-        hasna = isna.any() # will work for ndim 1 and 2
+        hasna = isna.any() # pyright: ignore # will work for ndim 1 and 2
 
         from pandas import BooleanDtype  # pylint: disable=E0611
         from pandas import StringDtype  # pylint: disable=E0611
@@ -418,9 +418,9 @@ def pandas_to_numpy(
 
     else: # not an extension dtype
         if own_data:
-            array = container.values
+            array = container.values # pyright: ignore
         else:
-            array = container.values.copy()
+            array = container.values.copy() # pyright: ignore
 
     array.flags.writeable = False
     return array
@@ -559,7 +559,7 @@ def index_from_optional_constructors(
         # default_constructor is an IH type
         index = default_constructor( # type: ignore
                 value,
-                index_constructors=explicit_constructors
+                index_constructors=explicit_constructors # pyright: ignore
                 )
         own_index = True
     return index, own_index
@@ -649,7 +649,6 @@ def matmul(lhs: NDArrayAny, rhs: Frame) -> tp.Union[Series, Frame]: ...
 @tp.overload
 def matmul(lhs: Frame, rhs: Frame) -> Frame: ...
 
-
 def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
     '''
     Implementation of matrix multiplication for Series and Frame
@@ -697,9 +696,9 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
         columns = None
 
         if lhs_type == Series and (rhs_type == Series or rhs_type == Frame): # type: ignore
-            aligned = lhs._index.union(rhs._index)
+            aligned = lhs._index.union(rhs._index) # pyright: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index): # pyright: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication') #pragma: no cover
 
         if lhs_type == Series: # type: ignore
@@ -707,7 +706,7 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
                 if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
-                left = lhs.values
+                left = lhs.values # pyright: ignore
                 right = rhs # already np
                 if ndim == 1:
                     index = None # force auto increment integer
@@ -715,40 +714,40 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
                     constructor = lhs.__class__
             elif rhs_type == Series: # type: ignore
                 ndim = 0
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(aligned).values
+                left = lhs.reindex(aligned).values # pyright: ignore
+                right = rhs.reindex(aligned).values # pyright: ignore
             else: # rhs is Frame
                 ndim = 1
-                left = lhs.reindex(aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = rhs._columns
+                left = lhs.reindex(aligned).values # pyright: ignore
+                right = rhs.reindex(index=aligned).values # pyright: ignore
+                index = rhs._columns # pyright: ignore
                 constructor = lhs.__class__
         else: # lhs is 1D array
             left = lhs
-            right = rhs.values
+            right = rhs.values # pyright: ignore
             if rhs_type == Series: # type: ignore
                 ndim = 0
             else: # rhs is Frame, len(lhs) == len(rhs.index)
                 ndim = 1
-                index = rhs._columns
+                index = rhs._columns # pyright: ignore
                 constructor = Series # cannot get from argument
 
     elif lhs.ndim == 2: # Frame, 2D array
 
         if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame): # type: ignore
-            aligned = lhs._columns.union(rhs._index)
+            aligned = lhs._columns.union(rhs._index) # pyright: ignore
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
+            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index): # pyright: ignore
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
         if lhs_type == Frame: # type: ignore
             if rhs_type == np.ndarray:
-                if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
+                if lhs.shape[1] != rhs.shape[0]: # pyright: ignore # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = rhs.ndim
-                left = lhs.values
+                left = lhs.values # pyright: ignore
                 right = rhs # already np
-                index = lhs._index
+                index = lhs._index # pyright: ignore
 
                 if ndim == 1:
                     constructor = Series
@@ -758,33 +757,33 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
             elif rhs_type == Series: # type: ignore
                 # a.columns must align with b.index
                 ndim = 1
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(aligned).values
-                index = lhs._index
+                left = lhs.reindex(columns=aligned).values # pyright: ignore
+                right = rhs.reindex(aligned).values # pyright: ignore
+                index = lhs._index # pyright: ignore
                 constructor = rhs.__class__
             else: # rhs is Frame
                 # a.columns must align with b.index
                 ndim = 2
-                left = lhs.reindex(columns=aligned).values
-                right = rhs.reindex(index=aligned).values
-                index = lhs._index
-                columns = rhs._columns
+                left = lhs.reindex(columns=aligned).values # pyright: ignore
+                right = rhs.reindex(index=aligned).values # pyright: ignore
+                index = lhs._index # pyright: ignore
+                columns = rhs._columns # pyright: ignore
                 constructor = lhs.__class__ # give left precedence
         else: # lhs is 2D array
             left = lhs
-            right = rhs.values
+            right = rhs.values # pyright: ignore
             if rhs_type == Series: # type: ignore
                 ndim = 1
                 index = None # returns unindexed Series
                 own_index = False
                 constructor = rhs.__class__
             else: # rhs is Frame, lhs.shape[1] == rhs.shape[0]
-                if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
+                if lhs.shape[1] != rhs.shape[0]: # pyright: ignore # works for 1D and 2D
                     raise RuntimeError('shapes not alignable for matrix multiplication')
                 ndim = 2
                 index = None
                 own_index = False
-                columns = rhs._columns
+                columns = rhs._columns # pyright: ignore
                 constructor = rhs.__class__
     else:
         raise NotImplementedError(f'no handling for {lhs}')
@@ -800,13 +799,13 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
     data.flags.writeable = False
     if ndim == 1:
         return constructor(data,
-                index=index,
-                own_index=own_index,
+                index=index, # pyright: ignore
+                own_index=own_index, # pyright: ignore
                 )
     return constructor(data,
-            index=index,
-            own_index=own_index,
-            columns=columns
+            index=index, # pyright: ignore
+            own_index=own_index, # pyright: ignore
+            columns=columns # pyright: ignore
             )
 
 
@@ -996,7 +995,10 @@ def bloc_key_normalize(
     return bloc_key
 
 
-def key_to_ascending_key(key: TLocSelector, size: int) -> TLocSelector:
+def key_to_ascending_key(
+        key: TLocSelector | Frame,
+        size: int,
+        ) -> TLocSelector | Frame:
     '''
     Normalize all types of keys into an ascending formation.
 
@@ -1477,7 +1479,7 @@ def index_many_to_one(
                 many_to_one_type=many_to_one_type,
                 assume_unique=True)
 
-    indices_iter: tp.Iterable['IndexBase' | IMTOAdapter]
+    indices_iter: tp.Iterable[IndexBase | IMTOAdapter]
     if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2: # type: ignore
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
@@ -1613,8 +1615,8 @@ def index_many_to_one(
 
         return constructor(arrays_per_depth, #type: ignore
                 name=name,
-                index_constructors=index_constructors,
-                depth_reference=depth_first,
+                index_constructors=index_constructors, # pyright: ignore
+                depth_reference=depth_first, # pyright: ignore
                 )
 
     # returns an immutable array
@@ -1761,7 +1763,7 @@ def sort_index_for_order(
                 ascending=ascending,
                 values_for_lex=values_for_lex,
                 )
-        order = np.lexsort(values_for_lex)
+        order = np.lexsort(values_for_lex) # pyright: ignore
     else:
         # depth is 1
         asc_is_element = isinstance(ascending, BOOL_TYPES)
