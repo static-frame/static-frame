@@ -200,8 +200,8 @@ class Yarn(ContainerBase, StoreClientMixin):
                     explicit_constructor=index_constructor
                     )
 
-        if len(self._index) != len(self._hierarchy):
-            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).')
+        if len(self._index) != len(self._hierarchy): # pyright: ignore
+            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).') # pyright: ignore
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -746,7 +746,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             index_init = index #type: ignore
 
         return self.__class__(self._series, # no change to Buses
-                index=index_init,
+                index=index_init, # pyright: ignore
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
                 own_index=own_index,
