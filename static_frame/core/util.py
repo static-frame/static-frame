@@ -250,7 +250,7 @@ KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
 TILocSelectorOne = tp.Union[int, np.integer]
 TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
 TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
-TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, ...]]
+TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
 
 # NOTE: slice is not hashable
 # NOTE: this is TLocSelectorOne
@@ -295,7 +295,7 @@ TLocSelector = tp.Union[
         ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, ...]]
+TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, TLocSelector]]
 
 KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
 NameType = TLabel # include None

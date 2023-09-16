@@ -5141,8 +5141,9 @@ class Frame(ContainerOperand):
         Give a compound key, return a new Frame. This method simply handles the variability of single or compound selectors.
         '''
         if isinstance(key, tuple):
-            return self._extract(*key)
-        return self._extract(row_key=key)
+            r, c = key
+            return self._extract(r, c)
+        return self._extract(key)
 
     def _compound_loc_to_iloc(self,
             key: TLocSelectorCompound) -> TILocSelectorCompound:

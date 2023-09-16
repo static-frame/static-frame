@@ -844,7 +844,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         for label, axis_values in self._axis_array_items(axis):
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -1005,10 +1005,10 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
 
     @tp.overload
-    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: None, column_key: TILocSelectorOne) -> Series: ...
 
     @tp.overload
-    def _extract(self, column_key: TILocSelectorMany) -> Frame: ...
+    def _extract(self, row_key: None, column_key: TILocSelectorMany) -> Frame: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
@@ -1165,8 +1165,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         if self._assign_axis:
             self._update_axis_labels()
         if isinstance(key, tuple):
-            return self._extract(*key)
-        return self._extract(row_key=key)
+            r, c = key
+            return self._extract(r, c)
+        return self._extract(key)
 
     def _compound_loc_to_iloc(self,
             key: TLocSelectorCompound) -> tp.Tuple[TILocSelector, TILocSelector]:
@@ -1174,7 +1175,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
         if isinstance(key, tuple):
-            loc_row_key, loc_column_key = key
+            loc_row_key, loc_column_key = key # pyright: ignore
             iloc_column_key = self._columns._loc_to_iloc(loc_column_key)
         else:
             loc_row_key = key
