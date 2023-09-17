@@ -20,6 +20,7 @@ from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
@@ -323,8 +324,8 @@ def pivot_items_to_frame(*,
         frame_cls: tp.Type['Frame'],
         name: NameType,
         dtype: DtypeAny | None,
-        index_constructor: TIndexCtorSpecifier,
-        columns_constructor: TIndexCtorSpecifier,
+        index_constructor: TIndexCtor,
+        columns_constructor: TIndexCtor,
         kind: TSortKinds,
         ) -> 'Frame':
     '''
@@ -486,7 +487,7 @@ def pivot_core(
                     frame_cls=frame.__class__,
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
-                else columns_constructor(f.columns))
+                else columns_constructor(f.columns)) # pyright: ignore
         return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
@@ -556,7 +557,7 @@ def pivot_core(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=columns_constructor(sub_columns_collected),
+            columns=columns_constructor(sub_columns_collected), # pyright: ignore
             own_data=True,
             own_index=True,
             own_columns=True,
@@ -602,7 +603,7 @@ def pivot_outer_index(
                         name=name,
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                ).flat()
+                ).flat() # pyright: ignore
     return index_inner
 
 
