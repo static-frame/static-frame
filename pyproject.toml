@@ -14,7 +14,6 @@ exclude = [
     "static_frame/test/property",
     "static_frame/profile",
 
-    "static_frame/core/batch.py",
     "static_frame/core/protocol_dfi.py",
     "static_frame/core/node*",
     "static_frame/core/store*",

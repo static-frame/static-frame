@@ -704,7 +704,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: TLocSelectorCompound) -> 'Batch':
+    def _drop_iloc(self, key: TILocSelectorCompound) -> 'Batch':
         return self._apply_attr(
                 attr='_drop_iloc',
                 key=key
