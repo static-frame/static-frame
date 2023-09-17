@@ -1251,10 +1251,10 @@ class TypeBlocks(ContainerOperand):
 
     def group_extract(self,
             axis: int,
-            key: int,
+            key: TILocSelector,
             extract: int,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            ) -> tp.Iterator[tp.Tuple[NDArrayAny, NDArrayAny | slice, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny | slice, NDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
 

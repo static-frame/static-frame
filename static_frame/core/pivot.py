@@ -20,6 +20,7 @@ from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
@@ -102,23 +103,23 @@ def pivot_records_dtypes(
 def pivot_records_items_to_frame(
         *,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
         func_no: bool,
         kind: TSortKinds,
-        columns_constructor: TIndexCtorSpecifier,
+        columns_constructor: TIndexCtor,
         columns: tp.Sequence[TLabel],
-        index_constructor: TIndexCtorSpecifier,
+        index_constructor: TIndexCtor,
         dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
         frame_cls: tp.Type['Frame'],
         ) -> 'Frame':
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map)) # type: ignore
 
     index_labels: tp.List[TLabel] = []
@@ -164,7 +165,7 @@ def pivot_records_items_to_frame(
 
 def pivot_records_items_to_blocks(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
         func_single: tp.Optional[UFunc],
@@ -181,7 +182,7 @@ def pivot_records_items_to_blocks(*,
     '''
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     arrays: tp.List[tp.Union[tp.List[tp.Any], NDArrayAny]] = []
     for dtype in dtypes:
         if dtype is None:
@@ -244,7 +245,7 @@ def pivot_records_items_to_blocks(*,
 
 def pivot_items_to_block(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
         func_single: tp.Optional[UFunc],
@@ -258,7 +259,8 @@ def pivot_items_to_block(*,
     Specialized generator of pairs for when we have only one data_field and one function.
     '''
     from static_frame.core.series import Series
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
+            else group_fields_iloc[0])
 
     if func_single and dtype is not None:
         array = np.full(len(index_outer),
@@ -276,14 +278,15 @@ def pivot_items_to_block(*,
         return array
 
     if func_single and dtype is None:
-        def gen() -> tp.Iterator[tp.Tuple[int, tp.Any]]:
+        def gen() -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
             for label, _, values in blocks.group_extract(
                     axis=0,
                     key=group_key,
                     extract=data_field_iloc,
                     kind=kind,
                     ):
-                yield index_outer._loc_to_iloc(label), func_single(values)
+                yield index_outer._loc_to_iloc(label), func_single(values) # pyright: ignore
+
         post = Series.from_items(gen())
         if len(post) == len(index_outer):
             array = np.empty(len(index_outer), dtype=post.dtype)
@@ -298,7 +301,7 @@ def pivot_items_to_block(*,
 
     # func_no scenario as no mapping here
     if group_depth == 1:
-        labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)]
+        labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)] # type: ignore
     else:
         # NOTE: might replace _extract_array_column with an iterator of tuples
         labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]
@@ -317,7 +320,7 @@ def pivot_items_to_block(*,
 
 def pivot_items_to_frame(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
         func_single: tp.Optional[AnyCallable],
@@ -334,7 +337,8 @@ def pivot_items_to_frame(*,
     '''
 
     from static_frame.core.series import Series
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
+            else group_fields_iloc[0])
 
     if func_single:
         labels: tp.List[TLabel] = []
@@ -345,7 +349,7 @@ def pivot_items_to_frame(*,
                 extract=data_field_iloc,
                 kind=kind,
                 ):
-            labels.append(label) # type: ignore
+            labels.append(label)
             values.append(func_single(v))
 
         if dtype is None:
@@ -362,7 +366,7 @@ def pivot_items_to_frame(*,
                 )
     # func_no scenario
     if group_depth == 1:
-        index = index_constructor(blocks._extract_array_column(group_key))
+        index = index_constructor(blocks._extract_array_column(group_key)) # type: ignore[arg-type]
     else:
         index = index_constructor(tuple(label) for label in blocks._extract_array(column_key=group_key))
 
