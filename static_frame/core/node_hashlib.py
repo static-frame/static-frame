@@ -72,10 +72,10 @@ class InterfaceHashlib:
     def to_bytes(self) -> bytes:
         '''Return the byte signature for this container, suitable for passing to a cryptographic hash function.
         '''
-        return self._to_bytes( # type: ignore  # (need Protocol with __call__)
-                include_name=self._include_name,
-                include_class=self._include_class,
-                encoding=self._encoding,
+        return self._to_bytes(
+                self._include_name,
+                self._include_class,
+                self._encoding,
                 )
 
     def md5(self) -> '_Hash':

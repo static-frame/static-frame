@@ -58,7 +58,6 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'Bus',
         'Batch',
         'Yarn',
-        # 'Quilt',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
@@ -69,11 +68,11 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         covariant=True,
         )
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
-        bound=tp.Callable[[TLocSelector], TVContainer_co]
+        bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
 
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
-        bound=tp.Callable[[TILocSelector], TVContainer_co]
+        bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
 
 
@@ -310,7 +309,7 @@ class InterfaceSelectDuo(Interface[TVContainer_co]):
 
     @property
     def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
-        return InterGetItemLocReduces(self._func_loc)
+        return InterGetItemLocReduces(self._func_loc) # pyright: ignore
 
 class InterfaceSelectTrio(Interface[TVContainer_co]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors. It is assumed that functionality that uses this interface returns containers that do not reduce their dimensionality.
@@ -347,7 +346,7 @@ class InterfaceSelectTrio(Interface[TVContainer_co]):
     def loc(self) -> InterGetItemLoc[TVContainer_co]:
         '''Label-based selection.
         '''
-        return InterGetItemLoc(self._func_loc)
+        return InterGetItemLoc(self._func_loc) # pyright: ignore
 
 
 class InterfaceSelectQuartet(Interface[TVContainer_co]):
@@ -393,7 +392,7 @@ class InterfaceSelectQuartet(Interface[TVContainer_co]):
     def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
         '''Label-based assignment.
         '''
-        return InterGetItemLocReduces(self._func_loc)
+        return InterGetItemLocReduces(self._func_loc) # pyright: ignore
 
 
 #-------------------------------------------------------------------------------
@@ -621,7 +620,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
         flag_attrs: tp.Tuple[str, ...] = ('owndata', 'f_contiguous', 'c_contiguous')
         columns: IndexBase = self._container.columns # type: ignore
 
-        def gen() -> tp.Tuple[DtypeAny, tp.Tuple[int, ...], int]:
+        def gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
             iloc_start = 0
 
             for b in self._container._blocks._blocks: # type: ignore

@@ -83,7 +83,7 @@ class ArrowCType:
             return f'{prefix}{res}'
 
         try:
-            return cls.KIND_ITEMSIZE_TO_FORMAT[(kind, dtype.itemsize)]
+            return cls.KIND_ITEMSIZE_TO_FORMAT[(kind, dtype.itemsize)] # pyright: ignore
         except KeyError as e:
             raise NotImplementedError(f'no support for dtype: {dtype}') from e
 

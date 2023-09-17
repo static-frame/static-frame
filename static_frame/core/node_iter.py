@@ -118,7 +118,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
-        arg_gen: PoolArgGen
+        # arg_gen: PoolArgGen
 
         if self._yield_type is IterNodeType.VALUES:
             def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
@@ -126,7 +126,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                     func_keys.append(k)
                     yield v
         else:
-            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]: #pylint: disable=E0102
+            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield k, v
@@ -711,7 +711,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         func_values = partial(self._func_values, **kwargs)
         func_items = partial(self._func_items, **kwargs)
 
-        axis = kwargs.get('axis', 0)
+        axis: int = kwargs.get('axis', 0) # type: ignore
 
         apply_constructor: tp.Callable[..., tp.Union['Frame', 'Series']]
 

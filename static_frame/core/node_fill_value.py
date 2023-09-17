@@ -200,7 +200,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> FrameOrSeries:
         if isinstance(key, tuple):
-            row_key, column_key = key
+            row_key, column_key = key # pyright: ignore
         else:
             row_key = key
             column_key = NULL_SLICE
