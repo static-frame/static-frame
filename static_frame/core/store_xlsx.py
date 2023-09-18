@@ -34,6 +34,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
+    from openpyxl import Workbook as WorkbookOpenpyxl
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
@@ -48,26 +49,26 @@ MAX_XLSX_COLUMNS = 16384 #1024 on libre office
 class FormatDefaults:
 
     @staticmethod
-    def label(f: 'Format') -> 'Format':
+    def label(f: Format) -> Format:
         f.set_bold()
         return f
 
     @staticmethod
-    def date(f: 'Format') -> 'Format':
+    def date(f: Format) -> Format:
         f.set_num_format('yyyy-mm-dd')
         return f
 
     @staticmethod
-    def datetime(f: 'Format') -> 'Format':
+    def datetime(f: Format) -> Format:
         f.set_num_format('yyyy-mm-ddThh:mm:ss.000') # ISO 8601 requires the T
         return f
 
     @staticmethod
     def get_format_or_default(
-            workbook: 'Workbook', # do not want module level import o
+            workbook: Workbook,
             # format_specifier: tp.Optional[tp.Dict[str, tp.Any]],
-            format_funcs: tp.Iterable[tp.Callable[['Format'], None]]
-            ) -> 'Format':
+            format_funcs: tp.Iterable[tp.Callable[[Format], Format]]
+            ) -> Format:
         # if format_specifier:
         #     return workbook.add_format(format_specifier)
         f = workbook.add_format()
@@ -108,7 +109,7 @@ class StoreXLSX(Store):
     @classmethod
     def _get_writer(cls,
             dtype: DtypeAny,
-            ws: 'Worksheet'
+            ws: Worksheet
             ) -> AnyCallable: # find better type
         '''
         Return a writer function of the passed in Worksheet.
@@ -124,9 +125,9 @@ class StoreXLSX(Store):
                 row: int,
                 col: int,
                 value: tp.Any,
-                format_date: xlsxwriter.format.Format,
-                format_datetime: xlsxwriter.format.Format,
-                format_cell: tp.Optional[xlsxwriter.format.Format] = None,
+                format_date: Format,
+                format_datetime: Format,
+                format_cell: tp.Optional[Format] = None,
                 ) -> tp.Any:
 
             # cannot yet write complex types directly, so covert to string
@@ -366,7 +367,7 @@ class StoreXLSX(Store):
         wb.close()
 
     @staticmethod
-    def _load_workbook(fp: str) -> 'Workbook':
+    def _load_workbook(fp: str) -> WorkbookOpenpyxl:
         import openpyxl
          # NOTE: read_only=True provides best performance, but may lead to empty cells with formatting being loaded
         return openpyxl.load_workbook(
@@ -404,11 +405,11 @@ class StoreXLSX(Store):
             consolidate_blocks = c.consolidate_blocks
 
             if label is STORE_LABEL_DEFAULT:
-                ws = wb[wb.sheetnames[0]]
+                ws = wb[wb.sheetnames[0]] # pyright: ignore
                 name = None # do not set to default sheet name
             else:
                 label_encoded = config_map.default.label_encode(label)
-                ws = wb[label_encoded]
+                ws = wb[label_encoded] # pyright: ignore
                 name = label # set name to the un-encoded hashable
 
             if ws.max_column <= 1 or ws.max_row <= 1:

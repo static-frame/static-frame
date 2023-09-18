@@ -13,8 +13,6 @@ exclude = [
     "static_frame/test/unit",
     "static_frame/test/integration",
 
-    "static_frame/core/store_xlsx.py",
-    "static_frame/core/store_zip.py",
     "static_frame/core/interface.py",
 ]
 

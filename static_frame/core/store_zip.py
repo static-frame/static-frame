@@ -27,7 +27,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import get_concurrent_executor
 
 FrameExporter = AnyCallable # Protocol not supported yet...
-FrameConstructor = tp.Callable[[tp.Any], Frame]
+FrameConstructor = tp.Callable[..., Frame]
 LabelAndBytes = tp.Tuple[TLabel, tp.Union[str, bytes]]
 IteratorItemsLabelOptionalFrame = tp.Iterator[tp.Tuple[TLabel, tp.Optional[Frame]]]
 
@@ -312,7 +312,7 @@ class _StoreZipDelimited(_StoreZip):
             constructor: FrameConstructor,
             ) -> Frame:
 
-        return constructor( # type: ignore
+        return constructor(
             StringIO(src.decode()),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
@@ -456,7 +456,7 @@ class StoreZipParquet(_StoreZip):
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> Frame:
-        return constructor( # type: ignore
+        return constructor(
             BytesIO(src),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
