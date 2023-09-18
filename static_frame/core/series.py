@@ -146,9 +146,8 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 def _NA_VALUES_CONSTRCTOR(count: int) -> None: ...
 
-
-# class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
-class Series(ContainerOperand):
+class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
+# class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
     '''
     __slots__ = (
@@ -1940,19 +1939,6 @@ class Series(ContainerOperand):
         '''
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
-
-        # try:
-        #     values = self.values[iloc_key]
-        # except IndexError as e:
-        #     raise KeyError(iloc_key) from e
-
-        # if isinstance(iloc_key, INT_TYPES): # if we have a single element
-        #     return values
-
-        # return self.__class__(values,
-        #         index=self._index.iloc[iloc_key],
-        #         own_index=True,
-        #         name=self._name)
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...

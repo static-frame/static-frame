@@ -1,3 +1,4 @@
+import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
@@ -41,7 +42,7 @@ def test_frame_getitem_a() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.Frame.from_records(records)
-    s1: sf.Series = f1[2]
+    s1: sf.Series[sf.Index[np.int64], np.str_] = f1[2]
     f2: sf.Frame = f1[[0, 2]]
     f3: sf.Frame = f1[f1.columns.values == 2]
     f4: sf.Frame = f1[1:]
@@ -80,7 +81,7 @@ def test_frame_getitem_d() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.Frame.from_records(records, columns=('a', 'b', 'c', 'd'))
-    s1: sf.Series = f1['c']
+    s1: sf.Series[sf.Index[np.int64], np.str_] = f1['c']
     f2: sf.Frame = f1['c':]
     f3: sf.Frame = f1[['b', 'd']]
 
@@ -92,13 +93,13 @@ def test_frame_iloc_a() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.Frame.from_records(records)
-    s1: sf.Series = f1.iloc[2]
-    s2: sf.Series = f1.iloc[:, 1]
-    s3: sf.Series = f1.iloc[0, :]
-    s4: sf.Series = f1.iloc[[0, 1], 1]
-    s5: sf.Series = f1.iloc[0, [1, 2]]
-    s6: sf.Series = f1.iloc[1:, 1]
-    s7: sf.Series = f1.iloc[0, 1:]
+    s1: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[2]
+    s2: sf.Series[sf.Index[np.int64], np.int64] = f1.iloc[:, 1]
+    s3: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[0, :]
+    s4: sf.Series[sf.Index[np.int64], np.int64] = f1.iloc[[0, 1], 1]
+    s5: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[0, [1, 2]]
+    s6: sf.Series[sf.Index[np.int64], np.int64] = f1.iloc[1:, 1]
+    s7: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[0, 1:]
 
     f2: sf.Frame = f1.iloc[[0,2], [0, 1]]
     f3: sf.Frame = f1.iloc[0:1, 1:]
@@ -113,11 +114,11 @@ def test_frame_loc_a() -> None:
             (54, 95, 'c', False),
             )
     f1 = sf.Frame.from_records(records)
-    s1: sf.Series = f1.loc[2]
-    s2: sf.Series = f1.loc[:, 1]
-    s3: sf.Series = f1.loc[0, :]
-    s4: sf.Series = f1.loc[[0, 1], 1]
-    s5: sf.Series = f1.loc[0, [1, 2]]
+    s1: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[2]
+    s2: sf.Series[sf.Index[np.int64], np.int64] = f1.loc[:, 1]
+    s3: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[0, :]
+    s4: sf.Series[sf.Index[np.int64], np.int64] = f1.loc[[0, 1], 1]
+    s5: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[0, [1, 2]]
 
     f2: sf.Frame = f1.loc[[0, 2], [0, 1]]
     f3: sf.Frame = f1.loc[0:1, 1:]
