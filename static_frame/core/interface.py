@@ -1193,19 +1193,19 @@ class InterfaceSummary(Features):
                     )
 
             if name in cls.DICT_LIKE:
-                yield from InterfaceRecord.gen_from_dict_like(**kwargs)
+                yield from InterfaceRecord.gen_from_dict_like(**kwargs) # pyright: ignore
             elif name in cls.DISPLAY:
-                yield from InterfaceRecord.gen_from_display(**kwargs)
+                yield from InterfaceRecord.gen_from_display(**kwargs) # pyright: ignore
             elif name == 'astype':
-                yield from InterfaceRecord.gen_from_astype(**kwargs)
+                yield from InterfaceRecord.gen_from_astype(**kwargs) # pyright: ignore
             elif name == 'consolidate':
-                yield from InterfaceRecord.gen_from_consolidate(**kwargs)
+                yield from InterfaceRecord.gen_from_consolidate(**kwargs) # pyright: ignore
             elif callable(obj) and name.startswith('from_') or name == '__init__':
-                yield from InterfaceRecord.gen_from_constructor(**kwargs)
+                yield from InterfaceRecord.gen_from_constructor(**kwargs) # pyright: ignore
             elif callable(obj) and name.startswith('to_'):
-                yield from InterfaceRecord.gen_from_exporter(**kwargs)
+                yield from InterfaceRecord.gen_from_exporter(**kwargs) # pyright: ignore
             elif name.startswith('iter_'):
-                yield from InterfaceRecord.gen_from_iterator(**kwargs)
+                yield from InterfaceRecord.gen_from_iterator(**kwargs) # pyright: ignore
             elif isinstance(obj, (
                     InterGetItemLoc,
                     InterGetItemLocReduces,
@@ -1217,37 +1217,37 @@ class InterfaceSummary(Features):
                     InterGetItemILocCompoundReduces,
                     InterfaceGetItemBLoc,
                     )) or name == cls.GETITEM:
-                yield from InterfaceRecord.gen_from_getitem(**kwargs)
+                yield from InterfaceRecord.gen_from_getitem(**kwargs) # pyright: ignore
 
             elif obj.__class__ in INTERFACE_ATTRIBUTE_CLS:
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=obj.__class__,
-                        **kwargs,
+                        **kwargs, # pyright: ignore
                         )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
                 yield from InterfaceRecord.gen_from_selection(
                         cls_interface=obj.__class__,
-                        **kwargs,
+                        **kwargs, # pyright: ignore
                         )
             elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
                 yield from InterfaceRecord.gen_from_assignment(
                         cls_interface=obj.__class__,
-                        **kwargs,
+                        **kwargs, # pyright: ignore
                         )
             # as InterfaceFillValue, InterfaceRe are methods, must match on name, not INTERFACE_ATTRIBUTE_CLS
             elif name == 'via_fill_value':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceFillValue,
-                        **kwargs,
+                        **kwargs, # pyright: ignore
                         )
             elif name == 'via_re':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceRe,
-                        **kwargs,
+                        **kwargs, # pyright: ignore
                         )
 
             elif callable(obj): # general methods
-                yield from InterfaceRecord.gen_from_method(**kwargs)
+                yield from InterfaceRecord.gen_from_method(**kwargs) # pyright: ignore
             else:
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
