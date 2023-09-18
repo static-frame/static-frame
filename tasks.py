@@ -157,7 +157,7 @@ def lint(context):
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, pyright, lint, isort))
+@invoke.task(pre=(mypy, pyright, lint, isort)) # pyright: ignore
 def quality(context):
     '''Perform all quality checks.
     '''
@@ -171,13 +171,13 @@ def format(context):
 
 #-------------------------------------------------------------------------------
 
-@invoke.task(pre=(clean,))
+@invoke.task(pre=(clean,)) # pyright: ignore
 def build(context):
     '''Build packages
     '''
     context.run(f'{sys.executable} setup.py sdist bdist_wheel')
 
-@invoke.task(pre=(build,), post=(clean,))
+@invoke.task(pre=(build,), post=(clean,)) # pyright: ignore
 def release(context):
     context.run('twine upload dist/*')
 

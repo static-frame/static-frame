@@ -167,9 +167,9 @@ class Store:
 
             # add index names in front of column names
             if include_columns:
-                field_names.extend(columns_values)
+                field_names.extend(columns_values) # pyright: ignore
             else: # name fields with integers?
-                field_names.extend(range(frame._blocks.shape[1]))
+                field_names.extend(range(frame._blocks.shape[1])) # pyright: ignore
 
         field_names_post: tp.Sequence[str]
         if force_str_names:

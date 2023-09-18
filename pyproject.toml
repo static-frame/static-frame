@@ -7,13 +7,14 @@ force_single_line = true
 exclude = [
     "**/__pycache__",
     "doc/**",
-    "tasks.py",
+    "static_frame/profile",
     "static_frame/core/display_visidata.py",
+    "static_frame/test/property",
     "static_frame/test/unit",
     "static_frame/test/integration",
-    "static_frame/test/property",
-    "static_frame/profile",
-    "static_frame/core/store*",
+
+    "static_frame/core/store_xlsx.py",
+    "static_frame/core/store_zip.py",
     "static_frame/core/interface.py",
 ]
 
