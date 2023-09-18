@@ -34,7 +34,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
-    from openpyxl import Workbook as WorkbookOpenpyxl
+    from openpyxl import Workbook as WorkbookOpenpyxl # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
