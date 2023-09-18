@@ -99,12 +99,12 @@ class StoreHDF5(Store):
                 columns_labels = []
 
                 table = file.get_node(f'/{label_encoded}')
-                colnames = table.cols._v_colnames
+                colnames = table.cols._v_colnames # pyright: ignore
 
                 def blocks() -> tp.Iterator[NDArrayAny]:
                     for col_idx, colname in enumerate(colnames):
                         # can also do: table.read(field=colname)
-                        array = table.col(colname)
+                        array = table.col(colname) # pyright: ignore
                         if array.dtype.kind in DTYPE_STR_KINDS:
                             array = array.astype(str)
                         array.flags.writeable = False
