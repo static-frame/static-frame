@@ -20,7 +20,6 @@ from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
