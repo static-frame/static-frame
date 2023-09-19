@@ -27,10 +27,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
-TSeriesAny = Series[tp.Any, tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any]
+
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
-        'Series',
+        'Series[tp.Any, tp.Any]',
         covariant=True,
         )
 INTERFACE_FILL_VALUE = (
@@ -121,7 +122,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     def _extract_loc1d(self,
             key: TLocSelector = NULL_SLICE,
-            ) -> 'Series':
+            ) -> TSeriesAny:
         '''This is only called if container is 1D
         '''
         from static_frame.core.container_util import get_col_fill_value_factory
@@ -144,7 +145,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
     def _extract_loc2d(self,
             row_key: TLocSelector = NULL_SLICE,
             column_key: TLocSelector = NULL_SLICE,
-            ) -> tp.Union['Frame', 'Series']:
+            ) -> tp.Union['Frame', TSeriesAny]:
         '''
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''

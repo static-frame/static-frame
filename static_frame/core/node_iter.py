@@ -33,10 +33,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any]
 
-
-TSeriesAny = Series[tp.Any, tp.Any]
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series[tp.Any, tp.Any]', 'Bus', 'Quilt', 'Yarn')
 PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
@@ -560,7 +559,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             axis: int = 0,
-            ) -> 'Series':
+            ) -> TSeriesAny:
         from static_frame.core.series import Series
 
         # Creating a Series that will have the same index as source container
@@ -593,7 +592,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             axis: int = 0,
-            ) -> 'Series':
+            ) -> TSeriesAny:
         from static_frame.core.series import Series
 
         # apply_constructor should be implemented to take a pairs of label, value; only used for iter_window
@@ -629,7 +628,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             name_index: NameType = None,
-            ) -> 'Series':
+            ) -> TSeriesAny:
         from static_frame.core.index import Index
         from static_frame.core.series import Series
 
@@ -714,7 +713,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         axis: int = kwargs.get('axis', 0) # type: ignore
 
-        apply_constructor: tp.Callable[..., tp.Union['Frame', 'Series']]
+        apply_constructor: tp.Callable[..., tp.Union['Frame', TSeriesAny]]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
             apply_constructor = partial(self.to_series_from_values, axis=axis)
@@ -861,7 +860,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            other: tp.Union[NDArrayAny, Index[tp.Any], Series, tp.Iterable[tp.Any]],
+            other: tp.Union[NDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0

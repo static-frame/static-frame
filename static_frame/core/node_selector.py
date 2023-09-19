@@ -43,14 +43,15 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any]
 
 #-------------------------------------------------------------------------------
-FrameOrSeries = tp.Union['Frame', 'Series']
+FrameOrSeries = tp.Union['Frame', 'Series[tp.Any, tp.Any]']
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Index[tp.Any]',
-        'Series',
-        'SeriesHE',
+        'Series[tp.Any, tp.Any]',
+        'SeriesHE[tp.Any, tp.Any]',
         'Frame',
         'FrameGO',
         'FrameHE',
@@ -170,10 +171,10 @@ class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
         self._func = func
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> TSeriesAny: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
@@ -188,7 +189,7 @@ class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Series: ...
+    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> TVContainer_co: ...
@@ -230,16 +231,16 @@ class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorOne) -> Series: ...
+    def __getitem__(self, key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> TSeriesAny: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> TVContainer_co: ...
