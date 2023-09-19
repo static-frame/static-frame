@@ -65,6 +65,8 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TSeriesAny = Series[tp.Any, tp.Any]
+
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
@@ -175,7 +177,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_series(cls,
-            series: Series,
+            series: TSeriesAny,
             *,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
@@ -208,7 +210,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         # will extract .values, .index from Bus, which will correct load from Store as needed
         # NOTE: useful to use Series here as it handles aligned names, IndexAutoFactory, etc.
-        series = Series.from_concat(containers, index=index, name=name)
+        series: TSeriesAny = Series.from_concat(containers, index=index, name=name)
         return cls.from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
@@ -520,7 +522,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     def _derive_from_series(self,
-            series: Series,
+            series: TSeriesAny,
             *,
             own_data: bool = False,
             ) -> 'Bus':
@@ -1042,7 +1044,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> Series:
+    def mloc(self) -> TSeriesAny:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
@@ -1071,14 +1073,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return f
 
     @property
-    def shapes(self) -> Series:
+    def shapes(self) -> TSeriesAny:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
             :obj:`Series`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._values_mutable)
-        return Series(values, index=self._index, dtype=object, name='shape')
+        return Series(values, index=self._index, dtype=DTYPE_OBJECT, name='shape')
 
     @property
     def nbytes(self) -> int:
@@ -1091,7 +1093,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         '''
-        def gen() -> tp.Iterator[Series]:
+        def gen() -> tp.Iterator[TSeriesAny]:
 
             yield Series(self._loaded,
                     index=self._index,
@@ -1335,7 +1337,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']],
+            key: tp.Callable[[TSeriesAny], tp.Union[NDArrayAny, TSeriesAny]],
             ) -> 'Bus':
         '''
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
@@ -1394,7 +1396,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # exporter
 
-    def _to_series_state(self) -> Series:
+    def _to_series_state(self) -> TSeriesAny:
         # the mutable array will be copied in the Series construction
         return Series(self._values_mutable,
                 index=self._index,
@@ -1402,7 +1404,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 name=self._name,
                 )
 
-    def to_series(self) -> Series:
+    def to_series(self) -> TSeriesAny:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
         # values returns an immutable array and will fully realize from Store

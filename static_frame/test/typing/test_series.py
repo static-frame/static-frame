@@ -23,12 +23,12 @@ def test_series_getitem_a() -> None:
 
 
 def test_series_getitem_b() -> None:
-    s = sf.SeriesHE((10, 20, 30), index=('a', 'b', 'c'))
+    s = sf.SeriesHE[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
     v1: int = s['b']
-    v2: sf.SeriesHE = s['b':]
+    v2: sf.SeriesHE[sf.Index[np.str_], np.int64] = s['b':]
 
-    def proc(x: sf.SeriesHE) -> sf.SeriesHE:
+    def proc(x: sf.SeriesHE[sf.Index[np.str_], np.int64]) -> sf.SeriesHE[sf.Index[np.str_], np.int64]:
         return x.dropna()
 
     y = proc(s['b':]) # this checks that x.dropna() is on a Series
@@ -45,13 +45,13 @@ def test_series_iloc_a() -> None:
     assert len(v3) == 2
 
 def test_series_he_iloc_a() -> None:
-    s = sf.SeriesHE((10, 20, 30), index=('a', 'b', 'c'))
+    s = sf.SeriesHE[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
     v1: int = s.iloc[0]
-    v2: sf.SeriesHE = s.iloc[[0, 2]]
+    v2: sf.SeriesHE[sf.Index[np.str_], np.int64] = s.iloc[[0, 2]]
     assert len(v2) == 2
 
-    v3: sf.SeriesHE = s.iloc[1:]
+    v3: sf.SeriesHE[sf.Index[np.str_], np.int64] = s.iloc[1:]
     assert len(v3) == 2
 
 

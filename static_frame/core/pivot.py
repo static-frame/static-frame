@@ -83,7 +83,7 @@ def extrapolate_column_fields(
     return sub_columns
 
 def pivot_records_dtypes(
-        dtype_map: Series,
+        dtype_map: Series[tp.Any, tp.Any],
         data_fields: tp.Iterable[TLabel],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]]
@@ -286,7 +286,7 @@ def pivot_items_to_block(*,
                     ):
                 yield index_outer._loc_to_iloc(label), func_single(values) # pyright: ignore
 
-        post = Series.from_items(gen())
+        post = Series[tp.Any, tp.Any].from_items(gen())
         if len(post) == len(index_outer):
             array = np.empty(len(index_outer), dtype=post.dtype)
         else:

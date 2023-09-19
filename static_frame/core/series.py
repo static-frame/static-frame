@@ -139,7 +139,6 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     FrameType = tp.TypeVar('FrameType', bound='Frame') # pylint: disable=W0611 #pragma: no cover
 
-
 #-------------------------------------------------------------------------------
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
@@ -308,7 +307,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable[tp.Union['Series', 'Bus']],
+            containers: tp.Iterable[tp.Union[TSeriesAny, 'Bus']],
             *,
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -375,7 +374,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[TLabel, 'Series']],
+            items: tp.Iterable[tp.Tuple[TLabel, TSeriesAny]],
             *,
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None
@@ -707,21 +706,21 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[Series]:
+    def loc(self) -> InterGetItemLocReduces[TSeriesAny]:
         '''
         Interface for label-based selection.
         '''
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[Series]:
+    def iloc(self) -> InterGetItemILocReduces[TSeriesAny]:
         '''
         Interface for position-based selection.
         '''
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio[Series]:
+    def drop(self) -> InterfaceSelectTrio[TSeriesAny]:
         '''
         Interface for dropping elements from :obj:`static_frame.Series`. This alway returns a `Series`.
         '''
@@ -732,7 +731,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def mask(self) -> InterfaceSelectTrio['Series']:
+    def mask(self) -> InterfaceSelectTrio[TSeriesAny]:
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
@@ -743,7 +742,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def masked_array(self) -> InterfaceSelectTrio['Series']:
+    def masked_array(self) -> InterfaceSelectTrio[TSeriesAny]:
         '''
         Interface for extracting NumPy Masked Arrays.
         '''
@@ -768,18 +767,18 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def via_values(self) -> InterfaceValues['Series']:
+    def via_values(self) -> InterfaceValues[TSeriesAny]:
         '''
         Interface for applying functions to values (as arrays) in this container.
         '''
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString['Series']:
+    def via_str(self) -> InterfaceString[TSeriesAny]:
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -795,11 +794,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime['Series']:
+    def via_dt(self) -> InterfaceDatetime[TSeriesAny]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -814,7 +813,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     def via_fill_value(self,
             fill_value: object = np.nan,
-            ) -> InterfaceFillValue['Series']:
+            ) -> InterfaceFillValue[TSeriesAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -826,11 +825,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe['Series']:
+            ) -> InterfaceRe[TSeriesAny]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> Series:
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -847,7 +846,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeGroup['Series']:
+    def iter_group(self) -> IterNodeGroup[TSeriesAny]:
         '''
         Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
         '''
@@ -862,7 +861,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeGroup['Series']:
+    def iter_group_items(self) -> IterNodeGroup[TSeriesAny]:
         return IterNodeGroup(
                 container=self,
                 function_items=partial(self._axis_group_items,
@@ -875,7 +874,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_array(self) -> IterNodeGroup['Series']:
+    def iter_group_array(self) -> IterNodeGroup[TSeriesAny]:
         '''
         Iterator of :obj:`Series`, where each :obj:`Series` matches unique values.
         '''
@@ -892,7 +891,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_group_array_items(self) -> IterNodeGroup['Series']:
+    def iter_group_array_items(self) -> IterNodeGroup[TSeriesAny]:
         return IterNodeGroup(
                 container=self,
                 function_items=partial(self._axis_group_items,
@@ -907,7 +906,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels(self) -> IterNodeDepthLevel['Series']:
+    def iter_group_labels(self) -> IterNodeDepthLevel[TSeriesAny]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_labels_items,
@@ -917,7 +916,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_group_labels_items(self) -> IterNodeDepthLevel['Series']:
+    def iter_group_labels_items(self) -> IterNodeDepthLevel[TSeriesAny]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_labels_items,
@@ -928,7 +927,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels_array(self) -> IterNodeDepthLevel['Series']:
+    def iter_group_labels_array(self) -> IterNodeDepthLevel[TSeriesAny]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=partial(self._axis_group_labels_items,
@@ -940,7 +939,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_group_labels_array_items(self) -> IterNodeDepthLevel['Series']:
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevel[TSeriesAny]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=partial(self._axis_group_labels_items,
@@ -954,7 +953,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     @property
     def iter_group_other(self,
-            ) -> IterNodeGroupOther['Series']:
+            ) -> IterNodeGroupOther[TSeriesAny]:
         '''
         Iterator of :obj:`Series`, grouped by unique values found in the passed container.
         '''
@@ -968,7 +967,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @property
     def iter_group_other_items(self,
-            ) -> IterNodeGroupOther['Series']:
+            ) -> IterNodeGroupOther[TSeriesAny]:
         '''
         Iterator of pairs of label, :obj:`Series`, grouped by unique values found in the passed container.
         '''
@@ -982,7 +981,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther['Series']:
+    def iter_group_other_array(self) -> IterNodeGroupOther[TSeriesAny]:
         return IterNodeGroupOther(
                 container=self,
                 function_items=partial(self._axis_group_items,
@@ -994,7 +993,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther['Series']:
+    def iter_group_other_array_items(self) -> IterNodeGroupOther[TSeriesAny]:
         return IterNodeGroupOther(
                 container=self,
                 function_items=partial(self._axis_group_items,
@@ -1009,7 +1008,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArgMapable['Series']:
+    def iter_element(self) -> IterNodeNoArgMapable[TSeriesAny]:
         '''
         Iterator of elements.
         '''
@@ -1022,7 +1021,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArgMapable['Series']:
+    def iter_element_items(self) -> IterNodeNoArgMapable[TSeriesAny]:
         '''
         Iterator of label, element pairs.
         '''
@@ -1036,7 +1035,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_window(self) -> IterNodeWindow['Series']:
+    def iter_window(self) -> IterNodeWindow[TSeriesAny]:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -1048,7 +1047,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_window_items(self) -> IterNodeWindow['Series']:
+    def iter_window_items(self) -> IterNodeWindow[TSeriesAny]:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -1061,7 +1060,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
 
     @property
-    def iter_window_array(self) -> IterNodeWindow['Series']:
+    def iter_window_array(self) -> IterNodeWindow[TSeriesAny]:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -1073,7 +1072,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     @property
-    def iter_window_array_items(self) -> IterNodeWindow['Series']:
+    def iter_window_array_items(self) -> IterNodeWindow[TSeriesAny]:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -1087,10 +1086,10 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # index manipulation
 
     def _reindex_other_like_iloc(self,
-            value: Series,
+            value: TSeriesAny,
             iloc_key: TILocSelector,
             fill_value: tp.Any = np.nan,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''Given a value that is a Series, reindex that Series argument to the index components, drawn from this Series, that are specified by the iloc_key. This means that this returns a new Series that corresponds to the index of this Series based on the iloc selection.
         '''
         iloc_many: TILocSelectorMany
@@ -2026,7 +2025,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[TLabel, 'Series']]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''
         Args:
             group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
@@ -2047,7 +2046,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator['Series']:
+            ) -> tp.Iterator[TSeriesAny]:
         yield from (x for _, x in self._axis_group_items(
                 axis=axis,
                 as_array=as_array,
@@ -2071,7 +2070,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             depth_level: tp.Optional[TDepthLevel] = None,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
 
         if depth_level is None:
             depth_level = 0
@@ -2093,7 +2092,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             depth_level: TDepthLevel = 0,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[Series]:
+            ) -> tp.Iterator[TSeriesAny]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 as_array=as_array,
@@ -2114,7 +2113,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[NDArrayAny, 'Series']]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[NDArrayAny, TSeriesAny]]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -2147,7 +2146,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Union[NDArrayAny, 'Series']]:
+            ) -> tp.Iterator[tp.Union[NDArrayAny, TSeriesAny]]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 axis=axis,
@@ -2268,7 +2267,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']]] = None,
+            key: tp.Optional[tp.Callable[[TSeriesAny], tp.Union[NDArrayAny, TSeriesAny]]] = None,
             ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted values.
@@ -2321,8 +2320,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(class_name='Series')
     def clip(self, *,
-            lower: tp.Optional[tp.Union[float, 'Series']] = None,
-            upper: tp.Optional[tp.Union[float, 'Series']] = None,
+            lower: tp.Optional[tp.Union[float, TSeriesAny]] = None,
+            upper: tp.Optional[tp.Union[float, TSeriesAny]] = None,
             ) -> tp.Self:
         '''{}
 
@@ -2699,7 +2698,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Series')
-    def head(self, count: int = 5) -> Series:
+    def head(self, count: int = 5) -> TSeriesAny:
         '''{doc}
 
         Args:
@@ -2711,7 +2710,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Series')
-    def tail(self, count: int = 5) -> Series:
+    def tail(self, count: int = 5) -> TSeriesAny:
         '''{doc}s
 
         Args:
@@ -3040,7 +3039,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     def cov(self,
-            other: tp.Union['Series', NDArrayAny],
+            other: tp.Union[TSeriesAny, NDArrayAny],
             *,
             ddof: int = 1,
             ) -> float:
@@ -3056,7 +3055,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
 
     def corr(self,
-            other: tp.Union['Series', NDArrayAny],
+            other: tp.Union[TSeriesAny, NDArrayAny],
             ) -> float:
         '''
         Return the index-aligned correlation to the supplied :obj:`Series`.
@@ -3142,7 +3141,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     def _insert(self,
             key: int | np.integer[tp.Any], # iloc positions
-            container: 'Series',
+            container: TSeriesAny,
             *,
             after: bool,
             ) -> tp.Self:
@@ -3184,7 +3183,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     @doc_inject(selector='insert')
     def insert_before(self,
             key: TLabel,
-            container: 'Series',
+            container: TSeriesAny,
             ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position before the label specified by ``key``.
@@ -3204,7 +3203,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     @doc_inject(selector='insert')
     def insert_after(self,
             key: TLabel, # iloc positions
-            container: 'Series',
+            container: TSeriesAny,
             ) -> tp.Self:
         '''
         Create a new :obj:`Series` by inserting a :obj:`Series` at the position after the label specified by ``key``.
@@ -3480,7 +3479,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 name=name,
                 )
 
-    def to_series_he(self) -> SeriesHE:
+    def to_series_he(self) -> TSeriesHEAny:
         '''
         Return a :obj:`SeriesHE` from this :obj:`Series`.
         '''
@@ -3574,21 +3573,21 @@ class SeriesAssign(Assign):
         )
 
     def __init__(self,
-            container: Series,
+            container: TSeriesAny,
             key: TILocSelector,
             ) -> None:
         '''
         Args:
             key: an iloc-style key.
         '''
-        self.container: Series = container
+        self.container: TSeriesAny = container
         self.key: TILocSelector = key
 
     def __call__(self,
             value: tp.Any, # any possible assignment type
             *,
             fill_value: tp.Any = np.nan
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
@@ -3634,7 +3633,7 @@ class SeriesAssign(Assign):
             func: AnyCallable,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
 
@@ -3652,7 +3651,7 @@ class SeriesAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Provide a function to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -3671,7 +3670,7 @@ class SeriesAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -3687,7 +3686,7 @@ class SeriesAssign(Assign):
 
 #-------------------------------------------------------------------------------
 
-class SeriesHE(Series):
+class SeriesHE(Series[TVIndex, TVDtype]):
     '''
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     '''
@@ -3717,7 +3716,7 @@ class SeriesHE(Series):
             self._hash = hash(tuple(self.index.values))
         return self._hash
 
-    def to_series(self) -> Series:
+    def to_series(self) -> TSeriesAny:
         '''
         Return a ``Series`` from this ``SeriesHE``.
         '''
@@ -3731,15 +3730,20 @@ class SeriesHE(Series):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocReduces[SeriesHE]:
+    def loc(self) -> InterGetItemLocReduces[TSeriesHEAny]:
         '''
         Interface for label-based selection.
         '''
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[SeriesHE]:
+    def iloc(self) -> InterGetItemILocReduces[TSeriesHEAny]:
         '''
         Interface for position-based selection.
         '''
         return InterGetItemILocReduces(self._extract_iloc)
+
+
+TSeriesAny = Series[tp.Any, tp.Any]
+TSeriesHEAny = SeriesHE[tp.Any, tp.Any]
+

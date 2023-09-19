@@ -248,7 +248,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     _recache: bool
     _values: tp.Optional[NDArrayAny] # Used to cache the property `values`
     _map: HierarchicalLocMap
-    _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
+    _index_types: tp.Optional[Series[tp.Any, np.object_]] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy', PendingRow]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
@@ -1288,7 +1288,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._blocks.mloc
 
     @property
-    def dtypes(self) -> 'Series':
+    def dtypes(self) -> Series[tp.Any, np.object_]:
         '''
         Return a Series of dytpes for each index depth.
 
@@ -1569,7 +1569,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         yield from zip(map(index._extract_iloc_by_int, ilocs), widths)
 
     @property
-    def index_types(self) -> 'Series':
+    def index_types(self) -> Series[tp.Any, np.object_]:
         '''
         Return a Series of Index classes for each index depth.
 

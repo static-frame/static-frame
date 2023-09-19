@@ -812,7 +812,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         yield from zip_longest(self.values, (), fillvalue=1)
 
     @property
-    def index_types(self) -> 'Series':
+    def index_types(self) -> Series[tp.Any, np.object_]:
         '''
         Return a Series of Index classes for each index depth.
 
@@ -1427,7 +1427,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     #---------------------------------------------------------------------------
     # export
 
-    def to_series(self) -> 'Series':
+    def to_series(self) -> Series[Index[np.int64], TVDtype]:
         '''Return a Series with values from this Index's labels.
         '''
         # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate

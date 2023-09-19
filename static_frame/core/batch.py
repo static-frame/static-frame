@@ -12,6 +12,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
+from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_auto import RelabelInput
 from static_frame.core.node_dt import InterfaceBatchDatetime
@@ -68,6 +69,8 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+TSeriesAny = Series[tp.Any, tp.Any]
 
 #-------------------------------------------------------------------------------
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
@@ -460,7 +463,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def shapes(self) -> Series:
+    def shapes(self) -> Series[Index[tp.Any], np.object_]:
         '''A :obj:`Series` describing the shape of each iterated :obj:`Frame`.
 
         Returns:
@@ -480,7 +483,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         config = config or DisplayActive.get()
 
         items = ((label, f.__class__) for label, f in self._items)
-        series = Series.from_items(items, name=self._name)
+        series: TSeriesAny = Series.from_items(items, name=self._name)
 
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
@@ -979,8 +982,8 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     @doc_inject(class_name='Batch')
     def clip(self, *,
-            lower: tp.Optional[tp.Union[float, Series, Frame]] = None,
-            upper: tp.Optional[tp.Union[float, Series, Frame]] = None,
+            lower: tp.Optional[tp.Union[float, TSeriesAny, Frame]] = None,
+            upper: tp.Optional[tp.Union[float, TSeriesAny, Frame]] = None,
             axis: tp.Optional[int] = None
             ) -> 'Batch':
         '''{}
@@ -1723,7 +1726,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         dtype: TDtypeSpecifier = None,
         name: NameType = None,
         index_constructor: TIndexCtorSpecifier = None
-        ) -> Series:
+        ) -> TSeriesAny:
         '''
         Consolidate stored values into a new :obj:`Series` using the stored labels as the index.
         '''

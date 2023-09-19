@@ -72,6 +72,8 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TSeriesAny = Series[tp.Any, tp.Any]
+
 class Quilt(ContainerBase, StoreClientMixin):
     '''
     A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
@@ -735,7 +737,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
         if self._assign_axis:
@@ -744,8 +746,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     def get(self,
             key: TLabel,
-            default: tp.Optional[Series] = None,
-            ) -> tp.Optional[Series]:
+            default: tp.Optional[TSeriesAny] = None,
+            ) -> tp.Optional[TSeriesAny]:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -837,14 +839,14 @@ class Quilt(ContainerBase, StoreClientMixin):
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
 
-    def _axis_series(self, axis: int) -> tp.Iterator[Series]:
+    def _axis_series(self, axis: int) -> tp.Iterator[TSeriesAny]:
         '''Generator of Series across an axis
         '''
         index = self._index if axis == 0 else self._columns
         for label, axis_values in self._axis_array_items(axis):
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -999,22 +1001,22 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
 
     @tp.overload
-    def _extract(self, row_key: None, column_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: None, column_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, row_key: None, column_key: TILocSelectorMany) -> Frame: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
@@ -1199,13 +1201,13 @@ class Quilt(ContainerBase, StoreClientMixin):
 
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Series: ...
+    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, Series]:
+    def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, TSeriesAny]:
         '''Selector of columns by label.
 
         Args:

@@ -212,6 +212,7 @@ if tp.TYPE_CHECKING:
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
     TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TSeriesAny = Series[tp.Any, tp.Any]
 
 def _NA_BLOCKS_CONSTRCTOR(shape: tp.Tuple[int, int]) -> None: ...
 
@@ -241,7 +242,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_series(cls,
-            series: Series,
+            series: TSeriesAny,
             *,
             name: TLabel = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -439,7 +440,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_concat(cls: tp.Type[tp.Self],
-            frames: tp.Iterable[tp.Union['Frame', Series]],
+            frames: tp.Iterable[tp.Union['Frame', TSeriesAny]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -623,7 +624,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[TLabel, tp.Union['Frame', Series]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Union['Frame', TSeriesAny]]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -3476,7 +3477,7 @@ class Frame(ContainerOperand):
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItemBLoc['Series']:
+    def bloc(self) -> InterfaceGetItemBLoc[TSeriesAny]:
         return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
@@ -3991,12 +3992,12 @@ class Frame(ContainerOperand):
     # index manipulation
 
     def _reindex_other_like_iloc(self,
-            value: tp.Union[Series, Frame],
+            value: tp.Union[TSeriesAny, Frame],
             iloc_key: TILocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[Series, Frame]:
+            ) -> tp.Union[TSeriesAny, Frame]:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
         # assert iloc_key.__class__ is tuple # must already be normalized
@@ -4009,7 +4010,7 @@ class Frame(ContainerOperand):
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         # NOTE: NM (not many) means an integer or label
         nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
-        v: None | Series | Frame = None
+        v: None | TSeriesAny | Frame = None
         col_key_many: TILocSelectorMany
         row_key_many: TILocSelectorMany
 
@@ -4916,7 +4917,7 @@ class Frame(ContainerOperand):
     # common attributes from the numpy array
 
     @property
-    def dtypes(self) -> Series:
+    def dtypes(self) -> TSeriesAny:
         '''
         Return a Series of dytpes for each realizable column.
 
@@ -5007,22 +5008,22 @@ class Frame(ContainerOperand):
         return row_nm, column_nm
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def _extract(self, column_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, column_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, column_key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> Series: ...
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> Series: ...
+    def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TSeriesAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> tp.Self: ...
@@ -5116,16 +5117,16 @@ class Frame(ContainerOperand):
 
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorOne) -> Series: ...
+    def _extract_iloc(self, key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+    def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> TSeriesAny: ...
 
     @tp.overload
     def _extract_iloc(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> tp.Self: ...
@@ -5170,7 +5171,7 @@ class Frame(ContainerOperand):
                 self._columns._loc_to_iloc(key),
                 )
 
-    def _extract_bloc(self, key: TBlocKey) -> Series:
+    def _extract_bloc(self, key: TBlocKey) -> TSeriesAny:
         '''
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
@@ -5189,7 +5190,7 @@ class Frame(ContainerOperand):
         return None, iloc_column_key
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Series: ...
+    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
@@ -5201,10 +5202,10 @@ class Frame(ContainerOperand):
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series: ...
+    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
@@ -5346,7 +5347,7 @@ class Frame(ContainerOperand):
         '''
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
         for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
@@ -5355,8 +5356,8 @@ class Frame(ContainerOperand):
 
     def get(self,
             key: TLabel,
-            default: tp.Optional[Series] = None,
-            ) -> Series:
+            default: tp.Optional[TSeriesAny] = None,
+            ) -> TSeriesAny:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -5516,7 +5517,7 @@ class Frame(ContainerOperand):
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> 'Series':
+            ) -> TSeriesAny:
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         post = self._blocks.ufunc_axis_skipna(
@@ -5624,7 +5625,7 @@ class Frame(ContainerOperand):
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
 
-    def _axis_series(self, axis: int) -> tp.Iterator[Series]:
+    def _axis_series(self, axis: int) -> tp.Iterator[TSeriesAny]:
         '''Generator of Series across an axis
         '''
         # reference the indices and let the constructor reuse what is reusable
@@ -5640,7 +5641,7 @@ class Frame(ContainerOperand):
             # NOTE: axis_values here are already immutable
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -6135,7 +6136,7 @@ class Frame(ContainerOperand):
             ascending: BoolOrBools = True,
             axis: int = 1,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[tp.Union['Frame', Series]], tp.Union[NDArrayAny, 'Series', 'Frame']]] = None,
+            key: tp.Optional[tp.Callable[[tp.Union['Frame', TSeriesAny]], tp.Union[NDArrayAny, TSeriesAny, 'Frame']]] = None,
             ) -> tp.Self:
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
@@ -6150,7 +6151,7 @@ class Frame(ContainerOperand):
         '''
         values_for_sort: NDArrayAny | tp.List[NDArrayAny] | None = None
         values_for_lex: OptionalArrayList = None
-        cfs: NDArrayAny | Series | Frame | TypeBlocks
+        cfs: NDArrayAny | TSeriesAny | Frame | TypeBlocks
 
         if axis == 0: # get a column ordering based on one or more rows
             iloc_key = self._index._loc_to_iloc(label) # type: ignore
@@ -6263,8 +6264,8 @@ class Frame(ContainerOperand):
 
     @doc_inject(class_name='Frame')
     def clip(self, *,
-            lower: tp.Optional[tp.Union[float, Series, 'Frame']] = None,
-            upper: tp.Optional[tp.Union[float, Series, 'Frame']] = None,
+            lower: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
+            upper: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
             axis: tp.Optional[int] = None
             ) -> 'Frame':
         '''{}
@@ -6339,7 +6340,7 @@ class Frame(ContainerOperand):
     def duplicated(self, *,
             axis: int = 0,
             exclude_first: bool = False,
-            exclude_last: bool = False) -> 'Series':
+            exclude_last: bool = False) -> TSeriesAny:
         '''
         Return an axis-sized Boolean :obj:`Series` that shows True for all rows (axis 0) or columns (axis 1) duplicated.
 
@@ -6990,7 +6991,7 @@ class Frame(ContainerOperand):
                             )
                 else:
                     index = self._index if axis == 0 else self._columns
-                    s = Series(array, index=index, own_index=True)
+                    s: TSeriesAny = Series(array, index=index, own_index=True)
                     # if iterating rows, all arrays will have the same dtype
                     fv = fill_value if axis == 1 else fill_value_factory(idx, array.dtype)
                     yield s._rank(method=method,
@@ -7197,7 +7198,7 @@ class Frame(ContainerOperand):
             skipfalsy: bool = False,
             unique: bool = False,
             axis: int = 0,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the count of non-NA values along the provided ``axis``, where 0 provides counts per column, 1 provides counts per row.
 
@@ -7287,7 +7288,7 @@ class Frame(ContainerOperand):
     def loc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the minimum value found.
 
@@ -7314,7 +7315,7 @@ class Frame(ContainerOperand):
     def iloc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the integer indices corresponding to the minimum values found.
 
@@ -7333,7 +7334,7 @@ class Frame(ContainerOperand):
     def loc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the maximum values found.
 
@@ -7357,7 +7358,7 @@ class Frame(ContainerOperand):
     def iloc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the integer indices corresponding to the maximum values found.
 
@@ -7381,7 +7382,7 @@ class Frame(ContainerOperand):
             forward: bool,
             fill_value: TLabel = np.nan,
             func: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         For a given axis, return the first or last label observed that is not missing.
         Args:
@@ -7442,7 +7443,7 @@ class Frame(ContainerOperand):
     def iloc_notna_first(self, *,
             fill_value: int = -1,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the position corresponding to the first non-missing values along the selected axis.
 
@@ -7461,7 +7462,7 @@ class Frame(ContainerOperand):
     def iloc_notna_last(self, *,
             fill_value: int = -1,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the position corresponding to the last non-missing values along the selected axis.
 
@@ -7480,7 +7481,7 @@ class Frame(ContainerOperand):
     def loc_notna_first(self, *,
             fill_value: TLabel = np.nan,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the first non-missing values along the selected axis.
 
@@ -7499,7 +7500,7 @@ class Frame(ContainerOperand):
     def loc_notna_last(self, *,
             fill_value: TLabel = np.nan,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the last non-missing values along the selected axis.
 
@@ -7519,7 +7520,7 @@ class Frame(ContainerOperand):
     def iloc_notfalsy_first(self, *,
             fill_value: int = -1,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the position corresponding to the first non-falsy (including nan) values along the selected axis.
 
@@ -7538,7 +7539,7 @@ class Frame(ContainerOperand):
     def iloc_notfalsy_last(self, *,
             fill_value: int = -1,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the position corresponding to the last non-falsy (including nan) values along the selected axis.
 
@@ -7557,7 +7558,7 @@ class Frame(ContainerOperand):
     def loc_notfalsy_first(self, *,
             fill_value: TLabel = np.nan,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the first non-falsy (including nan) values along the selected axis.
 
@@ -7576,7 +7577,7 @@ class Frame(ContainerOperand):
     def loc_notfalsy_last(self, *,
             fill_value: TLabel = np.nan,
             axis: int = 0
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the last non-falsy (including nan) values along the selected axis.
 
@@ -8074,7 +8075,7 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     def _insert(self,
             key: int | np.integer[tp.Any], # iloc positions
-            container: tp.Union['Frame', Series],
+            container: tp.Union['Frame', TSeriesAny],
             *,
             after: bool,
             fill_value: tp.Any = np.nan,
@@ -8137,7 +8138,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='insert')
     def insert_before(self,
             key: TLabel,
-            container: tp.Union['Frame', Series],
+            container: tp.Union[Frame, TSeriesAny],
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8160,7 +8161,7 @@ class Frame(ContainerOperand):
     @doc_inject(selector='insert')
     def insert_after(self,
             key: TLabel,
-            container: tp.Union['Frame', Series],
+            container: tp.Union[Frame, TSeriesAny],
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8503,7 +8504,7 @@ class Frame(ContainerOperand):
             columns_values = array2d_to_tuples(columns.values)
 
             def columns_arrays() -> tp.Iterator[NDArrayAny]:
-                c: Series
+                c: TSeriesAny
                 for c in self.iter_series(axis=0): #type: ignore
                     # dtype must be able to accomodate a float NaN
                     resolved = resolve_dtype(c.dtype, DTYPE_FLOAT_DEFAULT)
@@ -8581,7 +8582,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: TIndexCtor = Index,
             name: NameType = NAME_DEFAULT,
-            ) -> Series:
+            ) -> TSeriesAny:
         '''
         Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.
 
@@ -9268,7 +9269,7 @@ class FrameGO(Frame):
         self._blocks.append(block)
 
     def extend_items(self,
-            pairs: tp.Iterable[tp.Tuple[TLabel, Series]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, TSeriesAny]],
             fill_value: tp.Any = np.nan,
             ) -> None:
         '''
@@ -9278,7 +9279,7 @@ class FrameGO(Frame):
             self.__setitem__(k, v, fill_value)
 
     def extend(self,
-            container: tp.Union['Frame', Series],
+            container: tp.Union[Frame, TSeriesAny],
             fill_value: tp.Any = np.nan
             ) -> None:
         '''Extend this FrameGO (in-place) with another Frame's blocks or Series array; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame or Series will be reindexed (as happens when adding a column to a FrameGO).

@@ -22,6 +22,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
@@ -198,10 +199,10 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def index_types(self) -> 'Series':
+    def index_types(self) -> Series[tp.Any, np.object_]:
         # NOTE: this implementation is here due to pydoc.render_doc call that led to calling this base class method
         from static_frame.core.series import Series
-        return Series(()) # pragma: no cover
+        return Series((), dtype=DTYPE_OBJECT) # pragma: no cover
 
 
     @tp.overload
