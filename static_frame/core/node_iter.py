@@ -35,6 +35,7 @@ if tp.TYPE_CHECKING:
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
+TSeriesAny = Series[tp.Any, tp.Any]
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series', 'Bus', 'Quilt', 'Yarn')
 PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')

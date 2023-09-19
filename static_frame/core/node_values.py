@@ -23,7 +23,7 @@ if tp.TYPE_CHECKING:
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame',
         'IndexHierarchy',
-        'Series',
+        'Series[tp.Any, tp.Any]',
         'Index[tp.Any]',
         covariant=True,
         )
