@@ -79,7 +79,7 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
