@@ -76,3 +76,7 @@ https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/typeh
 
 
 
+NumPy discussion on ordering of generic args:
+https://github.com/numpy/numpy/issues/16547
+
+
