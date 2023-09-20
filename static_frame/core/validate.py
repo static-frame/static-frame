@@ -19,29 +19,37 @@ else:
     UNION_TYPES = typing._UnionGenericAlias # type: ignore
     GENERIC_TYPES = typing._GenericAlias # type: ignore
 
+TPair = tp.Tuple[tp.Any, tp.Any]
 
 class ValidationError(TypeError):
-    def __init__(self, pairs: tp.Sequence[tp.Tuple[tp.Any, tp.Any]]) -> None:
+    def __init__(self, pairs: tp.Sequence[TPair]) -> None:
         pass
 
 
-def get_series_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[tp.Tuple[tp.Any, tp.Any]]:
+#-------------------------------------------------------------------------------
+# handlers for getting components out of generics
+# NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
+
+def get_series_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
     h_index, h_generic = tp.get_args(hint) # there must be two
     yield value.index, h_index
-    yield value.dtype.type, tp.Type[h_generic]
+    yield value.dtype.type(), h_generic
+    # yield value.dtype.type, tp.Type[h_generic]
 
-def get_index_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[tp.Tuple[tp.Any, tp.Any]]:
+def get_index_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
     [h_generic] = tp.get_args(hint) # there must be two
-    yield value.dtype.type, tp.Type[h_generic]
+    yield value.dtype.type(), h_generic
 
+
+#-------------------------------------------------------------------------------
 
 def validate_pair(
         value: tp.Any,
         hint: tp.Any,
-        ) -> tp.Iterable[tp.Tuple[tp.Any, tp.Any]]:
+        ) -> tp.Iterable[TPair]:
 
     q = deque(((value, hint),))
-    log = []
+    log: tp.List[TPair] = []
 
     while q:
         v, h = q.popleft()
@@ -53,7 +61,7 @@ def validate_pair(
 
         if isinstance(h, UNION_TYPES):
             # NOTE: must check union types first as tp.Union matches as generic type
-            u_log = []
+            u_log: tp.List[TPair] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
                 c_log = validate_pair(v, c_hint)
@@ -63,9 +71,8 @@ def validate_pair(
                     u_log.extend(c_log)
             else: # not one break, so no matches within union
                 log.extend(u_log)
-                continue
 
-        elif isinstance(h, GENERIC_TYPES):
+        elif isinstance(h, GENERIC_TYPES): # type: ignore[unreachable]
             # have a generic container
             origin = tp.get_origin(h)
             if origin is type: # a tp.Type[x] generic
@@ -78,7 +85,7 @@ def validate_pair(
                     continue
                 else:
                     log.append((v, h))
-                    continue
+
             elif isinstance(v, ContainerBase):
                 # type check that instance v is of type origin
                 if not isinstance(v, origin):
@@ -87,22 +94,19 @@ def validate_pair(
                 # collect pairs to check for component parts (which might be generic)
                 if issubclass(Index, origin):
                     q.extend(get_index_pairs(v, h))
-                    continue
                 elif issubclass(Series, origin):
                     q.extend(get_series_pairs(v, h))
-                    continue
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
             else:
                 raise NotImplementedError(f'no handling for generic {origin}')
 
         elif issubclass(ContainerBase, h):
-            # handle SF containers
+            # handle non-generic SF containers
             if isinstance(value, h):
                 continue
             else:
                 log.append((v, h))
-                continue
 
         elif isinstance(h, type):
             # special cases
@@ -111,13 +115,11 @@ def validate_pair(
                     continue
                 else:
                     log.append((v, h))
-                    continue
             # general case
-            if isinstance(v, h):
+            elif isinstance(v, h):
                 continue
             else:
                 log.append((v, h))
-                continue
         else:
             pass
 
@@ -129,7 +131,8 @@ def validate_pair_raises(value: tp.Any, hint: tp.Any) -> None:
     if log:
         raise TypeError(log)
 
+
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
 def validate(func: TVFunc) -> TVFunc:
-    pass
+    return func
