@@ -88,7 +88,7 @@ def test_series_ih1() -> None:
     def proc2(x: TSeries2) -> TSeries2:
         return x.dropna()
 
-    y1 = proc2(s1) # error: Argument of type "Series[IndexDate, float64]" cannot be assigned to parameter "x" of type "Series[Index[int64], float64]" in function "proc2"
+    #y1 = proc2(s1) # error: Argument of type "Series[IndexDate, float64]" cannot be assigned to parameter "x" of type "Series[Index[int64], float64]" in function "proc2"
 
 
 # NOTE: tested and shown that neither beartype or typeguard work for these nested containers
