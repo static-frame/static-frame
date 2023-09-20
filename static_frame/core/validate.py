@@ -43,6 +43,7 @@ def validate_pair(value: tp.Any, hint: tp.Any) -> None:
             # import ipdb; ipdb.set_trace()
             u_log = []
             for c_hint in tp.get_args(h): # get components
+                # handing on pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
                 c_log = validate_pair(v, c_hint)
                 if not c_log: # no error found, can exit
                     break
@@ -52,7 +53,6 @@ def validate_pair(value: tp.Any, hint: tp.Any) -> None:
                 log.extend(u_log)
                 continue
 
-            # any of these need to match
 
         elif isinstance(h, GENERIC_TYPES):
             # have a generic container

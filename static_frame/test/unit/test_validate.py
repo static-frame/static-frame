@@ -44,3 +44,12 @@ def test_validate_pair_union_a():
 
     validate_pair_raises('x', tp.Union[str, bytes])
     validate_pair_raises('x', tp.Union[int, str])
+
+
+
+def test_validate_pair_type_a():
+
+    validate_pair_raises(sf.Series, tp.Type[sf.Series])
+
+    with pytest.raises(TypeError):
+        validate_pair_raises(sf.Series, tp.Type[sf.Index])
