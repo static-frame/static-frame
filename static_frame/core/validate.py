@@ -122,10 +122,10 @@ def check(
             if origin is type: # a tp.Type[x] generic
                 [t] = tp.get_args(h)
                 try: # the v should be a subclass of t
-                    check = issubclass(t, v)
+                    t_check = issubclass(t, v)
                 except TypeError:
-                    check = False
-                if check:
+                    t_check = False
+                if t_check:
                     continue
                 log.append((v, h, p))
             else:
