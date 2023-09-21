@@ -12,23 +12,46 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
-# tp.Optional returns a _UnionGenericAlias
-if hasattr(types, 'UnionType') and hasattr(types, 'GenericAlias'):
-    UNION_TYPES = (typing._UnionGenericAlias, types.UnionType) # type: ignore
-    GENERIC_TYPES = (typing._GenericAlias, types.GenericAlias) # type: ignore
-else:
-    UNION_TYPES = typing._UnionGenericAlias # type: ignore
-    GENERIC_TYPES = typing._GenericAlias # type: ignore
+# tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
+
+def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
+    if hasattr(types, 'GenericAlias'):
+        yield types.GenericAlias
+    if hasattr(typing, '_GenericAlias'):
+        yield typing._GenericAlias
+
+GENERIC_TYPES = tuple(_iter_generic_classes())
+
+def iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
+    if hasattr(types, 'UnionType'):
+        yield types.UnionType
+    if hasattr(typing, '_UnionGenericAlias'):
+        yield typing._UnionGenericAlias
+
+UNION_TYPES = tuple(iter_union_classes())
+
+def is_union(hint: tp.Any):
+    if UNION_TYPES:
+        return isinstance(hint, UNION_TYPES)
+    elif isinstance(hint, GENERIC_TYPES):
+        return tp.get_origin() is tp.Union
+
 
 TPair = tp.Tuple[tp.Any, tp.Any]
 TLogRecord = tp.Tuple[tp.Tuple[tp.Any, ...], tp.Any, tp.Any]
 
 class ValidationError(TypeError):
+    @staticmethod
+    def get_name(v: tp.Any) -> str:
+        if hasattr(v, '__name__'):
+            return v.__name__
+        return str(v)
+
     def __init__(self, log: tp.Sequence[TLogRecord]) -> None:
         tab = '   '
         for p, v, h in log:
-            path = ' / '.join(str(n) for n in p)
-            print(f'\n{path}: expected {str(h)} found: {str(type(v))}')
+            path = ':'.join(self.get_name(n) for n in p)
+            print(f'\n{path}: expected {self.get_name(h)}, found {self.get_name(type(v))}')
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
@@ -74,7 +97,7 @@ def validate_pair(
         if h is tp.Any:
             continue
 
-        if isinstance(h, UNION_TYPES):
+        if is_union(h):
             # NOTE: must check union types first as tp.Union matches as generic type
             u_log: tp.List[TLogRecord] = []
             for c_hint in tp.get_args(h): # get components
