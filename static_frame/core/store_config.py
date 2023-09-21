@@ -276,7 +276,7 @@ class StoreConfig(StoreConfigHE):
         if self.label_encoder:
             label = self.label_encoder(label)
         if not isinstance(label, str):
-            raise RuntimeError(f'Store label {label} is not a string; provide a label_encoder to StoreConfig')
+            raise RuntimeError(f'Store label {label!r} is not a string; provide a label_encoder to StoreConfig')
         return label
 
     def label_decode(self, label: str) -> tp.Hashable:
