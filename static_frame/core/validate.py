@@ -38,43 +38,49 @@ def is_union(hint: tp.Any) -> bool:
     return False
 
 
-TPair = tp.Tuple[tp.Any, tp.Any]
-TLogRecord = tp.Tuple[tp.Tuple[tp.Any, ...], tp.Any, tp.Any]
+TParent = tp.Tuple[tp.Any, ...]
+TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
 class ValidationError(TypeError):
     @staticmethod
     def get_name(v: tp.Any) -> str:
+        if isinstance(v, GENERIC_TYPES):
+            return str(v)
         if hasattr(v, '__name__'):
             return v.__name__ # type: ignore[no-any-return]
         return str(v)
 
-    def __init__(self, log: tp.Iterable[TLogRecord]) -> None:
-        tab = '   '
-        for p, v, h in log:
-            path = ':'.join(self.get_name(n) for n in p)
-            print(f'\n{path}: expected {self.get_name(h)}, found {self.get_name(type(v))}')
+    def __init__(self, log: tp.Iterable[TValidation]) -> None:
+        msg = []
+        for v, h, p in log:
+            if p:
+                path = ', '.join(self.get_name(n) for n in p)
+                prefix = f'In {path}, provided'
+            else:
+                prefix = 'Provided'
+            msg.append(f'{prefix} {self.get_name(type(v))} invalid for {self.get_name(h)}.')
+        TypeError.__init__(self, ' '.join(msg))
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
 
-def get_series_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+def get_series_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     h_index, h_generic = tp.get_args(hint) # there must be two
-    yield value.index, h_index
-    yield value.dtype.type(), h_generic
-    # yield value.dtype.type, tp.Type[h_generic]
+    yield value.index, h_index, parent
+    yield value.dtype.type(), h_generic, parent
 
-def get_index_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+def get_index_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
-    yield value.dtype.type(), h_generic
+    yield value.dtype.type(), h_generic, parent
 
-def get_ndarray_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+def get_ndarray_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     h_shape, h_dtype = tp.get_args(hint)
-    yield value.dtype, h_dtype
+    yield value.dtype, h_dtype, parent
 
-def get_dtype_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+def get_dtype_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
-    yield value.type(), h_generic
+    yield value.type(), h_generic, parent
 
 #-------------------------------------------------------------------------------
 
@@ -82,25 +88,25 @@ def validate_pair(
         value: tp.Any,
         hint: tp.Any,
         fail_fast: bool = False,
-        parent: tp.Tuple[tp.Any, ...] = (),
-        ) -> tp.Iterable[TLogRecord]:
+        parent: TParent = (),
+        ) -> tp.Iterable[TValidation]:
 
-    q = deque(((value, hint),))
-    log: tp.List[TLogRecord] = []
+    q = deque(((value, hint, parent),))
+    log: tp.List[TValidation] = []
 
     while q:
         if fail_fast and log:
             return log
 
-        v, h = q.popleft()
-        p_next = parent + (h,)
+        v, h, p = q.popleft()
+        p_next = p + (h,)
 
         if h is tp.Any:
             continue
 
         if is_union(h):
             # NOTE: must check union types first as tp.Union matches as generic type
-            u_log: tp.List[TLogRecord] = []
+            u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
                 c_log = validate_pair(v, c_hint, fail_fast, p_next)
@@ -121,24 +127,25 @@ def validate_pair(
                     check = False
                 if check:
                     continue
-                log.append((p_next, v, h))
+                log.append((v, h, p))
             else:
                 if not isinstance(v, origin):
-                    log.append((p_next, v, origin))
+                    log.append((v, origin, p))
                     continue
 
                 if isinstance(v, Index):
-                    q.extend(get_index_pairs(v, h))
+                    q.extend(get_index_pairs(v, h, p_next))
                 elif isinstance(v, Series):
-                    q.extend(get_series_pairs(v, h))
+                    q.extend(get_series_pairs(v, h, p_next))
                 elif isinstance(v, np.ndarray):
-                    q.extend(get_ndarray_pairs(v, h))
+                    q.extend(get_ndarray_pairs(v, h, p_next))
                 elif isinstance(v, np.dtype):
-                    q.extend(get_dtype_pairs(v, h))
+                    q.extend(get_dtype_pairs(v, h, p_next))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
 
-        elif isinstance(h, type):
+        else:
+            assert isinstance(h, type)
             # special cases
             if v.__class__ is bool:
                 if h is bool:
@@ -146,15 +153,14 @@ def validate_pair(
             # general case
             elif isinstance(v, h):
                 continue
-            log.append((p_next, v, h))
-        else:
-            raise NotImplementedError(f'no handling for {v}, {h}')
+            log.append((v, h, p))
+
 
     return log
 
 
-def validate_pair_raises(value: tp.Any, hint: tp.Any) -> None:
-    log = validate_pair(value, hint)
+def validate_pair_raises(value: tp.Any, hint: tp.Any, fail_fast: bool = False) -> None:
+    log = validate_pair(value, hint, fail_fast)
     if log:
         raise ValidationError(log)
 

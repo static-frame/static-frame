@@ -51,6 +51,13 @@ def test_validate_pair_type_a():
     with pytest.raises(TypeError):
         validate_pair_raises(sf.Series, tp.Type[sf.Index])
 
+
+def test_validate_pair_type_b():
+    try:
+        validate_pair_raises(3, tp.Type[sf.Series])
+    except TypeError as e:
+        assert str(e) == 'Provided int invalid for typing.Type[static_frame.core.series.Series].'
+
 #-------------------------------------------------------------------------------
 
 @skip_nple119
@@ -130,3 +137,23 @@ def test_validate_pair_containers_e():
 
     with pytest.raises(TypeError):
         validate_pair_raises(v3, h1)
+
+
+#-------------------------------------------------------------------------------
+
+def test_validate_pair_fail_fast_a():
+    v = sf.Series(('a', 'b'), index=sf.Index(('x', 'y'), dtype=np.str_))
+    h = sf.Series[sf.Index[np.int64], np.int64]
+
+    try:
+        validate_pair_raises(v, h, fail_fast=True)
+    except TypeError as e:
+        assert str(e) == 'In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], provided str_ invalid for int64.'
+
+
+    try:
+        validate_pair_raises(v, h, fail_fast=False)
+    except TypeError as e:
+        assert str(e) == 'In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], provided str_ invalid for int64. In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], static_frame.core.index.Index[numpy.int64], provided str_ invalid for int64.'
+
+
