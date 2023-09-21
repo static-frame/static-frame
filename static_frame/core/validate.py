@@ -2,8 +2,8 @@ import types
 import typing
 from collections import deque
 
-import typing_extensions as tp
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame

@@ -7,6 +7,7 @@ from static_frame.core.validate import validate_pair
 from static_frame.core.validate import validate_pair_raises
 from static_frame.test.test_case import skip_pyle310
 
+
 def test_validate_pair_a():
 
     validate_pair_raises(sf.IndexDate(('2022-01-01',)), sf.IndexDate)
