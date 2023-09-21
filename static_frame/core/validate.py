@@ -29,8 +29,6 @@ class ValidationError(TypeError):
         for p, v, h in log:
             path = ' / '.join(str(n) for n in p)
             print(f'\n{path}: expected {str(h)} found: {str(type(v))}')
-            # import ipdb; ipdb.set_trace()
-
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
