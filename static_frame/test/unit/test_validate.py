@@ -5,7 +5,7 @@ import typing_extensions as tp
 import static_frame as sf
 from static_frame.core.validate import validate_pair
 from static_frame.core.validate import validate_pair_raises
-
+from static_frame.test.test_case import skip_pyle310
 
 def test_validate_pair_a():
 
@@ -49,6 +49,19 @@ def test_validate_pair_type_a():
 
     with pytest.raises(TypeError):
         validate_pair_raises(sf.Series, tp.Type[sf.Index])
+
+#-------------------------------------------------------------------------------
+
+@skip_pyle310
+def test_validate_numpy_a():
+    v = np.array([False, True, False])
+    h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
+    h2 = np.ndarray[tp.Any, np.dtype[np.str_]]
+
+    validate_pair_raises(v, h1)
+    with pytest.raises(TypeError):
+        validate_pair_raises(v, h2)
+
 
 #-------------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@ import typing
 from collections import deque
 
 import typing_extensions as tp
+import numpy as np
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame
@@ -37,9 +38,16 @@ def get_series_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
     # yield value.dtype.type, tp.Type[h_generic]
 
 def get_index_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
-    [h_generic] = tp.get_args(hint) # there must be two
+    [h_generic] = tp.get_args(hint)
     yield value.dtype.type(), h_generic
 
+def get_ndarray_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+    h_shape, h_dtype = tp.get_args(hint)
+    yield value.dtype, h_dtype
+
+def get_dtype_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
+    [h_generic] = tp.get_args(hint)
+    yield value.type(), h_generic
 
 #-------------------------------------------------------------------------------
 
@@ -81,32 +89,26 @@ def validate_pair(
                     check = issubclass(t, v)
                 except TypeError:
                     check = False
+
                 if check:
                     continue
                 else:
                     log.append((v, h))
-
-            elif isinstance(v, ContainerBase):
-                # type check that instance v is of type origin
+            else:
                 if not isinstance(v, origin):
                     log.append((v, origin))
                     continue
-                # collect pairs to check for component parts (which might be generic)
-                if issubclass(Index, origin):
+
+                if isinstance(v, Index):
                     q.extend(get_index_pairs(v, h))
-                elif issubclass(Series, origin):
+                elif isinstance(v, Series):
                     q.extend(get_series_pairs(v, h))
+                elif isinstance(v, np.ndarray):
+                    q.extend(get_ndarray_pairs(v, h))
+                elif isinstance(v, np.dtype):
+                    q.extend(get_dtype_pairs(v, h))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
-            else:
-                raise NotImplementedError(f'no handling for generic {origin}')
-
-        elif issubclass(ContainerBase, h):
-            # handle non-generic SF containers
-            if isinstance(value, h):
-                continue
-            else:
-                log.append((v, h))
 
         elif isinstance(h, type):
             # special cases
