@@ -56,8 +56,9 @@ skip_mac_pyle38 = pytest.mark.skipif(
         reason='MacOS tk.h issue'
         )
 
-skip_pyle310 = pytest.mark.skipif(
-        sys.version_info[:2] <= (3, 10),
+# NOTE: np 1.20 and greater expose generic ndarray and dtype
+skip_nple119 = pytest.mark.skipif(
+        tuple(int(x) for x in np.__version__.split('.')[:2]) <= (1, 19),
         reason='Python less than or equal to 3.10'
         )
 
