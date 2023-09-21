@@ -4,57 +4,57 @@ import typing_extensions as tp
 
 import static_frame as sf
 # from static_frame.core.validate import validate_pair
-from static_frame.core.validate import validate_pair_raises
+from static_frame.core.validate import check_type
 from static_frame.test.test_case import skip_nple119
 
 
 def test_validate_pair_a():
 
-    validate_pair_raises(sf.IndexDate(('2022-01-01',)), sf.IndexDate)
-    validate_pair_raises(sf.IndexDate(('2022-01-01',)), tp.Any)
+    check_type(sf.IndexDate(('2022-01-01',)), sf.IndexDate)
+    check_type(sf.IndexDate(('2022-01-01',)), tp.Any)
 
     with pytest.raises(TypeError):
-        validate_pair_raises(sf.IndexDate(('2022-01-01',)), sf.IndexSecond)
+        check_type(sf.IndexDate(('2022-01-01',)), sf.IndexSecond)
 
 
 def test_validate_pair_b():
 
-    validate_pair_raises(3, int)
-    validate_pair_raises('foo', str)
-    validate_pair_raises(False, bool)
+    check_type(3, int)
+    check_type('foo', str)
+    check_type(False, bool)
 
     with pytest.raises(TypeError):
-        validate_pair_raises(3, str)
+        check_type(3, str)
 
     with pytest.raises(TypeError):
-        validate_pair_raises(True, int)
+        check_type(True, int)
 
 #-------------------------------------------------------------------------------
 
 def test_validate_pair_union_a():
 
-    validate_pair_raises(3, tp.Union[int, str])
+    check_type(3, tp.Union[int, str])
 
     with pytest.raises(TypeError):
-        validate_pair_raises('x', tp.Union[int, float])
+        check_type('x', tp.Union[int, float])
 
-    validate_pair_raises('x', tp.Union[str, bytes])
-    validate_pair_raises('x', tp.Union[int, str])
+    check_type('x', tp.Union[str, bytes])
+    check_type('x', tp.Union[int, str])
 
 
 #-------------------------------------------------------------------------------
 
 def test_validate_pair_type_a():
 
-    validate_pair_raises(sf.Series, tp.Type[sf.Series])
+    check_type(sf.Series, tp.Type[sf.Series])
 
     with pytest.raises(TypeError):
-        validate_pair_raises(sf.Series, tp.Type[sf.Index])
+        check_type(sf.Series, tp.Type[sf.Index])
 
 
 def test_validate_pair_type_b():
     try:
-        validate_pair_raises(3, tp.Type[sf.Series])
+        check_type(3, tp.Type[sf.Series])
     except TypeError as e:
         assert str(e) == 'Provided int invalid for typing.Type[static_frame.core.series.Series].'
 
@@ -66,9 +66,9 @@ def test_validate_numpy_a():
     h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
     h2 = np.ndarray[tp.Any, np.dtype[np.str_]]
 
-    validate_pair_raises(v, h1)
+    check_type(v, h1)
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h2)
+        check_type(v, h2)
 
 
 #-------------------------------------------------------------------------------
@@ -80,19 +80,19 @@ def test_validate_pair_containers_a():
     h3 = sf.Series[sf.IndexDate, np.str_]
 
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h2)
+        check_type(v, h2)
 
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h1)
+        check_type(v, h1)
 
 def test_validate_pair_containers_b():
     v = sf.Series(('a', 'b'), index=sf.IndexDate(('2021-04-05', '2022-05-03')))
     h1 = sf.Series[sf.IndexDate, np.str_]
     h2 = sf.Series[sf.IndexDate, np.int64]
 
-    validate_pair_raises(v, h1)
+    check_type(v, h1)
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h2)
+        check_type(v, h2)
 
 
 def test_validate_pair_containers_c():
@@ -103,13 +103,13 @@ def test_validate_pair_containers_c():
     h4 = sf.Series[sf.Index[np.int64], np.str_]
 
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h1)
+        check_type(v, h1)
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h2)
+        check_type(v, h2)
     with pytest.raises(TypeError):
-        validate_pair_raises(v, h3)
+        check_type(v, h3)
 
-    validate_pair_raises(v, h4)
+    check_type(v, h4)
 
 
 def test_validate_pair_containers_d():
@@ -119,10 +119,10 @@ def test_validate_pair_containers_d():
 
     h1 = sf.Series[sf.Index[tp.Union[np.int64, np.str_]], np.str_]
 
-    validate_pair_raises(v1, h1)
-    validate_pair_raises(v2, h1)
+    check_type(v1, h1)
+    check_type(v2, h1)
     with pytest.raises(TypeError):
-        validate_pair_raises(v3, h1)
+        check_type(v3, h1)
 
 
 def test_validate_pair_containers_e():
@@ -132,11 +132,11 @@ def test_validate_pair_containers_e():
 
     h1 = sf.Series[tp.Union[sf.IndexDate, sf.IndexSecond], np.str_]
 
-    validate_pair_raises(v1, h1)
-    validate_pair_raises(v2, h1)
+    check_type(v1, h1)
+    check_type(v2, h1)
 
     with pytest.raises(TypeError):
-        validate_pair_raises(v3, h1)
+        check_type(v3, h1)
 
 
 #-------------------------------------------------------------------------------
@@ -146,13 +146,13 @@ def test_validate_pair_fail_fast_a():
     h = sf.Series[sf.Index[np.int64], np.int64]
 
     try:
-        validate_pair_raises(v, h, fail_fast=True)
+        check_type(v, h, fail_fast=True)
     except TypeError as e:
         assert str(e) == 'In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], provided str_ invalid for int64.'
 
 
     try:
-        validate_pair_raises(v, h, fail_fast=False)
+        check_type(v, h, fail_fast=False)
     except TypeError as e:
         assert str(e) == 'In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], provided str_ invalid for int64. In static_frame.core.series.Series[static_frame.core.index.Index[numpy.int64], numpy.int64], static_frame.core.index.Index[numpy.int64], provided str_ invalid for int64.'
 

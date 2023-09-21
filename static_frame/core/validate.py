@@ -41,7 +41,7 @@ def is_union(hint: tp.Any) -> bool:
 TParent = tp.Tuple[tp.Any, ...]
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
-class ValidationError(TypeError):
+class CheckError(TypeError):
     @staticmethod
     def get_name(v: tp.Any) -> str:
         if isinstance(v, GENERIC_TYPES):
@@ -84,7 +84,7 @@ def get_dtype_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable
 
 #-------------------------------------------------------------------------------
 
-def validate_pair(
+def check(
         value: tp.Any,
         hint: tp.Any,
         fail_fast: bool = False,
@@ -109,7 +109,7 @@ def validate_pair(
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = validate_pair(v, c_hint, fail_fast, p_next)
+                c_log = check(v, c_hint, fail_fast, p_next)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
@@ -159,15 +159,15 @@ def validate_pair(
     return log
 
 
-def validate_pair_raises(value: tp.Any, hint: tp.Any, fail_fast: bool = False) -> None:
-    log = validate_pair(value, hint, fail_fast)
+def check_type(value: tp.Any, hint: tp.Any, fail_fast: bool = False) -> None:
+    log = check(value, hint, fail_fast)
     if log:
-        raise ValidationError(log)
+        raise CheckError(log)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
-def validate(func: TVFunc) -> TVFunc:
+def check_interface(func: TVFunc) -> TVFunc:
     return func
 
 

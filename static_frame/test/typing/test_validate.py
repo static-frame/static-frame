@@ -1,7 +1,7 @@
 import numpy as np
 import typing_extensions as tp
 
-# from static_frame.core.validate import validate_pair_raises
+# from static_frame.core.validate import check_type
 from static_frame.test.test_case import skip_nple119
 
 
@@ -11,4 +11,4 @@ def test_ndarray_a() -> None:
     # NOTE: must type this as a dytpe, not just a a generic
     h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
 
-    # validate_pair_raises(v, h1)
+    # check_type(v, h1)
