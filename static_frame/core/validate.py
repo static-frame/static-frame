@@ -30,11 +30,12 @@ def iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
 
 UNION_TYPES = tuple(iter_union_classes())
 
-def is_union(hint: tp.Any):
+def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
         return isinstance(hint, UNION_TYPES)
     elif isinstance(hint, GENERIC_TYPES):
-        return tp.get_origin() is tp.Union
+        return tp.get_origin(hint) is tp.Union
+    return False
 
 
 TPair = tp.Tuple[tp.Any, tp.Any]
@@ -44,10 +45,10 @@ class ValidationError(TypeError):
     @staticmethod
     def get_name(v: tp.Any) -> str:
         if hasattr(v, '__name__'):
-            return v.__name__
+            return v.__name__ # type: ignore[no-any-return]
         return str(v)
 
-    def __init__(self, log: tp.Sequence[TLogRecord]) -> None:
+    def __init__(self, log: tp.Iterable[TLogRecord]) -> None:
         tab = '   '
         for p, v, h in log:
             path = ':'.join(self.get_name(n) for n in p)
@@ -110,7 +111,7 @@ def validate_pair(
             else: # no breaks, so no matches within union
                 log.extend(u_log)
 
-        elif isinstance(h, GENERIC_TYPES): # type: ignore[unreachable]
+        elif isinstance(h, GENERIC_TYPES):
             # have a generic container
             origin = tp.get_origin(h)
             if origin is type: # a tp.Type[x] generic
