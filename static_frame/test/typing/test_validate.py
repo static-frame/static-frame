@@ -4,6 +4,7 @@ import typing_extensions as tp
 # from static_frame.core.validate import validate_pair_raises
 from static_frame.test.test_case import skip_nple119
 
+
 @skip_nple119
 def test_ndarray_a() -> None:
     v = np.array([False, True, False])
