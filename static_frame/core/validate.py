@@ -106,8 +106,7 @@ def validate_pair(
                 c_log = validate_pair(v, c_hint, fail_fast, p_next)
                 if not c_log: # no error found, can exit
                     break
-                else: # find all errors
-                    u_log.extend(c_log)
+                u_log.extend(c_log)
             else: # no breaks, so no matches within union
                 log.extend(u_log)
 
@@ -120,11 +119,9 @@ def validate_pair(
                     check = issubclass(t, v)
                 except TypeError:
                     check = False
-
                 if check:
                     continue
-                else:
-                    log.append((p_next, v, h))
+                log.append((p_next, v, h))
             else:
                 if not isinstance(v, origin):
                     log.append((p_next, v, origin))
@@ -146,13 +143,10 @@ def validate_pair(
             if v.__class__ is bool:
                 if h is bool:
                     continue
-                else:
-                    log.append((p_next, v, h))
             # general case
             elif isinstance(v, h):
                 continue
-            else:
-                log.append((p_next, v, h))
+            log.append((p_next, v, h))
         else:
             raise NotImplementedError(f'no handling for {v}, {h}')
 
@@ -169,3 +163,10 @@ TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
 def validate(func: TVFunc) -> TVFunc:
     return func
+
+
+
+
+
+
+

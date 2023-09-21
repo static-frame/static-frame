@@ -1,7 +1,7 @@
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.validate import validate_pair_raises
+# from static_frame.core.validate import validate_pair_raises
 
 
 def test_ndarray_a() -> None:

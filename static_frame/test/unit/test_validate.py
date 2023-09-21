@@ -3,7 +3,7 @@ import pytest
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame.core.validate import validate_pair
+# from static_frame.core.validate import validate_pair
 from static_frame.core.validate import validate_pair_raises
 from static_frame.test.test_case import skip_pyle310
 
