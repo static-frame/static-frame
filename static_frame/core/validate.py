@@ -5,10 +5,10 @@ from collections import deque
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.container import ContainerBase
-from static_frame.core.frame import Frame
+# from static_frame.core.container import ContainerBase
+# from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
+# from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
