@@ -21,10 +21,15 @@ else:
     GENERIC_TYPES = typing._GenericAlias # type: ignore
 
 TPair = tp.Tuple[tp.Any, tp.Any]
+TLogRecord = tp.Tuple[tp.Tuple[tp.Any, ...], tp.Any, tp.Any]
 
 class ValidationError(TypeError):
-    def __init__(self, pairs: tp.Sequence[TPair]) -> None:
-        pass
+    def __init__(self, log: tp.Sequence[TLogRecord]) -> None:
+        tab = '   '
+        for p, v, h in log:
+            path = ' / '.join(str(n) for n in p)
+            print(f'\n{path}: expected {str(h)} found: {str(type(v))}')
+            # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------
@@ -54,38 +59,42 @@ def get_dtype_pairs(value: tp.Any, hint: tp.Any) -> tp.Iterable[TPair]:
 def validate_pair(
         value: tp.Any,
         hint: tp.Any,
-        ) -> tp.Iterable[TPair]:
+        fail_fast: bool = False,
+        parent: tp.Tuple[tp.Any, ...] = (),
+        ) -> tp.Iterable[TLogRecord]:
 
     q = deque(((value, hint),))
-    log: tp.List[TPair] = []
+    log: tp.List[TLogRecord] = []
 
     while q:
+        if fail_fast and log:
+            return log
+
         v, h = q.popleft()
-        # print(v, h)
-        # import ipdb; ipdb.set_trace()
+        p_next = parent + (h,)
 
         if h is tp.Any:
             continue
 
         if isinstance(h, UNION_TYPES):
             # NOTE: must check union types first as tp.Union matches as generic type
-            u_log: tp.List[TPair] = []
+            u_log: tp.List[TLogRecord] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = validate_pair(v, c_hint)
+                c_log = validate_pair(v, c_hint, fail_fast, p_next)
                 if not c_log: # no error found, can exit
                     break
                 else: # find all errors
                     u_log.extend(c_log)
-            else: # not one break, so no matches within union
+            else: # no breaks, so no matches within union
                 log.extend(u_log)
 
         elif isinstance(h, GENERIC_TYPES): # type: ignore[unreachable]
             # have a generic container
             origin = tp.get_origin(h)
             if origin is type: # a tp.Type[x] generic
-                [t] = tp.get_args(h) # this is the type
-                try: # the value should be a subclass of t
+                [t] = tp.get_args(h)
+                try: # the v should be a subclass of t
                     check = issubclass(t, v)
                 except TypeError:
                     check = False
@@ -93,10 +102,10 @@ def validate_pair(
                 if check:
                     continue
                 else:
-                    log.append((v, h))
+                    log.append((p_next, v, h))
             else:
                 if not isinstance(v, origin):
-                    log.append((v, origin))
+                    log.append((p_next, v, origin))
                     continue
 
                 if isinstance(v, Index):
@@ -116,14 +125,14 @@ def validate_pair(
                 if h is bool:
                     continue
                 else:
-                    log.append((v, h))
+                    log.append((p_next, v, h))
             # general case
             elif isinstance(v, h):
                 continue
             else:
-                log.append((v, h))
+                log.append((p_next, v, h))
         else:
-            pass
+            raise NotImplementedError(f'no handling for {v}, {h}')
 
     return log
 
@@ -131,7 +140,7 @@ def validate_pair(
 def validate_pair_raises(value: tp.Any, hint: tp.Any) -> None:
     log = validate_pair(value, hint)
     if log:
-        raise TypeError(log)
+        raise ValidationError(log)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
