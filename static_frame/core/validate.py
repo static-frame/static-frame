@@ -1,6 +1,7 @@
 import types
 import typing
 from collections import deque
+from collections.abc import Sequence
 
 import numpy as np
 import typing_extensions as tp
@@ -41,44 +42,71 @@ def is_union(hint: tp.Any) -> bool:
 TParent = tp.Tuple[tp.Any, ...]
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
+@staticmethod
+def to_name(v: tp.Any) -> str:
+    if isinstance(v, GENERIC_TYPES):
+        return f'{v.__name__}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    if hasattr(v, '__name__'):
+        return v.__name__ # type: ignore[no-any-return]
+    elif v is ...:
+        return '...'
+    return str(v)
+
 class CheckError(TypeError):
-    @staticmethod
-    def get_name(v: tp.Any) -> str:
-        if isinstance(v, GENERIC_TYPES):
-            return str(v)
-        if hasattr(v, '__name__'):
-            return v.__name__ # type: ignore[no-any-return]
-        return str(v)
 
     def __init__(self, log: tp.Iterable[TValidation]) -> None:
         msg = []
         for v, h, p in log:
             if p:
-                path = ', '.join(self.get_name(n) for n in p)
+                path = ', '.join(to_name(n) for n in p)
                 prefix = f'In {path}, provided'
             else:
                 prefix = 'Provided'
-            msg.append(f'{prefix} {self.get_name(type(v))} invalid for {self.get_name(h)}.')
+            msg.append(f'{prefix} {to_name(type(v))} invalid for {to_name(h)}.')
         TypeError.__init__(self, ' '.join(msg))
+
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
+
+def get_sequence_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+    [h_component] = tp.get_args(hint)
+    for v in value:
+        yield v, h_component, parent
+
+def get_tuple_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+    h_components = tp.get_args(hint)
+    if h_components[-1] is ...:
+        if len(h_components) != 2:
+            raise RuntimeError() # TODO: yield size error
+        else:
+            h = h_components[0]
+            for v in value:
+                yield v, h, parent
+    else:
+        if len(value) != len(h_components):
+            import ipdb; ipdb.set_trace()
+            raise RuntimeError() # TODO: yield size error
+        for v, h in zip(value, h_components):
+            yield v, h, parent
+
+
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
 
-def get_series_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_series_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     h_index, h_generic = tp.get_args(hint) # there must be two
     yield value.index, h_index, parent
     yield value.dtype.type(), h_generic, parent
 
-def get_index_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_index_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
     yield value.dtype.type(), h_generic, parent
 
-def get_ndarray_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_ndarray_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     h_shape, h_dtype = tp.get_args(hint)
     yield value.dtype, h_dtype, parent
 
-def get_dtype_pairs(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_dtype_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
     yield value.type(), h_generic, parent
 
@@ -99,7 +127,6 @@ def check(
             return log
 
         v, h, p = q.popleft()
-        p_next = p + (h,)
 
         if h is tp.Any:
             continue
@@ -109,7 +136,7 @@ def check(
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = check(v, c_hint, fail_fast, p_next)
+                c_log = check(v, c_hint, fail_fast, p + (h,))
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
@@ -133,14 +160,21 @@ def check(
                     log.append((v, origin, p))
                     continue
 
-                if isinstance(v, Index):
-                    q.extend(get_index_pairs(v, h, p_next))
+                p_next = p + (h,)
+
+                if isinstance(v, tuple):
+                    q.extend(get_tuple_checks(v, h, p_next))
+                elif isinstance(v, (list, Sequence)):
+                    q.extend(get_sequence_checks(v, h, p_next))
+
+                elif isinstance(v, Index):
+                    q.extend(get_index_checks(v, h, p_next))
                 elif isinstance(v, Series):
-                    q.extend(get_series_pairs(v, h, p_next))
+                    q.extend(get_series_checks(v, h, p_next))
                 elif isinstance(v, np.ndarray):
-                    q.extend(get_ndarray_pairs(v, h, p_next))
+                    q.extend(get_ndarray_checks(v, h, p_next))
                 elif isinstance(v, np.dtype):
-                    q.extend(get_dtype_pairs(v, h, p_next))
+                    q.extend(get_dtype_checks(v, h, p_next))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
 
