@@ -18,7 +18,7 @@ def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if hasattr(types, 'GenericAlias'):
         yield types.GenericAlias
     if hasattr(typing, '_GenericAlias'):
-        yield typing._GenericAlias
+        yield typing._GenericAlias # pyright: ignore
 
 GENERIC_TYPES = tuple(_iter_generic_classes())
 
@@ -26,7 +26,7 @@ def iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if hasattr(types, 'UnionType'):
         yield types.UnionType
     if hasattr(typing, '_UnionGenericAlias'):
-        yield typing._UnionGenericAlias
+        yield typing._UnionGenericAlias # pyright: ignore
 
 UNION_TYPES = tuple(iter_union_classes())
 
