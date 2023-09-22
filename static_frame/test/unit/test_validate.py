@@ -208,3 +208,8 @@ def test_check_type_tuple_b():
 
     check_type((3, 4, False), tp.Tuple[int, int, bool])
     check_type((3, 4.1, False), tp.Tuple[int, float, bool])
+
+def test_check_type_tuple_c():
+
+    with pytest.raises(TypeError):
+        check_type((3, 4), tp.Tuple[int, int, int])

@@ -16,18 +16,18 @@ from static_frame.core.series import Series
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
-    if hasattr(types, 'GenericAlias'):
-        yield types.GenericAlias
-    if hasattr(typing, '_GenericAlias'):
-        yield typing._GenericAlias # pyright: ignore
+    if t := getattr(types, 'GenericAlias', None):
+        yield t
+    if t := getattr(typing, '_GenericAlias', None):
+        yield t # pyright: ignore
 
 GENERIC_TYPES = tuple(_iter_generic_classes())
 
 def iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
-    if hasattr(types, 'UnionType'):
-        yield types.UnionType
-    if hasattr(typing, '_UnionGenericAlias'):
-        yield typing._UnionGenericAlias # pyright: ignore
+    if t := getattr(types, 'UnionType', None):
+        yield t
+    if t := getattr(typing, '_UnionGenericAlias', None):
+        yield t # pyright: ignore
 
 UNION_TYPES = tuple(iter_union_classes())
 
@@ -69,6 +69,13 @@ class CheckError(TypeError):
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
+
+
+def get_literal_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+    [h_value] = tp.get_args(hint)
+    if value != h_value:
+        yield value, h_value, parent
+
 def get_sequence_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
     for v in value:
@@ -77,16 +84,15 @@ def get_sequence_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iter
 def get_tuple_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
-        if len(h_components) != 2:
-            raise RuntimeError() # TODO: yield size error
+        if (h_len := len(h_components)) != 2:
+            yield h_len, tp.Literal['invalid ellipses usage'], parent
         else:
             h = h_components[0]
             for v in value:
                 yield v, h, parent
     else:
-        if len(value) != len(h_components):
-            import ipdb; ipdb.set_trace()
-            raise RuntimeError() # TODO: yield size error
+        if (h_len := len(h_components)) != len(value):
+            yield h_len, tp.Literal['tuple length invalid'], parent
         for v, h in zip(value, h_components):
             yield v, h, parent
 
@@ -156,11 +162,15 @@ def check(
                     continue
                 log.append((v, h, p))
             else:
+                p_next = p + (h,)
+                # import ipdb; ipdb.set_trace()
+                if origin is typing.Literal:
+                    q.extend(get_literal_checks(v, h, p_next))
+                    continue
+
                 if not isinstance(v, origin):
                     log.append((v, origin, p))
                     continue
-
-                p_next = p + (h,)
 
                 if isinstance(v, tuple):
                     q.extend(get_tuple_checks(v, h, p_next))
@@ -177,9 +187,11 @@ def check(
                     q.extend(get_dtype_checks(v, h, p_next))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
-
+        elif not isinstance(h, type):
+            # h is value from a literal
+            if v != h:
+                log.append((v, h, p))
         else:
-            assert isinstance(h, type)
             # special cases
             if v.__class__ is bool:
                 if h is bool:
