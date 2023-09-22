@@ -266,5 +266,19 @@ def test_check_interface_b():
 
     try:
         assert proc1(2, 'foo') == 6
-    except:
+    except TypeError as e:
         assert str(e) == 'In args of (a: int, b: int) -> bool, provided str invalid for int.'
+
+
+
+def test_check_interface_c():
+
+    @check_interface(fail_fast=False)
+    def proc1(a: int, b) -> int:
+        return a * b
+
+    assert proc1(2, False) == 0
+    # try:
+    # except TypeError as e:
+    #     assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid for bool.'
+
