@@ -27,6 +27,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
 from numpy.ma import MaskedArray
+from pyarrow.lib import ArrowInvalid
 
 from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
@@ -3142,10 +3143,19 @@ class Frame(ContainerOperand):
             columns_select = list(columns_select)
 
         # NOTE: the order of columns_select will determine their order
-        table = pq.read_table(fp,
-                columns=columns_select,
-                use_pandas_metadata=False,
-                )
+        try:
+            table = pq.read_table(fp,
+                    columns=columns_select,
+                    use_pandas_metadata=False,
+                    )
+        except ArrowInvalid:
+            # support loading parquet files saved with pyarrow<1.0
+            # https://github.com/apache/arrow/issues/32660
+            table = pq.read_table(fp,
+                    columns=columns_select,
+                    use_pandas_metadata=False,
+                    use_legacy_dataset=True,
+                    )
         if columns_select:
             # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
             if len(table.column_names) < len(columns_select):
