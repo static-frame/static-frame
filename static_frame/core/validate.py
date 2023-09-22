@@ -50,7 +50,7 @@ def to_name(v: tp.Any) -> str:
         return f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     if hasattr(v, '__name__'):
         return v.__name__ # type: ignore[no-any-return]
-    elif v is ...:
+    if v is ...:
         return '...'
     return str(v)
 

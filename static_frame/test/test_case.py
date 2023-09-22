@@ -62,6 +62,11 @@ skip_nple119 = pytest.mark.skipif(
         reason='Python less than or equal to 3.10'
         )
 
+skip_pyle310 = pytest.mark.skipif(
+        sys.version_info[:2] <= (3, 10),
+        reason='MacOS tk.h issue'
+        )
+
 #-------------------------------------------------------------------------------
 class Timer():
 

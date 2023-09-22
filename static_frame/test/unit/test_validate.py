@@ -6,6 +6,7 @@ import static_frame as sf
 # from static_frame.core.validate import validate_pair
 from static_frame.core.validate import check_type
 from static_frame.test.test_case import skip_nple119
+from static_frame.test.test_case import skip_pyle310
 
 
 def test_check_type_a():
@@ -51,7 +52,7 @@ def test_check_type_type_a():
     with pytest.raises(TypeError):
         check_type(sf.Series, tp.Type[sf.Index])
 
-
+@skip_pyle310
 def test_check_type_type_b():
     try:
         check_type(3, tp.Type[sf.Series])
@@ -141,6 +142,7 @@ def test_check_type_containers_e():
 
 #-------------------------------------------------------------------------------
 
+@skip_pyle310
 def test_check_type_fail_fast_a():
     v = sf.Series(('a', 'b'), index=sf.Index(('x', 'y'), dtype=np.str_))
     h = sf.Series[sf.Index[np.int64], np.int64]
