@@ -5,6 +5,8 @@ from collections.abc import Sequence
 from collections.abc import MutableMapping
 from itertools import chain
 from itertools import repeat
+from functools import wraps
+from inspect import Signature
 
 import numpy as np
 import typing_extensions as tp
@@ -110,7 +112,6 @@ def get_mapping_checks(value: tp.Any,
             zip(value.values(), repeat(h_values)),
             ):
         yield v, h, parent
-
 
 
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
@@ -238,20 +239,53 @@ def check(
                 continue
             log.append((v, h, p))
 
-
     return log
 
 
-def check_type(value: tp.Any, hint: tp.Any, fail_fast: bool = False) -> None:
-    log = check(value, hint, fail_fast)
+def check_type(value: tp.Any,
+        hint: tp.Any,
+        fail_fast: bool = False,
+        parent: TParent = (),
+        ) -> None:
+    log = check(value, hint, fail_fast, parent)
     if log:
         raise CheckError(log)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
-def check_interface(func: TVFunc) -> TVFunc:
-    return func
+def check_interface(
+        *args: tp.Any,
+        fail_fast: bool = False,
+        ) -> tp.Callable[[TVFunc], TVFunc]:
+
+    def decorator(func: TVFunc) -> TVFunc:
+
+        @wraps(func)
+        def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            # dict keyed by parameter name, only for those defined; if return is hinted, will be under key 'return'
+            # hints = tp.get_type_hints(func)
+            sig = Signature.from_callable(func)
+            sig_bound = sig.bind(*args, **kwargs)
+            sig_bound.apply_defaults()
+            # for v in sig.parameters.values():
+            #     if (h_value := v.annotation) != Signature.empty:
+            parent = (f'args of {sig}',)
+            for k, v in sig_bound.arguments.items():
+                if (h_p := sig.parameters[k].annotation) != Signature.empty:
+                    check_type(v, h_p, fail_fast, parent)
+
+            post = func(*args, **kwargs)
+
+            # if h_return := hints.get('return', None):
+            if (h_return := sig.return_annotation) != Signature.empty:
+                check_type(post, h_return, fail_fast, (f'return of {sig}',))
+
+            return post
+
+        return tp.cast(TVFunc, wrapper)
+
+    return decorator
 
 
 

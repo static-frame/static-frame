@@ -5,6 +5,7 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import validate_pair
 from static_frame.core.validate import check_type
+from static_frame.core.validate import check_interface
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
 
@@ -244,4 +245,26 @@ def test_check_type_dict_a():
         check_type({'a': 20, 'b': 18, 20: 3}, tp.Dict[str, int])
 
 
+#-------------------------------------------------------------------------------
+def test_check_interface_a():
 
+    @check_interface(fail_fast=False)
+    def proc1(a: int, b: int) -> int:
+        return a * b
+
+    assert proc1(2, 3) == 6
+
+def test_check_interface_b():
+
+    @check_interface(fail_fast=False)
+    def proc1(a: int, b: int) -> bool:
+        return a * b
+    try:
+        assert proc1(2, 3) == 6
+    except TypeError as e:
+        assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid for bool.'
+
+    try:
+        assert proc1(2, 'foo') == 6
+    except:
+        assert str(e) == 'In args of (a: int, b: int) -> bool, provided str invalid for int.'
