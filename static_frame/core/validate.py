@@ -44,7 +44,10 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
-        return f'{v.__name__}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+        # for older Python, not all generics have __name__
+        if not (name := getattr(v, '__name__', '')):
+            name = str(v)
+        return f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     if hasattr(v, '__name__'):
         return v.__name__ # type: ignore[no-any-return]
     elif v is ...:
