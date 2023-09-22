@@ -27,7 +27,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
 from numpy.ma import MaskedArray
-from pyarrow.lib import ArrowInvalid
+from pyarrow.lib import ArrowInvalid  # pylint: disable=E0611
 
 from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
