@@ -3151,7 +3151,7 @@ class Frame(ContainerOperand):
         except ArrowInvalid:
             # support loading parquet files saved with pyarrow<1.0
             # https://github.com/apache/arrow/issues/32660
-            table = pq.read_table(fp,
+            table = pq.read_table(fp,  # pragma: nocover
                     columns=columns_select,
                     use_pandas_metadata=False,
                     use_legacy_dataset=True,
