@@ -3131,7 +3131,8 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-        import pyarrow.parquet as pq  # type: ignore
+        import pyarrow.parquet as pq
+        from pyarrow.lib import ArrowInvalid  # pylint: disable=E0611
 
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
@@ -3142,10 +3143,19 @@ class Frame(ContainerOperand):
             columns_select = list(columns_select)
 
         # NOTE: the order of columns_select will determine their order
-        table = pq.read_table(fp,
-                columns=columns_select,
-                use_pandas_metadata=False,
-                )
+        try:
+            table = pq.read_table(fp,
+                    columns=columns_select,
+                    use_pandas_metadata=False,
+                    )
+        except ArrowInvalid:  # pragma: no cover
+            # support loading parquet files saved with pyarrow<1.0
+            # https://github.com/apache/arrow/issues/32660
+            table = pq.read_table(fp,  # pragma: no cover
+                    columns=columns_select,
+                    use_pandas_metadata=False,
+                    use_legacy_dataset=True,
+                    )
         if columns_select:
             # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
             if len(table.column_names) < len(columns_select):
