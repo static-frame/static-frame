@@ -215,3 +215,33 @@ def test_check_type_tuple_c():
 
     with pytest.raises(TypeError):
         check_type((3, 4), tp.Tuple[int, int, int])
+
+def test_check_type_tuple_c():
+
+    with pytest.raises(TypeError):
+        check_type((3, 4, 5), tp.Tuple[..., int, ...])
+
+
+#-------------------------------------------------------------------------------
+
+def test_check_type_literal_a():
+    check_type(42, tp.Literal[42])
+    check_type(42, tp.Literal[-1, 42])
+
+    with pytest.raises(TypeError):
+        check_type(42, tp.Literal['a', 'b'])
+
+#-------------------------------------------------------------------------------
+
+def test_check_type_dict_a():
+    check_type({'a': 3}, tp.Dict[str, int])
+    check_type({'b': 20}, tp.Dict[str, int])
+
+    with pytest.raises(TypeError):
+        check_type({'a': 20, 'b': 18, 'c': False}, tp.Dict[str, int])
+
+    with pytest.raises(TypeError):
+        check_type({'a': 20, 'b': 18, 20: 3}, tp.Dict[str, int])
+
+
+

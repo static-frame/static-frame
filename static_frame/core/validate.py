@@ -2,6 +2,9 @@ import types
 import typing
 from collections import deque
 from collections.abc import Sequence
+from collections.abc import MutableMapping
+from itertools import chain
+from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp
@@ -71,26 +74,18 @@ class CheckError(TypeError):
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
-
-
-def get_literal_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
-    [h_value] = tp.get_args(hint)
-    if value != h_value:
-        yield value, h_value, parent
-
-    # https://peps.python.org/pep-0586/#equivalence-of-two-literals
-    # for h in h_values:
-    #     if type(h) == type(h_values) and h == value:
-    #         break
-    # else: # no match found, return an error
-    #     yield value, hint, parent
-
-def get_sequence_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_sequence_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
     for v in value:
         yield v, h_component, parent
 
-def get_tuple_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_tuple_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
         if (h_len := len(h_components)) != 2:
@@ -105,23 +100,47 @@ def get_tuple_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterabl
         for v, h in zip(value, h_components):
             yield v, h, parent
 
+def get_mapping_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
+    [h_keys, h_values] = tp.get_args(hint)
+    for v, h in chain(
+            zip(value.keys(), repeat(h_keys)),
+            zip(value.values(), repeat(h_values)),
+            ):
+        yield v, h, parent
+
+
 
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
 
-def get_series_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_series_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     h_index, h_generic = tp.get_args(hint) # there must be two
     yield value.index, h_index, parent
     yield value.dtype.type(), h_generic, parent
 
-def get_index_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_index_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
     yield value.dtype.type(), h_generic, parent
 
-def get_ndarray_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_ndarray_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     h_shape, h_dtype = tp.get_args(hint)
     yield value.dtype, h_dtype, parent
 
-def get_dtype_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
+def get_dtype_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
     yield value.type(), h_generic, parent
 
@@ -174,7 +193,14 @@ def check(
                 p_next = p + (h,)
                 # import ipdb; ipdb.set_trace()
                 if origin is typing.Literal:
-                    q.extend(get_literal_checks(v, h, p_next))
+                    l_log: tp.List[TValidation] = []
+                    for l_hint in tp.get_args(h): # get components
+                        c_log = check(v, l_hint, fail_fast, p + (h,))
+                        if not c_log: # no error found, can exit
+                            break
+                        l_log.extend(c_log)
+                    else: # no breaks, so no matches within union
+                        log.extend(l_log)
                     continue
 
                 if not isinstance(v, origin):
@@ -183,9 +209,10 @@ def check(
 
                 if isinstance(v, tuple):
                     q.extend(get_tuple_checks(v, h, p_next))
-                elif isinstance(v, (list, Sequence)):
+                elif isinstance(v, Sequence):
                     q.extend(get_sequence_checks(v, h, p_next))
-
+                elif isinstance(v, MutableMapping):
+                    q.extend(get_mapping_checks(v, h, p_next))
                 elif isinstance(v, Index):
                     q.extend(get_index_checks(v, h, p_next))
                 elif isinstance(v, Series):
@@ -198,9 +225,10 @@ def check(
                     raise NotImplementedError(f'no handling for generic {origin}')
         elif not isinstance(h, type):
             # h is value from a literal
-            if v != h:
+            # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
+            if type(v) != type(h) or v != h:
                 log.append((v, h, p))
-        else:
+        else: # h is a non-generic type
             # special cases
             if v.__class__ is bool:
                 if h is bool:
