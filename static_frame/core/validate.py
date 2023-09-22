@@ -42,7 +42,6 @@ def is_union(hint: tp.Any) -> bool:
 TParent = tp.Tuple[tp.Any, ...]
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
-@staticmethod
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
         return f'{v.__name__}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
