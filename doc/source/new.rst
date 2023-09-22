@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+1.6.5
+-----------
+
+Implemented fall-back behavior for Parquet files written with  ``pyarrow`` less than 1.0.
+
+
 1.6.4
 -----------
 
