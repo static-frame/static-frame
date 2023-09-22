@@ -227,7 +227,7 @@ def check(
         elif not isinstance(h, type):
             # h is value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
-            if type(v) != type(h) or v != h:
+            if type(v) != type(h) or v != h: # pylint: disable=C0123
                 log.append((v, h, p))
         else: # h is a non-generic type
             # special cases

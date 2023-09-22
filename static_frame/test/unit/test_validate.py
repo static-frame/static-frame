@@ -217,7 +217,7 @@ def test_check_type_tuple_c():
     with pytest.raises(TypeError):
         check_type((3, 4), tp.Tuple[int, int, int])
 
-def test_check_type_tuple_c():
+def test_check_type_tuple_d():
 
     with pytest.raises(TypeError):
         check_type((3, 4, 5), tp.Tuple[..., int, ...])
@@ -278,7 +278,19 @@ def test_check_interface_c():
         return a * b
 
     assert proc1(2, False) == 0
-    # try:
-    # except TypeError as e:
-    #     assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid for bool.'
+    assert proc1(2, 1) == 2
+
+    with pytest.raises(TypeError):
+        assert proc1('foo', 1) == 2
+
+
+
+
+
+
+
+
+
+
+
 
