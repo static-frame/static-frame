@@ -3132,7 +3132,7 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-        import pyarrow.parquet as pq  # type: ignore
+        import pyarrow.parquet as pq
 
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
