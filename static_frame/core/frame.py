@@ -27,7 +27,6 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
 from numpy.ma import MaskedArray
-from pyarrow.lib import ArrowInvalid  # pylint: disable=E0611
 
 from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
@@ -3133,6 +3132,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
         '''
         import pyarrow.parquet as pq
+        from pyarrow.lib import ArrowInvalid  # pylint: disable=E0611
 
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
