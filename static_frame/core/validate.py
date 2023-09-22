@@ -75,6 +75,13 @@ def get_literal_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Itera
     if value != h_value:
         yield value, h_value, parent
 
+    # https://peps.python.org/pep-0586/#equivalence-of-two-literals
+    # for h in h_values:
+    #     if type(h) == type(h_values) and h == value:
+    #         break
+    # else: # no match found, return an error
+    #     yield value, hint, parent
+
 def get_sequence_checks(value: tp.Any, hint: tp.Any, parent: TParent) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
     for v in value:
