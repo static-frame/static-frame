@@ -1,12 +1,12 @@
 import types
 import typing
 from collections import deque
-from collections.abc import Sequence
 from collections.abc import MutableMapping
-from itertools import chain
-from itertools import repeat
+from collections.abc import Sequence
 from functools import wraps
 from inspect import Signature
+from itertools import chain
+from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp

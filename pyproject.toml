@@ -39,6 +39,7 @@ module = [
     "openpyxl",
     "pandas",
     "pyarrow",
+    "pyarrow.*",
     "pytest",
     "setuptools",
     "sphinx.*",
