@@ -50,7 +50,12 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 #-------------------------------------------------------------------------------
 
 class Constraint:
-    pass
+    def get_log(self,
+            value: tp.Any,
+            hint: tp.Any,
+            parent: TParent,
+            ) -> tp.Iterator[TValidation]:
+        raise NotImplementedError()
 
 class Name(Constraint):
     def __init__(self, name: TLabel):
@@ -63,7 +68,7 @@ class Name(Constraint):
             ) -> tp.Iterator[TValidation]:
         # returning anything is an error
         if value.name != self._name:
-            yield value, f'name {value.name} did not match {self._name}', parent
+            yield value, f'name {value.name!r} did not match {self._name!r}', parent
 
 # TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
 class Labels(Constraint):
@@ -323,7 +328,7 @@ def check_interface(
     if args: # if used without calling with kwargs
         if len(args) != 1 or not callable(args[0]):
             raise NotImplementedError('Only provide keyword arguments.')
-        return decorator(args[0])
+        return decorator(args[0]) # type: ignore
 
     return decorator
 
