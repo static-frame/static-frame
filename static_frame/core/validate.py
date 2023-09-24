@@ -181,6 +181,8 @@ def check(
         elif isinstance(h, GENERIC_TYPES):
             # have a generic container
             origin = tp.get_origin(h)
+            p_next = p + (h,)
+
             if origin is type: # a tp.Type[x] generic
                 [t] = tp.get_args(h)
                 try: # the v should be a subclass of t
@@ -190,13 +192,14 @@ def check(
                 if t_check:
                     continue
                 log.append((v, h, p))
+            elif origin is tp.Annotated:
+                h_type, *h_annotations = tp.get_args(h)
+                q.append((v, h_type, p_next))
             else:
-                p_next = p + (h,)
-                # import ipdb; ipdb.set_trace()
                 if origin is typing.Literal:
                     l_log: tp.List[TValidation] = []
                     for l_hint in tp.get_args(h): # get components
-                        c_log = check(v, l_hint, fail_fast, p + (h,))
+                        c_log = check(v, l_hint, fail_fast, p_next)
                         if not c_log: # no error found, can exit
                             break
                         l_log.extend(c_log)
