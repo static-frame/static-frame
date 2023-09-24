@@ -292,10 +292,8 @@ def test_check_interface_d():
     assert proc1(2, 1) == 2
 
 
+#-------------------------------------------------------------------------------
 
+def test_check_annotated_a():
 
-
-
-
-
-
+    check_type(3, tp.Annotated[int, 'foo'])
