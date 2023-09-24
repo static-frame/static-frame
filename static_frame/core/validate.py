@@ -268,8 +268,6 @@ def check_interface(
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
             sig_bound.apply_defaults()
-            # for v in sig.parameters.values():
-            #     if (h_value := v.annotation) != Signature.empty:
             parent = (f'args of {sig}',)
             for k, v in sig_bound.arguments.items():
                 if (h_p := sig.parameters[k].annotation) != Signature.empty:
@@ -277,13 +275,17 @@ def check_interface(
 
             post = func(*args, **kwargs)
 
-            # if h_return := hints.get('return', None):
             if (h_return := sig.return_annotation) != Signature.empty:
                 check_type(post, h_return, fail_fast, (f'return of {sig}',))
 
             return post
 
         return tp.cast(TVFunc, wrapper)
+
+    if args: # if used without calling with kwargs
+        if len(args) != 1 or not callable(args[0]):
+            raise NotImplementedError('Only provide keyword arguments.')
+        return decorator(args[0])
 
     return decorator
 
