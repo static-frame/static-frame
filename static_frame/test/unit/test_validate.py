@@ -292,6 +292,18 @@ def test_check_interface_d():
     assert proc1(2, 1) == 2
 
 
+
+def test_check_interface_e():
+
+    @check_interface
+    def proc1(a: tp.Annotated[int, 'foo'], b: tp.Annotated[int, 'bar']) -> int:
+        return a * b
+
+    assert proc1(2, 0) == 0
+    assert proc1(2, 1) == 2
+
+
+
 #-------------------------------------------------------------------------------
 
 def test_check_annotated_a():
