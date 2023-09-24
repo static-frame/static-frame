@@ -16,6 +16,7 @@ import typing_extensions as tp
 from static_frame.core.index import Index
 # from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.util import TLabel
 
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
@@ -43,9 +44,38 @@ def is_union(hint: tp.Any) -> bool:
         return tp.get_origin(hint) is tp.Union
     return False
 
-
 TParent = tp.Tuple[tp.Any, ...]
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
+
+#-------------------------------------------------------------------------------
+
+class Constraint:
+    pass
+
+class Name(Constraint):
+    def __init__(self, name: TLabel):
+        self._name = name
+
+    def get_log(self,
+            value: tp.Any,
+            hint: tp.Any,
+            parent: TParent,
+            ) -> tp.Iterator[TValidation]:
+        # returning anything is an error
+        if value.name != self._name:
+            yield value, f'name {value.name} did not match {self._name}', parent
+
+# TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
+class Labels(Constraint):
+    pass
+
+# TVValidator = tp.TypeVar('TVLabel', bound=tp.Callable[..., bool])
+class Validator(Constraint):
+    pass
+
+
+
+#-------------------------------------------------------------------------------
 
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
@@ -177,7 +207,8 @@ def check(
                 u_log.extend(c_log)
             else: # no breaks, so no matches within union
                 log.extend(u_log)
-
+        elif isinstance(h, Constraint):
+            log.extend(h.get_log(v, h, p))
         elif isinstance(h, GENERIC_TYPES):
             # have a generic container
             origin = tp.get_origin(h)
@@ -194,7 +225,11 @@ def check(
                 log.append((v, h, p))
             elif origin is tp.Annotated:
                 h_type, *h_annotations = tp.get_args(h)
+                # perform the un-annoitated check
                 q.append((v, h_type, p_next))
+                for h_annotation in h_annotations:
+                    if isinstance(h_annotation, Constraint):
+                        q.append((v, h_annotation, p_next))
             else:
                 if origin is typing.Literal:
                     l_log: tp.List[TValidation] = []

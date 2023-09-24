@@ -6,7 +6,11 @@ import static_frame as sf
 # from static_frame.core.validate import validate_pair
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
+from static_frame.core.validate import Name
+from static_frame.core.validate import Labels
+from static_frame.core.validate import Validator
 from static_frame.test.test_case import skip_nple119
+
 from static_frame.test.test_case import skip_pyle310
 
 
@@ -309,3 +313,20 @@ def test_check_interface_e():
 def test_check_annotated_a():
 
     check_type(3, tp.Annotated[int, 'foo'])
+
+
+
+def test_check_annotated_b():
+
+    v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
+    h1 = tp.Annotated[
+            sf.Series[sf.Index[np.int64], np.str_],
+            Name('foo'),
+    ]
+    with pytest.raises(TypeError):
+        check_type(v1, h1)
+
+    v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)), name='foo')
+    check_type(v1, h1)
+
+
