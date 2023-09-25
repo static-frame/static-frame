@@ -50,7 +50,7 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 #-------------------------------------------------------------------------------
 
 class Constraint:
-    __slots__ = ()
+    __slots__: tp.Tuple[str, ...] = ()
 
     def get_log(self,
             value: tp.Any,
