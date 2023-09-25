@@ -50,6 +50,8 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 #-------------------------------------------------------------------------------
 
 class Constraint:
+    __slots__ = ()
+
     def get_log(self,
             value: tp.Any,
             hint: tp.Any,
@@ -57,7 +59,13 @@ class Constraint:
             ) -> tp.Iterator[TValidation]:
         raise NotImplementedError()
 
+    def __repr__(self) -> str:
+        args = ', '.join(repr(getattr(self, v)) for v in self.__slots__)
+        return f'{self.__class__.__name__}({args})'
+
 class Name(Constraint):
+    __slots__ = ('_name',)
+
     def __init__(self, name: TLabel):
         self._name = name
 
@@ -67,8 +75,25 @@ class Name(Constraint):
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
         # returning anything is an error
-        if value.name != self._name:
-            yield value, f'name {value.name!r} did not match {self._name!r}', parent
+        if (n := value.name) != self._name:
+            # provide expected first
+            yield value, f'name {self._name!r}, provided name {n!r}', parent
+
+
+class Len(Constraint):
+    __slots__ = ('_len',)
+
+    def __init__(self, len: int):
+        self._len = len
+
+    def get_log(self,
+            value: tp.Any,
+            hint: tp.Any,
+            parent: TParent,
+            ) -> tp.Iterator[TValidation]:
+        if (vl := len(value)) != self._len:
+            # provide expected first
+            yield value, f'length {self._len}, provided length {vl}', parent
 
 # TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
 class Labels(Constraint):
@@ -104,7 +129,7 @@ class CheckError(TypeError):
                 prefix = f'In {path}, provided'
             else:
                 prefix = 'Provided'
-            msg.append(f'{prefix} {to_name(type(v))} invalid for {to_name(h)}.')
+            msg.append(f'{prefix} {to_name(type(v))} invalid: expected {to_name(h)}.')
         TypeError.__init__(self, ' '.join(msg))
 
 
@@ -201,23 +226,24 @@ def check(
         if h is tp.Any:
             continue
 
+        p_next = p + (h,)
+
         if is_union(h):
             # NOTE: must check union types first as tp.Union matches as generic type
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = check(v, c_hint, fail_fast, p + (h,))
+                c_log = check(v, c_hint, fail_fast, p_next)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
             else: # no breaks, so no matches within union
                 log.extend(u_log)
         elif isinstance(h, Constraint):
-            log.extend(h.get_log(v, h, p))
+            log.extend(h.get_log(v, h, p_next))
         elif isinstance(h, GENERIC_TYPES):
             # have a generic container
             origin = tp.get_origin(h)
-            p_next = p + (h,)
 
             if origin is type: # a tp.Type[x] generic
                 [t] = tp.get_args(h)

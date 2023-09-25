@@ -4,9 +4,10 @@ import typing_extensions as tp
 
 import static_frame as sf
 # from static_frame.core.validate import validate_pair
-from static_frame.core.validate import Labels
+# from static_frame.core.validate import Labels
 from static_frame.core.validate import Name
-from static_frame.core.validate import Validator
+# from static_frame.core.validate import Validator
+from static_frame.core.validate import Len
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
 from static_frame.test.test_case import skip_nple119
@@ -61,7 +62,7 @@ def test_check_type_type_b():
     try:
         check_type(3, tp.Type[sf.Series])
     except TypeError as e:
-        assert str(e) == 'Provided int invalid for Type[Series].'
+        assert str(e) == 'Provided int invalid: expected Type[Series].'
 
 #-------------------------------------------------------------------------------
 
@@ -154,13 +155,13 @@ def test_check_type_fail_fast_a():
     try:
         check_type(v, h, fail_fast=True)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid for int64.'
+        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid: expected int64.'
 
 
     try:
         check_type(v, h, fail_fast=False)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid for int64. In Series[Index[int64], int64], Index[int64], provided str_ invalid for int64.'
+        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid: expected int64. In Series[Index[int64], int64], Index[int64], provided str_ invalid: expected int64.'
 
 #-------------------------------------------------------------------------------
 
@@ -265,12 +266,12 @@ def test_check_interface_b():
     try:
         assert proc1(2, 3) == 6
     except TypeError as e:
-        assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid for bool.'
+        assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid: expected bool.'
 
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert str(e) == 'In args of (a: int, b: int) -> bool, provided str invalid for int.'
+        assert str(e) == 'In args of (a: int, b: int) -> bool, provided str invalid: expected int.'
 
 def test_check_interface_c():
 
@@ -313,8 +314,6 @@ def test_check_annotated_a():
 
     check_type(3, tp.Annotated[int, 'foo'])
 
-
-
 def test_check_annotated_b():
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
@@ -327,5 +326,22 @@ def test_check_annotated_b():
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)), name='foo')
     check_type(v1, h1)
+
+def test_check_annotated_c():
+
+    v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
+    h1 = tp.Annotated[
+            sf.Series[sf.Index[np.int64], np.str_],
+            Len(1),
+            ]
+    h2 = tp.Annotated[
+            sf.Series[sf.Index[np.int64], np.str_],
+            Len(2),
+            ]
+
+    with pytest.raises(TypeError):
+        check_type(v1, h1)
+
+    check_type(v1, h2)
 
 
