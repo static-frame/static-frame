@@ -220,6 +220,7 @@ def test_check_type_tuple_b():
     check_type((3, 4, False), tp.Tuple[int, int, bool])
     check_type((3, 4.1, False), tp.Tuple[int, float, bool])
 
+@skip_pyle310
 def test_check_type_tuple_c():
 
     with pytest.raises(TypeError):
@@ -362,6 +363,7 @@ def test_check_annotated_c():
 
 #-------------------------------------------------------------------------------
 
+@skip_pyle310
 def test_check_index_hierarchy_a():
 
     v1 = sf.IndexHierarchy.from_product(('a', 'b'), (1, 2))
@@ -398,6 +400,7 @@ def test_check_index_hierarchy_b():
     else: # did not raise
         raise TypeError('expected failure did not raise')
 
+@skip_pyle310
 def test_check_index_hierarchy_c():
 
     v1 = sf.IndexHierarchy.from_labels([(1, 'a', False), (1, 'b', False), (2, 'c', True)])
