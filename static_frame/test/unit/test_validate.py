@@ -5,7 +5,7 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import Validator
 # from static_frame.core.validate import validate_pair
-# from static_frame.core.validate import Labels
+from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
 from static_frame.core.validate import check_interface
@@ -417,4 +417,34 @@ def test_check_index_hierarchy_c():
     else: # did not raise
         raise TypeError('expected failure did not raise')
 
+#-------------------------------------------------------------------------------
+def test_validate_labels_a1():
+    idx1 = sf.Index(('a', 'b', 'c'))
+    v = Labels(('a', 'b', 'c'))
+    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_a2():
+    idx1 = sf.Index(('a', 'x', 'c'))
+    v = Labels(('a', 'b', 'c'))
+    assert tuple(v.iter_error_log(idx1, None, (None,)))[0][1] == "expected 'b', provided 'x'"
+
+def test_validate_labels_b():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Labels(('a', ..., 'd'))
+    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_c():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Labels((..., 'd'))
+    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_d1():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Labels(('a', 'b', ...))
+    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_d2():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Labels(('a', 'b', ..., 'e'))
+    assert tuple(v.iter_error_log(idx1, None, (None,)))[0][1] == "expected has unmatched labels ('e',)"
 

@@ -13,6 +13,7 @@ import typing_extensions as tp
 
 # from static_frame.core.container import ContainerBase
 # from static_frame.core.frame import Frame
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -56,9 +57,8 @@ def is_union(hint: tp.Any) -> bool:
 
 def is_unpack(hint: tp.Any) -> bool:
     # NOTE: cannot use isinstance or issubclass with Unpack
-    for cls in UNPACK_TYPES:
-        if hint == cls:
-            return True
+    if hint in UNPACK_TYPES:
+        return True
     return False
 
 TParent = tp.Tuple[tp.Any, ...]
@@ -66,6 +66,48 @@ TParent = tp.Tuple[tp.Any, ...]
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 # Leading Boolean is True if an error, other wise additional checks to queue
 TErrorOrCheck = tp.Tuple[bool, tp.Any, tp.Any, TParent]
+
+#-------------------------------------------------------------------------------
+# error reporting, presentation
+
+ERROR_MESSAGE_TYPE = object()
+
+def to_name(v: tp.Any) -> str:
+    if isinstance(v, GENERIC_TYPES):
+        # for older Python, not all generics have __name__
+        if not (name := getattr(v, '__name__', '')):
+            name = str(v)
+        return f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    if hasattr(v, '__name__'):
+        return v.__name__ # type: ignore[no-any-return]
+    if v is ...:
+        return '...'
+    return str(v)
+
+class CheckError(TypeError):
+
+    def __init__(self, log: tp.Iterable[TValidation]) -> None:
+        msg = []
+        for v, h, p in log:
+            if p:
+                path = ', '.join(to_name(n) for n in p)
+            else:
+                path = ''
+
+            if v is ERROR_MESSAGE_TYPE:
+                if path:
+                    prefix = f'Failed check in {path}:'
+                else:
+                    prefix = 'Failed check:'
+                msg.append(f'{prefix} {h}.')
+            else:
+                if path:
+                    prefix = f'In {path}: expected'
+                else:
+                    prefix = 'Expected'
+                msg.append(f'{prefix} {to_name(h)}, provided {to_name(type(v))} invalid.')
+
+        TypeError.__init__(self, ' '.join(msg))
 
 #-------------------------------------------------------------------------------
 
@@ -113,58 +155,55 @@ class Len(Constraint):
         if (vl := len(value)) != self._len:
             yield value, f'expected length {self._len}, provided length {vl}', parent
 
-# TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
-# might acccept regular expression objects as label entries?
+
+# might accept regular expression objects as label entries?
 class Labels(Constraint):
-    pass
+    __slots__ = ('_labels',)
+
+    def __init__(self, labels: tp.Sequence[TLabel]):
+        self._labels: tp.Sequence[TLabel] = labels
+
+    def iter_error_log(self,
+            value: tp.Any,
+            hint: tp.Any,
+            parent: TParent,
+            ) -> tp.Iterator[TValidation]:
+        if not isinstance(value, IndexBase):
+            yield value, f'expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
+        else:
+            pos_expected = 0
+            len_expected = len(self._labels)
+            for pos_provided in range(len(value)):
+                label_provided = value.iloc[pos_provided] # returns tuple for IH
+                if pos_expected >= len_expected:
+                    yield value, f'expected has insufficient labels, provided {label_provided!r}', parent
+
+                label_expected = self._labels[pos_expected]
+
+                if label_expected is not ...:
+                    if label_provided != label_expected:
+                        yield value, f'expected {label_expected!r}, provided {label_provided!r}', parent
+                    pos_expected += 1
+                # expected is an Ellipses
+                elif pos_expected + 1 < len_expected: # more expected labels available
+                    expected = self._labels[pos_expected + 1]
+                    if label_provided == expected:
+                        pos_expected += 2 # skip the compared value, prepare to get next
+                    else: # not equal, continue with ellipsis
+                        pass
+                        # end ellipses region
+        if pos_expected == len_expected - 1 and label_expected is ...:
+            pass # ended on elipses
+        elif pos_expected < len_expected:
+            expected_remainder = self._labels[pos_expected:]
+            if expected_remainder[0] is ...:
+                expected_remainder = expected_remainder[1:]
+            yield value, f'expected has unmatched labels {expected_remainder!r}', parent
+
 
 # TVValidator = tp.TypeVar('TVLabel', bound=tp.Callable[..., bool])
 class Validator(Constraint):
     pass
-
-
-
-#-------------------------------------------------------------------------------
-
-ERROR_MESSAGE_TYPE = object()
-
-def to_name(v: tp.Any) -> str:
-    if isinstance(v, GENERIC_TYPES):
-        # for older Python, not all generics have __name__
-        if not (name := getattr(v, '__name__', '')):
-            name = str(v)
-        return f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
-    if hasattr(v, '__name__'):
-        return v.__name__ # type: ignore[no-any-return]
-    if v is ...:
-        return '...'
-    return str(v)
-
-class CheckError(TypeError):
-
-    def __init__(self, log: tp.Iterable[TValidation]) -> None:
-        msg = []
-        for v, h, p in log:
-            if p:
-                path = ', '.join(to_name(n) for n in p)
-            else:
-                path = ''
-
-            if v is ERROR_MESSAGE_TYPE:
-                if path:
-                    prefix = f'Failed check in {path}:'
-                else:
-                    prefix = 'Failed check:'
-                msg.append(f'{prefix} {h}.')
-            else:
-                if path:
-                    prefix = f'In {path}: expected'
-                else:
-                    prefix = 'Expected'
-                msg.append(f'{prefix} {to_name(h)}, provided {to_name(type(v))} invalid.')
-
-        TypeError.__init__(self, ' '.join(msg))
-
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
