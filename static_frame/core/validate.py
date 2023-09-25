@@ -274,14 +274,12 @@ def check(
     # Error log: any entry is considered an error
     e_log: tp.List[TValidation] = []
 
-    def tee_error_or_check(records: tp.Iterator[TErrorOrCheck]) -> None:
+    def tee_error_or_check(records: tp.Iterable[TErrorOrCheck]) -> None:
         for record in records:
-            is_error = record[0]
-            record = record[1:]
-            if is_error:
-                e_log.append(record)
+            if record[0]:
+                e_log.append(record[1:])
             else:
-                q.append(record)
+                q.append(record[1:])
 
     while q:
         if fail_fast and e_log:
