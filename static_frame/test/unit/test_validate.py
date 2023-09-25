@@ -378,7 +378,7 @@ def test_check_index_hierarchy_a():
         assert str(e) == 'Failed check in IndexHierarchy[Index[str_], Index[integer], IndexDate]: expected IndexHierarchy depth of 3, provided depth of 2.'
 
 
-
+@skip_pyle310
 def test_check_index_hierarchy_b():
 
     v1 = sf.IndexHierarchy.from_labels([(1, 100), (1, 200), (2, 100)])
@@ -402,10 +402,15 @@ def test_check_index_hierarchy_c():
     v1 = sf.IndexHierarchy.from_labels([(1, 'a', False), (1, 'b', False), (2, 'c', True)])
 
     h1 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.str_], sf.Index[np.bool_]]
-    h2 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.bool_], sf.Index[np.str_]]
+    h2 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.int_], sf.Index[np.str_], sf.Index[np.bool_]]]]
+
+    h3 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.bool_], sf.Index[np.str_]]
+
+    check_type(v1, h1)
+    check_type(v1, h2)
 
     try:
-        check_type(v1, h2)
+        check_type(v1, h3)
     except TypeError as e:
         assert str(e) == 'In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[bool_]: expected bool_, provided str_ invalid. In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[str_]: expected str_, provided bool_ invalid.'
     else: # did not raise
