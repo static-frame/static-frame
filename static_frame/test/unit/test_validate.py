@@ -416,5 +416,3 @@ def test_check_index_hierarchy_c():
         raise TypeError('expected failure did not raise')
 
 
-
-    # h2 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.str_], ...]]
