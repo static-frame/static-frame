@@ -29,13 +29,23 @@ def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
 
 GENERIC_TYPES = tuple(_iter_generic_classes())
 
-def iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
+def _iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'UnionType', None):
         yield t
     if t := getattr(typing, '_UnionGenericAlias', None):
         yield t # pyright: ignore
 
-UNION_TYPES = tuple(iter_union_classes())
+UNION_TYPES = tuple(_iter_union_classes())
+
+def _iter_unpack_classes() -> tp.Iterable[tp.Type[tp.Any]]:
+    # NOTE: type extensions Unpack is not equal to typing.Unpack
+    if t := getattr(tp, 'Unpack', None):
+        yield t
+    if t := getattr(typing, 'Unpack', None):
+        yield t # pyright: ignore
+
+UNPACK_TYPES = tuple(_iter_unpack_classes())
+
 
 def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
@@ -44,15 +54,25 @@ def is_union(hint: tp.Any) -> bool:
         return tp.get_origin(hint) is tp.Union
     return False
 
+def is_unpack(hint: tp.Any) -> bool:
+    # NOTE: cannot use isinstance or issubclass with Unpack
+    for cls in UNPACK_TYPES:
+        if hint == cls:
+            return True
+    return False
+
 TParent = tp.Tuple[tp.Any, ...]
+# A validation record can be used to queue checks or report errors
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
+# Leading Boolean is True if an error, other wise additional checks to queue
+TErrorOrCheck = tp.Tuple[bool, tp.Any, tp.Any, TParent]
 
 #-------------------------------------------------------------------------------
 
 class Constraint:
     __slots__: tp.Tuple[str, ...] = ()
 
-    def get_log(self,
+    def iter_error_log(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
@@ -69,15 +89,14 @@ class Name(Constraint):
     def __init__(self, name: TLabel):
         self._name = name
 
-    def get_log(self,
+    def iter_error_log(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
         # returning anything is an error
         if (n := value.name) != self._name:
-            # provide expected first
-            yield value, f'name {self._name!r}, provided name {n!r}', parent
+            yield value, f'expected name {self._name!r}, provided name {n!r}', parent
 
 
 class Len(Constraint):
@@ -86,14 +105,13 @@ class Len(Constraint):
     def __init__(self, len: int):
         self._len = len
 
-    def get_log(self,
+    def iter_error_log(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
         if (vl := len(value)) != self._len:
-            # provide expected first
-            yield value, f'length {self._len}, provided length {vl}', parent
+            yield value, f'expected length {self._len}, provided length {vl}', parent
 
 # TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
 # might acccept regular expression objects as label entries?
@@ -107,6 +125,8 @@ class Validator(Constraint):
 
 
 #-------------------------------------------------------------------------------
+
+ERROR_MESSAGE_TYPE = object()
 
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
@@ -127,132 +147,167 @@ class CheckError(TypeError):
         for v, h, p in log:
             if p:
                 path = ', '.join(to_name(n) for n in p)
-                prefix = f'In {path}, provided'
             else:
-                prefix = 'Provided'
-            msg.append(f'{prefix} {to_name(type(v))} invalid: expected {to_name(h)}.')
+                path = ''
+
+            if v is ERROR_MESSAGE_TYPE:
+                if path:
+                    prefix = f'Failed check in {path}:'
+                else:
+                    prefix = 'Failed check:'
+                msg.append(f'{prefix} {h}.')
+            else:
+                if path:
+                    prefix = f'In {path}: expected'
+                else:
+                    prefix = 'Expected'
+                msg.append(f'{prefix} {to_name(h)}, provided {to_name(type(v))} invalid.')
+
         TypeError.__init__(self, ' '.join(msg))
 
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
-def get_sequence_checks(value: tp.Any,
+def iter_sequence_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     [h_component] = tp.get_args(hint)
     for v in value:
-        yield v, h_component, parent
+        yield False, v, h_component, parent
 
-def get_tuple_checks(value: tp.Any,
+def iter_tuple_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
         if (h_len := len(h_components)) != 2:
-            yield h_len, tp.Literal['invalid ellipses usage'], parent
+            yield True, ERROR_MESSAGE_TYPE, 'invalid ellipses usage', parent
         else:
             h = h_components[0]
             for v in value:
-                yield v, h, parent
+                yield False, v, h, parent
     else:
         if (h_len := len(h_components)) != len(value):
-            yield h_len, tp.Literal['tuple length invalid'], parent
+            msg = f'expected tuple length of {h_len}, provided tuple length of {len(value)}'
+            yield True, ERROR_MESSAGE_TYPE, msg, parent
         for v, h in zip(value, h_components):
-            yield v, h, parent
+            yield False, v, h, parent
 
-def get_mapping_checks(value: tp.Any,
+def iter_mapping_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     [h_keys, h_values] = tp.get_args(hint)
     for v, h in chain(
             zip(value.keys(), repeat(h_keys)),
             zip(value.values(), repeat(h_values)),
             ):
-        yield v, h, parent
+        yield False, v, h, parent
 
 
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
 
-def get_series_checks(value: tp.Any,
+def iter_series_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     h_index, h_generic = tp.get_args(hint) # there must be two
-    yield value.index, h_index, parent
-    yield value.dtype.type(), h_generic, parent
+    yield False, value.index, h_index, parent
+    yield False, value.dtype.type(), h_generic, parent
 
-def get_index_checks(value: tp.Any,
+def iter_index_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     [h_generic] = tp.get_args(hint)
-    yield value.dtype.type(), h_generic, parent
+    yield False, value.dtype.type(), h_generic, parent
 
-def get_index_hierarchy_checks(value: tp.Any,
+def iter_index_hierarchy_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     h_generics = tp.get_args(hint)
-    if (h_len := len(h_generics)) != value.depth:
-        yield h_len, tp.Literal['Component Index length invalid'], parent
-    # import ipdb; ipdb.set_trace()
-    for i in range(value.depth):
-        yield value.index_at_depth(i), h_generics[i], parent
+    h_len = len(h_generics)
 
-def get_ndarray_checks(value: tp.Any,
+    if h_len == 1 and is_unpack(tp.get_origin(h_generics[0])):
+        # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
+        [h_tuple] = tp.get_args(h_generics[0])
+        assert issubclass(tuple, tp.get_origin(h_tuple))
+        # to support usage of Elipses, treat this as a hint of a corresponding tuple of Index
+        yield False, tuple(value.index_at_depth(i) for i in range(value.depth)), h_tuple, parent
+    else:
+        if h_len != value.depth:
+            # give expected first
+            yield True, ERROR_MESSAGE_TYPE, f'expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
+        for i in range(value.depth):
+            yield False, value.index_at_depth(i), h_generics[i], parent
+
+def iter_ndarray_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     h_shape, h_dtype = tp.get_args(hint)
-    yield value.dtype, h_dtype, parent
+    yield False, value.dtype, h_dtype, parent
 
-def get_dtype_checks(value: tp.Any,
+def iter_dtype_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TValidation]:
+        ) -> tp.Iterable[TErrorOrCheck]:
     [h_generic] = tp.get_args(hint)
-    yield value.type(), h_generic, parent
+    yield False, value.type(), h_generic, parent
 
 #-------------------------------------------------------------------------------
 
 def check(
         value: tp.Any,
         hint: tp.Any,
-        fail_fast: bool = False,
         parent: TParent = (),
+        fail_fast: bool = False,
         ) -> tp.Iterable[TValidation]:
 
+    # Check queue: queue all checks
     q = deque(((value, hint, parent),))
-    log: tp.List[TValidation] = []
+    # Error log: any entry is considered an error
+    e_log: tp.List[TValidation] = []
+
+    def tee_error_or_check(records: tp.Iterator[TErrorOrCheck]) -> None:
+        for record in records:
+            is_error = record[0]
+            record = record[1:]
+            if is_error:
+                e_log.append(record)
+            else:
+                q.append(record)
 
     while q:
-        if fail_fast and log:
-            return log
+        if fail_fast and e_log:
+            return e_log
 
         v, h, p = q.popleft()
+        # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checkls
+        assert v is not ERROR_MESSAGE_TYPE
 
         if h is tp.Any:
             continue
 
         p_next = p + (h,)
-
         if is_union(h):
             # NOTE: must check union types first as tp.Union matches as generic type
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = check(v, c_hint, fail_fast, p_next)
+                c_log = check(v, c_hint, p_next, fail_fast)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
             else: # no breaks, so no matches within union
-                log.extend(u_log)
+                e_log.extend(u_log)
         elif isinstance(h, Constraint):
-            log.extend(h.get_log(v, h, p_next))
+            e_log.extend(h.iter_error_log(v, h, p_next))
         elif isinstance(h, GENERIC_TYPES):
             # have a generic container
             origin = tp.get_origin(h)
@@ -265,7 +320,7 @@ def check(
                     t_check = False
                 if t_check:
                     continue
-                log.append((v, h, p))
+                e_log.append((v, h, p))
             elif origin == tp.Annotated: # NOTE: cannot use is due backwards compat
                 h_type, *h_annotations = tp.get_args(h)
                 # perform the un-annoitated check
@@ -277,41 +332,41 @@ def check(
                 if origin == tp.Literal: # NOTE: cannot use is due backwards compat
                     l_log: tp.List[TValidation] = []
                     for l_hint in tp.get_args(h): # get components
-                        c_log = check(v, l_hint, fail_fast, p_next)
+                        c_log = check(v, l_hint, p_next, fail_fast)
                         if not c_log: # no error found, can exit
                             break
                         l_log.extend(c_log)
                     else: # no breaks, so no matches within union
-                        log.extend(l_log)
+                        e_log.extend(l_log)
                     continue
 
                 if not isinstance(v, origin):
-                    log.append((v, origin, p))
+                    e_log.append((v, origin, p))
                     continue
 
                 if isinstance(v, tuple):
-                    q.extend(get_tuple_checks(v, h, p_next))
+                    tee_error_or_check(iter_tuple_checks(v, h, p_next))
                 elif isinstance(v, Sequence):
-                    q.extend(get_sequence_checks(v, h, p_next))
+                    tee_error_or_check(iter_sequence_checks(v, h, p_next))
                 elif isinstance(v, MutableMapping):
-                    q.extend(get_mapping_checks(v, h, p_next))
+                    tee_error_or_check(iter_mapping_checks(v, h, p_next))
                 elif isinstance(v, Index):
-                    q.extend(get_index_checks(v, h, p_next))
+                    tee_error_or_check(iter_index_checks(v, h, p_next))
                 elif isinstance(v, IndexHierarchy):
-                    q.extend(get_index_hierarchy_checks(v, h, p_next))
+                    tee_error_or_check(iter_index_hierarchy_checks(v, h, p_next))
                 elif isinstance(v, Series):
-                    q.extend(get_series_checks(v, h, p_next))
+                    tee_error_or_check(iter_series_checks(v, h, p_next))
                 elif isinstance(v, np.ndarray):
-                    q.extend(get_ndarray_checks(v, h, p_next))
+                    tee_error_or_check(iter_ndarray_checks(v, h, p_next))
                 elif isinstance(v, np.dtype):
-                    q.extend(get_dtype_checks(v, h, p_next))
+                    tee_error_or_check(iter_dtype_checks(v, h, p_next))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}')
         elif not isinstance(h, type):
             # h is value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
             if type(v) != type(h) or v != h: # pylint: disable=C0123
-                log.append((v, h, p))
+                e_log.append((v, h, p))
         else: # h is a non-generic type
             # special cases
             if v.__class__ is bool:
@@ -320,19 +375,23 @@ def check(
             # general case
             elif isinstance(v, h):
                 continue
-            log.append((v, h, p))
+            e_log.append((v, h, p))
 
-    return log
+    return e_log
 
+#-------------------------------------------------------------------------------
+# public interfaces
 
-def check_type(value: tp.Any,
+def check_type(
+        value: tp.Any,
         hint: tp.Any,
-        fail_fast: bool = False,
         parent: TParent = (),
+        *,
+        fail_fast: bool = False,
         ) -> None:
-    log = check(value, hint, fail_fast, parent)
-    if log:
-        raise CheckError(log)
+    e_log = check(value, hint, parent, fail_fast)
+    if e_log:
+        raise CheckError(e_log)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
@@ -354,12 +413,12 @@ def check_interface(
             parent = (f'args of {sig}',)
             for k, v in sig_bound.arguments.items():
                 if (h_p := sig.parameters[k].annotation) != Signature.empty:
-                    check_type(v, h_p, fail_fast, parent)
+                    check_type(v, h_p, parent, fail_fast=fail_fast)
 
             post = func(*args, **kwargs)
 
             if (h_return := sig.return_annotation) != Signature.empty:
-                check_type(post, h_return, fail_fast, (f'return of {sig}',))
+                check_type(post, h_return, (f'return of {sig}',), fail_fast=fail_fast)
 
             return post
 

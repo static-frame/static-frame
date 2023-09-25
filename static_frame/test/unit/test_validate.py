@@ -62,7 +62,7 @@ def test_check_type_type_b():
     try:
         check_type(3, tp.Type[sf.Series])
     except TypeError as e:
-        assert str(e) == 'Provided int invalid: expected Type[Series].'
+        assert str(e) == 'Expected Type[Series], provided int invalid.'
 
 #-------------------------------------------------------------------------------
 
@@ -152,16 +152,20 @@ def test_check_type_fail_fast_a():
     v = sf.Series(('a', 'b'), index=sf.Index(('x', 'y'), dtype=np.str_))
     h = sf.Series[sf.Index[np.int64], np.int64]
 
+    with pytest.raises(TypeError):
+        check_type(v, h, fail_fast=True)
     try:
         check_type(v, h, fail_fast=True)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid: expected int64.'
+        assert str(e) == 'In Series[Index[int64], int64]: expected int64, provided str_ invalid.'
 
 
+    with pytest.raises(TypeError):
+        check_type(v, h, fail_fast=False)
     try:
         check_type(v, h, fail_fast=False)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64], provided str_ invalid: expected int64. In Series[Index[int64], int64], Index[int64], provided str_ invalid: expected int64.'
+        assert str(e) == 'In Series[Index[int64], int64]: expected int64, provided str_ invalid. In Series[Index[int64], int64], Index[int64]: expected int64, provided str_ invalid.'
 
 #-------------------------------------------------------------------------------
 
@@ -220,12 +224,20 @@ def test_check_type_tuple_c():
 
     with pytest.raises(TypeError):
         check_type((3, 4), tp.Tuple[int, int, int])
+    try:
+        check_type((3, 4), tp.Tuple[int, int, int])
+    except TypeError as e:
+        assert str(e) == 'Failed check in Tuple[int, int, int]: expected tuple length of 3, provided tuple length of 2.'
+
 
 def test_check_type_tuple_d():
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as e:
         check_type((3, 4, 5), tp.Tuple[..., int, ...])
-
+    try:
+        check_type((3, 4, 5), tp.Tuple[..., int, ...])
+    except TypeError as e:
+        assert str(e) == 'Failed check in Tuple[..., int, ...]: invalid ellipses usage.'
 
 #-------------------------------------------------------------------------------
 
@@ -235,6 +247,10 @@ def test_check_type_literal_a():
 
     with pytest.raises(TypeError):
         check_type(42, tp.Literal['a', 'b'])
+    try:
+        check_type(42, tp.Literal['a', 'b'])
+    except TypeError as e:
+        assert str(e) == 'In Literal[a, b]: expected a, provided int invalid. In Literal[a, b]: expected b, provided int invalid.'
 
 #-------------------------------------------------------------------------------
 
@@ -266,12 +282,12 @@ def test_check_interface_b():
     try:
         assert proc1(2, 3) == 6
     except TypeError as e:
-        assert str(e) == 'In return of (a: int, b: int) -> bool, provided int invalid: expected bool.'
+        assert str(e) == 'In return of (a: int, b: int) -> bool: expected bool, provided int invalid.'
 
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert str(e) == 'In args of (a: int, b: int) -> bool, provided str invalid: expected int.'
+        assert str(e) == 'In args of (a: int, b: int) -> bool: expected int, provided str invalid.'
 
 def test_check_interface_c():
 
@@ -344,7 +360,7 @@ def test_check_annotated_c():
 
 #-------------------------------------------------------------------------------
 
-def test_check_index_hiearchy_a():
+def test_check_index_hierarchy_a():
 
     v1 = sf.IndexHierarchy.from_product(('a', 'b'), (1, 2))
     h1 = tp.Annotated[
@@ -353,3 +369,48 @@ def test_check_index_hiearchy_a():
             ]
     check_type(v1, h1)
 
+    h1 = sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer], sf.IndexDate]
+    with pytest.raises(TypeError):
+        check_type(v1, h1)
+    try:
+        check_type(v1, h1)
+    except TypeError as e:
+        assert str(e) == 'Failed check in IndexHierarchy[Index[str_], Index[integer], IndexDate]: expected IndexHierarchy depth of 3, provided depth of 2.'
+
+
+
+def test_check_index_hierarchy_b():
+
+    v1 = sf.IndexHierarchy.from_labels([(1, 100), (1, 200), (2, 100)])
+    v2 = sf.IndexHierarchy.from_labels([(1, 100, 3), (1, 200, 3), (2, 100, 3)])
+
+    h1 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.int_], ...]]
+    h2 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.str_], ...]]
+
+    check_type(v1, h1)
+    check_type(v2, h1)
+
+    try:
+        check_type(v1, h2)
+    except TypeError as e:
+        assert str(e) == 'In IndexHierarchy[Unpack[Tuple[Index[str_], ...]]], Tuple[Index[str_], ...], Index[str_]: expected str_, provided int64 invalid. In IndexHierarchy[Unpack[Tuple[Index[str_], ...]]], Tuple[Index[str_], ...], Index[str_]: expected str_, provided int64 invalid.'
+    else: # did not raise
+        raise TypeError('expected failure did not raise')
+
+def test_check_index_hierarchy_c():
+
+    v1 = sf.IndexHierarchy.from_labels([(1, 'a', False), (1, 'b', False), (2, 'c', True)])
+
+    h1 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.str_], sf.Index[np.bool_]]
+    h2 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.bool_], sf.Index[np.str_]]
+
+    try:
+        check_type(v1, h2)
+    except TypeError as e:
+        assert str(e) == 'In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[bool_]: expected bool_, provided str_ invalid. In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[str_]: expected str_, provided bool_ invalid.'
+    else: # did not raise
+        raise TypeError('expected failure did not raise')
+
+
+
+    # h2 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.str_], ...]]
