@@ -255,7 +255,7 @@ def check(
                 if t_check:
                     continue
                 log.append((v, h, p))
-            elif origin is tp.Annotated:
+            elif origin == tp.Annotated: # NOTE: cannot use is due backwards compat
                 h_type, *h_annotations = tp.get_args(h)
                 # perform the un-annoitated check
                 q.append((v, h_type, p_next))
@@ -263,7 +263,7 @@ def check(
                     if isinstance(h_annotation, Constraint):
                         q.append((v, h_annotation, p_next))
             else:
-                if origin is typing.Literal:
+                if origin == tp.Literal: # NOTE: cannot use is due backwards compat
                     l_log: tp.List[TValidation] = []
                     for l_hint in tp.get_args(h): # get components
                         c_log = check(v, l_hint, fail_fast, p_next)
