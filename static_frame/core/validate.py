@@ -14,7 +14,7 @@ import typing_extensions as tp
 # from static_frame.core.container import ContainerBase
 # from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-# from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
 
@@ -192,6 +192,17 @@ def get_index_checks(value: tp.Any,
     [h_generic] = tp.get_args(hint)
     yield value.dtype.type(), h_generic, parent
 
+def get_index_hierarchy_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
+    h_generics = tp.get_args(hint)
+    if (h_len := len(h_generics)) != value.depth:
+        yield h_len, tp.Literal['Component Index length invalid'], parent
+    # import ipdb; ipdb.set_trace()
+    for i in range(value.depth):
+        yield value.index_at_depth(i), h_generics[i], parent
+
 def get_ndarray_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
@@ -286,6 +297,8 @@ def check(
                     q.extend(get_mapping_checks(v, h, p_next))
                 elif isinstance(v, Index):
                     q.extend(get_index_checks(v, h, p_next))
+                elif isinstance(v, IndexHierarchy):
+                    q.extend(get_index_hierarchy_checks(v, h, p_next))
                 elif isinstance(v, Series):
                     q.extend(get_series_checks(v, h, p_next))
                 elif isinstance(v, np.ndarray):

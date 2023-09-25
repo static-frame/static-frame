@@ -306,8 +306,6 @@ def test_check_interface_e():
     assert proc1(2, 0) == 0
     assert proc1(2, 1) == 2
 
-
-
 #-------------------------------------------------------------------------------
 
 def test_check_annotated_a():
@@ -344,4 +342,14 @@ def test_check_annotated_c():
 
     check_type(v1, h2)
 
+#-------------------------------------------------------------------------------
+
+def test_check_index_hiearchy_a():
+
+    v1 = sf.IndexHierarchy.from_product(('a', 'b'), (1, 2))
+    h1 = tp.Annotated[
+            sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer]],
+            Len(4),
+            ]
+    check_type(v1, h1)
 
