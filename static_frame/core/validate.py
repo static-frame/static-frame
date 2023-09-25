@@ -96,6 +96,7 @@ class Len(Constraint):
             yield value, f'length {self._len}, provided length {vl}', parent
 
 # TVLabels = tp.TypeVar('TVLabel', bound=tp.Sequence[TLabel])
+# might acccept regular expression objects as label entries?
 class Labels(Constraint):
     pass
 
