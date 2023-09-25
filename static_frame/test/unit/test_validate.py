@@ -378,14 +378,13 @@ def test_check_index_hierarchy_a():
         assert str(e) == 'Failed check in IndexHierarchy[Index[str_], Index[integer], IndexDate]: expected IndexHierarchy depth of 3, provided depth of 2.'
 
 
-@skip_pyle310
 def test_check_index_hierarchy_b():
 
     v1 = sf.IndexHierarchy.from_labels([(1, 100), (1, 200), (2, 100)])
     v2 = sf.IndexHierarchy.from_labels([(1, 100, 3), (1, 200, 3), (2, 100, 3)])
 
-    h1 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.int_], ...]]
-    h2 = sf.IndexHierarchy[*tp.Tuple[sf.Index[np.str_], ...]]
+    h1 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.int_], ...]]]
+    h2 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.str_], ...]]]
 
     check_type(v1, h1)
     check_type(v2, h1)
