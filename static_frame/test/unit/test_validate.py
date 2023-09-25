@@ -230,6 +230,7 @@ def test_check_type_tuple_c():
         assert str(e) == 'Failed check in Tuple[int, int, int]: expected tuple length of 3, provided tuple length of 2.'
 
 
+@skip_pyle310
 def test_check_type_tuple_d():
 
     with pytest.raises(TypeError) as e:
@@ -241,6 +242,7 @@ def test_check_type_tuple_d():
 
 #-------------------------------------------------------------------------------
 
+@skip_pyle310
 def test_check_type_literal_a():
     check_type(42, tp.Literal[42])
     check_type(42, tp.Literal[-1, 42])
@@ -377,7 +379,7 @@ def test_check_index_hierarchy_a():
     except TypeError as e:
         assert str(e) == 'Failed check in IndexHierarchy[Index[str_], Index[integer], IndexDate]: expected IndexHierarchy depth of 3, provided depth of 2.'
 
-
+@skip_pyle310
 def test_check_index_hierarchy_b():
 
     v1 = sf.IndexHierarchy.from_labels([(1, 100), (1, 200), (2, 100)])
