@@ -23,6 +23,7 @@ Using Generics and TypeVarTuple for Better Typing of Arrays and DataFrames
 .. Using `TypeVarTuple`
 .. for Variadic Columnar dtype Specfication
 
+Using Nested Generics and TypeVarTuple for Better Typing of Arrays and DataFrames
 
 
 
@@ -33,9 +34,7 @@ Use `generic` insteead of `dtype[generic]` provides a more concise representatio
 
 
 
-
-
-
+### first internal presentation
 
 A goal of StaticFrame is to provide an explicit interface that supports creating maintainable libraries using DataFrames. As Python standard library tools for typing have evolved, using type hints to make DataFrame interfaces explicit and statically checkable is now (nearly!) possible.
 
@@ -47,6 +46,11 @@ PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) tha
 
 In CR today we will review NumPy's approach to typing, including the as-of-yet undefined generic shape type and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Then, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can make columnar type specification variadic for `IndexHierarchy` and `Frame`. Finally, we will consider other `Frame` characteristics that might be combined with type hints to perform comprehensive run-time validations.
 
+
+
+### second internal presentation
+
+Using nested generics and the new TypeVarTuple, StaticFrame 2.0 will permit full static-typing of DataFrames, including statically typing the index, columns, and columnar types. In addition to this support for static-analysis checks with mypy or Pyright, built-in functions and decorators permit can use the same type-hints for run-time validation. Extended with one or more validators enclosed in an Annotated generic, additional run-time validation of shape, name attributes, index labels, or arbitrary functional checks can be included in single definition.
 
 
 
