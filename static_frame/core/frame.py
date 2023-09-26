@@ -216,7 +216,12 @@ TSeriesAny = Series[tp.Any, tp.Any]
 
 def _NA_BLOCKS_CONSTRCTOR(shape: tp.Tuple[int, int]) -> None: ...
 
-class Frame(ContainerOperand):
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
+TVDtypes = tp.TypeVarTuple('TVDtypes',
+        default=tp.Unpack[tp.Tuple[tp.Any, ...]])
+
+class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
     '''
     __slots__ = (
