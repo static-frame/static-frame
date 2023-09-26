@@ -164,7 +164,7 @@ class Labels(Constraint):
         self._labels: tp.Sequence[TLabel] = labels
 
     @staticmethod
-    def _prepare_remainder(labels: tp.Sequence[TLabel]):
+    def _prepare_remainder(labels: tp.Sequence[TLabel]) -> str:
         # always drop leading ellipses
         if labels[0] is ...:
             labels = labels[1:]
@@ -196,7 +196,7 @@ class Labels(Constraint):
                 elif pos_e + 1 < len_e: # more expected labels available
                     label_next_e = self._labels[pos_e + 1]
                     if label_next_e is ...:
-                        yield value, f'expected cannot be defined with adjacent ellipses'
+                        yield value, f'expected cannot be defined with adjacent ellipses', parent
                         break
                     if label_p == label_next_e:
                         pos_e += 2 # skip the compared value, prepare to get next
@@ -226,7 +226,7 @@ class Validator(Constraint):
             ) -> tp.Iterator[TValidation]:
         post = self._validator(value)
         if post is False:
-            yield value, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}'
+            yield value, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}', parent
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
