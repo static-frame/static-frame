@@ -11,10 +11,10 @@ from itertools import repeat
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.index import Index
 # from static_frame.core.container import ContainerBase
 # from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
@@ -163,47 +163,70 @@ class Labels(Constraint):
     def __init__(self, labels: tp.Sequence[TLabel]):
         self._labels: tp.Sequence[TLabel] = labels
 
+    @staticmethod
+    def _prepare_remainder(labels: tp.Sequence[TLabel]):
+        # always drop leading ellipses
+        if labels[0] is ...:
+            labels = labels[1:]
+        return ', '.join((repr(l) if l is not ... else '...') for l in labels)
+
     def iter_error_log(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
+
         if not isinstance(value, IndexBase):
             yield value, f'expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
         else:
-            pos_expected = 0
-            len_expected = len(self._labels)
-            for pos_provided in range(len(value)):
-                label_provided = value.iloc[pos_provided] # returns tuple for IH
-                if pos_expected >= len_expected:
-                    yield value, f'expected has insufficient labels, provided {label_provided!r}', parent
+            pos_e = 0 # position expected
+            len_e = len(self._labels)
 
-                label_expected = self._labels[pos_expected]
+            for label_p in value:
+                if pos_e >= len_e:
+                    yield value, f'expected labels exhausted at provided {label_p!r}', parent
+                    break
+                label_e = self._labels[pos_e]
 
-                if label_expected is not ...:
-                    if label_provided != label_expected:
-                        yield value, f'expected {label_expected!r}, provided {label_provided!r}', parent
-                    pos_expected += 1
-                # expected is an Ellipses
-                elif pos_expected + 1 < len_expected: # more expected labels available
-                    expected = self._labels[pos_expected + 1]
-                    if label_provided == expected:
-                        pos_expected += 2 # skip the compared value, prepare to get next
-                    else: # not equal, continue with ellipsis
-                        pass
-                        # end ellipses region
-        if pos_expected == len_expected - 1 and label_expected is ...:
-            pass # ended on elipses
-        elif pos_expected < len_expected:
-            expected_remainder = self._labels[pos_expected:]
-            if expected_remainder[0] is ...:
-                expected_remainder = expected_remainder[1:]
-            yield value, f'expected has unmatched labels {expected_remainder!r}', parent
+                if label_e is not ...:
+                    if label_p != label_e:
+                        yield value, f'expected {label_e!r}, provided {label_p!r}', parent
+                    pos_e += 1
+                # label_e is an Ellipses; either find next as match or continue with Ellipses
+                elif pos_e + 1 < len_e: # more expected labels available
+                    label_next_e = self._labels[pos_e + 1]
+                    if label_next_e is ...:
+                        yield value, f'expected cannot be defined with adjacent ellipses'
+                        break
+                    if label_p == label_next_e:
+                        pos_e += 2 # skip the compared value, prepare to get next
+                # else, last expected value is Ellipses
+            else: # no break, evaluate final conditions
+                if pos_e == len_e - 1 and label_e is ...:
+                    pass # ended on elipses
+                elif pos_e < len_e:
+                    remainder = self._prepare_remainder(self._labels[pos_e:])
+                    yield value, f'expected has unmatched labels {remainder}', parent
 
 
-# TVValidator = tp.TypeVar('TVLabel', bound=tp.Callable[..., bool])
 class Validator(Constraint):
-    pass
+    __slots__ = ('_validator',)
+
+    def __init__(self, validator: tp.Callable[..., bool]):
+        self._validator: tp.Callable[..., bool] = validator
+
+    @staticmethod
+    def _prepare_callable(validator: tp.Callable[..., bool]) -> str:
+        return validator.__name__
+
+    def iter_error_log(self,
+            value: tp.Any,
+            hint: tp.Any,
+            parent: TParent,
+            ) -> tp.Iterator[TValidation]:
+        post = self._validator(value)
+        if post is False:
+            yield value, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}'
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics

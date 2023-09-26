@@ -8,6 +8,8 @@ import static_frame as sf
 from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
+from static_frame.core.validate import Validator
+from static_frame.core.validate import TValidation
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
 from static_frame.test.test_case import skip_nple119
@@ -421,33 +423,102 @@ def test_check_index_hierarchy_c():
         raise TypeError('expected failure did not raise')
 
 #-------------------------------------------------------------------------------
+
+def get_hints(records: tp.Iterable[TValidation]) -> tp.Tuple[str]:
+    return tuple(r[1] for r in records)
+
 def test_validate_labels_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
     v = Labels(('a', 'b', 'c'))
-    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
 
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
     v = Labels(('a', 'b', 'c'))
-    assert tuple(v.iter_error_log(idx1, None, (None,)))[0][1] == "expected 'b', provided 'x'"
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected 'b', provided 'x'",)
+
+def test_validate_labels_a3():
+    idx1 = sf.Index(('a', 'x', 'z'))
+    v = Labels(('a', 'b', 'c'))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == (
+            "expected 'b', provided 'x'",
+            "expected 'c', provided 'z'")
 
 def test_validate_labels_b():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels(('a', ..., 'd'))
-    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels((..., 'd'))
-    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
 
 def test_validate_labels_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels(('a', 'b', ...))
-    assert tuple(v.iter_error_log(idx1, None, (None,))) == ()
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
 
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels(('a', 'b', ..., 'e'))
-    assert tuple(v.iter_error_log(idx1, None, (None,)))[0][1] == "expected has unmatched labels ('e',)"
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'e'",)
 
+def test_validate_labels_e1():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels(('a', ..., 'c', ..., 'd'))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected labels exhausted at provided 'e'",)
+
+def test_validate_labels_e2():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels(('a', ..., 'c', ..., 'e'))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e3():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels(('a', ..., 'c', ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e4():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels((..., 'c', ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e5():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels((..., 'b', 'c', ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e6():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels((..., 'b', ..., 'd', 'e'))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e7():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels(('a', 'b', ..., 'd', 'e'))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+
+def test_validate_labels_e8():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels(('a', 'b', ..., 'f', ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'f', ...",)
+
+def test_validate_labels_e9():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels((..., 'x', ..., 'y', ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'x', ..., 'y', ...",)
+
+def test_validate_labels_e10():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Labels((..., 'a', ..., ...))
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected cannot be defined with adjacent ellipses",)
+
+
+def test_validate_validator_a():
+    idx1 = sf.Index(('a', 'b', 'c'))
+    v1 = Validator(lambda i: 'b' in i)
+    assert get_hints(v1.iter_error_log(idx1, None, (None,))) == ()
+
+    v2 = Validator(lambda i: 'q' in i)
+    assert get_hints(v2.iter_error_log(idx1, None, (None,))) == ("Index failed validation with <lambda>",)
