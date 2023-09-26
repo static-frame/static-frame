@@ -42,6 +42,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     HeaderType = tp.Tuple[DtypeAny, bool, tp.Tuple[int, ...]] # pylint: disable=W0611 #pragma: no cover
     HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -677,7 +678,7 @@ class ArchiveFrameConverter:
     @staticmethod
     def frame_encode(*,
             archive: Archive,
-            frame: 'Frame',
+            frame: TFrameAny,
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
@@ -739,7 +740,7 @@ class ArchiveFrameConverter:
     @classmethod
     def to_archive(cls,
             *,
-            frame: 'Frame',
+            frame: TFrameAny,
             fp: PathSpecifier,
             include_index: bool = True,
             include_columns: bool = True,
@@ -773,8 +774,8 @@ class ArchiveFrameConverter:
     def frame_decode(cls,
             *,
             archive: Archive,
-            constructor: tp.Type['Frame'],
-            ) -> 'Frame':
+            constructor: tp.Type[TFrameAny],
+            ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -846,9 +847,9 @@ class ArchiveFrameConverter:
     @classmethod
     def from_archive(cls,
             *,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[TFrameAny],
             fp: PathSpecifier,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -865,9 +866,9 @@ class ArchiveFrameConverter:
     @classmethod
     def from_archive_mmap(cls,
             *,
-            constructor: tp.Type['Frame'],
+            constructor: tp.Type[TFrameAny],
             fp: PathSpecifier,
-            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+            ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -932,7 +933,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         self._archive.__del__() # force closing resources
 
     @property
-    def contents(self) -> 'Frame':
+    def contents(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating name, dtype, shape, and bytes, of Archive components.
         '''
@@ -953,7 +954,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     header = self._archive.read_array_header(name)
                     yield (name, self._archive.size_array(name)) + header
 
-        f = Frame.from_records(gen(),
+        f: TFrameAny = Frame.from_records(gen(),
                 columns=('name', 'size', 'dtype', 'fortran', 'shape'),
                 name=str(self._archive._archive),
                 )
@@ -1098,7 +1099,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         self._archive.write_metadata(metadata)
 
     def from_frames(self,
-            frames: tp.Iterable['Frame'],
+            frames: tp.Iterable[TFrameAny],
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -1178,7 +1179,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
             def blocks() -> tp.Iterator[NDArrayAny]:
                 type_blocks = []
-                previous_f: tp.Optional[Frame] = None
+                previous_f: tp.Optional[TFrameAny] = None
                 block_compatible = True
                 reblock_compatible = True
 

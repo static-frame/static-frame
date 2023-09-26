@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 NP_KIND_TO_DFI_KIND = {
     'i': DtypeKind.INT,
@@ -240,7 +241,7 @@ class DFIDataFrame(DataFrame):
             )
 
     def __init__(self,
-            frame: 'Frame',
+            frame: TFrameAny,
             *,
             nan_as_null: bool = False,
             allow_copy: bool = True,
@@ -257,7 +258,7 @@ class DFIDataFrame(DataFrame):
 
         if recast_blocks:
             from static_frame.core.frame import Frame
-            self._frame = Frame(
+            self._frame: TFrameAny = Frame(
                     frame._blocks.contiguous_columnar(),
                     index=frame._index,
                     columns=frame._columns,

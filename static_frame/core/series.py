@@ -137,7 +137,11 @@ if tp.TYPE_CHECKING:
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    FrameType = tp.TypeVar('FrameType', bound='Frame') # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+    TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
+    FrameType = tp.TypeVar('FrameType', bound=TFrameAny) # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
@@ -3395,7 +3399,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
@@ -3427,7 +3431,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'FrameGO':
+            ) -> TFrameGOAny:
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
@@ -3457,7 +3461,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: NameType = NAME_DEFAULT,
-            ) -> 'FrameHE':
+            ) -> TFrameHEAny:
         '''
         Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 

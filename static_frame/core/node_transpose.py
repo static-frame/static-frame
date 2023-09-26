@@ -17,10 +17,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_fill_value import InterfaceFillValue  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
-
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'IndexHierarchy',
         covariant=True,
         )
@@ -73,7 +73,7 @@ class InterfaceTranspose(Interface[TVContainer_co]):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
-            ) -> 'InterfaceFillValue[Frame]':
+            ) -> InterfaceFillValue[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''

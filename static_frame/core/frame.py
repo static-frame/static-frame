@@ -8578,7 +8578,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def to_frame_he(self,
             *,
             name: NameType = NAME_DEFAULT,
-            ) -> 'FrameHE':
+            ) -> TFrameHEAny:
         '''
         Return a ``FrameHE`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
@@ -8587,7 +8587,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def to_frame_go(self,
             *,
             name: NameType = NAME_DEFAULT,
-            ) -> 'FrameGO':
+            ) -> TFrameGOAny:
         '''
         Return a ``FrameGO`` instance from this ``Frame``.
         '''
@@ -9225,7 +9225,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
 #-------------------------------------------------------------------------------
 
-class FrameGO(Frame):
+class FrameGO(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 
@@ -9342,15 +9342,15 @@ class FrameGO(Frame):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[FrameGO]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameGOAny]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[FrameGO]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[TFrameGOAny]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 #-------------------------------------------------------------------------------
-class FrameHE(Frame):
+class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
     '''
     A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     '''
@@ -9380,7 +9380,7 @@ class FrameHE(Frame):
 
     def __hash__(self) -> int:
         if not hasattr(self, '_hash'):
-            # NOTE: we hash based on labels, which we use a faster-than full identity check
+            # NOTE: we hash based on labels, which we use as a faster-than full identity check
             self._hash = hash((
                     tuple(self.index),
                     tuple(self.columns),
@@ -9392,11 +9392,11 @@ class FrameHE(Frame):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[FrameHE]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameHEAny]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[FrameHE]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[TFrameHEAny]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 
@@ -9704,4 +9704,6 @@ class FrameAsType:
 
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 

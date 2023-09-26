@@ -104,10 +104,14 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.frame import FrameHE  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+    TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 
 # IH = tp.TypeVar('IH', bound='IndexHierarchy')
@@ -2669,8 +2673,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # export
 
     def _to_frame(self,
-            constructor: tp.Type['Frame'],
-            ) -> 'Frame':
+            constructor: tp.Type[TFrameAny],
+            ) -> TFrameAny:
         if self._recache:
             self._update_array_cache()
 
@@ -2681,19 +2685,20 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 own_data=True,
                 )
 
-    def to_frame(self) -> 'Frame':
+    def to_frame(self) -> TFrameAny:
         '''
         Return :obj:`Frame` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import Frame
         return self._to_frame(Frame)
 
-    def to_frame_go(self) -> 'FrameGO':
+    def to_frame_go(self) -> TFrameGOAny:
         '''
         Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import FrameGO
-        return tp.cast(FrameGO, self._to_frame(FrameGO))
+        TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+        return tp.cast(TFrameGOAny, self._to_frame(FrameGO))
 
     def _to_signature_bytes(self,
             include_name: bool = True,
@@ -2876,9 +2881,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
 
-# class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
-
-class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]):
+class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]): # type: ignore[type-arg]
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''

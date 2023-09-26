@@ -44,17 +44,21 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
-FrameOrSeries = tp.Union['Frame', 'Series[tp.Any, tp.Any]']
+FrameOrSeries = tp.Union[
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Series[tp.Any, tp.Any]',
+        ]
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Index[tp.Any]',
         'Series[tp.Any, tp.Any]',
         'SeriesHE[tp.Any, tp.Any]',
-        'Frame',
-        'FrameGO',
-        'FrameHE',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'TypeBlocks',
         'Bus',
         'Batch',
@@ -467,7 +471,7 @@ class InterfaceFrameAsType(Interface[TVContainer_co]):
             dtype: TDtypeSpecifier,
             *,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Apply a single ``dtype`` to all columns.
         '''
@@ -588,7 +592,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
 
     def __init__(self,
             container: TVContainer_co,
-            func_getitem: tp.Callable[[TLocSelector], 'Frame']
+            func_getitem: tp.Callable[[TLocSelector], TFrameAny]
             ) -> None:
         '''
         Args:
@@ -598,7 +602,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'Frame':
+    def __getitem__(self, key: TLocSelector) -> TFrameAny:
         '''Selector of columns by label for consolidation.
 
         Args:
@@ -606,14 +610,14 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
         '''
         return self._func_getitem(key)
 
-    def __call__(self) -> 'Frame':
+    def __call__(self) -> TFrameAny:
         '''
         Apply consolidation to all columns.
         '''
         return self._func_getitem(NULL_SLICE)
 
     @property
-    def status(self) -> 'Frame':
+    def status(self) -> TFrameAny:
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame

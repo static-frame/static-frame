@@ -4,6 +4,8 @@ import typing_extensions as tp
 import static_frame as sf
 
 TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameGOAny = sf.FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameHEAny = sf.FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 def test_frame_from_dict() -> None:
 
@@ -16,7 +18,7 @@ def test_frame_from_dict_fields() -> None:
     d1 = {'a': 1, 'b':10, 'c': 5}
     d2 = {'b': 10, 'c': 5, 'a': 1}
 
-    f: sf.FrameGO = sf.FrameGO.from_dict_fields((d1, d2))
+    f: TFrameGOAny= sf.FrameGO.from_dict_fields((d1, d2))
     assert f.shape == (3, 2)
 
 def test_frame_from_dict_records() -> None:
@@ -24,7 +26,7 @@ def test_frame_from_dict_records() -> None:
     d1 = {'a': 1, 'b':10, 'c': 5}
     d2 = {'b': 10, 'c': 5, 'a': 1}
 
-    f: sf.FrameGO = sf.FrameGO.from_dict_records((d1, d2))
+    f: TFrameGOAny= sf.FrameGO.from_dict_records((d1, d2))
     assert f.shape == (2, 3)
 
 
@@ -32,7 +34,7 @@ def test_frame_from_records_items() -> None:
 
     d1 = {'a': (1, 2, 3), 'b': (10, 20, 30), 'c': (5, 5, 5)}
 
-    f: sf.FrameGO = sf.FrameGO.from_records_items(d1.items())
+    f: TFrameGOAny= sf.FrameGO.from_records_items(d1.items())
     assert f.shape == (3, 3)
 
 
@@ -55,11 +57,11 @@ def test_frame_getitem_b() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.FrameGO.from_records(records)
-    f2: sf.FrameGO = f1[2:]
+    f1: TFrameGOAny = sf.FrameGO.from_records(records)
+    f2: TFrameGOAny = f1[2:]
     assert isinstance(f2, sf.FrameGO)
 
-    f3: sf.FrameGO = f1[f1.columns.values % 2 == 0]
+    f3: TFrameGOAny = f1[f1.columns.values % 2 == 0]
     assert isinstance(f3, sf.FrameGO)
 
 def test_frame_getitem_c() -> None:
@@ -68,11 +70,11 @@ def test_frame_getitem_c() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.FrameHE.from_records(records)
-    f2: sf.FrameHE = f1[2:]
+    f1: TFrameHEAny = sf.FrameHE.from_records(records)
+    f2: TFrameHEAny = f1[2:]
     assert isinstance(f2, sf.FrameHE)
 
-    f3: sf.FrameHE = f1[f1.columns.values % 2 == 0]
+    f3: TFrameHEAny = f1[f1.columns.values % 2 == 0]
     assert isinstance(f3, sf.FrameHE)
 
 def test_frame_getitem_d() -> None:
@@ -134,8 +136,8 @@ def test_frame_go_loc_a() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.FrameGO.from_records(records)
-    f2: sf.FrameGO = f1.loc[1:, 1:]
+    f1: TFrameGOAny = sf.FrameGO.from_records(records)
+    f2: TFrameGOAny = f1.loc[1:, 1:]
     assert isinstance(f2, sf.FrameGO)
 
 
@@ -145,8 +147,8 @@ def test_frame_he_loc_a() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.FrameHE.from_records(records)
-    f2: sf.FrameHE = f1.loc[1:, 1:]
+    f1: TFrameHEAny = sf.FrameHE.from_records(records)
+    f2: TFrameHEAny = f1.loc[1:, 1:]
     assert isinstance(f2, sf.FrameHE)
 
 

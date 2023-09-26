@@ -28,9 +28,12 @@ from static_frame.core.util import dtype_from_element
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
-def join(frame: 'Frame',
-        other: 'Frame', # support a named Series as a 1D frame?
+def join(frame: TFrameAny,
+        other: TFrameAny, # support a named Series as a 1D frame?
         *,
         join_type: Join, # intersect, left, right, union,
         left_depth_level: tp.Optional[TDepthLevel] = None,
@@ -41,7 +44,7 @@ def join(frame: 'Frame',
         right_template: str = '{}',
         fill_value: tp.Any = np.nan,
         include_index: bool = False,
-        ) -> 'Frame':
+        ) -> TFrameAny:
 
     from static_frame.core.frame import FrameGO
 
@@ -168,7 +171,7 @@ def join(frame: 'Frame',
 
     #-----------------------------------------------------------------------
     # construct final frame
-    final: FrameGO
+    final: TFrameGOAny
     if not is_many:
         final = FrameGO(index=final_index)
         left_column_labels = (left_template.format(c) for c in frame.columns)

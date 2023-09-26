@@ -34,8 +34,15 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series[tp.Any, tp.Any]', 'Bus', 'Quilt', 'Yarn')
+FrameOrSeries = tp.TypeVar('FrameOrSeries',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Series[tp.Any, tp.Any]',
+        'Bus',
+        'Quilt',
+        'Yarn',
+        )
 PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 # FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
@@ -654,7 +661,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             columns_constructor: tp.Optional[TIndexCtorSpecifier]= None,
             axis: int = 0,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         # NOTE: this is only called from `Frame` to produce a new `Frame`
 
         from static_frame.core.frame import Frame
@@ -713,7 +720,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         axis: int = kwargs.get('axis', 0) # type: ignore
 
-        apply_constructor: tp.Callable[..., tp.Union['Frame', TSeriesAny]]
+        apply_constructor: tp.Callable[..., tp.Union[TFrameAny, TSeriesAny]]
 
         if self._apply_type is IterNodeApplyType.SERIES_VALUES:
             apply_constructor = partial(self.to_series_from_values, axis=axis)

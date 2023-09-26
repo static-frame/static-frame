@@ -36,6 +36,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 
 #-------------------------------------------------------------------------------
@@ -113,8 +114,8 @@ def pivot_records_items_to_frame(
         columns: tp.Sequence[TLabel],
         index_constructor: TIndexCtor,
         dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
-        frame_cls: tp.Type['Frame'],
-        ) -> 'Frame':
+        frame_cls: tp.Type[TFrameAny],
+        ) -> TFrameAny:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
@@ -323,13 +324,13 @@ def pivot_items_to_frame(*,
         group_depth: int,
         data_field_iloc: int,
         func_single: tp.Optional[AnyCallable],
-        frame_cls: tp.Type['Frame'],
+        frame_cls: tp.Type[TFrameAny],
         name: NameType,
         dtype: DtypeAny | None,
         index_constructor: TIndexCtor,
         columns_constructor: TIndexCtor,
         kind: TSortKinds,
-        ) -> 'Frame':
+        ) -> TFrameAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     This version returns a Frame.
@@ -380,7 +381,7 @@ def pivot_items_to_frame(*,
 
 def pivot_core(
         *,
-        frame: 'Frame',
+        frame: TFrameAny,
         index_fields: tp.List[TLabel],
         columns_fields: tp.List[TLabel],
         data_fields: tp.List[TLabel],
@@ -390,7 +391,7 @@ def pivot_core(
         fill_value: object = np.nan,
         index_constructor: TIndexCtorSpecifier = None,
         kind: TSortKinds = DEFAULT_FAST_SORT_KIND,
-        ) -> 'Frame':
+        ) -> TFrameAny:
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
     from static_frame.core.frame import Frame
@@ -527,7 +528,7 @@ def pivot_core(
                 )
         sub_columns_collected.extend(sub_columns)
 
-        sub_frame: Frame
+        sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
             sub_blocks.append(pivot_items_to_block(blocks=sub,
@@ -570,7 +571,7 @@ def pivot_core(
 #-------------------------------------------------------------------------------
 
 def pivot_outer_index(
-        frame: 'Frame',
+        frame: TFrameAny,
         index_fields: tp.Sequence[TLabel],
         index_depth: int,
         index_constructor: TIndexCtorSpecifier = None,
@@ -706,7 +707,7 @@ def pivot_derive_constructors(*,
         target_select: NDArrayAny,
         group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]],
         expand_is_columns: bool,
-        frame_cls: tp.Type['Frame'],
+        frame_cls: tp.Type[TFrameAny],
         ) -> PivotDeriveConstructors:
     '''
     pivot_stack: columns is contract, index is expand

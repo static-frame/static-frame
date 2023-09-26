@@ -25,9 +25,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable = W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'Series[tp.Any, tp.Any]',
         covariant=True,
         )
@@ -85,7 +86,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     #---------------------------------------------------------------------------
     @property
-    def via_T(self) -> 'InterfaceTranspose[Frame]':
+    def via_T(self) -> InterfaceTranspose[TFrameAny]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -142,7 +143,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
     def _extract_loc2d(self,
             row_key: TLocSelector = NULL_SLICE,
             column_key: TLocSelector = NULL_SLICE,
-            ) -> tp.Union['Frame', TSeriesAny]:
+            ) -> tp.Union[TFrameAny, TSeriesAny]:
         '''
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''

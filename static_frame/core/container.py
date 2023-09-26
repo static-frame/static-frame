@@ -35,6 +35,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
 
@@ -55,7 +56,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     @property
     @doc_inject()
-    def interface(self) -> 'Frame':
+    def interface(self) -> TFrameAny:
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(self.__class__)
@@ -208,7 +209,7 @@ class ContainerOperandSequence(ContainerBase):
 
     __slots__ = ()
 
-    interface: 'Frame' # property that returns a Frame
+    interface: TFrameAny # property that returns a Frame
     # values: NDArrayAny
 
     # NOTE: the return type here is intentionally broad as it will get specialized in derived classes

@@ -80,6 +80,7 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
@@ -629,26 +630,26 @@ def matmul(lhs: NDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, float]: ...
 
 
 @tp.overload
-def matmul(lhs: Frame, rhs: TSeriesAny) -> TSeriesAny: ...
+def matmul(lhs: TFrameAny, rhs: TSeriesAny) -> TSeriesAny: ...
 
 @tp.overload
-def matmul(lhs: Frame, rhs: tp.Sequence[float]) -> TSeriesAny: ...
+def matmul(lhs: TFrameAny, rhs: tp.Sequence[float]) -> TSeriesAny: ...
 
 @tp.overload
-def matmul(lhs: Frame, rhs: NDArrayAny) -> tp.Union[TSeriesAny, Frame]: ...
+def matmul(lhs: TFrameAny, rhs: NDArrayAny) -> tp.Union[TSeriesAny, TFrameAny]: ...
 
 @tp.overload
-def matmul(lhs: TSeriesAny, rhs: Frame) -> TSeriesAny: ...
+def matmul(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny: ...
 
 @tp.overload
-def matmul(lhs: tp.Sequence[float], rhs: Frame) -> TSeriesAny: ...
+def matmul(lhs: tp.Sequence[float], rhs: TFrameAny) -> TSeriesAny: ...
 
 @tp.overload
-def matmul(lhs: NDArrayAny, rhs: Frame) -> tp.Union[TSeriesAny, Frame]: ...
+def matmul(lhs: NDArrayAny, rhs: TFrameAny) -> tp.Union[TSeriesAny, TFrameAny]: ...
 
 # 2D @ 2D = 2D
 @tp.overload
-def matmul(lhs: Frame, rhs: Frame) -> Frame: ...
+def matmul(lhs: TFrameAny, rhs: TFrameAny) -> TFrameAny: ...
 
 def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
     '''
@@ -811,7 +812,7 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
 
 
 def axis_window_items( *,
-        source: tp.Union[TSeriesAny, 'Frame', 'Quilt'],
+        source: tp.Union[TSeriesAny, TFrameAny, Quilt],
         size: int,
         axis: int = 0,
         step: int = 1,
@@ -968,7 +969,7 @@ def get_block_match(
 
 def bloc_key_normalize(
         key: TBlocKey,
-        container: 'Frame'
+        container: TFrameAny
         ) -> NDArrayAny:
     '''
     Normalize and validate a bloc key. Return a same sized Boolean array.
@@ -997,9 +998,9 @@ def bloc_key_normalize(
 
 
 def key_to_ascending_key(
-        key: TLocSelector | Frame,
+        key: TLocSelector | TFrameAny,
         size: int,
-        ) -> TLocSelector | Frame:
+        ) -> TLocSelector | TFrameAny:
     '''
     Normalize all types of keys into an ascending formation.
 
@@ -1249,7 +1250,7 @@ def apply_binary_operator_blocks_columnar(*,
 #-------------------------------------------------------------------------------
 
 def arrays_from_index_frame(
-        container: 'Frame',
+        container: TFrameAny,
         depth_level: tp.Optional[TDepthLevel],
         columns: TLocSelector
         ) -> tp.Iterator[NDArrayAny]:
@@ -1680,7 +1681,7 @@ def apex_to_name(
     raise AxisInvalid(f'invalid axis: {axis}')
 
 
-def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
+def container_to_exporter_attr(container_type: tp.Type[TFrameAny]) -> str:
     from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameGO
     from static_frame.core.frame import FrameHE
@@ -1694,9 +1695,9 @@ def container_to_exporter_attr(container_type: tp.Type['Frame']) -> str:
     raise NotImplementedError(f'no handling for {container_type}')
 
 def frame_to_frame(
-        frame: 'Frame',
-        container_type: tp.Type['Frame'],
-        ) -> 'Frame':
+        frame: TFrameAny,
+        container_type: tp.Type[TFrameAny],
+        ) -> TFrameAny:
     if frame.__class__ is container_type:
         return frame
     func = getattr(frame, container_to_exporter_attr(container_type))
