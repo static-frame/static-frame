@@ -337,7 +337,7 @@ def test_check_annotated_b():
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
     h1 = tp.Annotated[
-            sf.Series[sf.Index[np.int64], np.str_],
+            sf.Series[sf.Index[np.int_], np.str_],
             Name('foo'),
     ]
     with pytest.raises(TypeError):
@@ -350,11 +350,11 @@ def test_check_annotated_c():
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
     h1 = tp.Annotated[
-            sf.Series[sf.Index[np.int64], np.str_],
+            sf.Series[sf.Index[np.int_], np.str_],
             Len(1),
             ]
     h2 = tp.Annotated[
-            sf.Series[sf.Index[np.int64], np.str_],
+            sf.Series[sf.Index[np.int_], np.str_],
             Len(2),
             ]
 
@@ -430,7 +430,7 @@ def get_hints(records: tp.Iterable[TValidation]) -> tp.Tuple[str]:
 def test_validate_labels_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
     v = Labels(('a', 'b', 'c'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
@@ -447,17 +447,17 @@ def test_validate_labels_a3():
 def test_validate_labels_b():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels(('a', ..., 'd'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels((..., 'd'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels(('a', 'b', ...))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
@@ -472,32 +472,32 @@ def test_validate_labels_e1():
 def test_validate_labels_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(('a', ..., 'c', ..., 'e'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e3():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(('a', ..., 'c', ...))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e4():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels((..., 'c', ...))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e5():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels((..., 'b', 'c', ...))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e6():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels((..., 'b', ..., 'd', 'e'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e7():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(('a', 'b', ..., 'd', 'e'))
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
@@ -518,7 +518,7 @@ def test_validate_labels_e10():
 def test_validate_validator_a():
     idx1 = sf.Index(('a', 'b', 'c'))
     v1 = Validator(lambda i: 'b' in i)
-    assert get_hints(v1.iter_error_log(idx1, None, (None,))) == ()
+    assert not get_hints(v1.iter_error_log(idx1, None, (None,)))
 
     v2 = Validator(lambda i: 'q' in i)
     assert get_hints(v2.iter_error_log(idx1, None, (None,))) == ("Index failed validation with <lambda>",)

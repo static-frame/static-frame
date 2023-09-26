@@ -196,7 +196,7 @@ class Labels(Constraint):
                 elif pos_e + 1 < len_e: # more expected labels available
                     label_next_e = self._labels[pos_e + 1]
                     if label_next_e is ...:
-                        yield value, f'expected cannot be defined with adjacent ellipses', parent
+                        yield value, 'expected cannot be defined with adjacent ellipses', parent
                         break
                     if label_p == label_next_e:
                         pos_e += 2 # skip the compared value, prepare to get next
