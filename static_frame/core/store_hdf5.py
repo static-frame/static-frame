@@ -25,7 +25,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -77,8 +77,8 @@ class StoreHDF5(Store):
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
         import tables
         config_map = StoreConfigMap.from_initializer(config)
 

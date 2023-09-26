@@ -51,7 +51,7 @@ class StoreSQLite(Store):
     @classmethod
     def _frame_to_table(cls,
             *,
-            frame: Frame,
+            frame: TFrameAny,
             label: str, # can be None
             cursor: sqlite3.Cursor,
             include_columns: bool,
@@ -98,7 +98,7 @@ class StoreSQLite(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -144,8 +144,8 @@ class StoreSQLite(Store):
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
 
         config_map = StoreConfigMap.from_initializer(config)
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
