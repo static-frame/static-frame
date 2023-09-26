@@ -2761,7 +2761,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npz(cls,
             fp: PathSpecifier,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
         '''
@@ -2773,7 +2773,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npy(cls,
             fp: PathSpecifier,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an directory of npy files.
 
@@ -2806,7 +2806,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_pickle(cls,
             fp: PathSpecifier,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from a pickle file.
 
@@ -3186,7 +3186,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_msgpack(
             msgpack_data: bytes
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
@@ -3418,12 +3418,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> 'Frame':
+    # def __copy__(self) -> TFrameAny:
     #     '''
     #     Return shallow copy of this Frame.
     #     '''
 
-    # def copy(self)-> 'Frame':
+    # def copy(self)-> TFrameAny:
     #     '''
     #     Return shallow copy of this Frame.
     #     '''
@@ -3466,7 +3466,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             index: NameType = NAME_DEFAULT,
             columns: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''
@@ -3570,7 +3570,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Frame':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -3596,7 +3596,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # NOTE: we only process object dt64 types; strings have to be converted explicitly
 
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Frame':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -3640,7 +3640,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> 'Frame':
+        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -5276,18 +5276,18 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
 
     #---------------------------------------------------------------------------
-    def _extract_iloc_mask(self, key: TILocSelectorCompound) -> 'Frame':
+    def _extract_iloc_mask(self, key: TILocSelectorCompound) -> TFrameAny:
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return self.__class__(masked_blocks,
                 columns=self._columns,
                 index=self._index,
                 own_data=True)
 
-    def _extract_loc_mask(self, key: TLocSelectorCompound) -> 'Frame':
+    def _extract_loc_mask(self, key: TLocSelectorCompound) -> TFrameAny:
         key_iloc = self._compound_loc_to_iloc(key)
         return self._extract_iloc_mask(key=key_iloc)
 
-    def _extract_getitem_mask(self, key: TLocSelectorCompound) -> 'Frame':
+    def _extract_getitem_mask(self, key: TLocSelectorCompound) -> TFrameAny:
         key_iloc = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_mask(key=key_iloc)
 
@@ -5331,7 +5331,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         _, key_iloc = self._compound_loc_to_getitem_iloc(key)
         return FrameAsType(self, column_key=key_iloc)
 
-    def _extract_getitem_consolidate(self, key: TLocSelector) -> 'Frame':
+    def _extract_getitem_consolidate(self, key: TLocSelector) -> TFrameAny:
         _, key_iloc = self._compound_loc_to_getitem_iloc(key)
         blocks = TypeBlocks.from_blocks(
                 self._blocks._consolidate_select_blocks(key_iloc))
@@ -5386,7 +5386,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _ufunc_unary_operator(self,
             operator: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> 'Frame':
+            ) -> TFrameAny:
         # call the unary operator on _blocks
         return self.__class__(
                 self._blocks._ufunc_unary_operator(operator=operator),
@@ -5400,7 +5400,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
 
         if operator.__name__ == 'matmul':
             return matmul(self, other) # type: ignore
@@ -5561,7 +5561,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             composable: bool,
             dtypes: tp.Tuple[DtypeAny, ...],
             size_one_unity: bool
-            ) -> 'Frame':
+            ) -> TFrameAny:
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         dtype = None if not dtypes else dtypes[0] # only a tuple
@@ -6095,7 +6095,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
 
@@ -6122,7 +6122,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
 
@@ -6264,7 +6264,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_index=True
                 )
 
-    def isin(self, other: tp.Any) -> 'Frame':
+    def isin(self, other: tp.Any) -> TFrameAny:
         '''
         Return a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         '''
@@ -6282,7 +6282,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             lower: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
             upper: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
             axis: tp.Optional[int] = None
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''{}
 
         Args:
@@ -6336,7 +6336,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
 
-    def transpose(self) -> 'Frame':
+    def transpose(self) -> TFrameAny:
         '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.__class__(self._blocks.transpose(),
@@ -6346,7 +6346,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 name=self._name)
 
     @property
-    def T(self) -> 'Frame':
+    def T(self) -> TFrameAny:
         '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.transpose()
@@ -6379,7 +6379,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             exclude_first: bool = False,
             exclude_last: bool = False
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
 
@@ -6431,7 +6431,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             drop: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` produced by setting the given column as the index, optionally removing that column from the new :obj:`Frame`.
 
@@ -6488,7 +6488,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
             reorder_for_hierarchy: bool = False,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Given an iterable of column labels, return a new ``Frame`` with those columns as an ``IndexHierarchy`` on the index.
 
@@ -6567,7 +6567,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
             columns_constructors: TIndexCtorSpecifiers = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` where the index is added to the front of the data, and an :obj:`IndexAutoFactory` is used to populate a new index. If the :obj:`Index` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
 
@@ -6653,7 +6653,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             drop: bool = False,
             columns_constructor: TIndexCtorSpecifier = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` produced by setting the given row as the columns, optionally removing that row from the new :obj:`Frame`.
 
@@ -6709,7 +6709,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             columns_constructors: TIndexCtorSpecifiers = None,
             reorder_for_hierarchy: bool = False,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Given an iterable of index labels, return a new ``Frame`` with those rows as an ``IndexHierarchy`` on the columns.
 
@@ -6788,7 +6788,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             names: tp.Sequence[TLabel] = (),
             # consolidate_blocks: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` where columns are added to the top of the data, and an :obj:`IndexAutoFactory` is used to populate new columns. This operation potentially forces a complete copy of all data.
 
@@ -6862,7 +6862,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 name=self._name,
                 )
 
-    def __round__(self, decimals: int = 0) -> 'Frame':
+    def __round__(self, decimals: int = 0) -> TFrameAny:
         '''
         Return a :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
@@ -6886,7 +6886,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: int = 0,
             *,
             include_index: bool = False,
-            include_columns: bool = False) -> 'Frame':
+            include_columns: bool = False) -> TFrameAny:
         '''
         Roll columns and/or rows by positive or negative integer counts, where columns and/or rows roll around the axis.
 
@@ -6932,7 +6932,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: int = 0,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
         '''
@@ -6978,7 +6978,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-    ) -> 'Frame':
+    ) -> TFrameAny:
 
         if axis == 1 and is_fill_value_factory_initializer(fill_value):
             raise InvalidFillValue(fill_value, 'axis==1')
@@ -7046,7 +7046,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Rank values distinctly, where ties get distinct values that maintain their ordering, and ranks are contiguous unique integers.
 
         Args:
@@ -7075,7 +7075,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Rank values as compactly as possible, where ties get the same value, and ranks are contiguous (potentially non-unique) integers.
 
         Args:
@@ -7104,7 +7104,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Rank values where tied values are assigned the minimum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -7133,7 +7133,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Rank values where tied values are assigned the maximum ordinal rank; ranks are potentially non-contiguous and non-unique integers.
 
         Args:
@@ -7162,7 +7162,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''Rank values where tied values are assigned the mean of the ordinal ranks; ranks are potentially non-contiguous and non-unique floats.
 
         Args:
@@ -7258,7 +7258,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: tp.Optional[int] = None,
             *,
             seed: tp.Optional[int] = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         {doc}
 
@@ -7686,7 +7686,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func: tp.Optional[CallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
 
@@ -8547,7 +8547,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             constructor: tp.Type[Frame],
             *,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> TFrameAny:
 
         if self.__class__ is constructor and constructor in (Frame, FrameHE):
             if name is not NAME_DEFAULT:
@@ -8569,7 +8569,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def to_frame(self,
             *,
             name: NameType = NAME_DEFAULT,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Return ``Frame`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
         '''
@@ -9421,7 +9421,7 @@ class FrameAssign(Assign):
             value: tp.Any,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
@@ -9436,7 +9436,7 @@ class FrameAssign(Assign):
             func: AnyCallable,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Provide a function to apply to the assignment target, and use that as the assignment value.
 
@@ -9452,7 +9452,7 @@ class FrameAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Provide a function to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -9471,7 +9471,7 @@ class FrameAssign(Assign):
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Provide a function, taking pairs of label, element, to apply to each element in the assignment target, and use that as the assignment value.
 
@@ -9503,7 +9503,7 @@ class FrameAssignILoc(FrameAssign):
             value: tp.Any,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
@@ -9571,7 +9571,7 @@ class FrameAssignILoc(FrameAssign):
             func: AnyCallable,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         value = func(self.container.iloc[self.key])
         return self.__call__(value, fill_value=fill_value)
 
@@ -9580,7 +9580,7 @@ class FrameAssignBLoc(FrameAssign):
     __slots__ = ()
 
     def __init__(self,
-            container: Frame,
+            container: TFrameAny,
             key: TBlocKey = None,
             ) -> None:
         '''
@@ -9594,7 +9594,7 @@ class FrameAssignBLoc(FrameAssign):
             value: tp.Any,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         is_frame = isinstance(value, Frame)
         is_series = isinstance(value, Series)
 
@@ -9654,7 +9654,7 @@ class FrameAssignBLoc(FrameAssign):
             func: AnyCallable,
             *,
             fill_value: tp.Any = np.nan,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         # use the Boolean key for a bloc selection, which always returns a Series
         value = func(self.container.bloc[self.key])
         return self.__call__(value, fill_value=fill_value)
@@ -9667,7 +9667,7 @@ class FrameAsType:
     __slots__ = ('container', 'column_key',)
 
     def __init__(self,
-            container: Frame,
+            container: TFrameAny,
             column_key: TILocSelector
             ) -> None:
         self.container = container
