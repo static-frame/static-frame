@@ -10,6 +10,8 @@ from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 #-------------------------------------------------------------------------------
 
 class StoreConfigHE(metaclass=InterfaceMeta):
@@ -204,7 +206,7 @@ class StoreConfig(StoreConfigHE):
             )
 
     @classmethod
-    def from_frame(cls, frame: Frame) -> 'StoreConfig':
+    def from_frame(cls, frame: TFrameAny) -> 'StoreConfig':
         '''Derive a config from a Frame.
         '''
         include_index = frame.index.depth > 1 or not frame.index._map is None # type: ignore
@@ -333,7 +335,7 @@ class StoreConfigMap:
     )
 
     @classmethod
-    def from_frames(cls, frames: tp.Iterable[Frame]) -> 'StoreConfigMap':
+    def from_frames(cls, frames: tp.Iterable[TFrameAny]) -> 'StoreConfigMap':
         '''
         Derive a config map from an iterable of Frames
         '''

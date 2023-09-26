@@ -83,7 +83,7 @@ class _StoreZip(Store):
                 )
 
     @staticmethod
-    def _set_container_type(frame: TFrameAny, container_type: tp.Type[TFrameAny]) -> Frame:
+    def _set_container_type(frame: TFrameAny, container_type: tp.Type[TFrameAny]) -> TFrameAny:
         '''
         Helper method to coerce a frame to the expected type, or return it as is
         if the type is already correct

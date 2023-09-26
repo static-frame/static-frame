@@ -9677,7 +9677,7 @@ class FrameAsType:
             dtypes: TDtypesSpecifier,
             *,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''This method is only called after a __getitem__() selection has been made; this instance is created and returned from that __getitem__() call; this instance then exposes __call__() for the final provisioning of dtypes. When a root node gets __call__() direclty, an instance if this object is created and called.
         '''
         if self.column_key.__class__ is slice and self.column_key == NULL_SLICE:
@@ -9700,3 +9700,8 @@ class FrameAsType:
                 name=self.container._name,
                 own_data=True,
                 )
+
+
+
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+

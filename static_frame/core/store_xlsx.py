@@ -42,6 +42,7 @@ if tp.TYPE_CHECKING:
 
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384 #1024 on libre office
@@ -152,7 +153,7 @@ class StoreXLSX(Store):
 
     @classmethod
     def _frame_to_worksheet(cls,
-            frame: Frame,
+            frame: TFrameAny,
             ws: 'Worksheet',
             *,
             include_columns: bool,
@@ -288,7 +289,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -383,8 +384,8 @@ class StoreXLSX(Store):
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
 
         config_map = StoreConfigMap.from_initializer(config)
         wb = self._load_workbook(self._fp)
@@ -565,11 +566,11 @@ class StoreXLSX(Store):
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> TFrameAny:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
         '''
-        return next(self.read_many((label,), #type: ignore
+        return next(self.read_many((label,),
                 config=config,
                 store_filter=store_filter,
                 container_type=container_type,

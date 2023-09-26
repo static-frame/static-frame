@@ -24,13 +24,15 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 #-------------------------------------------------------------------------------
 # decorators
 
 def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
     @wraps(f)
-    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> Frame:
+    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> TFrameAny:
         '''Decprator for derived Store class implementation of read(), labels().
         '''
         self._mtime_coherent()
@@ -72,7 +74,7 @@ class Store:
         self._fp: str = fp
         self._last_modified = np.nan
         self._mtime_update()
-        self._weak_cache: tp.MutableMapping[TLabel, Frame] = WeakValueDictionary()
+        self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -116,7 +118,7 @@ class Store:
     #---------------------------------------------------------------------------
     @staticmethod
     def get_field_names_and_dtypes(*,
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool,
             include_index_name: bool,
             include_columns: bool,
@@ -193,7 +195,7 @@ class Store:
 
     @staticmethod
     def _get_row_iterator(
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool
             ) -> tp.Callable[[], tp.Iterator[tp.Sequence[tp.Any]]]:
 
@@ -214,7 +216,7 @@ class Store:
 
     @staticmethod
     def get_column_iterator(
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool
             ) -> tp.Iterator[NDArrayAny]:
         if include_index:
@@ -238,8 +240,8 @@ class Store:
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
         '''Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`.
         '''
         raise NotImplementedError() #pragma: no cover
@@ -249,14 +251,14 @@ class Store:
             label: TLabel,
             *,
             config: tp.Optional[StoreConfig] = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> TFrameAny:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
         '''
         return next(self.read_many((label,), config=config, container_type=container_type))
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[str, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:
