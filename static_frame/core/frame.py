@@ -445,7 +445,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_concat(cls: tp.Type[tp.Self],
-            frames: tp.Iterable[tp.Union['Frame', TSeriesAny]],
+            frames: tp.Iterable[tp.Union[TFrameAny, TSeriesAny]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -475,7 +475,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             :obj:`static_frame.Frame`
         '''
 
-        frame_seq: tp.List[Frame] = []
+        frame_seq: tp.List[TFrameAny] = []
         for f in frames:
             if isinstance(f, Frame):
                 frame_seq.append(f)
@@ -580,7 +580,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
             def blocks() -> tp.Iterator[NDArrayAny]:
                 type_blocks = []
-                previous_frame: tp.Optional[Frame] = None
+                previous_frame: tp.Optional[TFrameAny] = None
                 block_compatible = True
                 reblock_compatible = True
 
@@ -629,7 +629,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[TLabel, tp.Union['Frame', TSeriesAny]]],
+            items: tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, TSeriesAny]]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -714,7 +714,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_overlay(cls,
-            containers: tp.Iterable[Frame],
+            containers: tp.Iterable[TFrameAny],
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -2788,7 +2788,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npy_mmap(cls,
             fp: PathSpecifier,
-            ) -> tp.Tuple['Frame', tp.Callable[[], None]]:
+            ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an directory of npy files using memory maps.
 
@@ -3484,11 +3484,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     # interfaces
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[TFrameAny]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     @property
@@ -3496,21 +3496,21 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio[Frame]:
+    def drop(self) -> InterfaceSelectTrio[TFrameAny]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not reuturn Frame, but a delegate
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
-    def mask(self) -> InterfaceSelectTrio[Frame]:
+    def mask(self) -> InterfaceSelectTrio[TFrameAny]:
         return InterfaceSelectTrio( # type: ignore # NOTE: does not return Frame, but a delegate
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
 
     @property
-    def masked_array(self) -> InterfaceSelectTrio[Frame]:
+    def masked_array(self) -> InterfaceSelectTrio[TFrameAny]:
         return InterfaceSelectTrio( # type: ignore
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
@@ -3529,7 +3529,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(select='astype')
-    def astype(self) -> InterfaceFrameAsType[Frame]:
+    def astype(self) -> InterfaceFrameAsType[TFrameAny]:
         '''
         Retype one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
@@ -3540,7 +3540,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return InterfaceFrameAsType(func_getitem=self._extract_getitem_astype)
 
     @property
-    def consolidate(self) -> InterfaceConsolidate[Frame]:
+    def consolidate(self) -> InterfaceConsolidate[TFrameAny]:
         '''
         Consolidate one or more columns. When used as a function, can be used to retype the entire ``Frame``. Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to consolidate one or more coloumns.
 
@@ -3554,7 +3554,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # via interfaces
 
     @property
-    def via_values(self) -> InterfaceValues[Frame]:
+    def via_values(self) -> InterfaceValues[TFrameAny]:
         '''
         Interface for applying functions to values (as arrays) in this container.
 
@@ -3566,7 +3566,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString[Frame]:
+    def via_str(self) -> InterfaceString[TFrameAny]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -3589,7 +3589,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime[Frame]:
+    def via_dt(self) -> InterfaceDatetime[TFrameAny]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -3613,7 +3613,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose[Frame]:
+    def via_T(self) -> InterfaceTranspose[TFrameAny]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -3624,7 +3624,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def via_fill_value(self,
             fill_value: tp.Any = np.nan,
-            ) -> InterfaceFillValue[Frame]:
+            ) -> InterfaceFillValue[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -3636,7 +3636,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[Frame]:
+            ) -> InterfaceRe[TFrameAny]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
@@ -3661,7 +3661,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # iterators
 
     @property
-    def iter_array(self) -> IterNodeAxis[Frame]:
+    def iter_array(self) -> IterNodeAxis[TFrameAny]:
         '''
         Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3674,7 +3674,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_array_items(self) -> IterNodeAxis[Frame]:
+    def iter_array_items(self) -> IterNodeAxis[TFrameAny]:
         '''
         Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3687,7 +3687,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_tuple(self) -> IterNodeConstructorAxis[Frame]:
+    def iter_tuple(self) -> IterNodeConstructorAxis[TFrameAny]:
         '''
         Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
@@ -3700,7 +3700,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_tuple_items(self) -> IterNodeConstructorAxis[Frame]:
+    def iter_tuple_items(self) -> IterNodeConstructorAxis[TFrameAny]:
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3713,7 +3713,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_series(self) -> IterNodeAxis[Frame]:
+    def iter_series(self) -> IterNodeAxis[TFrameAny]:
         '''
         Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3726,7 +3726,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_series_items(self) -> IterNodeAxis[Frame]:
+    def iter_series_items(self) -> IterNodeAxis[TFrameAny]:
         '''
         Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
         '''
@@ -3740,7 +3740,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeGroupAxis[Frame]:
+    def iter_group(self) -> IterNodeGroupAxis[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3753,7 +3753,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeGroupAxis[Frame]:
+    def iter_group_items(self) -> IterNodeGroupAxis[TFrameAny]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3767,7 +3767,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_array(self) -> IterNodeGroupAxis[Frame]:
+    def iter_group_array(self) -> IterNodeGroupAxis[TFrameAny]:
         '''
         Iterator of ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3780,7 +3780,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_array_items(self) -> IterNodeGroupAxis[Frame]:
+    def iter_group_array_items(self) -> IterNodeGroupAxis[TFrameAny]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
@@ -3794,7 +3794,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels(self) -> IterNodeDepthLevelAxis[Frame]:
+    def iter_group_labels(self) -> IterNodeDepthLevelAxis[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3807,7 +3807,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis[Frame]:
+    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis[TFrameAny]:
         '''
         Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3821,7 +3821,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis[Frame]:
+    def iter_group_labels_array(self) -> IterNodeDepthLevelAxis[TFrameAny]:
         '''
         Iterator of ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3834,7 +3834,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis[Frame]:
+    def iter_group_labels_array_items(self) -> IterNodeDepthLevelAxis[TFrameAny]:
         '''
         Iterator of pairs of label, ``np.ndarray`` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
         '''
@@ -3849,7 +3849,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other(self) -> IterNodeGroupOther[Frame]:
+    def iter_group_other(self) -> IterNodeGroupOther[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3862,7 +3862,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_items(self) -> IterNodeGroupOther[Frame]:
+    def iter_group_other_items(self) -> IterNodeGroupOther[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3876,7 +3876,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther[Frame]:
+    def iter_group_other_array(self) -> IterNodeGroupOther[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3891,7 +3891,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther[Frame]:
+    def iter_group_other_array_items(self) -> IterNodeGroupOther[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
@@ -3908,7 +3908,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     @property
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow[Frame]:
+    def iter_window(self) -> IterNodeWindow[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -3926,7 +3926,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow[Frame]:
+    def iter_window_items(self) -> IterNodeWindow[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -3944,7 +3944,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow[Frame]:
+    def iter_window_array(self) -> IterNodeWindow[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -3962,7 +3962,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow[Frame]:
+    def iter_window_array_items(self) -> IterNodeWindow[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -3980,7 +3980,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxisElement[Frame]:
+    def iter_element(self) -> IterNodeAxisElement[TFrameAny]:
         '''Iterator of elements, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -3992,7 +3992,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxisElement[Frame]:
+    def iter_element_items(self) -> IterNodeAxisElement[TFrameAny]:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
         return IterNodeAxisElement(
@@ -4007,12 +4007,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # index manipulation
 
     def _reindex_other_like_iloc(self,
-            value: tp.Union[TSeriesAny, Frame],
+            value: tp.Union[TSeriesAny, TFrameAny],
             iloc_key: TILocSelectorCompound,
             is_series: bool,
             is_frame: bool,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[TSeriesAny, Frame]:
+            ) -> tp.Union[TSeriesAny, TFrameAny]:
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
         # assert iloc_key.__class__ is tuple # must already be normalized
@@ -4025,7 +4025,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         # NOTE: NM (not many) means an integer or label
         nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
-        v: None | TSeriesAny | Frame = None
+        v: None | TSeriesAny | TFrameAny = None
         col_key_many: TILocSelectorMany
         row_key_many: TILocSelectorMany
 
@@ -5671,7 +5671,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index: IndexBase,
             columns: IndexBase,
             ordering: tp.Optional[NDArrayAny],
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
         '''Utility for final iteration of the group_iter, shared by three methods.
         '''
         if as_array:
@@ -5710,7 +5710,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
         '''
         Core group implementation.
 
@@ -5783,7 +5783,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
         '''
         Args:
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
@@ -5809,7 +5809,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             drop: bool = False,
             as_array: bool = False,
-            ) -> tp.Iterator[Frame | NDArrayAny]:
+            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
         yield from (x for _, x in self._axis_group_loc_items(
                 key=key,
                 axis=axis,
@@ -5823,7 +5823,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
         # NOTE: simlar to _axis_group_iloc_items
 
         blocks = self._blocks
@@ -5902,7 +5902,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[Frame | NDArrayAny]:
+            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 axis=axis,
@@ -5915,7 +5915,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
 
         blocks = self._blocks
         index = self._index
@@ -5978,7 +5978,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             as_array: bool = False,
             group_source: NDArrayAny,
-            ) -> tp.Iterator[Frame | NDArrayAny]:
+            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
         yield from (x for _, x in self._axis_group_other_items(
                 axis=axis,
                 as_array=as_array,
@@ -6033,7 +6033,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[Frame]:
+            ) -> tp.Iterator[TFrameAny]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 size=size,
@@ -6151,7 +6151,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             axis: int = 1,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[tp.Union['Frame', TSeriesAny]], tp.Union[NDArrayAny, TSeriesAny, 'Frame']]] = None,
+            key: tp.Optional[tp.Callable[[tp.Union[TFrameAny, TSeriesAny]], tp.Union[NDArrayAny, TSeriesAny, TFrameAny]]] = None,
             ) -> tp.Self:
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
@@ -6166,7 +6166,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         values_for_sort: NDArrayAny | tp.List[NDArrayAny] | None = None
         values_for_lex: OptionalArrayList = None
-        cfs: NDArrayAny | TSeriesAny | Frame | TypeBlocks
+        cfs: NDArrayAny | TSeriesAny | TFrameAny | TypeBlocks
 
         if axis == 0: # get a column ordering based on one or more rows
             iloc_key = self._index._loc_to_iloc(label) # type: ignore
@@ -6279,8 +6279,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(class_name='Frame')
     def clip(self, *,
-            lower: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
-            upper: tp.Optional[tp.Union[float, TSeriesAny, 'Frame']] = None,
+            lower: tp.Optional[tp.Union[float, TSeriesAny, TFrameAny]] = None,
+            upper: tp.Optional[tp.Union[float, TSeriesAny, TFrameAny]] = None,
             axis: tp.Optional[int] = None
             ) -> TFrameAny:
         '''{}
@@ -7190,7 +7190,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Frame')
-    def head(self, count: int = 5) -> Frame:
+    def head(self, count: int = 5) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -7199,7 +7199,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Frame')
-    def tail(self, count: int = 5) -> Frame:
+    def tail(self, count: int = 5) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -7732,7 +7732,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         #-----------------------------------------------------------------------
         # have final fields and normalized function representation
         all_fields = list(chain(index_fields, columns_fields, data_fields))
-        frame: Frame
+        frame: TFrameAny
         if len(all_fields) < len(self.columns):
             frame = self._extract_loc_columns(all_fields) # type: ignore
         else:
@@ -7909,7 +7909,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     @doc_inject(selector='join')
     def join_inner(self,
-            other: 'Frame', # support a named Series as a 1D frame?
+            other: TFrameAny, # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -7921,7 +7921,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: TLabel = None,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         Perform an inner join.
 
@@ -7954,7 +7954,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_left(self,
-            other: 'Frame', # support a named Series as a 1D frame?
+            other: TFrameAny, # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -7966,7 +7966,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: TLabel = None,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         Perform a left outer join.
 
@@ -7999,7 +7999,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_right(self,
-            other: 'Frame', # support a named Series as a 1D frame?
+            other: TFrameAny, # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8011,7 +8011,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: TLabel = None,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         Perform a right outer join.
 
@@ -8044,7 +8044,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_outer(self,
-            other: 'Frame', # support a named Series as a 1D frame?
+            other: TFrameAny, # support a named Series as a 1D frame?
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8056,7 +8056,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             include_index: bool = False,
             # composite_index: bool = True,
             # composite_index_fill_value: TLabel = None,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         Perform an outer join.
 
@@ -8090,7 +8090,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     def _insert(self,
             key: int | np.integer[tp.Any], # iloc positions
-            container: tp.Union['Frame', TSeriesAny],
+            container: tp.Union[TFrameAny, TSeriesAny],
             *,
             after: bool,
             fill_value: tp.Any = np.nan,
@@ -8153,7 +8153,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='insert')
     def insert_before(self,
             key: TLabel,
-            container: tp.Union[Frame, TSeriesAny],
+            container: tp.Union[TFrameAny, TSeriesAny],
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8176,7 +8176,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='insert')
     def insert_after(self,
             key: TLabel,
-            container: tp.Union[Frame, TSeriesAny],
+            container: tp.Union[TFrameAny, TSeriesAny],
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8544,7 +8544,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return xarray.Dataset(data_vars, coords=coords)
 
     def _to_frame(self,
-            constructor: tp.Type[Frame],
+            constructor: tp.Type[TFrameAny],
             *,
             name: NameType = NAME_DEFAULT,
             ) -> TFrameAny:
@@ -9294,7 +9294,7 @@ class FrameGO(Frame):
             self.__setitem__(k, v, fill_value)
 
     def extend(self,
-            container: tp.Union[Frame, TSeriesAny],
+            container: tp.Union[TFrameAny, TSeriesAny],
             fill_value: tp.Any = np.nan
             ) -> None:
         '''Extend this FrameGO (in-place) with another Frame's blocks or Series array; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame or Series will be reindexed (as happens when adding a column to a FrameGO).
@@ -9329,7 +9329,7 @@ class FrameGO(Frame):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object = np.nan,
-            ) -> InterfaceFillValueGO[Frame]:
+            ) -> InterfaceFillValueGO[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -9489,7 +9489,7 @@ class FrameAssignILoc(FrameAssign):
     __slots__ = ()
 
     def __init__(self,
-            container: Frame,
+            container: TFrameAny,
             key: TILocSelectorCompound = None,
             ) -> None:
         '''
