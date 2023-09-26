@@ -2,6 +2,7 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
+from static_frame.core.validate import check_interface
 
 TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TFrameGOAny = sf.FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -162,13 +163,73 @@ def test_frame_astype_a() -> None:
     f2: TFrameAny = f1.astype(int)
 
 
+#-------------------------------------------------------------------------------
+def test_frame_interface_a() -> None:
+    records = (
+            (1, 2, False),
+            (30, 34,True),
+            (54, 95, False),
+            )
+    h1 = sf.Frame[sf.Index[np.int_], sf.Index[np.str_], np.int_, np.int_, np.bool_] # type: ignore[type-arg]
+    f: h1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'))
+
+    @check_interface
+    def proc1(f: h1) -> sf.Series[sf.Index[np.int_], np.int_]:
+        return f['a']
+
+    s1 = proc1(f)
+
+    h2 = sf.Frame[sf.Index[np.int_], sf.Index[np.str_], np.int_, np.bool_] # type: ignore[type-arg]
+    # @check_interface
+    # def proc2(f: h2) -> sf.Series[sf.Index[np.int_], np.str_]:
+    #     return f['a']
+
+    # s2 = proc2(f) # pyright: Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, int_, bool_]" is not the same as "*tuple[int_, bool_]" (reportGeneralTypeIssues)
 
 
+def test_frame_interface_b() -> None:
+
+    records = (
+            (1, 2, True),
+            (30, 34, False),
+            (54, 95, True),
+            )
+    # f1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
+
+    # def proc(f: sf.Frame) -> sf.Series:
+    #     return f.loc[f['c']].prod(axis=1)
+
+    #----------
 
 
+    hf1 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_] # type: ignore[type-arg]
+    hs = sf.Series[sf.IndexDate, np.int_]
+
+    f1: hf1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
+
+    def proc(f: hf1) -> hs:
+        return f.loc[f['c'], 'b']
+
+    s = proc(f1)  # passes
 
 
+    # if we define a Frame with a different index type, we can statically check it
+
+    hf2 = sf.Frame[sf.Index[np.int_], sf.Index[np.str_], np.int_, np.int_, np.bool_] # type: ignore[type-arg]
+    f2: hf2 = sf.Frame.from_records(records, columns=('a', 'b', 'c'))
+
+    # s = proc(f2)  # pyright: error: Argument of type "Frame[Index[int_], Index[str_], int_, int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
+    # "Frame[Index[int_], Index[str_], int_, int_, bool_]" is incompatible with "Frame[IndexDate, Index[str_], int_, int_, bool_]"
+    #   Type parameter "TVIndex@Frame" is invariant, but "Index[int_]" is not the same as "IndexDate" (reportGeneralTypeIssues)
+
+    # if we define a Frame with different column typing, we can statically check it
+
+    hf3 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.bool_] # type: ignore[type-arg]
+    f3: hf3 = sf.Frame.from_records((r[1:] for r in records), columns=('b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
+
+    s = proc(f3) #pyright: error: Argument of type "Frame[IndexDate, Index[str_], int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
+    # "Frame[IndexDate, Index[str_], int_, bool_]" is incompatible with "Frame[IndexDate, Index[str_], int_, int_, bool_]"
+    #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, bool_]" is not the same as "*tuple[int_, int_, bool_]" (reportGeneralTypeIssues)
 
 
-
-
+    # if we want to add run-time checks, we can do that too

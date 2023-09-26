@@ -11,9 +11,8 @@ from itertools import repeat
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-# from static_frame.core.container import ContainerBase
-# from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -299,7 +298,7 @@ def iter_index_hierarchy_checks(value: tp.Any,
         # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
         [h_tuple] = tp.get_args(h_generics[0])
         assert issubclass(tuple, tp.get_origin(h_tuple))
-        # to support usage of Elipses, treat this as a hint of a corresponding tuple of Index
+        # to support usage of Ellipses, treat this as a hint of a corresponding tuple of Index
         yield False, tuple(value.index_at_depth(i) for i in range(value.depth)), h_tuple, parent
     else:
         if h_len != value.depth:
@@ -307,6 +306,32 @@ def iter_index_hierarchy_checks(value: tp.Any,
             yield True, ERROR_MESSAGE_TYPE, f'expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
         for i in range(value.depth):
             yield False, value.index_at_depth(i), h_generics[i], parent
+
+def iter_frame_checks(value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TErrorOrCheck]:
+
+    # NOTE: not sure how this works with defaults in TypeVar
+    h_index, h_columns, *h_types = tp.get_args(hint)
+    h_types_len = len(h_types)
+
+    yield False, value.index, h_index, parent
+    yield False, value.columns, h_columns, parent
+
+    if h_types_len == 1 and is_unpack(tp.get_origin(h_types[0])):
+        # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
+        [h_tuple] = tp.get_args(h_types[0])
+        assert issubclass(tuple, tp.get_origin(h_tuple))
+        # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
+        yield False, tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
+    else:
+        if h_types_len != value.shape[1]:
+            # give expected first
+            yield True, ERROR_MESSAGE_TYPE, f'expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
+        for dt, h in zip(value._blocks._iter_dtypes(), h_types):
+            yield False, dt.type(), h, parent
+
 
 def iter_ndarray_checks(value: tp.Any,
         hint: tp.Any,
@@ -416,6 +441,8 @@ def check(
                     tee_error_or_check(iter_index_hierarchy_checks(v, h, p_next))
                 elif isinstance(v, Series):
                     tee_error_or_check(iter_series_checks(v, h, p_next))
+                elif isinstance(v, Frame):
+                    tee_error_or_check(iter_frame_checks(v, h, p_next))
                 elif isinstance(v, np.ndarray):
                     tee_error_or_check(iter_ndarray_checks(v, h, p_next))
                 elif isinstance(v, np.dtype):
@@ -456,6 +483,9 @@ def check_type(
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
+@tp.overload
+def check_interface(func: TVFunc) -> TVFunc: ...
+
 def check_interface(
         *args: tp.Any,
         fail_fast: bool = False,
@@ -466,7 +496,6 @@ def check_interface(
         @wraps(func)
         def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
             # dict keyed by parameter name, only for those defined; if return is hinted, will be under key 'return'
-            # hints = tp.get_type_hints(func)
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
             sig_bound.apply_defaults()

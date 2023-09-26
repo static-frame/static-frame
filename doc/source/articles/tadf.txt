@@ -50,7 +50,7 @@ In CR today we will review NumPy's approach to typing, including the as-of-yet u
 
 ### second internal presentation
 
-Using nested generics and the new TypeVarTuple, StaticFrame 2.0 will permit full static-typing of DataFrames, including statically typing the index, columns, and columnar types. In addition to this support for static-analysis checks with mypy or Pyright, built-in functions and decorators permit can use the same type-hints for run-time validation. Extended with one or more validators enclosed in an Annotated generic, additional run-time validation of shape, name attributes, index labels, or arbitrary functional checks can be included in single definition.
+Using nested generics and the new TypeVarTuple, StaticFrame 2.0 will permit full static-typing of DataFrames, including statically typing the index, columns, and columnar types. In addition to this support for static-analysis checks with mypy or Pyright, a built-in decorator permits using the same type-hints for run-time validation. Extended with one or more validators enclosed in an Annotated generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included in single definition.
 
 
 
