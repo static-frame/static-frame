@@ -102,6 +102,8 @@ from static_frame.core.yarn import Yarn
 
 #-------------------------------------------------------------------------------
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 DOCUMENTED_COMPONENTS = (
         Series,
         SeriesHE,
@@ -1080,6 +1082,7 @@ class InterfaceSummary(Features):
         '''
         Get a sample instance from any ContainerBase; cache to only create one per life of process.
         '''
+        f: TFrameAny
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
                 instance = target.from_blocks(np.array((0,)))
@@ -1264,11 +1267,11 @@ class InterfaceSummary(Features):
             minimized: bool = True,
             max_args: int = MAX_ARGS,
             max_doc_chars: int = MAX_DOC_CHARS,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         Reduce to key fields.
         '''
-        f = Frame.from_records(
+        f: TFrameAny = Frame.from_records(
                 cls.interrogate(target,
                         max_args=max_args,
                         max_doc_chars=max_doc_chars,

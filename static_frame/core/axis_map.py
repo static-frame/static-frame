@@ -19,7 +19,7 @@ from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
-
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -49,7 +49,7 @@ def _bus_to_hierarchy_inner_hierarchies(
     '''
     opposite: tp.Optional[IndexBase] = None
 
-    def level_add(pair: tp.Tuple[TLabel, Frame]) -> IndexHierarchy:
+    def level_add(pair: tp.Tuple[TLabel, TFrameAny]) -> IndexHierarchy:
         nonlocal opposite
         label, frame = pair
 
@@ -90,7 +90,7 @@ def bus_to_hierarchy(
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    first = tp.cast(Frame, bus.iloc[0])
+    first = tp.cast(TFrameAny, bus.iloc[0])
     if (
         (axis == 0 and isinstance(first.index, IndexHierarchy)) or
         (axis == 1 and isinstance(first.columns, IndexHierarchy))

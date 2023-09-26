@@ -30,6 +30,8 @@ if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
 # for running with native traveback
@@ -337,8 +339,8 @@ class TestCase(unittest.TestCase):
 
 
     def assertEqualFrames(self,
-            f1: Frame,
-            f2: Frame,
+            f1: TFrameAny,
+            f2: TFrameAny,
             compare_dtype: bool = True
             ) -> None:
 

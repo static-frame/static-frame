@@ -66,6 +66,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -78,9 +79,9 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
 
 BusItemsType = tp.Iterable[tp.Tuple[
-        TLabel, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+        TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
 
-FrameIterType = tp.Iterator[Frame]
+FrameIterType = tp.Iterator[TFrameAny]
 
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
@@ -111,7 +112,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
@@ -137,7 +138,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable[Frame],
+            frames: tp.Iterable[TFrameAny],
             *,
             index_constructor: TIndexCtorSpecifier = None,
             config: StoreConfigMapInitializer = None,
@@ -156,7 +157,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[TLabel, Frame],
+            mapping: tp.Dict[TLabel, TFrameAny],
             *,
             name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
@@ -424,7 +425,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            frames: NDArrayAny | tp.Iterable[Frame | tp.Type[FrameDeferred]] | None,
+            frames: NDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
             *,
             index: IndexInitializer,
             index_constructor: TIndexCtorSpecifier = None,
@@ -792,7 +793,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values: NDArrayAny | Frame = array[key]
+        target_values: NDArrayAny | TFrameAny = array[key]
         target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
@@ -917,7 +918,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -948,7 +949,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._loaded_all:
@@ -1060,13 +1061,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return Series.from_items(gen())
 
     @property
-    def dtypes(self) -> Frame:
+    def dtypes(self) -> TFrameAny:
         '''Returns a :obj:`Frame` of dtype per column for all loaded Frames.
         '''
         if not self._loaded.any():
             return Frame(index=self._index)
 
-        f = Frame.from_concat(
+        f: TFrameAny = Frame.from_concat(
                 frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._index, fill_value=None)
@@ -1089,7 +1090,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return sum(f.nbytes if f is not FrameDeferred else 0 for f in self._values_mutable)
 
     @property
-    def status(self) -> Frame:
+    def status(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         '''

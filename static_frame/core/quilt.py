@@ -73,6 +73,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -103,7 +104,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_frame(cls,
-            frame: Frame,
+            frame: TFrameAny,
             *,
             chunksize: int,
             retain_labels: bool,
@@ -139,7 +140,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         axis_map_components: TreeNodeT = {}
         opposite = None
 
-        def values() -> tp.Iterator[Frame]:
+        def values() -> tp.Iterator[TFrameAny]:
             nonlocal opposite
 
             for start, end in zip_longest(starts, ends, fillvalue=vector_len):
@@ -430,7 +431,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_items(cls,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             axis: int = 0,
             name: NameType = None,
@@ -449,7 +450,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable[Frame],
+            frames: tp.Iterable[TFrameAny],
             *,
             axis: int = 0,
             name: NameType = None,
@@ -705,7 +706,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return sum(f.nbytes for _, f in self._bus.items())
 
     @property
-    def status(self) -> Frame:
+    def status(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in the contained :obj:`Quilt`.
         '''
@@ -760,7 +761,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # compatibility with StoreClientMixin
 
-    def _items_store(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+    def _items_store(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Quilt` label and contained :obj:`Frame`.
         '''
         yield from self._bus.items()
@@ -898,7 +899,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator['Frame']:
+            ) -> tp.Iterator[TFrameAny]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 size=size,
@@ -1004,13 +1005,13 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany) -> Frame: ...
+    def _extract(self, row_key: TILocSelectorMany) -> TFrameAny: ...
 
     @tp.overload
     def _extract(self, row_key: None, column_key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract(self, row_key: None, column_key: TILocSelectorMany) -> Frame: ...
+    def _extract(self, row_key: None, column_key: TILocSelectorMany) -> TFrameAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorOne) -> TSeriesAny: ...
@@ -1019,7 +1020,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorMany) -> TSeriesAny: ...
 
     @tp.overload
-    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> Frame: ...
+    def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TFrameAny: ...
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne, column_key: TILocSelectorOne) -> tp.Any: ...
@@ -1134,7 +1135,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             columns: tp.Optional[int] = None,
             *,
             seed: tp.Optional[int] = None,
-            ) -> Frame:
+            ) -> TFrameAny:
         '''
         {doc}
 
@@ -1204,10 +1205,10 @@ class Quilt(ContainerBase, StoreClientMixin):
     def __getitem__(self, key: TLabel) -> TSeriesAny: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> Frame: ...
+    def __getitem__(self, key: TLocSelectorMany) -> TFrameAny: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Union[Frame, TSeriesAny]:
+    def __getitem__(self, key: TLocSelector) -> tp.Union[TFrameAny, TSeriesAny]:
         '''Selector of columns by label.
 
         Args:
@@ -1222,11 +1223,11 @@ class Quilt(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[Frame]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompoundReduces[Frame]:
+    def iloc(self) -> InterGetItemILocCompoundReduces[TFrameAny]:
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
     #---------------------------------------------------------------------------
@@ -1408,7 +1409,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
     @doc_inject(selector='head', class_name='Quilt')
-    def head(self, count: int = 5) -> 'Frame':
+    def head(self, count: int = 5) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -1417,7 +1418,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Quilt')
-    def tail(self, count: int = 5) -> 'Frame':
+    def tail(self, count: int = 5) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -1497,7 +1498,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return True
 
     #---------------------------------------------------------------------------
-    def to_frame(self) -> Frame:
+    def to_frame(self) -> TFrameAny:
         '''
         Return a consolidated :obj:`Frame`.
         '''

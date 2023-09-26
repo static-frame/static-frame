@@ -3,11 +3,12 @@ import typing_extensions as tp
 
 import static_frame as sf
 
+TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 def test_frame_from_dict() -> None:
 
     d: tp.Dict[int, tp.Tuple[bool, ...]] = {10: (False, True,), 20: (True, False)}
-    f = sf.Frame.from_dict(d)
+    f: TFrameAny = sf.Frame.from_dict(d)
     assert f.shape == (2, 2)
 
 def test_frame_from_dict_fields() -> None:
@@ -41,11 +42,11 @@ def test_frame_getitem_a() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.Frame.from_records(records)
+    f1: TFrameAny = sf.Frame.from_records(records)
     s1: sf.Series[sf.Index[np.int64], np.str_] = f1[2]
-    f2: sf.Frame = f1[[0, 2]]
-    f3: sf.Frame = f1[f1.columns.values == 2]
-    f4: sf.Frame = f1[1:]
+    f2: TFrameAny = f1[[0, 2]]
+    f3: TFrameAny = f1[f1.columns.values == 2]
+    f4: TFrameAny = f1[1:]
 
 
 def test_frame_getitem_b() -> None:
@@ -80,10 +81,10 @@ def test_frame_getitem_d() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.Frame.from_records(records, columns=('a', 'b', 'c', 'd'))
+    f1: TFrameAny = sf.Frame.from_records(records, columns=('a', 'b', 'c', 'd'))
     s1: sf.Series[sf.Index[np.int64], np.str_] = f1['c']
-    f2: sf.Frame = f1['c':]
-    f3: sf.Frame = f1[['b', 'd']]
+    f2: TFrameAny = f1['c':]
+    f3: TFrameAny = f1[['b', 'd']]
 
 
 def test_frame_iloc_a() -> None:
@@ -92,7 +93,7 @@ def test_frame_iloc_a() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.Frame.from_records(records)
+    f1: TFrameAny = sf.Frame.from_records(records)
     s1: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[2]
     s2: sf.Series[sf.Index[np.int64], np.int64] = f1.iloc[:, 1]
     s3: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[0, :]
@@ -101,10 +102,10 @@ def test_frame_iloc_a() -> None:
     s6: sf.Series[sf.Index[np.int64], np.int64] = f1.iloc[1:, 1]
     s7: sf.Series[sf.Index[np.int64], np.object_] = f1.iloc[0, 1:]
 
-    f2: sf.Frame = f1.iloc[[0,2], [0, 1]]
-    f3: sf.Frame = f1.iloc[0:1, 1:]
+    f2: TFrameAny = f1.iloc[[0,2], [0, 1]]
+    f3: TFrameAny = f1.iloc[0:1, 1:]
 
-    f4: sf.Frame = f1.iloc[f1.index.values == 2]
+    f4: TFrameAny = f1.iloc[f1.index.values == 2]
 
 
 def test_frame_loc_a() -> None:
@@ -113,17 +114,17 @@ def test_frame_loc_a() -> None:
             (30, 34, 'b', True),
             (54, 95, 'c', False),
             )
-    f1 = sf.Frame.from_records(records)
+    f1: TFrameAny = sf.Frame.from_records(records)
     s1: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[2]
     s2: sf.Series[sf.Index[np.int64], np.int64] = f1.loc[:, 1]
     s3: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[0, :]
     s4: sf.Series[sf.Index[np.int64], np.int64] = f1.loc[[0, 1], 1]
     s5: sf.Series[sf.Index[np.int64], np.object_] = f1.loc[0, [1, 2]]
 
-    f2: sf.Frame = f1.loc[[0, 2], [0, 1]]
-    f3: sf.Frame = f1.loc[0:1, 1:]
+    f2: TFrameAny = f1.loc[[0, 2], [0, 1]]
+    f3: TFrameAny = f1.loc[0:1, 1:]
 
-    f4: sf.Frame = f1.loc[f1.index.values == 2]
+    f4: TFrameAny = f1.loc[f1.index.values == 2]
 
 
 
@@ -155,8 +156,8 @@ def test_frame_astype_a() -> None:
             (30, 34,True),
             (54, 95, False),
             )
-    f1 = sf.Frame.from_records(records)
-    f2 = f1.astype(int)
+    f1: TFrameAny = sf.Frame.from_records(records)
+    f2: TFrameAny = f1.astype(int)
 
 
 

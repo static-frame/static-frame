@@ -52,6 +52,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
@@ -395,7 +396,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             return default
         return self.__getitem__(key)
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
@@ -506,7 +507,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> Yarn | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> Yarn | TFrameAny:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -552,14 +553,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: TLocSelector) -> Yarn | Frame:
+    def _extract_loc(self, key: TLocSelector) -> Yarn | TFrameAny:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> Yarn | Frame:
+    def __getitem__(self, key: TLocSelector) -> Yarn | TFrameAny:
         '''Selector of values by label.
 
         Args:
@@ -642,7 +643,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 index=self._index)
 
     @property
-    def dtypes(self) -> Frame:
+    def dtypes(self) -> TFrameAny:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
         return Frame.from_concat(
@@ -667,11 +668,11 @@ class Yarn(ContainerBase, StoreClientMixin):
         return sum(b.nbytes for b in self._series.values)
 
     @property
-    def status(self) -> Frame:
+    def status(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
-        f = Frame.from_concat(
+        f: TFrameAny = Frame.from_concat(
                 (b.status for b in self._series.values),
                 index=IndexAutoFactory)
         return f.relabel(index=self._index)

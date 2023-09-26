@@ -224,7 +224,6 @@ TVIndices = tp.TypeVarTuple('TVIndices',
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
-# class IndexHierarchy(IndexBase):
     '''
     A hierarchy of :obj:`Index` objects.
     '''
@@ -2877,8 +2876,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
 
+# class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
-class IndexHierarchyGO(IndexHierarchy):
+class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]):
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''

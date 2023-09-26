@@ -71,6 +71,7 @@ if tp.TYPE_CHECKING:
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 #-------------------------------------------------------------------------------
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
@@ -125,7 +126,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable[Frame],
+            frames: tp.Iterable[TFrameAny],
             *,
             name: NameType = None,
             config: StoreConfigMapInitializer = None,
@@ -982,8 +983,8 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     @doc_inject(class_name='Batch')
     def clip(self, *,
-            lower: tp.Optional[tp.Union[float, TSeriesAny, Frame]] = None,
-            upper: tp.Optional[tp.Union[float, TSeriesAny, Frame]] = None,
+            lower: tp.Optional[tp.Union[float, TSeriesAny, TFrameAny]] = None,
+            upper: tp.Optional[tp.Union[float, TSeriesAny, TFrameAny]] = None,
             axis: tp.Optional[int] = None
             ) -> 'Batch':
         '''{}
@@ -1746,7 +1747,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
-        ) -> Frame:
+        ) -> TFrameAny:
         '''
         Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to a single dimension along the provided `axis`.
         '''
@@ -1778,7 +1779,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                     consolidate_blocks=consolidate_blocks,
                     )
         # produce a hierarchical index to return all Frames
-        f = Frame.from_concat_items(
+        f: TFrameAny = Frame.from_concat_items(
                 zip(labels, containers),
                 axis=axis,
                 union=union,
@@ -1800,7 +1801,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
-        frames: tp.List[Frame] = []
+        frames: tp.List[TFrameAny] = []
         index = []
         for i, f in self.items():
             index.append(i)

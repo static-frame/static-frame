@@ -3,6 +3,8 @@ import typing_extensions as tp
 
 import static_frame as sf
 
+TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 
 def test_index_len_a() -> None:
 
@@ -12,7 +14,7 @@ def test_index_len_a() -> None:
 
 def test_index_len_b() -> None:
 
-    idx = sf.Frame.from_records([('a', 'b'), ('c', 'd')])
+    idx: TFrameAny = sf.Frame.from_records([('a', 'b'), ('c', 'd')])
     l: int = len(idx.columns)
     assert l == 2
 
