@@ -114,6 +114,89 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
 
 
 
+# basic SF containers
+
+>>> idx1 = sf.Index(('a', 'b', 'c', 'd'))
+>>> idx2 = sf.Index((3, 4, 5, -1))
+
+>>> check_type(idx2, sf.Index[np.int_])
+
+
+# support for built-in containers, Union
+
+>>> check_type((idx1, idx2), tp.Tuple[sf.Index[np.str_], sf.Index[np.int_]])
+>>> check_type((idx1, idx2), tp.Tuple[sf.Index[np.str_], sf.Index[np.int_], int]) # fails
+
+# union
+
+>>> check_type(dict(a=idx1, b=idx2), tp.Dict[str, tp.Union[sf.Index[np.str_], sf.Index[np.int_]]])
+>>> check_type(dict(a=idx1, b=idx2), tp.Dict[str, tp.Union[sf.Index[np.float64], sf.Index[np.complex128]]]) # fails
+
+
+# literals
+
+>>> check_type(dict(a=idx1, b=idx2), tp.Dict[tp.Literal['a', 'b'], tp.Union[sf.Index[np.str_], sf.Index[np.int_]]])
+
+>>> check_type(dict(a=idx1, b=idx2), tp.Dict[tp.Literal['a', 'x'], tp.Union[sf.Index[np.str_], sf.Index[np.int_]]]) # fails
+
+
+# using an annotation for additional checks
+
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Len(4)])
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Len(2)]) # fails
+
+
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Labels(('a', ..., 'd'))])
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Labels(('a', ..., 'c', 'd'))])
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Labels(('a', 'b', ...))])
+
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Validator(lambda idx: 'c' in idx)])
+>>> check_type(idx1, tp.Annotated[sf.Index[np.str_], Validator(lambda idx: 'q' in idx)]) # fails
+
+
+# skip over IndexHierarchy, Series
+
+
+>>> f = sf.Frame.from_records(((10.4, False), (30.2, True)), index=('a', 'b'), columns=sf.IndexYear(('1543', '1533')))
+
+>>> check_type(f, sf.Frame[sf.Index[np.str_], sf.IndexYear, np.float64, np.bool_])
+>>> check_type(f, sf.Frame[sf.Index[np.str_], sf.IndexDate, np.float64, np.bool_]) # fails
+>>> check_type(f, sf.Frame[tp.Annotated[sf.Index[np.str_], Labels(('a', ...))], sf.IndexYear, np.float64, np.bool_])
+
+
+>>> u1 = tp.Union[str, int]
+>>> u2 = str | int
+>>>
+>>> type(u1)
+typing._UnionGenericAlias
+>>> type(u2)
+types.UnionType
+>>>
+>>>
+>>> tp.get_origin(u1)
+typing.Union
+>>> tp.get_args(u1)
+(str, int)
+
+
+>>> hf = sf.Frame[sf.Index[np.str_], sf.IndexDate, np.float64, np.bool_]
+>>> type(hf)
+typing._GenericAlias
+>>> tp.get_origin(hf)
+static_frame.core.frame.Frame
+>>> tp.get_args(hf)
+(static_frame.core.index.Index[numpy.str_],
+ static_frame.core.index_datetime.IndexDate,
+ numpy.float64,
+ numpy.bool_)
+>>> tp.get_args(tp.get_args(hf)[0])
+(numpy.str_,)
+
+
+
+
+
+
 
 
 

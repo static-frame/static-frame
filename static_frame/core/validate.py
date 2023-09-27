@@ -63,8 +63,6 @@ def is_unpack(hint: tp.Any) -> bool:
 TParent = tp.Tuple[tp.Any, ...]
 # A validation record can be used to queue checks or report errors
 TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
-# Leading Boolean is True if an error, other wise additional checks to queue
-TErrorOrCheck = tp.Tuple[bool, tp.Any, tp.Any, TParent]
 
 #-------------------------------------------------------------------------------
 # error reporting, presentation
@@ -93,7 +91,7 @@ class CheckError(TypeError):
             else:
                 path = ''
 
-            if v is ERROR_MESSAGE_TYPE:
+            if v is ERROR_MESSAGE_TYPE: # in this case, do not use the value
                 if path:
                     prefix = f'Failed check in {path}:'
                 else:
@@ -137,7 +135,7 @@ class Name(Constraint):
             ) -> tp.Iterator[TValidation]:
         # returning anything is an error
         if (n := value.name) != self._name:
-            yield value, f'expected name {self._name!r}, provided name {n!r}', parent
+            yield ERROR_MESSAGE_TYPE, f'expected name {self._name!r}, provided name {n!r}', parent
 
 
 class Len(Constraint):
@@ -152,7 +150,7 @@ class Len(Constraint):
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
         if (vl := len(value)) != self._len:
-            yield value, f'expected length {self._len}, provided length {vl}', parent
+            yield ERROR_MESSAGE_TYPE, f'expected length {self._len}, provided length {vl}', parent
 
 
 # might accept regular expression objects as label entries?
@@ -176,26 +174,26 @@ class Labels(Constraint):
             ) -> tp.Iterator[TValidation]:
 
         if not isinstance(value, IndexBase):
-            yield value, f'expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
+            yield ERROR_MESSAGE_TYPE, f'expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
         else:
             pos_e = 0 # position expected
             len_e = len(self._labels)
 
             for label_p in value:
                 if pos_e >= len_e:
-                    yield value, f'expected labels exhausted at provided {label_p!r}', parent
+                    yield ERROR_MESSAGE_TYPE, f'expected labels exhausted at provided {label_p!r}', parent
                     break
                 label_e = self._labels[pos_e]
 
                 if label_e is not ...:
                     if label_p != label_e:
-                        yield value, f'expected {label_e!r}, provided {label_p!r}', parent
+                        yield ERROR_MESSAGE_TYPE, f'expected {label_e!r}, provided {label_p!r}', parent
                     pos_e += 1
                 # label_e is an Ellipses; either find next as match or continue with Ellipses
                 elif pos_e + 1 < len_e: # more expected labels available
                     label_next_e = self._labels[pos_e + 1]
                     if label_next_e is ...:
-                        yield value, 'expected cannot be defined with adjacent ellipses', parent
+                        yield ERROR_MESSAGE_TYPE, 'expected cannot be defined with adjacent ellipses', parent
                         break
                     if label_p == label_next_e:
                         pos_e += 2 # skip the compared value, prepare to get next
@@ -205,7 +203,7 @@ class Labels(Constraint):
                     pass # ended on elipses
                 elif pos_e < len_e:
                     remainder = self._prepare_remainder(self._labels[pos_e:])
-                    yield value, f'expected has unmatched labels {remainder}', parent
+                    yield ERROR_MESSAGE_TYPE, f'expected has unmatched labels {remainder}', parent
 
 
 class Validator(Constraint):
@@ -225,7 +223,7 @@ class Validator(Constraint):
             ) -> tp.Iterator[TValidation]:
         post = self._validator(value)
         if post is False:
-            yield value, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}', parent
+            yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}', parent
 
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
@@ -234,40 +232,40 @@ def iter_sequence_checks(
         value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
     for v in value:
-        yield False, v, h_component, parent
+        yield v, h_component, parent
 
 def iter_tuple_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
         if (h_len := len(h_components)) != 2:
-            yield True, ERROR_MESSAGE_TYPE, 'invalid ellipses usage', parent
+            yield ERROR_MESSAGE_TYPE, 'invalid ellipses usage', parent
         else:
             h = h_components[0]
             for v in value:
-                yield False, v, h, parent
+                yield v, h, parent
     else:
         if (h_len := len(h_components)) != len(value):
             msg = f'expected tuple length of {h_len}, provided tuple length of {len(value)}'
-            yield True, ERROR_MESSAGE_TYPE, msg, parent
+            yield ERROR_MESSAGE_TYPE, msg, parent
         for v, h in zip(value, h_components):
-            yield False, v, h, parent
+            yield v, h, parent
 
 def iter_mapping_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     [h_keys, h_values] = tp.get_args(hint)
     for v, h in chain(
             zip(value.keys(), repeat(h_keys)),
             zip(value.values(), repeat(h_values)),
             ):
-        yield False, v, h, parent
+        yield v, h, parent
 
 
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
@@ -275,22 +273,22 @@ def iter_mapping_checks(value: tp.Any,
 def iter_series_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     h_index, h_generic = tp.get_args(hint) # there must be two
-    yield False, value.index, h_index, parent
-    yield False, value.dtype.type(), h_generic, parent
+    yield value.index, h_index, parent
+    yield value.dtype.type(), h_generic, parent
 
 def iter_index_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
-    yield False, value.dtype.type(), h_generic, parent
+    yield value.dtype.type(), h_generic, parent
 
 def iter_index_hierarchy_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     h_generics = tp.get_args(hint)
     h_len = len(h_generics)
 
@@ -299,53 +297,53 @@ def iter_index_hierarchy_checks(value: tp.Any,
         [h_tuple] = tp.get_args(h_generics[0])
         assert issubclass(tuple, tp.get_origin(h_tuple))
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of Index
-        yield False, tuple(value.index_at_depth(i) for i in range(value.depth)), h_tuple, parent
+        yield tuple(value.index_at_depth(i) for i in range(value.depth)), h_tuple, parent
     else:
         if h_len != value.depth:
             # give expected first
-            yield True, ERROR_MESSAGE_TYPE, f'expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
+            yield ERROR_MESSAGE_TYPE, f'expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
         for i in range(value.depth):
-            yield False, value.index_at_depth(i), h_generics[i], parent
+            yield value.index_at_depth(i), h_generics[i], parent
 
 def iter_frame_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
 
     # NOTE: not sure how this works with defaults in TypeVar
     h_index, h_columns, *h_types = tp.get_args(hint)
     h_types_len = len(h_types)
 
-    yield False, value.index, h_index, parent
-    yield False, value.columns, h_columns, parent
+    yield value.index, h_index, parent
+    yield value.columns, h_columns, parent
 
     if h_types_len == 1 and is_unpack(tp.get_origin(h_types[0])):
         # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
         [h_tuple] = tp.get_args(h_types[0])
         assert issubclass(tuple, tp.get_origin(h_tuple))
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
-        yield False, tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
+        yield tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
     else:
         if h_types_len != value.shape[1]:
             # give expected first
-            yield True, ERROR_MESSAGE_TYPE, f'expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
+            yield ERROR_MESSAGE_TYPE, f'expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
         for dt, h in zip(value._blocks._iter_dtypes(), h_types):
-            yield False, dt.type(), h, parent
+            yield dt.type(), h, parent
 
 
 def iter_ndarray_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     h_shape, h_dtype = tp.get_args(hint)
-    yield False, value.dtype, h_dtype, parent
+    yield value.dtype, h_dtype, parent
 
 def iter_dtype_checks(value: tp.Any,
         hint: tp.Any,
         parent: TParent,
-        ) -> tp.Iterable[TErrorOrCheck]:
+        ) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
-    yield False, value.type(), h_generic, parent
+    yield value.type(), h_generic, parent
 
 #-------------------------------------------------------------------------------
 
@@ -361,12 +359,12 @@ def check(
     # Error log: any entry is considered an error
     e_log: tp.List[TValidation] = []
 
-    def tee_error_or_check(records: tp.Iterable[TErrorOrCheck]) -> None:
+    def tee_error_or_check(records: tp.Iterable[TValidation]) -> None:
         for record in records:
-            if record[0]:
-                e_log.append(record[1:])
+            if record[0] is ERROR_MESSAGE_TYPE:
+                e_log.append(record)
             else:
-                q.append(record[1:])
+                q.append(record)
 
     while q:
         if fail_fast and e_log:
