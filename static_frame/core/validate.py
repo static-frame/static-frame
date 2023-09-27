@@ -157,7 +157,7 @@ class Len(Constraint):
 class Labels(Constraint):
     __slots__ = ('_labels',)
 
-    def __init__(self, labels: tp.Sequence[TLabel]):
+    def __init__(self, *labels: tp.Sequence[TLabel]):
         self._labels: tp.Sequence[TLabel] = labels
 
     @staticmethod
@@ -497,7 +497,6 @@ def check_interface(
 
         @wraps(func)
         def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-            # dict keyed by parameter name, only for those defined; if return is hinted, will be under key 'return'
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
             sig_bound.apply_defaults()

@@ -429,89 +429,89 @@ def get_hints(records: tp.Iterable[TValidation]) -> tp.Tuple[str]:
 
 def test_validate_labels_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
-    v = Labels(('a', 'b', 'c'))
+    v = Labels('a', 'b', 'c')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
-    v = Labels(('a', 'b', 'c'))
+    v = Labels('a', 'b', 'c')
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected 'b', provided 'x'",)
 
 def test_validate_labels_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
-    v = Labels(('a', 'b', 'c'))
+    v = Labels('a', 'b', 'c')
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == (
             "expected 'b', provided 'x'",
             "expected 'c', provided 'z'")
 
 def test_validate_labels_b():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Labels(('a', ..., 'd'))
+    v = Labels('a', ..., 'd')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Labels((..., 'd'))
+    v = Labels(..., 'd')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Labels(('a', 'b', ...))
+    v = Labels('a', 'b', ...)
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Labels(('a', 'b', ..., 'e'))
+    v = Labels('a', 'b', ..., 'e')
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'e'",)
 
 def test_validate_labels_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels(('a', ..., 'c', ..., 'd'))
+    v = Labels('a', ..., 'c', ..., 'd')
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected labels exhausted at provided 'e'",)
 
 def test_validate_labels_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels(('a', ..., 'c', ..., 'e'))
+    v = Labels('a', ..., 'c', ..., 'e')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e3():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels(('a', ..., 'c', ...))
+    v = Labels('a', ..., 'c', ...)
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e4():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels((..., 'c', ...))
+    v = Labels(..., 'c', ...)
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e5():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels((..., 'b', 'c', ...))
+    v = Labels(..., 'b', 'c', ...)
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e6():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels((..., 'b', ..., 'd', 'e'))
+    v = Labels(..., 'b', ..., 'd', 'e')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e7():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels(('a', 'b', ..., 'd', 'e'))
+    v = Labels('a', 'b', ..., 'd', 'e')
     assert not get_hints(v.iter_error_log(idx1, None, (None,)))
 
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels(('a', 'b', ..., 'f', ...))
+    v = Labels('a', 'b', ..., 'f', ...)
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'f', ...",)
 
 def test_validate_labels_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels((..., 'x', ..., 'y', ...))
+    v = Labels(..., 'x', ..., 'y', ...)
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'x', ..., 'y', ...",)
 
 def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Labels((..., 'a', ..., ...))
+    v = Labels(..., 'a', ..., ...)
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected cannot be defined with adjacent ellipses",)
 
 
