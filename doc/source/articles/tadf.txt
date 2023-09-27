@@ -50,13 +50,17 @@ In CR today we will review NumPy's approach to typing, including the as-of-yet u
 
 ### second internal presentation
 
-Since the advent of type hints in Python 3.5, statically typing a DataFrame was mostly limited to the type of the container:
+Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to the type of the container:
 
 def process(f: DataFrame) -> Series: ...
 
-This is insufficient for a number of reason. First, DataFrames have typed index and column labels, even hierarchical indices, on either axis. Second, DataFrames have data stored in types by column. While using generics can support some of these component definitions, the variable number of types needed to define hierarchical indicies or columnar data types has not been easy to represent. `TypeVarTuple`, introduced in Python 3.11, provides the missing tool to flexibly define types of hierarchical indices or columnar data types.
+This is insufficient, as it leaves out critical types contained within the the container. DataFrames have typed labels, or even hierarchical indices, on rows and columns; DataFrames have data stored in types by column. These characteristics are as critical as typing the keys and values of a dictionary. And yet Pandas, even with the `pandas-stubs` package, does not even try to type the inner components of a DataFrame.
 
-Using nested generics and `TypeVarTuple`, and building on the generic types introduced into NumPy, StaticFrame 2.0 permits statically typing the index, columns, and columnar types of a DataFrame. For example, the same interface from above can be annotated to show a Frame with a hierarchical index (where the outer depth is a date, the inner depth a string), string column labels, and two columns of floats. The returned Series is indexed by date with floating-point values.
+While using generics can support some of these component definitions, the variable number of types needed to define hierarchical indices or columnar data types has not been easy to represent. The `TypeVarTuple`, introduced in Python 3.11, provides the missing tool to flexibly define variable numbers of types as found in hierarchical indices and columnar data.
+
+Using nested generics and `TypeVarTuple`, and building on the generic types introduced in NumPy, StaticFrame 2.0 permits statically typing the index, columns, and columnar types of a DataFrame.
+
+For example, the same interface from above can be annotated to show a Frame with a hierarchical index (where the outer depth is a date, the inner depth a string), string column labels, and two columns of floats. The returned Series is indexed by date with floating-point values.
 
 def process(f: Frame[
         IndexHierarchy[IndexDate, Index[np.int64]],
@@ -67,7 +71,7 @@ def process(f: Frame[
 
 This signature conveys far more information, even hinting at what the function might be doing. Even better, static type checkers (Pyright now, mypy in the future), can validate arguments to this interface.
 
-Static type checking might not be enough: runtime evaluation provides even stronger constraints. StaticFrame 2.0 inroduces a built-in decorator, `check_interface`, that uses the same type hints for runtime evaluation. Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
+Static type checking might not be enough: runtime evaluation provides even stronger constraints. StaticFrame 2.0 introduces a built-in decorator, `check_interface`, that uses the same type hints for runtime validation. Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
 
 @check_interface
 def process(f: Frame[
@@ -77,12 +81,12 @@ def process(f: Frame[
         np.float64,
         ]) -> Series[IndexDate, np.float64]: ...
 
+In CR today we will review the implementation of `check_interface`, as well as `check_type`, the core routine for run-time validation of type hints in StaticFrame. Along the way, we will learn about introspecting Python Generics and see yet another recursive, graph transversal implemented with the trusty old `deque`. You can get a head start here: https://github.com/static-frame/static-frame/blob/829/generics/static_frame/core/validate.py
 
 
 
 
 
-The popular `pandas-stubs` package, for example, does not even try to type the inner components of a DataFrame.
 
 
 

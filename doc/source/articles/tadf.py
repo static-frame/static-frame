@@ -60,57 +60,57 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
     ...
 
 
-q: Frame[Index[np.int64], Index[np.unicode_], np.bool_, np.unicode_, np.int64]
+# q: Frame[Index[np.int64], Index[np.unicode_], np.bool_, np.unicode_, np.int64]
 
-r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
+# r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
 
-r2: Frame[tp.Any, tp.Any, np.float64, np.int64]
+# r2: Frame[tp.Any, tp.Any, np.float64, np.int64]
 
-s: Frame[
-        IndexHierarchy[IndexDate, Index[np.int64]],
-        Index[np.unicode_],
-        np.bool_,
-        np.unicode_,
-        *tp.Tuple[np.int64, ...],
-        np.bool_,
-        ]
-
-
-def proc1(
-    f: Frame[
-        IndexHierarchy[IndexDate, Index[np.int64]],
-        Index[np.str_],
-        np.float64,
-        np.float64,
-        ]
-    ) -> Series[IndexDate, np.float64]:
-    ...
+# s: Frame[
+#         IndexHierarchy[IndexDate, Index[np.int64]],
+#         Index[np.unicode_],
+#         np.bool_,
+#         np.unicode_,
+#         *tp.Tuple[np.int64, ...],
+#         np.bool_,
+#         ]
 
 
+# def proc1(
+#     f: Frame[
+#         IndexHierarchy[IndexDate, Index[np.int64]],
+#         Index[np.str_],
+#         np.float64,
+#         np.float64,
+#         ]
+#     ) -> Series[IndexDate, np.float64]:
+#     ...
 
-@sf.validate(
-        Frame.validate(
-        name='scores',
-        columns=Index.validate('code', 'included', ..., 'signal', ...),
-        shape=(20,)),
-        )
-def proc(
-    f: Frame[
-        IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
-        Index[np.unicode_],
-        np.unicode_,
-        np.bool_,
-        *tp.Tuple[np.float64, ...]
-        ]
-    ) -> Series[IndexDate[np.datetime64], np.float64]:
-    ...
 
-# NOTE: could use tp.Annotated to bundle type with a field name
 
-@sf.validate(
-        x = Series.validate(index=bb_index, shape=len(bb_index)),
-        y = Series.validate(index=bb_index),
-        )
+# @sf.validate(
+#         Frame.validate(
+#         name='scores',
+#         columns=Index.validate('code', 'included', ..., 'signal', ...),
+#         shape=(20,)),
+#         )
+# def proc(
+#     f: Frame[
+#         IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
+#         Index[np.unicode_],
+#         np.unicode_,
+#         np.bool_,
+#         *tp.Tuple[np.float64, ...]
+#         ]
+#     ) -> Series[IndexDate[np.datetime64], np.float64]:
+#     ...
+
+# # NOTE: could use tp.Annotated to bundle type with a field name
+
+# @sf.validate(
+#         x = Series.validate(index=bb_index, shape=len(bb_index)),
+#         y = Series.validate(index=bb_index),
+#         )
 
 
 
