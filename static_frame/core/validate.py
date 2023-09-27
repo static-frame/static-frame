@@ -484,10 +484,14 @@ TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 @tp.overload
 def check_interface(func: TVFunc) -> TVFunc: ...
 
+@tp.overload
+def check_interface(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+
 def check_interface(
-        *args: tp.Any,
+        func: TVFunc | None = None,
+        *,
         fail_fast: bool = False,
-        ) -> tp.Callable[[TVFunc], TVFunc]:
+        ) -> tp.Any:
 
     def decorator(func: TVFunc) -> TVFunc:
 
@@ -511,10 +515,8 @@ def check_interface(
 
         return tp.cast(TVFunc, wrapper)
 
-    if args: # if used without calling with kwargs
-        if len(args) != 1 or not callable(args[0]):
-            raise NotImplementedError('Only provide keyword arguments.')
-        return decorator(args[0]) # type: ignore
+    if func is not None:
+        return decorator(func) # type: ignore
 
     return decorator
 

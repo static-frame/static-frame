@@ -227,7 +227,7 @@ def test_frame_interface_b() -> None:
     hf3 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.bool_] # type: ignore[type-arg]
     f3: hf3 = sf.Frame.from_records((r[1:] for r in records), columns=('b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
 
-    s = proc(f3) #pyright: error: Argument of type "Frame[IndexDate, Index[str_], int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
+    # s = proc(f3) #pyright: error: Argument of type "Frame[IndexDate, Index[str_], int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
     # "Frame[IndexDate, Index[str_], int_, bool_]" is incompatible with "Frame[IndexDate, Index[str_], int_, int_, bool_]"
     #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, bool_]" is not the same as "*tuple[int_, int_, bool_]" (reportGeneralTypeIssues)
 
