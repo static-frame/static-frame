@@ -6,6 +6,7 @@ from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
 from functools import wraps
+from inspect import BoundArguments
 from inspect import Signature
 from itertools import chain
 from itertools import repeat
@@ -82,6 +83,15 @@ def to_name(v: tp.Any) -> str:
     if v is ...:
         return '...'
     return str(v)
+
+def to_signature(
+        sig: BoundArguments,
+        hints: tp.Mapping[str, tp.Any]) -> str:
+    msg = []
+    for k in sig.arguments:
+        msg.append(f'{k}: {to_name(hints.get(k, tp.Any))}')
+    r = to_name(hints.get('return', tp.Any))
+    return f'({", ".join(msg)}) -> {r}'
 
 class CheckError(TypeError):
 
@@ -499,18 +509,22 @@ def check_interface(
 
         @wraps(func)
         def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            # NOTE: Signature is not always evaluating hints when using from __future__ import annotations
+            hints = tp.get_type_hints(func)
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
             sig_bound.apply_defaults()
-            parent = (f'args of {sig}',)
+            sig_str = to_signature(sig_bound, hints)
+            parent = (f'args of {sig_str}',)
+
             for k, v in sig_bound.arguments.items():
-                if (h_p := sig.parameters[k].annotation) != Signature.empty:
+                if h_p := hints.get(k, None):
                     check_type(v, h_p, parent, fail_fast=fail_fast)
 
             post = func(*args, **kwargs)
 
-            if (h_return := sig.return_annotation) != Signature.empty:
-                check_type(post, h_return, (f'return of {sig}',), fail_fast=fail_fast)
+            if h_return := hints.get('return', None):
+                check_type(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast)
 
             return post
 
