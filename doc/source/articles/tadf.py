@@ -67,7 +67,7 @@ r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
 r2: Frame[tp.Any, tp.Any, np.float64, np.int64]
 
 s: Frame[
-        IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
+        IndexHierarchy[IndexDate, Index[np.int64]],
         Index[np.unicode_],
         np.bool_,
         np.unicode_,
@@ -78,13 +78,12 @@ s: Frame[
 
 def proc1(
     f: Frame[
-        IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
-        Index[np.unicode_],
-        np.unicode_,
-        np.bool_,
+        IndexHierarchy[IndexDate, Index[np.int64]],
+        Index[np.str_],
+        np.float64,
         np.float64,
         ]
-    ) -> Series[IndexDate[np.datetime64], np.float64]:
+    ) -> Series[IndexDate, np.float64]:
     ...
 
 

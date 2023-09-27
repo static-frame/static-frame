@@ -50,8 +50,27 @@ In CR today we will review NumPy's approach to typing, including the as-of-yet u
 
 ### second internal presentation
 
+Since the advent of type hints in Python 3.5, statically typing a DataFrame was moostly limited to the type of the container:
+
+def process(f: DataFrame) -> Series: ...
+
+This is insufficient for a number of reason. First, DataFrames have typed index and column labels, even hierarchical indices, on either axis. Second, DataFrames have data stored in types by column. While using generics can support some of these component definitions, the variable number of types needed to define hierarchical indicies or columnar data types has not been easy to reprent. TypeVarTuple, introduced in Python 3.11, provides the missing tool to flexibly define types of hierarchical indicies or columnar data types.
+
+def process(f: Frame[
+        IndexHierarchy[IndexDate, Index[np.int64]],
+        Index[np.str_],
+        np.float64,
+        np.float64,
+        ]) -> Series[IndexDate, np.float64]: ...
+
 Using nested generics and the new TypeVarTuple, StaticFrame 2.0 will permit full static-typing of DataFrames, including statically typing the index, columns, and columnar types. In addition to this support for static-analysis checks with mypy or Pyright, a built-in decorator permits using the same type-hints for run-time validation. Extended with one or more validators enclosed in an Annotated generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included in single definition.
 
+def process(f: Frame[
+        IndexHierarchy[IndexDate, Index[np.int64]],
+        Index[np.str_],
+        np.float64,
+        np.float64,
+        ]) -> Series[IndexDate, np.float64]: ...
 
 
 
