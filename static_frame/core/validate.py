@@ -515,7 +515,7 @@ def check_interface(
         return tp.cast(TVFunc, wrapper)
 
     if func is not None:
-        return decorator(func) # type: ignore
+        return decorator(func)
 
     return decorator
 
