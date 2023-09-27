@@ -510,7 +510,9 @@ def check_interface(
         @wraps(func)
         def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
             # NOTE: Signature is not always evaluating hints when using from __future__ import annotations
+            # NOTE: need to use include_extras=True to get annotations, but this parameters is only in Python >= 3.9
             hints = tp.get_type_hints(func)
+
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
             sig_bound.apply_defaults()
