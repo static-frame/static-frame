@@ -75,8 +75,10 @@ ERROR_MESSAGE_TYPE = object()
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
         # for older Python, not all generics have __name__
-        if not (name := getattr(v, '__name__', '')):
-            name = str(v)
+        if hasattr(v, '__name__'):
+            name = v.__name__
+        else:
+            name = tp.get_origin(v).__name__
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif hasattr(v, '__name__'):
         s = v.__name__
@@ -418,7 +420,7 @@ def check(
                 if t_check:
                     continue
                 e_log.append((v, h, p))
-            elif origin == tp.Annotated: # NOTE: cannot use is due backwards compat
+            elif origin == tp.Annotated: # NOTE: cannot use `is` due backwards compat
                 h_type, *h_annotations = tp.get_args(h)
                 # perform the un-annotated check
                 q.append((v, h_type, p_next))
