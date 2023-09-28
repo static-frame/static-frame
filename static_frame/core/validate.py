@@ -418,23 +418,21 @@ def check(
                 e_log.append((v, h, p))
             elif origin == tp.Annotated: # NOTE: cannot use is due backwards compat
                 h_type, *h_annotations = tp.get_args(h)
-                # perform the un-annoitated check
+                # perform the un-annotated check
                 q.append((v, h_type, p_next))
                 for h_annotation in h_annotations:
                     if isinstance(h_annotation, Constraint):
                         q.append((v, h_annotation, p_next))
+            elif origin == tp.Literal: # NOTE: cannot use is due backwards compat
+                l_log: tp.List[TValidation] = []
+                for l_hint in tp.get_args(h): # get components
+                    c_log = check(v, l_hint, p_next, fail_fast)
+                    if not c_log: # no error found, can exit
+                        break
+                    l_log.extend(c_log)
+                else: # no breaks, so no matches within union
+                    e_log.extend(l_log)
             else:
-                if origin == tp.Literal: # NOTE: cannot use is due backwards compat
-                    l_log: tp.List[TValidation] = []
-                    for l_hint in tp.get_args(h): # get components
-                        c_log = check(v, l_hint, p_next, fail_fast)
-                        if not c_log: # no error found, can exit
-                            break
-                        l_log.extend(c_log)
-                    else: # no breaks, so no matches within union
-                        e_log.extend(l_log)
-                    continue
-
                 if not isinstance(v, origin):
                     e_log.append((v, origin, p))
                     continue
