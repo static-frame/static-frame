@@ -329,6 +329,34 @@ def test_check_interface_e():
     assert proc1(2, 0) == 0
     assert proc1(2, 1) == 2
 
+
+def test_check_interface_f():
+
+    @check_interface
+
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Len(3), Name('foo')]) -> int:
+        return len(idx)
+
+    idx1 = sf.Index(('a', 'b', 'c'), name='foo')
+    assert proc1(idx1) == 3
+
+    idx1 = sf.Index(('a', 'b', 'c'), name='fab')
+    with pytest.raises(TypeError):
+        _ = proc1(idx1)
+    try:
+        _ = proc1(idx1)
+    except TypeError as e:
+        assert str(e) == "Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Name('foo'): expected name 'foo', provided name 'fab'."
+
+    idx1 = sf.Index(('a', 'c'), name='fab')
+    with pytest.raises(TypeError):
+        _ = proc1(idx1)
+    try:
+        _ = proc1(idx1)
+    except TypeError as e:
+        assert str(e) == "Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Len(3): expected length 3, provided length 2. Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Name('foo'): expected name 'foo', provided name 'fab'."
+
+
 #-------------------------------------------------------------------------------
 
 def test_check_annotated_a():

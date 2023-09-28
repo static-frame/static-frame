@@ -77,12 +77,14 @@ def to_name(v: tp.Any) -> str:
         # for older Python, not all generics have __name__
         if not (name := getattr(v, '__name__', '')):
             name = str(v)
-        return f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
-    if hasattr(v, '__name__'):
-        return v.__name__ # type: ignore[no-any-return]
-    if v is ...:
-        return '...'
-    return str(v)
+        s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif hasattr(v, '__name__'):
+        s = v.__name__ # type: ignore[no-any-return]
+    elif v is ...:
+        s = '...'
+    else:
+        s = str(v)
+    return s
 
 def to_signature(
         sig: BoundArguments,
@@ -507,9 +509,8 @@ def check_interface(
 
         @wraps(func)
         def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-            # NOTE: Signature is not always evaluating hints when using from __future__ import annotations
-            # NOTE: need to use include_extras=True to get annotations, but this parameters is only in Python >= 3.9
-            hints = tp.get_type_hints(func)
+            # include_extras insures that Annotated generics are returned
+            hints = tp.get_type_hints(func, include_extras=True)
 
             sig = Signature.from_callable(func)
             sig_bound = sig.bind(*args, **kwargs)
