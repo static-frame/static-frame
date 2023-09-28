@@ -194,14 +194,6 @@ def test_frame_interface_b() -> None:
             (30, 34, False),
             (54, 95, True),
             )
-    # f1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
-
-    # def proc(f: sf.Frame) -> sf.Series:
-    #     return f.loc[f['c']].prod(axis=1)
-
-    #----------
-
-
     hf1 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_] # type: ignore[type-arg]
     hs = sf.Series[sf.IndexDate, np.int_]
 
@@ -232,9 +224,58 @@ def test_frame_interface_b() -> None:
     #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, bool_]" is not the same as "*tuple[int_, int_, bool_]" (reportGeneralTypeIssues)
 
 
-    # if we want to add run-time checks, we can do that too
+def test_frame_interface_c() -> None:
 
 
+    records1 = (
+            (1, True),
+            (30, False),
+            (54, True),
+            )
+    records2 = (
+            (1, 3, 20, True),
+            (30, 4, 100, False),
+            (54, 3, 8, True),
+            )
+    records3 = (
+            (True, 3),
+            (False, 20),
+            (True, 3),
+            )
+
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.int_,
+            np.bool_]
+
+    h2 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.int_,
+            np.int_,
+            np.int_,
+            np.bool_]
+    h3 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.bool_,
+            np.int_,
+            ]
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f1: h1 = sf.Frame.from_records(records1, columns=('a', 'b'), index=index)
+    f2: h2 = sf.Frame.from_records(records2, columns=('a', 'b', 'c', 'd'), index=index)
+    f3: h3 = sf.Frame.from_records(records3, columns=('a', 'd'), index=index)
+
+    hflex = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[np.int_, ...]],
+            np.bool_]
+
+    fflex1: hflex = f1
+    fflex2: hflex = f2
+
+    # fflex3: hflex = f3 # error: Expression of type "Frame[IndexDate, Index[str_], bool_, int_]" cannot be assigned to declared type "Frame[IndexDate, Index[str_], *tuple[int_, ...], bool_]"
+    # "Frame[IndexDate, Index[str_], bool_, int_]" is incompatible with "Frame[IndexDate, Index[str_], *tuple[int_, ...], bool_]"
+    #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[bool_, int_]" is not the same as "*tuple[*tuple[int_, ...], bool_]" (reportGeneralTypeIssues)
 
 
 

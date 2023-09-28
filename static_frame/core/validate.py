@@ -153,7 +153,6 @@ class Name(Constraint):
         if (n := value.name) != self._name:
             yield ERROR_MESSAGE_TYPE, f'expected name {self._name!r}, provided name {n!r}', parent
 
-
 class Len(Constraint):
     __slots__ = ('_len',)
 
@@ -447,6 +446,7 @@ def check(
                     tee_error_or_check(iter_sequence_checks(v, h, p_next))
                 elif isinstance(v, MutableMapping):
                     tee_error_or_check(iter_mapping_checks(v, h, p_next))
+
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, p_next))
                 elif isinstance(v, IndexHierarchy):
@@ -455,6 +455,7 @@ def check(
                     tee_error_or_check(iter_series_checks(v, h, p_next))
                 elif isinstance(v, Frame):
                     tee_error_or_check(iter_frame_checks(v, h, p_next))
+
                 elif isinstance(v, np.ndarray):
                     tee_error_or_check(iter_ndarray_checks(v, h, p_next))
                 elif isinstance(v, np.dtype):
