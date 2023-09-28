@@ -74,11 +74,15 @@ ERROR_MESSAGE_TYPE = object()
 
 def to_name(v: tp.Any) -> str:
     if isinstance(v, GENERIC_TYPES):
-        # for older Python, not all generics have __name__
         if hasattr(v, '__name__'):
             name = v.__name__
         else:
-            name = tp.get_origin(v).__name__
+            # for older Python, not all generics have __name__
+            origin = tp.get_origin(v)
+            if hasattr(origin, '__name__'):
+                name = origin.__name__
+            else:
+                name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif hasattr(v, '__name__'):
         s = v.__name__
