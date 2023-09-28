@@ -79,7 +79,7 @@ def to_name(v: tp.Any) -> str:
             name = str(v)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif hasattr(v, '__name__'):
-        s = v.__name__ # type: ignore[no-any-return]
+        s = v.__name__
     elif v is ...:
         s = '...'
     else:
