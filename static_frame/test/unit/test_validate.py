@@ -17,6 +17,7 @@ from static_frame.core.validate import check_type
 from static_frame.core.validate import GenericFactory
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
+from static_frame.test.test_case import skip_win
 
 
 def test_check_type_a():
@@ -524,6 +525,7 @@ def test_validate_validator_a():
 
 
 #-------------------------------------------------------------------------------
+@skip_win
 def test_check_error_display_a():
 
     records = (
