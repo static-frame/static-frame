@@ -555,3 +555,8 @@ def test_check_error_display_a():
         check_type(f, h2)
     except TypeError as e:
         assert str(e).replace('\n', '') == 'In Frame[IndexDate, Index[int64], int64, int64, str_]    Expected str_, provided bool_ invalid.In Frame[IndexDate, Index[int64], int64, int64, str_]    Index[int64]        Expected int64, provided str_ invalid.'
+
+
+
+
+

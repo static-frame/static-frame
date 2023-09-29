@@ -16,6 +16,7 @@ import typing_extensions as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
+from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -315,7 +316,7 @@ def iter_mapping_checks(value: tp.Any,
         yield v, h, parent
 
 
-# NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type
+# NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instasce of the type that can be used for testing. This might be cached.
 
 def iter_series_checks(value: tp.Any,
         hint: tp.Any,
@@ -574,11 +575,36 @@ def check_interface(
 
 
 #-------------------------------------------------------------------------------
+def _value_to_hint(value) -> tp.Any: # tp._GenericAlias
+    if isinstance(value, Frame):
+        dts = [dt.type().__class__ for dt in value._blocks._iter_dtypes()]
+        return value.__class__[
+            _value_to_hint(value.index),
+            _value_to_hint(value.columns),
+            *dts
+            ]
+
+    # must come before index
+    if isinstance(value, IndexDatetime):
+        return value.__class__
+
+    if isinstance(value, Index):
+        return value.__class__[value.dtype.type().__class__]
+
+    return value.__class__
+
 class GenericFactory:
     __slots__ = ('_value',)
 
     def __init__(self, value: tp.Any, /):
         self._value = value
+
+    def to_hint(self) -> tp.Any:
+        # NOTE: this can cache as value assumed immutable
+        return _value_to_hint(self._value)
+
+    def __repr__(self) -> str:
+        return to_name(self.to_hint())
 
     def check(self, hint: tp.Any, /) -> CheckResult:
         return _check(self._value, hint)
