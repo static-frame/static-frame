@@ -78,7 +78,7 @@ def test(context,
     '''Run tests.
     '''
     if unit:
-        fp = 'static_frame/test/unit'
+        fp = 'static_frame/test/unit static_frame/test/typing'
     else:
         fp = 'static_frame/test'
 
