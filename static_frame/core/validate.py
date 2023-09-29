@@ -16,8 +16,8 @@ import typing_extensions as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
