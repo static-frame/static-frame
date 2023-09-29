@@ -69,30 +69,6 @@ def is_unpack(hint: tp.Any) -> bool:
     return False
 
 #-------------------------------------------------------------------------------
-# cache NumPy generics
-
-# class DtypeGeneric:
-#     _cache: tp.Dict[DtypeAny, tp.Tuple[tp.Type[np.generic], np.generic]] = {}
-
-#     @classmethod
-#     def _get_pair(cls, dt: DtypeAny)
-#         if pair := cls._cache.get(dt, None):
-#             return pair
-#         v = dt.type()
-#         pair = (v.__class__, v)
-#         cls._cache[dt] = pair
-#         return pair
-
-#     @classmethod
-#     def dtype_to_type(cls, dt: DtypeAny) -> tp.Type[np.generic]:
-#         return cls._get_pair(dt)[0]
-
-#     @classmethod
-#     def dtype_to_instance(cls, dt: DtypeAny) -> tp.Type[np.generic]:
-#         return cls._get_pair(dt)[0]
-
-
-#-------------------------------------------------------------------------------
 
 TParent = tp.Tuple[tp.Any, ...]
 # A validation record can be used to queue checks or report errors
@@ -133,10 +109,13 @@ def to_signature(
     return f'({", ".join(msg)}) -> {r}'
 
 
-TAB = '    '
 
 class CheckResult:
     __slots__ = ('_log',)
+
+    _LINE = '─'
+    _CORNER = '└'
+    _WIDTH = 4
 
     def __init__(self, log: tp.Sequence[TValidation]) -> None:
         self._log = log
@@ -145,11 +124,21 @@ class CheckResult:
         return self._log.__iter__()
 
     def __bool__(self) -> bool:
+        '''Return True if there are validation issues.
+        '''
         return bool(self._log)
 
     @property
     def validated(self) -> bool:
         return not bool(self._log)
+
+    @classmethod
+    def _get_indent(cls, size: int) -> str:
+        if size < 1:
+            return ''
+        c_width = cls._WIDTH - 2
+        l_width = cls._WIDTH * (size - 1)
+        return f'{" " * l_width}{cls._CORNER}{cls._LINE * c_width} '
 
     def to_str(self) -> str:
         msg = []
@@ -158,28 +147,32 @@ class CheckResult:
                 # path = ', '.join(to_name(n) for n in p)
                 path_components = []
                 for i, pc in enumerate(p):
-                    path_components.append(f'{TAB * i}{to_name(pc)}')
+                    path_components.append(f'{self._get_indent(i)}{to_name(pc)}')
                 path = '\n'.join(path_components)
                 i_next = i + 1
             else:
                 path = ''
                 i_next = 1
 
+            prefix = f'\nIn {path}'
+
             if v is ERROR_MESSAGE_TYPE: # in this case, do not use the value
-                if path:
-                    prefix = f'\nFailed check in {path}'
-                else:
+                if not path:
                     prefix = '\nFailed check'
-                msg.append(f'{prefix}\n{TAB * i_next}{h}.')
+                error_msg = f'{h}.'
             else:
-                if path:
-                    prefix = f'\nIn {path}'
-                else:
+                if not path:
                     prefix = ''
                     i_next = 0
-                msg.append(f'{prefix}\n{TAB * i_next}Expected {to_name(h)}, provided {to_name(type(v))} invalid.')
+                error_msg = f'Expected {to_name(h)}, provided {to_name(type(v))} invalid.'
+
+            msg.append(f'{prefix}\n{self._get_indent(i_next)}{error_msg}')
 
         return ''.join(msg)
+
+    def __repr__(self) -> str:
+        return self.to_str()
+
 
 class CheckError(TypeError):
     def __init__(self, cr: CheckResult) -> None:
@@ -214,7 +207,7 @@ class Name(Constraint):
             ) -> tp.Iterator[TValidation]:
         # returning anything is an error
         if (n := value.name) != self._name:
-            yield ERROR_MESSAGE_TYPE, f'expected name {self._name!r}, provided name {n!r}', parent
+            yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
 
 class Len(Constraint):
     __slots__ = ('_len',)
@@ -228,7 +221,7 @@ class Len(Constraint):
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
         if (vl := len(value)) != self._len:
-            yield ERROR_MESSAGE_TYPE, f'expected length {self._len}, provided length {vl}', parent
+            yield ERROR_MESSAGE_TYPE, f'Expected length {self._len}, provided length {vl}', parent
 
 
 # might accept regular expression objects as label entries?
@@ -252,26 +245,26 @@ class Labels(Constraint):
             ) -> tp.Iterator[TValidation]:
 
         if not isinstance(value, IndexBase):
-            yield ERROR_MESSAGE_TYPE, f'expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
+            yield ERROR_MESSAGE_TYPE, f'Expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
         else:
             pos_e = 0 # position expected
             len_e = len(self._labels)
 
             for label_p in value:
                 if pos_e >= len_e:
-                    yield ERROR_MESSAGE_TYPE, f'expected labels exhausted at provided {label_p!r}', parent
+                    yield ERROR_MESSAGE_TYPE, f'Expected labels exhausted at provided {label_p!r}', parent
                     break
                 label_e = self._labels[pos_e]
 
                 if label_e is not ...:
                     if label_p != label_e:
-                        yield ERROR_MESSAGE_TYPE, f'expected {label_e!r}, provided {label_p!r}', parent
+                        yield ERROR_MESSAGE_TYPE, f'Expected {label_e!r}, provided {label_p!r}', parent
                     pos_e += 1
                 # label_e is an Ellipses; either find next as match or continue with Ellipses
                 elif pos_e + 1 < len_e: # more expected labels available
                     label_next_e = self._labels[pos_e + 1]
                     if label_next_e is ...:
-                        yield ERROR_MESSAGE_TYPE, 'expected cannot be defined with adjacent ellipses', parent
+                        yield ERROR_MESSAGE_TYPE, 'Expected cannot be defined with adjacent ellipses', parent
                         break
                     if label_p == label_next_e:
                         pos_e += 2 # skip the compared value, prepare to get next
@@ -281,7 +274,7 @@ class Labels(Constraint):
                     pass # ended on elipses
                 elif pos_e < len_e:
                     remainder = self._prepare_remainder(self._labels[pos_e:])
-                    yield ERROR_MESSAGE_TYPE, f'expected has unmatched labels {remainder}', parent
+                    yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
 
 
 class Validator(Constraint):
@@ -322,14 +315,14 @@ def iter_tuple_checks(value: tp.Any,
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
         if (h_len := len(h_components)) != 2:
-            yield ERROR_MESSAGE_TYPE, 'invalid ellipses usage', parent
+            yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent
         else:
             h = h_components[0]
             for v in value:
                 yield v, h, parent
     else:
         if (h_len := len(h_components)) != len(value):
-            msg = f'expected tuple length of {h_len}, provided tuple length of {len(value)}'
+            msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
             yield ERROR_MESSAGE_TYPE, msg, parent
         for v, h in zip(value, h_components):
             yield v, h, parent
@@ -379,7 +372,7 @@ def iter_index_hierarchy_checks(value: tp.Any,
     else:
         if h_len != value.depth:
             # give expected first
-            yield ERROR_MESSAGE_TYPE, f'expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
+            yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
         for i in range(value.depth):
             yield value.index_at_depth(i), h_generics[i], parent
 
@@ -404,7 +397,7 @@ def iter_frame_checks(value: tp.Any,
     else:
         if h_types_len != value.shape[1]:
             # give expected first
-            yield ERROR_MESSAGE_TYPE, f'expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
+            yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
         for dt, h in zip(value._blocks._iter_dtypes(), h_types):
             yield dt.type(), h, parent
 
@@ -552,8 +545,7 @@ def check_type(
         *,
         fail_fast: bool = False,
         ) -> None:
-    cr = _check(value, hint, parent, fail_fast)
-    if cr:
+    if cr := _check(value, hint, parent, fail_fast):
         raise CheckError(cr)
 
 
@@ -627,7 +619,7 @@ def _value_to_hint(value) -> tp.Any: # tp._GenericAlias
 
     return value.__class__
 
-class GenericFactory:
+class TypeClinic:
     __slots__ = ('_value',)
 
     def __init__(self, value: tp.Any, /):

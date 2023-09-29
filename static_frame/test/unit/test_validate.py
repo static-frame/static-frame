@@ -14,7 +14,8 @@ from static_frame.core.validate import TValidation
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
-from static_frame.core.validate import GenericFactory
+from static_frame.core.validate import TypeClinic
+from static_frame.core.validate import CheckResult
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
@@ -153,6 +154,12 @@ def test_check_type_containers_e():
 
 #-------------------------------------------------------------------------------
 
+def scrub_str(s: str) -> str:
+    s = s.replace('\n', '').replace(CheckResult._LINE, '').replace(CheckResult._CORNER, '')
+    while '  ' in s:
+        s = s.replace('  ', ' ')
+    return s
+
 @skip_pyle310
 def test_check_type_fail_fast_a():
     v = sf.Series(('a', 'b'), index=sf.Index(('x', 'y'), dtype=np.str_))
@@ -164,20 +171,18 @@ def test_check_type_fail_fast_a():
     try:
         check_type(v, h, fail_fast=True)
     except TypeError as e:
-        assert str(e).replace('\n', '') == 'In Series[Index[int64], int64]    Expected int64, provided str_ invalid.'
+        assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid.'
 
     with pytest.raises(TypeError):
         check_type(v, h, fail_fast=False)
     try:
         check_type(v, h, fail_fast=False)
     except TypeError as e:
-        assert str(e).replace('\n', '') == 'In Series[Index[int64], int64]    Expected int64, provided str_ invalid.In Series[Index[int64], int64]    Index[int64]        Expected int64, provided str_ invalid.'
+        assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid.In Series[Index[int64], int64] Index[int64] Expected int64, provided str_ invalid.'
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_sequence_a():
-
-
     check_type([3, 4], tp.List[int])
 
     with pytest.raises(TypeError):
@@ -229,14 +234,14 @@ def test_check_type_tuple_b():
 @skip_pyle310
 def test_check_type_tuple_c():
 
-    cr = GenericFactory((3, 4)).check(tp.Tuple[int, int, int])
-    assert [r[1] for r in cr] == ['expected tuple length of 3, provided tuple length of 2']
+    cr = TypeClinic((3, 4)).check(tp.Tuple[int, int, int])
+    assert [r[1] for r in cr] == ['Expected tuple length of 3, provided tuple length of 2']
 
 @skip_pyle310
 def test_check_type_tuple_d():
 
-    cr = GenericFactory((3, 4, 5)).check(tp.Tuple[..., int, ...])
-    assert [r[1] for r in cr] == ['invalid ellipses usage']
+    cr = TypeClinic((3, 4, 5)).check(tp.Tuple[..., int, ...])
+    assert [r[1] for r in cr] == ['Invalid ellipses usage']
 
 
 #-------------------------------------------------------------------------------
@@ -246,7 +251,7 @@ def test_check_type_literal_a():
     check_type(42, tp.Literal[42])
     check_type(42, tp.Literal[-1, 42])
 
-    cr = GenericFactory(42).check(tp.Literal['a', 'b'])
+    cr = TypeClinic(42).check(tp.Literal['a', 'b'])
     assert list(cr) == [(42, 'a', (tp.Literal['a', 'b'],)),
                         (42, 'b', (tp.Literal['a', 'b'],))]
 
@@ -280,12 +285,12 @@ def test_check_interface_b():
     try:
         assert proc1(2, 3) == 6
     except TypeError as e:
-        assert str(e).replace('\n', '') == 'In return of (a: int, b: int) -> bool    Expected bool, provided int invalid.'
+        assert scrub_str(str(e)) == 'In return of (a: int, b: int) -> bool Expected bool, provided int invalid.'
 
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert str(e).replace('\n', '') == 'In args of (a: int, b: int) -> bool    Expected int, provided str invalid.'
+        assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool Expected int, provided str invalid.'
 
 def test_check_interface_c():
 
@@ -403,7 +408,7 @@ def test_check_index_hierarchy_b():
     check_type(v1, h1)
     check_type(v2, h1)
 
-    assert not GenericFactory(v1).check(h2).validated
+    assert not TypeClinic(v1).check(h2).validated
 
 @skip_pyle310
 def test_check_index_hierarchy_c():
@@ -434,14 +439,14 @@ def test_validate_labels_a1():
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
     v = Labels('a', 'b', 'c')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected 'b', provided 'x'",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected 'b', provided 'x'",)
 
 def test_validate_labels_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
     v = Labels('a', 'b', 'c')
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == (
-            "expected 'b', provided 'x'",
-            "expected 'c', provided 'z'")
+            "Expected 'b', provided 'x'",
+            "Expected 'c', provided 'z'")
 
 def test_validate_labels_b():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
@@ -461,12 +466,12 @@ def test_validate_labels_d1():
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Labels('a', 'b', ..., 'e')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'e'",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'e'",)
 
 def test_validate_labels_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels('a', ..., 'c', ..., 'd')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected labels exhausted at provided 'e'",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected labels exhausted at provided 'e'",)
 
 def test_validate_labels_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
@@ -501,17 +506,17 @@ def test_validate_labels_e7():
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels('a', 'b', ..., 'f', ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'f', ...",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'f', ...",)
 
 def test_validate_labels_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(..., 'x', ..., 'y', ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected has unmatched labels 'x', ..., 'y', ...",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'x', ..., 'y', ...",)
 
 def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(..., 'a', ..., ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("expected cannot be defined with adjacent ellipses",)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected cannot be defined with adjacent ellipses",)
 
 
 def test_validate_validator_a():
@@ -556,13 +561,27 @@ def test_check_error_display_a():
     try:
         check_type(f, h2)
     except TypeError as e:
-        assert str(e).replace('\n', '') == 'In Frame[IndexDate, Index[int64], int64, int64, str_]    Expected str_, provided bool_ invalid.In Frame[IndexDate, Index[int64], int64, int64, str_]    Index[int64]        Expected int64, provided str_ invalid.'
+        assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool_ invalid.In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid.'
 
 
 #-------------------------------------------------------------------------------
 def test_generic_factory_a():
+    records = (
+            (1, True, 20, True),
+            (30, False, 100, False),
+            (54, False, 8, True),
+            )
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    columns = sf.IndexHierarchy.from_product(('a', 'b'), (True, False))
+    f = sf.Frame.from_records(records, columns=columns, index=index)
 
+    h = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.int_]],
+            np.int_,
+            np.bool_,
+            np.int_,
+            np.int_,
+            ]
 
-
-
-
+    post = str(TypeClinic(f).check(h))
+    assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid.\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid.'
