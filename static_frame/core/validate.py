@@ -101,30 +101,58 @@ def to_signature(
     r = to_name(hints.get('return', tp.Any))
     return f'({", ".join(msg)}) -> {r}'
 
-class CheckError(TypeError):
 
-    def __init__(self, log: tp.Iterable[TValidation]) -> None:
+TAB = '    '
+
+class CheckResult:
+    __slots__ = ('_log',)
+
+    def __init__(self, log: tp.Sequence[TValidation]) -> None:
+        self._log = log
+
+    def __iter__(self) -> tp.Iterator[TValidation]:
+        return self._log.__iter__()
+
+    def __bool__(self) -> bool:
+        return bool(self._log)
+
+    @property
+    def validated(self) -> bool:
+        return not bool(self._log)
+
+    def to_str(self) -> str:
         msg = []
-        for v, h, p in log:
+        for v, h, p in self._log:
             if p:
-                path = ', '.join(to_name(n) for n in p)
+                # path = ', '.join(to_name(n) for n in p)
+                path_components = []
+                for i, pc in enumerate(p):
+                    path_components.append(f'{TAB * i}{to_name(pc)}')
+                path = '\n'.join(path_components)
+                i_next = i + 1
             else:
                 path = ''
+                i_next = 1
 
             if v is ERROR_MESSAGE_TYPE: # in this case, do not use the value
                 if path:
-                    prefix = f'Failed check in {path}:'
+                    prefix = f'\nFailed check in {path}'
                 else:
-                    prefix = 'Failed check:'
-                msg.append(f'{prefix} {h}.')
+                    prefix = '\nFailed check'
+                msg.append(f'{prefix}\n{TAB * i_next}{h}.')
             else:
                 if path:
-                    prefix = f'In {path}: expected'
+                    prefix = f'\nIn {path}'
                 else:
-                    prefix = 'Expected'
-                msg.append(f'{prefix} {to_name(h)}, provided {to_name(type(v))} invalid.')
+                    prefix = ''
+                    i_next = 0
+                msg.append(f'{prefix}\n{TAB * i_next}Expected {to_name(h)}, provided {to_name(type(v))} invalid.')
 
-        TypeError.__init__(self, ' '.join(msg))
+        return ''.join(msg)
+
+class CheckError(TypeError):
+    def __init__(self, cr: CheckResult) -> None:
+        TypeError.__init__(self, cr.to_str())
 
 #-------------------------------------------------------------------------------
 
@@ -366,12 +394,12 @@ def iter_dtype_checks(value: tp.Any,
 
 #-------------------------------------------------------------------------------
 
-def check(
+def _check(
         value: tp.Any,
         hint: tp.Any,
         parent: TParent = (),
         fail_fast: bool = False,
-        ) -> tp.Iterable[TValidation]:
+        ) -> CheckResult:
 
     # Check queue: queue all checks
     q = deque(((value, hint, parent),))
@@ -387,7 +415,7 @@ def check(
 
     while q:
         if fail_fast and e_log:
-            return e_log
+            return CheckResult(e_log)
 
         v, h, p = q.popleft()
         # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checkls
@@ -402,7 +430,7 @@ def check(
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = check(v, c_hint, p_next, fail_fast)
+                c_log = _check(v, c_hint, p_next, fail_fast)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
@@ -433,7 +461,7 @@ def check(
             elif origin == tp.Literal: # NOTE: cannot use is due backwards compat
                 l_log: tp.List[TValidation] = []
                 for l_hint in tp.get_args(h): # get components
-                    c_log = check(v, l_hint, p_next, fail_fast)
+                    c_log = _check(v, l_hint, p_next, fail_fast)
                     if not c_log: # no error found, can exit
                         break
                     l_log.extend(c_log)
@@ -481,7 +509,7 @@ def check(
                 continue
             e_log.append((v, h, p))
 
-    return e_log
+    return CheckResult(e_log)
 
 #-------------------------------------------------------------------------------
 # public interfaces
@@ -493,9 +521,9 @@ def check_type(
         *,
         fail_fast: bool = False,
         ) -> None:
-    e_log = check(value, hint, parent, fail_fast)
-    if e_log:
-        raise CheckError(e_log)
+    cr = _check(value, hint, parent, fail_fast)
+    if cr:
+        raise CheckError(cr)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
@@ -545,7 +573,15 @@ def check_interface(
 
 
 
+#-------------------------------------------------------------------------------
+class GenericFactory:
+    __slots__ = ('_value',)
 
+    def __init__(self, value: tp.Any, /):
+        self._value = value
+
+    def check(self, hint: tp.Any, /) -> CheckResult:
+        return _check(self._value, hint)
 
 
 

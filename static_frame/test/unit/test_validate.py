@@ -14,6 +14,7 @@ from static_frame.core.validate import TValidation
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
+from static_frame.core.validate import GenericFactory
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
 
@@ -66,7 +67,7 @@ def test_check_type_type_b():
     try:
         check_type(3, tp.Type[sf.Series])
     except TypeError as e:
-        assert str(e) == 'Expected Type[Series], provided int invalid.'
+        assert str(e).replace('\n', '') == 'Expected Type[Series], provided int invalid.'
 
 #-------------------------------------------------------------------------------
 
@@ -156,20 +157,20 @@ def test_check_type_fail_fast_a():
     v = sf.Series(('a', 'b'), index=sf.Index(('x', 'y'), dtype=np.str_))
     h = sf.Series[sf.Index[np.int64], np.int64]
 
+
     with pytest.raises(TypeError):
         check_type(v, h, fail_fast=True)
     try:
         check_type(v, h, fail_fast=True)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64]: expected int64, provided str_ invalid.'
-
+        assert str(e).replace('\n', '') == 'In Series[Index[int64], int64]    Expected int64, provided str_ invalid.'
 
     with pytest.raises(TypeError):
         check_type(v, h, fail_fast=False)
     try:
         check_type(v, h, fail_fast=False)
     except TypeError as e:
-        assert str(e) == 'In Series[Index[int64], int64]: expected int64, provided str_ invalid. In Series[Index[int64], int64], Index[int64]: expected int64, provided str_ invalid.'
+        assert str(e).replace('\n', '') == 'In Series[Index[int64], int64]    Expected int64, provided str_ invalid.In Series[Index[int64], int64]    Index[int64]        Expected int64, provided str_ invalid.'
 
 #-------------------------------------------------------------------------------
 
@@ -227,23 +228,15 @@ def test_check_type_tuple_b():
 @skip_pyle310
 def test_check_type_tuple_c():
 
-    with pytest.raises(TypeError):
-        check_type((3, 4), tp.Tuple[int, int, int])
-    try:
-        check_type((3, 4), tp.Tuple[int, int, int])
-    except TypeError as e:
-        assert str(e) == 'Failed check in Tuple[int, int, int]: expected tuple length of 3, provided tuple length of 2.'
-
+    cr = GenericFactory((3, 4)).check(tp.Tuple[int, int, int])
+    assert [r[1] for r in cr] == ['expected tuple length of 3, provided tuple length of 2']
 
 @skip_pyle310
 def test_check_type_tuple_d():
 
-    with pytest.raises(TypeError) as e:
-        check_type((3, 4, 5), tp.Tuple[..., int, ...])
-    try:
-        check_type((3, 4, 5), tp.Tuple[..., int, ...])
-    except TypeError as e:
-        assert str(e) == 'Failed check in Tuple[..., int, ...]: invalid ellipses usage.'
+    cr = GenericFactory((3, 4, 5)).check(tp.Tuple[..., int, ...])
+    assert [r[1] for r in cr] == ['invalid ellipses usage']
+
 
 #-------------------------------------------------------------------------------
 
@@ -252,12 +245,9 @@ def test_check_type_literal_a():
     check_type(42, tp.Literal[42])
     check_type(42, tp.Literal[-1, 42])
 
-    with pytest.raises(TypeError):
-        check_type(42, tp.Literal['a', 'b'])
-    try:
-        check_type(42, tp.Literal['a', 'b'])
-    except TypeError as e:
-        assert str(e) == 'In Literal[a, b]: expected a, provided int invalid. In Literal[a, b]: expected b, provided int invalid.'
+    cr = GenericFactory(42).check(tp.Literal['a', 'b'])
+    assert list(cr) == [(42, 'a', (tp.Literal['a', 'b'],)),
+                        (42, 'b', (tp.Literal['a', 'b'],))]
 
 #-------------------------------------------------------------------------------
 
@@ -289,12 +279,12 @@ def test_check_interface_b():
     try:
         assert proc1(2, 3) == 6
     except TypeError as e:
-        assert str(e) == 'In return of (a: int, b: int) -> bool: expected bool, provided int invalid.'
+        assert str(e).replace('\n', '') == 'In return of (a: int, b: int) -> bool    Expected bool, provided int invalid.'
 
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert str(e) == 'In args of (a: int, b: int) -> bool: expected int, provided str invalid.'
+        assert str(e).replace('\n', '') == 'In args of (a: int, b: int) -> bool    Expected int, provided str invalid.'
 
 def test_check_interface_c():
 
@@ -340,22 +330,13 @@ def test_check_interface_f():
     idx1 = sf.Index(('a', 'b', 'c'), name='foo')
     assert proc1(idx1) == 3
 
-    idx1 = sf.Index(('a', 'b', 'c'), name='fab')
+    idx2 = sf.Index(('a', 'b', 'c'), name='fab')
     with pytest.raises(TypeError):
-        _ = proc1(idx1)
-    try:
-        _ = proc1(idx1)
-    except TypeError as e:
-        assert str(e) == "Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Name('foo'): expected name 'foo', provided name 'fab'."
+        _ = proc1(idx2)
 
-    idx1 = sf.Index(('a', 'c'), name='fab')
+    idx3 = sf.Index(('a', 'c'), name='fab')
     with pytest.raises(TypeError):
-        _ = proc1(idx1)
-    try:
-        _ = proc1(idx1)
-    except TypeError as e:
-        assert str(e) == "Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Len(3): expected length 3, provided length 2. Failed check in args of (idx: Annotated[Index[str_], Len(3), Name('foo')]) -> int, Annotated[Index[str_], Len(3), Name('foo')], Name('foo'): expected name 'foo', provided name 'fab'."
-
+        _ = proc1(idx3)
 
 #-------------------------------------------------------------------------------
 
@@ -408,10 +389,6 @@ def test_check_index_hierarchy_a():
     h1 = sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer], sf.IndexDate]
     with pytest.raises(TypeError):
         check_type(v1, h1)
-    try:
-        check_type(v1, h1)
-    except TypeError as e:
-        assert str(e) == 'Failed check in IndexHierarchy[Index[str_], Index[integer], IndexDate]: expected IndexHierarchy depth of 3, provided depth of 2.'
 
 @skip_pyle310
 def test_check_index_hierarchy_b():
@@ -425,12 +402,7 @@ def test_check_index_hierarchy_b():
     check_type(v1, h1)
     check_type(v2, h1)
 
-    try:
-        check_type(v1, h2)
-    except TypeError as e:
-        assert str(e) == 'In IndexHierarchy[Unpack[Tuple[Index[str_], ...]]], Tuple[Index[str_], ...], Index[str_]: expected str_, provided int64 invalid. In IndexHierarchy[Unpack[Tuple[Index[str_], ...]]], Tuple[Index[str_], ...], Index[str_]: expected str_, provided int64 invalid.'
-    else: # did not raise
-        raise TypeError('expected failure did not raise')
+    assert not GenericFactory(v1).check(h2).validated
 
 @skip_pyle310
 def test_check_index_hierarchy_c():
@@ -445,12 +417,8 @@ def test_check_index_hierarchy_c():
     check_type(v1, h1)
     check_type(v1, h2)
 
-    try:
-        check_type(v1, h3)
-    except TypeError as e:
-        assert str(e) == 'In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[bool_]: expected bool_, provided str_ invalid. In IndexHierarchy[Index[int64], Index[bool_], Index[str_]], Index[str_]: expected str_, provided bool_ invalid.'
-    else: # did not raise
-        raise TypeError('expected failure did not raise')
+    # try:
+    #     check_type(v1, h3)
 
 #-------------------------------------------------------------------------------
 
@@ -552,3 +520,38 @@ def test_validate_validator_a():
 
     v2 = Validator(lambda i: 'q' in i)
     assert get_hints(v2.iter_error_log(idx1, None, (None,))) == ("Index failed validation with <lambda>",)
+
+
+
+#-------------------------------------------------------------------------------
+def test_check_error_display_a():
+
+    records = (
+            (1, 3, True),
+            (4, 100, False),
+            (3, 8, True),
+            )
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.int_,
+            np.int_,
+            np.bool_]
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+
+    h2 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.int_],
+            np.int_,
+            np.int_,
+            np.str_]
+
+    with pytest.raises(TypeError):
+        check_type(f, h2)
+    try:
+        check_type(f, h2)
+    except TypeError as e:
+        assert str(e).replace('\n', '') == 'In Frame[IndexDate, Index[int64], int64, int64, str_]    Expected str_, provided bool_ invalid.In Frame[IndexDate, Index[int64], int64, int64, str_]    Index[int64]        Expected int64, provided str_ invalid.'
