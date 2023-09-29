@@ -597,25 +597,25 @@ def check_interface(
 
 
 #-------------------------------------------------------------------------------
-def _value_to_hint(value) -> tp.Any: # tp._GenericAlias
+def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
     if isinstance(value, Frame):
         hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
         hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
-        return value.__class__.__class_getitem__(tuple(hints))
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
 
     if isinstance(value, Series):
-        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__]
+        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__] # type: ignore
 
     # must come before index
     if isinstance(value, IndexDatetime):
         return value.__class__
 
     if isinstance(value, Index):
-        return value.__class__[value.dtype.type().__class__]
+        return value.__class__[value.dtype.type().__class__] # type: ignore
 
     if isinstance(value, IndexHierarchy):
-        hints = tuple(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
-        return value.__class__.__class_getitem__(hints)
+        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
 
     return value.__class__
 
