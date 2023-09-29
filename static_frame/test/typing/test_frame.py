@@ -171,7 +171,11 @@ def test_frame_interface_a() -> None:
             (54, 95, False),
             )
     h1 = sf.Frame[sf.Index[np.int64], sf.Index[np.str_], np.int64, np.int64, np.bool_] # type: ignore[type-arg]
-    f: h1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.Index((10, 20, 30), dtype=np.int64))
+    f: h1 = sf.Frame.from_records(records,
+        columns=('a', 'b', 'c'),
+        index=sf.Index((10, 20, 30), dtype=np.int64),
+        dtypes=np.int64,
+        )
 
     @check_interface
     def proc1(f: h1) -> sf.Series[sf.Index[np.int64], np.int64]:
