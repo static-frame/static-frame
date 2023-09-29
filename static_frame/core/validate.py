@@ -25,6 +25,10 @@ from static_frame.core.util import TLabel
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
 
+if tp.TYPE_CHECKING:
+    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'GenericAlias', None):
         yield t
@@ -63,6 +67,32 @@ def is_unpack(hint: tp.Any) -> bool:
     if hint in UNPACK_TYPES:
         return True
     return False
+
+#-------------------------------------------------------------------------------
+# cache NumPy generics
+
+# class DtypeGeneric:
+#     _cache: tp.Dict[DtypeAny, tp.Tuple[tp.Type[np.generic], np.generic]] = {}
+
+#     @classmethod
+#     def _get_pair(cls, dt: DtypeAny)
+#         if pair := cls._cache.get(dt, None):
+#             return pair
+#         v = dt.type()
+#         pair = (v.__class__, v)
+#         cls._cache[dt] = pair
+#         return pair
+
+#     @classmethod
+#     def dtype_to_type(cls, dt: DtypeAny) -> tp.Type[np.generic]:
+#         return cls._get_pair(dt)[0]
+
+#     @classmethod
+#     def dtype_to_instance(cls, dt: DtypeAny) -> tp.Type[np.generic]:
+#         return cls._get_pair(dt)[0]
+
+
+#-------------------------------------------------------------------------------
 
 TParent = tp.Tuple[tp.Any, ...]
 # A validation record can be used to queue checks or report errors
@@ -577,12 +607,12 @@ def check_interface(
 #-------------------------------------------------------------------------------
 def _value_to_hint(value) -> tp.Any: # tp._GenericAlias
     if isinstance(value, Frame):
-        dts = [dt.type().__class__ for dt in value._blocks._iter_dtypes()]
-        return value.__class__[
-            _value_to_hint(value.index),
-            _value_to_hint(value.columns),
-            *dts
-            ]
+        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
+        hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
+        return value.__class__.__class_getitem__(tuple(hints))
+
+    if isinstance(value, Series):
+        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__]
 
     # must come before index
     if isinstance(value, IndexDatetime):
@@ -590,6 +620,10 @@ def _value_to_hint(value) -> tp.Any: # tp._GenericAlias
 
     if isinstance(value, Index):
         return value.__class__[value.dtype.type().__class__]
+
+    if isinstance(value, IndexHierarchy):
+        hints = tuple(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
+        return value.__class__.__class_getitem__(hints)
 
     return value.__class__
 
