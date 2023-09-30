@@ -565,7 +565,7 @@ def test_check_error_display_a():
 
 
 #-------------------------------------------------------------------------------
-def test_generic_factory_a():
+def test_type_clinic_a():
     records = (
             (1, True, 20, True),
             (30, False, 100, False),
@@ -585,3 +585,17 @@ def test_generic_factory_a():
 
     post = str(TypeClinic(f).check(h))
     assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid.\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid.'
+
+
+def test_type_clinic_to_hint_a():
+    s = sf.Series((3, 2), index=sf.Index(('a', 'b')), dtype=np.int64)
+    assert TypeClinic(s).to_hint() == sf.Series[sf.Index[np.str_], np.int64]
+
+def test_type_clinic_to_hint_b():
+    s = sf.Index(('a', 'b'))
+    assert TypeClinic(s).to_hint() == sf.Index[np.str_]
+
+def test_type_clinic_to_hint_c():
+    s = sf.IndexHierarchy.from_product(('a', 'b'), (True, False))
+    assert TypeClinic(s).to_hint() == sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]
+
