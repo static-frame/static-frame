@@ -573,14 +573,14 @@ def test_type_clinic_a():
             )
     index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
     columns = sf.IndexHierarchy.from_product(('a', 'b'), (True, False))
-    f = sf.Frame.from_records(records, columns=columns, index=index)
+    f = sf.Frame.from_records(records, columns=columns, index=index, dtypes=(np.int64, np.bool_, np.int64, np.bool_))
 
     h = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
-            sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.int_]],
-            np.int_,
+            sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.int64]],
+            np.int64,
             np.bool_,
-            np.int_,
-            np.int_,
+            np.int64,
+            np.int64,
             ]
 
     post = str(TypeClinic(f).check(h))
