@@ -79,7 +79,7 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
 ERROR_MESSAGE_TYPE = object()
 
-def to_name(v: tp.Any) -> str:
+def to_name(v: tp.Any, func_to_str: tp.Callable[..., str] = str) -> str:
     if isinstance(v, GENERIC_TYPES):
         if hasattr(v, '__name__'):
             name = v.__name__
@@ -96,7 +96,7 @@ def to_name(v: tp.Any) -> str:
     elif v is ...:
         s = '...'
     else:
-        s = str(v)
+        s = func_to_str(v)
     return s
 
 def to_signature(
@@ -154,19 +154,15 @@ class CheckResult:
                 path = ''
                 i_next = 1
 
-            prefix = f'\nIn {path}'
-
             if v is ERROR_MESSAGE_TYPE: # in this case, do not use the value
-                if not path:
-                    prefix = '\nFailed check'
                 error_msg = f'{h}.'
             else:
-                if not path:
-                    prefix = ''
-                    i_next = 0
                 error_msg = f'Expected {to_name(h)}, provided {to_name(type(v))} invalid.'
 
-            msg.append(f'{prefix}\n{self._get_indent(i_next)}{error_msg}')
+            if not path:
+                msg.append(f'\n{error_msg}')
+            else:
+                msg.append(f'\nIn {path}\n{self._get_indent(i_next)}{error_msg}')
 
         return ''.join(msg)
 
@@ -191,7 +187,7 @@ class Constraint:
         raise NotImplementedError() #pragma: no cover
 
     def __repr__(self) -> str:
-        args = ', '.join(repr(getattr(self, v)) for v in self.__slots__)
+        args = ', '.join(to_name(getattr(self, v)) for v in self.__slots__)
         return f'{self.__class__.__name__}({args})'
 
 class Name(Constraint):
@@ -230,6 +226,11 @@ class Labels(Constraint):
 
     def __init__(self, *labels: tp.Sequence[TLabel]):
         self._labels: tp.Sequence[TLabel] = labels
+
+    def __repr__(self) -> str:
+        args = ', '.join(to_name(v, func_to_str=repr) for v in self._labels)
+        return f'{self.__class__.__name__}({args})'
+
 
     @staticmethod
     def _prepare_remainder(labels: tp.Sequence[TLabel]) -> str:
@@ -314,7 +315,7 @@ def iter_tuple_checks(value: tp.Any,
         ) -> tp.Iterable[TValidation]:
     h_components = tp.get_args(hint)
     if h_components[-1] is ...:
-        if (h_len := len(h_components)) != 2:
+        if len(h_components) != 2 or h_components[0] is ...:
             yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent
         else:
             h = h_components[0]
@@ -325,6 +326,7 @@ def iter_tuple_checks(value: tp.Any,
             msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
             yield ERROR_MESSAGE_TYPE, msg, parent
         for v, h in zip(value, h_components):
+            # NOTE: find bad usage of ellipses
             yield v, h, parent
 
 def iter_mapping_checks(value: tp.Any,

@@ -51,6 +51,20 @@ def test_is_unpack_a():
 
 #-------------------------------------------------------------------------------
 
+def test_check_result_a():
+    assert CheckResult([]).validated == True
+
+def test_check_result_b():
+    post = TypeClinic((3, 'x')).check(tp.Tuple[..., ...]).to_str()
+    assert scrub_str(post) == 'In Tuple[..., ...] Invalid ellipses usage.'
+
+def test_check_result_c():
+    post = TypeClinic(sf.Index(('a', 'b'))).check(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
+    assert scrub_str(post) == 'In Annotated[Index[str_], Len(1)] Len(1) Expected length 1, provided length 2.'
+
+
+#-------------------------------------------------------------------------------
+
 def test_check_type_union_a():
 
     check_type(3, tp.Union[int, str])
@@ -413,8 +427,9 @@ def test_check_index_hierarchy_b():
     h2 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.str_], ...]]]
 
     check_type(v1, h1)
-    check_type(v2, h1)
+    assert TypeClinic(v1).check(h1).validated
 
+    check_type(v2, h1)
     assert not TypeClinic(v1).check(h2).validated
 
 @skip_pyle310
@@ -524,6 +539,12 @@ def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Labels(..., 'a', ..., ...)
     assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected cannot be defined with adjacent ellipses",)
+
+def test_validate_labels_e11():
+    idx1 = sf.Series(('a',))
+    v = Labels('a', ...)
+    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
+
 
 
 def test_validate_validator_a():
