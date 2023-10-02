@@ -52,7 +52,7 @@ def test_is_unpack_a():
 #-------------------------------------------------------------------------------
 
 def test_check_result_a():
-    assert CheckResult([]).validated == True
+    assert CheckResult([]).validated
 
 def test_check_result_b():
     post = TypeClinic((3, 'x')).check(tp.Tuple[..., ...]).to_str()
