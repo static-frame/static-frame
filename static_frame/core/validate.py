@@ -188,7 +188,7 @@ class Constraint:
             hint: tp.Any,
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __repr__(self) -> str:
         args = ', '.join(repr(getattr(self, v)) for v in self.__slots__)
@@ -517,7 +517,7 @@ def _check(
                 elif isinstance(v, np.dtype):
                     tee_error_or_check(iter_dtype_checks(v, h, p_next))
                 else:
-                    raise NotImplementedError(f'no handling for generic {origin}')
+                    raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
         elif not isinstance(h, type):
             # h is value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals

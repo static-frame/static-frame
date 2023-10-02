@@ -16,6 +16,7 @@ from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
+from static_frame.core.validate import is_unpack
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
@@ -41,6 +42,12 @@ def test_check_type_b():
 
     with pytest.raises(TypeError):
         check_type(True, int)
+
+#-------------------------------------------------------------------------------
+
+def test_is_unpack_a():
+    assert is_unpack(tp.Unpack)
+    assert not is_unpack(None)
 
 #-------------------------------------------------------------------------------
 
