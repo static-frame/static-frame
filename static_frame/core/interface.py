@@ -97,6 +97,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
+from static_frame.core.validate import TypeClinic
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
@@ -224,6 +225,7 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
         InterfaceDatetime,
         InterfaceTranspose,
         InterfaceHashlib,
+        TypeClinic,
 
         InterfaceBatchValues,
         InterfaceBatchString,
@@ -433,6 +435,7 @@ class InterfaceGroup:
     AccessorFillValue = 'Accessor Fill Value'
     AccessorRe = 'Accessor Regular Expression'
     AccessorHashlib = 'Accessor Hashlib'
+    AccessorTypeClinic = 'Accessor TypeClinic'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -796,6 +799,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorRe
         elif cls_interface is InterfaceHashlib:
             group = InterfaceGroup.AccessorHashlib
+        elif cls_interface is TypeClinic:
+            group = InterfaceGroup.AccessorTypeClinic
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
 

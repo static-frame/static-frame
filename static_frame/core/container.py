@@ -33,6 +33,7 @@ from static_frame.core.util import ufunc_nanany
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.validate import TypeClinic
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -60,6 +61,12 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(self.__class__)
+
+    @property
+    def via_type_clinic(self) -> TypeClinic:
+        from static_frame.core.validate import TypeClinic
+        return TypeClinic(self)
+
 
     # def __sizeof__(self) -> int:
         # NOTE: implementing this to use memory_total is difficult, as we cannot pass in self without an infinite loop; trying to leave out self but keep its components returns a slightly different result as we miss the "native" (shallow) __sizeof__ components (and possible GC components as well).

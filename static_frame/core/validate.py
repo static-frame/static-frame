@@ -60,7 +60,7 @@ def is_union(hint: tp.Any) -> bool:
         return isinstance(hint, UNION_TYPES)
     elif isinstance(hint, GENERIC_TYPES):
         return tp.get_origin(hint) is tp.Union
-    return False
+    return False #pragma: no cover
 
 def is_unpack(hint: tp.Any) -> bool:
     # NOTE: cannot use isinstance or issubclass with Unpack
@@ -167,7 +167,7 @@ class CheckResult:
         return ''.join(msg)
 
     def __repr__(self) -> str:
-        return self.to_str()
+        return f'<CheckResult: {len(self._log)} errors>'
 
 
 class CheckError(TypeError):
@@ -623,6 +623,11 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
 
 class TypeClinic:
     __slots__ = ('_value',)
+
+    INTERFACE = (
+        'to_hint',
+        'check',
+        )
 
     def __init__(self, value: tp.Any, /):
         self._value = value

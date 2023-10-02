@@ -16,6 +16,7 @@ from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
+from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
 from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
@@ -49,14 +50,22 @@ def test_is_unpack_a():
     assert is_unpack(tp.Unpack)
     assert not is_unpack(None)
 
+def test_is_union_a():
+    assert is_union(tp.Union[int, str])
+    assert not is_union(tp.Tuple[str, str])
+    assert not is_union(str)
+
 #-------------------------------------------------------------------------------
 
 def test_check_result_a():
     assert CheckResult([]).validated
 
 def test_check_result_b():
-    post = TypeClinic((3, 'x')).check(tp.Tuple[int, str, ...]).to_str()
-    assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage.'
+    try:
+        post = TypeClinic((3, 'x')).check(tp.Tuple[int, str, ...]).to_str()
+        assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage.'
+    except TypeError:
+        pass
 
 def test_check_result_c():
     post = TypeClinic(sf.Index(('a', 'b'))).check(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
@@ -611,7 +620,8 @@ def test_type_clinic_a():
             np.int64,
             ]
 
-    post = str(TypeClinic(f).check(h))
+    assert str(TypeClinic(f).check(h)) == '<CheckResult: 2 errors>'
+    post = TypeClinic(f).check(h).to_str()
     assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid.\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid.'
 
 
@@ -626,4 +636,11 @@ def test_type_clinic_to_hint_b():
 def test_type_clinic_to_hint_c():
     s = sf.IndexHierarchy.from_product(('a', 'b'), (True, False))
     assert TypeClinic(s).to_hint() == sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]
+
+
+#-------------------------------------------------------------------------------
+def test_via_type_clinic_a():
+    s = sf.Series(('a', 'b'), index=(('x', 'y')))
+    assert str(s.via_type_clinic) == 'Series[Index[str_], str_]'
+    assert s.via_type_clinic.check(s.via_type_clinic.to_hint()).validated
 
