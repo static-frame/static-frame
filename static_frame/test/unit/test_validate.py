@@ -55,8 +55,8 @@ def test_check_result_a():
     assert CheckResult([]).validated
 
 def test_check_result_b():
-    post = TypeClinic((3, 'x')).check(tp.Tuple[..., ...]).to_str()
-    assert scrub_str(post) == 'In Tuple[..., ...] Invalid ellipses usage.'
+    post = TypeClinic((3, 'x')).check(tp.Tuple[int, str, ...]).to_str()
+    assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage.'
 
 def test_check_result_c():
     post = TypeClinic(sf.Index(('a', 'b'))).check(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
