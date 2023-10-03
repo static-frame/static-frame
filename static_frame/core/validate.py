@@ -427,7 +427,6 @@ def iter_frame_checks(value: tp.Any,
                 # in terms of column position, we need to find the first column position after the unpack
                 # if unpack pos is 0, and 5 types, 4 are post
                 # if unpack pos is 3, and 5 types, 1 is post
-                # if unpack pos is 4, and 5 types, 0 are pos
                 h_types_post = h_types_len - unpack_pos - 1
                 col_post_unpack = col_count - h_types_post
 
@@ -451,8 +450,7 @@ def iter_frame_checks(value: tp.Any,
                         yield dt.type(), h, parent + (f'Field {col_pos}',)
                         col_pos += 1
 
-                    if dt_unpack:
-                        # if we have fewer types hints (including Unpack), we may not align any dt with hints
+                    if dt_unpack: # we may not have dtypes to compare if fewer
                         [h_tuple] = tp.get_args(h_unpack)
                         assert issubclass(tuple, tp.get_origin(h_tuple))
                         yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Fields {col_pos} to {col_post_unpack - 1}',)
