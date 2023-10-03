@@ -535,6 +535,7 @@ def test_check_frame_d():
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
+    print(TypeClinic(f1).check(h1).to_str())
     assert TypeClinic(f1).check(h1).validated
 
 
