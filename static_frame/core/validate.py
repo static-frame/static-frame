@@ -395,14 +395,53 @@ def iter_frame_checks(value: tp.Any,
         assert issubclass(tuple, tp.get_origin(h_tuple))
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
-    else:
-        # NOTE: need to find position of 1 unpack, if foudn
-        # import ipdb; ipdb.set_trace()
-        if h_types_len != value.shape[1]:
-            # give expected first
-            yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
-        for dt, h in zip(value._blocks._iter_dtypes(), h_types):
-            yield dt.type(), h, parent
+    else: # unpack is noth_ only type
+
+        # NOTE: as we need to stop using unpack a certain number of elements before the end, we need to do two iterations... or read from front and back, but that requires converting dtypes into sequence
+
+        unpack_pos = -1
+        for i, h in enumerate(h_types):
+            # must get_origin to id unpack; origin of simplet types is None
+            if is_unpack(tp.get_origin((h))):
+                unpack_pos = i
+                break
+
+        col_count = value.shape[1]
+
+        import ipdb; ipdb.set_trace()
+        if unpack_pos == -1: # no unpack
+            if h_types_len != col_count:
+                # if no unpack and lengths are not equal
+                yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len} dtype, provided Frame has {col_count} dtype', parent
+            for dt, h in zip(value._blocks._iter_dtypes(), h_types):
+                yield dt.type(), h, parent
+
+        else: # unpack found
+            if h_types_len > col_count + 1:
+                # if 1 unpack, there cannot be more than width h_types + 1 for the Unpack
+                yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len - 1} dtype (excluding Unpack), provided Frame has {col_count} dtype', parent
+
+            # int str *tuple[tp.Any, ...] str int float
+            # find unpack_pos of 2
+            # h_post_unpack_count:
+            col_post_unpack = col_count - (h_types_len - unpack_pos - 1)
+            dts = iter(value._blocks._iter_dtypes())
+            hints = iter(h_types)
+            for col_pos in range(col_count):
+                if col_pos < unpack_pos:
+                    yield next(dts).type(), next(hints), parent
+                elif col_pos >= unpack_pos and col_pos < col_post_unpack:
+                    h = next(hints)
+                    assert is_unpack(h) # temp
+                    [h_tuple] = tp.get_args(h)
+                    assert issubclass(tuple, tp.get_origin(h_tuple))
+                    import ipdb; ipdb.set_trace()
+
+            # h_pos, (dt, h) in enumerate(zip(, h_types)):
+            #     if h_pos == unpack_pos:
+
+            #     yield dt.type(), h, parent
+            #     col_pos += 1
 
 
 def iter_ndarray_checks(value: tp.Any,

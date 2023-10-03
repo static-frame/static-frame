@@ -521,6 +521,23 @@ def test_check_frame_c():
             )
     assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid.'
 
+def test_check_frame_d():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.bool_,
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            np.str_,
+            np.str_
+            ]
+    records = ((True, 1.8, 3.1, 'x', 'y'), (False, 3.2, 8.1, 'a', 'b'),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f1: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd', 'e'),
+            index=index,
+            )
+    assert TypeClinic(f1).check(h1).validated
+
+
 
 #-------------------------------------------------------------------------------
 
