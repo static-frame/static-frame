@@ -648,6 +648,58 @@ def test_check_frame_e3():
     assert f2.via_type_clinic.check(h1).validated
 
 
+def test_check_frame_f1():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.str_,
+            np.str_,
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            ]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+    records1 = (('a', 'x'), ('b', 'a'),)
+    f1 = sf.Frame.from_records(records1,
+            columns=('a', 'b'),
+            index=index,
+            )
+
+    assert f1.via_type_clinic.check(h1).validated
+
+    records2 = (('a', 'x', 1.2), ('b', 'a', 5.4),)
+    f2 = sf.Frame.from_records(records2,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+
+    assert f2.via_type_clinic.check(h1).validated
+
+    records3 = (('a', 'x', 1.2, 5.3, 5.4), ('b', 'a', 5.4, 1.2, 1.4),)
+    f3 = sf.Frame.from_records(records3,
+            columns=('a', 'b', 'c', 'd', 'e'),
+            index=index,
+            )
+
+    assert f3.via_type_clinic.check(h1).validated
+
+
+def test_check_frame_f2():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.str_,
+            np.str_,
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            ]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+    records1 = (('a', 'x', 1.3, 'q'), ('b', 'a', 1.5, 'x'),)
+    f1 = sf.Frame.from_records(records1,
+            columns=('a', 'b', 'c', 'd'),
+            index=index,
+            )
+    assert not f1.via_type_clinic.check(h1).validated
+    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, Unpack[Tuple[float64, ...]]] Fields 2 to 3 Tuple[float64, ...] Expected float64, provided str_ invalid.'
+
+
 #-------------------------------------------------------------------------------
 
 def get_hints(records: tp.Iterable[TValidation] | CheckResult) -> tp.Tuple[str]:
