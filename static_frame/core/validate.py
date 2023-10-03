@@ -64,9 +64,7 @@ def is_union(hint: tp.Any) -> bool:
 
 def is_unpack(hint: tp.Any) -> bool:
     # NOTE: cannot use isinstance or issubclass with Unpack
-    if hint in UNPACK_TYPES:
-        return True
-    return False
+    return hint in UNPACK_TYPES
 
 #-------------------------------------------------------------------------------
 
@@ -95,6 +93,8 @@ def to_name(v: tp.Any, func_to_str: tp.Callable[..., str] = str) -> str:
         s = v.__name__
     elif v is ...:
         s = '...'
+    elif is_unpack(v): # needed for backwards compat
+        s = 'Unpack'
     else:
         s = func_to_str(v)
     return s
