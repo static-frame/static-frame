@@ -562,7 +562,7 @@ def test_check_frame_d():
     assert scrub_str(TypeClinic(f4).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Column 1 Expected str_, provided float64 invalid.'
 
 
-def test_check_frame_e():
+def test_check_frame_e1():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             sf.Index[np.str_],
             tp.Unpack[tp.Tuple[np.float64, ...]],
@@ -593,6 +593,24 @@ def test_check_frame_e():
     assert not TypeClinic(f3).check(h1).validated
     assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Columns 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid.'
 
+
+# def test_check_frame_e2():
+#     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+#             sf.Index[np.str_],
+#             tp.Unpack[tp.Tuple[np.float64, ...]],
+#             np.str_,
+#             np.str_
+#             ]
+#     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+#     records4 = ((3.1, 'x'), (8.1, 'a'),)
+#     f4 = sf.Frame.from_records(records4,
+#             columns=('a', 'b'),
+#             index=index,
+#             )
+
+#     import ipdb; ipdb.set_trace()
+#     assert f4.via_type_clinic.check(h1).validated
 
 #-------------------------------------------------------------------------------
 

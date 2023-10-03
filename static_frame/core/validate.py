@@ -424,7 +424,14 @@ def iter_frame_checks(value: tp.Any,
                 # if 1 unpack, there cannot be more than width h_types + 1 for the Unpack
                 yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len - 1} dtype (excluding Unpack), provided Frame has {col_count} dtype', parent
             else:
-                col_post_unpack = col_count - (h_types_len - unpack_pos - 1)
+                # in terms of column position, find the first column position after the unpack
+                h_types_pre = unpack_pos
+                # if unpack pos is 0, and 5 types, 4 are pos
+                # if unpack pos is 3, and 5 types, 1 is post
+                # if unpack pos is 4, and 5 types, 0 are pos
+                h_types_post = h_types_len - unpack_pos - 1
+                col_post_unpack = col_count - h_types_post
+
                 dts = tuple(value._blocks._iter_dtypes())
 
                 dt_pre = dts[:unpack_pos]
@@ -434,6 +441,8 @@ def iter_frame_checks(value: tp.Any,
                 h_pre = h_types[:unpack_pos]
                 h_unpack = h_types[unpack_pos]
                 h_post = h_types[unpack_pos + 1:]
+
+                # import ipdb; ipdb.set_trace()
 
                 col_pos = 0
                 for dt, h in zip(dt_pre, h_pre):
