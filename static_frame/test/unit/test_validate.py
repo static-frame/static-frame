@@ -529,15 +529,69 @@ def test_check_frame_d():
             np.str_,
             np.str_
             ]
-    records = ((True, 1.8, 3.1, 'x', 'y'), (False, 3.2, 8.1, 'a', 'b'),)
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
-    f1: h1 = sf.Frame.from_records(records,
+
+    records1 = ((True, 1.8, 3.1, 'x', 'y'), (False, 3.2, 8.1, 'a', 'b'),)
+    f1 = sf.Frame.from_records(records1,
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    # print(TypeClinic(f1).check(h1).to_str())
     assert TypeClinic(f1).check(h1).validated
 
+    records2 = ((True, 1.8, 3.1, 1.2, 'x', 'y'), (False, 3.2, 8.1, 3.5, 'a', 'b'),)
+    f2 = sf.Frame.from_records(records2,
+            columns=('a', 'b', 'c', 'd', 'e', 'f'),
+            index=index,
+            )
+    assert TypeClinic(f2).check(h1).validated
+
+    records3 = ((1.8, 3.1, 1.2, 'x', 'y'), (3.2, 8.1, 3.5, 'a', 'b'),)
+    f3 = sf.Frame.from_records(records3,
+            columns=('a', 'b', 'c', 'd', 'e'),
+            index=index,
+            )
+    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Column 0 Expected bool_, provided float64 invalid.'
+    assert not TypeClinic(f3).check(h1).validated
+
+    records4 = ((True, 1.8, 'x'), (False, 3.2, 'a'),)
+    f4 = sf.Frame.from_records(records4,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert not TypeClinic(f4).check(h1).validated
+    assert scrub_str(TypeClinic(f4).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Column 1 Expected str_, provided float64 invalid.'
+
+
+def test_check_frame_e():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            np.str_,
+            np.str_
+            ]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+    records1 = ((3.1, 'x', 'y'), (8.1, 'a', 'b'),)
+    f1 = sf.Frame.from_records(records1,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert TypeClinic(f1).check(h1).validated
+
+    records2 = ((3.1, 3.2, 5.2, 'x', 'y'), (8.1, 1.5, 5.2, 'a', 'b'),)
+    f2 = sf.Frame.from_records(records2,
+            columns=('a', 'b', 'c', 'd', 'e'),
+            index=index,
+            )
+    assert TypeClinic(f2).check(h1).validated
+
+    records3 = ((3.1, False, 5.2, 'x', 'y'), (8.1, True, 5.2, 'a', 'b'),)
+    f3 = sf.Frame.from_records(records3,
+            columns=('a', 'b', 'c', 'd', 'e'),
+            index=index,
+            )
+    assert not TypeClinic(f3).check(h1).validated
+    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Columns 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid.'
 
 
 #-------------------------------------------------------------------------------

@@ -125,6 +125,9 @@ class CheckResult:
     def __iter__(self) -> tp.Iterator[TValidation]:
         return self._log.__iter__()
 
+    def __len__(self) -> int:
+        return len(self._log)
+
     def __bool__(self) -> bool:
         '''Return True if there are validation issues.
         '''
@@ -169,7 +172,8 @@ class CheckResult:
         return ''.join(msg)
 
     def __repr__(self) -> str:
-        return f'<CheckResult: {len(self._log)} errors>'
+        log_len = len(self)
+        return f'<CheckResult: {log_len} {"errors" if log_len != 1 else "error"}>'
 
 
 class CheckError(TypeError):
@@ -431,15 +435,20 @@ def iter_frame_checks(value: tp.Any,
                 h_unpack = h_types[unpack_pos]
                 h_post = h_types[unpack_pos + 1:]
 
+                col_pos = 0
                 for dt, h in zip(dt_pre, h_pre):
-                    yield dt.type(), h, parent
+                    yield dt.type(), h, parent + (f'Column {col_pos}',)
+                    col_pos += 1
 
                 [h_tuple] = tp.get_args(h_unpack)
+                # tpt_parent =
                 assert issubclass(tuple, tp.get_origin(h_tuple))
-                yield tuple(d.type() for d in dt_unpack), h_tuple, parent
+                yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Columns {col_pos} to {col_post_unpack - 1}',)
 
+                col_pos = col_post_unpack
                 for dt, h in zip(dt_post, h_post):
-                    yield dt.type(), h, parent
+                    yield dt.type(), h, parent + (f'Column {col_pos}',)
+                    col_pos += 1
 
 
 def iter_ndarray_checks(value: tp.Any,
