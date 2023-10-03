@@ -18,7 +18,6 @@ from static_frame.core.validate import check_interface
 from static_frame.core.validate import check_type
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
-from static_frame.test.test_case import skip_nple119
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
