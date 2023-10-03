@@ -424,9 +424,8 @@ def iter_frame_checks(value: tp.Any,
                 # if 1 unpack, there cannot be more than width h_types + 1 for the Unpack
                 yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len - 1} dtype (excluding Unpack), provided Frame has {col_count} dtype', parent
             else:
-                # in terms of column position, find the first column position after the unpack
-                h_types_pre = unpack_pos
-                # if unpack pos is 0, and 5 types, 4 are pos
+                # in terms of column position, we need to find the first column position after the unpack
+                # if unpack pos is 0, and 5 types, 4 are post
                 # if unpack pos is 3, and 5 types, 1 is post
                 # if unpack pos is 4, and 5 types, 0 are pos
                 h_types_post = h_types_len - unpack_pos - 1

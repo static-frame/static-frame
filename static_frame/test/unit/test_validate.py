@@ -605,14 +605,48 @@ def test_check_frame_e2():
             ]
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
 
-    records4 = ((3.1, 'x'), (8.1, 'a'),)
-    f4 = sf.Frame.from_records(records4,
+    records1 = ((3.1, 'x'), (8.1, 'a'),)
+    f1 = sf.Frame.from_records(records1,
             columns=('a', 'b'),
             index=index,
             )
 
-    assert not f4.via_type_clinic.check(h1).validated
-    assert scrub_str(f4.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected str_, provided float64 invalid.'
+    assert not f1.via_type_clinic.check(h1).validated
+    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected str_, provided float64 invalid.'
+
+    records2 = ((3.1, 'x', 'p'), (8.1, 'a', 'q'),)
+    f2 = sf.Frame.from_records(records2,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+
+    assert f2.via_type_clinic.check(h1).validated
+
+
+def test_check_frame_e3():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            np.str_,
+            np.str_
+            ]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+    records1 = (('a', 'x'), ('b', 'a'),)
+    f1 = sf.Frame.from_records(records1,
+            columns=('a', 'b'),
+            index=index,
+            )
+
+    assert f1.via_type_clinic.check(h1).validated
+
+    records2 = ((1.2, 'a', 'x'), (3.4, 'b', 'a'),)
+    f2 = sf.Frame.from_records(records2,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert f2.via_type_clinic.check(h1).validated
+
 
 #-------------------------------------------------------------------------------
 
