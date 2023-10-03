@@ -103,7 +103,7 @@ def test_check_type_type_b():
 
 #-------------------------------------------------------------------------------
 
-@skip_nple119
+@skip_pyle310
 def test_validate_numpy_a():
     v = np.array([False, True, False])
     h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
@@ -185,7 +185,10 @@ def test_check_type_containers_e():
 #-------------------------------------------------------------------------------
 
 def scrub_str(s: str) -> str:
-    s = s.replace('\n', '').replace(CheckResult._LINE, '').replace(CheckResult._CORNER, '')
+    s = s.replace('\n', ''
+            ).replace(CheckResult._LINE, ''
+            ).replace(CheckResult._CORNER, ''
+            ).replace('tuple[', 'Tuple[') # normalize tuple presentation
     while '  ' in s:
         s = s.replace('  ', ' ')
     return s

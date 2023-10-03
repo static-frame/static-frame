@@ -88,8 +88,8 @@ def to_name(v: tp.Any,
             origin = tp.get_origin(v)
             if hasattr(origin, '__name__'):
                 name = origin.__name__
-            elif is_unpack(v): # needed for backwards compat
-                s = 'Unpack'
+            elif is_unpack(origin): # needed for backwards compat
+                name = 'Unpack'
             else:
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
