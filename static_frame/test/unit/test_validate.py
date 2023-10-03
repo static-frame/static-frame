@@ -454,12 +454,77 @@ def test_check_index_hierarchy_c():
     check_type(v1, h1)
     check_type(v1, h2)
 
-    # try:
-    #     check_type(v1, h3)
+#-------------------------------------------------------------------------------
+
+def test_check_frame_a():
+    records = ((1, 3, True), (3, 8, True),)
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    cr = TypeClinic(f).check(h1)
+    # NOTE: langauge support for defaults in TypeVarTuple might changes this
+    assert get_hints(cr) == ('Expected Frame has 0 dtype, provided Frame has 3 dtype',)
+
+def test_check_frame_b():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f1: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert TypeClinic(f1).check(h1).validated
+
+    records = ((1, 3, True, False), (3, 8, True, True),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f2: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            index=index,
+            )
+    assert TypeClinic(f2).check(h1).validated
+
+def test_check_frame_c():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            ]
+    records = ((1.8, 3.1), (3.2, 8.1),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f1: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b'),
+            index=index,
+            )
+    assert TypeClinic(f1).check(h1).validated
+
+    records = ((1.8, 3.1, 5.4), (3.2, 8.1, 4.7),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f2: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert TypeClinic(f2).check(h1).validated
+
+
+    records = ((1.8, 3.1, False), (3.2, 8.1, True),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f3: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid.'
+
 
 #-------------------------------------------------------------------------------
 
-def get_hints(records: tp.Iterable[TValidation]) -> tp.Tuple[str]:
+def get_hints(records: tp.Iterable[TValidation] | CheckResult) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
 def test_validate_labels_a1():

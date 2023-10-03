@@ -281,5 +281,16 @@ def test_frame_interface_c() -> None:
     #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[bool_, int_]" is not the same as "*tuple[*tuple[int_, ...], bool_]" (reportGeneralTypeIssues)
 
 
+def test_frame_type_var_tuple_a() ->  None:
+    records = ((1, 3, True), (3, 8, True),)
+    h1 = sf.Frame[sf.IndexDate,
+            sf.Index[np.str_],]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    # NOTE: this works because of default of TypeVarTuple
+    f: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+
 
 

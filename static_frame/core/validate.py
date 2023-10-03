@@ -340,7 +340,6 @@ def iter_mapping_checks(value: tp.Any,
             ):
         yield v, h, parent
 
-
 # NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instasce of the type that can be used for testing. This might be cached.
 
 def iter_series_checks(value: tp.Any,
@@ -383,7 +382,7 @@ def iter_frame_checks(value: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
 
-    # NOTE: not sure how this works with defaults in TypeVar
+    # NOTE: note: at runtime TypeVarTuple defaults do not return anything
     h_index, h_columns, *h_types = tp.get_args(hint)
     h_types_len = len(h_types)
 
@@ -397,6 +396,8 @@ def iter_frame_checks(value: tp.Any,
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
     else:
+        # NOTE: need to find position of 1 unpack, if foudn
+        # import ipdb; ipdb.set_trace()
         if h_types_len != value.shape[1]:
             # give expected first
             yield ERROR_MESSAGE_TYPE, f'Expected Frame has {h_types_len} dtype, provided Frame has {value.shape[1]} dtype', parent
