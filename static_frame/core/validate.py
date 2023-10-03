@@ -77,7 +77,9 @@ TValidation = tp.Tuple[tp.Any, tp.Any, TParent]
 
 ERROR_MESSAGE_TYPE = object()
 
-def to_name(v: tp.Any, func_to_str: tp.Callable[..., str] = str) -> str:
+def to_name(v: tp.Any,
+        func_to_str: tp.Callable[..., str] = str,
+        ) -> str:
     if isinstance(v, GENERIC_TYPES):
         if hasattr(v, '__name__'):
             name = v.__name__
@@ -86,6 +88,8 @@ def to_name(v: tp.Any, func_to_str: tp.Callable[..., str] = str) -> str:
             origin = tp.get_origin(v)
             if hasattr(origin, '__name__'):
                 name = origin.__name__
+            elif is_unpack(v): # needed for backwards compat
+                s = 'Unpack'
             else:
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
@@ -93,8 +97,6 @@ def to_name(v: tp.Any, func_to_str: tp.Callable[..., str] = str) -> str:
         s = v.__name__
     elif v is ...:
         s = '...'
-    elif is_unpack(v): # needed for backwards compat
-        s = 'Unpack'
     else:
         s = func_to_str(v)
     return s
