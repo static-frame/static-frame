@@ -442,22 +442,26 @@ def iter_frame_checks(value: tp.Any,
                 h_unpack = h_types[unpack_pos]
                 h_post = h_types[unpack_pos + 1:]
 
-                # import ipdb; ipdb.set_trace()
+                if len(dt_pre) != len(h_pre):
+                    yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_pre)} dtype before Unpack, provided Frame has {len(dt_pre)} alignable dtype', parent
+                elif len(dt_post) != len(h_post):
+                    yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_post)} dtype after Unpack, provided Frame has {len(dt_post)} alignable dtype', parent
+                else:
+                    col_pos = 0
+                    for dt, h in zip(dt_pre, h_pre):
+                        yield dt.type(), h, parent + (f'Field {col_pos}',)
+                        col_pos += 1
 
-                col_pos = 0
-                for dt, h in zip(dt_pre, h_pre):
-                    yield dt.type(), h, parent + (f'Column {col_pos}',)
-                    col_pos += 1
+                    if dt_unpack:
+                        # if we have fewer types hints (including Unpack), we may not align any dt with hints
+                        [h_tuple] = tp.get_args(h_unpack)
+                        assert issubclass(tuple, tp.get_origin(h_tuple))
+                        yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Fields {col_pos} to {col_post_unpack - 1}',)
 
-                [h_tuple] = tp.get_args(h_unpack)
-                # tpt_parent =
-                assert issubclass(tuple, tp.get_origin(h_tuple))
-                yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Columns {col_pos} to {col_post_unpack - 1}',)
-
-                col_pos = col_post_unpack
-                for dt, h in zip(dt_post, h_post):
-                    yield dt.type(), h, parent + (f'Column {col_pos}',)
-                    col_pos += 1
+                    col_pos = col_post_unpack
+                    for dt, h in zip(dt_post, h_post):
+                        yield dt.type(), h, parent + (f'Field {col_pos}',)
+                        col_pos += 1
 
 
 def iter_ndarray_checks(value: tp.Any,
