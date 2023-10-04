@@ -162,7 +162,7 @@ class CheckResult:
             if v is ERROR_MESSAGE_TYPE: # in this case, do not use the value
                 error_msg = f'{h}.'
             else:
-                error_msg = f'Expected {to_name(h)}, provided {to_name(type(v))} invalid.'
+                error_msg = f'Expected {to_name(h)}, provided {to_name(type(v))} invalid'
 
             if not path:
                 msg.append(f'\n{error_msg}')
