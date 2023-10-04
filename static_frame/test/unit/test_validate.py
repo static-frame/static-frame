@@ -62,13 +62,13 @@ def test_check_result_a():
 def test_check_result_b():
     try:
         post = TypeClinic((3, 'x')).check(tp.Tuple[int, str, ...]).to_str()
-        assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage.'
+        assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage'
     except TypeError:
         pass
 
 def test_check_result_c():
     post = TypeClinic(sf.Index(('a', 'b'))).check(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
-    assert scrub_str(post) == 'In Annotated[Index[str_], Len(1)] Len(1) Expected length 1, provided length 2.'
+    assert scrub_str(post) == 'In Annotated[Index[str_], Len(1)] Len(1) Expected length 1, provided length 2'
 
 
 #-------------------------------------------------------------------------------
@@ -505,6 +505,29 @@ def test_check_index_hierarchy_e2():
     assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Unpack[Tuple[Index[integer], ...]]] Tuple[Index[integer], ...] Index[integer] Expected integer, provided str_ invalid'
 
 
+def test_check_index_hierarchy_f():
+
+    v1 = sf.IndexHierarchy.from_labels([(1,  'a'), (3,  'b'), (2,  'c')])
+    h1 = sf.IndexHierarchy[sf.Index[np.integer], sf.IndexDate, sf.IndexDate]
+
+    assert not v1.via_type_clinic.check(h1).validated
+    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[integer], IndexDate, IndexDate] Expected IndexHierarchy has 3 dtype, provided IndexHierarchy has 2 depth'
+
+
+def test_check_index_hierarchy_g():
+
+    v1 = sf.IndexHierarchy.from_labels([(1,  'a'), (3,  'b'), (2,  'c')])
+    h1 = sf.IndexHierarchy[
+            sf.Index[np.int_],
+            sf.Index[np.str_],
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
+            ]
+
+    assert not v1.via_type_clinic.check(h1).validated
+    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Expected IndexHierarchy has 3 depth (excluding Unpack), provided IndexHierarchy has 2 depth'
+
+
 #-------------------------------------------------------------------------------
 
 def test_check_frame_a():
@@ -747,6 +770,25 @@ def test_check_frame_f2():
             )
     assert not f1.via_type_clinic.check(h1).validated
     assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, Unpack[Tuple[float64, ...]]] Fields 2 to 3 Tuple[float64, ...] Expected float64, provided str_ invalid'
+
+def test_check_frame_g():
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.str_,
+            np.str_,
+            np.str_,
+            tp.Unpack[tp.Tuple[np.float64, ...]],
+            ]
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+
+    records1 = (('a', 'x'), ('b', 'a'),)
+    f1 = sf.Frame.from_records(records1,
+            columns=('a', 'b'),
+            index=index,
+            )
+    assert not f1.via_type_clinic.check(h1).validated
+    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, str_, Unpack[Tuple[float64, ...]]] Expected Frame has 3 dtype (excluding Unpack), provided Frame has 2 dtype'
+
 
 
 #-------------------------------------------------------------------------------
