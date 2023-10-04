@@ -370,18 +370,71 @@ def iter_index_hierarchy_checks(value: tp.Any,
     h_generics = tp.get_args(hint)
     h_len = len(h_generics)
 
-    if h_len == 1 and is_unpack(tp.get_origin(h_generics[0])):
-        # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
+    unpack_pos = -1
+    for i, h in enumerate(h_generics):
+        # must get_origin to id unpack; origin of simplet types is None
+        if is_unpack(tp.get_origin((h))):
+            unpack_pos = i
+            break
+
+    if h_len == 1 and unpack_pos == 0:
         [h_tuple] = tp.get_args(h_generics[0])
         assert issubclass(tuple, tp.get_origin(h_tuple))
-        # to support usage of Ellipses, treat this as a hint of a corresponding tuple of Index
+        # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield tuple(value.index_at_depth(i) for i in range(value.depth)), h_tuple, parent
+
     else:
-        if h_len != value.depth:
-            # give expected first
-            yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy depth of {h_len}, provided depth of {value.depth}', parent
-        for i in range(value.depth):
-            yield value.index_at_depth(i), h_generics[i], parent
+        col_count = value.shape[1]
+
+        if unpack_pos == -1: # no unpack
+            if h_len != col_count:
+                # if no unpack and lengths are not equal
+                yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {h_len} dtype, provided IndexHierarchy has {col_count} depth', parent
+            else:
+                yield from zip(
+                        (value.index_at_depth(i) for i in range(value.depth)),
+                        h_generics,
+                        repeat(parent),
+                        )
+
+        else: # unpack found
+            if h_len > col_count + 1:
+                # if 1 unpack, there cannot be more than width h_generics + 1 for the Unpack
+                yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {h_len - 1} depth (excluding Unpack), provided IndexHierarchy has {col_count} depth', parent
+            else:
+                h_types_post = h_len - unpack_pos - 1
+                depth_post_unpack = col_count - h_types_post
+
+                indexes = tuple(value.index_at_depth(i) for i in range(value.depth))
+
+                index_pre = indexes[:unpack_pos]
+                index_unpack = indexes[unpack_pos: depth_post_unpack]
+                index_post = indexes[depth_post_unpack:]
+
+                h_pre = h_generics[:unpack_pos]
+                h_unpack = h_generics[unpack_pos]
+                h_post = h_generics[unpack_pos + 1:]
+
+                if len(index_pre) != len(h_pre):
+                    yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_pre)} depth before Unpack, provided IndexHierarchy has {len(index_pre)} alignable depth', parent
+                elif len(index_post) != len(h_post):
+                    yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_post)} depth after Unpack, provided IndexHierarchy has {len(index_post)} alignable depth', parent
+                else:
+                    col_pos = 0
+                    for index, h in zip(index_pre, h_pre):
+                        yield index, h, parent + (f'Depth {col_pos}',)
+                        col_pos += 1
+
+                    if index_unpack: # we may not have dtypes to compare if fewer
+                        [h_tuple] = tp.get_args(h_unpack)
+                        assert issubclass(tuple, tp.get_origin(h_tuple))
+                        yield tuple(index_unpack), h_tuple, parent + (f'Depths {col_pos} to {depth_post_unpack - 1}',)
+
+                    col_pos = depth_post_unpack
+                    for index, h in zip(index_post, h_post):
+                        yield index, h, parent + (f'Depth {col_pos}',)
+                        col_pos += 1
+
 
 def iter_frame_checks(value: tp.Any,
         hint: tp.Any,
@@ -395,21 +448,21 @@ def iter_frame_checks(value: tp.Any,
     yield value.index, h_index, parent
     yield value.columns, h_columns, parent
 
-    if h_types_len == 1 and is_unpack(tp.get_origin(h_types[0])):
-        # if using tp.Unpack, or the *tp.Tuple[] notation, the origin of this generic will be tp.Unpack
+    unpack_pos = -1
+    for i, h in enumerate(h_types):
+        # must get_origin to id unpack; origin of simplet types is None
+        if is_unpack(tp.get_origin((h))):
+            unpack_pos = i
+            break
+
+    if h_types_len == 1 and unpack_pos == 0:
         [h_tuple] = tp.get_args(h_types[0])
         assert issubclass(tuple, tp.get_origin(h_tuple))
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield tuple(d.type() for d in value._blocks._iter_dtypes()), h_tuple, parent
 
-    else: # unpack is not the only type
+    else:
         col_count = value.shape[1]
-        unpack_pos = -1
-        for i, h in enumerate(h_types):
-            # must get_origin to id unpack; origin of simplet types is None
-            if is_unpack(tp.get_origin((h))):
-                unpack_pos = i
-                break
 
         if unpack_pos == -1: # no unpack
             if h_types_len != col_count:
