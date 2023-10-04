@@ -64,10 +64,13 @@ def get_extras_require() -> tp.Dict[str, tp.List[str]]:
     # For now, have only one group that installs all extras; in the future, can create specialized groups if necessary.
     return {'extras': list(_get_requirements('requirements-extras.txt'))}
 
+# Immutable DataFrames with full support for static type hints',
+# Statically type and run-time validate immutable DataFrames
+
 setup(
     name='static-frame',
     version=get_version(),
-    description='Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface.',
+    description='Statically type and run-time validate immutable DataFrames',
     long_description=get_long_description(),
     python_requires='>=3.8',
     install_requires=list(get_install_requires()),
@@ -92,6 +95,7 @@ setup(
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Typing :: Typed',
             ],
 
     keywords='staticframe pandas numpy immutable array',
