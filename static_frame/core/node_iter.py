@@ -33,7 +33,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries',
