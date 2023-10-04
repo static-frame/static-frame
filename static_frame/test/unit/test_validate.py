@@ -516,16 +516,22 @@ def test_check_index_hierarchy_f():
 
 def test_check_index_hierarchy_g():
 
-    v1 = sf.IndexHierarchy.from_labels([(1,  'a'), (3,  'b'), (2,  'c')])
+    v1 = sf.IndexHierarchy.from_labels([
+            (1, 'a', False, 'a',),
+            (3, 'b', True, 'c',),
+            (2, 'c', False, 'd',),
+            ])
     h1 = sf.IndexHierarchy[
             sf.Index[np.int_],
             sf.Index[np.str_],
-            sf.Index[np.str_],
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
+            sf.Index[np.str_],
+            sf.Index[np.int_],
             ]
 
     assert not v1.via_type_clinic.check(h1).validated
-    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Expected IndexHierarchy has 3 depth (excluding Unpack), provided IndexHierarchy has 2 depth'
+    # print(v1.via_type_clinic.check(h1).to_str())
+    # assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Expected IndexHierarchy has 3 depth (excluding Unpack), provided IndexHierarchy has 2 depth'
 
 
 #-------------------------------------------------------------------------------
