@@ -415,9 +415,9 @@ def iter_index_hierarchy_checks(value: tp.Any,
                 h_unpack = h_generics[unpack_pos]
                 h_post = h_generics[unpack_pos + 1:]
 
-                if len(index_pre) != len(h_pre):
-                    yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_pre)} depth before Unpack, provided IndexHierarchy has {len(index_pre)} alignable depth', parent
-                elif len(index_post) != len(h_post):
+                # if len(index_pre) != len(h_pre):
+                #     yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_pre)} depth before Unpack, provided IndexHierarchy has {len(index_pre)} alignable depth', parent
+                if len(index_post) != len(h_post):
                     yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_post)} depth after Unpack, provided IndexHierarchy has {len(index_post)} alignable depth', parent
                 else:
                     col_pos = 0
