@@ -540,6 +540,42 @@ def test_check_index_hierarchy_g():
     assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
 
 
+def test_check_index_hierarchy_h1():
+
+    v1 = sf.IndexHierarchy.from_labels([
+            (1, 'a', False, 'a', 3, 2),
+            (3, 'b', True, 'c', 10, 12),
+            (2, 'c', False, 'd', 20, 3),
+            ])
+    h1 = sf.IndexHierarchy[
+            sf.Index[np.int_],
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
+            sf.Index[np.str_],
+            sf.Index[np.int_],
+            sf.Index[np.int_],
+            ]
+
+    assert v1.via_type_clinic.check(h1).validated
+
+def test_check_index_hierarchy_h2():
+
+    v1 = sf.IndexHierarchy.from_labels([
+            (1, 'a', False, True, 'a', 3, 2),
+            (3, 'b', True, False, 'c', 10, 12),
+            (2, 'c', False, True, 'd', 20, 3),
+            ])
+    h1 = sf.IndexHierarchy[
+            sf.Index[np.int_],
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
+            sf.Index[np.str_],
+            sf.Index[np.int_],
+            sf.Index[np.int_],
+            ]
+
+    assert v1.via_type_clinic.check(h1).validated
+
 #-------------------------------------------------------------------------------
 
 def test_check_frame_a():
