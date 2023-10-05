@@ -735,6 +735,13 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
         return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
 
+    if isinstance(value, np.dtype):
+        return np.dtype[value.type().__class__]
+
+    if isinstance(value, np.ndarray):
+        return value.__class__[_value_to_hint(value.dtype)]
+
+
     return value.__class__
 
 class TypeClinic:

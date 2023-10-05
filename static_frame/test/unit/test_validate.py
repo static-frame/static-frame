@@ -1001,6 +1001,11 @@ def test_type_clinic_to_hint_e():
     assert TypeClinic(str).to_hint() == tp.Type[str]
     assert TypeClinic(sf.Frame).to_hint() == tp.Type[sf.Frame]
 
+@skip_pyle310
+def test_type_clinic_to_hint_f():
+    assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
+    assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
+
 
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():
