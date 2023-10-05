@@ -576,6 +576,26 @@ def test_check_index_hierarchy_h2():
 
     assert v1.via_type_clinic.check(h1).validated
 
+
+def test_check_index_hierarchy_h2():
+
+    v1 = sf.IndexHierarchy.from_labels([
+            (1, 'a', False, True, 'a', 3, 2),
+            (3, 'b', True, False, 'c', 10, 12),
+            (2, 'c', False, True, 'd', 20, 3),
+            ])
+    h1 = sf.IndexHierarchy[
+            sf.Index[np.int_],
+            sf.Index[np.str_],
+            tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
+            sf.Index[np.str_],
+            sf.Index[np.int_],
+            sf.Index[np.int_],
+            sf.Index[np.int_],
+            ]
+
+    assert not v1.via_type_clinic.check(h1).validated
+
 #-------------------------------------------------------------------------------
 
 def test_check_frame_a():
