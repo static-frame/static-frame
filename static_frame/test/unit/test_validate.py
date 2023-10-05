@@ -984,6 +984,24 @@ def test_type_clinic_to_hint_c():
     assert TypeClinic(s).to_hint() == sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]
 
 
+def test_type_clinic_to_hint_d():
+    records = ((1, 3, True), (3, 8, True),)
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            dtypes=(np.int64, np.int64, np.bool_)
+            )
+    h = TypeClinic(f).to_hint()
+    assert h == sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.int64, np.bool_]
+
+def test_type_clinic_to_hint_e():
+    assert TypeClinic(3).to_hint() == int
+    assert TypeClinic('foo').to_hint() == str
+    assert TypeClinic(str).to_hint() == tp.Type[str]
+    assert TypeClinic(sf.Frame).to_hint() == tp.Type[sf.Frame]
+
+
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():
     s = sf.Series(('a', 'b'), index=(('x', 'y')))

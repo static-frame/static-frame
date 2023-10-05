@@ -713,6 +713,9 @@ def check_interface(
 
 #-------------------------------------------------------------------------------
 def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
+    if isinstance(value, type):
+        return tp.Type[value]
+
     if isinstance(value, Frame):
         hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
         hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
