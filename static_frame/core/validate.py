@@ -417,23 +417,24 @@ def iter_index_hierarchy_checks(value: tp.Any,
 
                 # if len(index_pre) != len(h_pre):
                 #     yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_pre)} depth before Unpack, provided IndexHierarchy has {len(index_pre)} alignable depth', parent
-                if len(index_post) != len(h_post):
-                    yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_post)} depth after Unpack, provided IndexHierarchy has {len(index_post)} alignable depth', parent
-                else:
-                    col_pos = 0
-                    for index, h in zip(index_pre, h_pre):
-                        yield index, h, parent + (f'Depth {col_pos}',)
-                        col_pos += 1
+                # if len(index_post) != len(h_post):
+                #     yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {len(h_post)} depth after Unpack, provided IndexHierarchy has {len(index_post)} alignable depth', parent
+                # else:
 
-                    if index_unpack: # we may not have dtypes to compare if fewer
-                        [h_tuple] = tp.get_args(h_unpack)
-                        assert issubclass(tuple, tp.get_origin(h_tuple))
-                        yield tuple(index_unpack), h_tuple, parent + (f'Depths {col_pos} to {depth_post_unpack - 1}',)
+                col_pos = 0
+                for index, h in zip(index_pre, h_pre):
+                    yield index, h, parent + (f'Depth {col_pos}',)
+                    col_pos += 1
 
-                    col_pos = depth_post_unpack
-                    for index, h in zip(index_post, h_post):
-                        yield index, h, parent + (f'Depth {col_pos}',)
-                        col_pos += 1
+                if index_unpack: # we may not have dtypes to compare if fewer
+                    [h_tuple] = tp.get_args(h_unpack)
+                    assert issubclass(tuple, tp.get_origin(h_tuple))
+                    yield tuple(index_unpack), h_tuple, parent + (f'Depths {col_pos} to {depth_post_unpack - 1}',)
+
+                col_pos = depth_post_unpack
+                for index, h in zip(index_post, h_post):
+                    yield index, h, parent + (f'Depth {col_pos}',)
+                    col_pos += 1
 
 
 def iter_frame_checks(value: tp.Any,
@@ -493,25 +494,26 @@ def iter_frame_checks(value: tp.Any,
                 h_unpack = h_types[unpack_pos]
                 h_post = h_types[unpack_pos + 1:]
 
-                if len(dt_pre) != len(h_pre):
-                    yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_pre)} dtype before Unpack, provided Frame has {len(dt_pre)} alignable dtype', parent
-                elif len(dt_post) != len(h_post):
-                    yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_post)} dtype after Unpack, provided Frame has {len(dt_post)} alignable dtype', parent
-                else:
-                    col_pos = 0
-                    for dt, h in zip(dt_pre, h_pre):
-                        yield dt.type(), h, parent + (f'Field {col_pos}',)
-                        col_pos += 1
+                # if len(dt_pre) != len(h_pre):
+                #     yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_pre)} dtype before Unpack, provided Frame has {len(dt_pre)} alignable dtype', parent
+                # elif len(dt_post) != len(h_post):
+                #     yield ERROR_MESSAGE_TYPE, f'Expected Frame has {len(h_post)} dtype after Unpack, provided Frame has {len(dt_post)} alignable dtype', parent
+                # else:
 
-                    if dt_unpack: # we may not have dtypes to compare if fewer
-                        [h_tuple] = tp.get_args(h_unpack)
-                        assert issubclass(tuple, tp.get_origin(h_tuple))
-                        yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Fields {col_pos} to {col_post_unpack - 1}',)
+                col_pos = 0
+                for dt, h in zip(dt_pre, h_pre):
+                    yield dt.type(), h, parent + (f'Field {col_pos}',)
+                    col_pos += 1
 
-                    col_pos = col_post_unpack
-                    for dt, h in zip(dt_post, h_post):
-                        yield dt.type(), h, parent + (f'Field {col_pos}',)
-                        col_pos += 1
+                if dt_unpack: # we may not have dtypes to compare if fewer
+                    [h_tuple] = tp.get_args(h_unpack)
+                    assert issubclass(tuple, tp.get_origin(h_tuple))
+                    yield tuple(d.type() for d in dt_unpack), h_tuple, parent + (f'Fields {col_pos} to {col_post_unpack - 1}',)
+
+                col_pos = col_post_unpack
+                for dt, h in zip(dt_post, h_post):
+                    yield dt.type(), h, parent + (f'Field {col_pos}',)
+                    col_pos += 1
 
 
 def iter_ndarray_checks(value: tp.Any,
