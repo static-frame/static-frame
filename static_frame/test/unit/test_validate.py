@@ -577,7 +577,7 @@ def test_check_index_hierarchy_h2():
     assert v1.via_type_clinic.check(h1).validated
 
 
-def test_check_index_hierarchy_h2():
+def test_check_index_hierarchy_h3():
 
     v1 = sf.IndexHierarchy.from_labels([
             (1, 'a', False, True, 'a', 3, 2),
@@ -1069,3 +1069,8 @@ def test_via_type_clinic_a():
     assert str(s.via_type_clinic) == 'Series[Index[str_], str_]'
     assert s.via_type_clinic.check(s.via_type_clinic.to_hint()).validated
 
+def test_via_type_clinic_b():
+    s = sf.Series(('a', 'b'), index=(('x', 'y')))
+
+    with pytest.raises(TypeError):
+        s.via_type_clinic(sf.Series[sf.IndexDate, np.str_])
