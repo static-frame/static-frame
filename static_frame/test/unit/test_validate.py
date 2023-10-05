@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import partial
+
 import numpy as np
 import pytest
 import typing_extensions as tp
@@ -475,9 +477,12 @@ def test_check_index_hierarchy_d1():
 
 def test_check_index_hierarchy_d2():
 
-    v1 = sf.IndexHierarchy.from_labels([(1,  False), (3,  False), (2,  True)])
+    v1 = sf.IndexHierarchy.from_labels(
+            [(1,  False), (3,  False), (2,  True)],
+            index_constructors=(partial(sf.Index, dtype=np.int64), sf.Index),
+            )
     h1 = sf.IndexHierarchy[
-            sf.Index[np.int_],
+            sf.Index[np.int64],
             sf.Index[np.str_],
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             ]
