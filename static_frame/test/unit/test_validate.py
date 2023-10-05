@@ -532,11 +532,12 @@ def test_check_index_hierarchy_g():
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             sf.Index[np.str_],
             sf.Index[np.int_],
+            sf.Index[np.int_],
             ]
 
     assert not v1.via_type_clinic.check(h1).validated
-    # print(v1.via_type_clinic.check(h1).to_str())
-    # assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Expected IndexHierarchy has 3 depth (excluding Unpack), provided IndexHierarchy has 2 depth'
+
+    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
 
 
 #-------------------------------------------------------------------------------

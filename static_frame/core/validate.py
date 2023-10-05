@@ -180,6 +180,7 @@ class CheckError(TypeError):
     def __init__(self, cr: CheckResult) -> None:
         TypeError.__init__(self, cr.to_str())
 
+
 #-------------------------------------------------------------------------------
 
 class Constraint:
@@ -739,6 +740,8 @@ class TypeClinic:
     INTERFACE = (
         'to_hint',
         'check',
+        '__call__',
+        '__repr__',
         )
 
     def __init__(self, value: tp.Any, /):
@@ -753,6 +756,9 @@ class TypeClinic:
 
     def check(self, hint: tp.Any, /) -> CheckResult:
         return _check(self._value, hint)
+
+    def __call__(self, hint: tp.Any, /) -> None:
+        raise CheckError(self.check(hint))
 
 
 
