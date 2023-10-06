@@ -533,12 +533,12 @@ def test_check_index_hierarchy_g():
             sf.Index,
             ))
     h1 = sf.IndexHierarchy[
-            sf.Index[np.int_],
+            sf.Index[np.int64],
             sf.Index[np.str_],
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             sf.Index[np.str_],
-            sf.Index[np.int_],
-            sf.Index[np.int_],
+            sf.Index[np.int64],
+            sf.Index[np.int64],
             ]
 
     assert not v1.via_type_clinic.check(h1).validated
