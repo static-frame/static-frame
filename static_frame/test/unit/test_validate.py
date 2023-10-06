@@ -19,6 +19,7 @@ from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
+from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
@@ -1067,8 +1068,9 @@ def test_type_clinic_to_hint_f():
     assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
     assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
 
+@skip_pyle38
 def test_type_clinic_to_hint_g1():
-    assert TypeClinic((3, 'foo', False)).to_hint() == tp.Tuple[int, str, bool]
+    assert TypeClinic((3, 'foo', False)).to_hint() == tuple[int, str, bool]
 
 
 

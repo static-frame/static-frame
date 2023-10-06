@@ -727,9 +727,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         return tp.Type[value]
 
     if isinstance(value, tuple):
-        # return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
-        return tp.Tuple[*[_value_to_hint(v) for v in value]]
-
+        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
 
     # --------------------------------------------------------------------------
     # SF containers
