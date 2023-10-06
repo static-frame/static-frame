@@ -113,6 +113,8 @@ def to_signature(
 
 
 class CheckResult:
+    '''A ``CheckResult`` instance stores zero or more error messages resulting from a check.
+    '''
     __slots__ = ('_log',)
 
     _LINE = '─'
@@ -146,6 +148,8 @@ class CheckResult:
         return f'{" " * l_width}{cls._CORNER}{cls._LINE * c_width} '
 
     def to_str(self) -> str:
+        '''Return error messages as a formatted string with line breaks and indentation.
+        '''
         msg = []
         for v, h, p in self._log:
             if p:
@@ -177,6 +181,8 @@ class CheckResult:
 
 
 class CheckError(TypeError):
+    '''A TypeError subclass for exposing check errors.
+    '''
     def __init__(self, cr: CheckResult) -> None:
         TypeError.__init__(self, cr.to_str())
 
@@ -184,6 +190,8 @@ class CheckError(TypeError):
 #-------------------------------------------------------------------------------
 
 class Constraint:
+    '''Base class of all run-time constraints, deployed in Annotated generics.
+    '''
     __slots__: tp.Tuple[str, ...] = ()
 
     def iter_error_log(self,
@@ -198,6 +206,8 @@ class Constraint:
         return f'{self.__class__.__name__}({args})'
 
 class Name(Constraint):
+    '''Constraint to validate the name of a container.
+    '''
     __slots__ = ('_name',)
 
     def __init__(self, name: TLabel):
@@ -213,6 +223,9 @@ class Name(Constraint):
             yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
 
 class Len(Constraint):
+    '''Constraint to validate the length of a container.
+    '''
+
     __slots__ = ('_len',)
 
     def __init__(self, len: int):
@@ -286,6 +299,9 @@ class Labels(Constraint):
 
 
 class Validator(Constraint):
+    '''Apply a constraint to a container with an arbitrary function.
+    '''
+
     __slots__ = ('_validator',)
 
     def __init__(self, validator: tp.Callable[..., bool]):
@@ -660,6 +676,8 @@ def check_type(
         *,
         fail_fast: bool = False,
         ) -> None:
+    '''Utility function to check a value with a hint; a ``CheckError`` exception is raised on error.
+    '''
     if cr := _check(value, hint, parent, fail_fast):
         raise CheckError(cr)
 
@@ -677,6 +695,8 @@ def check_interface(
         *,
         fail_fast: bool = False,
         ) -> tp.Any:
+    '''A function decorator to perform run-time checking of function arguments and return values based on the functions type annotations, including type hints and ``Contraint`` subclasses.
+    '''
 
     def decorator(func: TVFunc) -> TVFunc:
 
