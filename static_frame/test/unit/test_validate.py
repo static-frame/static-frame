@@ -1067,6 +1067,10 @@ def test_type_clinic_to_hint_f():
     assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
     assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
 
+def test_type_clinic_to_hint_g1():
+    assert TypeClinic((3, 'foo', False)).to_hint() == tp.Tuple[int, str, bool]
+
+
 
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():

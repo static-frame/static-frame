@@ -669,18 +669,6 @@ def _check(
 #-------------------------------------------------------------------------------
 # public interfaces
 
-# def check_type(
-#         value: tp.Any,
-#         hint: tp.Any,
-#         parent: TParent = (),
-#         *,
-#         fail_fast: bool = False,
-#         ) -> None:
-#     '''Utility function to check a value with a hint; a ``CheckError`` exception is raised on error.
-#     '''
-#     if cr := _check(value, hint, parent, fail_fast):
-#         raise CheckError(cr)
-
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
@@ -738,6 +726,14 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
     if isinstance(value, type):
         return tp.Type[value]
 
+    if isinstance(value, tuple):
+        # return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
+        return tp.Tuple[*[_value_to_hint(v) for v in value]]
+
+
+    # --------------------------------------------------------------------------
+    # SF containers
+
     if isinstance(value, Frame):
         hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
         hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
@@ -762,7 +758,6 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
 
     if isinstance(value, np.ndarray):
         return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
-
 
     return value.__class__
 
