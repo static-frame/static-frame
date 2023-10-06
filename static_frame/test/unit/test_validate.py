@@ -1075,6 +1075,7 @@ def test_type_clinic_to_hint_g1():
 @skip_pyle38
 def test_type_clinic_to_hint_h1():
     assert TypeClinic([3, 1, 2]).to_hint() == list[int]
+    assert TypeClinic([]).to_hint() == list[tp.Any]
     assert TypeClinic([False, True, False]).to_hint() == list[bool]
     assert TypeClinic([False, True, 1, 2]).to_hint() == list[tp.Union[bool, int]]
 
