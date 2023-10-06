@@ -525,7 +525,13 @@ def test_check_index_hierarchy_g():
             (1, 'a', False, 'a',),
             (3, 'b', True, 'c',),
             (2, 'c', False, 'd',),
-            ])
+            ],
+            index_constructors=(
+            partial(sf.Index, dtype=np.int64),
+            sf.Index,
+            sf.Index,
+            sf.Index,
+            ))
     h1 = sf.IndexHierarchy[
             sf.Index[np.int_],
             sf.Index[np.str_],

@@ -736,10 +736,10 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
 
     if isinstance(value, np.dtype):
-        return np.dtype[value.type().__class__]
+        return np.dtype.__class_getitem__(value.type().__class__)
 
     if isinstance(value, np.ndarray):
-        return value.__class__[_value_to_hint(value.dtype)]
+        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
 
 
     return value.__class__
