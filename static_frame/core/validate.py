@@ -729,6 +729,20 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
     if isinstance(value, tuple):
         return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
 
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        if not len(value):
+            return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
+
+        ut = {v.__class__.__name__: v.__class__ for v in value}
+        if len(ut) == 1:
+            return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
+
+        hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
+        return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
+
+    # if isinstance(value, MutableMapping):
+    #     pass
+
     # --------------------------------------------------------------------------
     # SF containers
 
