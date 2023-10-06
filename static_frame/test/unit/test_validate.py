@@ -17,7 +17,6 @@ from static_frame.core.validate import TValidation
 from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
-from static_frame.core.validate import check_type
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
 from static_frame.test.test_case import skip_pyle310
@@ -26,24 +25,24 @@ from static_frame.test.test_case import skip_win
 
 def test_check_type_a():
 
-    check_type(sf.IndexDate(('2022-01-01',)), sf.IndexDate)
-    check_type(sf.IndexDate(('2022-01-01',)), tp.Any)
+    TypeClinic(sf.IndexDate(('2022-01-01',)))(sf.IndexDate)
+    TypeClinic(sf.IndexDate(('2022-01-01',)))(tp.Any)
 
     with pytest.raises(TypeError):
-        check_type(sf.IndexDate(('2022-01-01',)), sf.IndexSecond)
+        TypeClinic(sf.IndexDate(('2022-01-01',)))(sf.IndexSecond)
 
 
 def test_check_type_b():
 
-    check_type(3, int)
-    check_type('foo', str)
-    check_type(False, bool)
+    TypeClinic(3)(int)
+    TypeClinic('foo')(str)
+    TypeClinic(False)(bool)
 
     with pytest.raises(TypeError):
-        check_type(3, str)
+        TypeClinic(3)(str)
 
     with pytest.raises(TypeError):
-        check_type(True, int)
+        TypeClinic(True)(int)
 
 #-------------------------------------------------------------------------------
 
@@ -77,28 +76,28 @@ def test_check_result_c():
 
 def test_check_type_union_a():
 
-    check_type(3, tp.Union[int, str])
+    TypeClinic(3)(tp.Union[int, str])
 
     with pytest.raises(TypeError):
-        check_type('x', tp.Union[int, float])
+        TypeClinic('x')(tp.Union[int, float])
 
-    check_type('x', tp.Union[str, bytes])
-    check_type('x', tp.Union[int, str])
+    TypeClinic('x')(tp.Union[str, bytes])
+    TypeClinic('x')(tp.Union[int, str])
 
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_type_a():
 
-    check_type(sf.Series, tp.Type[sf.Series])
+    TypeClinic(sf.Series)(tp.Type[sf.Series])
 
     with pytest.raises(TypeError):
-        check_type(sf.Series, tp.Type[sf.Index])
+        TypeClinic(sf.Series)(tp.Type[sf.Index])
 
 @skip_pyle310
 def test_check_type_type_b():
     try:
-        check_type(3, tp.Type[sf.Series])
+        TypeClinic(3)(tp.Type[sf.Series])
     except TypeError as e:
         assert str(e).replace('\n', '') == 'Expected Type[Series], provided int invalid'
 
@@ -110,9 +109,9 @@ def test_validate_numpy_a():
     h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
     h2 = np.ndarray[tp.Any, np.dtype[np.str_]]
 
-    check_type(v, h1)
+    TypeClinic(v)(h1)
     with pytest.raises(TypeError):
-        check_type(v, h2)
+        TypeClinic(v)(h2)
 
 
 #-------------------------------------------------------------------------------
@@ -124,19 +123,19 @@ def test_check_type_containers_a():
     h3 = sf.Series[sf.IndexDate, np.str_]
 
     with pytest.raises(TypeError):
-        check_type(v, h2)
+        TypeClinic(v)(h2)
 
     with pytest.raises(TypeError):
-        check_type(v, h1)
+        TypeClinic(v)(h1)
 
 def test_check_type_containers_b():
     v = sf.Series(('a', 'b'), index=sf.IndexDate(('2021-04-05', '2022-05-03')))
     h1 = sf.Series[sf.IndexDate, np.str_]
     h2 = sf.Series[sf.IndexDate, np.int64]
 
-    check_type(v, h1)
+    TypeClinic(v)(h1)
     with pytest.raises(TypeError):
-        check_type(v, h2)
+        TypeClinic(v)(h2)
 
 
 def test_check_type_containers_c():
@@ -147,13 +146,13 @@ def test_check_type_containers_c():
     h4 = sf.Series[sf.Index[np.int64], np.str_]
 
     with pytest.raises(TypeError):
-        check_type(v, h1)
+        TypeClinic(v,)(h1)
     with pytest.raises(TypeError):
-        check_type(v, h2)
+        TypeClinic(v,)(h2)
     with pytest.raises(TypeError):
-        check_type(v, h3)
+        TypeClinic(v,)(h3)
 
-    check_type(v, h4)
+    TypeClinic(v,)(h4)
 
 
 def test_check_type_containers_d():
@@ -163,10 +162,10 @@ def test_check_type_containers_d():
 
     h1 = sf.Series[sf.Index[tp.Union[np.int64, np.str_]], np.str_]
 
-    check_type(v1, h1)
-    check_type(v2, h1)
+    TypeClinic(v1)(h1)
+    TypeClinic(v2)(h1)
     with pytest.raises(TypeError):
-        check_type(v3, h1)
+        TypeClinic(v3)(h1)
 
 
 def test_check_type_containers_e():
@@ -176,11 +175,11 @@ def test_check_type_containers_e():
 
     h1 = sf.Series[tp.Union[sf.IndexDate, sf.IndexSecond], np.str_]
 
-    check_type(v1, h1)
-    check_type(v2, h1)
+    TypeClinic(v1)(h1)
+    TypeClinic(v2)(h1)
 
     with pytest.raises(TypeError):
-        check_type(v3, h1)
+        TypeClinic(v3)(h1)
 
 
 #-------------------------------------------------------------------------------
@@ -201,49 +200,49 @@ def test_check_type_fail_fast_a():
 
 
     with pytest.raises(TypeError):
-        check_type(v, h, fail_fast=True)
+        TypeClinic(v)(h, fail_fast=True)
     try:
-        check_type(v, h, fail_fast=True)
+        TypeClinic(v)(h, fail_fast=True)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid'
 
     with pytest.raises(TypeError):
-        check_type(v, h, fail_fast=False)
+        TypeClinic(v)(h, fail_fast=False)
     try:
-        check_type(v, h, fail_fast=False)
+        TypeClinic(v)(h, fail_fast=False)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid In Series[Index[int64], int64] Index[int64] Expected int64, provided str_ invalid'
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_sequence_a():
-    check_type([3, 4], tp.List[int])
+    TypeClinic([3, 4])(tp.List[int])
 
     with pytest.raises(TypeError):
-        check_type([3, 4, 'a'], tp.List[int])
+        TypeClinic([3, 4, 'a'])(tp.List[int])
 
 
-    check_type([3, 4, 'a'], tp.List[tp.Union[int, str]])
+    TypeClinic([3, 4, 'a'])(tp.List[tp.Union[int, str]])
 
-    check_type(['c', 'b', 'a'], tp.Union[tp.List[int], tp.List[str]])
+    TypeClinic(['c', 'b', 'a'])(tp.Union[tp.List[int], tp.List[str]])
 
     with pytest.raises(TypeError):
-        check_type([3, 4, 'a', True], tp.List[tp.Union[int, str]])
+        TypeClinic([3, 4, 'a', True])(tp.List[tp.Union[int, str]])
 
 def test_check_type_sequence_b():
 
-    check_type([3, 4], tp.Sequence[int])
+    TypeClinic([3, 4])(tp.Sequence[int])
 
     with pytest.raises(TypeError):
-        check_type([3, 4, 'a'], tp.Sequence[int])
+        TypeClinic([3, 4, 'a'])(tp.Sequence[int])
 
 
-    check_type([3, 4, 'a'], tp.Sequence[tp.Union[int, str]])
+    TypeClinic([3, 4, 'a'])(tp.Sequence[tp.Union[int, str]])
 
-    check_type(['c', 'b', 'a'], tp.Union[tp.Sequence[int], tp.Sequence[str]])
+    TypeClinic(['c', 'b', 'a'])(tp.Union[tp.Sequence[int], tp.Sequence[str]])
 
     with pytest.raises(TypeError):
-        check_type([3, 4, 'a', True], tp.Sequence[tp.Union[int, str]])
+        TypeClinic([3, 4, 'a', True])(tp.Sequence[tp.Union[int, str]])
 
 
 #-------------------------------------------------------------------------------
@@ -251,19 +250,19 @@ def test_check_type_sequence_b():
 def test_check_type_tuple_a():
 
     with pytest.raises(TypeError):
-        check_type([3, 4], tp.Tuple[int, bool])
+        TypeClinic([3, 4])(tp.Tuple[int, bool])
 
     with pytest.raises(TypeError):
-        check_type((3, False, 'foo'), tp.Tuple[int, ...])
+        TypeClinic((3, False, 'foo'))(tp.Tuple[int, ...])
 
-    check_type((3, 4, 5), tp.Tuple[int, ...])
-    check_type((3, 4, 5, 3, 20), tp.Tuple[int, ...])
-    check_type((3,), tp.Tuple[int, ...])
+    TypeClinic((3, 4, 5))(tp.Tuple[int, ...])
+    TypeClinic((3, 4, 5, 3, 20))(tp.Tuple[int, ...])
+    TypeClinic((3,))(tp.Tuple[int, ...])
 
 def test_check_type_tuple_b():
 
-    check_type((3, 4, False), tp.Tuple[int, int, bool])
-    check_type((3, 4.1, False), tp.Tuple[int, float, bool])
+    TypeClinic((3, 4, False))(tp.Tuple[int, int, bool])
+    TypeClinic((3, 4.1, False))(tp.Tuple[int, float, bool])
 
 @skip_pyle310
 def test_check_type_tuple_c():
@@ -282,8 +281,8 @@ def test_check_type_tuple_d():
 
 @skip_pyle310
 def test_check_type_literal_a():
-    check_type(42, tp.Literal[42])
-    check_type(42, tp.Literal[-1, 42])
+    TypeClinic(42)(tp.Literal[42])
+    TypeClinic(42)(tp.Literal[-1, 42])
 
     cr = TypeClinic(42).check(tp.Literal['a', 'b'])
     assert list(cr) == [(42, 'a', (tp.Literal['a', 'b'],)),
@@ -292,14 +291,14 @@ def test_check_type_literal_a():
 #-------------------------------------------------------------------------------
 
 def test_check_type_dict_a():
-    check_type({'a': 3}, tp.Dict[str, int])
-    check_type({'b': 20}, tp.Dict[str, int])
+    TypeClinic({'a': 3})(tp.Dict[str, int])
+    TypeClinic({'b': 20})(tp.Dict[str, int])
 
     with pytest.raises(TypeError):
-        check_type({'a': 20, 'b': 18, 'c': False}, tp.Dict[str, int])
+        TypeClinic({'a': 20, 'b': 18, 'c': False})(tp.Dict[str, int])
 
     with pytest.raises(TypeError):
-        check_type({'a': 20, 'b': 18, 20: 3}, tp.Dict[str, int])
+        TypeClinic({'a': 20, 'b': 18, 20: 3})(tp.Dict[str, int])
 
 
 #-------------------------------------------------------------------------------
@@ -382,7 +381,7 @@ def test_check_interface_f():
 
 def test_check_annotated_a():
 
-    check_type(3, tp.Annotated[int, 'foo'])
+    TypeClinic(3)(tp.Annotated[int, 'foo'])
 
 def test_check_annotated_b():
 
@@ -392,10 +391,10 @@ def test_check_annotated_b():
             Name('foo'),
     ]
     with pytest.raises(TypeError):
-        check_type(v1, h1)
+        TypeClinic(v1)(h1)
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)), name='foo')
-    check_type(v1, h1)
+    TypeClinic(v1)(h1)
 
 def test_check_annotated_c():
 
@@ -410,9 +409,9 @@ def test_check_annotated_c():
             ]
 
     with pytest.raises(TypeError):
-        check_type(v1, h1)
+        TypeClinic(v1)(h1)
 
-    check_type(v1, h2)
+    TypeClinic(v1)(h2)
 
 #-------------------------------------------------------------------------------
 
@@ -423,11 +422,11 @@ def test_check_index_hierarchy_a():
             sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer]],
             Len(4),
             ]
-    check_type(v1, h1)
+    TypeClinic(v1)(h1)
 
     h1 = sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer], sf.IndexDate]
     with pytest.raises(TypeError):
-        check_type(v1, h1)
+        TypeClinic(v1)(h1)
 
 def test_check_index_hierarchy_b():
 
@@ -437,10 +436,10 @@ def test_check_index_hierarchy_b():
     h1 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.int_], ...]]]
     h2 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.str_], ...]]]
 
-    check_type(v1, h1)
+    TypeClinic(v1)(h1)
     assert TypeClinic(v1).check(h1).validated
 
-    check_type(v2, h1)
+    TypeClinic(v2)(h1)
     assert not TypeClinic(v1).check(h2).validated
 
 def test_check_index_hierarchy_c():
@@ -452,8 +451,8 @@ def test_check_index_hierarchy_c():
 
     h3 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.bool_], sf.Index[np.str_]]
 
-    check_type(v1, h1)
-    check_type(v1, h2)
+    TypeClinic(v1)(h1)
+    TypeClinic(v1)(h2)
 
 def test_check_index_hierarchy_d1():
 
@@ -1002,9 +1001,9 @@ def test_check_error_display_a():
             np.str_]
 
     with pytest.raises(TypeError):
-        check_type(f, h2)
+        TypeClinic(f)(h2)
     try:
-        check_type(f, h2)
+        TypeClinic(f)(h2)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool_ invalid In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid'
 

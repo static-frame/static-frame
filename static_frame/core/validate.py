@@ -669,17 +669,17 @@ def _check(
 #-------------------------------------------------------------------------------
 # public interfaces
 
-def check_type(
-        value: tp.Any,
-        hint: tp.Any,
-        parent: TParent = (),
-        *,
-        fail_fast: bool = False,
-        ) -> None:
-    '''Utility function to check a value with a hint; a ``CheckError`` exception is raised on error.
-    '''
-    if cr := _check(value, hint, parent, fail_fast):
-        raise CheckError(cr)
+# def check_type(
+#         value: tp.Any,
+#         hint: tp.Any,
+#         parent: TParent = (),
+#         *,
+#         fail_fast: bool = False,
+#         ) -> None:
+#     '''Utility function to check a value with a hint; a ``CheckError`` exception is raised on error.
+#     '''
+#     if cr := _check(value, hint, parent, fail_fast):
+#         raise CheckError(cr)
 
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
@@ -713,12 +713,14 @@ def check_interface(
 
             for k, v in sig_bound.arguments.items():
                 if h_p := hints.get(k, None):
-                    check_type(v, h_p, parent, fail_fast=fail_fast)
+                    if cr := _check(v, h_p, parent, fail_fast=fail_fast):
+                        raise CheckError(cr)
 
             post = func(*args, **kwargs)
 
             if h_return := hints.get('return', None):
-                check_type(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast)
+                if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
+                    raise CheckError(cr)
 
             return post
 
@@ -784,11 +786,21 @@ class TypeClinic:
     def __repr__(self) -> str:
         return to_name(self.to_hint())
 
-    def check(self, hint: tp.Any, /) -> CheckResult:
-        return _check(self._value, hint)
+    def check(self,
+            hint: tp.Any,
+            /, *,
+            fail_fast: bool = False
+            ) -> CheckResult:
+        return _check(self._value, hint, fail_fast=fail_fast)
 
-    def __call__(self, hint: tp.Any, /) -> None:
-        raise CheckError(self.check(hint))
+    def __call__(self,
+            hint: tp.Any,
+            /, *,
+            fail_fast: bool = False,
+            ) -> None:
+
+        if cr := self.check(hint, fail_fast=fail_fast):
+            raise CheckError(cr)
 
 
 
