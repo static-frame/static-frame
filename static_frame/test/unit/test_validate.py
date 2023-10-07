@@ -1091,3 +1091,5 @@ def test_via_type_clinic_b():
 
     with pytest.raises(TypeError):
         s.via_type_clinic(sf.Series[sf.IndexDate, np.str_])
+
+
