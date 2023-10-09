@@ -774,12 +774,12 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         if len(keys_ut) == 1:
             kt = keys_ut[next(iter(keys_ut.keys()))]
         else:
-            kt = tp.Union.__getitem__(tuple(keys_ut.values()))
+            kt = tp.Union.__getitem__(tuple(keys_ut.values())) # pyright: ignore
 
         if len(values_ut) == 1:
             vt = values_ut[next(iter(values_ut.keys()))]
         else:
-            vt = tp.Union.__getitem__(tuple(values_ut.values()))
+            vt = tp.Union.__getitem__(tuple(values_ut.values())) # pyright: ignore
 
         return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
 
