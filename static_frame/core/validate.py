@@ -742,7 +742,23 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
 
     if isinstance(value, MutableMapping):
-        pass
+        if not len(value):
+            return value.__class__.__class_getitem__((tp.Any, tp.Any)) # type: ignore[attr-defined]
+
+        keys_ut = {k.__class__.__name__: k.__class__ for k in value.keys()}
+        values_ut = {v.__class__.__name__: v.__class__ for v in value.values()}
+
+        if len(keys_ut) == 1:
+            kt = keys_ut[next(iter(keys_ut.keys()))]
+        else:
+            kt = tp.Union.__getitem__(tuple(keys_ut.values()))
+
+        if len(values_ut) == 1:
+            vt = values_ut[next(iter(values_ut.keys()))]
+        else:
+            vt = tp.Union.__getitem__(tuple(values_ut.values()))
+
+        return value.__class__.__class_getitem__((kt, vt))
 
     # --------------------------------------------------------------------------
     # SF containers

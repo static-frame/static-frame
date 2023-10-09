@@ -1094,6 +1094,32 @@ def test_type_clinic_to_hint_h1():
     assert TypeClinic([False, True, False]).to_hint() == list[bool]
     assert TypeClinic([False, True, 1, 2]).to_hint() == list[tp.Union[bool, int]]
 
+@skip_pyle38
+def test_type_clinic_to_hint_j1():
+    assert TypeClinic({}).to_hint() == dict[tp.Any, tp.Any]
+
+    assert TypeClinic({3: 'a'}).to_hint() == dict[int, str]
+    assert TypeClinic({3: 'a', 42: 'x'}).to_hint() == dict[int, str]
+
+    assert TypeClinic({'a': 3}).to_hint() == dict[str, int]
+    assert TypeClinic({'a': 3, 'x': 30}).to_hint() == dict[str, int]
+
+@skip_pyle38
+def test_type_clinic_to_hint_j2():
+
+    assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y'}).to_hint() == dict[tp.Union[int, float], str]
+
+    assert TypeClinic({'a': 3, 'x': 30, 'z': 10.5}).to_hint() == dict[str, tp.Union[int, float]]
+
+@skip_pyle38
+def test_type_clinic_to_hint_j3():
+
+    assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 3: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
+
+    assert TypeClinic({'a': 3, 'x': 30, b'z': 10.5}).to_hint() == dict[tp.Union[str, bytes], tp.Union[int, float]]
+
+
+
 
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():
