@@ -372,11 +372,23 @@ def iter_typeddict(
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
     # hint is a typedict class; returns dict of key name and value
+    # import ipdb; ipdb.set_trace()
     hints = tp.get_type_hints(hint, include_extras=True)
+    total = getattr(hint, '__total__', True)
+
     for k, h_value in hints.items():
         # TODO: check for required values, handle missing keys
-        yield value[k], h_value, parent + (f'Key {k!r}',)
-    # TODO: handle extra keys
+        parent_k = parent + (f'Key {k!r}',)
+        if k not in value:
+            if total:
+                yield ERROR_MESSAGE_TYPE, f'Expected totality but key {k!r} not provided', parent_k
+        else:
+            yield value[k], h_value, parent_k
+
+    if keys_over := value.keys() - hints.keys():
+        yield ERROR_MESSAGE_TYPE, f"Keys provided not expected: {', '.join(f'{k!r}' for k in keys_over)}", parent
+
+
 
 
 # NOTE: For SF containers, we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instance of the type that can be used for testing. Caching this value does not seem a benefit.
