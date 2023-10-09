@@ -733,6 +733,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         if not len(value):
             return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
 
+        # as classes may not be hashable, we key to string name to from a set; this is imperfect
         ut = {v.__class__.__name__: v.__class__ for v in value}
         if len(ut) == 1:
             return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
@@ -740,8 +741,8 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
         return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
 
-    # if isinstance(value, MutableMapping):
-    #     pass
+    if isinstance(value, MutableMapping):
+        pass
 
     # --------------------------------------------------------------------------
     # SF containers
@@ -787,10 +788,14 @@ class TypeClinic:
         self._value = value
 
     def to_hint(self) -> tp.Any:
+        '''Return the type hint (the type and/or generic aliases necessary) to represent the object given at initialization.
+        '''
         # NOTE: this can cache as value assumed immutable
         return _value_to_hint(self._value)
 
     def __repr__(self) -> str:
+        '''Return a compact string representation of the type hint (the type and/or generic aliases necessary) to represent the object given at initialization.
+        '''
         return to_name(self.to_hint())
 
     def check(self,
@@ -798,6 +803,11 @@ class TypeClinic:
             /, *,
             fail_fast: bool = False
             ) -> CheckResult:
+        '''Given a hint (a type and/or generic alias), return a ``CheckResult`` object describing the result of the check.
+
+        Args:
+            fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
+        '''
         return _check(self._value, hint, fail_fast=fail_fast)
 
     def __call__(self,
@@ -805,7 +815,11 @@ class TypeClinic:
             /, *,
             fail_fast: bool = False,
             ) -> None:
+        '''Given a hint (a type and/or generic alias), raise a ``CheckError`` exception describing the result of the check.
 
+        Args:
+            fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
+        '''
         if cr := self.check(hint, fail_fast=fail_fast):
             raise CheckError(cr)
 

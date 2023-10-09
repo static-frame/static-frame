@@ -24,6 +24,8 @@ from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
 
+#-------------------------------------------------------------------------------
+
 def test_check_type_a():
 
     TypeClinic(sf.IndexDate(('2022-01-01',)))(sf.IndexDate)
@@ -44,6 +46,19 @@ def test_check_type_b():
 
     with pytest.raises(TypeError):
         TypeClinic(True)(int)
+
+
+def test_check_type_c():
+    TypeClinic(['a', 'b'])(tp.List[str])
+    TypeClinic([{3: 'a'}, {4: 'x'}])(tp.List[tp.Dict[int, str]])
+    TypeClinic([(3, ['a', 'b']), (4, ['x', 'y'])])(tp.List[tp.Tuple[int, tp.List[str]]])
+
+    tc = TypeClinic([(3, ['a', 'b']), (4, ['x', 'y'])])
+    with pytest.raises(TypeError):
+        tc(tp.List[tp.Tuple[int, tp.List[bool]]])
+
+    cr = tc.check(tp.List[tp.Tuple[int, tp.List[bool]]])
+    assert len(cr) == 4
 
 #-------------------------------------------------------------------------------
 
