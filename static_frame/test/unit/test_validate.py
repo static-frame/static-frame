@@ -23,7 +23,6 @@ from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
-
 #-------------------------------------------------------------------------------
 
 def test_check_type_a():
@@ -59,6 +58,28 @@ def test_check_type_c():
 
     cr = tc.check(tp.List[tp.Tuple[int, tp.List[bool]]])
     assert len(cr) == 4
+
+
+def test_check_type_d():
+
+    class Record1(tp.TypedDict):
+        a: int
+        b: float
+        c: str
+
+    class Record2(tp.TypedDict):
+        a: int
+        b: float
+        c: bool
+
+    tc = TypeClinic(dict(a=3, b=10.5, c='foo'))
+    tc(Record1)
+
+    cr = tc.check(Record2)
+    assert not cr.validated
+
+    assert scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
+
 
 #-------------------------------------------------------------------------------
 

@@ -332,7 +332,8 @@ def iter_sequence_checks(
     for v in value:
         yield v, h_component, parent
 
-def iter_tuple_checks(value: tp.Any,
+def iter_tuple_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -352,7 +353,8 @@ def iter_tuple_checks(value: tp.Any,
             # NOTE: find bad usage of ellipses
             yield v, h, parent
 
-def iter_mapping_checks(value: tp.Any,
+def iter_mapping_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -363,9 +365,24 @@ def iter_mapping_checks(value: tp.Any,
             ):
         yield v, h, parent
 
-# NOTE: we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instasce of the type that can be used for testing. This might be cached.
 
-def iter_series_checks(value: tp.Any,
+def iter_typeddict(
+        value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
+    # hint is a typedict class; returns dict of key name and value
+    hints = tp.get_type_hints(hint, include_extras=True)
+    for k, h_value in hints.items():
+        # TODO: check for required values, handle missing keys
+        yield value[k], h_value, parent + (f'Key {k!r}',)
+    # TODO: handle extra keys
+
+
+# NOTE: For SF containers, we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instance of the type that can be used for testing. Caching this value does not seem a benefit.
+
+def iter_series_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -373,14 +390,16 @@ def iter_series_checks(value: tp.Any,
     yield value.index, h_index, parent
     yield value.dtype.type(), h_generic, parent
 
-def iter_index_checks(value: tp.Any,
+def iter_index_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
     [h_generic] = tp.get_args(hint)
     yield value.dtype.type(), h_generic, parent
 
-def iter_index_hierarchy_checks(value: tp.Any,
+def iter_index_hierarchy_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -454,7 +473,8 @@ def iter_index_hierarchy_checks(value: tp.Any,
                     col_pos += 1
 
 
-def iter_frame_checks(value: tp.Any,
+def iter_frame_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -533,14 +553,16 @@ def iter_frame_checks(value: tp.Any,
                     col_pos += 1
 
 
-def iter_ndarray_checks(value: tp.Any,
+def iter_ndarray_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
     h_shape, h_dtype = tp.get_args(hint)
     yield value.dtype, h_dtype, parent
 
-def iter_dtype_checks(value: tp.Any,
+def iter_dtype_checks(
+        value: tp.Any,
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
@@ -649,8 +671,9 @@ def _check(
                     tee_error_or_check(iter_dtype_checks(v, h, p_next))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
-        elif not isinstance(h, type):
-            # h is value from a literal
+        elif tp.is_typeddict(h):
+            tee_error_or_check(iter_typeddict(v, h, p_next))
+        elif not isinstance(h, type): # h is a value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
             if type(v) != type(h) or v != h: # pylint: disable=C0123
                 e_log.append((v, h, p))
@@ -758,7 +781,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         else:
             vt = tp.Union.__getitem__(tuple(values_ut.values()))
 
-        return value.__class__.__class_getitem__((kt, vt))
+        return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
 
     # --------------------------------------------------------------------------
     # SF containers
