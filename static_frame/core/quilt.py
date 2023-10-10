@@ -19,6 +19,7 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorInitQuilt
@@ -467,7 +468,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='quilt_init')
     def __init__(self,
             bus: tp.Union[Bus, Yarn],
             *,
@@ -1534,3 +1534,5 @@ class Quilt(ContainerBase, StoreClientMixin):
                         encoding=encoding),)
                 ))
 
+
+doc_update(Quilt.__init__, selector='quilt_init')

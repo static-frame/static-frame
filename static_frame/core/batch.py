@@ -10,6 +10,7 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
@@ -402,7 +403,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='batch_init')
     def __init__(self,
             items: IteratorFrameItems,
             *,
@@ -1828,3 +1828,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 include_class=include_class,
                 encoding=encoding,
                 )
+
+
+doc_update(Batch.__init__, selector='batch_init')

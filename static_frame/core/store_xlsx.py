@@ -377,7 +377,6 @@ class StoreXLSX(Store):
                 data_only=True
                 )
 
-    # @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[TLabel],

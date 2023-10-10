@@ -64,6 +64,7 @@ from static_frame.core.index_datetime import IndexYearMonth as IndexYearMonth
 from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthGO
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
+from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
 from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
 from static_frame.core.node_dt import InterfaceBatchDatetime
@@ -116,6 +117,7 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TLocSelector as TLocSelector
 from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
+from static_frame.core.validate import TypeClinic as TypeClinic
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn as Yarn
 

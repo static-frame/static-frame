@@ -27,6 +27,7 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index_base import IndexBase
@@ -271,7 +272,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return ErrorInitIndexNonUnique(msg)
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='index_init')
     def __init__(self,
             labels: IndexInitializer,
             *,
@@ -473,7 +473,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # common attributes from the numpy array
 
     @property
-    # @doc_inject()
+    @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}
         '''
@@ -578,7 +578,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             )
 
 
-    # @doc_inject(select='astype')
+    @doc_inject(select='astype')
     def astype(self, dtype: TDtypeSpecifier) -> Index[tp.Any]:
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
@@ -678,7 +678,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             self._update_array_cache()
         return len(self._labels)
 
-    # @doc_inject()
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
             *,
@@ -716,7 +716,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # core internal representation
 
     @property
-    # @doc_inject(selector='values_1d', class_name='Index')
+    @doc_inject(selector='values_1d', class_name='Index')
     def values(self) -> NDArrayAny:
         '''
         {}
@@ -1141,7 +1141,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self._depth_level_validate(depth_level)
         return self.values
 
-    # @doc_inject()
+    @doc_inject()
     def equals(self,
             other: tp.Any,
             *,
@@ -1459,6 +1459,9 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                         encoding=encoding),
                 (self.values.tobytes(),),
                 ))
+
+
+doc_update(Index.__init__, selector='index_init')
 
 #-------------------------------------------------------------------------------
 

@@ -3256,7 +3256,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return unpackb(msgpack_data) # type: ignore
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='container_init', class_name='Frame')
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
             *,

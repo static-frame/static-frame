@@ -8,6 +8,7 @@ import typing_extensions as tp
 from arraymap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index import INDEX_GO_LEAF_SLOTS
@@ -64,7 +65,6 @@ class IndexDatetime(Index[np.datetime64]):
     _DTYPE: DtypeAny # define in derived class
     __slots__ = ()
 
-    # @doc_inject(selector='index_date_time_init')
     def __init__(self,
             labels: IndexInitializer,
             *,
@@ -187,6 +187,10 @@ class IndexDatetime(Index[np.datetime64]):
                 key_to_datetime_key(values),
                 side_left=side_left,
                 )
+
+
+
+doc_update(IndexDatetime.__init__, selector='index_date_time_init')
 
 
 #-------------------------------------------------------------------------------

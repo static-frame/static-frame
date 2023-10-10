@@ -39,6 +39,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import RelabelInvalid
@@ -150,7 +151,6 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 def _NA_VALUES_CONSTRCTOR(count: int) -> None: ...
 
 class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
-# class Series(ContainerOperand):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
     '''
     __slots__ = (
@@ -531,7 +531,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     #---------------------------------------------------------------------------
-    # @doc_inject(selector='container_init', class_name='Series')
     def __init__(self,
             values: SeriesInitializer,
             *,
@@ -3236,7 +3235,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         '''
         return ufunc_unique1d(self.values)
 
-    # @doc_inject()
+    @doc_inject()
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
@@ -3564,6 +3563,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
 
+
+doc_update(Series.__init__, selector='container_init', class_name='Series')
 
 #-------------------------------------------------------------------------------
 class SeriesAssign(Assign):
