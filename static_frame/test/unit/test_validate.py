@@ -100,7 +100,7 @@ def test_check_type_d2():
 
     tc3 = TypeClinic(dict(a=3, b=10.5))
     assert not tc1.check(Record2).validated
-    assert scrub_str(tc1.check(Record2).to_str()) == "In Record2 Key 'c' Expected totality but key 'c' not provided"
+    assert scrub_str(tc1.check(Record2).to_str()) == "In Record2 Key 'c' Expected key not provided"
 
 def test_check_type_d3():
     class Record1(tp.TypedDict, total=False):
@@ -122,6 +122,31 @@ def test_check_type_d4():
     cr = tc.check(Record2)
     assert not cr.validated
     assert scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
+
+
+def test_check_type_d5():
+
+    class Record1(tp.TypedDict):
+        a: tp.Required[int]
+        b: tp.Required[float]
+        c: tp.NotRequired[str]
+
+    class Record2(tp.TypedDict):
+        a: int
+        b: float
+        c: tp.NotRequired[str]
+
+    tc1 = TypeClinic(dict(a=3, b=10.5))
+    assert tc1.check(Record1).validated
+    assert tc1.check(Record2).validated
+
+    tc2 = TypeClinic(dict(a=3, b=10.5, c='foo'))
+    assert tc2.check(Record1).validated
+    assert tc2.check(Record2).validated
+
+    # tc3 = TypeClinic(dict(b=10.5, c='foo'))
+    # assert not tc3.check(Record2).validated
+    # assert scrub_str(tc1.check(Record2).to_str()) == "In Record2 Key 'c' Expected key not provided"
 
 
 #-------------------------------------------------------------------------------

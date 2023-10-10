@@ -54,6 +54,8 @@ def _iter_unpack_classes() -> tp.Iterable[tp.Type[tp.Any]]:
 
 UNPACK_TYPES = tuple(_iter_unpack_classes())
 
+def is_generic(hint: tp.Any) -> bool:
+    return isinstance(hint, GENERIC_TYPES)
 
 def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
@@ -80,7 +82,7 @@ ERROR_MESSAGE_TYPE = object()
 def to_name(v: tp.Any,
         func_to_str: tp.Callable[..., str] = str,
         ) -> str:
-    if isinstance(v, GENERIC_TYPES):
+    if is_generic(v):
         if hasattr(v, '__name__'):
             name = v.__name__
         else:
@@ -371,22 +373,27 @@ def iter_typeddict(
         hint: tp.Any,
         parent: TParent,
         ) -> tp.Iterable[TValidation]:
+
     # hint is a typedict class; returns dict of key name and value
-    # import ipdb; ipdb.set_trace()
     hints = tp.get_type_hints(hint, include_extras=True)
-    total = getattr(hint, '__total__', True)
+    total = hint.__total__
 
-    for k, h_value in hints.items():
-        # TODO: check for required values, handle missing keys
+    for k, hint_key in hints.items(): # iterating hints retains order
         parent_k = parent + (f'Key {k!r}',)
-        if k not in value:
-            if total:
-                yield ERROR_MESSAGE_TYPE, f'Expected totality but key {k!r} not provided', parent_k
+        k_found = k in value
+        if not total or (is_generic(hint_key) and tp.get_origin(hint_key) is tp.NotRequired):
+            required = False
         else:
-            yield value[k], h_value, parent_k
+            required = True
 
-    if keys_over := value.keys() - hints.keys():
-        yield ERROR_MESSAGE_TYPE, f"Keys provided not expected: {', '.join(f'{k!r}' for k in keys_over)}", parent
+        if k_found:
+            yield value[k], hint_key, parent_k
+        elif not k_found and required:
+            yield ERROR_MESSAGE_TYPE, f'Expected key not provided', parent_k
+
+    # get over-specified keys
+    if keys_os := value.keys() - hints.keys():
+        yield ERROR_MESSAGE_TYPE, f"Keys provided not expected: {', '.join(f'{k!r}' for k in sorted(keys_os))}", parent
 
 
 
@@ -627,7 +634,7 @@ def _check(
                 e_log.extend(u_log)
         elif isinstance(h, Constraint):
             e_log.extend(h.iter_error_log(v, h, p_next))
-        elif isinstance(h, GENERIC_TYPES):
+        elif is_generic(h):
             # have a generic container
             origin = tp.get_origin(h)
 
@@ -656,6 +663,10 @@ def _check(
                     l_log.extend(c_log)
                 else: # no breaks, so no matches within union
                     e_log.extend(l_log)
+            elif origin == tp.Required or origin == tp.NotRequired:
+                # semantics handled elsewhere, just unpack
+                [h_type] = tp.get_args(h)
+                q.append((v, h_type, p_next))
             else:
                 if not isinstance(v, origin):
                     e_log.append((v, origin, p))
