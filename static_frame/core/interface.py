@@ -435,7 +435,7 @@ class InterfaceGroup:
     AccessorFillValue = 'Accessor Fill Value'
     AccessorRe = 'Accessor Regular Expression'
     AccessorHashlib = 'Accessor Hashlib'
-    AccessorTypeClinic = 'Accessor TypeClinic'
+    AccessorTypeClinic = 'Accessor Type Clinic'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -461,6 +461,7 @@ INTERFACE_GROUP_DOC = {
     'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
     'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
     'Accessor Hashlib': 'Interface exposing cryptographic hashing via hashlib interfaces.',
+    'Accessor Type Clinic': 'Interface for providing a type hint from a container or validating a container against a type hint.'
     }
 
 class InterfaceRecord(tp.NamedTuple):
