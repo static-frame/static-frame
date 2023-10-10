@@ -117,7 +117,7 @@ Overview: {{ name }}: {{ ig }}
 
 .. csv-table::
     :header-rows: 0
-    :widths: 10, 45, 45
+    :widths: 12, 44, 44
 
     {% for signature, row in frame_items.iter_tuple_items(axis=1) -%}
         {% if signature.startswith('[') -%}

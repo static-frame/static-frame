@@ -47,6 +47,15 @@
 static-frame
 =============
 
+Immutable and grow-only DataFrames with full static typing support and run-time type and data validation.
+
+Among the many Python DataFrame libraries that exist today, StaticFrame offers an alternative.
+
+* An immutable data-model, providing extraordinary perforamnce advantages for basic operations
+* Statically type the index, columns, and columnar types of DataFrames
+* Full support of NumPy dtypes and datetime64 units
+
+
 A library of immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface. StaticFrame is suitable for applications in data science, data engineering, finance, scientific computing, and related fields where reducing opportunities for error by prohibiting in-place mutation is critical.
 
 While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy units; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy and two C-extension packages (maintained by the StaticFrame team): Pandas is not a dependency.
