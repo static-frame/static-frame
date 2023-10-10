@@ -395,9 +395,6 @@ def iter_typeddict(
     if keys_os := value.keys() - hints.keys():
         yield ERROR_MESSAGE_TYPE, f"Keys provided not expected: {', '.join(f'{k!r}' for k in sorted(keys_os))}", parent
 
-
-
-
 # NOTE: For SF containers, we create an instance of dtype.type() so as to not modify h_generic, as it might be Union or other generic that cannot be wrapped in a tp.Type. This returns a "sample" instance of the type that can be used for testing. Caching this value does not seem a benefit.
 
 def iter_series_checks(
@@ -835,6 +832,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
 
     return value.__class__
+
 
 class TypeClinic:
     __slots__ = ('_value',)

@@ -7,7 +7,8 @@
 StaticFrame
 =========================================
 
-Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface.
+Immutable and grow-only DataFrames with static typing and run-time validation
+
 
 - Code: https://github.com/static-frame/static-frame
 - Packages: https://pypi.org/project/static-frame

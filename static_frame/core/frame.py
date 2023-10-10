@@ -63,6 +63,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
@@ -9222,6 +9223,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 type_delimiter_right='$>$',
                 )
         return repr(self.display(config))
+
+# NOTE: must not use decorator to avoid mypy confusion on interface
+doc_update(Frame.__init__, selector='container_init', class_name='Frame')
 
 #-------------------------------------------------------------------------------
 

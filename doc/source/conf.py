@@ -103,9 +103,10 @@ jinja_contexts = {'ctx': get_jinja_contexts()}
 extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.viewcode',
+        'sphinx.ext.napoleon',
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
-        'sphinxcontrib.napoleon',
+        # 'sphinxcontrib.napoleon',
         'sphinx_jinja',
         ]
 
