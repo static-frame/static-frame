@@ -1203,7 +1203,7 @@ def test_type_clinic_to_hint_j2():
 @skip_pyle38
 def test_type_clinic_to_hint_j3():
 
-    assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 3: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
+    assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 30: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
 
     assert TypeClinic({'a': 3, 'x': 30, b'z': 10.5}).to_hint() == dict[tp.Union[str, bytes], tp.Union[int, float]]
 

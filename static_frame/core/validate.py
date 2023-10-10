@@ -389,7 +389,7 @@ def iter_typeddict(
         if k_found:
             yield value[k], hint_key, parent_k
         elif not k_found and required:
-            yield ERROR_MESSAGE_TYPE, f'Expected key not provided', parent_k
+            yield ERROR_MESSAGE_TYPE, 'Expected key not provided', parent_k
 
     # get over-specified keys
     if keys_os := value.keys() - hints.keys():
