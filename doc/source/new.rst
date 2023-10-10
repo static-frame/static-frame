@@ -1,6 +1,17 @@
 What is New in StaticFrame
 ===============================
 
+
+2.0.0
+-----------
+
+Added ``via_type_check`` interfaces to all containers.
+
+Added ``TypeClinic``, ``TypeCheckResult``, and ``TypeCheckError``.
+
+
+
+
 1.6.5
 -----------
 

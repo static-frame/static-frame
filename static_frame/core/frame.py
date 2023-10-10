@@ -4243,7 +4243,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             index: {level}
             columns: {level}
-            *,
+            *
             index_constructor:
             columns_constructor:
         '''
@@ -6437,7 +6437,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         Args:
             column:
-            *,
+            *
             drop:
             index_constructor:
         '''
@@ -6659,7 +6659,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         Args:
             index:
-            *,
+            *
             drop:
             columns_constructor:
         '''
@@ -7694,7 +7694,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_fields
             columns_fields
             data_fields
-            *,
+            *
             fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
             index_constructor:

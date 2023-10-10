@@ -991,7 +991,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         Args:
             blocks:
-            *,
+            *
             index: An array, :obj:`Index`, or :obj:`IndexHierarchy`.
             columns: An array, :obj:`Index`, or :obj:`IndexHierarchy`.
             name:

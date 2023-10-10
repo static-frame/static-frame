@@ -587,7 +587,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         Args:
             labels: an iterator or generator of tuples.
-            *,
+            *
             name:
             reorder_for_hierarchy: an optional argument that will ensure the resulting index is arranged in a tree-like structure.
             index_constructors:
@@ -2495,7 +2495,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
-            *,
+            *
             condition:
         '''
         return self._drop_missing(isna_array, condition)
@@ -2507,7 +2507,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
-            *,
+            *
             condition:
         '''
         return self._drop_missing(isfalsy_array, condition)

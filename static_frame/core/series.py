@@ -438,7 +438,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         Args:
             containers: Iterable of :obj:`Series`.
-            *,
+            *
             index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
             union: If True, and no ``index`` argument is supplied, a union index from ``containers`` will be used; if False, the intersection index will be used.
             name:
@@ -3404,7 +3404,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         Args:
             axis: Axis 1 (default) creates a single-column :obj:`Frame` with the same index: axis 0 creates a single-row :obj:`Frame` with the index as columns.
-            *,
+            *
             index_constructor:
             columns_constructor:
             name:
@@ -3436,7 +3436,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         Args:
             axis:
-            *,
+            *
             index_constructor:
             columns_constructor:
         Returns:
@@ -3466,7 +3466,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         Args:
             axis:
-            *,
+            *
             index_constructor:
             columns_constructor:
         Returns:

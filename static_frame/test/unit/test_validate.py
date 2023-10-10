@@ -9,7 +9,7 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import Validator
 # from static_frame.core.validate import validate_pair
-from static_frame.core.validate import CheckResult
+from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
@@ -163,7 +163,7 @@ def test_is_union_a():
 #-------------------------------------------------------------------------------
 
 def test_check_result_a():
-    assert CheckResult([]).validated
+    assert TypeCheckResult([]).validated
 
 def test_check_result_b():
     try:
@@ -291,8 +291,8 @@ def test_check_type_containers_e():
 
 def scrub_str(s: str) -> str:
     s = s.replace('\n', ' '
-            ).replace(CheckResult._LINE, ''
-            ).replace(CheckResult._CORNER, ''
+            ).replace(TypeCheckResult._LINE, ''
+            ).replace(TypeCheckResult._CORNER, ''
             ).replace('tuple[', 'Tuple[') # normalize tuple presentation
     while '  ' in s:
         s = s.replace('  ', ' ')
@@ -971,7 +971,7 @@ def test_check_frame_g():
 
 #-------------------------------------------------------------------------------
 
-def get_hints(records: tp.Iterable[TValidation] | CheckResult) -> tp.Tuple[str]:
+def get_hints(records: tp.Iterable[TValidation] | TypeCheckResult) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
 def test_validate_labels_a1():
@@ -1132,7 +1132,7 @@ def test_type_clinic_a():
             np.int64,
             ]
 
-    assert str(TypeClinic(f).check(h)) == '<CheckResult: 2 errors>'
+    assert str(TypeClinic(f).check(h)) == '<TypeCheckResult: 2 errors>'
     post = TypeClinic(f).check(h).to_str()
     assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid'
 

@@ -114,8 +114,8 @@ def to_signature(
 
 
 
-class CheckResult:
-    '''A ``CheckResult`` instance stores zero or more error messages resulting from a check.
+class TypeCheckResult:
+    '''A ``TypeCheckResult`` instance stores zero or more error messages resulting from a check.
     '''
     __slots__ = ('_log',)
 
@@ -179,13 +179,13 @@ class CheckResult:
 
     def __repr__(self) -> str:
         log_len = len(self)
-        return f'<CheckResult: {log_len} {"errors" if log_len != 1 else "error"}>'
+        return f'<TypeCheckResult: {log_len} {"errors" if log_len != 1 else "error"}>'
 
 
-class CheckError(TypeError):
+class TypeCheckError(TypeError):
     '''A TypeError subclass for exposing check errors.
     '''
-    def __init__(self, cr: CheckResult) -> None:
+    def __init__(self, cr: TypeCheckResult) -> None:
         TypeError.__init__(self, cr.to_str())
 
 
@@ -592,7 +592,7 @@ def _check(
         hint: tp.Any,
         parent: TParent = (),
         fail_fast: bool = False,
-        ) -> CheckResult:
+        ) -> TypeCheckResult:
 
     # Check queue: queue all checks
     q = deque(((value, hint, parent),))
@@ -608,7 +608,7 @@ def _check(
 
     while q:
         if fail_fast and e_log:
-            return CheckResult(e_log)
+            return TypeCheckResult(e_log)
 
         v, h, p = q.popleft()
         # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checkls
@@ -707,64 +707,11 @@ def _check(
                 continue
             e_log.append((v, h, p))
 
-    return CheckResult(e_log)
+    return TypeCheckResult(e_log)
 
 #-------------------------------------------------------------------------------
 # public interfaces
 
-
-TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
-
-@tp.overload
-def check_interface(func: TVFunc) -> TVFunc: ...
-
-@tp.overload
-def check_interface(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
-
-def check_interface(
-        func: TVFunc | None = None,
-        *,
-        fail_fast: bool = False,
-        ) -> tp.Any:
-    '''A function decorator to perform run-time checking of function arguments and return values based on the functions type annotations, including type hints and ``Contraint`` subclasses.
-    '''
-
-    def decorator(func: TVFunc) -> TVFunc:
-
-        @wraps(func)
-        def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-            # include_extras insures that Annotated generics are returned
-            hints = tp.get_type_hints(func, include_extras=True)
-
-            sig = Signature.from_callable(func)
-            sig_bound = sig.bind(*args, **kwargs)
-            sig_bound.apply_defaults()
-            sig_str = to_signature(sig_bound, hints)
-            parent = (f'args of {sig_str}',)
-
-            for k, v in sig_bound.arguments.items():
-                if h_p := hints.get(k, None):
-                    if cr := _check(v, h_p, parent, fail_fast=fail_fast):
-                        raise CheckError(cr)
-
-            post = func(*args, **kwargs)
-
-            if h_return := hints.get('return', None):
-                if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
-                    raise CheckError(cr)
-
-            return post
-
-        return tp.cast(TVFunc, wrapper)
-
-    if func is not None:
-        return decorator(func)
-
-    return decorator
-
-
-
-#-------------------------------------------------------------------------------
 def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
     if isinstance(value, type):
         return tp.Type[value]
@@ -862,8 +809,8 @@ class TypeClinic:
             hint: tp.Any,
             /, *,
             fail_fast: bool = False
-            ) -> CheckResult:
-        '''Given a hint (a type and/or generic alias), return a ``CheckResult`` object describing the result of the check.
+            ) -> TypeCheckResult:
+        '''Given a hint (a type and/or generic alias), return a ``TypeCheckResult`` object describing the result of the check.
 
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
@@ -875,13 +822,61 @@ class TypeClinic:
             /, *,
             fail_fast: bool = False,
             ) -> None:
-        '''Given a hint (a type and/or generic alias), raise a ``CheckError`` exception describing the result of the check.
+        '''Given a hint (a type and/or generic alias), raise a ``TypeCheckError`` exception describing the result of the check.
 
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
         if cr := self.check(hint, fail_fast=fail_fast):
-            raise CheckError(cr)
+            raise TypeCheckError(cr)
 
 
 
+TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
+
+@tp.overload
+def check_interface(func: TVFunc) -> TVFunc: ...
+
+@tp.overload
+def check_interface(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+
+def check_interface(
+        func: TVFunc | None = None,
+        *,
+        fail_fast: bool = False,
+        ) -> tp.Any:
+    '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``TypeCheckError`` on failure.
+    '''
+
+    def decorator(func: TVFunc) -> TVFunc:
+
+        @wraps(func)
+        def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            # include_extras insures that Annotated generics are returned
+            hints = tp.get_type_hints(func, include_extras=True)
+
+            sig = Signature.from_callable(func)
+            sig_bound = sig.bind(*args, **kwargs)
+            sig_bound.apply_defaults()
+            sig_str = to_signature(sig_bound, hints)
+            parent = (f'args of {sig_str}',)
+
+            for k, v in sig_bound.arguments.items():
+                if h_p := hints.get(k, None):
+                    if cr := _check(v, h_p, parent, fail_fast=fail_fast):
+                        raise TypeCheckError(cr)
+
+            post = func(*args, **kwargs)
+
+            if h_return := hints.get('return', None):
+                if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
+                    raise TypeCheckError(cr)
+
+            return post
+
+        return tp.cast(TVFunc, wrapper)
+
+    if func is not None:
+        return decorator(func)
+
+    return decorator

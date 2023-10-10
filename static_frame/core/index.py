@@ -1390,8 +1390,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         Args:
             level: A hashable to used as the new root.
-            *,
-            index_constructor:
+            *
+            index_constructor
         '''
         from static_frame import Index
         from static_frame import IndexGO
