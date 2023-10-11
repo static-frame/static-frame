@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import types
 import typing
+import warnings
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
@@ -10,7 +11,6 @@ from inspect import BoundArguments
 from inspect import Signature
 from itertools import chain
 from itertools import repeat
-import warnings
 
 import numpy as np
 import typing_extensions as tp
@@ -824,7 +824,7 @@ class TypeClinic:
             /, *,
             fail_fast: bool = False,
             category: tp.Type[Warning] = UserWarning,
-            ):
+            ) -> None:
         if cr := self.check(hint, fail_fast=fail_fast):
             warnings.warn(cr.to_str(), category)
 
