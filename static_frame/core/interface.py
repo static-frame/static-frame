@@ -618,20 +618,23 @@ class InterfaceRecord(tp.NamedTuple):
                         getattr(obj.__class__, field).__doc__,
                         max_doc_chars=max_doc_chars,
                         )
-                if field == 'status':
-                    delegate_obj = getattr(obj.__class__, field) # from class for property
-                    assert isinstance(delegate_obj, property)
+                delegate_reference = f'{obj.__class__.__name__}.{field}'
+                delegate_obj = getattr(obj, field)
+
+                if field == 'status': # a property
+                    signature = f'{name}.{field}' # manual construct signature
                     yield cls(cls_name,
                             InterfaceGroup.Method,
-                            f'{name}.{field}', # manual construct signature
+                            signature,
                             doc,
                             reference,
+                            delegate_reference=delegate_reference,
+                            delegate_is_attr=True,
                             is_attr=True,
-                            signature_no_args=f'{name}.{field}'
+                            signature_no_args=signature,
+                            use_signature=True,
                             )
                 else:
-                    delegate_reference = f'{obj.__class__.__name__}.{field}'
-                    delegate_obj = getattr(obj, field)
                     signature, signature_no_args = _get_signatures(
                             name,
                             delegate_obj,
@@ -644,6 +647,8 @@ class InterfaceRecord(tp.NamedTuple):
                             doc,
                             reference,
                             delegate_reference=delegate_reference,
+                            delegate_is_attr=False,
+                            is_attr=True,
                             signature_no_args=signature_no_args,
                             use_signature=True,
                             )
