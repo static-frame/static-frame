@@ -49,20 +49,25 @@ static-frame
 
 Immutable and grow-only DataFrames with full static typing support and run-time type and data validation.
 
-Among the many Python DataFrame libraries that exist today, StaticFrame offers an alternative.
+Among the many Python DataFrame libraries, StaticFrame offers an alternative for engineers that prioritize correctness, maintainability, and reducing opportunities for error.
 
-* An immutable data-model, providing extraordinary perforamnce advantages for basic operations
-* Statically type the index, columns, and columnar types of DataFrames
-* Full support of NumPy dtypes and datetime64 units
+* An immutable data-model, providing excllent performance for common operations
+* Use Python type hints to statically type the index, columns, and columnar types of DataFrames
+* Use type hints and a family of validators to provide run-time type and data validation
+* A uniform interface, avoiding the complexity and inconsistencies of Pandas
+* Full support of all NumPy dtypes and datetime64 units
+* Interchange with CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet
+* Output to xarray, VisiData, HTML, RST, Markdown, and LaTeX, compatible with Jupyter
+* High performance serialization and memory mapping with NPZ abd NPY encodings
+* Novel multi-table containers (the Bus and Yarn) support lazy-loading data
+* A deffered processors of Frames (the Batch) permits compact expressions of sequential operations on groups, windows, or any iterator of Frames
+* Comprehensive documentation and thousands of examples
+* Depends only on NumPy and team-maintained C-extension packages for core functionality
 
 
-A library of immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface. StaticFrame is suitable for applications in data science, data engineering, finance, scientific computing, and related fields where reducing opportunities for error by prohibiting in-place mutation is critical.
+.. A wide variety of table formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. Full serialization is also available via custom NPZ and NPY encodings, the latter supporting memory mapping.
 
-While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy units; hierarchical indices are seamlessly integrated; and uniform approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy and two C-extension packages (maintained by the StaticFrame team): Pandas is not a dependency.
-
-A wide variety of table formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. Full serialization is also available via custom NPZ and NPY encodings, the latter supporting memory mapping.
-
-StaticFrame features a family of multi-table containers: the Bus is a lazily-loaded container of tables, the Batch is a deferred processor of tables, the Yarn is virtual concatenation of many Buses, and the Quilt is a virtual concatenation of all tables within a single Bus or Yarn. All permit operating on large collections of tables with minimal memory overhead, as well as writing to and reading from zipped bundles of pickles, NPZ, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
+.. StaticFrame features a family of multi-table containers: the Bus is a lazily-loaded container of tables, the Batch is a deferred processor of tables, the Yarn is virtual concatenation of many Buses, and the Quilt is a virtual concatenation of all tables within a single Bus or Yarn. All permit operating on large collections of tables with minimal memory overhead, as well as writing to and reading from zipped bundles of pickles, NPZ, Parquet, or delimited files, as well as XLSX workbooks, SQLite, and HDF5.
 
 
 Code: https://github.com/static-frame/static-frame

@@ -603,7 +603,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> TFrameAny:
-        '''Selector of columns by label for consolidation.
+        '''Return the full ``Frame``, selecting with ``key`` a subset of columns for consolidation.
 
         Args:
             key: {key_loc}

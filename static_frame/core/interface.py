@@ -488,7 +488,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
         if name == 'values':
             signature = signature_no_args = name
         else:
@@ -516,7 +516,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
         if name != 'interface':
             # signature = f'{name}()'
             signature, signature_no_args = _get_signatures(
@@ -551,10 +551,12 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
-        if isinstance(obj, (InterfaceFrameAsType, InterfaceIndexHierarchyAsType, InterfaceBatchAsType)):
+            ) -> tp.Iterator[InterfaceRecord]:
+        if isinstance(obj, (InterfaceFrameAsType,
+                InterfaceIndexHierarchyAsType,
+                InterfaceBatchAsType,
+                )):
             for field in obj.INTERFACE:
-
                 delegate_obj = getattr(obj, field)
                 delegate_reference = f'{obj.__class__.__name__}.{field}'
                 if field == Features.GETITEM:
@@ -607,7 +609,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
         '''Interfaces that are not full selectors or via but define an INTERFACE component.
         '''
         if isinstance(obj, InterfaceConsolidate):
@@ -642,7 +644,8 @@ class InterfaceRecord(tp.NamedTuple):
                             doc,
                             reference,
                             delegate_reference=delegate_reference,
-                            signature_no_args=signature_no_args
+                            signature_no_args=signature_no_args,
+                            use_signature=True,
                             )
         else:
             # TypeBlocks has a consolidate method
@@ -659,8 +662,6 @@ class InterfaceRecord(tp.NamedTuple):
                     reference,
                     signature_no_args=signature_no_args
                     )
-        # import ipdb; ipdb.set_trace()
-
 
     @classmethod
     def gen_from_constructor(cls, *,
@@ -672,7 +673,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         signature, signature_no_args = _get_signatures(
                 name,
@@ -698,7 +699,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         signature, signature_no_args = _get_signatures(
                 name,
@@ -724,7 +725,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         signature, signature_no_args = _get_signatures(
                 name,
@@ -785,7 +786,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues:
             group = InterfaceGroup.AccessorValues
@@ -871,7 +872,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
         '''
         For root __getitem__ methods, as well as __getitem__ on InterGetItemLocReduces objects.
         '''
@@ -910,7 +911,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         for field in cls_interface.INTERFACE:
             # get from object, not class
@@ -963,7 +964,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_interface: tp.Type[Interface[TVContainer_co]],
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         for field in cls_interface.INTERFACE:
 
@@ -986,7 +987,6 @@ class InterfaceRecord(tp.NamedTuple):
 
                 # use the delegate to get the root signature, as the root is just a property that returns an InterfaceAssignTrio or similar
                 if field != Features.GETITEM:
-                    delegate_is_attr = True
                     signature, signature_no_args = _get_signatures(
                             f'{name}.{field}', # make compound interface
                             delegate_obj.__getitem__,
@@ -996,7 +996,6 @@ class InterfaceRecord(tp.NamedTuple):
                             max_args=max_args,
                             )
                 else: # is getitem
-                    delegate_is_attr = False
                     signature, signature_no_args = _get_signatures(
                             name, # on the root, no change necessary
                             delegate_obj,
@@ -1027,7 +1026,7 @@ class InterfaceRecord(tp.NamedTuple):
             doc: str,
             max_args: int,
             max_doc_chars: int,
-            ) -> tp.Iterator['InterfaceRecord']:
+            ) -> tp.Iterator[InterfaceRecord]:
 
         signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
 
