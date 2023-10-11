@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from functools import partial
 
 import numpy as np
@@ -1210,8 +1211,12 @@ def test_type_clinic_to_hint_j3():
 #-------------------------------------------------------------------------------
 def test_type_clinic_warn_a():
     idx = sf.IndexDate(('2022-01-03', '2018-04-02'))
-    TypeClinic(idx).warn(sf.IndexSecond)
-    # import ipdb; ipdb.set_trace()
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always", DeprecationWarning)
+        TypeClinic(idx).warn(sf.IndexSecond, category=DeprecationWarning)
+        assert 'Expected IndexSecond, provided IndexDate invalid' in str(w[0])
+
 
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():
