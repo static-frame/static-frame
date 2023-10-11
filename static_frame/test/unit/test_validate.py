@@ -20,6 +20,7 @@ from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
+from static_frame.core.validate import InterfaceClinic
 from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
@@ -431,7 +432,7 @@ def test_check_interface_b():
     except TypeError as e:
         assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool Expected int, provided str invalid'
 
-def test_check_interface_c():
+def test_check_interface_c1():
 
     @check_interface(fail_fast=False)
     def proc1(a: int, b) -> int:
@@ -443,6 +444,17 @@ def test_check_interface_c():
     with pytest.raises(TypeError):
         assert proc1('foo', 1) == 2
 
+def test_check_interface_c2():
+
+    @InterfaceClinic.check(fail_fast=False)
+    def proc1(a: int, b) -> int:
+        return a * b
+
+    assert proc1(2, False) == 0
+    assert proc1(2, 1) == 2
+
+    with pytest.raises(TypeError):
+        assert proc1('foo', 1) == 2
 
 def test_check_interface_d():
 

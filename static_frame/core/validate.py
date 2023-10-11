@@ -892,3 +892,61 @@ def check_interface(
         return decorator(func)
 
     return decorator
+
+
+class InterfaceClinic:
+
+    @tp.overload
+    @staticmethod
+    def check(func: TVFunc) -> TVFunc: ...
+
+    @tp.overload
+    @staticmethod
+    def check(fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+
+    @tp.overload
+    @staticmethod
+    def check(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+
+    @staticmethod
+    def check(
+            func: TVFunc | None = None,
+            *,
+            fail_fast: bool = False,
+            ) -> tp.Any:
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``TypeCheckError`` on failure.
+        '''
+
+        def decorator(func: TVFunc) -> TVFunc:
+
+            @wraps(func)
+            def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+                # include_extras insures that Annotated generics are returned
+                hints = tp.get_type_hints(func, include_extras=True)
+
+                sig = Signature.from_callable(func)
+                sig_bound = sig.bind(*args, **kwargs)
+                sig_bound.apply_defaults()
+                sig_str = to_signature(sig_bound, hints)
+                parent = (f'args of {sig_str}',)
+
+                for k, v in sig_bound.arguments.items():
+                    if h_p := hints.get(k, None):
+                        if cr := _check(v, h_p, parent, fail_fast=fail_fast):
+                            raise TypeCheckError(cr)
+
+                post = func(*args, **kwargs)
+
+                if h_return := hints.get('return', None):
+                    if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
+                        raise TypeCheckError(cr)
+
+                return post
+
+            return tp.cast(TVFunc, wrapper)
+
+        if func is not None:
+            return decorator(func)
+
+        return decorator
+
