@@ -9,11 +9,11 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import Validator
 # from static_frame.core.validate import validate_pair
-from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
 from static_frame.core.validate import TValidation
+from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import check_interface
