@@ -98,7 +98,6 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.validate import TypeClinic
-from static_frame.core.validate import check_interface
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
