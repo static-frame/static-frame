@@ -1207,8 +1207,11 @@ def test_type_clinic_to_hint_j3():
 
     assert TypeClinic({'a': 3, 'x': 30, b'z': 10.5}).to_hint() == dict[tp.Union[str, bytes], tp.Union[int, float]]
 
-
-
+#-------------------------------------------------------------------------------
+def test_type_clinic_warn_a():
+    idx = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    TypeClinic(idx).warn(sf.IndexSecond)
+    # import ipdb; ipdb.set_trace()
 
 #-------------------------------------------------------------------------------
 def test_via_type_clinic_a():

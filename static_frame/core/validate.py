@@ -10,6 +10,7 @@ from inspect import BoundArguments
 from inspect import Signature
 from itertools import chain
 from itertools import repeat
+import warnings
 
 import numpy as np
 import typing_extensions as tp
@@ -787,6 +788,7 @@ class TypeClinic:
     INTERFACE = (
         'to_hint',
         'check',
+        'warn',
         '__call__',
         '__repr__',
         )
@@ -808,7 +810,7 @@ class TypeClinic:
     def check(self,
             hint: tp.Any,
             /, *,
-            fail_fast: bool = False
+            fail_fast: bool = False,
             ) -> TypeCheckResult:
         '''Given a hint (a type and/or generic alias), return a ``TypeCheckResult`` object describing the result of the check.
 
@@ -816,6 +818,16 @@ class TypeClinic:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
         return _check(self._value, hint, fail_fast=fail_fast)
+
+    def warn(self,
+            hint: tp.Any,
+            /, *,
+            fail_fast: bool = False,
+            category: tp.Type[Warning] = UserWarning,
+            ):
+        if cr := self.check(hint, fail_fast=fail_fast):
+            warnings.warn(cr.to_str(), category)
+
 
     def __call__(self,
             hint: tp.Any,
