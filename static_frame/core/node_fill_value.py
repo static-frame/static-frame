@@ -72,7 +72,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
             '_axis',
             )
 
-    INTERFACE = INTERFACE_FILL_VALUE
+    _INTERFACE = INTERFACE_FILL_VALUE
 
     def __init__(self,
             container: TVContainer_co,
@@ -427,7 +427,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is FrameGO
 
     __slots__ = ()
-    INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
+    _INTERFACE = InterfaceFillValue._INTERFACE + ( #type: ignore
             '__setitem__',
             )
 
@@ -443,7 +443,7 @@ class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is F
 class InterfaceBatchFillValue(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
-    INTERFACE = INTERFACE_FILL_VALUE
+    _INTERFACE = INTERFACE_FILL_VALUE
 
     __slots__ = (
             '_batch_apply',

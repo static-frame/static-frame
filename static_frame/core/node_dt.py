@@ -83,7 +83,7 @@ class InterfaceDatetime(Interface[TVContainer_co]):
             '_fill_value',
             '_fill_value_dtype',
             )
-    INTERFACE = INTERFACE_DT
+    _INTERFACE = INTERFACE_DT
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
@@ -780,7 +780,7 @@ class InterfaceBatchDatetime(InterfaceBatch):
             '_batch_apply',
             '_fill_value',
             )
-    INTERFACE = INTERFACE_DT
+    _INTERFACE = INTERFACE_DT
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],

@@ -3570,7 +3570,7 @@ doc_update(Series.__init__, selector='container_init', class_name='Series')
 class SeriesAssign(Assign):
     __slots__ = ('container', 'key')
 
-    INTERFACE = (
+    _INTERFACE = (
         '__call__',
         'apply',
         'apply_element',

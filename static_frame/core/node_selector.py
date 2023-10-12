@@ -83,17 +83,17 @@ TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
 
 class Interface(tp.Generic[TVContainer_co]):
     __slots__ = ()
-    INTERFACE: tp.Tuple[str, ...] = ()
+    _INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceBatch:
     __slots__ = ()
-    INTERFACE: tp.Tuple[str, ...] = ()
+    _INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterGetItemILocReduces(Interface[TVContainer_co]):
     '''Interface for iloc selection that reduces dimensionality.
     '''
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
@@ -115,7 +115,7 @@ class InterGetItemILoc(Interface[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
     '''
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
@@ -131,7 +131,7 @@ class InterGetItemILoc(Interface[TVContainer_co]):
 class InterGetItemLocReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelector], TVContainer_co]
 
@@ -151,7 +151,7 @@ class InterGetItemLocReduces(Interface[TVContainer_co]):
 class InterGetItemLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelector], TVContainer_co]
 
@@ -167,7 +167,7 @@ class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelectorCompound], tp.Any]
 
@@ -211,7 +211,7 @@ class InterGetItemLocCompound(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelectorCompound], TVContainer_co]
 
@@ -226,7 +226,7 @@ class InterGetItemLocCompound(Interface[TVContainer_co]):
 class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TILocSelectorCompound], tp.Any]
 
@@ -264,7 +264,7 @@ class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 class InterGetItemILocCompound(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TILocSelectorCompound], TVContainer_co]
 
@@ -278,7 +278,7 @@ class InterGetItemILocCompound(Interface[TVContainer_co]):
 class InterfaceGetItemBLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TBlocKey], TVContainer_co]
 
@@ -299,7 +299,7 @@ class InterfaceSelectDuo(Interface[TVContainer_co]):
             '_func_iloc',
             '_func_loc',
             )
-    INTERFACE = ('iloc', 'loc')
+    _INTERFACE = ('iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -325,7 +325,7 @@ class InterfaceSelectTrio(Interface[TVContainer_co]):
             '_func_loc',
             '_func_getitem',
             )
-    INTERFACE = ('__getitem__', 'iloc', 'loc')
+    _INTERFACE = ('__getitem__', 'iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -364,7 +364,7 @@ class InterfaceSelectQuartet(Interface[TVContainer_co]):
             '_func_getitem',
             '_func_bloc',
             )
-    INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
+    _INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -447,7 +447,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
 
 class InterfaceFrameAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
@@ -484,7 +484,7 @@ class InterfaceFrameAsType(Interface[TVContainer_co]):
 
 class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             func_getitem: tp.Callable[[TDepthLevelSpecifier], 'IndexHierarchyAsType']
@@ -547,7 +547,7 @@ class InterfaceBatchAsType(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_batch_apply',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],
@@ -584,7 +584,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
             '_func_getitem',
             )
 
-    INTERFACE = (
+    _INTERFACE = (
             '__getitem__',
             '__call__',
             'status',

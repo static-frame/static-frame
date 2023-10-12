@@ -560,7 +560,7 @@ class InterfaceRecord(tp.NamedTuple):
                 InterfaceIndexHierarchyAsType,
                 InterfaceBatchAsType,
                 )):
-            for field in obj.INTERFACE:
+            for field in obj._INTERFACE:
                 delegate_obj = getattr(obj, field)
                 delegate_reference = f'{obj.__class__.__name__}.{field}'
                 if field == Features.GETITEM:
@@ -614,10 +614,10 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:
-        '''Interfaces that are not full selectors or via but define an INTERFACE component.
+        '''Interfaces that are not full selectors or via but define an _INTERFACE component.
         '''
         if isinstance(obj, InterfaceConsolidate):
-            for field in obj.INTERFACE:
+            for field in obj._INTERFACE:
                 doc = Features.scrub_doc(
                         getattr(obj.__class__, field).__doc__,
                         max_doc_chars=max_doc_chars,
@@ -757,7 +757,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_interface = obj.CLS_DELEGATE
             # IterNodeDelegate or IterNodeDelegateMapable
 
-            for field in cls_interface.INTERFACE: # apply, map, etc
+            for field in cls_interface._INTERFACE: # apply, map, etc
                 delegate_obj = getattr(cls_interface, field)
                 delegate_reference = f'{cls_interface.__name__}.{field}'
                 doc = Features.scrub_doc(
@@ -818,7 +818,7 @@ class InterfaceRecord(tp.NamedTuple):
 
         terminus_name_no_args: tp.Optional[str]
 
-        for field in cls_interface.INTERFACE: # apply, map, etc
+        for field in cls_interface._INTERFACE: # apply, map, etc
             delegate_obj = getattr(cls_interface, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'
             doc = Features.scrub_doc(
@@ -922,7 +922,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:
 
-        for field in cls_interface.INTERFACE:
+        for field in cls_interface._INTERFACE:
             # get from object, not class
             delegate_obj = getattr(obj, field)
             delegate_reference = f'{cls_interface.__name__}.{field}'
@@ -975,7 +975,7 @@ class InterfaceRecord(tp.NamedTuple):
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:
 
-        for field in cls_interface.INTERFACE:
+        for field in cls_interface._INTERFACE:
 
             # get from object, not class
             delegate_obj = getattr(obj, field)
@@ -986,7 +986,7 @@ class InterfaceRecord(tp.NamedTuple):
                     )
 
             # will be either SeriesAssign or FrameAssign
-            for field_terminus in obj.delegate.INTERFACE:
+            for field_terminus in obj.delegate._INTERFACE:
                 terminus_obj = getattr(obj.delegate, field_terminus)
                 terminus_reference = f'{obj.delegate.__name__}.{field_terminus}'
                 terminus_doc = Features.scrub_doc(
@@ -1072,6 +1072,7 @@ class InterfaceRecord(tp.NamedTuple):
 class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
+    _CLS_ONLY = frozenset((WWW, InterfaceClinic))
     _CLS_INIT_SIMPLE = frozenset((
                     ContainerOperandSequence,
                     ContainerOperand,
@@ -1084,7 +1085,9 @@ class InterfaceSummary(Features):
                     Platform,
                     WWW,
                     InterfaceClinic,
-                    ))
+                    )) | _CLS_ONLY
+
+    _SELECTORS = ('__getitem__', 'iloc', 'loc')
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -1148,7 +1151,6 @@ class InterfaceSummary(Features):
                 yield name_attr, None, ContainerBase.__class__.interface #type: ignore
 
         # force these to be ordered at the bottom
-        selectors = ('__getitem__', 'iloc', 'loc')
         selectors_found = set()
 
         for name_attr in sorted(dir(target)):
@@ -1156,7 +1158,7 @@ class InterfaceSummary(Features):
                 continue # skip, provided by metaclass
             if not cls.is_public(name_attr):
                 continue
-            if name_attr in selectors:
+            if name_attr in cls._SELECTORS:
                 selectors_found.add(name_attr)
                 continue
             try:
@@ -1164,7 +1166,7 @@ class InterfaceSummary(Features):
             except NotImplementedError: # base class properties that are not implemented
                 pass
 
-        for name_attr in selectors:
+        for name_attr in cls._SELECTORS:
             if name_attr in selectors_found:
                 yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
 

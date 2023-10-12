@@ -9412,7 +9412,7 @@ class FrameAssign(Assign):
         'key',
         )
 
-    INTERFACE = (
+    _INTERFACE = (
         '__call__',
         'apply',
         'apply_element',

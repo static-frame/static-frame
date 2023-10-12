@@ -786,7 +786,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
 class TypeClinic:
     __slots__ = ('_value',)
 
-    INTERFACE = (
+    _INTERFACE = (
         'to_hint',
         'check',
         'warn',

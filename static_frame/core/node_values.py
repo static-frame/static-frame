@@ -47,7 +47,7 @@ class InterfaceValues(Interface[TVContainer_co]):
             '_unify_blocks',
             '_dtype',
             )
-    INTERFACE = INTERFACE_VALUES
+    _INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
             container: TVContainer_co,
@@ -191,7 +191,7 @@ class InterfaceBatchValues(InterfaceBatch):
             '_unify_blocks',
             '_dtype',
             )
-    INTERFACE = INTERFACE_VALUES
+    _INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],

@@ -85,7 +85,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_apply_type',
             )
 
-    INTERFACE: tp.Tuple[str, ...] = (
+    _INTERFACE: tp.Tuple[str, ...] = (
             'apply',
             'apply_iter',
             'apply_iter_items',
@@ -315,7 +315,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     __slots__ = ()
 
-    INTERFACE = IterNodeDelegate.INTERFACE + (
+    _INTERFACE = IterNodeDelegate._INTERFACE + (
             'map_all',
             'map_all_iter',
             'map_all_iter_items',

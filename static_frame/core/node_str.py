@@ -85,7 +85,7 @@ class InterfaceString(Interface[TVContainer_co]):
             '_ndim',
             '_labels',
             )
-    INTERFACE = INTERFACE_STR
+    _INTERFACE = INTERFACE_STR
 
     def __init__(self,
             blocks: BlocksType,
@@ -615,7 +615,7 @@ class InterfaceBatchString(InterfaceBatch):
     __slots__ = (
             '_batch_apply',
             )
-    INTERFACE = INTERFACE_STR
+    _INTERFACE = INTERFACE_STR
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],

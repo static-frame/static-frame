@@ -18,7 +18,7 @@ class InterfaceHashlib:
             '_encoding',
             )
 
-    INTERFACE = (
+    _INTERFACE = (
             'to_bytes',
             'md5',
             'sha256',

@@ -60,7 +60,7 @@ class InterfaceTranspose(Interface[TVContainer_co]):
             '_container',
             '_fill_value',
             )
-    INTERFACE = INTERFACE_TRANSPOSE
+    _INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
             container: TVContainer_co,
@@ -294,7 +294,7 @@ class InterfaceBatchTranspose(InterfaceBatch):
             '_batch_apply',
             '_fill_value',
             )
-    INTERFACE = INTERFACE_TRANSPOSE
+    _INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],

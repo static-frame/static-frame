@@ -46,7 +46,7 @@ class InterfaceRe(Interface[TVContainer_co]):
             '_blocks_to_container',
             '_pattern',
             )
-    INTERFACE = INTERFACE_RE
+    _INTERFACE = INTERFACE_RE
 
     def __init__(self,
             blocks: BlocksType,
@@ -233,7 +233,7 @@ class InterfaceBatchRe(InterfaceBatch):
             '_pattern',
             '_flags',
             )
-    INTERFACE = INTERFACE_RE
+    _INTERFACE = INTERFACE_RE
 
     def __init__(self,
             batch_apply: tp.Callable[[AnyCallable], 'Batch'],
