@@ -534,7 +534,7 @@ def test_check_interface_g2():
     def proc1(x: int) -> int | None:
         return None
 
-    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == None
+    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) is None
 
     def proc2(x: int) -> int | None:
         return 'foo'
