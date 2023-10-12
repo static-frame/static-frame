@@ -104,7 +104,7 @@ extensions = [
         'sphinx.ext.viewcode',
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
-        'sphinxcontrib.napoleon',
+        'sphinx.ext.napoleon',
         'sphinx_jinja',
         ]
 
