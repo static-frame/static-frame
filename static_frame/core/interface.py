@@ -1072,20 +1072,23 @@ class InterfaceRecord(tp.NamedTuple):
 class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
-    _CLS_ONLY = frozenset((WWW, InterfaceClinic))
+    _CLS_ONLY = frozenset((
+            WWW,
+            InterfaceClinic,
+            ))
     _CLS_INIT_SIMPLE = frozenset((
-                    ContainerOperandSequence,
-                    ContainerOperand,
-                    ContainerBase,
-                    IndexBase,
-                    DisplayConfig,
-                    StoreFilter,
-                    StoreConfig,
-                    DisplayActive,
-                    Platform,
-                    WWW,
-                    InterfaceClinic,
-                    )) | _CLS_ONLY
+            ContainerOperandSequence,
+            ContainerOperand,
+            ContainerBase,
+            IndexBase,
+            DisplayConfig,
+            StoreFilter,
+            StoreConfig,
+            DisplayActive,
+            Platform,
+            WWW,
+            InterfaceClinic,
+            )) | _CLS_ONLY
 
     _SELECTORS = ('__getitem__', 'iloc', 'loc')
 
@@ -1158,6 +1161,9 @@ class InterfaceSummary(Features):
                 continue # skip, provided by metaclass
             if not cls.is_public(name_attr):
                 continue
+            if name_attr == '__init__' and target in cls._CLS_ONLY:
+                continue
+
             if name_attr in cls._SELECTORS:
                 selectors_found.add(name_attr)
                 continue
