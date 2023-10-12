@@ -902,7 +902,7 @@ class InterfaceClinic:
 
     @tp.overload
     @staticmethod
-    def check(fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+    def check(*, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
 
     @tp.overload
     @staticmethod
