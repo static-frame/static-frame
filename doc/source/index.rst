@@ -80,6 +80,9 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/index_nanosecond_go.rst
    api_overview/hloc.rst
    api_overview/iloc.rst
+   api_overview/type_clinic.rst
+   api_overview/interface_clinic.rst
+   api_overview/clinic_result.rst
    api_overview/www.rst
    api_overview/fill_value_auto.rst
    api_overview/display_active.rst
@@ -132,6 +135,9 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/index_nanosecond_go.rst
    api_detail/hloc.rst
    api_detail/iloc.rst
+   api_detail/type_clinic.rst
+   api_detail/interface_clinic.rst
+   api_detail/clinic_result.rst
    api_detail/www.rst
    api_detail/fill_value_auto.rst
    api_detail/display_active.rst
@@ -651,6 +657,20 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/iloc-constructor.rst
    api_overview/iloc-attribute.rst
    api_overview/iloc-display.rst
+   api_overview/type_clinic-constructor.rst
+   api_overview/type_clinic-exporter.rst
+   api_overview/type_clinic-attribute.rst
+   api_overview/type_clinic-method.rst
+   api_overview/type_clinic-display.rst
+   api_overview/interface_clinic-constructor.rst
+   api_overview/interface_clinic-method.rst
+   api_overview/interface_clinic-display.rst
+   api_overview/clinic_result-constructor.rst
+   api_overview/clinic_result-exporter.rst
+   api_overview/clinic_result-attribute.rst
+   api_overview/clinic_result-method.rst
+   api_overview/clinic_result-dictionary_like.rst
+   api_overview/clinic_result-display.rst
    api_overview/www-constructor.rst
    api_overview/www-display.rst
    api_overview/fill_value_auto-constructor.rst
@@ -1205,6 +1225,20 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/iloc-constructor.rst
    api_detail/iloc-attribute.rst
    api_detail/iloc-display.rst
+   api_detail/type_clinic-constructor.rst
+   api_detail/type_clinic-exporter.rst
+   api_detail/type_clinic-attribute.rst
+   api_detail/type_clinic-method.rst
+   api_detail/type_clinic-display.rst
+   api_detail/interface_clinic-constructor.rst
+   api_detail/interface_clinic-method.rst
+   api_detail/interface_clinic-display.rst
+   api_detail/clinic_result-constructor.rst
+   api_detail/clinic_result-exporter.rst
+   api_detail/clinic_result-attribute.rst
+   api_detail/clinic_result-method.rst
+   api_detail/clinic_result-dictionary_like.rst
+   api_detail/clinic_result-display.rst
    api_detail/www-constructor.rst
    api_detail/www-display.rst
    api_detail/fill_value_auto-constructor.rst

@@ -3,7 +3,7 @@
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
-from arraykit import ErrorInitTypeBlocks
+from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
 from arraykit import isna_element as isna_element
 from arraykit import mloc as mloc
 
