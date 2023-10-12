@@ -6,6 +6,7 @@ import warnings
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
+from enum import Enum
 from functools import wraps
 from inspect import BoundArguments
 from inspect import Signature
@@ -843,58 +844,61 @@ class TypeClinic:
             raise TypeCheckError(cr)
 
 
+class ErrorAction(Enum):
+    RAISE = 0
+    WARN = 1
+    RETURN = 2
+
+def _check_interface(
+        func: tp.Callable[..., tp.Any],
+        args: tp.Any,
+        kwargs: tp.Any,
+        fail_fast: bool,
+        error_action: ErrorAction,
+        category: tp.Type[Warning] = UserWarning,
+        ) -> tp.Any:
+    # include_extras insures that Annotated generics are returned
+    hints = tp.get_type_hints(func, include_extras=True)
+
+    sig = Signature.from_callable(func)
+    sig_bound = sig.bind(*args, **kwargs)
+    sig_bound.apply_defaults()
+    sig_str = to_signature(sig_bound, hints)
+    parent = (f'args of {sig_str}',)
+
+    for k, v in sig_bound.arguments.items():
+        if h_p := hints.get(k, None):
+            if cr := _check(v, h_p, parent, fail_fast=fail_fast):
+                if error_action is ErrorAction.RAISE:
+                    raise TypeCheckError(cr)
+                elif error_action is ErrorAction.WARN:
+                    warnings.warn(cr.to_str(), category)
+                elif error_action is ErrorAction.RETURN:
+                    return cr
+
+    post = func(*args, **kwargs)
+
+    if h_return := hints.get('return', None):
+        if cr := _check(post,
+                h_return,
+                (f'return of {sig_str}',),
+                fail_fast=fail_fast,
+                ):
+            if error_action is ErrorAction.RAISE:
+                raise TypeCheckError(cr)
+            elif error_action is ErrorAction.WARN:
+                warnings.warn(cr.to_str(), category)
+            elif error_action is ErrorAction.RETURN:
+                return cr
+
+    return post
+
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
-@tp.overload
-def check_interface(func: TVFunc) -> TVFunc: ...
-
-@tp.overload
-def check_interface(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
-
-def check_interface(
-        func: TVFunc | None = None,
-        *,
-        fail_fast: bool = False,
-        ) -> tp.Any:
-    '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``TypeCheckError`` on failure.
-    '''
-
-    def decorator(func: TVFunc) -> TVFunc:
-
-        @wraps(func)
-        def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-            # include_extras insures that Annotated generics are returned
-            hints = tp.get_type_hints(func, include_extras=True)
-
-            sig = Signature.from_callable(func)
-            sig_bound = sig.bind(*args, **kwargs)
-            sig_bound.apply_defaults()
-            sig_str = to_signature(sig_bound, hints)
-            parent = (f'args of {sig_str}',)
-
-            for k, v in sig_bound.arguments.items():
-                if h_p := hints.get(k, None):
-                    if cr := _check(v, h_p, parent, fail_fast=fail_fast):
-                        raise TypeCheckError(cr)
-
-            post = func(*args, **kwargs)
-
-            if h_return := hints.get('return', None):
-                if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
-                    raise TypeCheckError(cr)
-
-            return post
-
-        return tp.cast(TVFunc, wrapper)
-
-    if func is not None:
-        return decorator(func)
-
-    return decorator
-
-
 class InterfaceClinic:
+    '''A family of decorators for run-time type checking and data validation.
+    '''
 
     @tp.overload
     @staticmethod
@@ -918,35 +922,56 @@ class InterfaceClinic:
         '''
 
         def decorator(func: TVFunc) -> TVFunc:
-
             @wraps(func)
             def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-                # include_extras insures that Annotated generics are returned
-                hints = tp.get_type_hints(func, include_extras=True)
-
-                sig = Signature.from_callable(func)
-                sig_bound = sig.bind(*args, **kwargs)
-                sig_bound.apply_defaults()
-                sig_str = to_signature(sig_bound, hints)
-                parent = (f'args of {sig_str}',)
-
-                for k, v in sig_bound.arguments.items():
-                    if h_p := hints.get(k, None):
-                        if cr := _check(v, h_p, parent, fail_fast=fail_fast):
-                            raise TypeCheckError(cr)
-
-                post = func(*args, **kwargs)
-
-                if h_return := hints.get('return', None):
-                    if cr := _check(post, h_return, (f'return of {sig_str}',), fail_fast=fail_fast):
-                        raise TypeCheckError(cr)
-
-                return post
-
+                return _check_interface(func,
+                        args,
+                        kwargs,
+                        fail_fast,
+                        ErrorAction.RAISE,
+                        )
             return tp.cast(TVFunc, wrapper)
 
         if func is not None:
             return decorator(func)
+        return decorator
 
+
+    @tp.overload
+    @staticmethod
+    def warn(func: TVFunc) -> TVFunc: ...
+
+    @tp.overload
+    @staticmethod
+    def warn(*, fail_fast: bool, category: tp.Type[Warning]) -> tp.Callable[[TVFunc], TVFunc]: ...
+
+    @tp.overload
+    @staticmethod
+    def warn(func: None, *, fail_fast: bool, category: tp.Type[Warning]) -> tp.Callable[[TVFunc], TVFunc]: ...
+
+    @staticmethod
+    def warn(
+            func: TVFunc | None = None,
+            *,
+            fail_fast: bool = False,
+            category: tp.Type[Warning] = UserWarning,
+            ) -> tp.Any:
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Issues a warning on failure.
+        '''
+
+        def decorator(func: TVFunc) -> TVFunc:
+            @wraps(func)
+            def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+                return _check_interface(func,
+                        args,
+                        kwargs,
+                        fail_fast,
+                        ErrorAction.WARN,
+                        category,
+                        )
+            return tp.cast(TVFunc, wrapper)
+
+        if func is not None:
+            return decorator(func)
         return decorator
 

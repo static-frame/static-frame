@@ -10,6 +10,8 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import Validator
 # from static_frame.core.validate import validate_pair
+from static_frame.core.validate import ErrorAction
+from static_frame.core.validate import InterfaceClinic
 from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
@@ -17,10 +19,10 @@ from static_frame.core.validate import TValidation
 from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
-from static_frame.core.validate import check_interface
+from static_frame.core.validate import _check_interface
+from static_frame.core.validate import InterfaceClinic
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
-from static_frame.core.validate import InterfaceClinic
 from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
@@ -411,7 +413,7 @@ def test_check_type_dict_a():
 #-------------------------------------------------------------------------------
 def test_check_interface_a():
 
-    @check_interface(fail_fast=False)
+    @InterfaceClinic.check(fail_fast=False)
     def proc1(a: int, b: int) -> int:
         return a * b
 
@@ -419,7 +421,7 @@ def test_check_interface_a():
 
 def test_check_interface_b():
 
-    @check_interface(fail_fast=False)
+    @InterfaceClinic.check(fail_fast=False)
     def proc1(a: int, b: int) -> bool:
         return a * b
     try:
@@ -434,7 +436,7 @@ def test_check_interface_b():
 
 def test_check_interface_c1():
 
-    @check_interface(fail_fast=False)
+    @InterfaceClinic.check(fail_fast=False)
     def proc1(a: int, b) -> int:
         return a * b
 
@@ -458,7 +460,7 @@ def test_check_interface_c2():
 
 def test_check_interface_d():
 
-    @check_interface
+    @InterfaceClinic.check
     def proc1(a: int, b: int) -> int:
         return a * b
 
@@ -469,7 +471,7 @@ def test_check_interface_d():
 
 def test_check_interface_e():
 
-    @check_interface
+    @InterfaceClinic.check
     def proc1(a: tp.Annotated[int, 'foo'], b: tp.Annotated[int, 'bar']) -> int:
         return a * b
 
@@ -479,7 +481,7 @@ def test_check_interface_e():
 
 def test_check_interface_f():
 
-    @check_interface
+    @InterfaceClinic.check
 
     def proc1(idx: tp.Annotated[sf.Index[np.str_], Len(3), Name('foo')]) -> int:
         return len(idx)
@@ -494,6 +496,36 @@ def test_check_interface_f():
     idx3 = sf.Index(('a', 'c'), name='fab')
     with pytest.raises(TypeError):
         _ = proc1(idx3)
+
+def test_check_interface_g1():
+    def proc1(x: int) -> int:
+        return x
+
+    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == 1
+
+    cr1 = _check_interface(proc1, (False,), {}, False, ErrorAction.RETURN)
+    assert scrub_str(cr1.to_str()) == 'In args of (x: int) -> int Expected int, provided bool invalid'
+
+    def proc2(x: int) -> int:
+        return 'foo'
+
+    cr2 = _check_interface(proc2, (3,), {}, False, ErrorAction.RETURN)
+    assert scrub_str(cr2.to_str()) == 'In return of (x: int) -> int Expected int, provided str invalid'
+
+
+def test_check_interface_g2():
+    def proc1(x: int) -> int | None:
+        return None
+
+    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == None
+
+    def proc2(x: int) -> int | None:
+        return 'foo'
+
+    cr1 = _check_interface(proc2, (3,), {}, False, ErrorAction.RETURN)
+    assert scrub_str(cr1.to_str()) == "In return of (x: int) -> int | None int | None Expected int, provided str invalid In return of (x: int) -> int | None int | None Expected NoneType, provided str invalid"
+
+
 
 #-------------------------------------------------------------------------------
 

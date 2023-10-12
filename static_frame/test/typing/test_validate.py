@@ -1,10 +1,9 @@
 import numpy as np
 import typing_extensions as tp
 
-import pytest
-
 from static_frame.core.validate import InterfaceClinic
 from static_frame.test.test_case import skip_nple119
+
 
 @skip_nple119
 def test_ndarray_a() -> None:
