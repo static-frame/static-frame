@@ -20,7 +20,6 @@ from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import _check_interface
-from static_frame.core.validate import InterfaceClinic
 from static_frame.core.validate import is_union
 from static_frame.core.validate import is_unpack
 from static_frame.test.test_case import skip_pyle38
@@ -479,10 +478,9 @@ def test_check_interface_e():
     assert proc1(2, 1) == 2
 
 
-def test_check_interface_f():
+def test_check_interface_f1():
 
     @InterfaceClinic.check
-
     def proc1(idx: tp.Annotated[sf.Index[np.str_], Len(3), Name('foo')]) -> int:
         return len(idx)
 
@@ -496,6 +494,24 @@ def test_check_interface_f():
     idx3 = sf.Index(('a', 'c'), name='fab')
     with pytest.raises(TypeError):
         _ = proc1(idx3)
+
+
+def test_check_interface_f2():
+
+    @InterfaceClinic.warn(category=DeprecationWarning)
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Len(3), Name('foo')]) -> int:
+        return len(idx)
+
+    idx1 = sf.Index(('a', 'b', 'c'), name='foo')
+    assert proc1(idx1) == 3
+
+    idx2 = sf.Index(('a', 'b', 'c'), name='fab')
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always", DeprecationWarning)
+        _ = proc1(idx2)
+        assert 'Annotated[Index[str_], Len(3), Name(foo)]' in str(w[0])
+
 
 def test_check_interface_g1():
     def proc1(x: int) -> int:
@@ -526,6 +542,17 @@ def test_check_interface_g2():
     assert scrub_str(cr1.to_str()) == "In return of (x: int) -> int | None int | None Expected int, provided str invalid In return of (x: int) -> int | None int | None Expected NoneType, provided str invalid"
 
 
+def test_check_interface_g3():
+    def proc1(x: int) -> int:
+        return x
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always", DeprecationWarning)
+        _check_interface(proc1, (False,), {}, False, ErrorAction.WARN)
+        # two warnings, one for input, one for output
+        assert len(w) == 2
+        assert 'Expected int, provided bool invalid' in str(w[0])
+        assert 'Expected int, provided bool invalid' in str(w[1])
 
 #-------------------------------------------------------------------------------
 
