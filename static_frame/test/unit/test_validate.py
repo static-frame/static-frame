@@ -513,6 +513,24 @@ def test_check_interface_f2():
         assert 'Annotated[Index[str_], Len(3), Name(foo)]' in str(w[0])
 
 
+def test_check_interface_f3():
+
+    @InterfaceClinic.warn
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Len(3), Name('foo')]) -> int:
+        return len(idx)
+
+    idx1 = sf.Index(('a', 'b', 'c'), name='foo')
+    assert proc1(idx1) == 3
+
+    idx2 = sf.Index(('a', 'b', 'c'), name='fab')
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always", DeprecationWarning)
+        _ = proc1(idx2)
+        assert 'Annotated[Index[str_], Len(3), Name(foo)]' in str(w[0])
+
+
+
 def test_check_interface_g1():
     def proc1(x: int) -> int:
         return x
