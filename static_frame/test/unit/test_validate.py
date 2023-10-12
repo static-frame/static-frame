@@ -529,6 +529,7 @@ def test_check_interface_g1():
     assert scrub_str(cr2.to_str()) == 'In return of (x: int) -> int Expected int, provided str invalid'
 
 
+@skip_pyle310
 def test_check_interface_g2():
     def proc1(x: int) -> int | None:
         return None
