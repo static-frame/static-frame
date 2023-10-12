@@ -659,7 +659,6 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/iloc-display.rst
    api_overview/type_clinic-constructor.rst
    api_overview/type_clinic-exporter.rst
-   api_overview/type_clinic-attribute.rst
    api_overview/type_clinic-method.rst
    api_overview/type_clinic-display.rst
    api_overview/interface_clinic-constructor.rst
@@ -1227,7 +1226,6 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/iloc-display.rst
    api_detail/type_clinic-constructor.rst
    api_detail/type_clinic-exporter.rst
-   api_detail/type_clinic-attribute.rst
    api_detail/type_clinic-method.rst
    api_detail/type_clinic-display.rst
    api_detail/interface_clinic-constructor.rst
