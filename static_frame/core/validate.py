@@ -116,8 +116,8 @@ def to_signature(
 
 
 
-class TypeCheckResult:
-    '''A ``TypeCheckResult`` instance stores zero or more error messages resulting from a check.
+class ClinicResult:
+    '''A ``ClinicResult`` instance stores zero or more error messages resulting from a check.
     '''
     __slots__ = ('_log',)
 
@@ -181,13 +181,13 @@ class TypeCheckResult:
 
     def __repr__(self) -> str:
         log_len = len(self)
-        return f'<TypeCheckResult: {log_len} {"errors" if log_len != 1 else "error"}>'
+        return f'<ClinicResult: {log_len} {"errors" if log_len != 1 else "error"}>'
 
 
-class TypeCheckError(TypeError):
+class ClinicError(TypeError):
     '''A TypeError subclass for exposing check errors.
     '''
-    def __init__(self, cr: TypeCheckResult) -> None:
+    def __init__(self, cr: ClinicResult) -> None:
         TypeError.__init__(self, cr.to_str())
 
 
@@ -594,7 +594,7 @@ def _check(
         hint: tp.Any,
         parent: TParent = (),
         fail_fast: bool = False,
-        ) -> TypeCheckResult:
+        ) -> ClinicResult:
 
     # Check queue: queue all checks
     q = deque(((value, hint, parent),))
@@ -610,7 +610,7 @@ def _check(
 
     while q:
         if fail_fast and e_log:
-            return TypeCheckResult(e_log)
+            return ClinicResult(e_log)
 
         v, h, p = q.popleft()
         # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checkls
@@ -709,7 +709,7 @@ def _check(
                 continue
             e_log.append((v, h, p))
 
-    return TypeCheckResult(e_log)
+    return ClinicResult(e_log)
 
 #-------------------------------------------------------------------------------
 # public interfaces
@@ -813,13 +813,13 @@ class TypeClinic:
             /, *,
             fail_fast: bool = False,
             ) -> None:
-        '''Given a hint (a type and/or generic alias), raise a ``TypeCheckError`` exception describing the result of the check if an error is found.
+        '''Given a hint (a type and/or generic alias), raise a ``ClinicError`` exception describing the result of the check if an error is found.
 
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
         if cr := self(hint, fail_fast=fail_fast):
-            raise TypeCheckError(cr)
+            raise ClinicError(cr)
 
     def warn(self,
             hint: tp.Any,
@@ -841,8 +841,8 @@ class TypeClinic:
             hint: tp.Any,
             /, *,
             fail_fast: bool = False,
-            ) -> TypeCheckResult:
-        '''Given a hint (a type and/or generic alias), return a ``TypeCheckResult`` object describing the result of the check.
+            ) -> ClinicResult:
+        '''Given a hint (a type and/or generic alias), return a ``ClinicResult`` object describing the result of the check.
 
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
@@ -877,7 +877,7 @@ def _check_interface(
         if h_p := hints.get(k, None):
             if cr := _check(v, h_p, parent, fail_fast=fail_fast):
                 if error_action is ErrorAction.RAISE:
-                    raise TypeCheckError(cr)
+                    raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
                     warnings.warn(cr.to_str(), category)
                 elif error_action is ErrorAction.RETURN:
@@ -892,7 +892,7 @@ def _check_interface(
                 fail_fast=fail_fast,
                 ):
             if error_action is ErrorAction.RAISE:
-                raise TypeCheckError(cr)
+                raise ClinicError(cr)
             elif error_action is ErrorAction.WARN:
                 warnings.warn(cr.to_str(), category)
             elif error_action is ErrorAction.RETURN:
@@ -925,7 +925,7 @@ class InterfaceClinic:
             *,
             fail_fast: bool = False,
             ) -> tp.Any:
-        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``TypeCheckError`` on failure.
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``ClinicError`` on failure.
         '''
 
         def decorator(func: TVFunc) -> TVFunc:

@@ -10,13 +10,13 @@ import typing_extensions as tp
 import static_frame as sf
 # from static_frame.core.validate import Validator
 # from static_frame.core.validate import validate_pair
+from static_frame.core.validate import ClinicResult
 from static_frame.core.validate import ErrorAction
 from static_frame.core.validate import InterfaceClinic
 from static_frame.core.validate import Labels
 from static_frame.core.validate import Len
 from static_frame.core.validate import Name
 from static_frame.core.validate import TValidation
-from static_frame.core.validate import TypeCheckResult
 from static_frame.core.validate import TypeClinic
 from static_frame.core.validate import Validator
 from static_frame.core.validate import _check_interface
@@ -166,7 +166,7 @@ def test_is_union_a():
 #-------------------------------------------------------------------------------
 
 def test_check_result_a():
-    assert TypeCheckResult([]).validated
+    assert ClinicResult([]).validated
 
 def test_check_result_b():
     try:
@@ -294,8 +294,8 @@ def test_check_type_containers_e():
 
 def scrub_str(s: str) -> str:
     s = s.replace('\n', ' '
-            ).replace(TypeCheckResult._LINE, ''
-            ).replace(TypeCheckResult._CORNER, ''
+            ).replace(ClinicResult._LINE, ''
+            ).replace(ClinicResult._CORNER, ''
             ).replace('tuple[', 'Tuple[') # normalize tuple presentation
     while '  ' in s:
         s = s.replace('  ', ' ')
@@ -1062,7 +1062,7 @@ def test_check_frame_g():
 
 #-------------------------------------------------------------------------------
 
-def get_hints(records: tp.Iterable[TValidation] | TypeCheckResult) -> tp.Tuple[str]:
+def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
 def test_validate_labels_a1():
@@ -1223,7 +1223,7 @@ def test_type_clinic_a():
             np.int64,
             ]
 
-    assert str(TypeClinic(f)(h)) == '<TypeCheckResult: 2 errors>'
+    assert str(TypeClinic(f)(h)) == '<ClinicResult: 2 errors>'
     post = TypeClinic(f)(h).to_str()
     assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid'
 
