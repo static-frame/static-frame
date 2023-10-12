@@ -812,6 +812,35 @@ class TypeClinic:
             hint: tp.Any,
             /, *,
             fail_fast: bool = False,
+            ) -> None:
+        '''Given a hint (a type and/or generic alias), raise a ``TypeCheckError`` exception describing the result of the check if an error is found.
+
+        Args:
+            fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
+        '''
+        if cr := self(hint, fail_fast=fail_fast):
+            raise TypeCheckError(cr)
+
+    def warn(self,
+            hint: tp.Any,
+            /, *,
+            fail_fast: bool = False,
+            category: tp.Type[Warning] = UserWarning,
+            ) -> None:
+        '''Given a hint (a type and/or generic alias), issue a warning describing the result of the check if an error is found.
+
+        Args:
+            fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
+            category: The ``Warning`` subclass to be used for issueing the warning.
+        '''
+        if cr := self(hint, fail_fast=fail_fast):
+            warnings.warn(cr.to_str(), category)
+
+
+    def __call__(self,
+            hint: tp.Any,
+            /, *,
+            fail_fast: bool = False,
             ) -> TypeCheckResult:
         '''Given a hint (a type and/or generic alias), return a ``TypeCheckResult`` object describing the result of the check.
 
@@ -820,28 +849,6 @@ class TypeClinic:
         '''
         return _check(self._value, hint, fail_fast=fail_fast)
 
-    def warn(self,
-            hint: tp.Any,
-            /, *,
-            fail_fast: bool = False,
-            category: tp.Type[Warning] = UserWarning,
-            ) -> None:
-        if cr := self.check(hint, fail_fast=fail_fast):
-            warnings.warn(cr.to_str(), category)
-
-
-    def __call__(self,
-            hint: tp.Any,
-            /, *,
-            fail_fast: bool = False,
-            ) -> None:
-        '''Given a hint (a type and/or generic alias), raise a ``TypeCheckError`` exception describing the result of the check.
-
-        Args:
-            fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
-        '''
-        if cr := self.check(hint, fail_fast=fail_fast):
-            raise TypeCheckError(cr)
 
 
 class ErrorAction(Enum):

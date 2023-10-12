@@ -5,11 +5,11 @@ What is New in StaticFrame
 2.0.0
 -----------
 
-Added ``via_type_check`` interfaces to all containers.
+Added ``via_type_clinic`` interfaces to all containers.
 
 Added ``TypeClinic``, ``TypeCheckResult``, and ``TypeCheckError``.
 
-
+Added ``InterfaceClinic``, exposing decorators for performing run-time function interface type check and data validation.
 
 
 1.6.5

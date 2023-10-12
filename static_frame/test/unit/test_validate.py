@@ -30,36 +30,36 @@ from static_frame.test.test_case import skip_win
 
 def test_check_type_a():
 
-    TypeClinic(sf.IndexDate(('2022-01-01',)))(sf.IndexDate)
-    TypeClinic(sf.IndexDate(('2022-01-01',)))(tp.Any)
+    TypeClinic(sf.IndexDate(('2022-01-01',))).check(sf.IndexDate)
+    TypeClinic(sf.IndexDate(('2022-01-01',))).check(tp.Any)
 
     with pytest.raises(TypeError):
-        TypeClinic(sf.IndexDate(('2022-01-01',)))(sf.IndexSecond)
+        TypeClinic(sf.IndexDate(('2022-01-01',))).check(sf.IndexSecond)
 
 
 def test_check_type_b():
 
-    TypeClinic(3)(int)
-    TypeClinic('foo')(str)
-    TypeClinic(False)(bool)
+    TypeClinic(3).check(int)
+    TypeClinic('foo').check(str)
+    TypeClinic(False).check(bool)
 
     with pytest.raises(TypeError):
-        TypeClinic(3)(str)
+        TypeClinic(3).check(str)
 
     with pytest.raises(TypeError):
-        TypeClinic(True)(int)
+        TypeClinic(True).check(int)
 
 
 def test_check_type_c():
-    TypeClinic(['a', 'b'])(tp.List[str])
-    TypeClinic([{3: 'a'}, {4: 'x'}])(tp.List[tp.Dict[int, str]])
-    TypeClinic([(3, ['a', 'b']), (4, ['x', 'y'])])(tp.List[tp.Tuple[int, tp.List[str]]])
+    TypeClinic(['a', 'b']).check(tp.List[str])
+    TypeClinic([{3: 'a'}, {4: 'x'}]).check(tp.List[tp.Dict[int, str]])
+    TypeClinic([(3, ['a', 'b']), (4, ['x', 'y'])]).check(tp.List[tp.Tuple[int, tp.List[str]]])
 
     tc = TypeClinic([(3, ['a', 'b']), (4, ['x', 'y'])])
     with pytest.raises(TypeError):
-        tc(tp.List[tp.Tuple[int, tp.List[bool]]])
+        tc.check(tp.List[tp.Tuple[int, tp.List[bool]]])
 
-    cr = tc.check(tp.List[tp.Tuple[int, tp.List[bool]]])
+    cr = tc(tp.List[tp.Tuple[int, tp.List[bool]]])
     assert len(cr) == 4
 
 
@@ -76,9 +76,9 @@ def test_check_type_d1():
         c: bool
 
     tc = TypeClinic(dict(a=3, b=10.5, c='foo'))
-    tc(Record1)
+    tc.check(Record1)
 
-    cr = tc.check(Record2)
+    cr = tc(Record2)
     assert not cr.validated
 
     assert scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
@@ -96,14 +96,14 @@ def test_check_type_d2():
         c: str
 
     tc1 = TypeClinic(dict(a=3, b=10.5))
-    assert tc1.check(Record1).validated
+    assert tc1(Record1).validated
 
     tc2 = TypeClinic(dict(a=3, b=10.5, c='foo'))
-    assert tc2.check(Record2).validated
+    assert tc2(Record2).validated
 
-    tc3 = TypeClinic(dict(a=3, b=10.5))
-    assert not tc1.check(Record2).validated
-    assert scrub_str(tc1.check(Record2).to_str()) == "In Record2 Key 'c' Expected key not provided"
+    # tc3 = TypeClinic(dict(a=3, b=10.5))
+    assert not tc1(Record2).validated
+    assert scrub_str(tc1(Record2).to_str()) == "In Record2 Key 'c' Expected key not provided"
 
 def test_check_type_d3():
     class Record1(tp.TypedDict, total=False):
@@ -111,7 +111,7 @@ def test_check_type_d3():
         b: float
 
     tc1 = TypeClinic(dict(a=3, b=10.5, c='foo', d=False))
-    cr = tc1.check(Record1)
+    cr = tc1(Record1)
     assert scrub_str(cr.to_str()) == "In Record1 Keys provided not expected: 'c', 'd'"
 
 
@@ -120,9 +120,9 @@ def test_check_type_d4():
     Record2 = tp.TypedDict('Record2', dict(a=int, b=float, c=bool))
 
     tc = TypeClinic(dict(a=3, b=10.5, c='foo'))
-    tc(Record1)
+    tc.check(Record1)
 
-    cr = tc.check(Record2)
+    cr = tc(Record2)
     assert not cr.validated
     assert scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
 
@@ -140,12 +140,12 @@ def test_check_type_d5():
         c: tp.NotRequired[str]
 
     tc1 = TypeClinic(dict(a=3, b=10.5))
-    assert tc1.check(Record1).validated
-    assert tc1.check(Record2).validated
+    assert tc1(Record1).validated
+    assert tc1(Record2).validated
 
     tc2 = TypeClinic(dict(a=3, b=10.5, c='foo'))
-    assert tc2.check(Record1).validated
-    assert tc2.check(Record2).validated
+    assert tc2(Record1).validated
+    assert tc2(Record2).validated
 
     # tc3 = TypeClinic(dict(b=10.5, c='foo'))
     # assert not tc3.check(Record2).validated
@@ -170,13 +170,13 @@ def test_check_result_a():
 
 def test_check_result_b():
     try:
-        post = TypeClinic((3, 'x')).check(tp.Tuple[int, str, ...]).to_str()
+        post = TypeClinic((3, 'x'))(tp.Tuple[int, str, ...]).to_str()
         assert scrub_str(post) == 'In Tuple[int, str, ...] Invalid ellipses usage'
     except TypeError:
         pass
 
 def test_check_result_c():
-    post = TypeClinic(sf.Index(('a', 'b'))).check(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
+    post = TypeClinic(sf.Index(('a', 'b')))(tp.Annotated[sf.Index[np.str_], Len(1)]).to_str()
     assert scrub_str(post) == 'In Annotated[Index[str_], Len(1)] Len(1) Expected length 1, provided length 2'
 
 
@@ -184,28 +184,28 @@ def test_check_result_c():
 
 def test_check_type_union_a():
 
-    TypeClinic(3)(tp.Union[int, str])
+    TypeClinic(3).check(tp.Union[int, str])
 
     with pytest.raises(TypeError):
-        TypeClinic('x')(tp.Union[int, float])
+        TypeClinic('x').check(tp.Union[int, float])
 
-    TypeClinic('x')(tp.Union[str, bytes])
-    TypeClinic('x')(tp.Union[int, str])
+    TypeClinic('x').check(tp.Union[str, bytes])
+    TypeClinic('x').check(tp.Union[int, str])
 
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_type_a():
 
-    TypeClinic(sf.Series)(tp.Type[sf.Series])
+    TypeClinic(sf.Series).check(tp.Type[sf.Series])
 
     with pytest.raises(TypeError):
-        TypeClinic(sf.Series)(tp.Type[sf.Index])
+        TypeClinic(sf.Series).check(tp.Type[sf.Index])
 
 @skip_pyle310
 def test_check_type_type_b():
     try:
-        TypeClinic(3)(tp.Type[sf.Series])
+        TypeClinic(3).check(tp.Type[sf.Series])
     except TypeError as e:
         assert str(e).replace('\n', '') == 'Expected Type[Series], provided int invalid'
 
@@ -217,9 +217,9 @@ def test_validate_numpy_a():
     h1 = np.ndarray[tp.Any, np.dtype[np.bool_]]
     h2 = np.ndarray[tp.Any, np.dtype[np.str_]]
 
-    TypeClinic(v)(h1)
+    TypeClinic(v).check(h1)
     with pytest.raises(TypeError):
-        TypeClinic(v)(h2)
+        TypeClinic(v).check(h2)
 
 
 #-------------------------------------------------------------------------------
@@ -231,19 +231,19 @@ def test_check_type_containers_a():
     h3 = sf.Series[sf.IndexDate, np.str_]
 
     with pytest.raises(TypeError):
-        TypeClinic(v)(h2)
+        TypeClinic(v).check(h2)
 
     with pytest.raises(TypeError):
-        TypeClinic(v)(h1)
+        TypeClinic(v).check(h1)
 
 def test_check_type_containers_b():
     v = sf.Series(('a', 'b'), index=sf.IndexDate(('2021-04-05', '2022-05-03')))
     h1 = sf.Series[sf.IndexDate, np.str_]
     h2 = sf.Series[sf.IndexDate, np.int64]
 
-    TypeClinic(v)(h1)
+    TypeClinic(v).check(h1)
     with pytest.raises(TypeError):
-        TypeClinic(v)(h2)
+        TypeClinic(v).check(h2)
 
 
 def test_check_type_containers_c():
@@ -254,13 +254,13 @@ def test_check_type_containers_c():
     h4 = sf.Series[sf.Index[np.int64], np.str_]
 
     with pytest.raises(TypeError):
-        TypeClinic(v,)(h1)
+        TypeClinic(v,).check(h1)
     with pytest.raises(TypeError):
-        TypeClinic(v,)(h2)
+        TypeClinic(v,).check(h2)
     with pytest.raises(TypeError):
-        TypeClinic(v,)(h3)
+        TypeClinic(v,).check(h3)
 
-    TypeClinic(v,)(h4)
+    TypeClinic(v,).check(h4)
 
 
 def test_check_type_containers_d():
@@ -270,10 +270,10 @@ def test_check_type_containers_d():
 
     h1 = sf.Series[sf.Index[tp.Union[np.int64, np.str_]], np.str_]
 
-    TypeClinic(v1)(h1)
-    TypeClinic(v2)(h1)
+    TypeClinic(v1).check(h1)
+    TypeClinic(v2).check(h1)
     with pytest.raises(TypeError):
-        TypeClinic(v3)(h1)
+        TypeClinic(v3).check(h1)
 
 
 def test_check_type_containers_e():
@@ -283,11 +283,11 @@ def test_check_type_containers_e():
 
     h1 = sf.Series[tp.Union[sf.IndexDate, sf.IndexSecond], np.str_]
 
-    TypeClinic(v1)(h1)
-    TypeClinic(v2)(h1)
+    TypeClinic(v1).check(h1)
+    TypeClinic(v2).check(h1)
 
     with pytest.raises(TypeError):
-        TypeClinic(v3)(h1)
+        TypeClinic(v3).check(h1)
 
 
 #-------------------------------------------------------------------------------
@@ -308,49 +308,49 @@ def test_check_type_fail_fast_a():
 
 
     with pytest.raises(TypeError):
-        TypeClinic(v)(h, fail_fast=True)
+        TypeClinic(v).check(h, fail_fast=True)
     try:
-        TypeClinic(v)(h, fail_fast=True)
+        TypeClinic(v).check(h, fail_fast=True)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid'
 
     with pytest.raises(TypeError):
-        TypeClinic(v)(h, fail_fast=False)
+        TypeClinic(v).check(h, fail_fast=False)
     try:
-        TypeClinic(v)(h, fail_fast=False)
+        TypeClinic(v).check(h, fail_fast=False)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Series[Index[int64], int64] Expected int64, provided str_ invalid In Series[Index[int64], int64] Index[int64] Expected int64, provided str_ invalid'
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_sequence_a():
-    TypeClinic([3, 4])(tp.List[int])
+    TypeClinic([3, 4]).check(tp.List[int])
 
     with pytest.raises(TypeError):
-        TypeClinic([3, 4, 'a'])(tp.List[int])
+        TypeClinic([3, 4, 'a']).check(tp.List[int])
 
 
-    TypeClinic([3, 4, 'a'])(tp.List[tp.Union[int, str]])
+    TypeClinic([3, 4, 'a']).check(tp.List[tp.Union[int, str]])
 
-    TypeClinic(['c', 'b', 'a'])(tp.Union[tp.List[int], tp.List[str]])
+    TypeClinic(['c', 'b', 'a']).check(tp.Union[tp.List[int], tp.List[str]])
 
     with pytest.raises(TypeError):
-        TypeClinic([3, 4, 'a', True])(tp.List[tp.Union[int, str]])
+        TypeClinic([3, 4, 'a', True]).check(tp.List[tp.Union[int, str]])
 
 def test_check_type_sequence_b():
 
-    TypeClinic([3, 4])(tp.Sequence[int])
+    TypeClinic([3, 4]).check(tp.Sequence[int])
 
     with pytest.raises(TypeError):
-        TypeClinic([3, 4, 'a'])(tp.Sequence[int])
+        TypeClinic([3, 4, 'a']).check(tp.Sequence[int])
 
 
-    TypeClinic([3, 4, 'a'])(tp.Sequence[tp.Union[int, str]])
+    TypeClinic([3, 4, 'a']).check(tp.Sequence[tp.Union[int, str]])
 
-    TypeClinic(['c', 'b', 'a'])(tp.Union[tp.Sequence[int], tp.Sequence[str]])
+    TypeClinic(['c', 'b', 'a']).check(tp.Union[tp.Sequence[int], tp.Sequence[str]])
 
     with pytest.raises(TypeError):
-        TypeClinic([3, 4, 'a', True])(tp.Sequence[tp.Union[int, str]])
+        TypeClinic([3, 4, 'a', True]).check(tp.Sequence[tp.Union[int, str]])
 
 
 #-------------------------------------------------------------------------------
@@ -358,30 +358,30 @@ def test_check_type_sequence_b():
 def test_check_type_tuple_a():
 
     with pytest.raises(TypeError):
-        TypeClinic([3, 4])(tp.Tuple[int, bool])
+        TypeClinic([3, 4]).check(tp.Tuple[int, bool])
 
     with pytest.raises(TypeError):
-        TypeClinic((3, False, 'foo'))(tp.Tuple[int, ...])
+        TypeClinic((3, False, 'foo')).check(tp.Tuple[int, ...])
 
-    TypeClinic((3, 4, 5))(tp.Tuple[int, ...])
-    TypeClinic((3, 4, 5, 3, 20))(tp.Tuple[int, ...])
-    TypeClinic((3,))(tp.Tuple[int, ...])
+    TypeClinic((3, 4, 5)).check(tp.Tuple[int, ...])
+    TypeClinic((3, 4, 5, 3, 20)).check(tp.Tuple[int, ...])
+    TypeClinic((3,)).check(tp.Tuple[int, ...])
 
 def test_check_type_tuple_b():
 
-    TypeClinic((3, 4, False))(tp.Tuple[int, int, bool])
-    TypeClinic((3, 4.1, False))(tp.Tuple[int, float, bool])
+    TypeClinic((3, 4, False)).check(tp.Tuple[int, int, bool])
+    TypeClinic((3, 4.1, False)).check(tp.Tuple[int, float, bool])
 
 @skip_pyle310
 def test_check_type_tuple_c():
 
-    cr = TypeClinic((3, 4)).check(tp.Tuple[int, int, int])
+    cr = TypeClinic((3, 4))(tp.Tuple[int, int, int])
     assert [r[1] for r in cr] == ['Expected tuple length of 3, provided tuple length of 2']
 
 @skip_pyle310
 def test_check_type_tuple_d():
 
-    cr = TypeClinic((3, 4, 5)).check(tp.Tuple[..., int, ...])
+    cr = TypeClinic((3, 4, 5))(tp.Tuple[..., int, ...])
     assert [r[1] for r in cr] == ['Invalid ellipses usage']
 
 
@@ -392,21 +392,21 @@ def test_check_type_literal_a():
     TypeClinic(42)(tp.Literal[42])
     TypeClinic(42)(tp.Literal[-1, 42])
 
-    cr = TypeClinic(42).check(tp.Literal['a', 'b'])
+    cr = TypeClinic(42)(tp.Literal['a', 'b'])
     assert list(cr) == [(42, 'a', (tp.Literal['a', 'b'],)),
                         (42, 'b', (tp.Literal['a', 'b'],))]
 
 #-------------------------------------------------------------------------------
 
 def test_check_type_dict_a():
-    TypeClinic({'a': 3})(tp.Dict[str, int])
-    TypeClinic({'b': 20})(tp.Dict[str, int])
+    TypeClinic({'a': 3}).check(tp.Dict[str, int])
+    TypeClinic({'b': 20}).check(tp.Dict[str, int])
 
     with pytest.raises(TypeError):
-        TypeClinic({'a': 20, 'b': 18, 'c': False})(tp.Dict[str, int])
+        TypeClinic({'a': 20, 'b': 18, 'c': False}).check(tp.Dict[str, int])
 
     with pytest.raises(TypeError):
-        TypeClinic({'a': 20, 'b': 18, 20: 3})(tp.Dict[str, int])
+        TypeClinic({'a': 20, 'b': 18, 20: 3}).check(tp.Dict[str, int])
 
 
 #-------------------------------------------------------------------------------
@@ -568,10 +568,10 @@ def test_check_annotated_b():
             Name('foo'),
     ]
     with pytest.raises(TypeError):
-        TypeClinic(v1)(h1)
+        TypeClinic(v1).check(h1)
 
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)), name='foo')
-    TypeClinic(v1)(h1)
+    TypeClinic(v1).check(h1)
 
 def test_check_annotated_c():
 
@@ -586,9 +586,9 @@ def test_check_annotated_c():
             ]
 
     with pytest.raises(TypeError):
-        TypeClinic(v1)(h1)
+        TypeClinic(v1).check(h1)
 
-    TypeClinic(v1)(h2)
+    TypeClinic(v1).check(h2)
 
 #-------------------------------------------------------------------------------
 
@@ -599,11 +599,11 @@ def test_check_index_hierarchy_a():
             sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer]],
             Len(4),
             ]
-    TypeClinic(v1)(h1)
+    TypeClinic(v1).check(h1)
 
     h1 = sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.integer], sf.IndexDate]
     with pytest.raises(TypeError):
-        TypeClinic(v1)(h1)
+        TypeClinic(v1).check(h1)
 
 def test_check_index_hierarchy_b():
 
@@ -614,10 +614,10 @@ def test_check_index_hierarchy_b():
     h2 = sf.IndexHierarchy[tp.Unpack[tp.Tuple[sf.Index[np.str_], ...]]]
 
     TypeClinic(v1)(h1)
-    assert TypeClinic(v1).check(h1).validated
+    assert TypeClinic(v1)(h1).validated
 
     TypeClinic(v2)(h1)
-    assert not TypeClinic(v1).check(h2).validated
+    assert not TypeClinic(v1)(h2).validated
 
 def test_check_index_hierarchy_c():
 
@@ -628,8 +628,8 @@ def test_check_index_hierarchy_c():
 
     h3 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.bool_], sf.Index[np.str_]]
 
-    TypeClinic(v1)(h1)
-    TypeClinic(v1)(h2)
+    TypeClinic(v1).check(h1)
+    TypeClinic(v1).check(h2)
 
 def test_check_index_hierarchy_d1():
 
@@ -639,17 +639,17 @@ def test_check_index_hierarchy_d1():
             sf.Index[np.str_],
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             ]
-    assert v1.via_type_clinic.check(h1).validated
+    assert v1.via_type_clinic(h1).validated
 
     v2 = sf.IndexHierarchy.from_labels([(1, 'a',), (1, 'b',), (2, 'c',)])
-    assert v2.via_type_clinic.check(h1).validated
+    assert v2.via_type_clinic(h1).validated
 
     v3 = sf.IndexHierarchy.from_labels([
             (1, 'a', False, True),
             (1, 'b', False, True),
             (2, 'c', True, False),
             ])
-    assert v3.via_type_clinic.check(h1).validated
+    assert v3.via_type_clinic(h1).validated
 
 def test_check_index_hierarchy_d2():
 
@@ -662,8 +662,8 @@ def test_check_index_hierarchy_d2():
             sf.Index[np.str_],
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             ]
-    assert not v1.via_type_clinic.check(h1).validated
-    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Depth 1 Index[str_] Expected str_, provided bool_ invalid'
+    assert not v1.via_type_clinic(h1).validated
+    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Depth 1 Index[str_] Expected str_, provided bool_ invalid'
 
 def test_check_index_hierarchy_e1():
 
@@ -671,10 +671,10 @@ def test_check_index_hierarchy_e1():
     h1 = sf.IndexHierarchy[
             tp.Unpack[tp.Tuple[sf.Index[np.integer], ...]],
             ]
-    assert v1.via_type_clinic.check(h1).validated
+    assert v1.via_type_clinic(h1).validated
 
     v2 = sf.IndexHierarchy.from_labels([(1,  3, 5), (3,  2, 2), (2,  3, 7)])
-    assert v2.via_type_clinic.check(h1).validated
+    assert v2.via_type_clinic(h1).validated
 
 def test_check_index_hierarchy_e2():
 
@@ -682,8 +682,8 @@ def test_check_index_hierarchy_e2():
     h1 = sf.IndexHierarchy[
             tp.Unpack[tp.Tuple[sf.Index[np.integer], ...]],
             ]
-    assert not v1.via_type_clinic.check(h1).validated
-    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Unpack[Tuple[Index[integer], ...]]] Tuple[Index[integer], ...] Index[integer] Expected integer, provided str_ invalid'
+    assert not v1.via_type_clinic(h1).validated
+    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Unpack[Tuple[Index[integer], ...]]] Tuple[Index[integer], ...] Index[integer] Expected integer, provided str_ invalid'
 
 
 def test_check_index_hierarchy_f():
@@ -691,8 +691,8 @@ def test_check_index_hierarchy_f():
     v1 = sf.IndexHierarchy.from_labels([(1,  'a'), (3,  'b'), (2,  'c')])
     h1 = sf.IndexHierarchy[sf.Index[np.integer], sf.IndexDate, sf.IndexDate]
 
-    assert not v1.via_type_clinic.check(h1).validated
-    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[integer], IndexDate, IndexDate] Expected IndexHierarchy has 3 dtype, provided IndexHierarchy has 2 depth'
+    assert not v1.via_type_clinic(h1).validated
+    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[integer], IndexDate, IndexDate] Expected IndexHierarchy has 3 dtype, provided IndexHierarchy has 2 depth'
 
 
 def test_check_index_hierarchy_g():
@@ -717,9 +717,9 @@ def test_check_index_hierarchy_g():
             sf.Index[np.int64],
             ]
 
-    assert not v1.via_type_clinic.check(h1).validated
+    assert not v1.via_type_clinic(h1).validated
 
-    assert scrub_str(v1.via_type_clinic.check(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
+    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
 
 
 def test_check_index_hierarchy_h1():
@@ -738,7 +738,7 @@ def test_check_index_hierarchy_h1():
             sf.Index[np.int_],
             ]
 
-    assert v1.via_type_clinic.check(h1).validated
+    assert v1.via_type_clinic(h1).validated
 
 def test_check_index_hierarchy_h2():
 
@@ -756,7 +756,7 @@ def test_check_index_hierarchy_h2():
             sf.Index[np.int_],
             ]
 
-    assert v1.via_type_clinic.check(h1).validated
+    assert v1.via_type_clinic(h1).validated
 
 
 def test_check_index_hierarchy_h3():
@@ -776,7 +776,7 @@ def test_check_index_hierarchy_h3():
             sf.Index[np.int_],
             ]
 
-    assert not v1.via_type_clinic.check(h1).validated
+    assert not v1.via_type_clinic(h1).validated
 
 #-------------------------------------------------------------------------------
 
@@ -789,7 +789,7 @@ def test_check_frame_a():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    cr = TypeClinic(f).check(h1)
+    cr = TypeClinic(f)(h1)
     # NOTE: langauge support for defaults in TypeVarTuple might changes this
     assert get_hints(cr) == ('Expected Frame has 0 dtype, provided Frame has 3 dtype',)
 
@@ -805,7 +805,7 @@ def test_check_frame_b():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert TypeClinic(f1).check(h1).validated
+    assert TypeClinic(f1)(h1).validated
 
     records = ((1, 3, True, False), (3, 8, True, True),)
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
@@ -813,7 +813,7 @@ def test_check_frame_b():
             columns=('a', 'b', 'c', 'd'),
             index=index,
             )
-    assert TypeClinic(f2).check(h1).validated
+    assert TypeClinic(f2)(h1).validated
 
 def test_check_frame_c():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
@@ -826,7 +826,7 @@ def test_check_frame_c():
             columns=('a', 'b'),
             index=index,
             )
-    assert TypeClinic(f1).check(h1).validated
+    assert TypeClinic(f1)(h1).validated
 
     records = ((1.8, 3.1, 5.4), (3.2, 8.1, 4.7),)
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
@@ -834,7 +834,7 @@ def test_check_frame_c():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert TypeClinic(f2).check(h1).validated
+    assert TypeClinic(f2)(h1).validated
 
 
     records = ((1.8, 3.1, False), (3.2, 8.1, True),)
@@ -843,7 +843,7 @@ def test_check_frame_c():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid'
+    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid'
 
 def test_check_frame_d():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
@@ -860,30 +860,30 @@ def test_check_frame_d():
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    assert TypeClinic(f1).check(h1).validated
+    assert TypeClinic(f1)(h1).validated
 
     records2 = ((True, 1.8, 3.1, 1.2, 'x', 'y'), (False, 3.2, 8.1, 3.5, 'a', 'b'),)
     f2 = sf.Frame.from_records(records2,
             columns=('a', 'b', 'c', 'd', 'e', 'f'),
             index=index,
             )
-    assert TypeClinic(f2).check(h1).validated
+    assert TypeClinic(f2)(h1).validated
 
     records3 = ((1.8, 3.1, 1.2, 'x', 'y'), (3.2, 8.1, 3.5, 'a', 'b'),)
     f3 = sf.Frame.from_records(records3,
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected bool_, provided float64 invalid'
-    assert not TypeClinic(f3).check(h1).validated
+    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected bool_, provided float64 invalid'
+    assert not TypeClinic(f3)(h1).validated
 
     records4 = ((True, 1.8, 'x'), (False, 3.2, 'a'),)
     f4 = sf.Frame.from_records(records4,
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert not TypeClinic(f4).check(h1).validated
-    assert scrub_str(TypeClinic(f4).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 1 Expected str_, provided float64 invalid'
+    assert not TypeClinic(f4)(h1).validated
+    assert scrub_str(TypeClinic(f4)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 1 Expected str_, provided float64 invalid'
 
 
 def test_check_frame_e1():
@@ -900,22 +900,22 @@ def test_check_frame_e1():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert TypeClinic(f1).check(h1).validated
+    assert TypeClinic(f1)(h1).validated
 
     records2 = ((3.1, 3.2, 5.2, 'x', 'y'), (8.1, 1.5, 5.2, 'a', 'b'),)
     f2 = sf.Frame.from_records(records2,
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    assert TypeClinic(f2).check(h1).validated
+    assert TypeClinic(f2)(h1).validated
 
     records3 = ((3.1, False, 5.2, 'x', 'y'), (8.1, True, 5.2, 'a', 'b'),)
     f3 = sf.Frame.from_records(records3,
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    assert not TypeClinic(f3).check(h1).validated
-    assert scrub_str(TypeClinic(f3).check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Fields 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid'
+    assert not TypeClinic(f3)(h1).validated
+    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Fields 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid'
 
 
 def test_check_frame_e2():
@@ -933,8 +933,8 @@ def test_check_frame_e2():
             index=index,
             )
 
-    assert not f1.via_type_clinic.check(h1).validated
-    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected str_, provided float64 invalid'
+    assert not f1.via_type_clinic(h1).validated
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected str_, provided float64 invalid'
 
     records2 = ((3.1, 'x', 'p'), (8.1, 'a', 'q'),)
     f2 = sf.Frame.from_records(records2,
@@ -942,7 +942,7 @@ def test_check_frame_e2():
             index=index,
             )
 
-    assert f2.via_type_clinic.check(h1).validated
+    assert f2.via_type_clinic(h1).validated
 
 
 def test_check_frame_e3():
@@ -960,14 +960,14 @@ def test_check_frame_e3():
             index=index,
             )
 
-    assert f1.via_type_clinic.check(h1).validated
+    assert f1.via_type_clinic(h1).validated
 
     records2 = ((1.2, 'a', 'x'), (3.4, 'b', 'a'),)
     f2 = sf.Frame.from_records(records2,
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert f2.via_type_clinic.check(h1).validated
+    assert f2.via_type_clinic(h1).validated
 
 
 def test_check_frame_f1():
@@ -985,7 +985,7 @@ def test_check_frame_f1():
             index=index,
             )
 
-    assert f1.via_type_clinic.check(h1).validated
+    assert f1.via_type_clinic(h1).validated
 
     records2 = (('a', 'x', 1.2), ('b', 'a', 5.4),)
     f2 = sf.Frame.from_records(records2,
@@ -993,7 +993,7 @@ def test_check_frame_f1():
             index=index,
             )
 
-    assert f2.via_type_clinic.check(h1).validated
+    assert f2.via_type_clinic(h1).validated
 
     records3 = (('a', 'x', 1.2, 5.3, 5.4), ('b', 'a', 5.4, 1.2, 1.4),)
     f3 = sf.Frame.from_records(records3,
@@ -1001,7 +1001,7 @@ def test_check_frame_f1():
             index=index,
             )
 
-    assert f3.via_type_clinic.check(h1).validated
+    assert f3.via_type_clinic(h1).validated
 
 
 def test_check_frame_f2():
@@ -1018,8 +1018,8 @@ def test_check_frame_f2():
             columns=('a', 'b', 'c', 'd'),
             index=index,
             )
-    assert not f1.via_type_clinic.check(h1).validated
-    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, Unpack[Tuple[float64, ...]]] Fields 2 to 3 Tuple[float64, ...] Expected float64, provided str_ invalid'
+    assert not f1.via_type_clinic(h1).validated
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, Unpack[Tuple[float64, ...]]] Fields 2 to 3 Tuple[float64, ...] Expected float64, provided str_ invalid'
 
 def test_check_frame_g():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
@@ -1036,8 +1036,8 @@ def test_check_frame_g():
             columns=('a', 'b'),
             index=index,
             )
-    assert not f1.via_type_clinic.check(h1).validated
-    assert scrub_str(f1.via_type_clinic.check(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, str_, Unpack[Tuple[float64, ...]]] Expected Frame has 3 dtype (excluding Unpack), provided Frame has 2 dtype'
+    assert not f1.via_type_clinic(h1).validated
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, str_, Unpack[Tuple[float64, ...]]] Expected Frame has 3 dtype (excluding Unpack), provided Frame has 2 dtype'
 
 
 
@@ -1178,9 +1178,9 @@ def test_check_error_display_a():
             np.str_]
 
     with pytest.raises(TypeError):
-        TypeClinic(f)(h2)
+        TypeClinic(f).check(h2)
     try:
-        TypeClinic(f)(h2)
+        TypeClinic(f).check(h2)
     except TypeError as e:
         assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool_ invalid In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid'
 
@@ -1204,8 +1204,8 @@ def test_type_clinic_a():
             np.int64,
             ]
 
-    assert str(TypeClinic(f).check(h)) == '<TypeCheckResult: 2 errors>'
-    post = TypeClinic(f).check(h).to_str()
+    assert str(TypeClinic(f)(h)) == '<TypeCheckResult: 2 errors>'
+    post = TypeClinic(f)(h).to_str()
     assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid'
 
 
@@ -1293,12 +1293,12 @@ def test_type_clinic_warn_a():
 def test_via_type_clinic_a():
     s = sf.Series(('a', 'b'), index=(('x', 'y')))
     assert str(s.via_type_clinic) == 'Series[Index[str_], str_]'
-    assert s.via_type_clinic.check(s.via_type_clinic.to_hint()).validated
+    assert s.via_type_clinic(s.via_type_clinic.to_hint()).validated
 
 def test_via_type_clinic_b():
     s = sf.Series(('a', 'b'), index=(('x', 'y')))
 
     with pytest.raises(TypeError):
-        s.via_type_clinic(sf.Series[sf.IndexDate, np.str_])
+        s.via_type_clinic.check(sf.Series[sf.IndexDate, np.str_])
 
 
