@@ -670,7 +670,7 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/clinic_result-method.rst
    api_overview/clinic_result-dictionary_like.rst
    api_overview/clinic_result-display.rst
-   api_overview/require-method.rst
+   api_overview/require-constructor.rst
    api_overview/www-constructor.rst
    api_overview/fill_value_auto-constructor.rst
    api_overview/fill_value_auto-attribute.rst
@@ -1235,7 +1235,7 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/clinic_result-method.rst
    api_detail/clinic_result-dictionary_like.rst
    api_detail/clinic_result-display.rst
-   api_detail/require-method.rst
+   api_detail/require-constructor.rst
    api_detail/www-constructor.rst
    api_detail/fill_value_auto-constructor.rst
    api_detail/fill_value_auto-attribute.rst

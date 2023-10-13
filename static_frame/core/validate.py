@@ -258,7 +258,7 @@ class Require:
         '''Validate the membership and ordering of labels.
 
         Args:
-            *labels: Provide labels as args. Use ... for undefined regions of labels.
+            \*labels: Provide labels as args. Use ... for undefined regions of labels.
         '''
         __slots__ = ('_labels',)
 
