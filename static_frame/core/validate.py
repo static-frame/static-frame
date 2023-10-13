@@ -337,25 +337,6 @@ class Require:
             if post is False:
                 yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._func)}', parent
 
-
-
-    # @staticmethod
-    # def len(length: int, /) -> Validator:
-    #     return Len(length)
-
-    # @staticmethod
-    # def shape() -> Validator:
-    #     pass
-
-    # @staticmethod
-    # def labels(*labels: tp.Sequence[TLabel]) -> Validator:
-    #     return Labels(*labels)
-
-    # @staticmethod
-    # def apply(func: tp.Callable[..., bool], /) -> Validator:
-    #     return Apply(func)
-
-
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
