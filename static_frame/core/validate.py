@@ -324,6 +324,29 @@ class Validator(Constraint):
         if post is False:
             yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}', parent
 
+
+# class Require:
+#     @staticmethod
+#     def len() -> Constraint:
+#         pass
+
+#     @staticmethod
+#     def name() -> Constraint:
+#         pass
+
+#     @staticmethod
+#     def shape() -> Constraint:
+#         pass
+
+#     @staticmethod
+#     def labels() -> Constraint:
+#         pass
+
+#     @staticmethod
+#     def apply() -> Constraint:
+#         pass
+
+
 #-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
