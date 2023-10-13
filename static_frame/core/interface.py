@@ -100,6 +100,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.validate import ClinicResult
 from static_frame.core.validate import InterfaceClinic
 from static_frame.core.validate import TypeClinic
+from static_frame.core.validate import Require
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
@@ -144,6 +145,7 @@ DOCUMENTED_COMPONENTS = (
         TypeClinic,
         InterfaceClinic,
         ClinicResult,
+        Require,
         WWW,
         FillValueAuto,
         DisplayActive,
@@ -1075,6 +1077,7 @@ class InterfaceSummary(Features):
     _CLS_ONLY = frozenset((
             WWW,
             InterfaceClinic,
+            Require,
             ))
     _CLS_INIT_SIMPLE = frozenset((
             ContainerOperandSequence,
@@ -1148,10 +1151,13 @@ class InterfaceSummary(Features):
             ) -> tp.Iterator[tp.Tuple[str, tp.Any, tp.Any]]:
         instance = cls.get_instance(target=target)
 
-        for name_attr in dir(target.__class__): # get metaclass
-            if name_attr == 'interface':
-                # getting interface off of the class will recurse
-                yield name_attr, None, ContainerBase.__class__.interface #type: ignore
+        # for name_attr in dir(target.__class__): # get metaclass
+        #     if name_attr == 'interface':
+        #         # getting interface off of the class will recurse
+        #         yield name_attr, None, ContainerBase.__class__.interface #type: ignore
+
+        if hasattr(target.__class__, 'interface'):
+            yield 'interface', None, ContainerBase.__class__.interface #type: ignore
 
         # force these to be ordered at the bottom
         selectors_found = set()
@@ -1161,7 +1167,8 @@ class InterfaceSummary(Features):
                 continue # skip, provided by metaclass
             if not cls.is_public(name_attr):
                 continue
-            if name_attr == '__init__' and target in cls._CLS_ONLY:
+            if target in cls._CLS_ONLY and (
+                    name_attr == '__init__' or name_attr in Features.DISPLAY):
                 continue
 
             if name_attr in cls._SELECTORS:

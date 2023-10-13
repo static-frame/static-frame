@@ -476,7 +476,7 @@ def test_check_interface_e():
 def test_check_interface_f1():
 
     @InterfaceClinic.check
-    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.name('foo')]) -> int:
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.Name('foo')]) -> int:
         return len(idx)
 
     idx1 = sf.Index(('a', 'b', 'c'), name='foo')
@@ -494,7 +494,7 @@ def test_check_interface_f1():
 def test_check_interface_f2():
 
     @InterfaceClinic.warn(category=DeprecationWarning)
-    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.name('foo')]) -> int:
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.Name('foo')]) -> int:
         return len(idx)
 
     idx1 = sf.Index(('a', 'b', 'c'), name='foo')
@@ -511,7 +511,7 @@ def test_check_interface_f2():
 def test_check_interface_f3():
 
     @InterfaceClinic.warn
-    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.name('foo')]) -> int:
+    def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.len(3), Require.Name('foo')]) -> int:
         return len(idx)
 
     idx1 = sf.Index(('a', 'b', 'c'), name='foo')
@@ -579,7 +579,7 @@ def test_check_annotated_b():
     v1 = sf.Series(('a', 'b'), index=sf.Index((10, 20)))
     h1 = tp.Annotated[
             sf.Series[sf.Index[np.int_], np.str_],
-            Require.name('foo'),
+            Require.Name('foo'),
     ]
     with pytest.raises(TypeError):
         TypeClinic(v1).check(h1)
@@ -1063,104 +1063,104 @@ def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]
 def test_validate_labels_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
     v = Require.labels('a', 'b', 'c')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
     v = Require.labels('a', 'b', 'c')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected 'b', provided 'x'",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected 'b', provided 'x'",)
 
 def test_validate_labels_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
     v = Require.labels('a', 'b', 'c')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == (
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == (
             "Expected 'b', provided 'x'",
             "Expected 'c', provided 'z'")
 
 def test_validate_labels_b():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.labels('a', ..., 'd')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.labels(..., 'd')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.labels('a', 'b', ...)
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.labels('a', 'b', ..., 'e')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'e'",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected has unmatched labels 'e'",)
 
 def test_validate_labels_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels('a', ..., 'c', ..., 'd')
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected labels exhausted at provided 'e'",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected labels exhausted at provided 'e'",)
 
 def test_validate_labels_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels('a', ..., 'c', ..., 'e')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e3():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels('a', ..., 'c', ...)
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e4():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels(..., 'c', ...)
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e5():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels(..., 'b', 'c', ...)
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e6():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels(..., 'b', ..., 'd', 'e')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e7():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels('a', 'b', ..., 'd', 'e')
-    assert not get_hints(v.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
 
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels('a', 'b', ..., 'f', ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'f', ...",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected has unmatched labels 'f', ...",)
 
 def test_validate_labels_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels(..., 'x', ..., 'y', ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected has unmatched labels 'x', ..., 'y', ...",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected has unmatched labels 'x', ..., 'y', ...",)
 
 def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.labels(..., 'a', ..., ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected cannot be defined with adjacent ellipses",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected cannot be defined with adjacent ellipses",)
 
 def test_validate_labels_e11():
     idx1 = sf.Series(('a',))
     v = Require.labels('a', ...)
-    assert get_hints(v.iter_error_log(idx1, None, (None,))) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
+    assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
 
 
 def test_validate_validator_a():
     idx1 = sf.Index(('a', 'b', 'c'))
     v1 = Require.apply(lambda i: 'b' in i)
-    assert not get_hints(v1.iter_error_log(idx1, None, (None,)))
+    assert not get_hints(v1._iter_errors(idx1, None, (None,)))
 
     v2 = Require.apply(lambda i: 'q' in i)
-    assert get_hints(v2.iter_error_log(idx1, None, (None,))) == ("Index failed validation with <lambda>",)
+    assert get_hints(v2._iter_errors(idx1, None, (None,))) == ("Index failed validation with <lambda>",)
 
 
 

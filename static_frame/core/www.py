@@ -101,6 +101,7 @@ WWWReturnType = tp.Union[Path, StringIO, BytesIO]
 class WWW:
     '''Utilities for downloading resources from the world-wide-web.
     '''
+    __slots__ = ()
 
     @staticmethod
     def _download_archive(

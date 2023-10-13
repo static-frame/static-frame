@@ -83,6 +83,7 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/type_clinic.rst
    api_overview/interface_clinic.rst
    api_overview/clinic_result.rst
+   api_overview/require.rst
    api_overview/www.rst
    api_overview/fill_value_auto.rst
    api_overview/display_active.rst
@@ -138,6 +139,7 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/type_clinic.rst
    api_detail/interface_clinic.rst
    api_detail/clinic_result.rst
+   api_detail/require.rst
    api_detail/www.rst
    api_detail/fill_value_auto.rst
    api_detail/display_active.rst
@@ -662,15 +664,14 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_overview/type_clinic-method.rst
    api_overview/type_clinic-display.rst
    api_overview/interface_clinic-method.rst
-   api_overview/interface_clinic-display.rst
    api_overview/clinic_result-constructor.rst
    api_overview/clinic_result-exporter.rst
    api_overview/clinic_result-attribute.rst
    api_overview/clinic_result-method.rst
    api_overview/clinic_result-dictionary_like.rst
    api_overview/clinic_result-display.rst
+   api_overview/require-method.rst
    api_overview/www-constructor.rst
-   api_overview/www-display.rst
    api_overview/fill_value_auto-constructor.rst
    api_overview/fill_value_auto-attribute.rst
    api_overview/fill_value_auto-display.rst
@@ -1228,15 +1229,14 @@ Immutable and grow-only DataFrames with static typing and run-time validation
    api_detail/type_clinic-method.rst
    api_detail/type_clinic-display.rst
    api_detail/interface_clinic-method.rst
-   api_detail/interface_clinic-display.rst
    api_detail/clinic_result-constructor.rst
    api_detail/clinic_result-exporter.rst
    api_detail/clinic_result-attribute.rst
    api_detail/clinic_result-method.rst
    api_detail/clinic_result-dictionary_like.rst
    api_detail/clinic_result-display.rst
+   api_detail/require-method.rst
    api_detail/www-constructor.rst
-   api_detail/www-display.rst
    api_detail/fill_value_auto-constructor.rst
    api_detail/fill_value_auto-attribute.rst
    api_detail/fill_value_auto-display.rst

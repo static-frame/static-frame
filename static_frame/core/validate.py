@@ -194,12 +194,12 @@ class ClinicError(TypeError):
 #-------------------------------------------------------------------------------
 # could be calld validator
 
-class Constraint:
+class Validator:
     '''Base class of all run-time constraints, deployed in Annotated generics.
     '''
     __slots__: tp.Tuple[str, ...] = ()
 
-    def iter_error_log(self,
+    def _iter_errors(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
@@ -210,25 +210,9 @@ class Constraint:
         args = ', '.join(to_name(getattr(self, v)) for v in self.__slots__)
         return f'{self.__class__.__name__}({args})'
 
-class Name(Constraint):
-    '''Constraint to validate the name of a container.
-    '''
-    __slots__ = ('_name',)
 
-    def __init__(self, name: TLabel):
-        self._name = name
-
-    def iter_error_log(self,
-            value: tp.Any,
-            hint: tp.Any,
-            parent: TParent,
-            ) -> tp.Iterator[TValidation]:
-        # returning anything is an error
-        if (n := value.name) != self._name:
-            yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
-
-class Len(Constraint):
-    '''Constraint to validate the length of a container.
+class Len(Validator):
+    '''Validator to validate the length of a container.
     '''
 
     __slots__ = ('_len',)
@@ -236,7 +220,7 @@ class Len(Constraint):
     def __init__(self, len: int):
         self._len = len
 
-    def iter_error_log(self,
+    def _iter_errors(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
@@ -246,7 +230,7 @@ class Len(Constraint):
 
 
 # might accept regular expression objects as label entries?
-class Labels(Constraint):
+class Labels(Validator):
     __slots__ = ('_labels',)
 
     def __init__(self, *labels: tp.Sequence[TLabel]):
@@ -264,7 +248,7 @@ class Labels(Constraint):
             labels = labels[1:]
         return ', '.join((repr(l) if l is not ... else '...') for l in labels)
 
-    def iter_error_log(self,
+    def _iter_errors(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
@@ -302,8 +286,7 @@ class Labels(Constraint):
                     remainder = self._prepare_remainder(self._labels[pos_e:])
                     yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
 
-
-class Apply(Constraint):
+class Apply(Validator):
     '''Apply a constraint to a container with an arbitrary function.
     '''
 
@@ -316,7 +299,7 @@ class Apply(Constraint):
     def _prepare_callable(func: tp.Callable[..., bool]) -> str:
         return func.__name__
 
-    def iter_error_log(self,
+    def _iter_errors(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
@@ -327,24 +310,44 @@ class Apply(Constraint):
 
 
 class Require:
-    @staticmethod
-    def name(name: TLabel, /) -> Constraint:
-        return Name(name)
+    __slots__ = ()
+
+    # @staticmethod
+    # def Name(name: TLabel, /) -> Validator:
+    #     return Name(name)
+
+    class Name(Validator):
+        '''Validator to validate the name of a container.
+        '''
+        __slots__ = ('_name',)
+
+        def __init__(self, name: TLabel):
+            self._name = name
+
+        def _iter_errors(self,
+                value: tp.Any,
+                hint: tp.Any,
+                parent: TParent,
+                ) -> tp.Iterator[TValidation]:
+            # returning anything is an error
+            if (n := value.name) != self._name:
+                yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
+
 
     @staticmethod
-    def len(length: int, /) -> Constraint:
+    def len(length: int, /) -> Validator:
         return Len(length)
 
     # @staticmethod
-    # def shape() -> Constraint:
+    # def shape() -> Validator:
     #     pass
 
     @staticmethod
-    def labels(*labels: tp.Sequence[TLabel]) -> Constraint:
+    def labels(*labels: tp.Sequence[TLabel]) -> Validator:
         return Labels(*labels)
 
     @staticmethod
-    def apply(func: tp.Callable[..., bool], /) -> Constraint:
+    def apply(func: tp.Callable[..., bool], /) -> Validator:
         return Apply(func)
 
 
@@ -655,8 +658,8 @@ def _check(
                 u_log.extend(c_log)
             else: # no breaks, so no matches within union
                 e_log.extend(u_log)
-        elif isinstance(h, Constraint):
-            e_log.extend(h.iter_error_log(v, h, p_next))
+        elif isinstance(h, Validator):
+            e_log.extend(h._iter_errors(v, h, p_next))
         elif is_generic(h):
             # have a generic container
             origin = tp.get_origin(h)
@@ -675,7 +678,7 @@ def _check(
                 # perform the un-annotated check
                 q.append((v, h_type, p_next))
                 for h_annotation in h_annotations:
-                    if isinstance(h_annotation, Constraint):
+                    if isinstance(h_annotation, Validator):
                         q.append((v, h_annotation, p_next))
             elif origin == tp.Literal: # NOTE: cannot use is due backwards compat
                 l_log: tp.List[TValidation] = []
@@ -949,7 +952,7 @@ class InterfaceClinic:
             *,
             fail_fast: bool = False,
             ) -> tp.Any:
-        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Raises ``ClinicError`` on failure.
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Validator`` subclasses. Raises ``ClinicError`` on failure.
         '''
 
         def decorator(func: TVFunc) -> TVFunc:
@@ -987,7 +990,7 @@ class InterfaceClinic:
             fail_fast: bool = False,
             category: tp.Type[Warning] = UserWarning,
             ) -> tp.Any:
-        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Constraint`` subclasses. Issues a warning on failure.
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Validator`` subclasses. Issues a warning on failure.
         '''
 
         def decorator(func: TVFunc) -> TVFunc:
