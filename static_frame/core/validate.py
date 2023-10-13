@@ -211,104 +211,6 @@ class Validator:
         return f'{self.__class__.__name__}({args})'
 
 
-class Len(Validator):
-    '''Validator to validate the length of a container.
-    '''
-
-    __slots__ = ('_len',)
-
-    def __init__(self, len: int):
-        self._len = len
-
-    def _iter_errors(self,
-            value: tp.Any,
-            hint: tp.Any,
-            parent: TParent,
-            ) -> tp.Iterator[TValidation]:
-        if (vl := len(value)) != self._len:
-            yield ERROR_MESSAGE_TYPE, f'Expected length {self._len}, provided length {vl}', parent
-
-
-# might accept regular expression objects as label entries?
-class Labels(Validator):
-    __slots__ = ('_labels',)
-
-    def __init__(self, *labels: tp.Sequence[TLabel]):
-        self._labels: tp.Sequence[TLabel] = labels
-
-    def __repr__(self) -> str:
-        args = ', '.join(to_name(v, func_to_str=repr) for v in self._labels)
-        return f'{self.__class__.__name__}({args})'
-
-
-    @staticmethod
-    def _prepare_remainder(labels: tp.Sequence[TLabel]) -> str:
-        # always drop leading ellipses
-        if labels[0] is ...:
-            labels = labels[1:]
-        return ', '.join((repr(l) if l is not ... else '...') for l in labels)
-
-    def _iter_errors(self,
-            value: tp.Any,
-            hint: tp.Any,
-            parent: TParent,
-            ) -> tp.Iterator[TValidation]:
-
-        if not isinstance(value, IndexBase):
-            yield ERROR_MESSAGE_TYPE, f'Expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
-        else:
-            pos_e = 0 # position expected
-            len_e = len(self._labels)
-
-            for label_p in value: # iterate over labels provided
-                if pos_e >= len_e:
-                    yield ERROR_MESSAGE_TYPE, f'Expected labels exhausted at provided {label_p!r}', parent
-                    break
-                label_e = self._labels[pos_e]
-
-                if label_e is not ...:
-                    if label_p != label_e:
-                        yield ERROR_MESSAGE_TYPE, f'Expected {label_e!r}, provided {label_p!r}', parent
-                    pos_e += 1
-                # label_e is an Ellipses; either find next as match or continue with Ellipses
-                elif pos_e + 1 < len_e: # more expected labels available
-                    label_next_e = self._labels[pos_e + 1]
-                    if label_next_e is ...:
-                        yield ERROR_MESSAGE_TYPE, 'Expected cannot be defined with adjacent ellipses', parent
-                        break
-                    if label_p == label_next_e:
-                        pos_e += 2 # skip the compared value, prepare to get next
-                # else, last expected value is Ellipses
-            else: # no break, evaluate final conditions
-                if pos_e == len_e - 1 and label_e is ...:
-                    pass # ended on elipses
-                elif pos_e < len_e:
-                    remainder = self._prepare_remainder(self._labels[pos_e:])
-                    yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
-
-class Apply(Validator):
-    '''Apply a constraint to a container with an arbitrary function.
-    '''
-
-    __slots__ = ('_func',)
-
-    def __init__(self, func: tp.Callable[..., bool]):
-        self._func: tp.Callable[..., bool] = func
-
-    @staticmethod
-    def _prepare_callable(func: tp.Callable[..., bool]) -> str:
-        return func.__name__
-
-    def _iter_errors(self,
-            value: tp.Any,
-            hint: tp.Any,
-            parent: TParent,
-            ) -> tp.Iterator[TValidation]:
-        post = self._func(value)
-        if post is False:
-            yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._func)}', parent
-
-
 class Require:
     __slots__ = ()
 
@@ -333,22 +235,125 @@ class Require:
             if (n := value.name) != self._name:
                 yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
 
+    class Len(Validator):
+        '''Validator to validate the length of a container.
+        '''
 
-    @staticmethod
-    def len(length: int, /) -> Validator:
-        return Len(length)
+        __slots__ = ('_len',)
+
+        def __init__(self, len: int):
+            self._len = len
+
+        def _iter_errors(self,
+                value: tp.Any,
+                hint: tp.Any,
+                parent: TParent,
+                ) -> tp.Iterator[TValidation]:
+            if (vl := len(value)) != self._len:
+                yield ERROR_MESSAGE_TYPE, f'Expected length {self._len}, provided length {vl}', parent
+
+
+    # might accept regular expression objects as label entries?
+    class Labels(Validator):
+        '''Validate the membership and ordering of labels.
+
+        Args:
+            *labels: Provide labels as args. Use ... for undefined regions of labels.
+        '''
+        __slots__ = ('_labels',)
+
+        def __init__(self, *labels: tp.Sequence[TLabel]):
+            self._labels: tp.Sequence[TLabel] = labels
+
+        def __repr__(self) -> str:
+            args = ', '.join(to_name(v, func_to_str=repr) for v in self._labels)
+            return f'{self.__class__.__name__}({args})'
+
+
+        @staticmethod
+        def _prepare_remainder(labels: tp.Sequence[TLabel]) -> str:
+            # always drop leading ellipses
+            if labels[0] is ...:
+                labels = labels[1:]
+            return ', '.join((repr(l) if l is not ... else '...') for l in labels)
+
+        def _iter_errors(self,
+                value: tp.Any,
+                hint: tp.Any,
+                parent: TParent,
+                ) -> tp.Iterator[TValidation]:
+
+            if not isinstance(value, IndexBase):
+                yield ERROR_MESSAGE_TYPE, f'Expected {self} to be used on Index or IndexHierarchy, not provided {to_name(type(value))}', parent
+            else:
+                pos_e = 0 # position expected
+                len_e = len(self._labels)
+
+                for label_p in value: # iterate over labels provided
+                    if pos_e >= len_e:
+                        yield ERROR_MESSAGE_TYPE, f'Expected labels exhausted at provided {label_p!r}', parent
+                        break
+                    label_e = self._labels[pos_e]
+
+                    if label_e is not ...:
+                        if label_p != label_e:
+                            yield ERROR_MESSAGE_TYPE, f'Expected {label_e!r}, provided {label_p!r}', parent
+                        pos_e += 1
+                    # label_e is an Ellipses; either find next as match or continue with Ellipses
+                    elif pos_e + 1 < len_e: # more expected labels available
+                        label_next_e = self._labels[pos_e + 1]
+                        if label_next_e is ...:
+                            yield ERROR_MESSAGE_TYPE, 'Expected cannot be defined with adjacent ellipses', parent
+                            break
+                        if label_p == label_next_e:
+                            pos_e += 2 # skip the compared value, prepare to get next
+                    # else, last expected value is Ellipses
+                else: # no break, evaluate final conditions
+                    if pos_e == len_e - 1 and label_e is ...:
+                        pass # ended on elipses
+                    elif pos_e < len_e:
+                        remainder = self._prepare_remainder(self._labels[pos_e:])
+                        yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
+
+    class Apply(Validator):
+        '''Apply a constraint to a container with an arbitrary function.
+        '''
+
+        __slots__ = ('_func',)
+
+        def __init__(self, func: tp.Callable[..., bool]):
+            self._func: tp.Callable[..., bool] = func
+
+        @staticmethod
+        def _prepare_callable(func: tp.Callable[..., bool]) -> str:
+            return func.__name__
+
+        def _iter_errors(self,
+                value: tp.Any,
+                hint: tp.Any,
+                parent: TParent,
+                ) -> tp.Iterator[TValidation]:
+            post = self._func(value)
+            if post is False:
+                yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._func)}', parent
+
+
+
+    # @staticmethod
+    # def len(length: int, /) -> Validator:
+    #     return Len(length)
 
     # @staticmethod
     # def shape() -> Validator:
     #     pass
 
-    @staticmethod
-    def labels(*labels: tp.Sequence[TLabel]) -> Validator:
-        return Labels(*labels)
+    # @staticmethod
+    # def labels(*labels: tp.Sequence[TLabel]) -> Validator:
+    #     return Labels(*labels)
 
-    @staticmethod
-    def apply(func: tp.Callable[..., bool], /) -> Validator:
-        return Apply(func)
+    # @staticmethod
+    # def apply(func: tp.Callable[..., bool], /) -> Validator:
+    #     return Apply(func)
 
 
 #-------------------------------------------------------------------------------

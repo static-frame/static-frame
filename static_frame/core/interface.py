@@ -1069,6 +1069,29 @@ class InterfaceRecord(tp.NamedTuple):
                     )
 
 
+    @classmethod
+    def gen_from_class(cls, *,
+            cls_name: str,
+            cls_target: tp.Type[ContainerBase],
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
+            max_args: int,
+            max_doc_chars: int,
+            ) -> tp.Iterator[InterfaceRecord]:
+        '''For classes defined on outer classes.
+        '''
+        signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
+        yield InterfaceRecord(cls_name,
+                InterfaceGroup.Constructor,
+                signature,
+                doc,
+                reference,
+                signature_no_args=signature_no_args,
+                use_signature=True,
+                )
+
 #-------------------------------------------------------------------------------
 
 class InterfaceSummary(Features):
@@ -1279,8 +1302,11 @@ class InterfaceSummary(Features):
                         **kwargs, # pyright: ignore
                         )
 
-            elif callable(obj): # general methods
-                yield from InterfaceRecord.gen_from_method(**kwargs) # pyright: ignore
+            elif callable(obj):
+                if obj.__class__ == type: # a class defined on this class
+                    yield from InterfaceRecord.gen_from_class(**kwargs) # pyright: ignore
+                else: # general methods
+                    yield from InterfaceRecord.gen_from_method(**kwargs) # pyright: ignore
             else:
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,

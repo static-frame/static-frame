@@ -12,6 +12,7 @@ from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
+from static_frame.core.validate import Require
 
 
 class TestUnit(TestCase):
@@ -106,9 +107,17 @@ class TestUnit(TestCase):
                 max_args=99,
                 )
         self.assertEqual(inter['signature_no_args'].values.tolist(),
-            ['from_file()', 'from_gzip()', 'from_zip()', '__repr__()', '__str__()']
+            ['from_file()', 'from_gzip()', 'from_zip()']
             )
 
+    def test_interface_summary_name_obj_iter_b(self) -> None:
+        inter = InterfaceSummary.to_frame(Require,
+                minimized=False,
+                max_args=99,
+                )
+        sigs = inter['signature_no_args'].values.tolist()
+        assert 'Len()' in sigs
+        assert 'Name()' in sigs
 
 if __name__ == '__main__':
     import unittest
