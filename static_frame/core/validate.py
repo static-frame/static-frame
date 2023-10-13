@@ -916,6 +916,16 @@ def _check_interface(
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
+# TODO: rename options
+# RequireSignature.check
+# InterfaceMonitor
+# InterfaceClinic
+# Signature.check
+# RequireSignature
+# RequrieInterface
+# RequireCall.check
+
+
 class InterfaceClinic:
     '''A family of decorators for run-time type checking and data validation.
     '''
