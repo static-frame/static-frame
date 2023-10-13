@@ -120,6 +120,7 @@ from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.validate import ClinicError as ClinicError
 from static_frame.core.validate import ClinicResult as ClinicResult
 from static_frame.core.validate import InterfaceClinic as InterfaceClinic
+from static_frame.core.validate import Require as Require
 from static_frame.core.validate import TypeClinic as TypeClinic
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn

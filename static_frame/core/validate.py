@@ -276,7 +276,7 @@ class Labels(Constraint):
             pos_e = 0 # position expected
             len_e = len(self._labels)
 
-            for label_p in value:
+            for label_p in value: # iterate over labels provided
                 if pos_e >= len_e:
                     yield ERROR_MESSAGE_TYPE, f'Expected labels exhausted at provided {label_p!r}', parent
                     break
@@ -344,7 +344,7 @@ class Require:
         return Labels(*labels)
 
     @staticmethod
-    def apply(func: tp.Callable[..., bool]) -> Constraint:
+    def apply(func: tp.Callable[..., bool], /) -> Constraint:
         return Apply(func)
 
 
