@@ -192,6 +192,7 @@ class ClinicError(TypeError):
 
 
 #-------------------------------------------------------------------------------
+# could be calld validator
 
 class Constraint:
     '''Base class of all run-time constraints, deployed in Annotated generics.
@@ -302,49 +303,49 @@ class Labels(Constraint):
                     yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
 
 
-class Validator(Constraint):
+class Apply(Constraint):
     '''Apply a constraint to a container with an arbitrary function.
     '''
 
-    __slots__ = ('_validator',)
+    __slots__ = ('_func',)
 
-    def __init__(self, validator: tp.Callable[..., bool]):
-        self._validator: tp.Callable[..., bool] = validator
+    def __init__(self, func: tp.Callable[..., bool]):
+        self._func: tp.Callable[..., bool] = func
 
     @staticmethod
-    def _prepare_callable(validator: tp.Callable[..., bool]) -> str:
-        return validator.__name__
+    def _prepare_callable(func: tp.Callable[..., bool]) -> str:
+        return func.__name__
 
     def iter_error_log(self,
             value: tp.Any,
             hint: tp.Any,
             parent: TParent,
             ) -> tp.Iterator[TValidation]:
-        post = self._validator(value)
+        post = self._func(value)
         if post is False:
-            yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._validator)}', parent
+            yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._func)}', parent
 
 
-# class Require:
-#     @staticmethod
-#     def len() -> Constraint:
-#         pass
+class Require:
+    @staticmethod
+    def name(name: TLabel, /) -> Constraint:
+        return Name(name)
 
-#     @staticmethod
-#     def name() -> Constraint:
-#         pass
+    @staticmethod
+    def len(length: int, /) -> Constraint:
+        return Len(length)
 
-#     @staticmethod
-#     def shape() -> Constraint:
-#         pass
+    # @staticmethod
+    # def shape() -> Constraint:
+    #     pass
 
-#     @staticmethod
-#     def labels() -> Constraint:
-#         pass
+    @staticmethod
+    def labels(*labels: tp.Sequence[TLabel]) -> Constraint:
+        return Labels(*labels)
 
-#     @staticmethod
-#     def apply() -> Constraint:
-#         pass
+    @staticmethod
+    def apply(func: tp.Callable[..., bool]) -> Constraint:
+        return Apply(func)
 
 
 #-------------------------------------------------------------------------------
