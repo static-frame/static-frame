@@ -20,6 +20,7 @@ from static_frame.core.util import TLabel
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TBusAny = Bus[tp.Any]
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -39,7 +40,7 @@ def get_extractor(
 
 
 def _bus_to_hierarchy_inner_hierarchies(
-        bus: tp.Union[Bus, 'Yarn'],
+        bus: tp.Union[TBusAny, 'Yarn'],
         axis: int,
         extractor: tp.Callable[[IndexBase], IndexBase],
         init_exception_cls: tp.Type[Exception],
@@ -79,7 +80,7 @@ def _bus_to_hierarchy_inner_hierarchies(
 
 
 def bus_to_hierarchy(
-        bus: tp.Union[Bus, 'Yarn'],
+        bus: tp.Union[TBusAny, 'Yarn'],
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
@@ -126,7 +127,7 @@ def bus_to_hierarchy(
 
 
 def buses_to_hierarchy(
-        buses: tp.Iterable[Bus],
+        buses: tp.Iterable[TBusAny],
         labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],

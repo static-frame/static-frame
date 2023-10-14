@@ -73,6 +73,7 @@ if tp.TYPE_CHECKING:
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TBusAny = Bus[tp.Any]
 
 #-------------------------------------------------------------------------------
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
@@ -1798,7 +1799,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_bus(self,
             *,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> 'Bus':
+            ) -> TBusAny:
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily), this :obj:`Batch` will be exhausted.
         '''
         frames: tp.List[TFrameAny] = []

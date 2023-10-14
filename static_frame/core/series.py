@@ -141,8 +141,10 @@ if tp.TYPE_CHECKING:
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     FrameType = tp.TypeVar('FrameType', bound=TFrameAny) # pylint: disable=W0611 #pragma: no cover
+
 
 #-------------------------------------------------------------------------------
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
@@ -311,7 +313,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable[tp.Union[TSeriesAny, 'Bus']],
+            containers: tp.Iterable[tp.Union[TSeriesAny, TBusAny]],
             *,
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,

@@ -35,11 +35,12 @@ if tp.TYPE_CHECKING:
     # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'Series[tp.Any, tp.Any]',
-        'Bus',
+        'Bus[tp.Any]',
         'Quilt',
         'Yarn',
         )

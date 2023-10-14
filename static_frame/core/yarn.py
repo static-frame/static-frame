@@ -53,6 +53,7 @@ if tp.TYPE_CHECKING:
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TBusAny = Bus[tp.Any]
 
 class Yarn(ContainerBase, StoreClientMixin):
     '''
@@ -74,7 +75,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_buses(cls,
-            buses: tp.Iterable[Bus],
+            buses: tp.Iterable[TBusAny],
             *,
             name: NameType = None,
             retain_labels: bool,
@@ -123,7 +124,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             name:
             deepcopy_from_bus:
         '''
-        bus_components: tp.List[Bus] = []
+        bus_components: tp.List[TBusAny] = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
@@ -149,7 +150,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            series: tp.Union[TSeriesAny, tp.Iterable[Bus]],
+            series: tp.Union[TSeriesAny, tp.Iterable[TBusAny]],
             *,
             index: IndexInitializer | IndexAutoFactoryType | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
