@@ -417,12 +417,13 @@ def pivot_core(
         columns_name = columns_name + ('func',)
 
     columns_depth = len(columns_name)
+    columns_constructor: TIndexCtor
 
     if columns_depth == 1:
         columns_name = columns_name[0] # type: ignore
         columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
     else:
-        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
+        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                 depth_reference=columns_depth,
                 name=columns_name)
 

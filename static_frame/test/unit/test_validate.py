@@ -8,9 +8,9 @@ import pytest
 import typing_extensions as tp
 
 import static_frame as sf
+from static_frame.core.validate import CallGuard
 from static_frame.core.validate import ClinicResult
 from static_frame.core.validate import ErrorAction
-from static_frame.core.validate import CallGuard
 from static_frame.core.validate import Require
 from static_frame.core.validate import TValidation
 from static_frame.core.validate import TypeClinic

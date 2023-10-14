@@ -21,7 +21,7 @@ msgpack-numpy==0.4.8
 visidata==2.11
 frame-fixtures==0.2.1
 
-mypy==1.5.1
+mypy==1.6.0
 pyright==1.1.331
 pylint==2.17.5
 isort==5.10.1

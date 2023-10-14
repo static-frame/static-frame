@@ -30,6 +30,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
@@ -503,11 +504,12 @@ class StoreXLSX(Store):
                     axis_depth=index_depth)
 
             # index: tp.Optional[IndexBase] = None
+            index_default_constructor: TIndexCtor
 
             if index_depth <= 1:
                 index_default_constructor = partial(Index, name=index_name)
             else: # > 1
-                index_default_constructor = partial(IndexHierarchy.from_labels, # type: ignore
+                index_default_constructor = partial(IndexHierarchy.from_labels,
                         name=index_name,
                         continuation_token=None, # NOTE: needed
                         )
@@ -527,7 +529,7 @@ class StoreXLSX(Store):
 
             # columns: tp.Optional[IndexBase] = None
             # own_columns = False
-
+            columns_default_constructor: TIndexCtor
             if columns_depth <= 1:
                 columns_default_constructor = partial(
                         container_type._COLUMNS_CONSTRUCTOR,
@@ -535,7 +537,7 @@ class StoreXLSX(Store):
                         )
             elif columns_depth > 1:
                 columns_default_constructor = partial(
-                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
+                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
                         continuation_token=None, # NOTE: needed, not the default
                         )

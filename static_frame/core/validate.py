@@ -214,10 +214,6 @@ class Validator:
 class Require:
     __slots__ = ()
 
-    # @staticmethod
-    # def Name(name: TLabel, /) -> Validator:
-    #     return Name(name)
-
     class Name(Validator):
         '''Validator to validate the name of a container.
         '''
@@ -255,7 +251,7 @@ class Require:
 
     # might accept regular expression objects as label entries?
     class Labels(Validator):
-        '''Validate the membership and ordering of labels.
+        r'''Validate the membership and ordering of labels.
 
         Args:
             \*labels: Provide labels as args. Use ... for undefined regions of labels.

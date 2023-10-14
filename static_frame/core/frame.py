@@ -2403,6 +2403,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 axis_depth=index_depth)
 
         index_values: tp.Iterable[tp.Any]
+        index_constructor: TIndexCtor
+
         if index_depth == 1:
             if not index_arrays:
                 index_values = () # assume an empty Frame
@@ -2419,7 +2421,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         elif index_continuation_token is not CONTINUATION_TOKEN_INACTIVE:
             # expect all index_arrays to have the same length
             index_values = zip(*index_arrays)
-            index_constructor = partial(IndexHierarchy.from_labels, # type: ignore
+            index_constructor = partial(IndexHierarchy.from_labels,
                     name=index_name,
                     continuation_token=index_continuation_token,
                     )
@@ -2431,7 +2433,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     )
         else: # index_depth > 1, no continuation toke`n
             index_constructor = partial(
-                    IndexHierarchy.from_values_per_depth, # type: ignore
+                    IndexHierarchy.from_values_per_depth,
                     name=index_name,
                     )
             index, own_index = index_from_optional_constructors(
@@ -3050,13 +3052,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 axis_depth=columns_depth,
                 )
 
+        columns_default_constructor: TIndexCtor
         if columns_depth <= 1:
             columns_default_constructor = partial(
                     cls._COLUMNS_CONSTRUCTOR,
                     name=columns_name)
         else:
             columns_default_constructor = partial(
-                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited, # type: ignore
+                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ',
                     name=columns_name)
 
@@ -3073,6 +3076,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 axis_depth=index_depth,
                 )
 
+        index_default_constructor: TIndexCtor # pyright: ignore
         if index_depth == 1:
             index_values = index_arrays[0] # type: ignore
             index_default_constructor = partial(Index, name=index_name) # pyright: ignore
