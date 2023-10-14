@@ -2,7 +2,7 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame.core.validate import InterfaceClinic
+from static_frame.core.validate import CallGuard
 
 TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TFrameGOAny = sf.FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -177,7 +177,7 @@ def test_frame_interface_a() -> None:
         dtypes=(np.int64, np.int64, np.bool_),
         )
 
-    @InterfaceClinic.check
+    @CallGuard.check
     def proc1(f: h1) -> sf.Series[sf.Index[np.int64], np.int64]:
         return f['a']
 

@@ -1,7 +1,7 @@
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.validate import InterfaceClinic
+from static_frame.core.validate import CallGuard
 from static_frame.test.test_case import skip_nple119
 
 
@@ -15,7 +15,7 @@ def test_ndarray_a() -> None:
 
 def test_interface_clinic_a() -> None:
 
-    @InterfaceClinic.check(fail_fast=False)
+    @CallGuard.check(fail_fast=False)
     def proc1(a: int, b: bool) -> int:
         return a if b else -1
 

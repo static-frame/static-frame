@@ -3,5 +3,5 @@
 
     {% import 'macros.jinja' as macros %}
 
-    {{ macros.api_overview(examples_defined=examples_defined, toc=toc, *interface['InterfaceClinic']['method']) }}
+    {{ macros.api_overview(examples_defined=examples_defined, toc=toc, *interface['CallGuard']['method']) }}
 

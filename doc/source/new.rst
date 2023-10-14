@@ -9,7 +9,7 @@ Added ``via_type_clinic`` interfaces to all containers.
 
 Added ``TypeClinic``, ``ClinicResult``, and ``ClinicError``.
 
-Added ``InterfaceClinic``, exposing decorators for performing run-time function interface type check and data validation.
+Added ``CallGuard``, exposing decorators for performing run-time function interface type check and data validation.
 
 
 1.6.5

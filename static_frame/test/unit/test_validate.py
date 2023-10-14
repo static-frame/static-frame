@@ -10,7 +10,7 @@ import typing_extensions as tp
 import static_frame as sf
 from static_frame.core.validate import ClinicResult
 from static_frame.core.validate import ErrorAction
-from static_frame.core.validate import InterfaceClinic
+from static_frame.core.validate import CallGuard
 from static_frame.core.validate import Require
 from static_frame.core.validate import TValidation
 from static_frame.core.validate import TypeClinic
@@ -407,7 +407,7 @@ def test_check_type_dict_a():
 #-------------------------------------------------------------------------------
 def test_check_interface_a():
 
-    @InterfaceClinic.check(fail_fast=False)
+    @CallGuard.check(fail_fast=False)
     def proc1(a: int, b: int) -> int:
         return a * b
 
@@ -415,7 +415,7 @@ def test_check_interface_a():
 
 def test_check_interface_b():
 
-    @InterfaceClinic.check(fail_fast=False)
+    @CallGuard.check(fail_fast=False)
     def proc1(a: int, b: int) -> bool:
         return a * b
     try:
@@ -430,7 +430,7 @@ def test_check_interface_b():
 
 def test_check_interface_c1():
 
-    @InterfaceClinic.check(fail_fast=False)
+    @CallGuard.check(fail_fast=False)
     def proc1(a: int, b) -> int:
         return a * b
 
@@ -442,7 +442,7 @@ def test_check_interface_c1():
 
 def test_check_interface_c2():
 
-    @InterfaceClinic.check(fail_fast=False)
+    @CallGuard.check(fail_fast=False)
     def proc1(a: int, b) -> int:
         return a * b
 
@@ -454,7 +454,7 @@ def test_check_interface_c2():
 
 def test_check_interface_d():
 
-    @InterfaceClinic.check
+    @CallGuard.check
     def proc1(a: int, b: int) -> int:
         return a * b
 
@@ -465,7 +465,7 @@ def test_check_interface_d():
 
 def test_check_interface_e():
 
-    @InterfaceClinic.check
+    @CallGuard.check
     def proc1(a: tp.Annotated[int, 'foo'], b: tp.Annotated[int, 'bar']) -> int:
         return a * b
 
@@ -475,7 +475,7 @@ def test_check_interface_e():
 
 def test_check_interface_f1():
 
-    @InterfaceClinic.check
+    @CallGuard.check
     def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.Len(3), Require.Name('foo')]) -> int:
         return len(idx)
 
@@ -493,7 +493,7 @@ def test_check_interface_f1():
 
 def test_check_interface_f2():
 
-    @InterfaceClinic.warn(category=DeprecationWarning)
+    @CallGuard.warn(category=DeprecationWarning)
     def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.Len(3), Require.Name('foo')]) -> int:
         return len(idx)
 
@@ -510,7 +510,7 @@ def test_check_interface_f2():
 
 def test_check_interface_f3():
 
-    @InterfaceClinic.warn
+    @CallGuard.warn
     def proc1(idx: tp.Annotated[sf.Index[np.str_], Require.Len(3), Require.Name('foo')]) -> int:
         return len(idx)
 

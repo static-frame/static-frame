@@ -919,14 +919,14 @@ TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 # TODO: rename options
 # RequireSignature.check
 # InterfaceMonitor
-# InterfaceClinic
+# CallGuard
 # Signature.check
 # RequireSignature
 # RequrieInterface
 # RequireCall.check
 
 
-class InterfaceClinic:
+class CallGuard:
     '''A family of decorators for run-time type checking and data validation.
     '''
 

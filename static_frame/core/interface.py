@@ -98,7 +98,7 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import AnyCallable
 from static_frame.core.validate import ClinicResult
-from static_frame.core.validate import InterfaceClinic
+from static_frame.core.validate import CallGuard
 from static_frame.core.validate import Require
 from static_frame.core.validate import TypeClinic
 from static_frame.core.www import WWW
@@ -143,7 +143,7 @@ DOCUMENTED_COMPONENTS = (
         HLoc,
         ILoc,
         TypeClinic,
-        InterfaceClinic,
+        CallGuard,
         ClinicResult,
         Require,
         WWW,
@@ -1099,7 +1099,7 @@ class InterfaceSummary(Features):
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
     _CLS_ONLY = frozenset((
             WWW,
-            InterfaceClinic,
+            CallGuard,
             Require,
             ))
     _CLS_INIT_SIMPLE = frozenset((
@@ -1113,7 +1113,7 @@ class InterfaceSummary(Features):
             DisplayActive,
             Platform,
             WWW,
-            InterfaceClinic,
+            CallGuard,
             )) | _CLS_ONLY
 
     _SELECTORS = ('__getitem__', 'iloc', 'loc')
