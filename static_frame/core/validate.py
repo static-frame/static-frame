@@ -916,16 +916,6 @@ def _check_interface(
 
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
-# TODO: rename options
-# RequireSignature.check
-# InterfaceMonitor
-# CallGuard
-# Signature.check
-# RequireSignature
-# RequrieInterface
-# RequireCall.check
-
-
 class CallGuard:
     '''A family of decorators for run-time type checking and data validation.
     '''
@@ -940,17 +930,16 @@ class CallGuard:
 
     @tp.overload
     @staticmethod
-    def check(func: None, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+    def check(func: None, /, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
 
     @staticmethod
     def check(
             func: TVFunc | None = None,
-            *,
+            /, *,
             fail_fast: bool = False,
             ) -> tp.Any:
-        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Validator`` subclasses. Raises ``ClinicError`` on failure.
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Require``-provided validators. Raises ``ClinicError`` on failure.
         '''
-
         def decorator(func: TVFunc) -> TVFunc:
             @wraps(func)
             def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
@@ -977,18 +966,17 @@ class CallGuard:
 
     @tp.overload
     @staticmethod
-    def warn(func: None, *, fail_fast: bool, category: tp.Type[Warning]) -> tp.Callable[[TVFunc], TVFunc]: ...
+    def warn(func: None, /, *, fail_fast: bool, category: tp.Type[Warning]) -> tp.Callable[[TVFunc], TVFunc]: ...
 
     @staticmethod
     def warn(
             func: TVFunc | None = None,
-            *,
+            /, *,
             fail_fast: bool = False,
             category: tp.Type[Warning] = UserWarning,
             ) -> tp.Any:
-        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Validator`` subclasses. Issues a warning on failure.
+        '''A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Require``-provided validators. Issues a warning on failure.
         '''
-
         def decorator(func: TVFunc) -> TVFunc:
             @wraps(func)
             def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
