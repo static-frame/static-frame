@@ -55,7 +55,10 @@ TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TBusAny = Bus[tp.Any]
 
-class Yarn(ContainerBase, StoreClientMixin):
+#-------------------------------------------------------------------------------
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+
+class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     '''
@@ -80,7 +83,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             name: NameType = None,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
         series: TSeriesAny = Series.from_items(
@@ -109,12 +112,12 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Yarn'],
+            containers: tp.Iterable[TYarnAny],
             *,
             index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = NAME_DEFAULT,
             deepcopy_from_bus: bool = False,
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Yarn` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
@@ -234,7 +237,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         '''{}'''
         return self._series._name
 
-    def rename(self, name: NameType) -> 'Yarn':
+    def rename(self, name: NameType) -> tp.Self:
         '''
         Return a new :obj:`Yarn` with an updated name attribute.
 
@@ -253,15 +256,15 @@ class Yarn(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces['Yarn']:
+    def loc(self) -> InterGetItemLocReduces[TYarnAny]:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces['Yarn']:
+    def iloc(self) -> InterGetItemILocReduces[TYarnAny]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Yarn']:
+    def drop(self) -> InterfaceSelectTrio[TYarnAny]:
         '''
         Interface for dropping elements from :obj:`Yarn`.
         '''
@@ -273,7 +276,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Yarn']:
+    def iter_element(self) -> IterNodeNoArg[TYarnAny]:
         '''
         Iterator of elements.
         '''
@@ -286,7 +289,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArg[TYarnAny]:
         '''
         Iterator of label, element pairs.
         '''
@@ -481,7 +484,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Yarn')
-    def head(self, count: int = 5) -> 'Yarn':
+    def head(self, count: int = 5) -> TYarnAny:
         '''{doc}
 
         Args:
@@ -493,7 +496,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Yarn')
-    def tail(self, count: int = 5) -> 'Yarn':
+    def tail(self, count: int = 5) -> TYarnAny:
         '''{doc}s
 
         Args:
@@ -508,7 +511,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> Yarn | TFrameAny:
+    def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -554,14 +557,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: TLocSelector) -> Yarn | TFrameAny:
+    def _extract_loc(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> Yarn | TFrameAny:
+    def __getitem__(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         '''Selector of values by label.
 
         Args:
@@ -572,12 +575,12 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: TILocSelector) -> 'Yarn':
+    def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         invalid = np.full(len(self._index), True)
         invalid[key] = False
         return self._extract_iloc(invalid) # type: ignore
 
-    def _drop_loc(self, key: TLocSelector) -> 'Yarn':
+    def _drop_loc(self, key: TLocSelector) -> tp.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
@@ -727,7 +730,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     @doc_inject(selector='relabel', class_name='Yarn')
     def relabel(self,
             index: tp.Optional[RelabelInput]
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -756,7 +759,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @doc_inject(selector='relabel_flat', class_name='Yarn')
-    def relabel_flat(self) -> 'Yarn':
+    def relabel_flat(self) -> tp.Self:
         '''
         {doc}
         '''
@@ -773,7 +776,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     @doc_inject(selector='relabel_level_add', class_name='Yarn')
     def relabel_level_add(self,
             level: TLabel
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -790,7 +793,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     @doc_inject(selector='relabel_level_drop', class_name='Yarn')
     def relabel_level_drop(self,
             count: int = 1
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -811,7 +814,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             depth_map: tp.Sequence[int],
             *,
             index_constructors: TIndexCtorSpecifiers = None,
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
@@ -826,3 +829,8 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
         return self._extract_iloc(iloc_map).relabel(index) # type: ignore
+
+
+TYarnAny = Yarn[tp.Any]
+
+

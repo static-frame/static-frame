@@ -76,6 +76,7 @@ if tp.TYPE_CHECKING:
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TBusAny = Bus[tp.Any]
+TYarnAny = Yarn[tp.Any]
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
@@ -94,7 +95,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             '_deepcopy_from_bus',
             )
 
-    _bus: tp.Union[TBusAny, Yarn]
+    _bus: tp.Union[TBusAny, TYarnAny]
     _axis: int
     _axis_hierarchy: tp.Optional[IndexHierarchy]
     _axis_opposite: tp.Optional[IndexBase]
@@ -470,7 +471,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            bus: tp.Union[TBusAny, Yarn],
+            bus: tp.Union[TBusAny, TYarnAny],
             *,
             axis: int = 0,
             retain_labels: bool,
@@ -652,7 +653,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self._columns
 
     @property
-    def bus(self) -> tp.Union[TBusAny, Yarn]:
+    def bus(self) -> tp.Union[TBusAny, TYarnAny]:
         '''The ``Bus`` instance assigned to this ``Quilt``.
         '''
         return self._bus

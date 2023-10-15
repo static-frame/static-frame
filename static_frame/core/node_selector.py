@@ -46,6 +46,7 @@ if tp.TYPE_CHECKING:
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 FrameOrSeries = tp.Union[
@@ -63,7 +64,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'TypeBlocks',
         'Bus[tp.Any]',
         'Batch',
-        'Yarn',
+        'Yarn[tp.Any]',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
