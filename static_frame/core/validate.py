@@ -452,7 +452,7 @@ def iter_index_hierarchy_checks(
         if unpack_pos == -1: # no unpack
             if h_len != col_count:
                 # if no unpack and lengths are not equal
-                yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {h_len} dtype, provided IndexHierarchy has {col_count} depth', parent
+                yield ERROR_MESSAGE_TYPE, f'Expected IndexHierarchy has {h_len} depth, provided IndexHierarchy has {col_count} depth', parent
             else:
                 yield from zip(
                         (value.index_at_depth(i) for i in range(value.depth)),

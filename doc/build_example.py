@@ -632,6 +632,41 @@ class ExGen:
             raise NotImplementedError(f'no handling for {attr}')
 
 
+    @classmethod
+    def accessor_type_clinic(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_type_clinic(row: sf.Series,
+            name: str,
+            ctr_method: str,
+            ctr_kwargs: str,
+            hint: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+        if attr == 'via_type_clinic.to_hint()':
+            yield f'{name}.via_type_clinic.to_hint()'
+        elif attr == 'via_type_clinic.check()':
+            yield f'{name}.via_type_clinic.check({hint})'
+        elif attr == 'via_type_clinic.warn()':
+            yield f'{name}.via_type_clinic.warn({hint})'
+        elif attr == 'via_type_clinic.__call__()':
+            yield f'cr = {name}.via_type_clinic({hint})'
+            yield f'cr'
+            yield f'cr.validated'
+            yield f'print(cr.to_str())'
+        elif attr == 'via_type_clinic.__repr__()':
+            yield f'{name}.via_type_clinic'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
 class ExGenSeries(ExGen):
 
     @staticmethod
@@ -1504,6 +1539,15 @@ class ExGenSeries(ExGen):
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 's', '', SERIES_INIT_A)
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                '',
+                SERIES_INIT_Y2,
+                'sf.Series[sf.Index[np.str_], np.int64]')
+
 
 
 class ExGenFrame(ExGen):
@@ -2971,6 +3015,14 @@ class ExGenFrame(ExGen):
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                'from_fields',
+                FRAME_INIT_FROM_FIELDS_M1,
+                'sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_]')
+
 
 class ExGenIndex(ExGen):
 
@@ -3335,6 +3387,15 @@ class ExGenIndex(ExGen):
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ix', '', INDEX_INIT_B2)
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                '',
+                INDEX_INIT_A1,
+                'sf.Index[np.int64]',
+                )
 
 
 class _ExGenIndexDT64(ExGen):
@@ -3732,6 +3793,15 @@ class _ExGenIndexDT64(ExGen):
     @classmethod
     def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
+
+    @classmethod
+    def accessor_type_clinic(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                '',
+                cls.INDEX_INIT_A,
+                'sf.Index[np.str_]',
+                )
 
 
 class ExGenIndexYear(_ExGenIndexDT64):
@@ -4228,6 +4298,15 @@ class ExGenIndexHierarchy(ExGen):
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                'from_labels',
+                IH_INIT_FROM_LABELS_E,
+                'sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]',
+                )
 
 
 class ExGenBus(ExGen):
@@ -6171,6 +6250,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorRe,
             InterfaceGroup.AccessorHashlib,
             InterfaceGroup.AccessorValues,
+            InterfaceGroup.AccessorTypeClinic,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
