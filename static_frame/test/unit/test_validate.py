@@ -706,7 +706,7 @@ def test_check_index_hierarchy_f():
     h1 = sf.IndexHierarchy[sf.Index[np.integer], sf.IndexDate, sf.IndexDate]
 
     assert not v1.via_type_clinic(h1).validated
-    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[integer], IndexDate, IndexDate] Expected IndexHierarchy has 3 dtype, provided IndexHierarchy has 2 depth'
+    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[integer], IndexDate, IndexDate] Expected IndexHierarchy has 3 depth, provided IndexHierarchy has 2 depth'
 
 
 def test_check_index_hierarchy_g():
