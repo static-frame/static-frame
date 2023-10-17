@@ -126,9 +126,9 @@ class ContainerMap:
         from static_frame.core.series import Series
         from static_frame.core.series import SeriesHE
         from static_frame.core.type_blocks import TypeBlocks
-        from static_frame.core.validate import TypeClinic
-        from static_frame.core.validate import ClinicResult
         from static_frame.core.validate import CallGuard
+        from static_frame.core.validate import ClinicResult
+        from static_frame.core.validate import TypeClinic
         from static_frame.core.yarn import Yarn
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
