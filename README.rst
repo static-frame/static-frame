@@ -47,20 +47,20 @@
 static-frame
 =============
 
-Immutable and grow-only DataFrames with full static typing support and run-time type and data validation.
+Immutable and grow-only DataFrames with static-typing support and run-time type and data validation.
 
-Among the many Python DataFrame libraries, StaticFrame offers an alternative for engineers that prioritize correctness, maintainability, and reducing opportunities for error.
+Among the many Python DataFrame libraries, StaticFrame offers an alternative that prioritizes correctness, maintainability, and reducing opportunities for error. Key features include:
 
-* An immutable data-model, providing excllent performance for common operations
-* Use Python type hints to statically type the index, columns, and columnar types of DataFrames
+* An immutable data-model, providing memory efficiency and excllent performance
+* Use Python type hints to fully statically type a DataFrame, including the index, columns, and columnar types
 * Use type hints and a family of validators to provide run-time type and data validation
 * A uniform interface, avoiding the complexity and inconsistencies of Pandas
 * Full support of all NumPy dtypes and datetime64 units
 * Interchange with CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet
-* Output to xarray, VisiData, HTML, RST, Markdown, and LaTeX, compatible with Jupyter
+* Output to xarray, VisiData, HTML, RST, Markdown, LaTeX, and Jupyter notebooks
 * High performance serialization and memory mapping with NPZ abd NPY encodings
-* Novel multi-table containers (the Bus and Yarn) support lazy-loading data
-* A deffered processors of Frames (the Batch) permits compact expressions of sequential operations on groups, windows, or any iterator of Frames
+* Novel multi-table containers (the Bus and the Yarn) supporting lazy data loading
+* A deferred Frame processing (the Batch) on groups, windows, or any iterator of Frames
 * Comprehensive documentation and thousands of examples
 * Depends only on NumPy and team-maintained C-extension packages for core functionality
 
