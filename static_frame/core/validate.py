@@ -16,6 +16,7 @@ from itertools import repeat
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
@@ -23,6 +24,7 @@ from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
+from static_frame.core.yarn import Yarn
 
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
@@ -580,6 +582,24 @@ def iter_frame_checks(
                     col_pos += 1
 
 
+def iter_bus_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
+    [h_index] = tp.get_args(hint) # there must be one
+    yield value.index, h_index, parent
+
+def iter_yarn_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent: TParent,
+        ) -> tp.Iterable[TValidation]:
+    [h_index] = tp.get_args(hint) # there must be one
+    yield value.index, h_index, parent
+
+
+
 def iter_ndarray_checks(
         value: tp.Any,
         hint: tp.Any,
@@ -695,6 +715,10 @@ def _check(
                     tee_error_or_check(iter_series_checks(v, h, p_next))
                 elif isinstance(v, Frame):
                     tee_error_or_check(iter_frame_checks(v, h, p_next))
+                elif isinstance(v, Bus):
+                    tee_error_or_check(iter_bus_checks(v, h, p_next))
+                elif isinstance(v, Yarn):
+                    tee_error_or_check(iter_yarn_checks(v, h, p_next))
 
                 elif isinstance(v, np.ndarray):
                     tee_error_or_check(iter_ndarray_checks(v, h, p_next))
@@ -782,6 +806,10 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
     if isinstance(value, IndexHierarchy):
         hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
         return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
+
+    if isinstance(value, (Bus, Yarn)):
+        return value.__class__[_value_to_hint(value.index)] # type: ignore
+
 
     if isinstance(value, np.dtype):
         return np.dtype.__class_getitem__(value.type().__class__)

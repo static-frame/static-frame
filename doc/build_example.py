@@ -3018,7 +3018,7 @@ class ExGenFrame(ExGen):
     @staticmethod
     def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_type_clinic(row,
-                's',
+                'f',
                 'from_fields',
                 FRAME_INIT_FROM_FIELDS_M1,
                 'sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_]')
@@ -3391,7 +3391,7 @@ class ExGenIndex(ExGen):
     @staticmethod
     def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_type_clinic(row,
-                's',
+                'ix',
                 '',
                 INDEX_INIT_A1,
                 'sf.Index[np.int64]',
@@ -3797,7 +3797,7 @@ class _ExGenIndexDT64(ExGen):
     @classmethod
     def accessor_type_clinic(cls, row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_type_clinic(row,
-                's',
+                'ix',
                 '',
                 cls.INDEX_INIT_A,
                 'sf.Index[np.str_]',
@@ -4302,7 +4302,7 @@ class ExGenIndexHierarchy(ExGen):
     @staticmethod
     def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_type_clinic(row,
-                's',
+                'ih',
                 'from_labels',
                 IH_INIT_FROM_LABELS_E,
                 'sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]',
@@ -4613,6 +4613,14 @@ class ExGenBus(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'b',
+                'from_frames',
+                BUS_INIT_FROM_FRAMES_A,
+                'sf.Bus[sf.Index[np.int64]]',
+                )
 
 
 class ExGenYarn(ExGen):
@@ -4914,7 +4922,14 @@ class ExGenYarn(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
 
-
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'y',
+                'from_buses',
+                YARN_INIT_FROM_BUSES_A,
+                'sf.Yarn[sf.Index[np.int64]]',
+                )
 
 
 class ExGenBatch(ExGen):
@@ -5438,10 +5453,18 @@ class ExGenBatch(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'bt', '', BATCH_INIT_D, '')
 
-
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'bt',
+                '',
+                BATCH_INIT_K,
+                'sf.Frame',
+                )
 
 
 class ExGenQuilt(ExGen):
@@ -5927,7 +5950,14 @@ class ExGenQuilt(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
 
-
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'q',
+                'from_frame',
+                QUILT_INIT_FROM_FRAME_A,
+                'sf.Frame',
+                )
 
 class ExGenHLoc(ExGen):
 
