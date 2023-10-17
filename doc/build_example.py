@@ -6346,6 +6346,38 @@ class ExGenClinicResult(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+
+
+
+class ExGenCallGuard(ExGen):
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'check()':
+            yield 'def f1(ix: sf.Index[np.int64]): return len(ix)'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_A1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix2)'
+
+            yield 'import typing as tp'
+            yield 'def f3(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(4)]): return len(ix)'
+            yield 'f4 = sf.CallGuard.check(f3)'
+            yield 'f4(ix1)'
+            yield 'f4(ix2)'
+            yield f"ix3 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f4(ix3)'
+
+        elif attr == 'warn()':
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -6488,6 +6520,7 @@ CLS_TO_EX_GEN = {
 
         sf.TypeClinic: ExGenTypeClinic,
         sf.ClinicResult: ExGenClinicResult,
+        sf.CallGuard: ExGenCallGuard,
         }
 
 CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}

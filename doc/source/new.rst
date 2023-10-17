@@ -11,6 +11,8 @@ Added ``TypeClinic``, ``ClinicResult``, and ``ClinicError``.
 
 Added ``CallGuard``, exposing decorators for performing run-time function interface type check and data validation.
 
+Added ``Require``, a collection of class to be used for run-time validation in ``tp.Annotated``.
+
 
 1.6.5
 -----------
