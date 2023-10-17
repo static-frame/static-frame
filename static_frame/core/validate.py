@@ -314,7 +314,7 @@ class Require:
                         yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
 
     class Apply(Validator):
-        '''Apply a constraint to a container with an arbitrary function. The validation passes if the function returns True.
+        '''Apply a constraint to a container with an arbitrary function. The validation passes if the function returns True (or a truthy value).
         '''
 
         __slots__ = ('_func',)
@@ -332,7 +332,7 @@ class Require:
                 parent: TParent,
                 ) -> tp.Iterator[TValidation]:
             post = self._func(value)
-            if post == False:
+            if not bool(post):
                 yield ERROR_MESSAGE_TYPE, f'{to_name(type(value))} failed validation with {self._prepare_callable(self._func)}', parent
 
 #-------------------------------------------------------------------------------
