@@ -5331,18 +5331,6 @@ r        True
 ClinicError('\nIn Series[Index[str_], int64]\n└── Expected int64, provided bool_ invalid')
 #end_Series-via_type_clinic.check()
 
-#start_Series-via_type_clinic.warn()
->>> s = sf.Series((False, True, True), index=('p', 'q', 'r'))
->>> s
-<Series>
-<Index>
-p        False
-q        True
-r        True
-<<U1>    <bool>
->>> s.via_type_clinic.warn(sf.Series[sf.Index[np.str_], np.int64])
-#end_Series-via_type_clinic.warn()
-
 #start_Series-via_type_clinic.__call__()
 >>> s = sf.Series((False, True, True), index=('p', 'q', 'r'))
 >>> s
@@ -5357,7 +5345,10 @@ r        True
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Series[Index[str_], int64]
+└── Expected int64, provided bool_ invalid
 #end_Series-via_type_clinic.__call__()
 
 #start_Series-via_type_clinic.__repr__()
@@ -10697,18 +10688,6 @@ r          True
 ClinicError('\nIn Series[Index[str_], int64]\n└── Expected int64, provided bool_ invalid')
 #end_SeriesHE-via_type_clinic.check()
 
-#start_SeriesHE-via_type_clinic.warn()
->>> s = sf.SeriesHE((False, True, True), index=('p', 'q', 'r'))
->>> s
-<SeriesHE>
-<Index>
-p          False
-q          True
-r          True
-<<U1>      <bool>
->>> s.via_type_clinic.warn(sf.Series[sf.Index[np.str_], np.int64])
-#end_SeriesHE-via_type_clinic.warn()
-
 #start_SeriesHE-via_type_clinic.__call__()
 >>> s = sf.SeriesHE((False, True, True), index=('p', 'q', 'r'))
 >>> s
@@ -10723,7 +10702,10 @@ r          True
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Series[Index[str_], int64]
+└── Expected int64, provided bool_ invalid
 #end_SeriesHE-via_type_clinic.__call__()
 
 #start_SeriesHE-via_type_clinic.__repr__()
@@ -18902,20 +18884,6 @@ static_frame.core.frame.Frame[static_frame.core.index_hierarchy.IndexHierarchy[s
 ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Expected str_, provided datetime64 invalid\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Index[int64]\n    └── Expected int64, provided str_ invalid')
 #end_Frame-via_type_clinic.check()
 
-#start_Frame-via_type_clinic.warn()
->>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
->>> f
-<Frame: x>
-<Index>                a       b      c               <<U1>
-<IndexHierarchy>
-0                p     10      False  1517-01-01
-0                q     2       True   1517-04-01
-1                p     8       True   1517-12-31
-1                q     3       False  1517-06-30
-<int64>          <<U1> <int64> <bool> <datetime64[D]>
->>> f.via_type_clinic.warn(sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_])
-#end_Frame-via_type_clinic.warn()
-
 #start_Frame-via_type_clinic.__call__()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f
@@ -18932,7 +18900,13 @@ ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64],
 <ClinicResult: 2 errors>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Expected str_, provided datetime64 invalid
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Index[int64]
+    └── Expected int64, provided str_ invalid
 #end_Frame-via_type_clinic.__call__()
 
 #start_Frame-via_type_clinic.__repr__()
@@ -27085,20 +27059,6 @@ static_frame.core.frame.FrameHE[static_frame.core.index_hierarchy.IndexHierarchy
 ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Expected str_, provided datetime64 invalid\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Index[int64]\n    └── Expected int64, provided str_ invalid')
 #end_FrameHE-via_type_clinic.check()
 
-#start_FrameHE-via_type_clinic.warn()
->>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
->>> f
-<FrameHE: x>
-<Index>                a       b      c               <<U1>
-<IndexHierarchy>
-0                p     10      False  1517-01-01
-0                q     2       True   1517-04-01
-1                p     8       True   1517-12-31
-1                q     3       False  1517-06-30
-<int64>          <<U1> <int64> <bool> <datetime64[D]>
->>> f.via_type_clinic.warn(sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_])
-#end_FrameHE-via_type_clinic.warn()
-
 #start_FrameHE-via_type_clinic.__call__()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f
@@ -27115,7 +27075,13 @@ ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64],
 <ClinicResult: 2 errors>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Expected str_, provided datetime64 invalid
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Index[int64]
+    └── Expected int64, provided str_ invalid
 #end_FrameHE-via_type_clinic.__call__()
 
 #start_FrameHE-via_type_clinic.__repr__()
@@ -35348,20 +35314,6 @@ static_frame.core.frame.FrameGO[static_frame.core.index_hierarchy.IndexHierarchy
 ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Expected str_, provided datetime64 invalid\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]\n└── Index[int64]\n    └── Expected int64, provided str_ invalid')
 #end_FrameGO-via_type_clinic.check()
 
-#start_FrameGO-via_type_clinic.warn()
->>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
->>> f
-<FrameGO: x>
-<IndexGO>              a       b      c               <<U1>
-<IndexHierarchy>
-0                p     10      False  1517-01-01
-0                q     2       True   1517-04-01
-1                p     8       True   1517-12-31
-1                q     3       False  1517-06-30
-<int64>          <<U1> <int64> <bool> <datetime64[D]>
->>> f.via_type_clinic.warn(sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_])
-#end_FrameGO-via_type_clinic.warn()
-
 #start_FrameGO-via_type_clinic.__call__()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f
@@ -35378,7 +35330,13 @@ ClinicError('\nIn Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64],
 <ClinicResult: 2 errors>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Expected str_, provided datetime64 invalid
+In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, str_]
+└── Index[int64]
+    └── Expected int64, provided str_ invalid
 #end_FrameGO-via_type_clinic.__call__()
 
 #start_FrameGO-via_type_clinic.__repr__()
@@ -37330,19 +37288,6 @@ e
 ClinicError('\nIn Index[int64]\n└── Expected int64, provided str_ invalid')
 #end_Index-via_type_clinic.check()
 
-#start_Index-via_type_clinic.warn()
->>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
->>> ix
-<Index: x>
-a
-b
-c
-d
-e
-<<U1>
->>> ix.via_type_clinic.warn(sf.Index[np.int64])
-#end_Index-via_type_clinic.warn()
-
 #start_Index-via_type_clinic.__call__()
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix
@@ -37358,7 +37303,10 @@ e
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[int64]
+└── Expected int64, provided str_ invalid
 #end_Index-via_type_clinic.__call__()
 
 #start_Index-via_type_clinic.__repr__()
@@ -39338,19 +39286,6 @@ e
 ClinicError('\nIn Index[int64]\n└── Expected int64, provided str_ invalid')
 #end_IndexGO-via_type_clinic.check()
 
-#start_IndexGO-via_type_clinic.warn()
->>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
->>> ix
-<IndexGO: x>
-a
-b
-c
-d
-e
-<<U1>
->>> ix.via_type_clinic.warn(sf.Index[np.int64])
-#end_IndexGO-via_type_clinic.warn()
-
 #start_IndexGO-via_type_clinic.__call__()
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix
@@ -39366,7 +39301,10 @@ e
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[int64]
+└── Expected int64, provided str_ invalid
 #end_IndexGO-via_type_clinic.__call__()
 
 #start_IndexGO-via_type_clinic.__repr__()
@@ -41173,17 +41111,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexYear-via_type_clinic.check()
 
-#start_IndexYear-via_type_clinic.warn()
->>> ix = sf.IndexYear(('1517', '1520', '1518'))
->>> ix
-<IndexYear>
-1517
-1520
-1518
-<datetime64[Y]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexYear-via_type_clinic.warn()
-
 #start_IndexYear-via_type_clinic.__call__()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix
@@ -41197,7 +41124,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexYear-via_type_clinic.__call__()
 
 #start_IndexYear-via_type_clinic.__repr__()
@@ -43029,17 +42959,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexYearGO-via_type_clinic.check()
 
-#start_IndexYearGO-via_type_clinic.warn()
->>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
->>> ix
-<IndexYearGO>
-1517
-1520
-1518
-<datetime64[Y]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexYearGO-via_type_clinic.warn()
-
 #start_IndexYearGO-via_type_clinic.__call__()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix
@@ -43053,7 +42972,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexYearGO-via_type_clinic.__call__()
 
 #start_IndexYearGO-via_type_clinic.__repr__()
@@ -44880,17 +44802,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexYearMonth-via_type_clinic.check()
 
-#start_IndexYearMonth-via_type_clinic.warn()
->>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
->>> ix
-<IndexYearMonth>
-1517-04
-1517-12
-1517-06
-<datetime64[M]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexYearMonth-via_type_clinic.warn()
-
 #start_IndexYearMonth-via_type_clinic.__call__()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix
@@ -44904,7 +44815,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexYearMonth-via_type_clinic.__call__()
 
 #start_IndexYearMonth-via_type_clinic.__repr__()
@@ -46758,17 +46672,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexYearMonthGO-via_type_clinic.check()
 
-#start_IndexYearMonthGO-via_type_clinic.warn()
->>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
->>> ix
-<IndexYearMonthGO>
-1517-04
-1517-12
-1517-06
-<datetime64[M]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexYearMonthGO-via_type_clinic.warn()
-
 #start_IndexYearMonthGO-via_type_clinic.__call__()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix
@@ -46782,7 +46685,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexYearMonthGO-via_type_clinic.__call__()
 
 #start_IndexYearMonthGO-via_type_clinic.__repr__()
@@ -48658,17 +48564,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexDate-via_type_clinic.check()
 
-#start_IndexDate-via_type_clinic.warn()
->>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
->>> ix
-<IndexDate>
-1517-04-01
-1517-12-01
-1517-06-30
-<datetime64[D]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexDate-via_type_clinic.warn()
-
 #start_IndexDate-via_type_clinic.__call__()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -48682,7 +48577,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexDate-via_type_clinic.__call__()
 
 #start_IndexDate-via_type_clinic.__repr__()
@@ -50585,17 +50483,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexDateGO-via_type_clinic.check()
 
-#start_IndexDateGO-via_type_clinic.warn()
->>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
->>> ix
-<IndexDateGO>
-1517-04-01
-1517-12-01
-1517-06-30
-<datetime64[D]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexDateGO-via_type_clinic.warn()
-
 #start_IndexDateGO-via_type_clinic.__call__()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -50609,7 +50496,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexDateGO-via_type_clinic.__call__()
 
 #start_IndexDateGO-via_type_clinic.__repr__()
@@ -52398,17 +52288,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMinute-via_type_clinic.check()
 
-#start_IndexMinute-via_type_clinic.warn()
->>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
->>> ix
-<IndexMinute>
-1517-04-01T00:00
-1517-12-01T00:00
-1517-06-30T00:00
-<datetime64[m]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMinute-via_type_clinic.warn()
-
 #start_IndexMinute-via_type_clinic.__call__()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -52422,7 +52301,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMinute-via_type_clinic.__call__()
 
 #start_IndexMinute-via_type_clinic.__repr__()
@@ -54238,17 +54120,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMinuteGO-via_type_clinic.check()
 
-#start_IndexMinuteGO-via_type_clinic.warn()
->>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
->>> ix
-<IndexMinuteGO>
-1517-04-01T00:00
-1517-12-01T00:00
-1517-06-30T00:00
-<datetime64[m]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMinuteGO-via_type_clinic.warn()
-
 #start_IndexMinuteGO-via_type_clinic.__call__()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -54262,7 +54133,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMinuteGO-via_type_clinic.__call__()
 
 #start_IndexMinuteGO-via_type_clinic.__repr__()
@@ -56054,17 +55928,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexHour-via_type_clinic.check()
 
-#start_IndexHour-via_type_clinic.warn()
->>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexHour>
-1517-04-01T00
-1517-12-31T00
-1517-06-30T00
-<datetime64[h]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexHour-via_type_clinic.warn()
-
 #start_IndexHour-via_type_clinic.__call__()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -56078,7 +55941,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexHour-via_type_clinic.__call__()
 
 #start_IndexHour-via_type_clinic.__repr__()
@@ -57897,17 +57763,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexHourGO-via_type_clinic.check()
 
-#start_IndexHourGO-via_type_clinic.warn()
->>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexHourGO>
-1517-04-01T00
-1517-12-31T00
-1517-06-30T00
-<datetime64[h]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexHourGO-via_type_clinic.warn()
-
 #start_IndexHourGO-via_type_clinic.__call__()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -57921,7 +57776,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexHourGO-via_type_clinic.__call__()
 
 #start_IndexHourGO-via_type_clinic.__repr__()
@@ -59718,17 +59576,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexSecond-via_type_clinic.check()
 
-#start_IndexSecond-via_type_clinic.warn()
->>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexSecond>
-1517-04-01T00:00:00
-1517-12-31T00:00:00
-1517-06-30T00:00:00
-<datetime64[s]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexSecond-via_type_clinic.warn()
-
 #start_IndexSecond-via_type_clinic.__call__()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -59742,7 +59589,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexSecond-via_type_clinic.__call__()
 
 #start_IndexSecond-via_type_clinic.__repr__()
@@ -61566,17 +61416,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexSecondGO-via_type_clinic.check()
 
-#start_IndexSecondGO-via_type_clinic.warn()
->>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexSecondGO>
-1517-04-01T00:00:00
-1517-12-31T00:00:00
-1517-06-30T00:00:00
-<datetime64[s]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexSecondGO-via_type_clinic.warn()
-
 #start_IndexSecondGO-via_type_clinic.__call__()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -61590,7 +61429,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexSecondGO-via_type_clinic.__call__()
 
 #start_IndexSecondGO-via_type_clinic.__repr__()
@@ -63406,17 +63248,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMillisecond-via_type_clinic.check()
 
-#start_IndexMillisecond-via_type_clinic.warn()
->>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexMillisecond>
-1517-04-01T00:00:00.000
-1517-12-31T00:00:00.000
-1517-06-30T00:00:00.000
-<datetime64[ms]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMillisecond-via_type_clinic.warn()
-
 #start_IndexMillisecond-via_type_clinic.__call__()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -63430,7 +63261,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMillisecond-via_type_clinic.__call__()
 
 #start_IndexMillisecond-via_type_clinic.__repr__()
@@ -65273,17 +65107,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMillisecondGO-via_type_clinic.check()
 
-#start_IndexMillisecondGO-via_type_clinic.warn()
->>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexMillisecondGO>
-1517-04-01T00:00:00.000
-1517-12-31T00:00:00.000
-1517-06-30T00:00:00.000
-<datetime64[ms]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMillisecondGO-via_type_clinic.warn()
-
 #start_IndexMillisecondGO-via_type_clinic.__call__()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -65297,7 +65120,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMillisecondGO-via_type_clinic.__call__()
 
 #start_IndexMillisecondGO-via_type_clinic.__repr__()
@@ -67115,17 +66941,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMicrosecond-via_type_clinic.check()
 
-#start_IndexMicrosecond-via_type_clinic.warn()
->>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexMicrosecond>
-1517-04-01T00:00:00.000000
-1517-12-31T00:00:00.000000
-1517-06-30T00:00:00.000000
-<datetime64[us]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMicrosecond-via_type_clinic.warn()
-
 #start_IndexMicrosecond-via_type_clinic.__call__()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -67139,7 +66954,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMicrosecond-via_type_clinic.__call__()
 
 #start_IndexMicrosecond-via_type_clinic.__repr__()
@@ -68984,17 +68802,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexMicrosecondGO-via_type_clinic.check()
 
-#start_IndexMicrosecondGO-via_type_clinic.warn()
->>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
->>> ix
-<IndexMicrosecondGO>
-1517-04-01T00:00:00.000000
-1517-12-31T00:00:00.000000
-1517-06-30T00:00:00.000000
-<datetime64[us]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexMicrosecondGO-via_type_clinic.warn()
-
 #start_IndexMicrosecondGO-via_type_clinic.__call__()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -69008,7 +68815,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexMicrosecondGO-via_type_clinic.__call__()
 
 #start_IndexMicrosecondGO-via_type_clinic.__repr__()
@@ -70825,17 +70635,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexNanosecond-via_type_clinic.check()
 
-#start_IndexNanosecond-via_type_clinic.warn()
->>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
->>> ix
-<IndexNanosecond>
-1789-05-05T00:00:00.000000000
-1789-12-31T00:00:00.000000000
-1799-11-09T00:00:00.000000000
-<datetime64[ns]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexNanosecond-via_type_clinic.warn()
-
 #start_IndexNanosecond-via_type_clinic.__call__()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
@@ -70849,7 +70648,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexNanosecond-via_type_clinic.__call__()
 
 #start_IndexNanosecond-via_type_clinic.__repr__()
@@ -72693,17 +72495,6 @@ TypeError("ufunc 'sin' not supported for the input types, and the inputs could n
 ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 invalid')
 #end_IndexNanosecondGO-via_type_clinic.check()
 
-#start_IndexNanosecondGO-via_type_clinic.warn()
->>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
->>> ix
-<IndexNanosecondGO>
-1789-05-05T00:00:00.000000000
-1789-12-31T00:00:00.000000000
-1799-11-09T00:00:00.000000000
-<datetime64[ns]>
->>> ix.via_type_clinic.warn(sf.Index[np.str_])
-#end_IndexNanosecondGO-via_type_clinic.warn()
-
 #start_IndexNanosecondGO-via_type_clinic.__call__()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
@@ -72717,7 +72508,10 @@ ClinicError('\nIn Index[str_]\n└── Expected str_, provided datetime64 inva
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Index[str_]
+└── Expected str_, provided datetime64 invalid
 #end_IndexNanosecondGO-via_type_clinic.__call__()
 
 #start_IndexNanosecondGO-via_type_clinic.__repr__()
@@ -73045,13 +72839,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fd4014c5260> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7ff789f55260> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fd4014c5300> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7ff789f55300> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -73099,13 +72893,13 @@ False                             True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fd410cae160> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7ff79972e160> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fd410cad9e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7ff79972d9e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -73368,13 +73162,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fd410cae700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7ff79972e700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fd410aa2980> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7ff79951e980> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -73386,7 +73180,7 @@ NotImplementedError('<function median at 0x7fd410aa2980> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fd410cae020> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7ff79972e020> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -73501,13 +73295,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fd410cb16b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7ff7997315b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fd410cad620> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7ff79972d620> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -73563,7 +73357,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fd410cb1870>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7ff7997317f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -75251,18 +75045,6 @@ a                   2048    False
 ClinicError('\nIn IndexHierarchy[Index[str_], Index[bool_]]\n└── Expected IndexHierarchy has 2 depth, provided IndexHierarchy has 3 depth')
 #end_IndexHierarchy-via_type_clinic.check()
 
-#start_IndexHierarchy-via_type_clinic.warn()
->>> ih = sf.IndexHierarchy.from_labels((('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
->>> ih
-<IndexHierarchy: x>
-b                   1024    True
-a                   1024    True
-a                   2048    True
-a                   2048    False
-<<U1>               <int64> <bool>
->>> ih.via_type_clinic.warn(sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]])
-#end_IndexHierarchy-via_type_clinic.warn()
-
 #start_IndexHierarchy-via_type_clinic.__call__()
 >>> ih = sf.IndexHierarchy.from_labels((('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 >>> ih
@@ -75277,7 +75059,10 @@ a                   2048    False
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In IndexHierarchy[Index[str_], Index[bool_]]
+└── Expected IndexHierarchy has 2 depth, provided IndexHierarchy has 3 depth
 #end_IndexHierarchy-via_type_clinic.__call__()
 
 #start_IndexHierarchy-via_type_clinic.__repr__()
@@ -75606,13 +75391,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7fd4014c5260> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7ff789f55260> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7fd4014c5300> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7ff789f55300> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -75673,13 +75458,13 @@ False                               True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fd410cae160> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7ff79972e160> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fd410cad9e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7ff79972d9e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -75950,13 +75735,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fd410cae700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7ff79972e700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7fd410aa2980> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7ff79951e980> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -75968,7 +75753,7 @@ NotImplementedError('<function median at 0x7fd410aa2980> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fd410cae020> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7ff79972e020> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -76083,13 +75868,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fd410cb16b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7ff7997315b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fd410cad620> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7ff79972d620> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -76145,7 +75930,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fd410cb1870>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7ff7997317f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -77833,18 +77618,6 @@ a                     2048    False
 ClinicError('\nIn IndexHierarchy[Index[str_], Index[bool_]]\n└── Expected IndexHierarchy has 2 depth, provided IndexHierarchy has 3 depth')
 #end_IndexHierarchyGO-via_type_clinic.check()
 
-#start_IndexHierarchyGO-via_type_clinic.warn()
->>> ih = sf.IndexHierarchyGO.from_labels((('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
->>> ih
-<IndexHierarchyGO: x>
-b                     1024    True
-a                     1024    True
-a                     2048    True
-a                     2048    False
-<<U1>                 <int64> <bool>
->>> ih.via_type_clinic.warn(sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]])
-#end_IndexHierarchyGO-via_type_clinic.warn()
-
 #start_IndexHierarchyGO-via_type_clinic.__call__()
 >>> ih = sf.IndexHierarchyGO.from_labels((('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 >>> ih
@@ -77859,7 +77632,10 @@ a                     2048    False
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In IndexHierarchy[Index[str_], Index[bool_]]
+└── Expected IndexHierarchy has 2 depth, provided IndexHierarchy has 3 depth
 #end_IndexHierarchyGO-via_type_clinic.__call__()
 
 #start_IndexHierarchyGO-via_type_clinic.__repr__()
@@ -79130,17 +78906,6 @@ y        Frame
 ClinicError('\nIn Bus[Index[int64]]\n└── Index[int64]\n    └── Expected int64, provided str_ invalid')
 #end_Bus-via_type_clinic.check()
 
-#start_Bus-via_type_clinic.warn()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b
-<Bus: i>
-<Index>
-x        Frame
-y        Frame
-<<U1>    <object>
->>> b.via_type_clinic.warn(sf.Bus[sf.Index[np.int64]])
-#end_Bus-via_type_clinic.warn()
-
 #start_Bus-via_type_clinic.__call__()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b
@@ -79154,7 +78919,11 @@ y        Frame
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Bus[Index[int64]]
+└── Index[int64]
+    └── Expected int64, provided str_ invalid
 #end_Bus-via_type_clinic.__call__()
 
 #start_Bus-via_type_clinic.__repr__()
@@ -80342,19 +80111,6 @@ j                w     Frame
 ClinicError('\nIn Yarn[Index[int64]]\n└── Expected Index, provided IndexHierarchy invalid')
 #end_Yarn-via_type_clinic.check()
 
-#start_Yarn-via_type_clinic.warn()
->>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
->>> y
-<Yarn>
-<IndexHierarchy>
-i                x     Frame
-i                y     Frame
-j                v     Frame
-j                w     Frame
-<<U1>            <<U1> <object>
->>> y.via_type_clinic.warn(sf.Yarn[sf.Index[np.int64]])
-#end_Yarn-via_type_clinic.warn()
-
 #start_Yarn-via_type_clinic.__call__()
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y
@@ -80370,7 +80126,10 @@ j                w     Frame
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+In Yarn[Index[int64]]
+└── Expected Index, provided IndexHierarchy invalid
 #end_Yarn-via_type_clinic.__call__()
 
 #start_Yarn-via_type_clinic.__repr__()
@@ -84623,13 +84382,6 @@ j                r     0.017701925105413577 0.8509035245341184
 ClinicError('\nExpected Frame, provided Batch invalid')
 #end_Batch-via_type_clinic.check()
 
-#start_Batch-via_type_clinic.warn()
->>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
->>> bt
-<Batch max_workers=None>
->>> bt.via_type_clinic.warn(sf.Frame)
-#end_Batch-via_type_clinic.warn()
-
 #start_Batch-via_type_clinic.__call__()
 >>> bt = sf.Batch((('i', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX '), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')), ('j', sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x'))))
 >>> bt
@@ -84639,7 +84391,9 @@ ClinicError('\nExpected Frame, provided Batch invalid')
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+Expected Frame, provided Batch invalid
 #end_Batch-via_type_clinic.__call__()
 
 #start_Batch-via_type_clinic.__repr__()
@@ -86587,18 +86341,6 @@ e4047f0057169987
 ClinicError('\nExpected Frame, provided Quilt invalid')
 #end_Quilt-via_type_clinic.check()
 
-#start_Quilt-via_type_clinic.warn()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
->>> q
-<Quilt: x>
-<Index: Aligned> a b c <<U1>
-<Index: Frames>
-0                . . .
-2                . . .
-<int64>
->>> q.via_type_clinic.warn(sf.Frame)
-#end_Quilt-via_type_clinic.warn()
-
 #start_Quilt-via_type_clinic.__call__()
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q
@@ -86613,7 +86355,9 @@ ClinicError('\nExpected Frame, provided Quilt invalid')
 <ClinicResult: 1 error>
 >>> cr.validated
 False
->>> print(cr.to_str())
+>>> cr.to_str()
+
+Expected Frame, provided Quilt invalid
 #end_Quilt-via_type_clinic.__call__()
 
 #start_Quilt-via_type_clinic.__repr__()
@@ -86789,7 +86533,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fd4011d5340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff75870aec0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -86849,13 +86593,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fd4011d5440>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff789c65540>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fd4011d5440>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff789c654c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]

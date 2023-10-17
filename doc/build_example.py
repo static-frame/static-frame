@@ -648,23 +648,24 @@ class ExGen:
         attr = row['signature_no_args']
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
 
-        yield f'{name} = {ctr}'
-        yield f'{name}'
-        if attr == 'via_type_clinic.to_hint()':
-            yield f'{name}.via_type_clinic.to_hint()'
-        elif attr == 'via_type_clinic.check()':
-            yield f'{name}.via_type_clinic.check({hint})'
-        elif attr == 'via_type_clinic.warn()':
-            yield f'{name}.via_type_clinic.warn({hint})'
-        elif attr == 'via_type_clinic.__call__()':
-            yield f'cr = {name}.via_type_clinic({hint})'
-            yield f'cr'
-            yield f'cr.validated'
-            yield f'print(cr.to_str())'
-        elif attr == 'via_type_clinic.__repr__()':
-            yield f'{name}.via_type_clinic'
+        if attr == 'via_type_clinic.warn()':
+            pass # cannot capture warnings
         else:
-            raise NotImplementedError(f'no handling for {attr}')
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            if attr == 'via_type_clinic.to_hint()':
+                yield f'{name}.via_type_clinic.to_hint()'
+            elif attr == 'via_type_clinic.check()':
+                yield f'{name}.via_type_clinic.check({hint})'
+            elif attr == 'via_type_clinic.__call__()':
+                yield f'cr = {name}.via_type_clinic({hint})'
+                yield f'cr'
+                yield f'cr.validated'
+                yield f'cr.to_str()'
+            elif attr == 'via_type_clinic.__repr__()':
+                yield f'{name}.via_type_clinic'
+            else:
+                raise NotImplementedError(f'no handling for {attr}')
 
 
 class ExGenSeries(ExGen):
