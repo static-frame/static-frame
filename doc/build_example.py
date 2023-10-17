@@ -6378,6 +6378,49 @@ class ExGenCallGuard(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
+class ExGenRequire(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'Apply()':
+            yield 'import typing as tp'
+            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f2(ix2)'
+        elif attr == 'Labels()':
+            yield 'import typing as tp'
+            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f2(ix2)'
+        elif attr == 'Len()':
+            yield 'import typing as tp'
+            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f2(ix2)'
+        elif attr == 'Name()':
+            yield 'import typing as tp'
+            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f2(ix2)'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -6521,6 +6564,7 @@ CLS_TO_EX_GEN = {
         sf.TypeClinic: ExGenTypeClinic,
         sf.ClinicResult: ExGenClinicResult,
         sf.CallGuard: ExGenCallGuard,
+        sf.Require: ExGenRequire,
         }
 
 CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}
