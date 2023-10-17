@@ -6156,8 +6156,6 @@ class ExGenFillValueAuto(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-
-
 class ExGenMemoryDisplay(ExGen):
 
     @staticmethod
@@ -6168,10 +6166,10 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == '__init__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'f.memory'
+            yield 'f.memory'
         elif attr == 'from_any()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f"sf.MemoryDisplay.from_any(f.index)"
+            yield "sf.MemoryDisplay.from_any(f.index)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6182,7 +6180,7 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == 'to_frame()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'f.memory.to_frame()'
+            yield 'f.memory.to_frame()'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6192,15 +6190,161 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == '__repr__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'md = f.memory'
-            yield f"repr(md)"
+            yield 'md = f.memory'
+            yield "repr(md)"
         elif attr == '__str__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'md = f.memory'
-            yield f"str(md)"
+            yield 'md = f.memory'
+            yield "str(md)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
+
+
+class ExGenTypeClinic(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__init__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == 'to_hint()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc.to_hint()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__call__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc(tuple[bool, bool])'
+            yield 'tc(tuple[bool, bool]).to_str()'
+        elif attr == 'check()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc.check(tuple[bool, bool])'
+        elif attr == 'warn()':
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+
+        if attr in ('__repr__()', '__str__()'):
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'tc = sf.TypeClinic((f, True))'
+            yield 'tc'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+
+
+class ExGenClinicResult(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__init__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'tc = sf.TypeClinic((f, True))'
+            yield f'cr = tc(tuple[str, int])'
+            yield 'cr'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == 'to_str()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr.to_str()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'validated':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr.validated'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__bool__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'bool(cr)'
+        elif attr == '__len__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'len(cr)'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield '[l for l in cr]'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+
+        if attr in ('__repr__()', '__str__()'):
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -6341,6 +6485,9 @@ CLS_TO_EX_GEN = {
         sf.ILoc: ExGenILoc,
         sf.FillValueAuto: ExGenFillValueAuto,
         sf.MemoryDisplay: ExGenMemoryDisplay,
+
+        sf.TypeClinic: ExGenTypeClinic,
+        sf.ClinicResult: ExGenClinicResult,
         }
 
 CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}
