@@ -33,7 +33,7 @@ from static_frame.core.util import ufunc_nanany
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.validate import TypeClinic  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_clinic import TypeClinic  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -64,7 +64,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     @property
     def via_type_clinic(self) -> TypeClinic:
-        from static_frame.core.validate import TypeClinic
+        from static_frame.core.type_clinic import TypeClinic
         return TypeClinic(self)
 
 

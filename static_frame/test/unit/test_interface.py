@@ -10,7 +10,7 @@ from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
-from static_frame.core.validate import Require
+from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
 

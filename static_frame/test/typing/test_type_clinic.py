@@ -1,7 +1,7 @@
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.validate import CallGuard
+from static_frame.core.type_clinic import CallGuard
 from static_frame.test.test_case import skip_nple119
 
 

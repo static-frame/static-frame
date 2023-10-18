@@ -2,7 +2,7 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame.core.validate import CallGuard
+from static_frame.core.type_clinic import CallGuard
 
 TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TFrameGOAny = sf.FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]

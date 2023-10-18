@@ -117,11 +117,11 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TLocSelector as TLocSelector
 from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
-from static_frame.core.validate import CallGuard as CallGuard
-from static_frame.core.validate import ClinicError as ClinicError
-from static_frame.core.validate import ClinicResult as ClinicResult
-from static_frame.core.validate import Require as Require
-from static_frame.core.validate import TypeClinic as TypeClinic
+from static_frame.core.type_clinic import CallGuard as CallGuard
+from static_frame.core.type_clinic import ClinicError as ClinicError
+from static_frame.core.type_clinic import ClinicResult as ClinicResult
+from static_frame.core.type_clinic import Require as Require
+from static_frame.core.type_clinic import TypeClinic as TypeClinic
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 

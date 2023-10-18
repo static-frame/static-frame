@@ -8,15 +8,15 @@ import pytest
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame.core.validate import CallGuard
-from static_frame.core.validate import ClinicResult
-from static_frame.core.validate import ErrorAction
-from static_frame.core.validate import Require
-from static_frame.core.validate import TValidation
-from static_frame.core.validate import TypeClinic
-from static_frame.core.validate import _check_interface
-from static_frame.core.validate import is_union
-from static_frame.core.validate import is_unpack
+from static_frame.core.type_clinic import CallGuard
+from static_frame.core.type_clinic import ClinicResult
+from static_frame.core.type_clinic import ErrorAction
+from static_frame.core.type_clinic import Require
+from static_frame.core.type_clinic import TValidation
+from static_frame.core.type_clinic import TypeClinic
+from static_frame.core.type_clinic import _check_interface
+from static_frame.core.type_clinic import is_union
+from static_frame.core.type_clinic import is_unpack
 from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
