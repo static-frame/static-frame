@@ -722,7 +722,6 @@ def iter_bus_checks(
 
     [h_index] = tp.get_args(hint) # there must be one
     pv_next = parent_values + (value,)
-
     yield value.index, h_index, parent_hints, pv_next
 
 def iter_yarn_checks(
@@ -734,10 +733,7 @@ def iter_yarn_checks(
 
     [h_index] = tp.get_args(hint) # there must be one
     pv_next = parent_values + (value,)
-
     yield value.index, h_index, parent_hints, pv_next
-
-
 
 def iter_ndarray_checks(
         value: tp.Any,
@@ -748,7 +744,6 @@ def iter_ndarray_checks(
 
     h_shape, h_dtype = tp.get_args(hint)
     pv_next = parent_values + (value,)
-
     yield value.dtype, h_dtype, parent_hints, pv_next
 
 def iter_dtype_checks(
@@ -760,7 +755,6 @@ def iter_dtype_checks(
 
     [h_generic] = tp.get_args(hint)
     pv_next = parent_values + (value,)
-
     yield value.type(), h_generic, parent_hints, pv_next
 
 #-------------------------------------------------------------------------------

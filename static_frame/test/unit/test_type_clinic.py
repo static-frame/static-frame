@@ -6,6 +6,7 @@ from functools import partial
 import numpy as np
 import pytest
 import typing_extensions as tp
+import frame_fixtures as ff
 
 import static_frame as sf
 from static_frame.core.type_clinic import CallGuard
@@ -1053,6 +1054,36 @@ def test_check_frame_g():
     assert not f1.via_type_clinic(h1).validated
     assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, str_, Unpack[Tuple[float64, ...]]] Expected Frame has 3 dtype (excluding Unpack), provided Frame has 2 dtype'
 
+#-------------------------------------------------------------------------------
+
+def test_check_bus_a():
+    f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+    f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+    b1 = sf.Bus((f1, f2), index=('a', 'b'))
+
+    cr1 = b1.via_type_clinic(sf.Bus[sf.Index[np.str_]])
+    assert cr1.validated is True
+
+    cr2 = b1.via_type_clinic(sf.Bus[sf.Index[np.int64]])
+    assert cr2.validated is False
+
+def test_check_yarn_a():
+
+    f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+    f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+    f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+    b1 = sf.Bus.from_frames((f1, f2, f3))
+
+    f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+    f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+    b2 = sf.Bus.from_frames((f4, f5))
+
+    y1 = sf.Yarn((b1, b2), index=tuple('abcde'))
+    cr1 = y1.via_type_clinic(sf.Yarn[sf.Index[np.str_]])
+    assert cr1.validated is True
+
+    cr2 = y1.via_type_clinic(sf.Yarn[sf.Index[np.int64]])
+    assert cr2.validated is False
 
 
 #-------------------------------------------------------------------------------
