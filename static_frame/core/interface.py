@@ -94,13 +94,13 @@ from static_frame.core.series import SeriesHE
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import DT64_S
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import AnyCallable
 from static_frame.core.type_clinic import CallGuard
 from static_frame.core.type_clinic import ClinicResult
 from static_frame.core.type_clinic import Require
 from static_frame.core.type_clinic import TypeClinic
+from static_frame.core.util import DT64_S
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import AnyCallable
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
