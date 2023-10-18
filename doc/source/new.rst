@@ -7,11 +7,11 @@ What is New in StaticFrame
 
 Added ``via_type_clinic`` interfaces to all containers.
 
-Added ``TypeClinic``, ``ClinicResult``, and ``ClinicError``.
+Added ``TypeClinic``, ``ClinicResult``, and ``ClinicError``, providing type to hint conversion and checks against arbitrary hints.
 
 Added ``CallGuard``, exposing decorators for performing run-time function interface type check and data validation.
 
-Added ``Require``, a collection of class to be used for run-time validation in ``tp.Annotated``.
+Added ``Require``, a collection of classes to be used for run-time validation in ``tp.Annotated`` generics.
 
 
 1.6.5

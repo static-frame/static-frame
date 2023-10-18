@@ -159,7 +159,6 @@ class ClinicResult:
         msg = []
         for v, h, p in self._log:
             if p:
-                # path = ', '.join(to_name(n) for n in p)
                 path_components = []
                 for i, pc in enumerate(p):
                     path_components.append(f'{self._get_indent(i)}{to_name(pc)}')
@@ -214,14 +213,20 @@ class Validator:
 
 
 class Require:
+    '''A collection of classes to be used in ``Annotated`` generics to perform run-time data validations.
+    '''
     __slots__ = ()
 
     class Name(Validator):
-        '''Validator to validate the name of a container.
+        '''Validate the name of a container.
+
+        Args:
+            name: The name to validate against.
+            /
         '''
         __slots__ = ('_name',)
 
-        def __init__(self, name: TLabel):
+        def __init__(self, name: TLabel, /):
             self._name = name
 
         def _iter_errors(self,
@@ -234,12 +239,16 @@ class Require:
                 yield ERROR_MESSAGE_TYPE, f'Expected name {self._name!r}, provided name {n!r}', parent
 
     class Len(Validator):
-        '''Validator to validate the length of a container.
+        '''Validate the length of a container.
+
+        Args:
+            len: The length to validate against.
+            /
         '''
 
         __slots__ = ('_len',)
 
-        def __init__(self, len: int):
+        def __init__(self, len: int, /):
             self._len = len
 
         def _iter_errors(self,
@@ -314,12 +323,15 @@ class Require:
                         yield ERROR_MESSAGE_TYPE, f'Expected has unmatched labels {remainder}', parent
 
     class Apply(Validator):
-        '''Apply a constraint to a container with an arbitrary function. The validation passes if the function returns True (or a truthy value).
+        '''Apply a function to a container with an arbitrary function. The validation passes if the function returns True (or a truthy value).
+
+        Args:
+            func: A function that takes a container and returns a Boolean.
         '''
 
         __slots__ = ('_func',)
 
-        def __init__(self, func: tp.Callable[..., bool]):
+        def __init__(self, func: tp.Callable[..., bool], /):
             self._func: tp.Callable[..., bool] = func
 
         @staticmethod
