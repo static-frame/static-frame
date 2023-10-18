@@ -3,10 +3,10 @@ from __future__ import annotations
 import warnings
 from functools import partial
 
+import frame_fixtures as ff
 import numpy as np
 import pytest
 import typing_extensions as tp
-import frame_fixtures as ff
 
 import static_frame as sf
 from static_frame.core.type_clinic import CallGuard
