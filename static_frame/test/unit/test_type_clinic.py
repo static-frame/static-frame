@@ -1178,7 +1178,7 @@ def test_validate_labels_f():
             index=index,
             )
 
-    assert TypeClinic(f)(h1).validated == True
+    assert TypeClinic(f)(h1).validated is True
 
 
 #-------------------------------------------------------------------------------
