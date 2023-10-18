@@ -265,7 +265,7 @@ class Require:
         r'''Validate the membership and ordering of labels.
 
         Args:
-            \*labels: Provide labels as args. Use ... for undefined regions of labels.
+            \*labels: Provide labels as args. Use ... for regions of zero or more undefined labels.
         '''
         __slots__ = ('_labels',)
 
@@ -638,7 +638,9 @@ def _check(
         ) -> ClinicResult:
 
     # Check queue: queue all checks
+    # TODO: can add containers list as fourth element; store parent containers (such as Frames) such that Labels can oppoerate on the Frame
     q = deque(((value, hint, parent),))
+
     # Error log: any entry is considered an error
     e_log: tp.List[TValidation] = []
 
@@ -654,7 +656,7 @@ def _check(
             return ClinicResult(e_log)
 
         v, h, p = q.popleft()
-        # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checkls
+        # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checks
         assert v is not ERROR_MESSAGE_TYPE
 
         if h is tp.Any:
@@ -833,6 +835,9 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
 
 
 class TypeClinic:
+    '''A ``TypeClinic`` instance, created from (almost) any object, can be used to derive a type hint (or type hint string), or test the object against a provided hint.
+    '''
+
     __slots__ = ('_value',)
 
     _INTERFACE = (
@@ -953,7 +958,7 @@ def _check_interface(
 TVFunc = tp.TypeVar('TVFunc', bound=tp.Callable[..., tp.Any])
 
 class CallGuard:
-    '''A family of decorators for run-time type checking and data validation.
+    '''A family of decorators for run-time type checking and data validation of functions.
     '''
 
     @tp.overload

@@ -1077,10 +1077,16 @@ def test_validate_labels_a3():
             "Expected 'b', provided 'x'",
             "Expected 'c', provided 'z'")
 
-def test_validate_labels_b():
+def test_validate_labels_b1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.Labels('a', ..., 'd')
     assert not get_hints(v._iter_errors(idx1, None, (None,)))
+
+def test_validate_labels_b2():
+    idx1 = sf.Index(('a', 'b'))
+    v = Require.Labels('a', ..., 'b')
+    assert not get_hints(v._iter_errors(idx1, None, (None,)))
+
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
@@ -1152,9 +1158,32 @@ def test_validate_labels_e11():
     v = Require.Labels('a', ...)
     assert get_hints(v._iter_errors(idx1, None, (None,))) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
+#-------------------------------------------------------------------------------
+
+def test_validate_labels_f():
+    records = (
+            (1, 3, True),
+            (4, 100, False),
+            (3, 8, True),
+            )
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            tp.Annotated[sf.Index[np.str_], sf.Require.Labels('a', ..., 'c')],
+            np.int_,
+            np.int_,
+            np.bool_]
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+
+    assert TypeClinic(f)(h1).validated == True
 
 
-def test_validate_validator_a():
+#-------------------------------------------------------------------------------
+
+def test_validate_apply_a():
     idx1 = sf.Index(('a', 'b', 'c'))
     v1 = Require.Apply(lambda i: 'b' in i)
     assert not get_hints(v1._iter_errors(idx1, None, (None,)))
