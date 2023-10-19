@@ -26,6 +26,8 @@ from static_frame.core.series import Series
 from static_frame.core.util import TLabel
 from static_frame.core.yarn import Yarn
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+
 # _UnionGenericAlias comes from tp.Union, UnionType from | expressions
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
 
@@ -195,6 +197,9 @@ class ClinicError(TypeError):
 #-------------------------------------------------------------------------------
 # could be calld validator
 
+TValidator = tp.Callable[..., bool]
+
+
 class Validator:
     '''Base class of all run-time constraints, deployed in Annotated generics.
     '''
@@ -281,19 +286,44 @@ class Require:
         __slots__ = ('_labels',)
 
         def __init__(self, *labels: tp.Sequence[TLabel]):
-            self._labels: tp.Sequence[TLabel] = labels
+            self._labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]] = labels
 
         def __repr__(self) -> str:
             args = ', '.join(to_name(v, func_to_str=repr) for v in self._labels)
             return f'{self.__class__.__name__}({args})'
 
-
         @staticmethod
-        def _prepare_remainder(labels: tp.Sequence[TLabel]) -> str:
+        def _prepare_remainder(labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]]) -> str:
             # always drop leading ellipses
             if labels[0] is ...:
                 labels = labels[1:]
             return ', '.join((repr(l) if l is not ... else '...') for l in labels)
+
+        @staticmethod
+        def _split_label_validators(
+                label: TLabel | tp.List[TLabel | TValidator],
+                ) -> tp.Tuple[TLabel, tp.List[TValidator]]:
+            '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
+            '''
+            label_e: TLabel
+            label_validators: tp.List[TValidator] | None
+
+            # TODO: evaluate that all post-label values are callables?
+            if isinstance(label, list):
+                label_e = label[0] # must be first
+                label_validators = label[1:] # type: ignore
+            else:
+                label_e = label
+                label_validators = None
+
+            return label_e, label_validators # type: ignore
+
+        @staticmethod
+        def _find_parent_frame(parent_values: TParent) -> TFrameAny | None:
+            for v in reversed(parent_values):
+                if isinstance(v, Frame):
+                    return v
+            return None
 
         def _iter_errors(self,
                 value: tp.Any,
@@ -309,6 +339,8 @@ class Require:
                         parent_values,
                         )
             else:
+                pf = self._find_parent_frame(parent_values)
+
                 pos_e = 0 # position expected
                 len_e = len(self._labels)
 
@@ -320,7 +352,8 @@ class Require:
                                 parent_values,
                                 )
                         break
-                    label_e = self._labels[pos_e]
+
+                    label_e, label_validators = self._split_label_validators(self._labels[pos_e])
 
                     if label_e is not ...:
                         if label_p != label_e:

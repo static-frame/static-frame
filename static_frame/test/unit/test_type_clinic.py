@@ -1198,7 +1198,13 @@ def test_validate_labels_f():
             (3, 8, True),
             )
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
-            tp.Annotated[sf.Index[np.str_], sf.Require.Labels('a', ..., 'c')],
+            tp.Annotated[sf.Index[np.str_],
+                    sf.Require.Labels(
+                            ['a', lambda s: (s > 0).all()],
+                            ...,
+                            'c',
+                            )
+                    ],
             np.int_,
             np.int_,
             np.bool_]
