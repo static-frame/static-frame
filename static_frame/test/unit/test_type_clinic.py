@@ -1216,8 +1216,24 @@ def test_validate_labels_f():
             )
 
     cr = TypeClinic(f)(h1)
+    assert (scrub_str(cr.to_str()) ==
+            "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., 'c')], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., 'c')] Labels(['a', <lambda>], ..., 'c') Validation failed of label 'a' with <lambda>"
+            )
+
+    h2 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            tp.Annotated[sf.Index[np.str_],
+                    sf.Require.Labels(
+                            ['a', lambda s: (s > 0).all()],
+                            ...,
+                            ['c', lambda s: s.sum() == 3],
+                            )
+                    ],
+            np.int_,
+            np.int_,
+            np.bool_]
+
+    cr = TypeClinic(f)(h2)
     print(cr.to_str())
-    #.validated is True
 
 
 #-------------------------------------------------------------------------------

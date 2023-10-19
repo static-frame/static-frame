@@ -307,8 +307,9 @@ class Require:
             return ', '.join((repr(l) if l is not ... else '...') for l in labels)
 
         @staticmethod
-        def _split_label_validators(
+        def _split_validators(
                 label: TLabel | tp.List[TLabel | TValidator],
+                frame: Frame | None,
                 ) -> tp.Tuple[TLabel, tp.List[TValidator]]:
             '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
             '''
@@ -323,6 +324,9 @@ class Require:
                 label_e = label
                 label_validators = None
 
+            if label_validators and Frame is None:
+                raise RuntimeError('Provided label validators in a context without a discoverable Frame.')
+
             return label_e, label_validators # type: ignore
 
         @staticmethod
@@ -334,26 +338,30 @@ class Require:
 
         @staticmethod
         def _iter_validator_results(
-                frame: Frame,
+                frame: Frame | None,
                 labels: IndexBase,
                 label: TLabel,
                 validators: tp.List[TValidator],
                 parent_hints: TParent,
                 parent_values: TParent,
                 ) -> tp.Iterator[TValidation]:
-            if labels is frame.index:
-                s = frame.loc[label]
-            elif labels is frame.columns:
-                s = frame[label]
-            else:
-                raise RuntimeError('Labels points to an index that is not a member of the parent Frame')
-            for validator in validators:
-                if not validator(s):
-                    yield (ERROR_MESSAGE_TYPE,
-                            f'Validation failed of label {label!r} with {to_name(validator)}',
-                            parent_hints,
-                            parent_values,
-                            )
+            # be a noop when no validators are present
+            if validators:
+                assert Frame is not None
+
+                if labels is frame.index:
+                    s = frame.loc[label]
+                elif labels is frame.columns:
+                    s = frame[label]
+                else:
+                    raise RuntimeError('Labels points to an index that is not a member of the parent Frame')
+                for validator in validators:
+                    if not validator(s):
+                        yield (ERROR_MESSAGE_TYPE,
+                                f'Validation failed of label {label!r} with {to_name(validator)}',
+                                parent_hints,
+                                parent_values,
+                                )
 
         def _iter_errors(self,
                 value: tp.Any,
@@ -374,7 +382,7 @@ class Require:
                 pos_e = 0 # position expected
                 len_e = len(self._labels)
 
-                for label_p in value: # iterate over labels provided
+                for label_p in value: # iterate over labels provided in the index
                     if pos_e >= len_e:
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected labels exhausted at provided {label_p!r}',
@@ -383,7 +391,7 @@ class Require:
                                 )
                         break
 
-                    label_e, label_validators = self._split_label_validators(self._labels[pos_e])
+                    label_e, label_validators = self._split_validators(self._labels[pos_e], pf)
 
                     if label_e is not ...:
                         if label_p != label_e:
@@ -392,7 +400,7 @@ class Require:
                                     parent_hints,
                                     parent_values,
                                     )
-                        # import ipdb; ipdb.set_trace()
+                            # break # NOTE: could break here
                         # NOTE: not failing fast!
                         yield from self._iter_validator_results(pf,
                                 value,
@@ -402,9 +410,13 @@ class Require:
                                 parent_values,
                                 )
                         pos_e += 1
-                    # label_e is an Ellipses; either find next as match or continue with Ellipses
+                    # expected is an Ellipses; either find next as match or continue with Ellipses
                     elif pos_e + 1 < len_e: # more expected labels available
-                        label_next_e = self._labels[pos_e + 1]
+                        label_next_e, label_next_validators = self._split_validators(
+                                self._labels[pos_e + 1],
+                                pf,
+                                )
+
                         if label_next_e is ...:
                             yield (ERROR_MESSAGE_TYPE,
                                     'Expected cannot be defined with adjacent ellipses',
@@ -413,11 +425,19 @@ class Require:
                                     )
                             break
                         if label_p == label_next_e:
+                            # if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must copmare to the next expected value; we then skip that value for subsequent evaluation
+                            yield from self._iter_validator_results(pf,
+                                    value,
+                                    label_next_e,
+                                    label_next_validators,
+                                    parent_hints,
+                                    parent_values,
+                                    )
                             pos_e += 2 # skip the compared value, prepare to get next
                     # else, last expected value is Ellipses
                 else: # no break, evaluate final conditions
                     if pos_e == len_e - 1 and label_e is ...:
-                        pass # ended on elipses
+                        pass # ended on ellipses
                     elif pos_e < len_e:
                         remainder = self._prepare_remainder(self._labels[pos_e:])
                         yield (ERROR_MESSAGE_TYPE,
