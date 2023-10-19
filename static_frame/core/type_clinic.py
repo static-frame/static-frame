@@ -289,8 +289,15 @@ class Require:
             self._labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]] = labels
 
         def __repr__(self) -> str:
-            args = ', '.join(to_name(v, func_to_str=repr) for v in self._labels)
-            return f'{self.__class__.__name__}({args})'
+            msg = []
+            for v in self._labels:
+                if isinstance(v, list):
+                    parts = [to_name(p, func_to_str=repr) for p in v]
+                    msg.append(f'[{", ".join(parts)}]')
+                else:
+                    msg.append(to_name(v, func_to_str=repr))
+
+            return f'{self.__class__.__name__}({", ".join(msg)})'
 
         @staticmethod
         def _prepare_remainder(labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]]) -> str:
@@ -324,6 +331,29 @@ class Require:
                 if isinstance(v, Frame):
                     return v
             return None
+
+        @staticmethod
+        def _iter_validator_results(
+                frame: Frame,
+                labels: IndexBase,
+                label: TLabel,
+                validators: tp.List[TValidator],
+                parent_hints: TParent,
+                parent_values: TParent,
+                ) -> tp.Iterator[TValidation]:
+            if labels is frame.index:
+                s = frame.loc[label]
+            elif labels is frame.columns:
+                s = frame[label]
+            else:
+                raise RuntimeError('Labels points to an index that is not a member of the parent Frame')
+            for validator in validators:
+                if not validator(s):
+                    yield (ERROR_MESSAGE_TYPE,
+                            f'Validation failed of label {label!r} with {to_name(validator)}',
+                            parent_hints,
+                            parent_values,
+                            )
 
         def _iter_errors(self,
                 value: tp.Any,
@@ -362,6 +392,15 @@ class Require:
                                     parent_hints,
                                     parent_values,
                                     )
+                        # import ipdb; ipdb.set_trace()
+                        # NOTE: not failing fast!
+                        yield from self._iter_validator_results(pf,
+                                value,
+                                label_e,
+                                label_validators,
+                                parent_hints,
+                                parent_values,
+                                )
                         pos_e += 1
                     # label_e is an Ellipses; either find next as match or continue with Ellipses
                     elif pos_e + 1 < len_e: # more expected labels available

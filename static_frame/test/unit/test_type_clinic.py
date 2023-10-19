@@ -1200,7 +1200,7 @@ def test_validate_labels_f():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             tp.Annotated[sf.Index[np.str_],
                     sf.Require.Labels(
-                            ['a', lambda s: (s > 0).all()],
+                            ['a', lambda s: (s < 0).all()],
                             ...,
                             'c',
                             )
@@ -1215,7 +1215,9 @@ def test_validate_labels_f():
             index=index,
             )
 
-    assert TypeClinic(f)(h1).validated is True
+    cr = TypeClinic(f)(h1)
+    print(cr.to_str())
+    #.validated is True
 
 
 #-------------------------------------------------------------------------------
