@@ -1226,14 +1226,15 @@ def test_validate_labels_g():
                             'c',
                             )
                     ],
-            np.int_,
-            np.int_,
+            np.int64,
+            np.int64,
             np.bool_]
 
     index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
     f: h1 = sf.Frame.from_records(records,
             columns=('a', 'b', 'c'),
             index=index,
+            dtypes=(np.int64, np.int64, np.bool_)
             )
 
     cr = TypeClinic(f)(h1)
@@ -1249,8 +1250,8 @@ def test_validate_labels_g():
                             ['c', lambda s: s.sum() == 3],
                             )
                     ],
-            np.int_,
-            np.int_,
+            np.int64,
+            np.int64,
             np.bool_]
 
     cr = TypeClinic(f)(h2)
