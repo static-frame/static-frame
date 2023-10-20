@@ -1260,6 +1260,53 @@ def test_validate_labels_g():
 
 #-------------------------------------------------------------------------------
 
+def test_validate_labels_h1():
+    idx1 = sf.Index(('a', 'b', 'c'))
+    records = (
+            (1, 3, True),
+            (4, 100, False),
+            (3, 8, True),
+            )
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            dtypes=(np.int64, np.int64, np.bool_)
+            )
+
+    v = Require.Labels('a', 'b', ['c', lambda s: s.dtype == bool])
+
+    with pytest.raises(RuntimeError):
+        # Provided label validators in a context without a discoverable Frame.
+        tuple(v._iter_errors(idx1, None, (), ()))
+
+    with pytest.raises(RuntimeError):
+        # Labels associated with an index that is not a member of the parent Frame
+        tuple(v._iter_errors(idx1, None, (), (f,)))
+
+
+def test_validate_labels_h2():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            index=index,
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    # import ipdb; ipdb.set_trace()
+    # NOTE: need to find way to use strings in lookup of datetime; maybe loc_to_iloc
+    v = Require.Labels('2011-01-03', ...)
+
+
+#-------------------------------------------------------------------------------
+
 def test_validate_apply_a():
     idx1 = sf.Index(('a', 'b', 'c'))
     v1 = Require.Apply(lambda i: 'b' in i)

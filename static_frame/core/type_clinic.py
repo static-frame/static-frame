@@ -359,7 +359,7 @@ class Require:
                 elif labels is frame.columns:
                     s = frame[label]
                 else:
-                    raise RuntimeError('Labels points to an index that is not a member of the parent Frame')
+                    raise RuntimeError('Labels associated with an index that is not a member of the parent Frame')
                 for validator in validators:
                     if not validator(s):
                         yield (ERROR_MESSAGE_TYPE,
