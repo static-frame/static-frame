@@ -50,7 +50,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    OptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -1021,7 +1021,7 @@ def blocks_to_array_2d(
     discover_dtype = dtype is None
     discover_shape = shape is None
     blocks_is_gen = not hasattr(blocks, '__len__')
-    blocks_post: OptionalArrayList = None
+    blocks_post: TOptionalArrayList = None
 
     if discover_shape or discover_dtype:
         # if we have to discover shape or types, we have to do two iterations, and then must load an iterator of `blocks` into a list

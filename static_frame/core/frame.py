@@ -210,7 +210,7 @@ if tp.TYPE_CHECKING:
     from xarray import Dataset  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    OptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
     TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -6169,7 +6169,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
         '''
         values_for_sort: TNDArrayAny | tp.List[TNDArrayAny] | None = None
-        values_for_lex: OptionalArrayList = None
+        values_for_lex: TOptionalArrayList = None
         cfs: TNDArrayAny | TSeriesAny | TFrameAny | TypeBlocks
 
         if axis == 0: # get a column ordering based on one or more rows

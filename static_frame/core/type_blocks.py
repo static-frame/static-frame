@@ -81,7 +81,7 @@ from static_frame.core.util import view_2d_as_1d
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    OptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
 #---------------------------------------------------------------------------
 
@@ -1189,7 +1189,7 @@ class TypeBlocks(ContainerOperand):
             axis: 0 orders columns by row(s) given by ``key``; 1 orders rows by column(s) given by ``key``.
         '''
         values_for_sort: tp.Optional[TNDArrayAny] = None
-        values_for_lex: OptionalArrayList = None
+        values_for_lex: TOptionalArrayList = None
 
         if axis == 0: # get a column ordering based on one or more rows
             cfsa: TNDArrayAny = self._extract_array(row_key=key)
