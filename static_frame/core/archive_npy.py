@@ -38,7 +38,7 @@ if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]] # pylint: disable=W0611 #pragma: no cover
     HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] # pylint: disable=W0611 #pragma: no cover
@@ -79,7 +79,7 @@ class NPYConverter:
         return prefix + center + postfix
 
     @classmethod
-    def to_npy(cls, file: tp.IO[bytes], array: NDArrayAny) -> None:
+    def to_npy(cls, file: tp.IO[bytes], array: TNDArrayAny) -> None:
         '''Write an NPY 1.0 file to the open, writeable, binary file given by ``file``. NPY 1.0 is used as structured arrays are not supported.
         '''
         dtype = array.dtype
@@ -168,7 +168,7 @@ class NPYConverter:
             file: tp.IO[bytes],
             header_decode_cache: HeaderDecodeCacheType,
             memory_map: bool = False,
-            ) -> tp.Tuple[NDArrayAny, tp.Optional[mmap.mmap]]:
+            ) -> tp.Tuple[TNDArrayAny, tp.Optional[mmap.mmap]]:
         '''Read an NPY 1.0 file.
         '''
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
@@ -200,7 +200,7 @@ class NPYConverter:
                     offset=offset_mmap,
                     )
             # will always be immutable
-            array: NDArrayAny = np.ndarray(shape,
+            array: TNDArrayAny = np.ndarray(shape,
                     dtype=dtype,
                     buffer=mm,
                     offset=offset_array,
@@ -258,10 +258,10 @@ class Archive:
     def labels(self) -> tp.Iterator[str]:
         raise NotImplementedError() # pragma: no cover
 
-    def write_array(self, name: str, array: NDArrayAny) -> None:
+    def write_array(self, name: str, array: TNDArrayAny) -> None:
         raise NotImplementedError() #pragma: no cover
 
-    def read_array(self, name: str) -> NDArrayAny:
+    def read_array(self, name: str) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     def read_array_header(self, name: str) -> HeaderType:
@@ -327,7 +327,7 @@ class ArchiveZip(Archive):
     def labels(self) -> tp.Iterator[str]:
         yield from self._archive.namelist()
 
-    def write_array(self, name: str, array: NDArrayAny) -> None:
+    def write_array(self, name: str, array: TNDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
         f = self._archive.open(name, 'w', force_zip64=True) # pylint: disable=R1732
@@ -336,7 +336,7 @@ class ArchiveZip(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> NDArrayAny:
+    def read_array(self, name: str) -> TNDArrayAny:
         f = self._archive.open(name) # pylint: disable=R1732
         try:
             array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
@@ -408,7 +408,7 @@ class ArchiveDirectory(Archive):
         fp = os.path.join(self._archive, name)
         return os.path.exists(fp)
 
-    def write_array(self, name: str, array: NDArrayAny) -> None:
+    def write_array(self, name: str, array: TNDArrayAny) -> None:
         fp = os.path.join(self._archive, name)
         f = open(fp, 'wb') # pylint: disable=R1732
         try:
@@ -416,7 +416,7 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> NDArrayAny:
+    def read_array(self, name: str) -> TNDArrayAny:
         fp = os.path.join(self._archive, name)
         if self._memory_map:
             if not hasattr(self, '_closable'):
@@ -530,7 +530,7 @@ class ArchiveZipWrapper(Archive):
             return False
         return True
 
-    def write_array(self, name: str, array: NDArrayAny) -> None:
+    def write_array(self, name: str, array: TNDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
         name = f'{self.prefix}{self._delimiter}{name}'
@@ -540,7 +540,7 @@ class ArchiveZipWrapper(Archive):
         finally:
             f.close()
 
-    def read_array(self, name: str) -> NDArrayAny:
+    def read_array(self, name: str) -> TNDArrayAny:
         name = f'{self.prefix}{self._delimiter}{name}'
         f = self._archive.open(name)
         try:
@@ -628,7 +628,7 @@ class ArchiveIndexConverter:
             *,
             metadata: tp.Dict[str, TLabel],
             archive: Archive,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             key_template_values: str,
             ) -> None:
         '''
@@ -979,10 +979,10 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         return sum(gen())
 
     def from_arrays(self,
-            blocks: tp.Iterable[NDArrayAny],
+            blocks: tp.Iterable[TNDArrayAny],
             *,
-            index: NDArrayAny | IndexBase | None = None,
-            columns: NDArrayAny | IndexBase | None = None,
+            index: TNDArrayAny | IndexBase | None = None,
+            columns: TNDArrayAny | IndexBase | None = None,
             name: NameType = None,
             axis: int = 0,
             ) -> None:
@@ -1152,7 +1152,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
 
-            def blocks() -> tp.Iterator[NDArrayAny]:
+            def blocks() -> tp.Iterator[TNDArrayAny]:
                 for f in frames:
                     if len(f.index) != len(index) or (f.index != index).any(): # type: ignore
                         f = f.reindex(index=index, fill_value=fill_value)
@@ -1177,7 +1177,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')
 
-            def blocks() -> tp.Iterator[NDArrayAny]:
+            def blocks() -> tp.Iterator[TNDArrayAny]:
                 type_blocks = []
                 previous_f: tp.Optional[TFrameAny] = None
                 block_compatible = True

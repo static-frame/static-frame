@@ -22,7 +22,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class ValidationResult(tp.NamedTuple):
@@ -97,7 +97,7 @@ def _validate_and_process_indices(
 
 
 def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
-        ) -> tp.Tuple[NDArrayAny, TDtypeAny]:
+        ) -> tp.Tuple[TNDArrayAny, TDtypeAny]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
@@ -143,15 +143,15 @@ def _get_encodings(
         *,
         union_indices: tp.List[Index[tp.Any]],
         depth: int,
-        bit_offset_encoders: NDArrayAny,
+        bit_offset_encoders: TNDArrayAny,
         encoding_dtype: TDtypeAny,
-        ) -> NDArrayAny:
+        ) -> TNDArrayAny:
     '''Encode `ih` based on the union indices'''
-    remapped_indexers: tp.List[NDArrayAny] = []
+    remapped_indexers: tp.List[TNDArrayAny] = []
 
     union_idx: Index[tp.Any]
     idx: Index[tp.Any]
-    indexer: NDArrayAny
+    indexer: TNDArrayAny
     depth_level = list(range(depth))
     for ( # type: ignore
         union_idx,
@@ -174,14 +174,14 @@ def _get_encodings(
 
 def _remove_union_bloat(
         indices: tp.List[Index[tp.Any]],
-        indexers: tp.List[NDArrayAny] | NDArrayAny,
-        ) -> tp.Tuple[tp.List[Index[tp.Any]], NDArrayAny]:
+        indexers: tp.List[TNDArrayAny] | TNDArrayAny,
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], TNDArrayAny]:
     # There is potentially a LOT of leftover bloat from all the unions. Clean up.
     final_indices: tp.List[Index[tp.Any]] = []
-    final_indexers: tp.List[NDArrayAny] = []
+    final_indexers: tp.List[TNDArrayAny] = []
 
     index: Index[tp.Any]
-    indexer: NDArrayAny
+    indexer: TNDArrayAny
 
     for index, indexer in zip(indices, indexers):
         unique, new_indexer = ufunc_unique1d_indexer(indexer)

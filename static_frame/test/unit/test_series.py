@@ -46,7 +46,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
@@ -3722,7 +3722,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(6), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
-        post: NDArrayAny = s1.loc_searchsorted([20, 2], fill_value=None) # type: ignore
+        post: TNDArrayAny = s1.loc_searchsorted([20, 2], fill_value=None) # type: ignore
         self.assertEqual(post.tolist(), [None, ('a', 3)])
 
 

@@ -68,7 +68,7 @@ IteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -1125,7 +1125,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def dropna(
             self,
-            axis: int = 0, condition: tp.Callable[[NDArrayAny], bool] = np.all,
+            axis: int = 0, condition: tp.Callable[[TNDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1155,7 +1155,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr='notfalsy')
 
     def dropfalsy(self,
-            axis: int = 0, condition: tp.Callable[[NDArrayAny], bool] = np.all,
+            axis: int = 0, condition: tp.Callable[[TNDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.

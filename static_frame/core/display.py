@@ -27,7 +27,7 @@ from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
 
@@ -427,7 +427,7 @@ class Display:
 
     @classmethod
     def from_values(cls,
-            values: NDArrayAny | tp.Sequence[tp.Any],
+            values: TNDArrayAny | tp.Sequence[tp.Any],
             *,
             header: THeaderSpecifier,
             config: tp.Optional[DisplayConfig] = None,
@@ -839,7 +839,7 @@ class Display:
             self._rows[row_idx].extend(row)
 
     def extend_iterable(self,
-            iterable: tp.Sequence[tp.Any] | NDArrayAny,
+            iterable: tp.Sequence[tp.Any] | TNDArrayAny,
             header: HeaderInitializer
             ) -> None:
         '''

@@ -17,7 +17,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
@@ -94,7 +94,7 @@ class InterfaceValues(Interface[TVContainer_co]):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(block: NDArrayAny, normalize_2d: bool = True) -> NDArrayAny:
+        def func(block: TNDArrayAny, normalize_2d: bool = True) -> TNDArrayAny:
             if normalize_2d:
                 block = column_2d_filter(block)
 
@@ -110,7 +110,7 @@ class InterfaceValues(Interface[TVContainer_co]):
             return array
 
         if self._container._NDIM == 2:
-            blocks: tp.Iterable[NDArrayAny] = self._container._blocks._blocks #type: ignore
+            blocks: tp.Iterable[TNDArrayAny] = self._container._blocks._blocks #type: ignore
 
             if self._unify_blocks:
                 dtype = self._container._blocks._index.dtype if self._dtype is None else self._dtype #type: ignore

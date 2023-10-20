@@ -41,7 +41,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -68,7 +68,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
-         # cannot be NDArrayAny as not available in old NumPy
+         # cannot be TNDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
         FrameOrSeries,

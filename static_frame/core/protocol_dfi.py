@@ -18,7 +18,7 @@ from static_frame.core.util import NULL_SLICE
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
@@ -102,7 +102,7 @@ class DFIBuffer(Buffer):
         '_array',
         )
 
-    def __init__(self, array: NDArrayAny) -> None:
+    def __init__(self, array: TNDArrayAny) -> None:
         self._array = array
 
         # NOTE: would expect transformation upstream to avoid reproducing the same contiguous buffer on repeated calls;expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
@@ -112,7 +112,7 @@ class DFIBuffer(Buffer):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -143,7 +143,7 @@ class DFIColumn(Column):
             )
 
     def __init__(self,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             index: 'IndexBase',
             ):
         assert len(array) == len(index)
@@ -154,7 +154,7 @@ class DFIColumn(Column):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -281,7 +281,7 @@ class DFIDataFrame(DataFrame):
                 recast_blocks=False,
                 )
 
-    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''

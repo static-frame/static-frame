@@ -44,7 +44,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
@@ -67,51 +67,51 @@ class IndexBase(ContainerOperandSequence):
     iloc: tp.Any # this does not work: InterGetItemLocReduces[I]
 
     #---------------------------------------------------------------------------
-    def _ufunc_unary_operator(self, operator: UFunc) -> NDArrayAny:
+    def _ufunc_unary_operator(self, operator: UFunc) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def positions(self) -> NDArrayAny:
+    def positions(self) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
-    def __pos__(self) -> NDArrayAny:
+    def __pos__(self) -> TNDArrayAny:
         return self._ufunc_unary_operator(OPERATORS['__pos__'])
 
-    def __neg__(self) -> NDArrayAny:
+    def __neg__(self) -> TNDArrayAny:
         return self._ufunc_unary_operator(OPERATORS['__neg__'])
 
-    def __abs__(self) -> NDArrayAny:
+    def __abs__(self) -> TNDArrayAny:
         return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
-    def __invert__(self) -> NDArrayAny:
+    def __invert__(self) -> TNDArrayAny:
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
-    __add__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __sub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __mul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __matmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __truediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __floordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __mod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    # __divmod__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __pow__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __lshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __rshift__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __and__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __xor__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __or__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __lt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __le__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __eq__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __ne__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __gt__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __ge__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __radd__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __rsub__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __rmul__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __rtruediv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
-    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], NDArrayAny]
+    __add__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __sub__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __mul__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __matmul__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __truediv__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __floordiv__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __mod__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    # __divmod__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __pow__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __lshift__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __rshift__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __and__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __xor__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __or__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __lt__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __le__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __eq__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __ne__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __gt__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __ge__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __radd__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __rsub__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __rmul__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
     # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
@@ -195,7 +195,7 @@ class IndexBase(ContainerOperandSequence):
 
     def values_at_depth(self,
             depth_level: TDepthLevel = 0
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -232,7 +232,7 @@ class IndexBase(ContainerOperandSequence):
     def _drop_iloc(self: I, key: TILocSelector) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> NDArrayAny:
+    def isin(self, other: tp.Iterable[tp.Any]) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     def roll(self: I, shift: int) -> I:
@@ -245,7 +245,7 @@ class IndexBase(ContainerOperandSequence):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[I, NDArrayAny]:
+            ) -> tp.Tuple[I, TNDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def level_add(self,
@@ -272,7 +272,7 @@ class IndexBase(ContainerOperandSequence):
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 
@@ -280,7 +280,7 @@ class IndexBase(ContainerOperandSequence):
     def cumsum(self,
             axis: int = 0,
             skipna: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''Return the cumulative sum over the specified axis.
 
         {args}
@@ -299,7 +299,7 @@ class IndexBase(ContainerOperandSequence):
     def cumprod(self,
             axis: int = 0,
             skipna: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''Return the cumulative product over the specified axis.
 
         {args}
@@ -469,17 +469,17 @@ class IndexBase(ContainerOperandSequence):
     # via interfaces
 
     @property
-    def via_str(self) -> InterfaceString[NDArrayAny]:
+    def via_str(self) -> InterfaceString[TNDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def via_dt(self) -> InterfaceDatetime[NDArrayAny]:
+    def via_dt(self) -> InterfaceDatetime[TNDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[NDArrayAny]:
+            ) -> InterfaceRe[TNDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------

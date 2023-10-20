@@ -18,11 +18,11 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
-def np_arange(*args: int) -> NDArrayAny:
+def np_arange(*args: int) -> TNDArrayAny:
     a = np.arange(*args)
     a.flags.writeable = False
     return a
@@ -146,7 +146,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
     def test_init_b(self) -> None:
         indices = [Index(()) for _ in range(4)]
-        indexers: tp.List[NDArrayAny] = [np.array(()) for _ in range(4)]
+        indexers: tp.List[TNDArrayAny] = [np.array(()) for _ in range(4)]
 
         hlmap = HierarchicalLocMap(indices=indices, indexers=indexers)
 

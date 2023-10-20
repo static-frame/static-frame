@@ -208,9 +208,9 @@ if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
     import pyarrow  # pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    OptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
     TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -544,7 +544,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
                 own_index = True
 
-            def blocks() -> tp.Iterator[NDArrayAny]:
+            def blocks() -> tp.Iterator[TNDArrayAny]:
                 for frame in frame_seq:
                     if not frame.index.equals(index):
                         frame = frame.reindex(index=index, # type: ignore
@@ -579,7 +579,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
                 own_columns = True
 
-            def blocks() -> tp.Iterator[NDArrayAny]:
+            def blocks() -> tp.Iterator[TNDArrayAny]:
                 type_blocks = []
                 previous_frame: tp.Optional[TFrameAny] = None
                 block_compatible = True
@@ -611,7 +611,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'no support for {axis}')
 
-        block_gen: tp.Callable[..., tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[..., tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -721,7 +721,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
-            func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> tp.Self:
         '''
@@ -937,7 +937,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 rows_iter = rows if not rows_to_iter else iter(rows)
                 return (getattr(row, fields_dc[col_key]) for row in rows_iter) #type: ignore
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             # iterate over final column order, yielding 1D arrays
             for col_idx in range(col_count):
                 if column_name_getter: # append as side effect of generator!
@@ -951,7 +951,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
                 yield values
 
-        block_gen: tp.Callable[..., tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[..., tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -1037,7 +1037,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
             return (row.get(col_key, fill_value) for row in rows_iter)
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
@@ -1049,7 +1049,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         row_count=row_count
                         )
 
-        block_gen: tp.Callable[..., tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[..., tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -1186,7 +1186,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, (k, v) in enumerate(pairs):
                 columns.append(k) # side effect of generator!
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
@@ -1221,7 +1221,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     values, _ = iterable_to_array_1d(v, column_type)
                     yield values
 
-        block_gen: tp.Callable[[], tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[[], tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -1315,7 +1315,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns) #type: ignore
         get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns) # type: ignore
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, v in enumerate(fields):
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
@@ -1345,7 +1345,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     values, _ = iterable_to_array_1d(v, column_type)
                     yield values
 
-        block_gen: tp.Callable[..., tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[..., tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -1409,7 +1409,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         for col in cols: # produce a column that has a value for all observed keys
             col_reference.update(col)
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             cols_iter = cols if hasattr(cols, '__getitem__') else iter(cols)
             for col_idx, col_dict in enumerate(cols_iter):
 
@@ -1435,7 +1435,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 array.flags.writeable = False
                 yield array
 
-        block_gen: tp.Callable[..., tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[..., tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -1453,14 +1453,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
-            array: NDArrayAny,
+            array: TNDArrayAny,
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[IndexSpecifier] = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tp.Tuple[TypeBlocks, tp.Sequence[NDArrayAny], tp.Sequence[TLabel]]:
+            ) -> tp.Tuple[TypeBlocks, tp.Sequence[TNDArrayAny], tp.Sequence[TLabel]]:
         '''
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
 
@@ -1504,7 +1504,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes,
                 columns_by_col_idx)
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
                 # append here as we iterate for usage in get_col_dtype
@@ -1549,7 +1549,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _from_data_index_arrays_column_labels(cls,
             data: TypeBlocks,
             index_depth: int,
-            index_arrays: tp.Sequence[NDArrayAny],
+            index_arrays: tp.Sequence[TNDArrayAny],
             index_constructors: TIndexCtorSpecifiers,
             columns_depth: int,
             columns_labels: tp.Sequence[TLabel],
@@ -1603,7 +1603,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_structured_array(cls,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[IndexSpecifier] = None,
@@ -2337,7 +2337,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         get_col_dtype = (None if dtypes is None
                 else get_col_dtype_factory(dtypes, columns, index_depth))
-        values_arrays: tp.Sequence[NDArrayAny] = delimited_to_arrays(
+        values_arrays: tp.Sequence[TNDArrayAny] = delimited_to_arrays(
                 row_iter,
                 axis=1, # process type per column
                 line_select=line_select,
@@ -2865,7 +2865,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
         # create generator of contiguous typed data
         # calling .values will force type unification across all columns
-        def gen() -> tp.Iterator[NDArrayAny]:
+        def gen() -> tp.Iterator[TNDArrayAny]:
             pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
@@ -2990,7 +2990,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_start_pos = 0
             index_end_pos = index_start_pos + index_depth - 1
             apex_labels: tp.Optional[tp.Sequence[str]] = []
-            index_arrays: tp.Optional[tp.Sequence[NDArrayAny]] = []
+            index_arrays: tp.Optional[tp.Sequence[TNDArrayAny]] = []
         else:
             apex_labels = None
             index_arrays = None
@@ -3004,7 +3004,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         pdvu1 = pandas_version_under_1()
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
                 # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
@@ -3083,7 +3083,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else: # > 1
             index_values = index_arrays
 
-            def index_default_constructor(values: tp.Iterable[NDArrayAny],
+            def index_default_constructor(values: tp.Iterable[TNDArrayAny],
                     *,
                     index_constructors: TIndexCtorSpecifiers = None,
                     ) -> IndexBase:
@@ -3574,7 +3574,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -3600,7 +3600,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # NOTE: we only process object dt64 types; strings have to be converted explicitly
 
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -3644,7 +3644,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TFrameAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TFrameAny:
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
                     tb,
@@ -4586,7 +4586,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def dropna(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tp.Self:
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all) -> tp.Self:
         '''
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -4641,7 +4641,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def dropfalsy(self,
             axis: int = 0,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all) -> tp.Self:
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all) -> tp.Self:
         '''
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
 
@@ -4666,7 +4666,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     def _fill_missing(self,
             value: tp.Any,
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> tp.Self:
         '''
         Args:
@@ -4914,7 +4914,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='values_2d', class_name='Frame')
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''
         {}
         '''
@@ -4950,7 +4950,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject()
-    def mloc(self) -> NDArrayAny:
+    def mloc(self) -> TNDArrayAny:
         '''{doc_array}
         '''
         return self._blocks.mloc
@@ -5003,7 +5003,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _extract_array(self,
             row_key: TILocSelector = None,
             column_key: TILocSelector = None,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Alternative extractor that returns just an ndarray. Keys are iloc keys.
         '''
@@ -5389,7 +5389,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # operator functions
 
     def _ufunc_unary_operator(self,
-            operator: tp.Callable[[NDArrayAny], NDArrayAny],
+            operator: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> TFrameAny:
         # call the unary operator on _blocks
         return self.__class__(
@@ -5587,14 +5587,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # axis iterators
     # NOTE: if there is more than one argument, the axis argument needs to be key-word only
 
-    def _axis_array(self, axis: int) -> tp.Iterator[NDArrayAny]:
+    def _axis_array(self, axis: int) -> tp.Iterator[TNDArrayAny]:
         '''Generator of arrays across an axis
         '''
         yield from self._blocks.axis_values(axis)
 
     def _axis_array_items(self,
             axis: int,
-            ) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._blocks.axis_values(axis))
 
@@ -5671,11 +5671,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _axis_group_final_iter(self, *,
             axis: int,
             as_array: bool,
-            group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]],
+            group_iter: tp.Iterator[tp.Tuple[TLabel, slice | TNDArrayAny, TypeBlocks | TNDArrayAny]],
             index: IndexBase,
             columns: IndexBase,
-            ordering: tp.Optional[NDArrayAny],
-            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
+            ordering: tp.Optional[TNDArrayAny],
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         '''Utility for final iteration of the group_iter, shared by three methods.
         '''
         if as_array:
@@ -5714,7 +5714,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         '''
         Core group implementation.
 
@@ -5740,7 +5740,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns: IndexBase
         index: IndexBase
 
-        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, tp.Union[TypeBlocks, NDArrayAny]]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | TNDArrayAny, tp.Union[TypeBlocks, TNDArrayAny]]]
         if use_sorted:
             group_iter = group_sorted(
                     blocks=blocks,
@@ -5787,7 +5787,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop: bool = False,
             stable: bool = True,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         '''
         Args:
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
@@ -5813,7 +5813,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             drop: bool = False,
             as_array: bool = False,
-            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
+            ) -> tp.Iterator[TFrameAny | TNDArrayAny]:
         yield from (x for _, x in self._axis_group_loc_items(
                 key=key,
                 axis=axis,
@@ -5827,7 +5827,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         # NOTE: simlar to _axis_group_iloc_items
 
         blocks = self._blocks
@@ -5867,7 +5867,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if use_sorted:
                 group_source = group_source[ordering]
 
-        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | TNDArrayAny, TypeBlocks | TNDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -5906,7 +5906,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
+            ) -> tp.Iterator[TFrameAny | TNDArrayAny]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 axis=axis,
@@ -5918,8 +5918,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: NDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | NDArrayAny]]:
+            group_source: TNDArrayAny,
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
 
         blocks = self._blocks
         index = self._index
@@ -5943,7 +5943,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if use_sorted:
             group_source = group_source[ordering]
 
-        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | NDArrayAny, TypeBlocks | NDArrayAny]]
+        group_iter: tp.Iterator[tp.Tuple[TLabel, slice | TNDArrayAny, TypeBlocks | TNDArrayAny]]
         if use_sorted:
             if axis == 0:
                 blocks = self._blocks._extract(row_key=ordering)
@@ -5981,8 +5981,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: NDArrayAny,
-            ) -> tp.Iterator[TFrameAny | NDArrayAny]:
+            group_source: TNDArrayAny,
+            ) -> tp.Iterator[TFrameAny | TNDArrayAny]:
         yield from (x for _, x in self._axis_group_other_items(
                 axis=axis,
                 as_array=as_array,
@@ -6098,7 +6098,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` ordered by the sorted Index.
@@ -6125,7 +6125,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> TFrameAny:
         '''
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
@@ -6155,7 +6155,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending: BoolOrBools = True,
             axis: int = 1,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[tp.Union[TFrameAny, TSeriesAny]], tp.Union[NDArrayAny, TSeriesAny, TFrameAny]]] = None,
+            key: tp.Optional[tp.Callable[[tp.Union[TFrameAny, TSeriesAny]], tp.Union[TNDArrayAny, TSeriesAny, TFrameAny]]] = None,
             ) -> tp.Self:
         '''
         Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
@@ -6168,9 +6168,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {kind}
             {key}
         '''
-        values_for_sort: NDArrayAny | tp.List[NDArrayAny] | None = None
+        values_for_sort: TNDArrayAny | tp.List[TNDArrayAny] | None = None
         values_for_lex: OptionalArrayList = None
-        cfs: NDArrayAny | TSeriesAny | TFrameAny | TypeBlocks
+        cfs: TNDArrayAny | TSeriesAny | TFrameAny | TypeBlocks
 
         if axis == 0: # get a column ordering based on one or more rows
             iloc_key = self._index._loc_to_iloc(label) # type: ignore
@@ -6302,7 +6302,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     name=self._name
                     )
 
-        args: tp.List[float | NDArrayAny | ContainerOperand | None] = [lower, upper]
+        args: tp.List[float | TNDArrayAny | ContainerOperand | None] = [lower, upper]
         for idx, arg in enumerate(args):
             if arg is None:
                 continue
@@ -6580,7 +6580,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             consolidate_blocks:
             columns_constructors:
         '''
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             # yield index as columns, then remaining blocks currently in Frame
             if self._index.ndim == 1:
                 yield self._index.values
@@ -6590,7 +6590,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             for b in self._blocks._blocks:
                 yield b
 
-        block_gen: tp.Callable[[], tp.Iterator[NDArrayAny]]
+        block_gen: tp.Callable[[], tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -6999,7 +6999,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if axis == 0:
             fill_value_factory = get_col_fill_value_factory(fill_value, self.columns)
 
-        def array_iter() -> tp.Iterator[NDArrayAny]:
+        def array_iter() -> tp.Iterator[TNDArrayAny]:
             for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
                 asc = ascending if asc_is_element else ascending[idx] # type: ignore
                 if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
@@ -7237,7 +7237,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
             for i, values in enumerate(self._blocks.axis_values(axis=axis)):
-                valid: tp.Optional[NDArrayAny] = None
+                valid: tp.Optional[TNDArrayAny] = None
 
                 if skipfalsy: # always includes skipna
                     valid = ~isfalsy_array(values)
@@ -7400,7 +7400,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             return_label: bool,
             forward: bool,
             fill_value: TLabel = np.nan,
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> TSeriesAny:
         '''
         For a given axis, return the first or last label observed that is not missing.
@@ -7409,7 +7409,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func: Array processor such as `isna_array`.
         '''
 
-        def blocks() -> tp.Iterator[NDArrayAny]:
+        def blocks() -> tp.Iterator[TNDArrayAny]:
             for b in self._blocks._blocks:
                 # func returns True for missing, invert for not missing
                 bool_block = ~func(b)
@@ -7878,7 +7878,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 frame_cls=self.__class__,
                 )
 
-        def items() -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+        def items() -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]:
             for col_idx, outer in enumerate(columns_src): # iter tuple or label
                 dtype_src_col = dtypes_src[col_idx]
 
@@ -8263,7 +8263,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def unique(self, *,
             axis: tp.Optional[int] = None,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return a NumPy array of unqiue values. If the axis argument is provided, uniqueness is determined by columns or row.
         '''
@@ -8272,7 +8272,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
-            ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
+            ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
         '''
         {doc}
         {args}
@@ -8387,7 +8387,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 force_str_names=True,
                 )
 
-        def arrays() -> tp.Iterator[NDArrayAny]:
+        def arrays() -> tp.Iterator[TNDArrayAny]:
             for array, dtype in zip(
                     Store.get_column_iterator(frame=self, include_index=include_index),
                     dtypes,
@@ -8433,7 +8433,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         import msgpack
         import msgpack_numpy
 
-        def encode(obj: tp.Union[ContainerOperand, IndexBase, NDArrayAny],
+        def encode(obj: tp.Union[ContainerOperand, IndexBase, TNDArrayAny],
                 chain: tp.Callable[[tp.Any], tp.Dict[bytes, tp.Any]] = msgpack_numpy.encode,
                 ) -> tp.Dict[bytes, tp.Any]: #returns dict that msgpack-python consumes
             cls = obj.__class__
@@ -8522,7 +8522,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else: # must be hashable
             columns_values = array2d_to_tuples(columns.values)
 
-            def columns_arrays() -> tp.Iterator[NDArrayAny]:
+            def columns_arrays() -> tp.Iterator[TNDArrayAny]:
                 c: TSeriesAny
                 for c in self.iter_series(axis=0): #type: ignore
                     # dtype must be able to accomodate a float NaN
@@ -9528,7 +9528,7 @@ class FrameAssignILoc(FrameAssign):
         column_only = key[0] is None
         column_is_multiple = key[1] is None or isinstance(key[1], KEY_MULTIPLE_TYPES)
 
-        assigned: NDArrayAny | tp.Iterable[NDArrayAny]
+        assigned: TNDArrayAny | tp.Iterable[TNDArrayAny]
         if is_series:
             assigned = self.container._reindex_other_like_iloc(value,
                     key,

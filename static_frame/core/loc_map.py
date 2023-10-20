@@ -36,7 +36,7 @@ from static_frame.core.util import TLocSelector
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
@@ -56,7 +56,7 @@ class LocMap:
     def map_slice_args(
             label_to_pos: tp.Callable[[tp.Iterable[TLabel]], int],
             key: slice,
-            labels: tp.Optional[NDArrayAny] = None,
+            labels: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Iterator[tp.Union[int, None]]:
         '''Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
 
@@ -64,7 +64,7 @@ class LocMap:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
         # NOTE: it is expected that NULL_SLICE is already identified
-        labels_astype: tp.Optional[NDArrayAny] = None
+        labels_astype: tp.Optional[TNDArrayAny] = None
 
         for field in SLICE_ATTRS:
             attr = getattr(key, field)
@@ -125,8 +125,8 @@ class LocMap:
     @classmethod
     def loc_to_iloc(cls, *,
             label_to_pos: FrozenAutoMap,
-            labels: NDArrayAny,
-            positions: NDArrayAny,
+            labels: TNDArrayAny,
+            positions: TNDArrayAny,
             key: TLocSelector,
             partial_selection: bool = False,
             ) -> TILocSelector:
@@ -211,14 +211,14 @@ class HierarchicalLocMap:
             'encoded_indexer_map',
             )
 
-    bit_offset_encoders: NDArrayAny
+    bit_offset_encoders: TNDArrayAny
     encoding_can_overflow: bool
     encoded_indexer_map: FrozenAutoMap
 
     def __init__(self: _HLMap,
             *,
             indices: tp.List[Index[tp.Any]],
-            indexers: NDArrayAny,
+            indexers: TNDArrayAny,
             ) -> None:
 
         if not len(indexers[0]):
@@ -276,7 +276,7 @@ class HierarchicalLocMap:
     @staticmethod
     def build_offsets_and_overflow(
             num_unique_elements_per_depth: tp.List[int],
-            ) -> tp.Tuple[NDArrayAny, bool]:
+            ) -> tp.Tuple[TNDArrayAny, bool]:
         '''
         Derive the offsets and the overflow flag from the number of unique values per depth
         '''
@@ -317,8 +317,8 @@ class HierarchicalLocMap:
     def build_encoded_indexers_map(
             *,
             encoding_can_overflow: bool,
-            bit_offset_encoders: NDArrayAny,
-            indexers: NDArrayAny,
+            bit_offset_encoders: TNDArrayAny,
+            indexers: TNDArrayAny,
             ) -> FrozenAutoMap:
         '''
         Builds up a mapping from indexers to iloc positions using their encoded values
@@ -385,7 +385,7 @@ class HierarchicalLocMap:
     def build_key_indexers(self: _HLMap,
             key: HierarchicalLocMapKey,
             indices: tp.List[Index[tp.Any]],
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         key_indexers: tp.List[tp.Sequence[int]] = []
 
         is_single_key = True
@@ -430,7 +430,7 @@ class HierarchicalLocMap:
         return self.encoded_indexer_map[key_indexers] # type: ignore
 
     def indexers_to_iloc(self: _HLMap,
-            indexers: NDArrayAny,
+            indexers: TNDArrayAny,
             ) -> tp.List[int]:
         '''
         Encodes indexers, and then remaps them to ilocs using the encoded_indexer_map
@@ -439,7 +439,7 @@ class HierarchicalLocMap:
         return list(map(self.encoded_indexer_map.__getitem__, indexers))
 
     @staticmethod
-    def encode(indexers: NDArrayAny, bit_offset_encoders: NDArrayAny) -> NDArrayAny:
+    def encode(indexers: TNDArrayAny, bit_offset_encoders: TNDArrayAny) -> TNDArrayAny:
         '''
         Encode indexers into a 1-dim array of uint64
         '''
@@ -448,15 +448,15 @@ class HierarchicalLocMap:
         assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        array: NDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
+        array: TNDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
         return array
 
     @staticmethod
     def unpack_encoding(
-            encoded_arr: NDArrayAny,
-            bit_offset_encoders: NDArrayAny,
+            encoded_arr: TNDArrayAny,
+            bit_offset_encoders: TNDArrayAny,
             encoding_can_overflow: bool,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Given an encoding, unpack it into its constituent parts
 
@@ -526,7 +526,7 @@ class HierarchicalLocMap:
         dtype = DTYPE_OBJECT if encoding_can_overflow else DTYPE_UINT_DEFAULT
 
         starts = bit_offset_encoders
-        stops: NDArrayAny = np.empty(len(starts), dtype=dtype)
+        stops: TNDArrayAny = np.empty(len(starts), dtype=dtype)
         stops[:-1] = starts[1:]
         stops[-1] = 64
 

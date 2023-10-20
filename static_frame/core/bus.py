@@ -62,7 +62,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -103,7 +103,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '_max_persist',
         )
 
-    _values_mutable: NDArrayAny
+    _values_mutable: TNDArrayAny
     _index: IndexBase
     _store: tp.Optional[Store]
     _config: StoreConfigMap
@@ -427,7 +427,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            frames: NDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
+            frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
             *,
             index: IndexInitializer,
             index_constructor: TIndexCtorSpecifier = None,
@@ -456,8 +456,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     explicit_constructor=index_constructor
                     )
         count = len(self._index) # pyright: ignore
-        frames_array: NDArrayAny
-        self._loaded: NDArrayAny
+        frames_array: TNDArrayAny
+        self._loaded: TNDArrayAny
         load_array: bool | np.bool_
         self._loaded_all: bool | np.bool_
 
@@ -795,7 +795,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values: NDArrayAny | TFrameAny = array[key]
+        target_values: TNDArrayAny | TFrameAny = array[key]
         target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
@@ -979,7 +979,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     _items_store = items
 
     @property
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
         # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy
@@ -1310,7 +1310,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             *,
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> tp.Self:
         '''
         Return a new Bus ordered by the sorted Index.
@@ -1336,7 +1336,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[[TSeriesAny], tp.Union[NDArrayAny, TSeriesAny]],
+            key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
             ) -> tp.Self:
         '''
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.

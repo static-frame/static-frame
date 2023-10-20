@@ -16,7 +16,7 @@ from static_frame.core.memory_measure import memory_total
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 _iter_iterable = MemoryMeasure._iter_iterable
@@ -307,7 +307,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_measure_format_a(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -335,7 +335,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_b(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         mempty = MaterializedArray(empty, format=MeasureFormat.REFERENCED_MATERIALIZED)
 
         a1 = np.array((1, 2), dtype=np.int64)
@@ -361,7 +361,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_c(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -381,7 +381,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_d(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -402,7 +402,7 @@ class TestUnit(TestCase):
 
 
     def test_measure_format_e(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 
@@ -422,7 +422,7 @@ class TestUnit(TestCase):
                 )
 
     def test_measure_format_f(self) -> None:
-        empty: NDArrayAny = np.array(())
+        empty: TNDArrayAny = np.array(())
         a1 = np.array((1, 2), dtype=np.int64)
         a2 = a1[:]
 

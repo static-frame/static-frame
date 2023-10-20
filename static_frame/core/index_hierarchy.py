@@ -107,7 +107,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import FrameHE  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
 
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -129,7 +129,7 @@ HashableToIntMapsT = tp.List[tp.Dict[TLabel, int]]
 GrowableIndexersT = tp.List[tp.List[int]]
 
 
-def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> NDArrayAny:
+def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> TNDArrayAny:
     '''
     Creates a 2D indexer array given a sequence of `list_lengths`
 
@@ -181,11 +181,11 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> NDArrayAny:
 # 83% of from_arrays_large (83% ufunc_unique1d_indexer)
 def construct_indices_and_indexers_from_column_arrays(
         *,
-        column_iter: tp.Iterable[NDArrayAny],
+        column_iter: tp.Iterable[TNDArrayAny],
         index_constructors_iter: tp.Iterable[TIndexCtorSpecifier],
-        ) -> tp.Tuple[tp.List[Index[tp.Any]], NDArrayAny]:
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], TNDArrayAny]:
     indices: tp.List[Index[tp.Any]] = []
-    indexers_coll: tp.List[NDArrayAny] = []
+    indexers_coll: tp.List[TNDArrayAny] = []
 
     for column, constructor in zip(column_iter, index_constructors_iter):
         # Alternative approach that retains order
@@ -245,11 +245,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             )
 
     _indices: tp.List[Index[tp.Any]] # Of index objects
-    _indexers: NDArrayAny # 2D - integer arrays
+    _indexers: TNDArrayAny # 2D - integer arrays
     _name: NameType
     _blocks: TypeBlocks
     _recache: bool
-    _values: tp.Optional[NDArrayAny] # Used to cache the property `values`
+    _values: tp.Optional[TNDArrayAny] # Used to cache the property `values`
     _map: HierarchicalLocMap
     _index_types: tp.Optional[Series[tp.Any, np.object_]] # Used to cache the property `index_types`
     _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy', PendingRow]]]
@@ -347,7 +347,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             return tp.cast(Index[tp.Any], constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
         indices: tp.List[Index[tp.Any]] = []
-        indexers: NDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+        indexers: TNDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
             indexers[i] = codes
@@ -495,7 +495,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @classmethod
     def from_values_per_depth(cls,
-            values: tp.Union[NDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | NDArrayAny],
+            values: tp.Union[TNDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | TNDArrayAny],
             *,
             name: NameType = None,
             depth_reference: int | None = None,
@@ -509,7 +509,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        arrays: NDArrayAny | tp.Iterable[NDArrayAny]
+        arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
         depth: int | None
         if values.__class__ is np.ndarray:
             size, depth = values.shape # type: ignore
@@ -686,7 +686,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             ) -> tp.Self:
         labels: tp.List[TLabel] = []
         index_inner: tp.Optional[IndexGO[tp.Any]] = None  # We will grow this in-place
-        indexers_inner: tp.List[NDArrayAny] = []
+        indexers_inner: tp.List[TNDArrayAny] = []
 
         # Contains the len of the index for each label. Used to generate the outermost indexer
         repeats: tp.List[int] = []
@@ -717,7 +717,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
-        indexers: NDArrayAny = np.array(
+        indexers: TNDArrayAny = np.array(
                 [
                     np.hstack([np.repeat(val, repeats=reps) for val, reps in enumerate(repeats)]),
                     np.hstack(indexers_inner),
@@ -799,7 +799,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         outer_level.flags.writeable = False
         assert len(outer_level) == sum(map(len, blocks)) # sanity check
 
-        def gen_blocks() -> tp.Iterable[NDArrayAny]:
+        def gen_blocks() -> tp.Iterable[TNDArrayAny]:
             yield outer_level
             yield from TypeBlocks.vstack_blocks_to_blocks(blocks)
 
@@ -807,7 +807,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         _, depth = tb.shape
 
-        def gen_columns() -> tp.Iterator[NDArrayAny]:
+        def gen_columns() -> tp.Iterator[TNDArrayAny]:
             for i in range(depth):
                 yield tb._extract_array_column(i)
 
@@ -911,7 +911,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if depth == 1:
             raise ErrorInitIndex('blocks must have at least two dimensions.')
 
-        def gen_columns() -> tp.Iterator[NDArrayAny]:
+        def gen_columns() -> tp.Iterator[TNDArrayAny]:
             for i in range(blocks.shape[1]):
                 yield blocks._extract_array_column(i).reshape(size)
 
@@ -960,7 +960,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         '''
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
         '''
-        def gen_blocks() -> tp.Iterator[NDArrayAny]:
+        def gen_blocks() -> tp.Iterator[TNDArrayAny]:
             for index, indexer in zip(self._indices, self._indexers):
                 array = index.values[indexer]
                 array.flags.writeable = False
@@ -972,7 +972,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def __init__(self,
             indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
             *,
-            indexers: NDArrayAny = EMPTY_ARRAY_INT,
+            indexers: TNDArrayAny = EMPTY_ARRAY_INT,
             name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
@@ -1227,7 +1227,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return InterfaceValues(self)
 
     @property
-    def via_str(self) -> InterfaceString[NDArrayAny]:
+    def via_str(self) -> InterfaceString[TNDArrayAny]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -1242,7 +1242,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime[NDArrayAny]:
+    def via_dt(self) -> InterfaceDatetime[TNDArrayAny]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -1264,7 +1264,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[NDArrayAny]:
+            ) -> InterfaceRe[TNDArrayAny]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
@@ -1281,7 +1281,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # --------------------------------------------------------------------------
     @property
     @doc_inject()
-    def mloc(self) -> NDArrayAny:
+    def mloc(self) -> TNDArrayAny:
         '''
         {doc_int}
         '''
@@ -1459,7 +1459,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @property
     @doc_inject(selector='values_2d', class_name='IndexHierarchy')
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''
         {}
         '''
@@ -1472,7 +1472,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._values
 
     @property
-    def positions(self) -> NDArrayAny:
+    def positions(self) -> TNDArrayAny:
         '''
         Return the immutable positions array.
         '''
@@ -1487,7 +1487,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def values_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return an NP array for the ``depth_level`` specified.
 
@@ -1524,7 +1524,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def indexer_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return the indexers for the ``depth_level`` specified.
         Array will 2D if multiple depths are selected.
@@ -1688,7 +1688,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if len(values) != self.__len__():
                 raise ValueError('Iterable must provide a value for each label')
 
-            def gen() -> tp.Iterator[NDArrayAny]:
+            def gen() -> tp.Iterator[TNDArrayAny]:
                 for depth_idx in range(self.depth):
                     if depth_idx in target_depths:
                         yield values
@@ -1770,8 +1770,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def _build_mask_for_key_at_depth(self,
             depth: int,
             key: tp.Sequence[TLocSelectorNonContainer],
-            available: tp.Optional[NDArrayAny],
-            ) -> NDArrayAny:
+            available: tp.Optional[TNDArrayAny],
+            ) -> TNDArrayAny:
         '''
         Determines the indexer mask for `key` at `depth`.
 
@@ -1788,7 +1788,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
-        post: NDArrayAny
+        post: TNDArrayAny
 
         if isinstance(key_at_depth, slice):
             if available is None:
@@ -1822,7 +1822,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             else:
                 stop = len(indexer_at_depth)
 
-            target: NDArrayAny = np.arange(start, stop, key_at_depth.step)
+            target: TNDArrayAny = np.arange(start, stop, key_at_depth.step)
             post = np.full(len(indexer_at_depth), False)
             post[target] = True
             return post
@@ -1855,7 +1855,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if key._recache:
             key._update_array_cache()
 
-        remapped_indexers: tp.List[NDArrayAny] = []
+        remapped_indexers: tp.List[TNDArrayAny] = []
         for key_index, self_index, key_indexer in zip(
                 key._indices,
                 self._indices,
@@ -2033,7 +2033,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     )
 
         new_indices: tp.List[Index[tp.Any]] = []
-        new_indexers: NDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
+        new_indexers: TNDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             selection = indexer[key]
@@ -2100,7 +2100,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def _ufunc_unary_operator(self,
             operator: UFunc,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Always return an NP array.
         '''
@@ -2114,7 +2114,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             other: tp.Any,
             axis: int = 0,
             fill_value: object = np.nan,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
@@ -2155,7 +2155,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Returns:
             immutable NumPy array.
@@ -2202,7 +2202,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
 
@@ -2268,7 +2268,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def unique(self,
             depth_level: TDepthLevelSpecifier = 0,
             order_by_occurrence: bool = False,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return a NumPy array of unique values.
 
@@ -2367,7 +2367,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             *,
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> tp.Self:
         '''
         Return a new Index with the labels sorted.
@@ -2396,7 +2396,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def isin(self,
             other: tp.Iterable[tp.Iterable[TLabel]],
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
         '''
@@ -2467,8 +2467,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     #---------------------------------------------------------------------------
 
     def _drop_missing(self,
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
-            condition: tp.Callable[[NDArrayAny], NDArrayAny],
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by  a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -2489,7 +2489,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._drop_iloc(~row_key) #type: ignore
 
     def dropna(self, *,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all,
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
             ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -2501,7 +2501,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._drop_missing(isna_array, condition)
 
     def dropfalsy(self, *,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all,
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
             ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -2564,7 +2564,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[tp.Self, NDArrayAny]:
+            ) -> tp.Tuple[tp.Self, TNDArrayAny]:
         '''
         Selects a deterministically random sample from this IndexHierarchy.
 
@@ -2591,7 +2591,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         {doc}
 
@@ -2630,7 +2630,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
             values_for_match[i] = label
 
-        post: NDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
+        post: TNDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
             return post[0] # type: ignore
         return post
@@ -2651,18 +2651,18 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             {fill_value}
         '''
         # will return an integer or an array of integers
-        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
+        sel: TNDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value
 
-        flat: NDArrayAny = self.flat().values
+        flat: TNDArrayAny = self.flat().values
         mask = sel == length
         if not mask.any():
             return flat[sel]
 
-        post: NDArrayAny = np.empty(len(sel), dtype=object)
+        post: TNDArrayAny = np.empty(len(sel), dtype=object)
         sel[mask] = 0 # set out of range values to zero
         post[:] = flat[sel]
         post[mask] = fill_value
@@ -2738,7 +2738,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def _build_tree_at_depth_from_mask(self,
             depth: int,
-            mask: NDArrayAny,
+            mask: TNDArrayAny,
             ) -> tp.Union[TreeNodeT, Index[tp.Any]]:
         '''
         Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
@@ -2806,7 +2806,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         indexers[1:] = self._indexers
         indexers.flags.writeable = False
 
-        def gen_blocks() -> tp.Iterator[NDArrayAny]:
+        def gen_blocks() -> tp.Iterator[TNDArrayAny]:
             # First index only has one value. Extract from array (instead of using `level`) since the constructor might have modified its type
             yield np.full(self.__len__(), indices[0][0])
             yield from self._blocks._blocks
@@ -2992,7 +2992,7 @@ class IndexHierarchyAsType:
         # update index_constructors based on dtype
         index_constructors = container.index_types.values.copy()
         # can select element or array
-        dtype_post: TDtypeAny | NDArrayAny = blocks.dtypes[self.depth_key]
+        dtype_post: TDtypeAny | TNDArrayAny = blocks.dtypes[self.depth_key]
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,

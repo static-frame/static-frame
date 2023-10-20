@@ -96,7 +96,7 @@ from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class TestUnit(TestCase):
@@ -1428,7 +1428,7 @@ class TestUnit(TestCase):
 
     def test_set_ufunc2d_k(self) -> None:
 
-        a1: NDArrayAny = np.array(())
+        a1: TNDArrayAny = np.array(())
         a2 = np.empty(2, dtype=object)
         a2[:] =((0, 1), (3, 4))
 
@@ -2677,7 +2677,7 @@ class TestUnit(TestCase):
     @skip_win
     def test_ufunc_dtype_to_dtype_a(self) -> None:
 
-        arrays: tp.Tuple[NDArrayAny, ...] = (np.array((2, 4), dtype=np.int16),
+        arrays: tp.Tuple[TNDArrayAny, ...] = (np.array((2, 4), dtype=np.int16),
                 np.array((2, 4), dtype=np.int32),
                 np.array((2, 4), dtype=np.int64),
                 np.array((2, 4), dtype=np.float32),

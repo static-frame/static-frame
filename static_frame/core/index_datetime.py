@@ -45,7 +45,7 @@ from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
@@ -98,7 +98,7 @@ class IndexDatetime(Index[np.datetime64]):
             operator: tp.Callable[..., tp.Any],
             other: tp.Any,
             fill_value: tp.Any = np.nan,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
 
         if self._recache:
             self._update_array_cache()
@@ -118,7 +118,7 @@ class IndexDatetime(Index[np.datetime64]):
         else:
             other_is_array = False
 
-        result: NDArrayAny
+        result: TNDArrayAny
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
             result = operator(self._labels.astype(other.dtype), other)
@@ -174,7 +174,7 @@ class IndexDatetime(Index[np.datetime64]):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         {doc}
 
@@ -271,7 +271,7 @@ class IndexYear(IndexDatetime):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
-        labels: NDArrayAny = np.arange(
+        labels: TNDArrayAny = np.arange(
                 to_datetime64(start, DT64_YEAR),
                 to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'Y'),
@@ -426,7 +426,7 @@ class IndexDate(IndexDatetime):
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
-        labels: NDArrayAny = np.arange(
+        labels: TNDArrayAny = np.arange(
                 to_datetime64(start, DT64_DAY),
                 to_datetime64(stop, DT64_DAY) + TD64_DAY,
                 np.timedelta64(step, 'D'))

@@ -15,7 +15,7 @@ from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 class MFConfig(NamedTuple):
@@ -83,7 +83,7 @@ class MaterializedArray:
     BASE_ARRAY_BYTES = getsizeof(EMPTY_ARRAY)
 
     def __init__(self,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             format: MFConfig = MeasureFormat.LOCAL,
             ):
         self._array = array

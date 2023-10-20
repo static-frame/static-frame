@@ -34,7 +34,7 @@ from static_frame.core.util import ufunc_unique1d
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
@@ -144,7 +144,7 @@ def pivot_records_items_to_frame(
                     arrays[i].append(func(values))
                     i += 1
 
-    def gen() -> tp.Iterator[NDArrayAny]:
+    def gen() -> tp.Iterator[TNDArrayAny]:
         for b, dtype in zip(arrays, dtypes):
             if dtype is None:
                 array, _ = iterable_to_array_1d(b)
@@ -176,14 +176,14 @@ def pivot_records_items_to_blocks(*,
         index_outer: 'IndexBase',
         dtypes: tp.Tuple[tp.Optional[TDtypeAny], ...],
         kind: TSortKinds,
-        ) -> tp.List[NDArrayAny]:
+        ) -> tp.List[TNDArrayAny]:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
     group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
-    arrays: tp.List[tp.Union[tp.List[tp.Any], NDArrayAny]] = []
+    arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
     for dtype in dtypes:
         if dtype is None:
             # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
@@ -254,7 +254,7 @@ def pivot_items_to_block(*,
         fill_value_dtype: TDtypeAny,
         index_outer: 'IndexBase',
         kind: TSortKinds,
-        ) -> NDArrayAny:
+        ) -> TNDArrayAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     '''
@@ -617,16 +617,16 @@ def pivot_outer_index(
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[TLabel]
     target_depth: int
-    target_select: NDArrayAny
+    target_select: TNDArrayAny
     group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]]
     group_depth: int
-    group_select: NDArrayAny
+    group_select: TNDArrayAny
     group_to_dtype: tp.Dict[TLabel | None, TDtypeAny]
 
 def pivot_index_map(*,
         index_src: IndexBase,
         depth_level: TDepthLevel,
-        dtypes_src: NDArrayAny | None, # array of dtypes
+        dtypes_src: TNDArrayAny | None, # array of dtypes
         ) -> PivotIndexMap:
     '''
     Args:
@@ -703,9 +703,9 @@ class PivotDeriveConstructors(tp.NamedTuple):
 def pivot_derive_constructors(*,
         contract_src: IndexBase,
         expand_src: IndexBase,
-        group_select: NDArrayAny, # Boolean
+        group_select: TNDArrayAny, # Boolean
         group_depth: int,
-        target_select: NDArrayAny,
+        target_select: TNDArrayAny,
         group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]],
         expand_is_columns: bool,
         frame_cls: tp.Type[TFrameAny],

@@ -27,7 +27,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -115,7 +115,7 @@ class TestCase(unittest.TestCase):
     '''
 
     @staticmethod
-    def get_arrays_a() -> tp.Iterator[tp.Tuple[NDArrayAny, ...]]:
+    def get_arrays_a() -> tp.Iterator[tp.Tuple[TNDArrayAny, ...]]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Unique values required.
         '''
@@ -137,7 +137,7 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_arrays_b() -> tp.Iterator[tp.Tuple[NDArrayAny, ...]]:
+    def get_arrays_b() -> tp.Iterator[tp.Tuple[TNDArrayAny, ...]]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Many NaNs.
         '''
@@ -291,7 +291,7 @@ class TestCase(unittest.TestCase):
         return self.assertEqual(v1, v2)
 
 
-    def assertAlmostEqualArray(self, a1: NDArrayAny, a2: NDArrayAny) -> None:
+    def assertAlmostEqualArray(self, a1: TNDArrayAny, a2: TNDArrayAny) -> None:
         # NaNs are treated as equal
         np.testing.assert_allclose(a1, a2)
         # np.testing.assert_array_almost_equal(a1, a2, decimal=5)

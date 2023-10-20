@@ -14,7 +14,7 @@ from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import PositionsAllocator
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class RankMethod(str, Enum):
@@ -26,11 +26,11 @@ class RankMethod(str, Enum):
 
 
 def rank_1d(
-        array: NDArrayAny,
+        array: TNDArrayAny,
         method: tp.Union[str, RankMethod],
         ascending: bool = True,
         start: int = 0,
-        ) -> NDArrayAny:
+        ) -> TNDArrayAny:
     '''
     Rank 1D array. Based on the the scipy implementation:
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html
@@ -109,12 +109,12 @@ def rank_1d(
 
 
 def rank_2d(
-        array: NDArrayAny,
+        array: TNDArrayAny,
         method: tp.Union[str, RankMethod],
         ascending: bool = True,
         start: int = 0,
         axis: int = 0,
-        ) -> NDArrayAny:
+        ) -> TNDArrayAny:
     '''
     Args:
         axis: if 0, columns are ranked, if 1, rows are ranked

@@ -136,7 +136,7 @@ if tp.TYPE_CHECKING:
     from static_frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
 
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -160,7 +160,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             '_index',
             '_name',
             )
-    values: NDArrayAny
+    values: TNDArrayAny
     _index: IndexBase
     _NDIM: int = 1
 
@@ -407,7 +407,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 for label, series in items:
                     array_values.append(series.values)
                     yield from product((label,), series._index) # pyright: ignore
-        values: NDArrayAny
+        values: TNDArrayAny
         try:
             # populates array_values as side
             ih = index_from_optional_constructor(
@@ -433,7 +433,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
-            func: tp.Callable[[NDArrayAny], NDArrayAny] = isna_array,
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> tp.Self:
         '''Return a new :obj:`Series` made by overlaying containers, aligned values are filled with values from subsequent containers with left-to-right precedence. Values are filled based on a passed function that must return a Boolean array. By default, that function is `isna_array`, returning True for missing values (NaN and None).
@@ -501,7 +501,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not isinstance(value, pandas.Series):
             raise ErrorInitSeries(f'from_pandas must be called with a Pandas Series object, not: {type(value)}')
 
-        data: NDArrayAny
+        data: TNDArrayAny
         if pandas_version_under_1():
             if own_data:
                 data = value.values # pyright: ignore
@@ -783,7 +783,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -803,7 +803,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -834,7 +834,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         '''
         Interface for applying regular expressions to elements in this container.
         '''
-        def blocks_to_container(blocks: tp.Iterator[NDArrayAny]) -> TSeriesAny:
+        def blocks_to_container(blocks: tp.Iterator[TNDArrayAny]) -> TSeriesAny:
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -1377,7 +1377,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     def _fill_missing(self,
             value: tp.Any, # an element or a Series
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> tp.Self:
         '''
         Args:
@@ -1449,11 +1449,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     @staticmethod
     def _fill_missing_directional(
-            array: NDArrayAny,
+            array: TNDArrayAny,
             directional_forward: bool,
             func_target: UFunc,
             limit: int = 0,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1552,11 +1552,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
 
     @staticmethod
-    def _fill_missing_sided(array: NDArrayAny,
+    def _fill_missing_sided(array: TNDArrayAny,
             value: tp.Any,
             sided_leading: bool,
             func_target: UFunc,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
@@ -1907,7 +1907,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     # extraction
 
-    # def _extract_array(self, key: TLocSelector) -> NDArrayAny:
+    # def _extract_array(self, key: TLocSelector) -> TNDArrayAny:
     #     return self.values[key]
 
     @tp.overload
@@ -2029,7 +2029,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _axis_group_items(self, *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: NDArrayAny,
+            group_source: TNDArrayAny,
             ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''
         Args:
@@ -2050,7 +2050,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _axis_group(self, *,
             axis: int = 0,
             as_array: bool = False,
-            group_source: NDArrayAny,
+            group_source: TNDArrayAny,
             ) -> tp.Iterator[TSeriesAny]:
         yield from (x for _, x in self._axis_group_items(
                 axis=axis,
@@ -2118,7 +2118,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[NDArrayAny, TSeriesAny]]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[TNDArrayAny, TSeriesAny]]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -2151,7 +2151,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Union[NDArrayAny, TSeriesAny]]:
+            ) -> tp.Iterator[tp.Union[TNDArrayAny, TSeriesAny]]:
         yield from (x for _, x in axis_window_items(
                 source=self,
                 axis=axis,
@@ -2240,7 +2240,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             ascending: BoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted Index.
@@ -2272,7 +2272,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[TSeriesAny], tp.Union[NDArrayAny, TSeriesAny]]] = None,
+            key: tp.Optional[tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]]] = None,
             ) -> tp.Self:
         '''
         Return a new Series ordered by the sorted values.
@@ -2337,7 +2337,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         '''
-        args: tp.List[NDArrayAny | float | None] = []
+        args: tp.List[TNDArrayAny | float | None] = []
         for idx, arg in enumerate((lower, upper)):
             # arg = args[idx]
             if isinstance(arg, Series):
@@ -2748,7 +2748,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not skipna and not skipfalsy and not unique:
             return len(values)
 
-        valid: tp.Optional[NDArrayAny] = None
+        valid: tp.Optional[TNDArrayAny] = None
         if skipfalsy: # always includes skipna
             valid = ~isfalsy_array(values)
         elif skipna: # NOTE: elif, as skipfalsy incldues skipna
@@ -2857,7 +2857,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             return_label: bool,
             forward: bool,
             fill_value: TLabel = np.nan,
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
             ) -> TLabel:
         '''
         Return the label corresponding to the first not NA (None or nan) value found.
@@ -3044,7 +3044,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     def cov(self,
-            other: tp.Union[TSeriesAny, NDArrayAny],
+            other: tp.Union[TSeriesAny, TNDArrayAny],
             *,
             ddof: int = 1,
             ) -> float:
@@ -3060,7 +3060,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return np.cov(self.values, other, ddof=ddof)[0, -1] #type: ignore [no-any-return]
 
     def corr(self,
-            other: tp.Union[TSeriesAny, NDArrayAny],
+            other: tp.Union[TSeriesAny, TNDArrayAny],
             ) -> float:
         '''
         Return the index-aligned correlation to the supplied :obj:`Series`.
@@ -3080,7 +3080,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> NDArrayAny: # might be 0 dim scalar
+            ) -> TNDArrayAny: # might be 0 dim scalar
         '''
         {doc}
 
@@ -3091,7 +3091,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        post: NDArrayAny = np.searchsorted(self.values, # pyright: ignore
+        post: TNDArrayAny = np.searchsorted(self.values, # pyright: ignore
                 values,
                 'left' if side_left else 'right',
                 )
@@ -3103,7 +3103,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
-            ) -> tp.Union[TLabel, NDArrayAny]:
+            ) -> tp.Union[TLabel, TNDArrayAny]:
         '''
         {doc}
 
@@ -3112,14 +3112,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             {side_left}
             {fill_value}
         '''
-        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
+        sel: TNDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value #type: ignore [no-any-return]
 
         # sel and mask might be zero-dimensional
-        found: NDArrayAny = sel != length
+        found: TNDArrayAny = sel != length
         if found.all(): # if all matches within series
             if self._index.ndim == 1:
                 return self._index.values[sel]
@@ -3228,7 +3228,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
-    def unique(self) -> NDArrayAny:
+    def unique(self) -> TNDArrayAny:
         '''
         Return a NumPy array of unique values.
 
@@ -3241,7 +3241,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def unique_enumerated(self, *,
             retain_order: bool = False,
             func: tp.Optional[tp.Callable[[tp.Any], bool]] = None,
-            ) -> tp.Tuple[NDArrayAny, NDArrayAny]:
+            ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
         '''
         {doc}
         {args}
@@ -3330,7 +3330,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         if axis == 1:
             # present as a column
-            def block_gen() -> tp.Iterator[NDArrayAny]:
+            def block_gen() -> tp.Iterator[TNDArrayAny]:
                 yield self.values
 
             if index is IndexAutoFactory:
@@ -3353,7 +3353,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             own_columns = False
 
         elif axis == 0:
-            def block_gen() -> tp.Iterator[NDArrayAny]:
+            def block_gen() -> tp.Iterator[TNDArrayAny]:
                 array = self.values
                 yield array.reshape(1, array.shape[0])
 

@@ -48,7 +48,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import is_callable_or_mapping
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -412,7 +412,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     _items_store = items
 
     @property
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)

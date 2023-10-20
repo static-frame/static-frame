@@ -70,7 +70,7 @@ from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
@@ -628,7 +628,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject(selector='values_2d', class_name='Quilt')
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''
         {}
         '''
@@ -772,7 +772,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # axis iterators
 
-    def _axis_array(self, axis: int) -> tp.Iterator[NDArrayAny]:
+    def _axis_array(self, axis: int) -> tp.Iterator[TNDArrayAny]:
         '''Generator of arrays across an axis
 
         Args:
@@ -801,7 +801,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             raise AxisInvalid(f'no support for axis {axis}')
 
-    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, NDArrayAny]]:
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
@@ -923,13 +923,13 @@ class Quilt(ContainerBase, StoreClientMixin):
     def _extract_array(self,
             row_key: TLocSelector = None,
             column_key: TLocSelector = None,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Extract a consolidated array based on iloc selection.
         '''
         assert self._axis_hierarchy is not None #mypy
 
-        extractor: tp.Callable[..., NDArrayAny] = get_extractor(
+        extractor: tp.Callable[..., TNDArrayAny] = get_extractor(
                 self._deepcopy_from_bus,
                 is_array=True,
                 memo_active=False,
@@ -949,7 +949,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     axis=self._axis,
                     )
 
-        parts: tp.List[NDArrayAny] = []
+        parts: tp.List[TNDArrayAny] = []
         bus_keys: tp.Iterable[TLabel]
 
         if self._axis == 0:

@@ -31,7 +31,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -695,7 +695,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         # NOTE: name argument is for common interface
         if index_constructor is not None:
             raise RuntimeError('index_constructor not supported with this interface')
@@ -869,7 +869,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
     __slots__ = ()
 
     def __call__(self,
-            other: tp.Union[NDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
+            other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0

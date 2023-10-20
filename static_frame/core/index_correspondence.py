@@ -12,7 +12,7 @@ from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
@@ -59,7 +59,7 @@ class IndexCorrespondence:
                 depth = 0
 
         # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
-        common_labels: NDArrayAny | tp.Sequence[NDArrayAny]
+        common_labels: TNDArrayAny | tp.Sequence[TNDArrayAny]
         if depth == 1:
             # NOTE: this can fail in some cases: comparing two object arrays with NaNs and strings.
             common_labels = intersect1d(

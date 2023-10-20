@@ -34,7 +34,7 @@ from static_frame.core.util import ufunc_nanany
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_clinic import TypeClinic  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
@@ -217,7 +217,7 @@ class ContainerOperandSequence(ContainerBase):
     __slots__ = ()
 
     interface: TFrameAny # property that returns a Frame
-    # values: NDArrayAny
+    # values: TNDArrayAny
 
     # NOTE: the return type here is intentionally broad as it will get specialized in derived classes
     def _ufunc_binary_operator(self, *,
@@ -228,7 +228,7 @@ class ContainerOperandSequence(ContainerBase):
         raise NotImplementedError() #pragma: no cover
 
     @property
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
@@ -321,13 +321,13 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: TDtypeSpecifier = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeSpecifier = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
         if dtype is None:
             return self.values
-        array: NDArrayAny = self.values.astype(dtype)
+        array: TNDArrayAny = self.values.astype(dtype)
         return array
 
     def __array_ufunc__(self,
@@ -374,7 +374,7 @@ class ContainerOperandSequence(ContainerBase):
     def all(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``and`` over values along the specified axis.
 
@@ -394,7 +394,7 @@ class ContainerOperandSequence(ContainerBase):
     def any(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Logical ``or`` over values along the specified axis.
 
@@ -414,7 +414,7 @@ class ContainerOperandSequence(ContainerBase):
     def sum(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Sum values along the specified axis.
 
@@ -434,7 +434,7 @@ class ContainerOperandSequence(ContainerBase):
     def min(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the minimum along the specified axis.
 
@@ -473,7 +473,7 @@ class ContainerOperandSequence(ContainerBase):
     def mean(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the mean along the specified axis.
 
@@ -493,7 +493,7 @@ class ContainerOperandSequence(ContainerBase):
     def median(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the median along the specified axis.
 
@@ -514,7 +514,7 @@ class ContainerOperandSequence(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the standard deviaton along the specified axis.
 
@@ -535,7 +535,7 @@ class ContainerOperandSequence(ContainerBase):
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the variance along the specified axis.
 
@@ -555,7 +555,7 @@ class ContainerOperandSequence(ContainerBase):
     def prod(self,
             axis: int = 0,
             skipna: bool = True,
-            out: tp.Optional[NDArrayAny] = None,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the product along the specified axis.
 
