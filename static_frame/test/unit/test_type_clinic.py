@@ -1105,8 +1105,7 @@ def test_validate_labels_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
     v = Require.Labels('a', 'b', 'c')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == (
-            "Expected 'b', provided 'x'",
-            "Expected 'c', provided 'z'")
+            "Expected 'b', provided 'x'",)
 
 def test_validate_labels_b1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
@@ -1172,12 +1171,12 @@ def test_validate_labels_e7():
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.Labels('a', 'b', ..., 'f', ...)
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'f', ...",)
+    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'f'",)
 
 def test_validate_labels_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.Labels(..., 'x', ..., 'y', ...)
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'x', ..., 'y', ...",)
+    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'x', ..., 'y'",)
 
 def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
@@ -1189,9 +1188,31 @@ def test_validate_labels_e11():
     v = Require.Labels('a', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
+def test_validate_labels_e7():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Require.Labels('a', 'b', ..., 'd', 'e')
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+
+def test_validate_labels_f1():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
+    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+def test_validate_labels_f2():
+    idx1 = sf.Index(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
+    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+def test_validate_labels_f3():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'e'", )
+
+
 #-------------------------------------------------------------------------------
 
-def test_validate_labels_f():
+def test_validate_labels_g():
     records = (
             (1, 3, True),
             (4, 100, False),
@@ -1233,7 +1254,7 @@ def test_validate_labels_f():
             np.bool_]
 
     cr = TypeClinic(f)(h2)
-    print(cr.to_str())
+    assert (scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])] Labels(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>")
 
 
 #-------------------------------------------------------------------------------

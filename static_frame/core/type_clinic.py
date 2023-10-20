@@ -300,10 +300,14 @@ class Require:
             return f'{self.__class__.__name__}({", ".join(msg)})'
 
         @staticmethod
-        def _prepare_remainder(labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]]) -> str:
+        def _repr_remainder(
+                labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]],
+                ) -> str:
             # always drop leading ellipses
             if labels[0] is ...:
                 labels = labels[1:]
+            if labels[-1] is ...:
+                labels = labels[:-1]
             return ', '.join((repr(l) if l is not ... else '...') for l in labels)
 
         @staticmethod
@@ -345,7 +349,7 @@ class Require:
                 parent_hints: TParent,
                 parent_values: TParent,
                 ) -> tp.Iterator[TValidation]:
-            # be a noop when no validators are present
+            # be a no-op when no validators are present
             if validators:
                 # when validators are extracted, we check that Frame is not None
                 assert frame is not None
@@ -401,15 +405,16 @@ class Require:
                                     parent_hints,
                                     parent_values,
                                     )
-                            # break # NOTE: could break here
-                        # NOTE: not failing fast!
-                        yield from self._iter_validator_results(pf,
+                            break
+                        for log in self._iter_validator_results(pf,
                                 value,
                                 label_e,
                                 label_validators,
                                 parent_hints,
                                 parent_values,
-                                )
+                                ):
+                            yield log
+                            break
                         pos_e += 1
                     # expected is an Ellipses; either find next as match or continue with Ellipses
                     elif pos_e + 1 < len_e: # more expected labels available
@@ -417,7 +422,6 @@ class Require:
                                 self._labels[pos_e + 1],
                                 pf,
                                 )
-
                         if label_next_e is ...:
                             yield (ERROR_MESSAGE_TYPE,
                                     'Expected cannot be defined with adjacent ellipses',
@@ -427,20 +431,23 @@ class Require:
                             break
                         if label_p == label_next_e:
                             # if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must copmare to the next expected value; we then skip that value for subsequent evaluation
-                            yield from self._iter_validator_results(pf,
+                            for log in self._iter_validator_results(pf,
                                     value,
                                     label_next_e,
                                     label_next_validators,
                                     parent_hints,
                                     parent_values,
-                                    )
+                                    ):
+                                yield log
+                                break
                             pos_e += 2 # skip the compared value, prepare to get next
                     # else, last expected value is Ellipses
-                else: # no break, evaluate final conditions
-                    if pos_e == len_e - 1 and label_e is ...:
-                        pass # ended on ellipses
-                    elif pos_e < len_e:
-                        remainder = self._prepare_remainder(self._labels[pos_e:])
+                else: # no break, exhausted all labels; evaluate final conditions
+                    if pos_e == len_e - 1 and self._labels[pos_e] is ...:
+                        pass # expected ends on an ellipses
+
+                    elif pos_e < len_e: # if we have unevaluated expected
+                        remainder = self._repr_remainder(self._labels[pos_e:])
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected has unmatched labels {remainder}',
                                 parent_hints,
