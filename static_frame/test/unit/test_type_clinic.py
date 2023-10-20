@@ -1188,7 +1188,7 @@ def test_validate_labels_e11():
     v = Require.Labels('a', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
-def test_validate_labels_e7():
+def test_validate_labels_e12():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.Labels('a', 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
@@ -1254,7 +1254,7 @@ def test_validate_labels_g():
             np.bool_]
 
     cr = TypeClinic(f)(h2)
-    assert (scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])] Labels(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>")
+    assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])] Labels(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
 
 
 #-------------------------------------------------------------------------------
