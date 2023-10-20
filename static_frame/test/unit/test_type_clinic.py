@@ -1315,6 +1315,27 @@ def test_validate_labels_h2():
     v = Require.Labels(..., '2021-01-03')
     assert tuple(v._iter_errors(f.index, None, (), (f,)))
 
+
+def test_validate_labels_h3():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            index=index,
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    v = Require.Labels(['2022-01-03', lambda s: 'y' in s.values], ...)
+    assert not tuple(v._iter_errors(f.index, None, (), (f,)))
+
+    v = Require.Labels(..., ['2018-04-02', lambda s: 'q' in s.values])
+    assert not tuple(v._iter_errors(f.index, None, (), (f,)))
+
 #-------------------------------------------------------------------------------
 
 def test_validate_apply_a():
