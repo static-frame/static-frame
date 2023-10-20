@@ -46,7 +46,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
     ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
@@ -122,7 +122,7 @@ class InterfaceDatetime(Interface[TVContainer_co]):
         if fill_value is not FILL_VALUE_DEFAULT:
             self._fill_value_dtype = dtype_from_element(fill_value)
 
-        # self._fill_value_dtype: tp.Optional[DtypeAny] = (None
+        # self._fill_value_dtype: tp.Optional[TDtypeAny] = (None
         #         if fill_value is FILL_VALUE_DEFAULT
         #         else dtype_from_element(fill_value))
 
@@ -142,8 +142,8 @@ class InterfaceDatetime(Interface[TVContainer_co]):
 
     @staticmethod
     def _validate_dtype_non_str(
-            dtype: DtypeAny,
-            exclude: tp.Iterable[DtypeAny] = (),
+            dtype: TDtypeAny,
+            exclude: tp.Iterable[TDtypeAny] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) datetime64 types. This is because most conversions from string can be done simply with astype().
@@ -157,8 +157,8 @@ class InterfaceDatetime(Interface[TVContainer_co]):
 
     @staticmethod
     def _validate_dtype_str(
-            dtype: DtypeAny,
-            exclude: tp.Iterable[DtypeAny] = (),
+            dtype: TDtypeAny,
+            exclude: tp.Iterable[TDtypeAny] = (),
             ) -> None:
         '''
         Only support dtypes that are (or contain) strings.
@@ -194,7 +194,7 @@ class InterfaceDatetime(Interface[TVContainer_co]):
             *,
             method_name: str,
             args: tp.Tuple[tp.Any, ...],
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> NDArrayAny:
         if self._fill_value is FILL_VALUE_DEFAULT:
             if isna_array(array).any():
@@ -227,7 +227,7 @@ class InterfaceDatetime(Interface[TVContainer_co]):
             array: NDArrayAny,
             *,
             attr_name: str,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> NDArrayAny:
         if self._fill_value is FILL_VALUE_DEFAULT:
             if isna_array(array).any():

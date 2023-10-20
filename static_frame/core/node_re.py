@@ -22,7 +22,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
     ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
@@ -62,7 +62,7 @@ class InterfaceRe(Interface[TVContainer_co]):
     def _process_blocks(*,
             blocks: BlocksType,
             func: AnyCallable,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block

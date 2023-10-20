@@ -209,7 +209,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
     TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
@@ -5534,7 +5534,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> TSeriesAny:
         # axis 0 processes ros, deliveres column index
@@ -5563,7 +5563,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> TFrameAny:
         # axis 0 processes ros, deliveres column index
@@ -7819,7 +7819,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     yield key, record
 
         # NOTE: this is a generator to defer evaluation until after records_items() is run, whereby group_has_fill is populated
-        def dtypes() -> tp.Iterator[DtypeAny]:
+        def dtypes() -> tp.Iterator[TDtypeAny]:
             for g, dtype in group_to_dtype.items():
                 if group_has_fill[g]:
                     yield resolve_dtype(dtype, dtype_fill)

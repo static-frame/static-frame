@@ -49,7 +49,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
 # dtype.kind
@@ -612,7 +612,7 @@ def ufunc_to_category(func: tp.Union[UFunc, partial[UFunc]]) -> tp.Optional[UFun
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
-def ufunc_dtype_to_dtype(func: UFunc, dtype: DtypeAny) -> tp.Optional[DtypeAny]:
+def ufunc_dtype_to_dtype(func: UFunc, dtype: TDtypeAny) -> tp.Optional[TDtypeAny]:
     '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
     '''
     rt = ufunc_to_category(func)
@@ -877,7 +877,7 @@ def gen_skip_middle(
 
 def dtype_from_element(
         value: tp.Any,
-        ) -> DtypeAny:
+        ) -> TDtypeAny:
     '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
     '''
     if value is np.nan:
@@ -1011,7 +1011,7 @@ def concat_resolved(
 def blocks_to_array_2d(
         blocks: tp.Iterable[NDArrayAny], # can be iterator
         shape: tp.Optional[tp.Tuple[int, int]] = None,
-        dtype: tp.Optional[DtypeAny] = None,
+        dtype: tp.Optional[TDtypeAny] = None,
         ) -> NDArrayAny:
     '''
     Given an iterable of blocks, return a consolidatd array. This is assumed to be an axis 1 style concatenation.
@@ -1078,7 +1078,7 @@ def blocks_to_array_2d(
     return array
 
 def full_for_fill(
-        dtype: tp.Optional[DtypeAny],
+        dtype: tp.Optional[TDtypeAny],
         shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object,
         resolve_fill_value_dtype: bool = True,
@@ -3135,7 +3135,7 @@ def ufunc_nanany(array: NDArrayAny,
 def array_from_element_attr(*,
         array: NDArrayAny,
         attr_name: str,
-        dtype: DtypeAny
+        dtype: TDtypeAny
         ) -> NDArrayAny:
     '''
     Handle element-wise attribute acesss on arrays of Python date/datetime objects.
@@ -3158,7 +3158,7 @@ def array_from_element_attr(*,
 def array_from_element_apply(
         array: NDArrayAny,
         func: AnyCallable,
-        dtype: DtypeAny
+        dtype: TDtypeAny
         ) -> NDArrayAny:
     '''
     Handle element-wise function application.
@@ -3185,7 +3185,7 @@ def array_from_element_method(*,
         array: NDArrayAny,
         method_name: str,
         args: tp.Tuple[tp.Any, ...],
-        dtype: DtypeAny,
+        dtype: TDtypeAny,
         pre_insert: tp.Optional[AnyCallable] = None,
         ) -> NDArrayAny:
     '''

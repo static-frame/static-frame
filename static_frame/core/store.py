@@ -22,7 +22,7 @@ from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
@@ -125,7 +125,7 @@ class Store:
             include_columns_name: bool,
             force_str_names: bool = False,
             force_brackets: bool = False
-            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[DtypeAny]]:
+            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
 
         index = frame.index
         columns = frame.columns
@@ -139,7 +139,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         field_names: tp.Sequence[TLabel]
-        dtypes: tp.List[DtypeAny]
+        dtypes: tp.List[TDtypeAny]
 
         if not include_index:
             if include_columns_name:

@@ -46,7 +46,7 @@ from static_frame.core.util import to_timedelta64
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
@@ -62,7 +62,7 @@ class IndexDatetime(Index[np.datetime64]):
     '''
 
     STATIC = True
-    _DTYPE: DtypeAny # define in derived class
+    _DTYPE: TDtypeAny # define in derived class
     __slots__ = ()
 
     def __init__(self,
@@ -196,7 +196,7 @@ doc_update(IndexDatetime.__init__, selector='index_date_time_init')
 #-------------------------------------------------------------------------------
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
-    _DTYPE: DtypeAny
+    _DTYPE: TDtypeAny
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
@@ -571,7 +571,7 @@ IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 
 
 #-------------------------------------------------------------------------------
-_DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index[np.datetime64]]] = {cls._DTYPE: cls for cls in (
+_DTYPE_TO_CLASS: tp.Dict[TDtypeAny, tp.Type[Index[np.datetime64]]] = {cls._DTYPE: cls for cls in (
         IndexYear,
         IndexYearMonth,
         IndexDate,
@@ -583,7 +583,7 @@ _DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index[np.datetime64]]] = {cls._DTYPE:
         IndexNanosecond
         )}
 
-def dtype_to_index_cls(static: bool, dtype: DtypeAny) -> tp.Type[Index[tp.Any]]:
+def dtype_to_index_cls(static: bool, dtype: TDtypeAny) -> tp.Type[Index[tp.Any]]:
     '''
     Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''

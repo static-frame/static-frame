@@ -33,7 +33,7 @@ from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class TestUnit(TestCase):
 

@@ -18,7 +18,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
@@ -54,18 +54,18 @@ class InterfaceValues(Interface[TVContainer_co]):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> None:
         self._container: TVContainer_co = container
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
-        self._dtype: DtypeAny | None = dtype
+        self._dtype: TDtypeAny | None = dtype
 
     def __call__(self,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> 'InterfaceValues[TVContainer_co]':
         '''
         Args:
@@ -198,7 +198,7 @@ class InterfaceBatchValues(InterfaceBatch):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> None:
         self._batch_apply = batch_apply
         self._consolidate_blocks = consolidate_blocks
@@ -224,7 +224,7 @@ class InterfaceBatchValues(InterfaceBatch):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> 'InterfaceBatchValues':
         '''
         Args:

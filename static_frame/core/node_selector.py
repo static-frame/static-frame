@@ -42,7 +42,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -507,7 +507,7 @@ class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
         return self._func_getitem(key)
 
     def __call__(self,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             *,
             consolidate_blocks: bool = False,
             ) -> 'IndexHierarchy':
@@ -565,7 +565,7 @@ class InterfaceBatchAsType(Interface[TVContainer_co]):
         '''
         return BatchAsType(batch_apply=self._batch_apply, column_key=key)
 
-    def __call__(self, dtype: DtypeAny) -> 'Batch':
+    def __call__(self, dtype: TDtypeAny) -> 'Batch':
         '''
         Apply a single ``dtype`` to all columns.
         '''

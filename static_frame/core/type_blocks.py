@@ -80,7 +80,7 @@ from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     OptionalArrayList = tp.Optional[tp.List[NDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
 #---------------------------------------------------------------------------
@@ -618,7 +618,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # new properties
 
-    def _iter_dtypes(self) -> tp.Iterator[DtypeAny]:
+    def _iter_dtypes(self) -> tp.Iterator[TDtypeAny]:
         for b in self._blocks:
             dt = b.dtype
             if b.ndim == 1:
@@ -803,12 +803,12 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
-    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[DtypeAny, int]]:
+    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[TDtypeAny, int]]:
         '''For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
 
         This is a generator to permit lazy pairwise comparison.
         '''
-        group_dtype: tp.Optional[DtypeAny] = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[TDtypeAny] = None # store type found along contiguous blocks
         group_cols = 0
         for block in self._blocks:
             if group_dtype is None: # first block of a type
@@ -894,7 +894,7 @@ class TypeBlocks(ContainerOperand):
 
         Returns: an Iterator of 1D or 2D arrays, consolidated if adjacent.
         '''
-        group_dtype: tp.Optional[DtypeAny] = None # store type found along contiguous blocks
+        group_dtype: tp.Optional[TDtypeAny] = None # store type found along contiguous blocks
         group = []
 
         for block in raw_blocks:
@@ -1063,7 +1063,7 @@ class TypeBlocks(ContainerOperand):
     def resize_blocks_by_callable(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
-            fill_value: tp.Callable[[int, DtypeAny | None], tp.Any]
+            fill_value: tp.Callable[[int, TDtypeAny | None], tp.Any]
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
@@ -1295,7 +1295,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Sequence[DtypeAny],
+            dtypes: tp.Sequence[TDtypeAny],
             size_one_unity: bool
             ) -> NDArrayAny:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
@@ -1341,7 +1341,7 @@ class TypeBlocks(ContainerOperand):
             result.flags.writeable = False
             return result
 
-        dtype: None | DtypeAny
+        dtype: None | TDtypeAny
         if dtypes:
             # If dtypes were specified, we know we have specific targets in mind for output
             # Favor row_dtype's kind if it is in dtypes, else take first of passed dtypes
@@ -1359,7 +1359,7 @@ class TypeBlocks(ContainerOperand):
             if dtype is None:
                 # if we do not have a mapping for this function and row dtype, try to get a compatible type for the result of the function applied to each block
                 block_dtypes = []
-                dtf: None | DtypeAny
+                dtf: None | TDtypeAny
                 for b in self._blocks:
                     dtf = ufunc_dtype_to_dtype(ufunc_selected, b.dtype)
                     if dtf is not None:
@@ -1998,7 +1998,7 @@ class TypeBlocks(ContainerOperand):
             row_shift: int,
             column_shift: int,
             wrap: bool,
-            get_col_fill_value: tp.Callable[[int, DtypeAny | None], tp.Any],
+            get_col_fill_value: tp.Callable[[int, TDtypeAny | None], tp.Any],
             ) -> tp.Iterator[NDArrayAny]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``get_col_fill_value``.
@@ -2363,7 +2363,7 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_from_boolean_blocks_by_callable(self,
             targets: tp.Iterable[NDArrayAny],
-            get_col_fill_value: tp.Callable[[int, DtypeAny], tp.Any],
+            get_col_fill_value: tp.Callable[[int, TDtypeAny], tp.Any],
             ) -> tp.Iterator[NDArrayAny]:
         '''Assign value (a single element) into blocks by integer column, based on a Boolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. The result of calling func with the column number is the value set where the Boolean is True.
 
@@ -2595,7 +2595,7 @@ class TypeBlocks(ContainerOperand):
     def _assign_from_bloc_by_coordinate(self,
             bloc_key: NDArrayAny,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
-            values_dtype: DtypeAny,
+            values_dtype: TDtypeAny,
             ) -> tp.Iterator[NDArrayAny]:
         '''
         For assignment from a Series of coordinate/value pairs, as extracted via a bloc selection.
@@ -2968,7 +2968,7 @@ class TypeBlocks(ContainerOperand):
         parts = []
         coords = []
 
-        dt_resolve: tp.Optional[DtypeAny] = None
+        dt_resolve: tp.Optional[TDtypeAny] = None
         size: int = 0
         target_slice: tp.Union[int, slice]
 
@@ -3089,7 +3089,7 @@ class TypeBlocks(ContainerOperand):
     def extract_bloc_assign_by_coordinate(self,
             key: NDArrayAny,
             values_map: tp.Dict[tp.Tuple[int, int], tp.Any],
-            values_dtype: DtypeAny,
+            values_dtype: TDtypeAny,
             ) -> 'TypeBlocks':
         return TypeBlocks.from_blocks(self._assign_from_bloc_by_coordinate(
                 bloc_key=key,
@@ -4082,7 +4082,7 @@ class TypeBlocks(ContainerOperand):
     def fill_missing_by_callable(self,
             *,
             func_missing: tp.Callable[[NDArrayAny], NDArrayAny],
-            get_col_fill_value: tp.Callable[[int, DtypeAny | None], tp.Any]
+            get_col_fill_value: tp.Callable[[int, TDtypeAny | None], tp.Any]
             ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.

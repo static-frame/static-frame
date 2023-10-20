@@ -69,7 +69,7 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -811,7 +811,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> 'Batch':
         return self._apply_attr(
@@ -831,7 +831,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> 'Batch':
 

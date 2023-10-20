@@ -32,7 +32,7 @@ TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: igno
 # tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
 
 if tp.TYPE_CHECKING:
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:

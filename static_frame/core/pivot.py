@@ -35,7 +35,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 
@@ -88,12 +88,12 @@ def pivot_records_dtypes(
         data_fields: tp.Iterable[TLabel],
         func_single: tp.Optional[UFunc],
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]]
-        ) -> tp.Iterator[tp.Optional[DtypeAny]]:
+        ) -> tp.Iterator[tp.Optional[TDtypeAny]]:
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
     for field in data_fields:
-        dtype: DtypeAny = dtype_map[field]
+        dtype: TDtypeAny = dtype_map[field]
         if func_single:
             yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
@@ -113,7 +113,7 @@ def pivot_records_items_to_frame(
         columns_constructor: TIndexCtor,
         columns: tp.Sequence[TLabel],
         index_constructor: TIndexCtor,
-        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
+        dtypes: tp.Tuple[tp.Optional[TDtypeAny], ...],
         frame_cls: tp.Type[TFrameAny],
         ) -> TFrameAny:
     '''
@@ -172,9 +172,9 @@ def pivot_records_items_to_blocks(*,
         func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
         func_no: bool,
         fill_value: tp.Any,
-        fill_value_dtype: DtypeAny,
+        fill_value_dtype: TDtypeAny,
         index_outer: 'IndexBase',
-        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
+        dtypes: tp.Tuple[tp.Optional[TDtypeAny], ...],
         kind: TSortKinds,
         ) -> tp.List[NDArrayAny]:
     '''
@@ -249,9 +249,9 @@ def pivot_items_to_block(*,
         group_depth: int,
         data_field_iloc: int,
         func_single: tp.Optional[UFunc],
-        dtype: tp.Optional[DtypeAny],
+        dtype: tp.Optional[TDtypeAny],
         fill_value: tp.Any,
-        fill_value_dtype: DtypeAny,
+        fill_value_dtype: TDtypeAny,
         index_outer: 'IndexBase',
         kind: TSortKinds,
         ) -> NDArrayAny:
@@ -326,7 +326,7 @@ def pivot_items_to_frame(*,
         func_single: tp.Optional[AnyCallable],
         frame_cls: tp.Type[TFrameAny],
         name: NameType,
-        dtype: DtypeAny | None,
+        dtype: TDtypeAny | None,
         index_constructor: TIndexCtor,
         columns_constructor: TIndexCtor,
         kind: TSortKinds,
@@ -427,10 +427,10 @@ def pivot_core(
                 depth_reference=columns_depth,
                 name=columns_name)
 
-    dtype_single: DtypeAny | None
+    dtype_single: TDtypeAny | None
     dtype_map = frame.dtypes # returns a Series
 
-    dtypes_per_data_fields: tp.Tuple[DtypeAny | None, ...]
+    dtypes_per_data_fields: tp.Tuple[TDtypeAny | None, ...]
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
@@ -621,7 +621,7 @@ class PivotIndexMap(tp.NamedTuple):
     group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]]
     group_depth: int
     group_select: NDArrayAny
-    group_to_dtype: tp.Dict[TLabel | None, DtypeAny]
+    group_to_dtype: tp.Dict[TLabel | None, TDtypeAny]
 
 def pivot_index_map(*,
         index_src: IndexBase,
@@ -650,7 +650,7 @@ def pivot_index_map(*,
 
     group_depth = len(group_arrays)
     target_depth = len(target_arrays)
-    group_to_dtype: tp.Dict[tp.Optional[TLabel], DtypeAny] = {}
+    group_to_dtype: tp.Dict[tp.Optional[TLabel], TDtypeAny] = {}
     targets_unique: tp.Iterable[TLabel]
 
     group_to_target_map: tp.Dict[tp.Any, tp.Dict[tp.Any, int]]

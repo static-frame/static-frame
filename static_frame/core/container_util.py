@@ -78,7 +78,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
@@ -215,7 +215,7 @@ def get_col_dtype_factory(
 def get_col_fill_value_factory(
         fill_value: tp.Any,
         columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
-        ) -> tp.Callable[[int, DtypeAny | None], tp.Any]:
+        ) -> tp.Callable[[int, TDtypeAny | None], tp.Any]:
     '''
     Return a function to get fill_vlaue.
 
@@ -248,7 +248,7 @@ def get_col_fill_value_factory(
     else: # can assume an element
         is_element = True
 
-    def get_col_fill_value(col_idx: int, dtype: tp.Optional[DtypeAny]) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: tp.Optional[TDtypeAny]) -> tp.Any:
         '''dtype can be used for automatic selection based on dtype kind
         '''
         nonlocal fill_value # might mutate a generator into a tuple

@@ -35,7 +35,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_clinic import TypeClinic  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
@@ -358,7 +358,7 @@ class ContainerOperandSequence(ContainerBase):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any: # usually a Series
         '''
@@ -628,7 +628,7 @@ class ContainerOperand(ContainerOperandSequence):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality

@@ -23,7 +23,7 @@ from static_frame.core.util import ufunc_unique1d_indexer
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class ValidationResult(tp.NamedTuple):
     indices: tp.List[IndexHierarchy]
@@ -97,7 +97,7 @@ def _validate_and_process_indices(
 
 
 def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
-        ) -> tp.Tuple[NDArrayAny, DtypeAny]:
+        ) -> tp.Tuple[NDArrayAny, TDtypeAny]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
@@ -144,7 +144,7 @@ def _get_encodings(
         union_indices: tp.List[Index[tp.Any]],
         depth: int,
         bit_offset_encoders: NDArrayAny,
-        encoding_dtype: DtypeAny,
+        encoding_dtype: TDtypeAny,
         ) -> NDArrayAny:
     '''Encode `ih` based on the union indices'''
     remapped_indexers: tp.List[NDArrayAny] = []

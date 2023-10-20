@@ -137,7 +137,7 @@ if tp.TYPE_CHECKING:
     from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -1735,7 +1735,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any:
         '''
@@ -1758,7 +1758,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Self:
         '''
@@ -1854,14 +1854,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return mloc(self.values)
 
     @property
-    def dtype(self) -> DtypeAny:
+    def dtype(self) -> TDtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 
         Returns:
             :obj:`numpy.dtype`
         '''
-        dt: DtypeAny = self.values.dtype
+        dt: TDtypeAny = self.values.dtype
         return dt
 
     @property

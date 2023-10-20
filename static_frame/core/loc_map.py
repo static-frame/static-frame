@@ -37,7 +37,7 @@ from static_frame.core.util import TLocSelector
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
 _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')

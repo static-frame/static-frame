@@ -19,7 +19,7 @@ if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 NP_KIND_TO_DFI_KIND = {
@@ -65,7 +65,7 @@ class ArrowCType:
     }
 
     @classmethod
-    def from_dtype(cls, dtype: DtypeAny) -> str:
+    def from_dtype(cls, dtype: TDtypeAny) -> str:
         kind = dtype.kind
         if kind == 'O':
             raise NotImplementedError('no support for object arrays')
@@ -89,7 +89,7 @@ class ArrowCType:
             raise NotImplementedError(f'no support for dtype: {dtype}') from e
 
 
-def np_dtype_to_dfi_dtype(dtype: DtypeAny) -> Dtype:
+def np_dtype_to_dfi_dtype(dtype: TDtypeAny) -> Dtype:
     return (NP_KIND_TO_DFI_KIND[dtype.kind],
             dtype.itemsize * 8, # bits!
             ArrowCType.from_dtype(dtype),
@@ -112,7 +112,7 @@ class DFIBuffer(Buffer):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -154,7 +154,7 @@ class DFIColumn(Column):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -281,7 +281,7 @@ class DFIDataFrame(DataFrame):
                 recast_blocks=False,
                 )
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> NDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''

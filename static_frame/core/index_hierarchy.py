@@ -108,7 +108,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
@@ -2153,7 +2153,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool,
             ) -> NDArrayAny:
         '''
@@ -2200,7 +2200,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> NDArrayAny:
         '''
@@ -2992,7 +2992,7 @@ class IndexHierarchyAsType:
         # update index_constructors based on dtype
         index_constructors = container.index_types.values.copy()
         # can select element or array
-        dtype_post: DtypeAny | NDArrayAny = blocks.dtypes[self.depth_key]
+        dtype_post: TDtypeAny | NDArrayAny = blocks.dtypes[self.depth_key]
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,

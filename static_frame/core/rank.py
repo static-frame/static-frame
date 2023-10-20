@@ -15,7 +15,7 @@ from static_frame.core.util import PositionsAllocator
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class RankMethod(str, Enum):
     MEAN = 'mean'
@@ -120,7 +120,7 @@ def rank_2d(
         axis: if 0, columns are ranked, if 1, rows are ranked
     '''
     # scipy uses np.apply_along_axis, but that handles many more cases than needed
-    dtype: DtypeAny
+    dtype: TDtypeAny
 
     if method == RankMethod.MEAN:
         dtype = DTYPE_FLOAT_DEFAULT

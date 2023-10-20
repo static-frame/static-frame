@@ -28,7 +28,7 @@ from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
@@ -299,7 +299,7 @@ class TestCase(unittest.TestCase):
     def assertTypeBlocksArrayEqual(self,
             tb: TypeBlocks,
             match: tp.Iterable[tp.Any],
-            match_dtype: tp.Optional[tp.Union[type, DtypeAny, str]] = None) -> None:
+            match_dtype: tp.Optional[tp.Union[type, TDtypeAny, str]] = None) -> None:
         '''
         Args:
             tb: a TypeBlocks instance

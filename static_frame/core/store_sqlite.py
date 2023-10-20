@@ -22,7 +22,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class StoreSQLite(Store):
@@ -32,7 +32,7 @@ class StoreSQLite(Store):
 
     @staticmethod
     def _dtype_to_affinity_type(
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> str:
         '''
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.

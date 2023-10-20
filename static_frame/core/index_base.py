@@ -45,7 +45,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -270,7 +270,7 @@ class IndexBase(ContainerOperandSequence):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> NDArrayAny:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality

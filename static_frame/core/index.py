@@ -95,7 +95,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
 
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='Index[tp.Any]')
 
@@ -178,7 +178,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
-    _DTYPE: tp.Optional[DtypeAny] = None # for specialized indices requiring a typed labels
+    _DTYPE: tp.Optional[TDtypeAny] = None # for specialized indices requiring a typed labels
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
@@ -1044,7 +1044,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any:
         '''
@@ -1070,7 +1070,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
             ) -> tp.Any:
         '''
@@ -1475,7 +1475,7 @@ class _IndexGOMixin:
     _labels: NDArrayAny
     _positions: NDArrayAny
     _labels_mutable: tp.List[TLabel]
-    _labels_mutable_dtype: tp.Optional[DtypeAny]
+    _labels_mutable_dtype: tp.Optional[TDtypeAny]
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
 
@@ -1502,7 +1502,7 @@ class _IndexGOMixin:
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[TLabel, int]],
             labels: NDArrayAny,
-            dtype: tp.Optional[DtypeAny] = None
+            dtype: tp.Optional[TDtypeAny] = None
             ) -> NDArrayAny:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''

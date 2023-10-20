@@ -63,7 +63,7 @@ from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -1120,7 +1120,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> DtypeAny:
+    def dtype(self) -> TDtypeAny:
         '''
         Return the dtype of the underlying NumPy array.
 

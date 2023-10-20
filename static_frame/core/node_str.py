@@ -27,7 +27,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
     ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
@@ -121,7 +121,7 @@ class InterfaceString(Interface[TVContainer_co]):
     def _process_tuple_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
             ) -> tp.Iterator[NDArrayAny]:
         '''
@@ -145,7 +145,7 @@ class InterfaceString(Interface[TVContainer_co]):
     def _process_element_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
             ) -> tp.Iterator[NDArrayAny]:
         '''
