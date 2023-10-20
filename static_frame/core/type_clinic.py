@@ -309,7 +309,7 @@ class Require:
         @staticmethod
         def _split_validators(
                 label: TLabel | tp.List[TLabel | TValidator],
-                frame: Frame | None,
+                frame: TFrameAny | None,
                 ) -> tp.Tuple[TLabel, tp.List[TValidator]]:
             '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
             '''
@@ -324,7 +324,7 @@ class Require:
                 label_e = label
                 label_validators = None
 
-            if label_validators and Frame is None:
+            if label_validators and frame is None:
                 raise RuntimeError('Provided label validators in a context without a discoverable Frame.')
 
             return label_e, label_validators # type: ignore
@@ -338,7 +338,7 @@ class Require:
 
         @staticmethod
         def _iter_validator_results(
-                frame: Frame | None,
+                frame: TFrameAny | None,
                 labels: IndexBase,
                 label: TLabel,
                 validators: tp.List[TValidator],
@@ -347,7 +347,8 @@ class Require:
                 ) -> tp.Iterator[TValidation]:
             # be a noop when no validators are present
             if validators:
-                assert Frame is not None
+                # when validators are extracted, we check that Frame is not None
+                assert frame is not None
 
                 if labels is frame.index:
                     s = frame.loc[label]
