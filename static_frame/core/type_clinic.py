@@ -368,8 +368,23 @@ class Require:
                                 parent_values,
                                 )
 
+        def _provided_is_expected(self,
+                label_e: TLabel,
+                label_p: TLabel,
+                iloc_p: int,
+                index: IndexBase,
+                ) -> bool:
+            if label_e == label_p:
+                return True
+            try:
+                # expected is defined in the hint; see if we can use it as a lookup, permitting string to date combination in IndexDate
+                return index.loc_to_iloc(label_e) == iloc_p
+            except KeyError:
+                pass
+            return False
+
         def _iter_errors(self,
-                value: tp.Any,
+                value: tp.Any, # an index object
                 hint: tp.Any,
                 parent_hints: TParent,
                 parent_values: TParent,
@@ -387,7 +402,7 @@ class Require:
                 pos_e = 0 # position expected
                 len_e = len(self._labels)
 
-                for label_p in value: # iterate over labels provided in the index
+                for iloc_p, label_p in enumerate(value): # iterate provided index
                     if pos_e >= len_e:
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected labels exhausted at provided {label_p!r}',
@@ -399,7 +414,12 @@ class Require:
                     label_e, label_validators = self._split_validators(self._labels[pos_e], pf)
 
                     if label_e is not ...:
-                        if label_p != label_e:
+                        if not self._provided_is_expected(
+                                label_e,
+                                label_p,
+                                iloc_p,
+                                value,
+                                ):
                             yield (ERROR_MESSAGE_TYPE,
                                     f'Expected {label_e!r}, provided {label_p!r}',
                                     parent_hints,
@@ -429,8 +449,13 @@ class Require:
                                     parent_values,
                                     )
                             break
-                        if label_p == label_next_e:
-                            # if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must copmare to the next expected value; we then skip that value for subsequent evaluation
+                        if self._provided_is_expected(
+                                label_next_e,
+                                label_p,
+                                iloc_p,
+                                value,
+                                ):
+                            # NOTE: if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must compare to the next expected value; we then skip that value for subsequent evaluation
                             for log in self._iter_validator_results(pf,
                                     value,
                                     label_next_e,

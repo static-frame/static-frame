@@ -1300,10 +1300,20 @@ def test_validate_labels_h2():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    # import ipdb; ipdb.set_trace()
-    # NOTE: need to find way to use strings in lookup of datetime; maybe loc_to_iloc
-    v = Require.Labels('2011-01-03', ...)
+    v = Require.Labels('2022-01-03', ...)
+    assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
+    v = Require.Labels(..., '2018-04-02')
+    assert not tuple(v._iter_errors(f.index, None, (), (f,)))
+
+    v = Require.Labels(..., '2022-02-05', '2018-04-02')
+    assert not tuple(v._iter_errors(f.index, None, (), (f,)))
+
+    v = Require.Labels('2021-01-03', ...)
+    assert tuple(v._iter_errors(f.index, None, (), (f,)))
+
+    v = Require.Labels(..., '2021-01-03')
+    assert tuple(v._iter_errors(f.index, None, (), (f,)))
 
 #-------------------------------------------------------------------------------
 
