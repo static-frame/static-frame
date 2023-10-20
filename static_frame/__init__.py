@@ -1,6 +1,6 @@
 #pylint: disable=W0611
 #pylint: disable=C0414
-
+import typing_extensions as tp
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
 from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
@@ -124,5 +124,9 @@ from static_frame.core.util import TLocSelector as TLocSelector
 from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
+
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TSeriesAny = Series[tp.Any, tp.Any]
+
 
 __version__ = '1.6.5'
