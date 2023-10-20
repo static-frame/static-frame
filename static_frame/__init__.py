@@ -125,7 +125,7 @@ from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TSeriesAny = Series[tp.Any, tp.Any]
 
 
