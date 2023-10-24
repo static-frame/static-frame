@@ -25,6 +25,7 @@ from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
+from static_frame.core.util import TShape
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -275,6 +276,33 @@ class Require:
                         parent_hints,
                         parent_values,
                         )
+
+    class Shape(Validator):
+        '''Validate the length of a container.
+
+        Args:
+            len: The length to validate against.
+            /
+        '''
+
+        __slots__ = ('_shape',)
+
+        def __init__(self, shape: TShape, /):
+            self._shape = shape
+
+        def _iter_errors(self,
+                value: tp.Any,
+                hint: tp.Any,
+                parent_hints: TParent,
+                parent_values: TParent,
+                ) -> tp.Iterator[TValidation]:
+            pass
+            # if (vl := len(value)) != self._shape:
+            #     yield (ERROR_MESSAGE_TYPE,
+            #             f'Expected length {self._len}, provided length {vl}',
+            #             parent_hints,
+            #             parent_values,
+            #             )
 
 
     # might accept regular expression objects as label entries?

@@ -22,12 +22,12 @@ from static_frame.core.store_config import StoreConfigHE
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import NOT_IN_CACHE_SENTINEL
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import get_concurrent_executor
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-FrameExporter = AnyCallable # Protocol not supported yet...
+FrameExporter = TCallableAny # Protocol not supported yet...
 FrameConstructor = tp.Callable[..., TFrameAny]
 LabelAndBytes = tp.Tuple[TLabel, tp.Union[str, bytes]]
 IteratorItemsLabelOptionalFrame = tp.Iterator[tp.Tuple[TLabel, tp.Optional[TFrameAny]]]
@@ -55,7 +55,7 @@ class _StoreZip(Store):
 
     _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
     _EXT_CONTAINED: str = ''
-    _EXPORTER: AnyCallable
+    _EXPORTER: TCallableAny
 
     @classmethod
     def _container_type_to_constructor(cls, container_type: tp.Type[TFrameAny]) -> FrameConstructor:

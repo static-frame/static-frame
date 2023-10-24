@@ -15,7 +15,7 @@ from static_frame.core.exception import StoreParameterConflict
 from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import path_filter
@@ -29,7 +29,7 @@ TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: igno
 #-------------------------------------------------------------------------------
 # decorators
 
-def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
+def store_coherent_non_write(f: TCallableAny) -> TCallableAny:
 
     @wraps(f)
     def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> TFrameAny:
@@ -41,7 +41,7 @@ def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
     return wrapper
 
 
-def store_coherent_write(f: AnyCallable) -> AnyCallable:
+def store_coherent_write(f: TCallableAny) -> TCallableAny:
     '''Decorator for derived Store classes implementation of write()
     '''
     @wraps(f)

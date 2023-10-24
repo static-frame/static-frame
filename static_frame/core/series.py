@@ -83,7 +83,7 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
@@ -101,7 +101,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import array_shift
@@ -1451,7 +1451,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _fill_missing_directional(
             array: TNDArrayAny,
             directional_forward: bool,
-            func_target: UFunc,
+            func_target: TUFunc,
             limit: int = 0,
             ) -> TNDArrayAny:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
@@ -1555,7 +1555,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _fill_missing_sided(array: TNDArrayAny,
             value: tp.Any,
             sided_leading: bool,
-            func_target: UFunc,
+            func_target: TUFunc,
             ) -> TNDArrayAny:
         '''
         Args:
@@ -1662,7 +1662,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: UFunc) -> tp.Self:
+    def _ufunc_unary_operator(self, operator: TUFunc) -> tp.Self:
         '''
         For unary operations, the `name` attribute propagates.
         '''
@@ -1674,7 +1674,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
     def _ufunc_binary_operator(self, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
@@ -1732,8 +1732,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -1755,8 +1755,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -2110,8 +2110,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,
@@ -2143,8 +2143,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,
@@ -3637,7 +3637,7 @@ class SeriesAssign(Assign):
                 name=self.container._name)
 
     def apply(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             fill_value: tp.Any = np.nan,
             ) -> TSeriesAny:
@@ -3654,7 +3654,7 @@ class SeriesAssign(Assign):
 
 
     def apply_element(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
@@ -3673,7 +3673,7 @@ class SeriesAssign(Assign):
                 )
 
     def apply_element_items(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,

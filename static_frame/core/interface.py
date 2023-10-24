@@ -100,7 +100,7 @@ from static_frame.core.type_clinic import Require
 from static_frame.core.type_clinic import TypeClinic
 from static_frame.core.util import DT64_S
 from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 
@@ -247,7 +247,7 @@ MAX_ARGS = 3
 MAX_DOC_CHARS = 80
 
 def _get_parameters(
-        func: AnyCallable,
+        func: TCallableAny,
         is_getitem: bool = False,
         max_args: int = MAX_ARGS,
         ) -> str:
@@ -302,10 +302,10 @@ def _get_parameters(
 
 def _get_signatures(
         name: str,
-        func: AnyCallable,
+        func: TCallableAny,
         *,
         is_getitem: bool = False,
-        delegate_func: tp.Optional[AnyCallable] = None,
+        delegate_func: tp.Optional[TCallableAny] = None,
         delegate_name: str = '',
         max_args: int = MAX_ARGS,
         name_no_args: tp.Optional[str] = None,
@@ -489,7 +489,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -517,7 +517,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -679,7 +679,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -705,7 +705,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -731,7 +731,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -791,7 +791,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             cls_interface: tp.Type[Interface[TVContainer_co]],
@@ -878,7 +878,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -916,7 +916,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             cls_interface: tp.Type[Interface[TVContainer_co]],
@@ -1032,7 +1032,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,
@@ -1074,7 +1074,7 @@ class InterfaceRecord(tp.NamedTuple):
             cls_name: str,
             cls_target: tp.Type[ContainerBase],
             name: str,
-            obj: AnyCallable,
+            obj: TCallableAny,
             reference: str,
             doc: str,
             max_args: int,

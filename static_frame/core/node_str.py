@@ -16,10 +16,10 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
 
@@ -103,7 +103,7 @@ class InterfaceString(Interface[TVContainer_co]):
     @staticmethod
     def _process_blocks(
             blocks: BlocksType,
-            func: UFunc,
+            func: TUFunc,
             args: tp.Tuple[tp.Any, ...] = (),
             astype_str: bool = True,
             ) -> tp.Iterator[TNDArrayAny]:
@@ -618,7 +618,7 @@ class InterfaceBatchString(InterfaceBatch):
     _INTERFACE = INTERFACE_STR
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             ) -> None:
         self._batch_apply = batch_apply
 

@@ -25,7 +25,7 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
 from static_frame.core.util import NameType
 from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
@@ -221,7 +221,7 @@ class ContainerOperandSequence(ContainerBase):
 
     # NOTE: the return type here is intentionally broad as it will get specialized in derived classes
     def _ufunc_binary_operator(self, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             fill_value: object = np.nan,
             ) -> tp.Any:
@@ -331,7 +331,7 @@ class ContainerOperandSequence(ContainerBase):
         return array
 
     def __array_ufunc__(self,
-            ufunc: UFunc,
+            ufunc: TUFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
@@ -355,8 +355,8 @@ class ContainerOperandSequence(ContainerBase):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -610,11 +610,11 @@ class ContainerOperand(ContainerOperandSequence):
 
     #---------------------------------------------------------------------------
 
-    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
+    def _ufunc_unary_operator(self: T, operator: TUFunc) -> T:
         raise NotImplementedError() #pragma: no cover
 
     def _ufunc_binary_operator(self: T, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             fill_value: object = np.nan,
             ) -> T:
@@ -625,8 +625,8 @@ class ContainerOperand(ContainerOperandSequence):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool

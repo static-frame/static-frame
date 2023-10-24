@@ -9,7 +9,7 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -452,7 +452,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
             )
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             fill_value: object = np.nan,
             axis: int = 0,
             ) -> None:

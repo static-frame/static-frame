@@ -17,14 +17,14 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -86,8 +86,8 @@ def extrapolate_column_fields(
 def pivot_records_dtypes(
         dtype_map: Series[tp.Any, tp.Any],
         data_fields: tp.Iterable[TLabel],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]]
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]]
         ) -> tp.Iterator[tp.Optional[TDtypeAny]]:
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
@@ -106,8 +106,8 @@ def pivot_records_items_to_frame(
         group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         func_no: bool,
         kind: TSortKinds,
         columns_constructor: TIndexCtor,
@@ -168,8 +168,8 @@ def pivot_records_items_to_blocks(*,
         group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         func_no: bool,
         fill_value: tp.Any,
         fill_value_dtype: TDtypeAny,
@@ -248,7 +248,7 @@ def pivot_items_to_block(*,
         group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
-        func_single: tp.Optional[UFunc],
+        func_single: tp.Optional[TUFunc],
         dtype: tp.Optional[TDtypeAny],
         fill_value: tp.Any,
         fill_value_dtype: TDtypeAny,
@@ -323,7 +323,7 @@ def pivot_items_to_frame(*,
         group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
-        func_single: tp.Optional[AnyCallable],
+        func_single: tp.Optional[TCallableAny],
         frame_cls: tp.Type[TFrameAny],
         name: NameType,
         dtype: TDtypeAny | None,
@@ -386,8 +386,8 @@ def pivot_core(
         columns_fields: tp.List[TLabel],
         data_fields: tp.List[TLabel],
         func_fields: tp.Tuple[TLabel, ...],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         fill_value: object = np.nan,
         index_constructor: TIndexCtorSpecifier = None,
         kind: TSortKinds = DEFAULT_FAST_SORT_KIND,

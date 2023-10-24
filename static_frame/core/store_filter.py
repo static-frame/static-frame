@@ -76,7 +76,7 @@ class StoreFilter(metaclass=InterfaceMeta):
     value_format_complex_scientific: tp.Optional[str]
     value_format_complex_positional: tp.Optional[str]
 
-    # reference collections defined with values given above; cannot use AnyCallable here
+    # reference collections defined with values given above; cannot use TCallableAny here
     _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _TYPE_TO_TO_SET: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]

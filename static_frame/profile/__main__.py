@@ -27,7 +27,7 @@ sys.path.append(os.getcwd())
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 from static_frame.core.index_base import IndexBase
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 
 
@@ -48,7 +48,7 @@ class PerfStatus(Enum):
 
 
 class FunctionMetaData(tp.NamedTuple):
-    line_target: tp.Optional[AnyCallable] = None
+    line_target: tp.Optional[TCallableAny] = None
     perf_status: tp.Optional[PerfStatus] = None
     explanation: str = ''
 

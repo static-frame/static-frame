@@ -33,7 +33,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
@@ -50,7 +50,7 @@ from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import is_dtype_specifier
@@ -821,8 +821,8 @@ def axis_window_items( *,
         axis: int = 0,
         step: int = 1,
         window_sized: bool = True,
-        window_func: tp.Optional[AnyCallable] = None,
-        window_valid: tp.Optional[AnyCallable] = None,
+        window_func: tp.Optional[TCallableAny] = None,
+        window_valid: tp.Optional[TCallableAny] = None,
         label_shift: int = 0,
         label_missing_skips: bool = True,
         label_missing_raises: bool = False,
@@ -1160,7 +1160,7 @@ def apply_binary_operator(*,
         values: TNDArrayAny,
         other: tp.Any,
         other_is_array: bool,
-        operator: UFunc,
+        operator: TUFunc,
         ) -> TNDArrayAny:
     '''
     Utility to handle binary operator application.
@@ -1204,7 +1204,7 @@ def apply_binary_operator(*,
 def apply_binary_operator_blocks(*,
         values: tp.Iterable[TNDArrayAny],
         other: tp.Iterable[TNDArrayAny],
-        operator: UFunc,
+        operator: TUFunc,
         apply_column_2d_filter: bool,
     ) -> tp.Iterator[TNDArrayAny]:
     '''
@@ -1225,7 +1225,7 @@ def apply_binary_operator_blocks(*,
 def apply_binary_operator_blocks_columnar(*,
         values: tp.Iterable[TNDArrayAny],
         other: TNDArrayAny,
-        operator: UFunc,
+        operator: TUFunc,
     ) -> tp.Iterator[TNDArrayAny]:
     '''
     Application from iterators of arrays, to iterators of arrays. Will return iterator of all 1D arrays, as we will break down larger blocks in values into 1D arrays.
@@ -1794,7 +1794,7 @@ class MessagePackElement:
     @staticmethod
     def encode(
             a: tp.Any,
-            packb: AnyCallable,
+            packb: TCallableAny,
             ) -> tp.Tuple[str, tp.Any]:
 
         if isinstance(a, datetime.datetime): #msgpack-numpy has an issue with datetime
@@ -1820,7 +1820,7 @@ class MessagePackElement:
     @staticmethod
     def decode(
             pair: tp.Tuple[str, tp.Any],
-            unpackb: AnyCallable,
+            unpackb: TCallableAny,
             ) -> tp.Any:
         dt = datetime.datetime
 

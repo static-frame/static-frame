@@ -68,7 +68,7 @@ from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_sample
@@ -989,7 +989,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # operators
 
     def _ufunc_unary_operator(self,
-            operator: UFunc
+            operator: TUFunc
             ) -> TNDArrayAny:
         '''Always return an NP array.
         '''
@@ -1001,7 +1001,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return array
 
     def _ufunc_binary_operator(self, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             fill_value: object = np.nan,
             ) -> TNDArrayAny:
@@ -1041,8 +1041,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -1067,8 +1067,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -1232,7 +1232,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ) -> tp.Self:
         '''
         Args:
-            func: UFunc that returns True for missing values
+            func: TUFunc that returns True for missing values
         '''
         labels = self.values
         if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:

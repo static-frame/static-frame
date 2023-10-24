@@ -305,13 +305,13 @@ TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[t
 TBlocKey = tp.Union['Frame', np.ndarray, None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
 
-UFunc = tp.Callable[..., np.ndarray]
-AnyCallable = tp.Callable[..., tp.Any]
+TUFunc = tp.Callable[..., np.ndarray]
+TCallableAny = tp.Callable[..., tp.Any]
 
 Mapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
-CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[TLabel, tp.Any], 'Series']
+CallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']
 
-ShapeType = tp.Union[int, tp.Tuple[int, ...]]
+TShape = tp.Union[int, tp.Tuple[int, ...]]
 
 # mloc, shape, and strides
 ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
@@ -327,7 +327,7 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
-CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[TLabel, AnyCallable]]
+CallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
@@ -480,7 +480,7 @@ NOT_IN_CACHE_SENTINEL = object()
 
 #-------------------------------------------------------------------------------
 # operator mod does not have r methods; create complete method reference
-OPERATORS: tp.Dict[str, UFunc] = { # pyright: ignore
+OPERATORS: tp.Dict[str, TUFunc] = { # pyright: ignore
     '__pos__': operator.__pos__,
     '__neg__': operator.__neg__,
     '__abs__': operator.__abs__,
@@ -517,7 +517,7 @@ for attr in ('__add__', '__sub__', '__mul__', '__matmul__', '__truediv__', '__fl
     rattr = '__r' + attr[2:]
     OPERATORS[rattr] = rfunc
 
-UFUNC_TO_REVERSE_OPERATOR: tp.Dict[UFunc, UFunc] = {
+UFUNC_TO_REVERSE_OPERATOR: tp.Dict[TUFunc, TUFunc] = {
     # '__pos__': operator.__pos__,
     # '__neg__': operator.__neg__,
     # '__abs__': operator.__abs__,
@@ -572,7 +572,7 @@ class UFuncCategory(Enum):
     SUMMING = 4 # same except bool goes to max int
 
 
-UFUNC_MAP: tp.Dict[AnyCallable, UFuncCategory] = {
+UFUNC_MAP: tp.Dict[TCallableAny, UFuncCategory] = {
     all: UFuncCategory.BOOL,
     any: UFuncCategory.BOOL,
     np.all: UFuncCategory.BOOL,
@@ -606,14 +606,14 @@ UFUNC_MAP: tp.Dict[AnyCallable, UFuncCategory] = {
     np.nancumprod: UFuncCategory.CUMMULATIVE,
 }
 
-def ufunc_to_category(func: tp.Union[UFunc, partial[UFunc]]) -> tp.Optional[UFuncCategory]:
+def ufunc_to_category(func: tp.Union[TUFunc, partial[TUFunc]]) -> tp.Optional[UFuncCategory]:
     if func.__class__ is partial:
         # std, var partialed
         func = func.func #type: ignore
     return UFUNC_MAP.get(func, None)
 
-def ufunc_dtype_to_dtype(func: UFunc, dtype: TDtypeAny) -> tp.Optional[TDtypeAny]:
-    '''Given a common UFunc and dtype, return the expected return dtype, or None if not possible.
+def ufunc_dtype_to_dtype(func: TUFunc, dtype: TDtypeAny) -> tp.Optional[TDtypeAny]:
+    '''Given a common TUFunc and dtype, return the expected return dtype, or None if not possible.
     '''
     rt = ufunc_to_category(func)
 
@@ -1157,8 +1157,8 @@ def array_ufunc_axis_skipna(
         *,
         skipna: bool,
         axis: int,
-        ufunc: UFunc,
-        ufunc_skipna: UFunc,
+        ufunc: TUFunc,
+        ufunc_skipna: TUFunc,
         out: tp.Optional[TNDArrayAny] = None
         ) -> tp.Any:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
@@ -1521,8 +1521,8 @@ def roll_2d(array: TNDArrayAny,
 
 def _argminmax_1d(
         array: TNDArrayAny,
-        ufunc: UFunc,
-        ufunc_skipna: UFunc,
+        ufunc: TUFunc,
+        ufunc_skipna: TUFunc,
         skipna: bool = True,
         ) -> tp.Any: # tp.Union[int, float]:
     '''
@@ -1547,8 +1547,8 @@ argmax_1d = partial(_argminmax_1d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
 
 def _argminmax_2d(
         array: TNDArrayAny,
-        ufunc: UFunc,
-        ufunc_skipna: UFunc,
+        ufunc: TUFunc,
+        ufunc_skipna: TUFunc,
         skipna: bool = True,
         axis: int = 0
         ) -> TNDArrayAny: # int or float array
@@ -2971,7 +2971,7 @@ def isin_array(*,
         ) -> TNDArrayAny:
     '''Core isin processing after other has been converted to an array.
     '''
-    func: UFunc
+    func: TUFunc
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
         # both funcs return immutable arrays
         func = _isin_1d if array.ndim == 1 else _isin_2d
@@ -3024,7 +3024,7 @@ def isin(
 
 def _ufunc_logical_skipna(
         array: TNDArrayAny,
-        ufunc: AnyCallable,
+        ufunc: TCallableAny,
         skipna: bool,
         axis: int = 0,
         out: tp.Optional[TNDArrayAny] = None
@@ -3157,7 +3157,7 @@ def array_from_element_attr(*,
 
 def array_from_element_apply(
         array: TNDArrayAny,
-        func: AnyCallable,
+        func: TCallableAny,
         dtype: TDtypeAny
         ) -> TNDArrayAny:
     '''
@@ -3186,7 +3186,7 @@ def array_from_element_method(*,
         method_name: str,
         args: tp.Tuple[tp.Any, ...],
         dtype: TDtypeAny,
-        pre_insert: tp.Optional[AnyCallable] = None,
+        pre_insert: tp.Optional[TCallableAny] = None,
         ) -> TNDArrayAny:
     '''
     Handle element-wise method calling on arrays of Python objects. For input arrays of strings or bytes, a string method can be extracted from the appropriate Python type. For other input arrays, the method will be extracted and called for each element.

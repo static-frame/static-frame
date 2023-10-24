@@ -13,7 +13,7 @@ from arraykit import name_filter
 from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
@@ -114,7 +114,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
 
     def _apply_iter_items_parallel(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
@@ -152,7 +152,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                     )
 
     def _apply_iter_parallel(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
@@ -179,7 +179,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     @doc_inject(selector='apply')
     def apply_iter_items(self,
-            func: AnyCallable,
+            func: TCallableAny,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -198,7 +198,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
     @doc_inject(selector='apply')
     def apply_iter(self,
-            func: AnyCallable
+            func: TCallableAny
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -216,7 +216,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
     @doc_inject(selector='apply')
     def apply(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
@@ -260,7 +260,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
     @doc_inject(selector='apply')
     def apply_pool(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
@@ -922,8 +922,8 @@ class IterNodeWindow(IterNode[FrameOrSeries]):
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,

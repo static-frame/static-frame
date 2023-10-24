@@ -80,7 +80,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
@@ -2099,7 +2099,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # operators
 
     def _ufunc_unary_operator(self,
-            operator: UFunc,
+            operator: TUFunc,
             ) -> TNDArrayAny:
         '''
         Always return an NP array.
@@ -2110,7 +2110,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def _ufunc_binary_operator(self,
             *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             axis: int = 0,
             fill_value: object = np.nan,
@@ -2150,8 +2150,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool,
@@ -2197,8 +2197,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool

@@ -12,7 +12,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import array_from_element_apply
 
 if tp.TYPE_CHECKING:
@@ -61,7 +61,7 @@ class InterfaceRe(Interface[TVContainer_co]):
     @staticmethod
     def _process_blocks(*,
             blocks: BlocksType,
-            func: AnyCallable,
+            func: TCallableAny,
             dtype: TDtypeAny,
             ) -> tp.Iterator[TNDArrayAny]:
         '''
@@ -236,7 +236,7 @@ class InterfaceBatchRe(InterfaceBatch):
     _INTERFACE = INTERFACE_RE
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             pattern: str,
             flags: int = 0,
             ) -> None:

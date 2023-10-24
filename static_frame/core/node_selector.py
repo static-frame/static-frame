@@ -7,7 +7,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypeSpecifier
@@ -21,7 +21,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
 
-# from static_frame.core.util import AnyCallable
+# from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -526,7 +526,7 @@ class BatchAsType:
     __slots__ = ('_batch_apply', '_column_key')
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             column_key: TLocSelector
             ) -> None:
         self._batch_apply = batch_apply
@@ -552,7 +552,7 @@ class InterfaceBatchAsType(Interface[TVContainer_co]):
     _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             ) -> None:
         self._batch_apply = batch_apply
 

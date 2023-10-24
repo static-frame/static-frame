@@ -145,7 +145,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import FrameInitializer
@@ -176,7 +176,7 @@ from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
@@ -5400,7 +5400,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def _ufunc_binary_operator(self, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             axis: int = 0,
             fill_value: tp.Any = np.nan,
@@ -5531,8 +5531,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -5560,8 +5560,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -5995,8 +5995,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,
@@ -6029,8 +6029,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,
@@ -9440,7 +9440,7 @@ class FrameAssign(Assign):
         raise NotImplementedError() #pragma: no cover
 
     def apply(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -9455,7 +9455,7 @@ class FrameAssign(Assign):
         raise NotImplementedError() #pragma: no cover
 
     def apply_element(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
@@ -9474,7 +9474,7 @@ class FrameAssign(Assign):
                 )
 
     def apply_element_items(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             dtype: TDtypeSpecifier = None,
             fill_value: tp.Any = np.nan,
@@ -9575,7 +9575,7 @@ class FrameAssignILoc(FrameAssign):
                 )
 
     def apply(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -9658,7 +9658,7 @@ class FrameAssignBLoc(FrameAssign):
                 )
 
     def apply(self,
-            func: AnyCallable,
+            func: TCallableAny,
             *,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:

@@ -6,7 +6,7 @@ import typing_extensions as tp
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -297,7 +297,7 @@ class InterfaceBatchTranspose(InterfaceBatch):
     _INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             fill_value: object = np.nan,
             ) -> None:
 

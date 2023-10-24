@@ -45,7 +45,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ArraySignature
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import ShapeType
+from static_frame.core.util import TShape
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
@@ -54,7 +54,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TupleConstructorType
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_signature
@@ -291,7 +291,7 @@ def assign_inner_from_iloc_by_unit(
         block: TNDArrayAny,
         row_target: TILocSelector,
         target_key: TILocSelector,
-        t_shape: ShapeType,
+        t_shape: TShape,
         target_is_slice: bool,
         block_is_column: bool,
         row_key_is_null_slice: bool,
@@ -355,7 +355,7 @@ def assign_inner_from_iloc_by_sequence(
         block: TNDArrayAny,
         row_target: TILocSelector,
         target_key: TILocSelector,
-        t_shape: ShapeType,
+        t_shape: TShape,
         target_is_slice: bool,
         block_is_column: bool,
         row_key_is_null_slice: bool,
@@ -441,7 +441,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_blocks(cls,
             raw_blocks: tp.Iterable[TNDArrayAny],
-            shape_reference: tp.Optional[ShapeType] = None
+            shape_reference: tp.Optional[TShape] = None
             ) -> 'TypeBlocks':
         '''
         Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
@@ -977,7 +977,7 @@ class TypeBlocks(ContainerOperand):
                     # works for both 1d and 2s arrays
                     yield b[index_ic.iloc_src]
                 else:
-                    shape: ShapeType = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
+                    shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
@@ -1292,8 +1292,8 @@ class TypeBlocks(ContainerOperand):
     def ufunc_axis_skipna(self, *,
             skipna: bool,
             axis: int,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Sequence[TDtypeAny],
             size_one_unity: bool
@@ -1322,7 +1322,7 @@ class TypeBlocks(ContainerOperand):
             result.flags.writeable = False
             return result
 
-        shape: ShapeType
+        shape: TShape
         if axis == 0:
             # reduce all rows to 1d with column width
             shape = self._index.columns
@@ -1747,7 +1747,7 @@ class TypeBlocks(ContainerOperand):
 
     def _ufunc_blocks(self,
             column_key: TILocSelector,
-            func: UFunc
+            func: TUFunc
             ) -> tp.Iterator[TNDArrayAny]:
         '''
         Return a new blocks after processing each columnar block with the passed ufunc. It is assumed the ufunc will retain the shape of the input 1D or 2D array. All blocks must be processed, which is different than _astype_blocks, which can check the type and skip processing some blocks.
@@ -2169,7 +2169,7 @@ class TypeBlocks(ContainerOperand):
                     TNDArrayAny,
                     TILocSelector,
                     TILocSelector,
-                    ShapeType,
+                    TShape,
                     bool,
                     bool,
                     bool],
@@ -2220,7 +2220,7 @@ class TypeBlocks(ContainerOperand):
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
 
                 # add empty components for the assignment region
-                t_shape: ShapeType
+                t_shape: TShape
                 if target_is_slice and not block_is_column:
                     if target_is_null_slice:
                         t_width = b.shape[1]
@@ -3452,7 +3452,7 @@ class TypeBlocks(ContainerOperand):
     def _fill_missing_sided_axis_0(
             blocks: tp.Iterable[TNDArrayAny],
             value: tp.Any,
-            func_target: UFunc,
+            func_target: TUFunc,
             sided_leading: bool,
             ) -> tp.Iterator[TNDArrayAny]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
@@ -3518,7 +3518,7 @@ class TypeBlocks(ContainerOperand):
     def _fill_missing_sided_axis_1(
             blocks: tp.Iterable[TNDArrayAny],
             value: tp.Any,
-            func_target: UFunc,
+            func_target: TUFunc,
             sided_leading: bool) -> tp.Iterator[TNDArrayAny]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1. Leading axis 1 fills rows, going from left to right.
 
@@ -3689,7 +3689,7 @@ class TypeBlocks(ContainerOperand):
     def _fill_missing_directional_axis_0(
             blocks: tp.Iterable[TNDArrayAny],
             directional_forward: bool,
-            func_target: UFunc,
+            func_target: TUFunc,
             limit: int = 0
             ) -> tp.Iterator[TNDArrayAny]:
         '''
@@ -3764,7 +3764,7 @@ class TypeBlocks(ContainerOperand):
     def _fill_missing_directional_axis_1(
             blocks: tp.Iterable[TNDArrayAny],
             directional_forward: bool,
-            func_target: UFunc,
+            func_target: TUFunc,
             limit: int = 0
             ) -> tp.Iterator[TNDArrayAny]:
         '''

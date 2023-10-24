@@ -53,7 +53,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TILocSelector
@@ -859,8 +859,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,
@@ -893,8 +893,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             axis: int = 0,
             step: int = 1,
             window_sized: bool = True,
-            window_func: tp.Optional[AnyCallable] = None,
-            window_valid: tp.Optional[AnyCallable] = None,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
             label_shift: int = 0,
             label_missing_skips: bool = True,
             label_missing_raises: bool = False,

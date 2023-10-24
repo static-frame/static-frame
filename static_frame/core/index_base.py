@@ -35,7 +35,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
@@ -67,7 +67,7 @@ class IndexBase(ContainerOperandSequence):
     iloc: tp.Any # this does not work: InterGetItemLocReduces[I]
 
     #---------------------------------------------------------------------------
-    def _ufunc_unary_operator(self, operator: UFunc) -> TNDArrayAny:
+    def _ufunc_unary_operator(self, operator: TUFunc) -> TNDArrayAny:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -267,8 +267,8 @@ class IndexBase(ContainerOperandSequence):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool

@@ -30,7 +30,7 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
@@ -783,7 +783,7 @@ class InterfaceBatchDatetime(InterfaceBatch):
     _INTERFACE = INTERFACE_DT
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             *,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:

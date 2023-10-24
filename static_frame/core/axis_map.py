@@ -14,7 +14,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TreeNodeT
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
@@ -28,7 +28,7 @@ def get_extractor(
         deepcopy_from_bus: bool,
         is_array: bool,
         memo_active: bool,
-        ) -> AnyCallable:
+        ) -> TCallableAny:
     '''
     Args:
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.

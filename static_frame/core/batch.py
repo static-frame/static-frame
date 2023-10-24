@@ -46,7 +46,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import BoolOrBools
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys
@@ -60,7 +60,7 @@ from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -92,12 +92,12 @@ def normalize_container(post: tp.Any
         return Series.from_element(post, index=ELEMENT_TUPLE)
     return post
 
-def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
+def call_func(bundle: tp.Tuple[FrameOrSeries, TCallableAny]
         ) -> FrameOrSeries:
     container, func = bundle
     return func(container) # type: ignore
 
-def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, TLabel]
+def call_func_items(bundle: tp.Tuple[FrameOrSeries, TCallableAny, TLabel]
         ) -> FrameOrSeries:
     container, func, label = bundle
     return func(label, container) # type: ignore
@@ -589,7 +589,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return self._apply_pool(labels, arg_gen(), call_attr)
 
-    def apply(self, func: AnyCallable) -> 'Batch':
+    def apply(self, func: TCallableAny) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
         '''
@@ -600,7 +600,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -608,7 +608,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_pool(labels, arg_gen(), call_func)
 
     def apply_except(self,
-            func: AnyCallable,
+            func: TCallableAny,
             exception: tp.Type[Exception],
             ) -> 'Batch':
         '''
@@ -624,7 +624,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -635,7 +635,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 exception,
                 )
 
-    def apply_items(self, func: AnyCallable) -> 'Batch':
+    def apply_items(self, func: TCallableAny) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
         '''
@@ -646,7 +646,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -654,7 +654,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_pool(labels, arg_gen(), call_func_items)
 
     def apply_items_except(self,
-            func: AnyCallable,
+            func: TCallableAny,
             exception: tp.Type[Exception],
             ) -> 'Batch':
         '''
@@ -670,7 +670,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, TLabel]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -787,7 +787,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # axis and shape ufunc methods
 
     def _ufunc_unary_operator(self,
-            operator: UFunc
+            operator: TUFunc
             ) -> 'Batch':
         return self._apply_attr(
                 attr='_ufunc_unary_operator',
@@ -795,7 +795,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     def _ufunc_binary_operator(self, *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             fill_value: object = np.nan,
             ) -> 'Batch':
@@ -808,8 +808,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
@@ -828,8 +828,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
             dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool

@@ -7,8 +7,8 @@ from arraykit import column_2d_filter
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import UFunc
+from static_frame.core.util import TCallableAny
+from static_frame.core.util import TUFunc
 from static_frame.core.util import blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
@@ -80,7 +80,7 @@ class InterfaceValues(Interface[TVContainer_co]):
                 )
 
     def __array_ufunc__(self,
-            ufunc: UFunc,
+            ufunc: TUFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
@@ -172,7 +172,7 @@ class InterfaceValues(Interface[TVContainer_co]):
 
 
     def apply(self,
-            func: UFunc,
+            func: TUFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
             ) -> TVContainer_co:
@@ -194,7 +194,7 @@ class InterfaceBatchValues(InterfaceBatch):
     _INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
@@ -207,7 +207,7 @@ class InterfaceBatchValues(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     def apply(self,
-            func: UFunc,
+            func: TUFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
             ) -> 'Batch':
@@ -239,7 +239,7 @@ class InterfaceBatchValues(InterfaceBatch):
                 )
 
     def __array_ufunc__(self,
-            ufunc: UFunc,
+            ufunc: TUFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
