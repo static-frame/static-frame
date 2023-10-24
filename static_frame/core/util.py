@@ -300,7 +300,7 @@ TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, TLocSelecto
 KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
 NameType = TLabel # include None
 
-TupleConstructorType = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
+TTupleCtor = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
 TBlocKey = tp.Union['Frame', np.ndarray, None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
@@ -308,15 +308,15 @@ TBlocKey = tp.Union['Frame', np.ndarray, None]
 TUFunc = tp.Callable[..., np.ndarray]
 TCallableAny = tp.Callable[..., tp.Any]
 
-Mapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
+TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
 CallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']
 
 TShape = tp.Union[int, tp.Tuple[int, ...]]
 
 # mloc, shape, and strides
-ArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
+TArraySignature = tp.Tuple[int, tp.Tuple[int, ...], tp.Tuple[int, ...]]
 
-def array_signature(value: TNDArrayAny) -> ArraySignature:
+def array_signature(value: TNDArrayAny) -> TArraySignature:
     return mloc(value), value.shape, value.strides
 
 def is_mapping(value: tp.Any) -> bool:
@@ -330,8 +330,8 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
 CallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
-KeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
-BoolOrBools = tp.Union[bool, tp.Iterable[bool]]
+TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
+TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
 PathSpecifier = tp.Union[str, PathLike]
 PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
@@ -2169,7 +2169,7 @@ def arrays_equal(array: TNDArrayAny,
     if (mloc(array) == mloc(other)
             and array.shape == other.shape
             and array.strides == other.strides):
-        # NOTE: this implements an ArraySignature check that will short-circuit. A columnar slice from a 2D array will always have a unique array id(); however, two slices from the same 2D array will have the same mloc, shape, and strides; we can identify those cases here
+        # NOTE: this implements an TArraySignature check that will short-circuit. A columnar slice from a 2D array will always have a unique array id(); however, two slices from the same 2D array will have the same mloc, shape, and strides; we can identify those cases here
         return True
 
     if array.dtype.kind == DTYPE_DATETIME_KIND and other.dtype.kind == DTYPE_DATETIME_KIND:
@@ -3651,7 +3651,7 @@ def file_like_manager(
 
 def get_tuple_constructor(
         fields: TNDArrayAny,
-        ) -> TupleConstructorType:
+        ) -> TTupleCtor:
     '''
     Given fields, try to create a Namedtuple and return the `_make` method
     '''
@@ -3662,7 +3662,7 @@ def get_tuple_constructor(
         pass
     raise ValueError('invalid fields for namedtuple; pass `tuple` as constructor')
 
-def key_normalize(key: KeyOrKeys) -> tp.List[TLabel]:
+def key_normalize(key: TKeyOrKeys) -> tp.List[TLabel]:
     '''
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''

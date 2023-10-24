@@ -47,9 +47,9 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import BoolOrBools
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import TKeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TBlocKey
@@ -954,7 +954,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 )
 
     def sort_values(self,
-            label: KeyOrKeys,
+            label: TKeyOrKeys,
             *,
             ascending: bool = True,
             axis: int = 1,
@@ -1453,7 +1453,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan
             ) -> 'Batch':
@@ -1471,7 +1471,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan
             ) -> 'Batch':
@@ -1489,7 +1489,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan
             ) -> 'Batch':
@@ -1507,7 +1507,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan
             ) -> 'Batch':
@@ -1525,7 +1525,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan
             ) -> 'Batch':

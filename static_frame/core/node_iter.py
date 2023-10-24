@@ -14,13 +14,13 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import Mapping
+from static_frame.core.util import TMapping
 from static_frame.core.util import NameType
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
-from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import TTupleCtor
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 
@@ -331,7 +331,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_any')
     def map_any_iter_items(self,
-            mapping: Mapping
+            mapping: TMapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -347,7 +347,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_any')
     def map_any_iter(self,
-            mapping: Mapping,
+            mapping: TMapping,
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -363,7 +363,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_any')
     def map_any(self,
-            mapping: Mapping,
+            mapping: TMapping,
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
@@ -393,7 +393,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_fill')
     def map_fill_iter_items(self,
-            mapping: Mapping,
+            mapping: TMapping,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
@@ -412,7 +412,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_fill')
     def map_fill_iter(self,
-            mapping: Mapping,
+            mapping: TMapping,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Any]:
@@ -431,7 +431,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_fill')
     def map_fill(self,
-            mapping: Mapping,
+            mapping: TMapping,
             *,
             fill_value: tp.Any = np.nan,
             dtype: TDtypeSpecifier = None,
@@ -464,7 +464,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_all')
     def map_all_iter_items(self,
-            mapping: Mapping
+            mapping: TMapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -481,7 +481,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_all')
     def map_all_iter(self,
-            mapping: Mapping
+            mapping: TMapping
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -497,7 +497,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
     @doc_inject(selector='map_all')
     def map_all(self,
-            mapping: Mapping,
+            mapping: TMapping,
             *,
             dtype: TDtypeSpecifier = None,
             name: NameType = None,
@@ -825,7 +825,7 @@ class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
     def __call__(self,
             *,
             axis: int = 0,
-            constructor: tp.Optional[TupleConstructorType] = None,
+            constructor: tp.Optional[TTupleCtor] = None,
             ) -> IterNodeDelegateMapable[FrameOrSeries]:
         return IterNode.get_delegate_mapable(self,
                 axis=axis,

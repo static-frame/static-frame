@@ -116,7 +116,7 @@ from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import FrameInitializer as FrameInitializer
 from static_frame.core.util import IndexInitializer as IndexInitializer
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
-from static_frame.core.util import KeyOrKeys as KeyOrKeys
+from static_frame.core.util import TKeyOrKeys as TKeyOrKeys
 from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier

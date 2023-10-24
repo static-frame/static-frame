@@ -146,14 +146,14 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import BoolOrBools
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
-from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import TKeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifier
@@ -175,7 +175,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
@@ -5600,7 +5600,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _axis_tuple(self, *,
             axis: int,
-            constructor: tp.Optional[TupleConstructorType] = None,
+            constructor: tp.Optional[TTupleCtor] = None,
             ) -> tp.Iterator[tp.Sequence[tp.Any]]:
         '''Generator of named tuples across an axis.
 
@@ -5638,7 +5638,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _axis_tuple_items(self, *,
             axis: int,
-            constructor: tp.Optional[TupleConstructorType] = None,
+            constructor: tp.Optional[TTupleCtor] = None,
             ) -> tp.Iterator[tp.Tuple[TLabel, tp.Sequence[tp.Any]]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
@@ -6096,7 +6096,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> TFrameAny:
@@ -6123,7 +6123,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='sort')
     def sort_columns(self,
             *,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> TFrameAny:
@@ -6150,9 +6150,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='sort')
     def sort_values(self,
-            label: KeyOrKeys, # elsewhere this is called 'key'
+            label: TKeyOrKeys, # elsewhere this is called 'key'
             *,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             axis: int = 1,
             kind: TSortKinds = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[[tp.Union[TFrameAny, TSeriesAny]], tp.Union[TNDArrayAny, TSeriesAny, TFrameAny]]] = None,
@@ -6979,7 +6979,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             method: RankMethod,
             axis: int = 0, # 0 ranks columns, 1 ranks rows
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
     ) -> TFrameAny:
@@ -7047,7 +7047,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def rank_ordinal(self, *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -7076,7 +7076,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def rank_dense(self, *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -7105,7 +7105,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def rank_min(self, *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -7134,7 +7134,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def rank_max(self, *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -7163,7 +7163,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def rank_mean(self, *,
             axis: int = 0,
             skipna: bool = True,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             start: int = 0,
             fill_value: tp.Any = np.nan,
             ) -> TFrameAny:
@@ -7683,9 +7683,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # pivot family
 
     def pivot(self,
-            index_fields: KeyOrKeys,
-            columns_fields: KeyOrKeys = (),
-            data_fields: KeyOrKeys = (),
+            index_fields: TKeyOrKeys,
+            columns_fields: TKeyOrKeys = (),
+            data_fields: TKeyOrKeys = (),
             *,
             func: tp.Optional[CallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,

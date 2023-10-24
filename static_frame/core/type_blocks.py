@@ -43,7 +43,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import ArraySignature
+from static_frame.core.util import TArraySignature
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TShape
 from static_frame.core.util import TDtypeSpecifier
@@ -53,7 +53,7 @@ from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import TupleConstructorType
+from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
@@ -2822,7 +2822,7 @@ class TypeBlocks(ContainerOperand):
     def iter_row_tuples(self,
             key: TILocSelector,
             *,
-            constructor: tp.Optional[TupleConstructorType] = tuple,
+            constructor: tp.Optional[TTupleCtor] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns. This interface yields all rows in the TypeBlocks.
         '''
@@ -2848,7 +2848,7 @@ class TypeBlocks(ContainerOperand):
     def iter_columns_tuples(self,
             key: TILocSelector,
             *,
-            constructor: tp.Optional[TupleConstructorType] = tuple,
+            constructor: tp.Optional[TTupleCtor] = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per column of values based on a selection of one or more rows. This interface yields all columns in the TypeBlocks.
         '''
@@ -4115,7 +4115,7 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def iter_block_signatures(self) -> tp.Iterator[ArraySignature]:
+    def iter_block_signatures(self) -> tp.Iterator[TArraySignature]:
         '''
         Yields:
             a hashable key that will match array that share the same data, or share slices from the same underlying data and have the same shape and strides.

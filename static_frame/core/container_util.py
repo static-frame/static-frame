@@ -34,7 +34,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import BoolOrBools
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import ExplicitConstructor
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import IndexInitializer
@@ -1709,7 +1709,7 @@ def frame_to_frame(
 
 def prepare_values_for_lex(
         *,
-        ascending: BoolOrBools = True,
+        ascending: TBoolOrBools = True,
         values_for_lex: tp.Optional[tp.Iterable[TNDArrayAny]],
         ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[TNDArrayAny]]]:
     '''Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through.
@@ -1734,7 +1734,7 @@ def prepare_values_for_lex(
 
 def sort_index_for_order(
         index: 'IndexBase',
-        ascending: BoolOrBools,
+        ascending: TBoolOrBools,
         kind: TSortKinds,
         key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[TNDArrayAny, 'IndexBase']]],
         ) -> TNDArrayAny:
