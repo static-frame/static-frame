@@ -7,8 +7,8 @@ from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
 from enum import Enum
-from functools import wraps
 from functools import partial
+from functools import wraps
 from inspect import BoundArguments
 from inspect import Signature
 from itertools import chain
