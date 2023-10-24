@@ -8,6 +8,7 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence
 from enum import Enum
 from functools import wraps
+from functools import partial
 from inspect import BoundArguments
 from inspect import Signature
 from itertools import chain
@@ -303,7 +304,7 @@ class Require:
         def _repr_remainder(
                 labels: tp.Sequence[TLabel | tp.List[TLabel | TValidator]],
                 ) -> str:
-            # always drop leading ellipses
+            # always drop leading or trailing ellipses
             if labels[0] is ...:
                 labels = labels[1:]
             if labels[-1] is ...:
@@ -341,7 +342,7 @@ class Require:
             return None
 
         @staticmethod
-        def _iter_validator_results(
+        def _iter_validator_results(*,
                 frame: TFrameAny | None,
                 labels: IndexBase,
                 label: TLabel,
@@ -398,11 +399,11 @@ class Require:
                         )
             else:
                 pf = self._find_parent_frame(parent_values)
-
-                pos_e = 0 # position expected
+                pos_e = 0 # position in expected hint
                 len_e = len(self._labels)
 
                 for iloc_p, label_p in enumerate(value): # iterate provided index
+                    # print('pos_p:', iloc_p, repr(label_p), '| pos_e:', pos_e, repr(self._labels[pos_e]))
                     if pos_e >= len_e:
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected labels exhausted at provided {label_p!r}',
@@ -412,6 +413,13 @@ class Require:
                         break
 
                     label_e, label_validators = self._split_validators(self._labels[pos_e], pf)
+                    # partial processor, but defer calling until after label eval
+                    iter_validator_results = partial(
+                                self._iter_validator_results,
+                                frame=pf,
+                                labels=value,
+                                parent_hints=parent_hints,
+                                parent_values=parent_values,)
 
                     if label_e is not ...:
                         if not self._provided_is_expected(
@@ -426,22 +434,29 @@ class Require:
                                     parent_values,
                                     )
                             break
-                        for log in self._iter_validator_results(pf,
-                                value,
-                                label_e,
-                                label_validators,
-                                parent_hints,
-                                parent_values,
+                        for log in iter_validator_results(
+                                label=label_p,
+                                validators=label_validators,
                                 ):
                             yield log
                             break
                         pos_e += 1
                     # expected is an Ellipses; either find next as match or continue with Ellipses
+                    elif pos_e + 1 == len_e: # last expected is an ellipses
+                        # do not need to look ahead, evaluate valdators
+                        for log in iter_validator_results(
+                                label=label_p,
+                                validators=label_validators,
+                                ):
+                            yield log
+                            break
                     elif pos_e + 1 < len_e: # more expected labels available
+                        # look ahead to see if the next expected hint matches the current label, if so, we use those validators on this column
                         label_next_e, label_next_validators = self._split_validators(
                                 self._labels[pos_e + 1],
                                 pf,
                                 )
+                        # import ipdb; ipdb.set_trace()
                         if label_next_e is ...:
                             yield (ERROR_MESSAGE_TYPE,
                                     'Expected cannot be defined with adjacent ellipses',
@@ -456,17 +471,22 @@ class Require:
                                 value,
                                 ):
                             # NOTE: if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must compare to the next expected value; we then skip that value for subsequent evaluation
-                            for log in self._iter_validator_results(pf,
-                                    value,
-                                    label_next_e,
-                                    label_next_validators,
-                                    parent_hints,
-                                    parent_values,
+                            for log in iter_validator_results(
+                                    label=label_next_e,
+                                    validators=label_next_validators,
                                     ):
                                 yield log
                                 break
                             pos_e += 2 # skip the compared value, prepare to get next
-                    # else, last expected value is Ellipses
+                        else:
+                            # if the lookahead label is not this label, run these validators
+                            for log in iter_validator_results(
+                                    label=label_p,
+                                    validators=label_validators,
+                                    ):
+                                yield log
+                                break
+
                 else: # no break, exhausted all labels; evaluate final conditions
                     if pos_e == len_e - 1 and self._labels[pos_e] is ...:
                         pass # expected ends on an ellipses

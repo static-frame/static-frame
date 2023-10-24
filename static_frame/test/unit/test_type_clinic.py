@@ -1375,6 +1375,61 @@ def test_validate_labels_h4():
     with pytest.raises(TypeError):
         assert proc(f) == 1
 
+
+def test_validate_labels_i1():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    v = Require.Labels([..., lambda s: (s > 0).all()], 'c', 'd')
+    assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
+
+    v = Require.Labels([..., lambda s: (s < 0).all()], 'c', 'd')
+    assert tuple(v._iter_errors(f.columns, None, (), (f,)))
+
+
+def test_validate_labels_i2():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    v = Require.Labels([..., lambda s: s.dtype == int], ['c', lambda s: s.dtype == bool], 'd')
+    assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
+
+    v = Require.Labels([..., lambda s: s.dtype == int], ['c', lambda s: s.dtype == float], 'd')
+    assert tuple(v._iter_errors(f.columns, None, (), (f,)))
+
+
+def test_validate_labels_i3():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    v = Require.Labels([..., lambda s: s.dtype == int], 'c', ['d', lambda s: s.dtype.kind == 'U'])
+    assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
+
+
 #-------------------------------------------------------------------------------
 
 def test_validate_apply_a():
