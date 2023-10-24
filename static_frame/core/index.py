@@ -55,7 +55,6 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
@@ -66,6 +65,7 @@ from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TKeyIterable
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TUFunc
@@ -1575,7 +1575,7 @@ class _IndexGOMixin:
         self._positions_mutable_count += 1
         self._recache = True # pylint: disable=E0237
 
-    def extend(self, values: KeyIterableTypes) -> None:
+    def extend(self, values: TKeyIterable) -> None:
         '''Append multiple values
         Args:
             values: can be a generator.

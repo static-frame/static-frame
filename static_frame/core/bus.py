@@ -50,15 +50,15 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
@@ -238,7 +238,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_tsv(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -259,7 +259,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_csv(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -280,7 +280,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_pickle(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -301,7 +301,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_npz(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -322,7 +322,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_npy(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -343,7 +343,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_parquet(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -364,7 +364,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_xlsx(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -386,7 +386,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_sqlite(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -407,7 +407,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_hdf5(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,

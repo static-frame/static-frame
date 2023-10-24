@@ -16,8 +16,8 @@ from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
@@ -63,7 +63,7 @@ class Store:
             '_weak_cache',
             )
 
-    def __init__(self, fp: PathSpecifier):
+    def __init__(self, fp: TPathSpecifier):
         # Redefine fp variable as only string after the filter.
         fp = tp.cast(str, path_filter(fp))
 

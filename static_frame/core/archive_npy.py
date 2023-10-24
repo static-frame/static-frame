@@ -30,8 +30,8 @@ from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
@@ -237,13 +237,13 @@ class Archive:
 
     _memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
-    _archive: tp.Union[ZipFile, PathSpecifier]
+    _archive: tp.Union[ZipFile, TPathSpecifier]
 
     # set per subclass
-    FUNC_REMOVE_FP: tp.Callable[[PathSpecifier], None]
+    FUNC_REMOVE_FP: tp.Callable[[TPathSpecifier], None]
 
     def __init__(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             writeable: bool,
             memory_map: bool,
             ):
@@ -293,7 +293,7 @@ class ArchiveZip(Archive):
     FUNC_REMOVE_FP = os.remove
 
     def __init__(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             writeable: bool,
             memory_map: bool,
             ):
@@ -376,11 +376,11 @@ class ArchiveDirectory(Archive):
     '''
     __slots__ = ()
 
-    _archive: PathSpecifier
+    _archive: TPathSpecifier
     FUNC_REMOVE_FP = shutil.rmtree
 
     def __init__(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             writeable: bool,
             memory_map: bool,
             ):
@@ -741,7 +741,7 @@ class ArchiveFrameConverter:
     def to_archive(cls,
             *,
             frame: TFrameAny,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
@@ -848,7 +848,7 @@ class ArchiveFrameConverter:
     def from_archive(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -867,7 +867,7 @@ class ArchiveFrameConverter:
     def from_archive_mmap(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -903,7 +903,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             '_writeable',
             )
 
-    def __init__(self, fp: PathSpecifier, mode: str = 'r') -> None:
+    def __init__(self, fp: TPathSpecifier, mode: str = 'r') -> None:
         if mode == 'w':
             writeable = True
         elif mode == 'r':

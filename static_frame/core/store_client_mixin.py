@@ -16,8 +16,8 @@ from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 
 # NOTE: wanted this to inherit from tp.Generic[T], such that values returned from constructors would be known, but this breaks in 3.6 with: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 
@@ -49,7 +49,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_tsv(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -65,7 +65,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_csv(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -81,7 +81,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_pickle(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -97,7 +97,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_npz(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -113,7 +113,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_npy(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -129,7 +129,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_zip_parquet(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -145,7 +145,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_xlsx(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             ) -> None:
@@ -160,7 +160,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_sqlite(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             ) -> None:
@@ -175,7 +175,7 @@ class StoreClientMixin:
 
     @doc_inject(selector='store_client_exporter')
     def to_hdf5(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             ) -> None:

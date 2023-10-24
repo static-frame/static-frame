@@ -43,15 +43,15 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TArraySignature
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TShape
+from static_frame.core.util import TArraySignature
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
+from static_frame.core.util import TShape
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc

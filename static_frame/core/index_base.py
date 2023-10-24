@@ -27,7 +27,6 @@ from static_frame.core.util import OPERATORS
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
@@ -35,6 +34,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TPathSpecifierOrFileLike
 from static_frame.core.util import TUFunc
 from static_frame.core.util import write_optional_file
 
@@ -503,7 +503,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
-            fp: tp.Optional[PathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
             *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None

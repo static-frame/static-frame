@@ -145,21 +145,17 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
-from static_frame.core.util import TKeyOrKeys
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TBoolOrBools
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
@@ -170,10 +166,14 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TKeyOrKeys
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
+from static_frame.core.util import TPathSpecifier
+from static_frame.core.util import TPathSpecifierOrFileLike
+from static_frame.core.util import TPathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
@@ -2132,7 +2132,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
-            fp: PathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrFileLikeOrIterator,
             *,
             delimiter: str,
             index_depth: int = 0,
@@ -2450,7 +2450,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_csv(cls,
-            fp: PathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2512,7 +2512,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_tsv(cls,
-            fp: PathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2650,7 +2650,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_xlsx(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
@@ -2697,7 +2697,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_sqlite(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             label: TLabel,
             index_depth: int = 0,
@@ -2731,7 +2731,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_hdf5(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             label: TLabel,
             index_depth: int = 0,
@@ -2763,7 +2763,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_npz(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -2775,7 +2775,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_npy(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an directory of npy files.
@@ -2790,7 +2790,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_npy_mmap(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an directory of npy files using memory maps.
@@ -2808,7 +2808,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_pickle(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from a pickle file.
@@ -3115,7 +3115,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     @doc_inject(selector='from_any')
     def from_parquet(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
@@ -8403,7 +8403,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
 
     def to_parquet(self,
-            fp: tp.Union[PathSpecifier, BytesIO],
+            fp: tp.Union[TPathSpecifier, BytesIO],
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -8788,7 +8788,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_delimited(self,
-            fp: PathSpecifierOrFileLike,
+            fp: TPathSpecifierOrFileLike,
             *,
             delimiter: str,
             include_index: bool = True,
@@ -8842,7 +8842,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_csv(self,
-            fp: PathSpecifierOrFileLike,
+            fp: TPathSpecifierOrFileLike,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -8891,7 +8891,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_tsv(self,
-            fp: PathSpecifierOrFileLike,
+            fp: TPathSpecifierOrFileLike,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -9000,7 +9000,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # Store based output
 
     def to_xlsx(self,
-            fp: PathSpecifier, # not sure I can take a file like yet
+            fp: TPathSpecifier, # not sure I can take a file like yet
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9030,7 +9030,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def to_sqlite(self,
-            fp: PathSpecifier, # not sure file-like StringIO works
+            fp: TPathSpecifier, # not sure file-like StringIO works
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9060,7 +9060,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def to_hdf5(self,
-            fp: PathSpecifier, # not sure file-like StringIO works
+            fp: TPathSpecifier, # not sure file-like StringIO works
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9091,7 +9091,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     def to_npz(self,
-            fp: PathSpecifier, # not sure file-like StringIO works
+            fp: TPathSpecifier, # not sure file-like StringIO works
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -9109,7 +9109,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def to_npy(self,
-            fp: PathSpecifier, # not sure file-like StringIO works
+            fp: TPathSpecifier, # not sure file-like StringIO works
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -9127,7 +9127,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def to_pickle(self,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             protocol: tp.Optional[int] = None,
             ) -> None:
@@ -9164,7 +9164,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,
-            fp: tp.Optional[PathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> tp.Optional[str]:

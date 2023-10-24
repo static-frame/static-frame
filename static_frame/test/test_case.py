@@ -23,8 +23,8 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -94,7 +94,7 @@ class Timer():
 @contextlib.contextmanager
 def temp_file(suffix: tp.Optional[str] = None,
         path: bool = False
-        ) -> tp.Iterator[PathSpecifier]:
+        ) -> tp.Iterator[TPathSpecifier]:
     try:
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
             tmp_name = f.name

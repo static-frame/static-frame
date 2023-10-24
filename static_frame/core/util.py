@@ -242,7 +242,7 @@ INT64_MAX = np.iinfo(np.int64).max
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
-KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
+TKeyIterable = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
@@ -333,9 +333,9 @@ CallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
-PathSpecifier = tp.Union[str, PathLike]
-PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
-PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
+TPathSpecifier = tp.Union[str, PathLike]
+TPathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
+TPathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
 TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
 TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
@@ -3584,7 +3584,7 @@ def slices_from_targets(
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
-def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextIO]:
+def path_filter(fp: TPathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
     if fp is None:
@@ -3595,7 +3595,7 @@ def path_filter(fp: PathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextI
 
 def write_optional_file(
         content: str,
-        fp: tp.Optional[PathSpecifierOrFileLike] = None,
+        fp: tp.Optional[TPathSpecifierOrFileLike] = None,
         ) -> tp.Optional[str]:
 
     if fp is not None:
@@ -3624,7 +3624,7 @@ def write_optional_file(
 
 @contextlib.contextmanager
 def file_like_manager(
-        file_like: PathSpecifierOrFileLikeOrIterator,
+        file_like: TPathSpecifierOrFileLikeOrIterator,
         encoding: tp.Optional[str] = None,
         mode: str = 'r',
         ) -> tp.Iterator[tp.Iterator[str]]:

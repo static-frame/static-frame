@@ -17,8 +17,8 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import TCallableAny
 from static_frame.core.util import NameType
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier

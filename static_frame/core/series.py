@@ -83,13 +83,12 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import TBoolOrBools
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelector
@@ -100,6 +99,7 @@ from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
+from static_frame.core.util import TPathSpecifierOrFileLike
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
 from static_frame.core.util import argmax_1d
@@ -3544,7 +3544,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,
-            fp: tp.Optional[PathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> tp.Optional[str]:

@@ -296,13 +296,12 @@ class Require:
                 parent_hints: TParent,
                 parent_values: TParent,
                 ) -> tp.Iterator[TValidation]:
-            pass
-            # if (vl := len(value)) != self._shape:
-            #     yield (ERROR_MESSAGE_TYPE,
-            #             f'Expected length {self._len}, provided length {vl}',
-            #             parent_hints,
-            #             parent_values,
-            #             )
+            if value.shape != self._shape:
+                yield (ERROR_MESSAGE_TYPE,
+                        f'Expected shape {self._shape}, provided shape {value.shape}',
+                        parent_hints,
+                        parent_values,
+                        )
 
 
     # might accept regular expression objects as label entries?
