@@ -1336,6 +1336,59 @@ def test_validate_labels_h3():
     v = Require.Labels(..., ['2018-04-02', lambda s: 'q' in s.values])
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
+
+def test_validate_labels_h4():
+    records = (
+            (-3, True, 'y'),
+            (-100, False, 'x'),
+            (8, True, 'z'),
+            )
+
+    index = sf.IndexDate(('2022-01-03', '2022-02-05', '2023-04-02'))
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            dtypes=(np.int64, np.bool_, np.str_)
+            )
+
+    f.via_type_clinic.check(sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.bool_, np.str_])
+
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], sf.Index[np.str_], np.int64, np.bool_, np.str_])
+
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', 'c')], np.int64, np.bool_, np.str_])
+
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
+
+    with pytest.raises(TypeError):
+        f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
+
+# static_frame.core.type_clinic.ClinicError:
+# In Frame[Annotated[IndexDate, Labels('2022-01-03', ..., '2023-04-02')], Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])], int64, bool_, str_]
+# └── Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])]
+#     └── Labels(..., ['b', <lambda>], ['c', <lambda>])
+#         └── Validation failed of label 'b' with <lambda>
+
+    @sf.CallGuard.check
+    def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+        return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
+
+    assert proc(f) == 1
+
+    @sf.CallGuard.check
+    def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+        return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
+
+    with pytest.raises(TypeError):
+        assert proc(f) == 1
+
+# static_frame.core.type_clinic.ClinicError:
+# In args of (f: Frame[Annotated[IndexDate, Labels('2022-01-03', ..., '2023-04-02')], Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])], int64, bool_, str_]) -> int64
+# └── Frame[Annotated[IndexDate, Labels('2022-01-03', ..., '2023-04-02')], Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])], int64, bool_, str_]
+#     └── Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])]
+#         └── Labels(..., ['b', <lambda>], ['c', <lambda>])
+#             └── Validation failed of label 'b' with <lambda>
+
+
 #-------------------------------------------------------------------------------
 
 def test_validate_apply_a():

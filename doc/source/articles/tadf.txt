@@ -118,3 +118,18 @@ NumPy discussion on ordering of generic args:
 https://github.com/numpy/numpy/issues/16547
 
 
+# some examples
+# https://www.kaggle.com/datasets/paultimothymooney/stock-market-data/
+
+
+# pretty good but many column, including one with tuple
+# https://www.kaggle.com/datasets/sujaykapadnis/meteorites-dataset
+
+# buoy data
+# also many columns
+# https://www.ndbc.noaa.gov/download_data.php?filename=4625382023.txt.gz&dir=data/stdmet/Aug/
+
+
+
+# https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+
