@@ -1363,17 +1363,17 @@ def test_validate_labels_h4():
         f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
 
     @sf.CallGuard.check
-    def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+    def proc1(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
         return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
 
-    assert proc(f) == 1
+    assert proc1(f) == 1
 
     @sf.CallGuard.check
-    def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+    def proc2(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
         return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
 
     with pytest.raises(TypeError):
-        assert proc(f) == 1
+        assert proc2(f) == 1
 
 
 def test_validate_labels_i1():
