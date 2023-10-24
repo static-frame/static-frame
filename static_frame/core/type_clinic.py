@@ -443,7 +443,7 @@ class Require:
                         pos_e += 1
                     # expected is an Ellipses; either find next as match or continue with Ellipses
                     elif pos_e + 1 == len_e: # last expected is an ellipses
-                        # do not need to look ahead, evaluate valdators
+                        # do not need to look ahead, evaluate validators
                         for log in iter_validator_results(
                                 label=label_p,
                                 validators=label_validators,
@@ -488,9 +488,9 @@ class Require:
                                 break
 
                 else: # no break, exhausted all labels; evaluate final conditions
-                    if pos_e == len_e - 1 and self._labels[pos_e] is ...:
-                        pass # expected ends on an ellipses
-
+                    # NOTE: must re-split validators to handle all scenarios
+                    if pos_e + 1 == len_e and self._split_validators(self._labels[pos_e], pf)[0] is ...:
+                        pass # expected ending on an ellipses
                     elif pos_e < len_e: # if we have unevaluated expected
                         remainder = self._repr_remainder(self._labels[pos_e:])
                         yield (ERROR_MESSAGE_TYPE,
