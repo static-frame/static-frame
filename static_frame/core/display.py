@@ -22,7 +22,7 @@ from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import CallableToIterType
+from static_frame.core.util import TCallableToIter
 from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
@@ -501,9 +501,9 @@ class Display:
             index: 'IndexBase',
             columns: 'IndexBase',
             header: DisplayHeader,
-            column_forward_iter: CallableToIterType,
-            column_reverse_iter: CallableToIterType,
-            column_default_iter: CallableToIterType,
+            column_forward_iter: TCallableToIter,
+            column_reverse_iter: TCallableToIter,
+            column_default_iter: TCallableToIter,
             config: tp.Optional[DisplayConfig] = None,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> 'Display':

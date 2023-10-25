@@ -46,8 +46,8 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TName
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -130,7 +130,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def from_frames(cls,
             frames: tp.Iterable[TFrameAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
@@ -407,7 +407,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def __init__(self,
             items: IteratorFrameItems,
             *,
-            name: NameType = None,
+            name: TName = None,
             config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
@@ -432,7 +432,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     def _derive(self,
             gen: GeneratorFrameItems,
-            name: NameType = None,
+            name: TName = None,
             ) -> 'Batch':
         '''Utility for creating derived Batch
         '''
@@ -459,7 +459,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 
@@ -910,10 +910,10 @@ class Batch(ContainerOperand, StoreClientMixin):
         return InterfaceBatchAsType(self.apply)
 
     def rename(self,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             *,
-            index: NameType = NAME_DEFAULT,
-            columns: NameType = NAME_DEFAULT,
+            index: TName = NAME_DEFAULT,
+            columns: TName = NAME_DEFAULT,
             ) -> 'Batch':
         '''
         Return a new Batch with an updated name attribute.
@@ -1377,8 +1377,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             )
 
     def reindex(self,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             *,
             fill_value: object = np.nan,
             own_index: bool = False,
@@ -1726,7 +1726,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def to_series(self, *,
         dtype: TDtypeSpecifier = None,
-        name: NameType = None,
+        name: TName = None,
         index_constructor: TIndexCtorSpecifier = None
         ) -> TSeriesAny:
         '''
@@ -1741,11 +1741,11 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_frame(self, *,
             axis: int = 0,
             union: bool = True,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            columns: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            columns: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
         ) -> TFrameAny:

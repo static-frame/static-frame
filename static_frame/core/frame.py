@@ -145,14 +145,14 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import FrameInitializer
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IndexSpecifier
+from static_frame.core.util import TCallableOrCallableMap
+from static_frame.core.util import TFrameInitializer
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TIndexSpecifier
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -274,8 +274,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def _from_zero_size_shape(cls,
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             index_constructor: TIndexCtorSpecifier = None,
@@ -323,8 +323,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_element(cls,
             element: tp.Any,
             *,
-            index: IndexInitializer,
-            columns: IndexInitializer,
+            index: TIndexInitializer,
+            columns: TIndexInitializer,
             dtype: TDtypeSpecifier = None,
             name: TLabel = None,
             index_constructor: TIndexCtorSpecifier = None,
@@ -454,7 +454,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: IndexInitOrAutoType = None,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             fill_value: tp.Any = np.nan,
             consolidate_blocks: bool = False,
             ) -> tp.Self:
@@ -634,7 +634,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             union: bool = True,
-            name: NameType = None,
+            name: TName = None,
             fill_value: tp.Any = np.nan,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             columns_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -717,10 +717,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_overlay(cls,
             containers: tp.Iterable[TFrameAny],
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             union: bool = True,
-            name: NameType = None,
+            name: TName = None,
             func: tp.Callable[[TNDArrayAny], TNDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> tp.Self:
@@ -832,8 +832,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_records(cls,
             records: tp.Iterable[tp.Any],
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -973,7 +973,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_dict_records(cls,
             records: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
             *,
-            index: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             fill_value: tp.Any = np.nan,
@@ -1070,7 +1070,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_records_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
-            columns: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -1148,7 +1148,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
             *,
-            index: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
             fill_value: tp.Any = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1243,7 +1243,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_dict(cls,
             mapping: tp.Mapping[tp.Any, tp.Iterable[tp.Any]],
             *,
-            index: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
             fill_value: object = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1280,8 +1280,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_fields(cls,
             fields: tp.Iterable[tp.Iterable[tp.Any]],
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             fill_value: tp.Any = np.nan,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1367,7 +1367,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_dict_fields(cls,
             fields: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
             *,
-            columns: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             fill_value: tp.Any = np.nan,
@@ -1456,7 +1456,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             array: TNDArrayAny,
             *,
             index_depth: int = 0,
-            index_column_first: tp.Optional[IndexSpecifier] = None,
+            index_column_first: tp.Optional[TIndexSpecifier] = None,
             dtypes: TDtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -1606,7 +1606,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             array: TNDArrayAny,
             *,
             index_depth: int = 0,
-            index_column_first: tp.Optional[IndexSpecifier] = None,
+            index_column_first: tp.Optional[TIndexSpecifier] = None,
             index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_constructors: TIndexCtorSpecifiers = None,
@@ -1655,11 +1655,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[TLabel, TLabel], tp.Any]],
             *,
-            index: IndexInitializer,
-            columns: IndexInitializer,
+            index: TIndexInitializer,
+            columns: TIndexInitializer,
             dtype: TDtypesSpecifier = None,
             axis: tp.Optional[int] = None,
-            name: NameType = None,
+            name: TName = None,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -2057,7 +2057,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_json_records(cls,
             json_data: tp.Union[str, StringIO],
             *,
-            index: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -2094,8 +2094,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_json_values(cls,
             json_data: tp.Union[str, StringIO],
             *,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
             consolidate_blocks: bool = False,
@@ -2598,7 +2598,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             decimal_char: str = '.',
             encoding: tp.Optional[str] = None,
             dtypes: TDtypesSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = None,
             ) -> tp.Self:
@@ -2835,7 +2835,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
             dtypes: TDtypesSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> tp.Self:
@@ -3261,11 +3261,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            data: FrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
+            data: TFrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
             *,
             index: IndexInitOrAutoType = None,
             columns: IndexInitOrAutoType = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             own_data: bool = False,
@@ -3461,15 +3461,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 
     def rename(self,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             *,
-            index: NameType = NAME_DEFAULT,
-            columns: NameType = NAME_DEFAULT,
+            index: TName = NAME_DEFAULT,
+            columns: TName = NAME_DEFAULT,
             ) -> TFrameAny:
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
@@ -4063,8 +4063,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='reindex', class_name='Frame')
     def reindex(self,
-            index: tp.Optional[IndexInitializer] = None,
-            columns: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
+            columns: tp.Optional[TIndexInitializer] = None,
             *,
             fill_value: tp.Any = np.nan,
             own_index: bool = False,
@@ -4317,7 +4317,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_opposite = self._index
             target_default_ctr = self._COLUMNS_CONSTRUCTOR
 
-        name_prior: tp.Tuple[NameType, ...]
+        name_prior: tp.Tuple[TName, ...]
         ih_index_constructors: tp.List[TIndexCtorSpecifier]
 
         if index_target.depth == 1:
@@ -4425,7 +4425,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if index_target._recache:
                 index_target._update_array_cache()
 
-            label_src: tp.Tuple[NameType] = (index_target.name if index_target._name_is_names() # type: ignore
+            label_src: tp.Tuple[TName] = (index_target.name if index_target._name_is_names() # type: ignore
                     else index_target.names)
 
             if isinstance(depth_level, INT_TYPES):
@@ -7687,7 +7687,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_fields: TKeyOrKeys = (),
             data_fields: TKeyOrKeys = (),
             *,
-            func: tp.Optional[CallableOrCallableMap] = np.nansum,
+            func: tp.Optional[TCallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,
             index_constructor: TIndexCtorSpecifier = None,
             ) -> TFrameAny:
@@ -8550,7 +8550,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _to_frame(self,
             constructor: tp.Type[TFrameAny],
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameAny:
 
         if self.__class__ is constructor and constructor in (Frame, FrameHE):
@@ -8572,7 +8572,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_frame(self,
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameAny:
         '''
         Return ``Frame`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
@@ -8581,7 +8581,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_frame_he(self,
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameHEAny:
         '''
         Return a ``FrameHE`` instance from this ``Frame``. If this ``Frame`` is immutable the same instance will be returned.
@@ -8590,7 +8590,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_frame_go(self,
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameGOAny:
         '''
         Return a ``FrameGO`` instance from this ``Frame``.
@@ -8600,7 +8600,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def to_series(self,
             *,
             index_constructor: TIndexCtor = Index,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TSeriesAny:
         '''
         Return a ``Series`` representation of this ``Frame``, where the index is extended with columns to from tuple labels for each element in the ``Frame``.

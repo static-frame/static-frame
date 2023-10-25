@@ -33,11 +33,11 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
-from static_frame.core.util import ExplicitConstructor
+from static_frame.core.util import TExplicitIndexCtor
 from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import IndexInitializer
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -465,10 +465,10 @@ def index_from_optional_constructor(
         value: 'IndexInitOrAutoType',
         *,
         default_constructor: TIndexCtorSpecifier,
-        explicit_constructor: ExplicitConstructor = None,
+        explicit_constructor: TExplicitIndexCtor = None,
         ) -> 'IndexBase':
     '''
-    Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
+    Given a value that is an TIndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
@@ -516,7 +516,7 @@ def index_from_optional_constructor(
 
 def constructor_from_optional_constructor(
         default_constructor: TIndexCtorSpecifier,
-        explicit_constructor: ExplicitConstructor = None,
+        explicit_constructor: TExplicitIndexCtor = None,
         ) -> TIndexCtor:
     '''Return a constructor, resolving default and explicit constructor .
     '''
@@ -530,7 +530,7 @@ def constructor_from_optional_constructor(
     return func
 
 def index_from_optional_constructors(
-        value: IndexInitializer,
+        value: TIndexInitializer,
         *,
         depth: int,
         default_constructor: TIndexCtorSpecifier,
@@ -542,7 +542,7 @@ def index_from_optional_constructors(
         index = None
         own_index = False
     elif depth == 1:
-        explicit_constructor: ExplicitConstructor
+        explicit_constructor: TExplicitIndexCtor
         if not explicit_constructors:
             explicit_constructor = None
         elif callable(explicit_constructors):
@@ -1398,7 +1398,7 @@ class IMTOAdapter:
 
     def __init__(self,
             values: TNDArrayAny,
-            name: NameType,
+            name: TName,
             depth: int,
             ndim: int,
             ):
@@ -1422,7 +1422,7 @@ class IMTOAdapter:
 def imto_adapter_factory(
         source: tp.Union['IndexBase', TNDArrayAny, tp.Iterable[TLabel]],
         depth: int,
-        name: NameType,
+        name: TName,
         ndim: int,
         ) -> tp.Union['IndexBase', IMTOAdapter]:
     '''
@@ -1646,7 +1646,7 @@ def apex_to_name(
         depth_level: tp.Optional[TDepthLevel],
         axis: int, # 0 is by row (for index), 1 is by column (for columns)
         axis_depth: int,
-        ) -> NameType:
+        ) -> TName:
     '''
     Utility for translating apex values (the upper left corner created be index/columns) in the appropriate name.
     '''

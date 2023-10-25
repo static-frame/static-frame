@@ -83,10 +83,10 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IndexInitializer
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import NameType
-from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import TName
+from static_frame.core.util import TSeriesInitializer
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
@@ -169,9 +169,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def from_element(cls,
             element: tp.Any,
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactory],
+            index: tp.Union[TIndexInitializer, IndexAutoFactory],
             dtype: TDtypeSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             own_index: bool = False,
             ) -> tp.Self:
@@ -209,7 +209,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
             *,
             dtype: TDtypeSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tp.Self:
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
@@ -245,7 +245,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             delimiter: str,
             index: tp.Optional[IndexInitOrAutoType] = None,
             dtype: TDtypeSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             skip_initial_space: bool = False,
             quoting: int = csv.QUOTE_MINIMAL,
@@ -294,7 +294,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             mapping: tp.Mapping[tp.Any, tp.Any],
             *,
             dtype: TDtypeSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tp.Self:
         '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
@@ -317,7 +317,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             index: tp.Optional[IndexInitOrAutoType] = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.
@@ -382,7 +382,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def from_concat_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, TSeriesAny]],
             *,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None
             ) -> tp.Self:
         '''
@@ -430,9 +430,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def from_overlay(cls,
             containers: tp.Iterable[tp.Self],
             *,
-            index: tp.Optional[IndexInitializer] = None,
+            index: tp.Optional[TIndexInitializer] = None,
             union: bool = True,
-            name: NameType = None,
+            name: TName = None,
             func: tp.Callable[[TNDArrayAny], TNDArrayAny] = isna_array,
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> tp.Self:
@@ -483,7 +483,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             index: IndexInitOrAutoType = None,
             index_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             own_data: bool = False) -> tp.Self:
         '''Given a Pandas Series, return a Series.
 
@@ -534,10 +534,10 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            values: SeriesInitializer,
+            values: TSeriesInitializer,
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
-            name: NameType = NAME_DEFAULT,
+            index: tp.Union[TIndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
+            name: TName = NAME_DEFAULT,
             dtype: TDtypeSpecifier = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             own_index: bool = False
@@ -687,14 +687,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 
     def rename(self,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             *,
-            index: NameType = NAME_DEFAULT,
+            index: TName = NAME_DEFAULT,
             ) -> tp.Self:
         '''
         Return a new Series with an updated name attribute.
@@ -1109,7 +1109,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(selector='reindex', class_name='Series')
     def reindex(self,
-            index: IndexInitializer,
+            index: TIndexInitializer,
             *,
             fill_value: tp.Any = np.nan,
             own_index: bool = False,
@@ -1183,7 +1183,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index: {relabel_input}
         '''
         own_index = False
-        index_init: IndexInitializer | None
+        index_init: TIndexInitializer | None
         if index is IndexAutoFactory:
             index_init = None
         elif index is None:
@@ -3321,7 +3321,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> FrameType:
         '''
         Common function for creating :obj:`Frame` from :obj:`Series`.
@@ -3399,7 +3399,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameAny:
         '''
         Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3431,7 +3431,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameGOAny:
         '''
         Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
@@ -3461,7 +3461,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             index_constructor: TIndexCtorSpecifier = None,
             columns: IndexInitOrAutoType = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> TFrameHEAny:
         '''
         Return :obj:`FrameHE` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.

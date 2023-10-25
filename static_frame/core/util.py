@@ -225,12 +225,9 @@ INT_TYPES = (int, np.integer) # np.integer catches all np int
 FLOAT_TYPES = (float, np.floating) # np.floating catches all np float
 COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all np complex
 INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
-InexactTypes = tp.Union[float, complex, np.inexact]
 NUMERIC_TYPES = (int, float, complex, np.number)
-
 BOOL_TYPES = (bool, np.bool_)
 DICTLIKE_TYPES = (abc.Set, dict, FrozenAutoMap)
-
 
 # iterables that cannot be used in NP array constructors; assumes that dictlike types have already been identified
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
@@ -297,8 +294,8 @@ TLocSelector = tp.Union[
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 TLocSelectorCompound = tp.Union[TLocSelector, tp.Tuple[TLocSelector, TLocSelector]]
 
-KeyTransformType = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
-NameType = TLabel # include None
+TKeyTransform = tp.Optional[tp.Callable[[TLocSelector], TLocSelector]]
+TName = TLabel # include name default?
 
 TTupleCtor = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
@@ -309,7 +306,7 @@ TUFunc = tp.Callable[..., np.ndarray]
 TCallableAny = tp.Callable[..., tp.Any]
 
 TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
-CallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']
+TCallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']
 
 TShape = tp.Union[int, tp.Tuple[int, ...]]
 
@@ -327,7 +324,7 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
-CallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
+TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
@@ -418,10 +415,10 @@ TDtypesSpecifier = tp.Optional[tp.Union[
 TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
 TDepthLevel = tp.Union[int, tp.List[int]]
 
-CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
+TCallableToIter = tp.Callable[[], tp.Iterable[tp.Any]]
 
-IndexSpecifier = tp.Union[int, TLabel] # specify a postiion in an index
-IndexInitializer = tp.Union[
+TIndexSpecifier = tp.Union[int, TLabel] # specify a position in an index
+TIndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[TLabel],
         tp.Iterable[tp.Sequence[TLabel]], # only for IndexHierarchy
@@ -440,7 +437,7 @@ TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
         tp.Type['IndexAutoConstructorFactory'],
         ]
 
-ExplicitConstructor = tp.Union[
+TExplicitIndexCtor = tp.Union[
         TIndexCtorSpecifier,
         'IndexConstructorFactoryBase',
         tp.Type['IndexConstructorFactoryBase'],
@@ -448,7 +445,7 @@ ExplicitConstructor = tp.Union[
         ]
 # take integers for size; otherwise, extract size from any other index initializer
 
-SeriesInitializer = tp.Union[
+TSeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
         np.ndarray,
         ]
@@ -458,7 +455,7 @@ FRAME_INITIALIZER_DEFAULT = object()
 CONTINUATION_TOKEN_INACTIVE = object()
 ZIP_LONGEST_DEFAULT = object()
 
-FrameInitializer = tp.Union[
+TFrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
         np.ndarray,
         'TypeBlocks',
@@ -783,7 +780,7 @@ def frozenset_filter(src: tp.Iterable[_T]) -> tp.FrozenSet[_T]:
 #     return src_array # keep it as is
 
 
-# def name_filter(name: NameType) -> NameType:
+# def name_filter(name: TName) -> TName:
 #     '''
 #     For name attributes on containers, only permit recursively hashable objects.
 #     '''
@@ -851,9 +848,9 @@ def frozenset_filter(src: tp.Iterable[_T]) -> tp.FrozenSet[_T]:
 #         last = v
 
 def gen_skip_middle(
-        forward_iter: CallableToIterType,
+        forward_iter: TCallableToIter,
         forward_count: int,
-        reverse_iter: CallableToIterType,
+        reverse_iter: TCallableToIter,
         reverse_count: int,
         center_sentinel: tp.Any) -> tp.Iterator[tp.Any]:
     '''

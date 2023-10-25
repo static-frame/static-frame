@@ -54,9 +54,9 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TKeyTransform
+from static_frame.core.util import TName
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
@@ -188,7 +188,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     _labels: TNDArrayAny
     _positions: TNDArrayAny
     _recache: bool
-    _name: NameType
+    _name: TName
     _argsort_cache: tp.Optional[_ArgsortCache]
 
     #---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def from_labels(cls: tp.Type[I],
             labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: NameType = None
+            name: TName = None
             ) -> I:
         '''
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
@@ -273,10 +273,10 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            labels: IndexInitializer,
+            labels: TIndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             dtype: TDtypeSpecifier = None,
             ) -> None:
         '''Initializer.
@@ -426,7 +426,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: I, name: NameType) -> I:
+    def rename(self: I, name: TName) -> I:
         '''
         Return a new Frame with an updated name attribute.
         '''
@@ -850,7 +850,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     def _loc_to_iloc(self,
             key: TLocSelector,
-            key_transform: KeyTransformType = None,
+            key_transform: TKeyTransform = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -1606,7 +1606,7 @@ Index._MUTABLE_CONSTRUCTOR = IndexGO
 #-------------------------------------------------------------------------------
 
 def _index_initializer_needs_init(
-        value: tp.Optional[IndexInitializer]
+        value: tp.Optional[TIndexInitializer]
         ) -> bool:
     '''Determine if value is a non-empty index initializer. This could almost just be a truthy test, but ndarrays need to be handled in isolation. Generators should return True.
     '''

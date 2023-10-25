@@ -10,10 +10,10 @@ from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 from static_frame.core.index_datetime import IndexDatetime  # base class
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import CallableOrMapping
-from static_frame.core.util import ExplicitConstructor
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
+from static_frame.core.util import TCallableOrMapping
+from static_frame.core.util import TExplicitIndexCtor
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TName
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
@@ -24,7 +24,7 @@ class IndexConstructorFactoryBase:
     def __call__(self,
             labels: tp.Iterable[TLabel],
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
             ) -> IndexBase:
         raise NotImplementedError() #pragma: no cover
@@ -36,13 +36,13 @@ class IndexDefaultConstructorFactory(IndexConstructorFactoryBase):
 
     __slots__ = ('_name',)
 
-    def __init__(self, name: NameType):
+    def __init__(self, name: TName):
         self._name = name
 
     def __call__(self,
             labels: tp.Iterable[TLabel],
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase],
             ) -> IndexBase:
         '''Call the passed constructor with the ``name``.
@@ -56,14 +56,14 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     '''
     __slots__ = ('_name',)
 
-    def __init__(self, name: NameType):
+    def __init__(self, name: TName):
         self._name = name
 
     @staticmethod
     def to_index(labels: tp.Iterable[TLabel],
             *,
             default_constructor: tp.Type[IndexBase],
-            name: NameType = None,
+            name: TName = None,
             ) -> IndexBase:
         '''Create and return the ``Index`` based on the array ``dtype``
         '''
@@ -80,7 +80,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
     def __call__(self,
             labels: tp.Iterable[TLabel],
             *,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             default_constructor: tp.Type[IndexBase] = Index,
             ) -> IndexBase:
         '''Call the passeed constructor with the ``name``.
@@ -109,7 +109,7 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer, # size
             *,
             default_constructor: TIndexCtorSpecifier,
-            explicit_constructor: ExplicitConstructor = None,
+            explicit_constructor: TExplicitIndexCtor = None,
             ) -> IndexBase:
 
         # get an immutable array, shared from positions allocator
@@ -139,7 +139,7 @@ class IndexAutoFactory:
     def __init__(self,
             size: IndexAutoInitializer,
             *,
-            name: NameType = None,
+            name: TName = None,
             ):
         self._size = size
         self._name = name
@@ -147,7 +147,7 @@ class IndexAutoFactory:
     def to_index(self,
             *,
             default_constructor: TIndexCtorSpecifier,
-            explicit_constructor: ExplicitConstructor = None,
+            explicit_constructor: TExplicitIndexCtor = None,
             ) -> IndexBase:
         '''Called by index_from_optional_constructor.
         '''
@@ -159,8 +159,8 @@ class IndexAutoFactory:
 
 
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]
-RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
+RelabelInput = tp.Union[TCallableOrMapping, IndexAutoFactoryType, TIndexInitializer]
 
-IndexInitOrAutoType = tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType, IndexAutoFactory]]
+IndexInitOrAutoType = tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType, IndexAutoFactory]]
 
 

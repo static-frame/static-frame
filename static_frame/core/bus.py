@@ -50,8 +50,8 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TName
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
@@ -107,7 +107,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     _index: IndexBase
     _store: tp.Optional[Store]
     _config: StoreConfigMap
-    _name: NameType
+    _name: TName
 
     STATIC = False
     _NDIM: int = 1
@@ -117,7 +117,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tp.Self:
         '''Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
@@ -144,7 +144,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             *,
             index_constructor: TIndexCtorSpecifier = None,
             config: StoreConfigMapInitializer = None,
-            name: NameType = None,
+            name: TName = None,
             ) -> tp.Self:
         '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
@@ -161,7 +161,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def from_dict(cls,
             mapping: tp.Dict[TLabel, TFrameAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> tp.Self:
         '''Bus construction from a mapping of labels and :obj:`Frame`.
@@ -205,8 +205,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def from_concat(cls,
             containers: tp.Iterable[TBusAny],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = NAME_DEFAULT,
+            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            name: TName = NAME_DEFAULT,
             ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
@@ -429,9 +429,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def __init__(self,
             frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
             *,
-            index: IndexInitializer,
+            index: TIndexInitializer,
             index_constructor: TIndexCtorSpecifier = None,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -564,11 +564,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 
-    def rename(self, name: NameType) -> tp.Self:
+    def rename(self, name: TName) -> tp.Self:
         '''
         Return a new :obj:`Bus` with an updated name attribute.
         '''
@@ -639,7 +639,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     @doc_inject(selector='reindex', class_name='Bus')
     def reindex(self,
-            index: IndexInitializer,
+            index: TIndexInitializer,
             *,
             fill_value: tp.Any,
             own_index: bool = False,

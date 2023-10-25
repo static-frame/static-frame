@@ -30,9 +30,9 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import DateInitializer
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TKeyTransform
+from static_frame.core.util import TName
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
@@ -66,10 +66,10 @@ class IndexDatetime(Index[np.datetime64]):
     __slots__ = ()
 
     def __init__(self,
-            labels: IndexInitializer,
+            labels: TIndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> None:
         '''Initializer.
 
@@ -146,7 +146,7 @@ class IndexDatetime(Index[np.datetime64]):
 
     def _loc_to_iloc(self,  # type: ignore
             key: TLocSelector,
-            key_transform: KeyTransformType = key_to_datetime_key,
+            key_transform: TKeyTransform = key_to_datetime_key,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -294,7 +294,7 @@ class IndexYear(IndexDatetime):
 
     def _loc_to_iloc(self,  # type: ignore
             key: TLocSelector,
-            key_transform: KeyTransformType = key_to_datetime_key_year,
+            key_transform: TKeyTransform = key_to_datetime_key_year,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''

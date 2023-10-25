@@ -38,8 +38,8 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TName
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
@@ -80,7 +80,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def from_buses(cls,
             buses: tp.Iterable[TBusAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
             ) -> tp.Self:
@@ -114,8 +114,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def from_concat(cls,
             containers: tp.Iterable[TYarnAny],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = NAME_DEFAULT,
+            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            name: TName = NAME_DEFAULT,
             deepcopy_from_bus: bool = False,
             ) -> tp.Self:
         '''
@@ -155,7 +155,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def __init__(self,
             series: tp.Union[TSeriesAny, tp.Iterable[TBusAny]],
             *,
-            index: IndexInitializer | IndexAutoFactoryType | None = None,
+            index: TIndexInitializer | IndexAutoFactoryType | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
@@ -233,11 +233,11 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._series._name
 
-    def rename(self, name: NameType) -> tp.Self:
+    def rename(self, name: TName) -> tp.Self:
         '''
         Return a new :obj:`Yarn` with an updated name attribute.
 

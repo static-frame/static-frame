@@ -112,11 +112,11 @@ from static_frame.core.type_clinic import ClinicError as ClinicError
 from static_frame.core.type_clinic import ClinicResult as ClinicResult
 from static_frame.core.type_clinic import Require as Require
 from static_frame.core.type_clinic import TypeClinic as TypeClinic
-from static_frame.core.util import CallableOrMapping as CallableOrMapping
-from static_frame.core.util import FrameInitializer as FrameInitializer
-from static_frame.core.util import IndexInitializer as IndexInitializer
-from static_frame.core.util import IndexSpecifier as IndexSpecifier
-from static_frame.core.util import SeriesInitializer as SeriesInitializer
+from static_frame.core.util import TCallableOrMapping as TCallableOrMapping
+from static_frame.core.util import TFrameInitializer as TFrameInitializer
+from static_frame.core.util import TIndexInitializer as TIndexInitializer
+from static_frame.core.util import TIndexSpecifier as TIndexSpecifier
+from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TKeyOrKeys as TKeyOrKeys
 from static_frame.core.util import TLocSelector as TLocSelector

@@ -53,7 +53,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
@@ -112,7 +112,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             chunksize: int,
             retain_labels: bool,
             axis: int = 0,
-            name: NameType = None,
+            name: TName = None,
             label_extractor: tp.Optional[tp.Callable[[IndexBase], TLabel]] = None,
             config: StoreConfigMapInitializer = None,
             deepcopy_from_bus: bool = False,
@@ -437,7 +437,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             axis: int = 0,
-            name: NameType = None,
+            name: TName = None,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
@@ -456,7 +456,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             frames: tp.Iterable[TFrameAny],
             *,
             axis: int = 0,
-            name: NameType = None,
+            name: TName = None,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
             ) -> 'Quilt':
@@ -542,11 +542,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._bus.name
 
-    def rename(self, name: NameType) -> 'Quilt':
+    def rename(self, name: TName) -> 'Quilt':
         '''
         Return a new :obj:`Quilt` with an updated name attribute.
 

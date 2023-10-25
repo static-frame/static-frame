@@ -24,9 +24,9 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import KeyTransformType
+from static_frame.core.util import TKeyTransform
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
@@ -59,7 +59,7 @@ class IndexBase(ContainerOperandSequence):
     #---------------------------------------------------------------------------
 
     _recache: bool
-    _name: NameType
+    _name: TName
     depth: int
     _NDIM: int
 
@@ -226,7 +226,7 @@ class IndexBase(ContainerOperandSequence):
     def relabel(self: I, mapper: 'RelabelInput') -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def rename(self: I, name: NameType) -> I:
+    def rename(self: I, name: TName) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def _drop_iloc(self: I, key: TILocSelector) -> I:
@@ -336,7 +336,7 @@ class IndexBase(ContainerOperandSequence):
 
     def _loc_to_iloc(self,
             key: TLocSelector,
-            key_transform: KeyTransformType = None,
+            key_transform: TKeyTransform = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
@@ -362,7 +362,7 @@ class IndexBase(ContainerOperandSequence):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 

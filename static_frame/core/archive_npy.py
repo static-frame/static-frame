@@ -29,7 +29,7 @@ from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TLabel
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import concat_resolved
@@ -646,7 +646,7 @@ class ArchiveIndexConverter:
             key_types: str,
             depth: int,
             cls_index: tp.Type['IndexBase'],
-            name: NameType,
+            name: TName,
             ) -> tp.Optional['IndexBase']:
         '''Build index or columns.
         '''
@@ -983,7 +983,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             *,
             index: TNDArrayAny | IndexBase | None = None,
             columns: TNDArrayAny | IndexBase | None = None,
-            name: NameType = None,
+            name: TName = None,
             axis: int = 0,
             ) -> None:
         '''
@@ -1105,7 +1105,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             include_columns: bool = True,
             axis: int = 0,
             union: bool = True,
-            name: NameType = None,
+            name: TName = None,
             fill_value: object = np.nan,
             ) -> None:
         '''Given an iterable of Frames, write out an NPZ or NPY directly, without building up an intermediary Frame. If axis 0, the Frames must be block compatible; if axis 1, the Frames must have the same number of rows. For both axis, if included, concatenated indices must be unique or aligned.

@@ -23,7 +23,7 @@ from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import INT64_MAX
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-from static_frame.core.util import NameType
+from static_frame.core.util import TName
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TUFunc
 from static_frame.core.util import ufunc_all
@@ -73,7 +73,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         # return memory_total(self, format=MeasureFormat.REFERENCED)
 
     @property
-    def name(self) -> NameType:
+    def name(self) -> TName:
         return None
 
     def _memory_label_component_pairs(self,

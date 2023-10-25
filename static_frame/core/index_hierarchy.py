@@ -64,9 +64,9 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NameType
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TKeyTransform
+from static_frame.core.util import TName
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel
@@ -246,7 +246,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     _indices: tp.List[Index[tp.Any]] # Of index objects
     _indexers: TNDArrayAny # 2D - integer arrays
-    _name: NameType
+    _name: TName
     _blocks: TypeBlocks
     _recache: bool
     _values: tp.Optional[TNDArrayAny] # Used to cache the property `values`
@@ -363,8 +363,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @classmethod
     def from_product(cls,
-            *levels: IndexInitializer,
-            name: NameType = None,
+            *levels: TIndexInitializer,
+            name: TName = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
         '''
@@ -425,7 +425,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def from_tree(cls,
             tree: TreeNodeT,
             *,
-            name: NameType = None,
+            name: TName = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
         '''
@@ -444,7 +444,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def _from_empty(cls,
             empty_labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: NameType = None,
+            name: TName = None,
             depth_reference: tp.Optional[int] = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
@@ -497,7 +497,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def from_values_per_depth(cls,
             values: tp.Union[TNDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | TNDArrayAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             depth_reference: int | None = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
@@ -576,7 +576,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: NameType = None,
+            name: TName = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
             depth_reference: tp.Optional[int] = None,
@@ -682,7 +682,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             items: tp.Iterable[tp.Tuple[TLabel, Index[tp.Any]]],
             *,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            name: NameType = None,
+            name: TName = None,
             ) -> tp.Self:
         labels: tp.List[TLabel] = []
         index_inner: tp.Optional[IndexGO[tp.Any]] = None  # We will grow this in-place
@@ -743,7 +743,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             items: tp.Iterable[tp.Tuple[TLabel, IndexBase]],
             *,
             index_constructor: TIndexCtorSpecifier = None,
-            name: NameType = None,
+            name: TName = None,
             ) -> tp.Self:
         '''
         Given an iterable of pairs of label, :obj:`IndexBase`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1. While the provided :obj:`IndexBase` can be `Index` or `IndexHierarchy`, across all pairs all depths must be the same.
@@ -831,7 +831,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             labels: tp.Iterable[str],
             *,
             delimiter: str = ' ',
-            name: NameType = None,
+            name: TName = None,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
         '''
@@ -892,7 +892,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def _from_type_blocks(cls,
             blocks: TypeBlocks,
             *,
-            name: NameType = None,
+            name: TName = None,
             index_constructors: TIndexCtorSpecifiers = None,
             own_blocks: bool = False,
             name_interleave: bool = False,
@@ -973,7 +973,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
             *,
             indexers: TNDArrayAny = EMPTY_ARRAY_INT,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
             ) -> None:
@@ -1153,7 +1153,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # name interface
 
     def rename(self,
-            name: NameType,
+            name: TName,
             ) -> tp.Self:
         '''
         Return a new IndexHierarchy with an updated name attribute.
@@ -1305,7 +1305,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             and isinstance(self._name, tuple)
             and len(self._name) == self.depth
         ):
-            labels: NameType = self._name
+            labels: TName = self._name
         else:
             labels = None
 
@@ -1583,7 +1583,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             # Prefer to use `@functools.cached_property`, but that is not supported
             from static_frame.core.series import Series
 
-            labels: NameType
+            labels: TName
 
             if (self._name
                     and isinstance(self._name, tuple)
@@ -1914,7 +1914,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def _loc_to_iloc(self,
             key: TLocSelector | ILoc | HLoc,
-            key_transform: KeyTransformType = None,
+            key_transform: TKeyTransform = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -2837,7 +2837,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         if self._name_is_names():
             if count < 0:
-                name: NameType = self._name[:count] # type: ignore
+                name: TName = self._name[:count] # type: ignore
             elif count > 0:
                 name = self._name[count:] # type: ignore
             if len(name) == 1: # type: ignore
