@@ -1454,7 +1454,7 @@ def test_validate_labels_i4():
 
 #-------------------------------------------------------------------------------
 
-def test_validate_shape_a1():
+def test_validate_shape_a():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1466,8 +1466,26 @@ def test_validate_shape_a1():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
     v1 = Require.Shape(..., 4)
-    assert not tuple(v1._iter_errors(f, None, (), ()))
+    assert not tuple(v1._iter_errors(f, None, (), ()))``
 
+    v2 = Require.Shape(..., 3)
+    assert tuple(v2._iter_errors(f, None, (), ()))
+
+    v3 = Require.Shape(3, 3)
+    assert tuple(v3._iter_errors(f, None, (), ()))
+
+    v4 = Require.Shape(3, 4)
+    assert not tuple(v4._iter_errors(f, None, (), ()))
+
+    v5 = Require.Shape(3, ...)
+    assert not tuple(v5._iter_errors(f, None, (), ()))
+
+    v6 = Require.Shape(5, ...)
+    assert tuple(v6._iter_errors(f, None, (), ()))
+
+def test_validate_shape_b():
+
+    v1 = Require.Shape(None, 4)
 
 
 #-------------------------------------------------------------------------------
