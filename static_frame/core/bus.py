@@ -50,14 +50,14 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TName
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 

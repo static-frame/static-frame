@@ -53,7 +53,6 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TName
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
@@ -63,6 +62,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
+from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import get_tuple_constructor

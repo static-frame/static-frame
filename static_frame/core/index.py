@@ -54,9 +54,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyTransform
-from static_frame.core.util import TName
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
@@ -65,9 +62,12 @@ from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyIterable
+from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import argsort_array
 from static_frame.core.util import array2d_to_tuples

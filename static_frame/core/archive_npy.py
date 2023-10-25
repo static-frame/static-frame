@@ -29,8 +29,8 @@ from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TName
 from static_frame.core.util import TLabel
+from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import concat_resolved
 

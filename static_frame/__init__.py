@@ -41,9 +41,9 @@ from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
 from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
-from static_frame.core.index_auto import TIndexAutoFactory as TIndexAutoFactory
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
 from static_frame.core.index_auto import IndexDefaultConstructorFactory as IndexDefaultConstructorFactory
+from static_frame.core.index_auto import TIndexAutoFactory as TIndexAutoFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexHour as IndexHour
@@ -113,15 +113,15 @@ from static_frame.core.type_clinic import ClinicResult as ClinicResult
 from static_frame.core.type_clinic import Require as Require
 from static_frame.core.type_clinic import TypeClinic as TypeClinic
 from static_frame.core.util import TCallableOrMapping as TCallableOrMapping
+from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TFrameInitializer as TFrameInitializer
 from static_frame.core.util import TIndexInitializer as TIndexInitializer
 from static_frame.core.util import TIndexSpecifier as TIndexSpecifier
-from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
-from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TKeyOrKeys as TKeyOrKeys
 from static_frame.core.util import TLocSelector as TLocSelector
 from static_frame.core.util import TLocSelectorCompound as TLocSelectorCompound
 from static_frame.core.util import TPathSpecifierOrFileLike as TPathSpecifierOrFileLike
+from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 

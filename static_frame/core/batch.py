@@ -46,8 +46,6 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TName
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -55,10 +53,12 @@ from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyOrKeys
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
