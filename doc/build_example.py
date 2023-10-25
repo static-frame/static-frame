@@ -6387,36 +6387,44 @@ class ExGenRequire(ExGen):
 
         if attr == 'Apply()':
             yield 'import typing as tp'
-            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()'
-            yield 'f2 = sf.CallGuard.check(f1)'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
-            yield 'f2(ix1)'
+            yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
-            yield 'f2(ix2)'
+            yield 'func2(ix2)'
         elif attr == 'Labels()':
             yield 'import typing as tp'
-            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()'
-            yield 'f2 = sf.CallGuard.check(f1)'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
-            yield 'f2(ix1)'
+            yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
-            yield 'f2(ix2)'
+            yield 'func2(ix2)'
         elif attr == 'Len()':
             yield 'import typing as tp'
-            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()'
-            yield 'f2 = sf.CallGuard.check(f1)'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
-            yield 'f2(ix1)'
+            yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
-            yield 'f2(ix2)'
+            yield 'func2(ix2)'
         elif attr == 'Name()':
             yield 'import typing as tp'
-            yield 'def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()'
-            yield 'f2 = sf.CallGuard.check(f1)'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
-            yield 'f2(ix1)'
+            yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
-            yield 'f2(ix2)'
+            yield 'func2(ix2)'
+        elif attr == 'Shape()':
+            yield 'import typing as tp'
+            yield 'def func1(f: tp.Annotated[sf.TFrameAny, sf.Require.Shape(3, 2)]): return f.sum().sum()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"f1 = sf.Frame({kwa(FRAME_INIT_A1)})"
+            yield 'func2(f1)'
+            yield f"f2 = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_P)})"
+            yield 'func2(f2)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
