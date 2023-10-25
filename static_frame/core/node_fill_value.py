@@ -18,7 +18,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_selector import FrameOrSeries  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_selector import TFrameOrSeries  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceBatchTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
@@ -197,7 +197,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
                 name=column_key, # type: ignore
                 )
 
-    def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> FrameOrSeries:
+    def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> TFrameOrSeries:
         if isinstance(key, tuple):
             row_key, column_key = key # pyright: ignore
         else:
@@ -207,14 +207,14 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterGetItemLocReduces[FrameOrSeries]:
+    def loc(self) -> InterGetItemLocReduces[TFrameOrSeries]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
             return InterGetItemLocReduces(self._extract_loc1d)
         return InterGetItemLocReduces(self._extract_loc2d_compound)
 
-    def __getitem__(self,  key: TLocSelector) -> FrameOrSeries:
+    def __getitem__(self,  key: TLocSelector) -> TFrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:

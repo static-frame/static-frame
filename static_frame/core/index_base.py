@@ -41,7 +41,7 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
 
-    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -223,7 +223,7 @@ class IndexBase(ContainerOperandSequence):
     def copy(self: I) -> I:
         raise NotImplementedError()
 
-    def relabel(self: I, mapper: 'RelabelInput') -> I:
+    def relabel(self: I, mapper: 'TRelabelInput') -> I:
         raise NotImplementedError() #pragma: no cover
 
     def rename(self: I, name: TName) -> I:

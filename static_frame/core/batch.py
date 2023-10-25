@@ -14,8 +14,8 @@ from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
@@ -63,9 +63,9 @@ from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 
-FrameOrSeries = tp.Union[Frame, Series]
-IteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, FrameOrSeries]]
-GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
+TFrameOrSeries = tp.Union[Frame, Series]
+TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
+TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -79,7 +79,7 @@ TBusAny = Bus[tp.Any]
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
 
 def normalize_container(post: tp.Any
-        ) -> FrameOrSeries:
+        ) -> TFrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
     if post.__class__ is np.ndarray:
         if post.ndim == 1:
@@ -92,18 +92,18 @@ def normalize_container(post: tp.Any
         return Series.from_element(post, index=ELEMENT_TUPLE)
     return post
 
-def call_func(bundle: tp.Tuple[FrameOrSeries, TCallableAny]
-        ) -> FrameOrSeries:
+def call_func(bundle: tp.Tuple[TFrameOrSeries, TCallableAny]
+        ) -> TFrameOrSeries:
     container, func = bundle
     return func(container) # type: ignore
 
-def call_func_items(bundle: tp.Tuple[FrameOrSeries, TCallableAny, TLabel]
-        ) -> FrameOrSeries:
+def call_func_items(bundle: tp.Tuple[TFrameOrSeries, TCallableAny, TLabel]
+        ) -> TFrameOrSeries:
     container, func, label = bundle
     return func(label, container) # type: ignore
 
-def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
-        ) -> FrameOrSeries:
+def call_attr(bundle: tp.Tuple[TFrameOrSeries, str, tp.Any, tp.Any]
+        ) -> TFrameOrSeries:
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
     return func(*args, **kwargs) # type: ignore
@@ -405,7 +405,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            items: IteratorFrameItems,
+            items: TIteratorFrameItems,
             *,
             name: TName = None,
             config: StoreConfigMapInitializer = None,
@@ -431,7 +431,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def _derive(self,
-            gen: GeneratorFrameItems,
+            gen: TGeneratorFrameItems,
             name: TName = None,
             ) -> 'Batch':
         '''Utility for creating derived Batch
@@ -449,7 +449,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         Return a new Batch with all values wrapped in either a :obj:`Frame` or :obj:`Series`.
         '''
-        def gen() -> IteratorFrameItems:
+        def gen() -> TIteratorFrameItems:
             for label, v in self._items:
                 yield label, normalize_container(v)
         return self._derive(gen)
@@ -507,7 +507,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # core function application routines
 
-    def _iter_items(self) -> IteratorFrameItems:
+    def _iter_items(self) -> TIteratorFrameItems:
         '''Iter pairs in items, providing helpful exception of a pair is not found. Thies is necessary as we cannot validate the items until we actually do an iteration, and the iterable might be an iterator.
         '''
         for pair in self._items:
@@ -520,7 +520,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _apply_pool(self,
             labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
-            caller: tp.Callable[..., FrameOrSeries],
+            caller: tp.Callable[..., TFrameOrSeries],
             ) -> 'Batch':
 
         pool_executor = get_concurrent_executor(
@@ -529,7 +529,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 mp_context=self._mp_context,
                 )
 
-        def gen_pool() -> IteratorFrameItems:
+        def gen_pool() -> TIteratorFrameItems:
             with pool_executor() as executor:
                 yield from zip(labels,
                         executor.map(caller, arg_iter, chunksize=self._chunksize)
@@ -539,7 +539,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _apply_pool_except(self,
             labels: tp.List[TLabel],
             arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
-            caller: tp.Callable[..., FrameOrSeries],
+            caller: tp.Callable[..., TFrameOrSeries],
             exception: tp.Type[Exception],
             ) -> 'Batch':
 
@@ -552,7 +552,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 mp_context=self._mp_context,
                 )
 
-        def gen_pool() -> IteratorFrameItems:
+        def gen_pool() -> TIteratorFrameItems:
             futures = []
             with pool_executor() as executor:
                 for args in arg_iter:
@@ -576,13 +576,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         Apply a method on a Frame given as an attr string.
         '''
         if self._max_workers is None:
-            def gen() -> IteratorFrameItems:
+            def gen() -> TIteratorFrameItems:
                 for label, frame in self._iter_items():
                     yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[TFrameOrSeries, str, tp.Any, tp.Any]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, attr, args, kwargs
@@ -594,13 +594,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
         '''
         if self._max_workers is None:
-            def gen() -> IteratorFrameItems:
+            def gen() -> TIteratorFrameItems:
                 for label, frame in self._iter_items():
                     yield label, call_func((frame, func))
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[TFrameOrSeries, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -615,7 +615,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
         '''
         if self._max_workers is None:
-            def gen() -> IteratorFrameItems:
+            def gen() -> TIteratorFrameItems:
                 for label, frame in self._iter_items():
                     try:
                         yield label, call_func((frame, func))
@@ -624,7 +624,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[TFrameOrSeries, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -640,13 +640,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
         '''
         if self._max_workers is None:
-            def gen() -> IteratorFrameItems:
+            def gen() -> TIteratorFrameItems:
                 for label, frame in self._iter_items():
                     yield label, call_func_items((frame, func, label))
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny, TLabel]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[TFrameOrSeries, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -661,7 +661,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
         '''
         if self._max_workers is None:
-            def gen() -> IteratorFrameItems:
+            def gen() -> TIteratorFrameItems:
                 for label, frame in self._iter_items():
                     try:
                         yield label, call_func_items((frame, func, label))
@@ -670,7 +670,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             return self._derive(gen)
 
         labels = []
-        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, TCallableAny, TLabel]]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[TFrameOrSeries, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -769,13 +769,13 @@ class Batch(ContainerOperand, StoreClientMixin):
         yield from self.keys()
 
     @property
-    def values(self) -> tp.Iterator[FrameOrSeries]: # type: ignore # NOTE: this violates the supertype
+    def values(self) -> tp.Iterator[TFrameOrSeries]: # type: ignore # NOTE: this violates the supertype
         '''
         Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
         '''
         return (v for _, v in self._iter_items())
 
-    def items(self) -> IteratorFrameItems:
+    def items(self) -> TIteratorFrameItems:
         '''
         Iterator of labels, :obj:`Frame`.
         '''
@@ -1347,8 +1347,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # index and relabel
     def relabel(self,
-            index: tp.Optional[RelabelInput] = None,
-            columns: tp.Optional[RelabelInput] = None,
+            index: tp.Optional[TRelabelInput] = None,
+            columns: tp.Optional[TRelabelInput] = None,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -1741,8 +1741,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_frame(self, *,
             axis: int = 0,
             union: bool = True,
-            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
-            columns: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = None,
@@ -1753,7 +1753,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to a single dimension along the provided `axis`.
         '''
         labels = []
-        containers: tp.List[FrameOrSeries] = []
+        containers: tp.List[TFrameOrSeries] = []
         ndim1d = True
         for label, container in self._items:
             container = normalize_container(container)

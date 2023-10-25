@@ -18,8 +18,8 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
@@ -205,7 +205,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def from_concat(cls,
             containers: tp.Iterable[TBusAny],
             *,
-            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             name: TName = NAME_DEFAULT,
             ) -> tp.Self:
         '''
@@ -664,7 +664,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
-            index: tp.Optional[RelabelInput],
+            index: tp.Optional[TRelabelInput],
             *,
             index_constructor: TIndexCtorSpecifier = None,
             ) -> tp.Self:

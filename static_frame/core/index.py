@@ -92,7 +92,7 @@ if tp.TYPE_CHECKING:
 
     from static_frame import IndexHierarchy  # pylint: disable=C0412 #pragma: no cover
     from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -825,7 +825,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     #---------------------------------------------------------------------------
 
-    def relabel(self, mapper: 'RelabelInput') -> Index[tp.Any]:
+    def relabel(self, mapper: 'TRelabelInput') -> Index[tp.Any]:
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''

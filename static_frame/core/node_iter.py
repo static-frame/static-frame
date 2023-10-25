@@ -38,7 +38,7 @@ if tp.TYPE_CHECKING:
     TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries',
+TFrameOrSeries = tp.TypeVar('TFrameOrSeries',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'Series[tp.Any, tp.Any]',
         'Bus[tp.Any]',
@@ -74,7 +74,7 @@ class IterNodeApplyType(Enum):
 
 
 # NOTE: the generic type here is the type returned from calls to apply()
-class IterNodeDelegate(tp.Generic[FrameOrSeries]):
+class IterNodeDelegate(tp.Generic[TFrameOrSeries]):
     '''
     Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
     '''
@@ -98,7 +98,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             func_values: tp.Callable[..., tp.Iterable[tp.Any]],
             func_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
-            apply_constructor: tp.Callable[..., FrameOrSeries],
+            apply_constructor: tp.Callable[..., TFrameOrSeries],
             apply_type: IterNodeApplyType,
         ) -> None:
         '''
@@ -108,7 +108,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         self._func_values = func_values
         self._func_items = func_items
         self._yield_type = yield_type
-        self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
+        self._apply_constructor: tp.Callable[..., TFrameOrSeries] = apply_constructor
         self._apply_type = apply_type
 
     #---------------------------------------------------------------------------
@@ -222,7 +222,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             columns_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            ) -> FrameOrSeries:
+            ) -> TFrameOrSeries:
         '''
         {doc} Returns a new container.
 
@@ -268,7 +268,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False
-            ) -> FrameOrSeries:
+            ) -> TFrameOrSeries:
         '''
         {doc} Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
 
@@ -310,7 +310,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield from self._func_items()
 
 
-class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
+class IterNodeDelegateMapable(IterNodeDelegate[TFrameOrSeries]):
     '''
     Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
     '''
@@ -368,7 +368,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            ) -> FrameOrSeries:
+            ) -> TFrameOrSeries:
         '''
         {doc} Returns a new container.
 
@@ -437,7 +437,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            ) -> FrameOrSeries:
+            ) -> TFrameOrSeries:
         '''
         {doc} Returns a new container.
 
@@ -502,7 +502,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-            ) -> FrameOrSeries:
+            ) -> TFrameOrSeries:
         '''
         {doc} Returns a new container.
 
@@ -526,7 +526,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[FrameOrSeries]):
 
 #-------------------------------------------------------------------------------
 
-class IterNode(tp.Generic[FrameOrSeries]):
+class IterNode(tp.Generic[TFrameOrSeries]):
     '''Interface to a type of iteration on :obj:`static_frame.Series` and :obj:`static_frame.Frame`.
     '''
     # Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
@@ -541,7 +541,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
     CLS_DELEGATE = IterNodeDelegate
 
     def __init__(self, *,
-            container: FrameOrSeries,
+            container: TFrameOrSeries,
             function_values: tp.Callable[..., tp.Iterable[tp.Any]],
             function_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
@@ -552,7 +552,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             function_values: will be partialed with arguments given with __call__.
             function_items: will be partialed with arguments given with __call__.
         '''
-        self._container: FrameOrSeries = container
+        self._container: TFrameOrSeries = container
         self._func_values = function_values
         self._func_items = function_items
         self._yield_type = yield_type
@@ -760,43 +760,43 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 func_values=func_values,
                 func_items=func_items,
                 yield_type=self._yield_type,
-                apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor),
+                apply_constructor=tp.cast(tp.Callable[..., TFrameOrSeries], apply_constructor),
                 apply_type=self._apply_type,
                 )
 
     def get_delegate(self,
             **kwargs: object,
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNodeDelegate(**self._get_delegate_kwargs(**kwargs))
 
     def get_delegate_mapable(self,
             **kwargs: object,
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNodeDelegateMapable(**self._get_delegate_kwargs(**kwargs))
 
 #-------------------------------------------------------------------------------
 # specialize IterNode based on arguments given to __call__
 
-class IterNodeNoArg(IterNode[FrameOrSeries]):
+class IterNodeNoArg(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
     CLS_DELEGATE = IterNodeDelegate
 
     def __call__(self,
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNode.get_delegate(self)
 
 
-class IterNodeNoArgMapable(IterNode[FrameOrSeries]):
+class IterNodeNoArgMapable(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
     CLS_DELEGATE = IterNodeDelegateMapable
 
     def __call__(self,
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNode.get_delegate_mapable(self)
 
-class IterNodeAxisElement(IterNode[FrameOrSeries]):
+class IterNodeAxisElement(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
     CLS_DELEGATE = IterNodeDelegateMapable
@@ -804,20 +804,20 @@ class IterNodeAxisElement(IterNode[FrameOrSeries]):
     def __call__(self,
             *,
             axis: int = 0
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
 
-class IterNodeAxis(IterNode[FrameOrSeries]):
+class IterNodeAxis(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
 
     def __call__(self,
             *,
             axis: int = 0
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNode.get_delegate_mapable(self, axis=axis)
 
-class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
+class IterNodeConstructorAxis(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
     CLS_DELEGATE = IterNodeDelegateMapable
@@ -826,13 +826,13 @@ class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
             *,
             axis: int = 0,
             constructor: tp.Optional[TTupleCtor] = None,
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNode.get_delegate_mapable(self,
                 axis=axis,
                 constructor=constructor,
                 )
 
-class IterNodeGroup(IterNode[FrameOrSeries]):
+class IterNodeGroup(IterNode[TFrameOrSeries]):
     '''
     Iterator on 1D groupings where no args are required (but axis is retained for compatibility)
     '''
@@ -842,10 +842,10 @@ class IterNodeGroup(IterNode[FrameOrSeries]):
     def __call__(self,
             *,
             axis: int = 0
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNode.get_delegate(self, axis=axis)
 
-class IterNodeGroupAxis(IterNode[FrameOrSeries]):
+class IterNodeGroupAxis(IterNode[TFrameOrSeries]):
     '''
     Iterator on 2D groupings where key and axis are required.
     '''
@@ -857,11 +857,11 @@ class IterNodeGroupAxis(IterNode[FrameOrSeries]):
             *,
             axis: int = 0,
             drop: bool = False,
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNode.get_delegate(self, key=key, axis=axis, drop=drop)
 
 
-class IterNodeGroupOther(IterNode[FrameOrSeries]):
+class IterNodeGroupOther(IterNode[TFrameOrSeries]):
     '''
     Iterator on 1D groupings where group values are provided.
     '''
@@ -873,7 +873,7 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
 
         index_ref = (self._container._index if axis == 0
                 else self._container._columns) # type: ignore
@@ -891,17 +891,17 @@ class IterNodeGroupOther(IterNode[FrameOrSeries]):
                 group_source=group_source,
                 )
 
-class IterNodeDepthLevel(IterNode[FrameOrSeries]):
+class IterNodeDepthLevel(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
 
     def __call__(self,
             depth_level: tp.Optional[TDepthLevel] = None
-            ) -> IterNodeDelegateMapable[FrameOrSeries]:
+            ) -> IterNodeDelegateMapable[TFrameOrSeries]:
         return IterNode.get_delegate_mapable(self, depth_level=depth_level)
 
 
-class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
+class IterNodeDepthLevelAxis(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
 
@@ -909,11 +909,11 @@ class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
             depth_level: TDepthLevel = 0,
             *,
             axis: int = 0
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNode.get_delegate(self, depth_level=depth_level, axis=axis)
 
 
-class IterNodeWindow(IterNode[FrameOrSeries]):
+class IterNodeWindow(IterNode[TFrameOrSeries]):
 
     __slots__ = ()
 
@@ -929,7 +929,7 @@ class IterNodeWindow(IterNode[FrameOrSeries]):
             label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
-            ) -> IterNodeDelegate[FrameOrSeries]:
+            ) -> IterNodeDelegate[TFrameOrSeries]:
         return IterNode.get_delegate(self,
                 axis=axis,
                 size=size,

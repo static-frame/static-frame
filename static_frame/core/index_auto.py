@@ -158,9 +158,8 @@ class IndexAutoFactory:
 
 
 
-IndexAutoFactoryType = tp.Type[IndexAutoFactory]
-RelabelInput = tp.Union[TCallableOrMapping, IndexAutoFactoryType, TIndexInitializer]
-
-IndexInitOrAutoType = tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType, IndexAutoFactory]]
+TIndexAutoFactory = tp.Type[IndexAutoFactory]
+TRelabelInput = tp.Union[TCallableOrMapping, TIndexAutoFactory, TIndexInitializer]
+TIndexInitOrAuto = tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory, IndexAutoFactory]]
 
 

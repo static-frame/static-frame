@@ -29,7 +29,7 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import TreeNodeT
+from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
@@ -140,7 +140,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if label_extractor is None:
             label_extractor = lambda x: x.iloc[0]
 
-        axis_map_components: TreeNodeT = {}
+        axis_map_components: TTreeNode = {}
         opposite = None
 
         def values() -> tp.Iterator[TFrameAny]:

@@ -41,7 +41,7 @@ from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
 from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType as IndexAutoFactoryType
+from static_frame.core.index_auto import TIndexAutoFactory as TIndexAutoFactory
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
 from static_frame.core.index_auto import IndexDefaultConstructorFactory as IndexDefaultConstructorFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate

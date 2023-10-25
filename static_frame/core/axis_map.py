@@ -13,7 +13,7 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
-from static_frame.core.index_hierarchy import TreeNodeT
+from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 
@@ -100,7 +100,7 @@ def bus_to_hierarchy(
     ):
         return _bus_to_hierarchy_inner_hierarchies(bus, axis, extractor, init_exception_cls)
 
-    tree: TreeNodeT = {}
+    tree: TTreeNode = {}
     opposite: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():

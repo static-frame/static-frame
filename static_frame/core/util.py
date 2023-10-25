@@ -463,9 +463,9 @@ TFrameInitializer = tp.Union[
         'Series',
         ]
 
-DateInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-YearMonthInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-YearInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+TDateInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+TYearMonthInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+TYearInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
@@ -1936,7 +1936,7 @@ DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH) # year is handled separately
 DTU_PYARROW = frozenset(('ns', 'D', 's'))
 
 def to_datetime64(
-        value: DateInitializer,
+        value: TDateInitializer,
         dtype: tp.Optional[TDtypeOrDT64] = None
         ) -> np.datetime64:
     '''

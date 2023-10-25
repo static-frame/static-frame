@@ -23,8 +23,8 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
@@ -114,7 +114,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def from_concat(cls,
             containers: tp.Iterable[TYarnAny],
             *,
-            index: tp.Optional[tp.Union[TIndexInitializer, IndexAutoFactoryType]] = None,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             name: TName = NAME_DEFAULT,
             deepcopy_from_bus: bool = False,
             ) -> tp.Self:
@@ -155,7 +155,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def __init__(self,
             series: tp.Union[TSeriesAny, tp.Iterable[TBusAny]],
             *,
-            index: TIndexInitializer | IndexAutoFactoryType | None = None,
+            index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
@@ -729,7 +729,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @doc_inject(selector='relabel', class_name='Yarn')
     def relabel(self,
-            index: tp.Optional[RelabelInput]
+            index: tp.Optional[TRelabelInput]
             ) -> tp.Self:
         '''
         {doc}

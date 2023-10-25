@@ -68,9 +68,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     # from static_frame.core.index_auto import IndexDefaultConstructorFactory #pylint: disable=W0611,C0412 #pragma: no
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactoryType  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexInitOrAutoType  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexInitOrAuto  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -462,7 +462,7 @@ def df_slice_to_arrays(*,
 
 #---------------------------------------------------------------------------
 def index_from_optional_constructor(
-        value: 'IndexInitOrAutoType',
+        value: 'TIndexInitOrAuto',
         *,
         default_constructor: TIndexCtorSpecifier,
         explicit_constructor: TExplicitIndexCtor = None,
@@ -593,7 +593,7 @@ def constructor_from_optional_constructors(
 
 
 def index_constructor_empty(
-        index: 'IndexInitOrAutoType',
+        index: 'TIndexInitOrAuto',
         ) -> bool:
     '''
     Determine if an index is empty (if possible) or an IndexAutoFactory.

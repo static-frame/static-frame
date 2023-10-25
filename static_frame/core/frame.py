@@ -77,8 +77,8 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultConstructorFactory
-from static_frame.core.index_auto import IndexInitOrAutoType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexInitOrAuto
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -97,7 +97,7 @@ from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import FrameOrSeries
+from static_frame.core.node_selector import TFrameOrSeries
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
@@ -373,8 +373,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_elements(cls,
             elements: tp.Iterable[tp.Any],
             *,
-            index: IndexInitOrAutoType = None,
-            columns: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
+            columns: TIndexInitOrAuto = None,
             dtype: TDtypeSpecifier = None,
             name: TLabel = None,
             index_constructor: TIndexCtorSpecifier = None,
@@ -450,8 +450,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             axis: int = 0,
             union: bool = True,
-            index: IndexInitOrAutoType = None,
-            columns: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
+            columns: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = None,
@@ -2830,9 +2830,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_pandas(cls,
             value: 'pandas.DataFrame',
             *,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
-            columns: IndexInitOrAutoType = None,
+            columns: TIndexInitOrAuto = None,
             columns_constructor: TIndexCtorSpecifier = None,
             dtypes: TDtypesSpecifier = None,
             name: TName = NAME_DEFAULT,
@@ -3263,8 +3263,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def __init__(self,
             data: TFrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
             *,
-            index: IndexInitOrAutoType = None,
-            columns: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
+            columns: TIndexInitOrAuto = None,
             name: TName = NAME_DEFAULT,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -4155,8 +4155,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='relabel', class_name='Frame')
     def relabel(self,
-            index: tp.Optional[RelabelInput] = None,
-            columns: tp.Optional[RelabelInput] = None,
+            index: tp.Optional[TRelabelInput] = None,
+            columns: tp.Optional[TRelabelInput] = None,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -5183,7 +5183,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
         return self._extract(*self._compound_loc_to_iloc(key))
 
-    def _extract_loc_columns(self, key: TLocSelector) -> FrameOrSeries:
+    def _extract_loc_columns(self, key: TLocSelector) -> TFrameOrSeries:
         '''Alternate extract of a columns only selection.
         '''
         return self._extract(None,

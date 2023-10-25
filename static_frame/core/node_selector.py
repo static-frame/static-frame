@@ -49,7 +49,7 @@ if tp.TYPE_CHECKING:
     TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
-FrameOrSeries = tp.Union[
+TFrameOrSeries = tp.Union[
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'Series[tp.Any, tp.Any]',
         ]
@@ -71,7 +71,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
          # cannot be TNDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
-        FrameOrSeries,
+        TFrameOrSeries,
         covariant=True,
         )
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',

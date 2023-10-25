@@ -45,10 +45,10 @@ from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultConstructorFactory
-from static_frame.core.index_auto import IndexInitOrAutoType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexInitOrAuto
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -243,7 +243,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             delimited: str,
             *,
             delimiter: str,
-            index: tp.Optional[IndexInitOrAutoType] = None,
+            index: tp.Optional[TIndexInitOrAuto] = None,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -315,7 +315,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def from_concat(cls,
             containers: tp.Iterable[tp.Union[TSeriesAny, TBusAny]],
             *,
-            index: tp.Optional[IndexInitOrAutoType] = None,
+            index: tp.Optional[TIndexInitOrAuto] = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             name: TName = NAME_DEFAULT,
             ) -> tp.Self:
@@ -481,7 +481,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def from_pandas(cls,
             value: 'pandas.Series',
             *,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
             name: TName = NAME_DEFAULT,
             own_data: bool = False) -> tp.Self:
@@ -536,7 +536,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def __init__(self,
             values: TSeriesInitializer,
             *,
-            index: tp.Union[TIndexInitializer, IndexAutoFactory, IndexAutoFactoryType, None] = None,
+            index: tp.Union[TIndexInitializer, IndexAutoFactory, TIndexAutoFactory, None] = None,
             name: TName = NAME_DEFAULT,
             dtype: TDtypeSpecifier = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -1172,7 +1172,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: tp.Optional[RelabelInput],
+            index: tp.Optional[TRelabelInput],
             *,
             index_constructor: TIndexCtorSpecifier = None,
             ) -> tp.Self:
@@ -3317,9 +3317,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             constructor: tp.Type[FrameType],
             axis: int = 1,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
-            columns: IndexInitOrAutoType = None,
+            columns: TIndexInitOrAuto = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = NAME_DEFAULT,
             ) -> FrameType:
@@ -3395,9 +3395,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def to_frame(self,
             axis: int = 1,
             *,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
-            columns: IndexInitOrAutoType = None,
+            columns: TIndexInitOrAuto = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = NAME_DEFAULT,
             ) -> TFrameAny:
@@ -3427,9 +3427,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def to_frame_go(self,
             axis: int = 1,
             *,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
-            columns: IndexInitOrAutoType = None,
+            columns: TIndexInitOrAuto = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = NAME_DEFAULT,
             ) -> TFrameGOAny:
@@ -3457,9 +3457,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def to_frame_he(self,
             axis: int = 1,
             *,
-            index: IndexInitOrAutoType = None,
+            index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
-            columns: IndexInitOrAutoType = None,
+            columns: TIndexInitOrAuto = None,
             columns_constructor: TIndexCtorSpecifier = None,
             name: TName = NAME_DEFAULT,
             ) -> TFrameHEAny:

@@ -29,7 +29,7 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
-from static_frame.core.util import DateInitializer
+from static_frame.core.util import TDateInitializer
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TName
@@ -37,8 +37,8 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import YearInitializer
-from static_frame.core.util import YearMonthInitializer
+from static_frame.core.util import TYearInitializer
+from static_frame.core.util import TYearMonthInitializer
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
@@ -223,8 +223,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None) -> I:
@@ -241,8 +241,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -262,8 +262,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -334,8 +334,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -354,8 +354,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -375,8 +375,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -417,8 +417,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -435,8 +435,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None) -> I:
@@ -453,8 +453,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
