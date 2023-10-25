@@ -1466,7 +1466,7 @@ def test_validate_shape_a():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
     v1 = Require.Shape(..., 4)
-    assert not tuple(v1._iter_errors(f, None, (), ()))``
+    assert not tuple(v1._iter_errors(f, None, (), ()))
 
     v2 = Require.Shape(..., 3)
     assert tuple(v2._iter_errors(f, None, (), ()))
@@ -1480,12 +1480,15 @@ def test_validate_shape_a():
     v5 = Require.Shape(3, ...)
     assert not tuple(v5._iter_errors(f, None, (), ()))
 
-    v6 = Require.Shape(5, ...)
-    assert tuple(v6._iter_errors(f, None, (), ()))
+    v6 = Require.Shape(3)
+    assert not tuple(v6._iter_errors(f, None, (), ()))
+
+    v7 = Require.Shape(5, ...)
+    assert tuple(v7._iter_errors(f, None, (), ()))
 
 def test_validate_shape_b():
-
-    v1 = Require.Shape(None, 4)
+    with pytest.raises(TypeError):
+        v1 = Require.Shape(None, 4)
 
 
 #-------------------------------------------------------------------------------

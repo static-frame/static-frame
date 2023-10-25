@@ -24,8 +24,8 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import TLabel
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import TLabel
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -290,7 +290,7 @@ class Require:
         @staticmethod
         def _validate_shape_component(c: TShapeComponent) -> TShapeComponent:
             if c is not ... and not isinstance(c, INT_TYPES):
-                raise TypeError('Components must be either `...` or an integer, not {c!r}.')
+                raise TypeError(f'Components must be either `...` or an integer, not {c!r}.')
             return c
 
         def __init__(self, y: TShapeComponent = ..., x: TShapeComponent = ..., /):
