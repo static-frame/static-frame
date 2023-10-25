@@ -25,7 +25,7 @@ from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
-from static_frame.core.util import TShape
+from static_frame.core.util import INT_TYPES
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -200,7 +200,7 @@ class ClinicError(TypeError):
 # could be calld validator
 
 TValidator = tp.Callable[..., bool]
-
+TShapeComponent = tp.Union[int, ...]
 
 class Validator:
     '''Base class of all run-time constraints, deployed in Annotated generics.
@@ -285,10 +285,17 @@ class Require:
             /
         '''
 
-        __slots__ = ('_shape',)
+        __slots__ = ('_y', '_x')
 
-        def __init__(self, shape: TShape, /):
-            self._shape = shape
+        @staticmethod
+        def _validate_shape_component(c: TShapeComponent) -> TShapeComponent:
+            if c is not ... and not isinstance(c, INT_TYPES):
+                raise TypeError('Components must be either `...` or an integer, not {c!r}.')
+            return c
+
+        def __init__(self, y: TShapeComponent = ..., x: TShapeComponent = ..., /):
+            self._y = self._validate_shape_component(y)
+            self._x = self._validate_shape_component(x)
 
         def _iter_errors(self,
                 value: tp.Any,
@@ -296,13 +303,20 @@ class Require:
                 parent_hints: TParent,
                 parent_values: TParent,
                 ) -> tp.Iterator[TValidation]:
-            if value.shape != self._shape:
+
+            # same for both 1d and 2d
+            if self._y is not ... and self._y != value.shape[0]:
                 yield (ERROR_MESSAGE_TYPE,
-                        f'Expected shape {self._shape}, provided shape {value.shape}',
+                        f'Expected shape ({self._y, self._x}), provided shape {value.shape}',
                         parent_hints,
                         parent_values,
                         )
-
+            elif value.ndim == 2 and self._x is not ... and self._x != value.shape[1]:
+                yield (ERROR_MESSAGE_TYPE,
+                        f'Expected shape ({self._y, self._x}), provided shape {value.shape}',
+                        parent_hints,
+                        parent_values,
+                        )
 
     # might accept regular expression objects as label entries?
     class Labels(Validator):
