@@ -1067,6 +1067,13 @@ def test_check_bus_a():
     cr2 = b1.via_type_clinic(sf.Bus[sf.Index[np.int64]])
     assert cr2.validated is False
 
+def test_check_bus_b():
+    f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+    f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+    b1 = sf.Bus((f1, f2), index=('a', 'b'))
+
+    assert b1.via_type_clinic.to_hint() == sf.Bus[sf.Index[np.str_]]
+
 def test_check_yarn_a():
 
     f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')

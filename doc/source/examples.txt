@@ -72839,13 +72839,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f4ca7961760> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7ff3715e1800> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f4ca7961800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7ff3715e18a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -72893,13 +72893,13 @@ False                             True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f4cdf81e660> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7ff3a9482660> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f4cdf81dee0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7ff3a9481ee0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -73162,13 +73162,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f4cdf81ec00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7ff3a9482c00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f4cb7122e80> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7ff380d86e80> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -73180,7 +73180,7 @@ NotImplementedError('<function median at 0x7f4cb7122e80> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f4cdf81e520> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7ff3a9482520> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -73295,13 +73295,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f4cdf823cf0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7ff3a9487b30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f4cdf81db20> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7ff3a9481b20> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -73357,7 +73357,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f4cdf823f30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7ff3a9487d70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -75391,13 +75391,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f4ca7961760> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7ff3715e1800> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f4ca7961800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7ff3715e18a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -75458,13 +75458,13 @@ False                               True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f4cdf81e660> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7ff3a9482660> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f4cdf81dee0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7ff3a9481ee0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -75735,13 +75735,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f4cdf81ec00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7ff3a9482c00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f4cb7122e80> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7ff380d86e80> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -75753,7 +75753,7 @@ NotImplementedError('<function median at 0x7f4cb7122e80> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f4cdf81e520> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7ff3a9482520> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -75868,13 +75868,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f4cdf823cf0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7ff3a9487b30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f4cdf81db20> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7ff3a9481b20> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -75930,7 +75930,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f4cdf823f30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7ff3a9487d70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -86533,7 +86533,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4ca7889940>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff3405d3340>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -86593,13 +86593,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4c9e4371c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff3a97a9040>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4ca788a640>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7ff3a97a90c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -86826,49 +86826,61 @@ ClinicError('\nIn args of (ix: Annotated[Index[int64], Len(4)]) -> Any\n└─�
 
 #start_Require-Apply()
 >>> import typing as tp
->>> def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()
->>> f2 = sf.CallGuard.check(f1)
+>>> def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()
+>>> func2 = sf.CallGuard.check(func1)
 >>> ix1 = sf.Index((1024, 2048, 4096), name='y')
->>> f2(ix1)
+>>> func2(ix1)
 4096
 >>> ix2 = sf.Index((0, 1024, -2048, 4096))
->>> f2(ix2)
+>>> func2(ix2)
 ClinicError('\nIn args of (ix: Annotated[Index[int64], Apply(<lambda>)]) -> Any\n└── Annotated[Index[int64], Apply(<lambda>)]\n    └── Apply(<lambda>)\n        └── Index failed validation with <lambda>')
 #end_Require-Apply()
 
 #start_Require-Labels()
 >>> import typing as tp
->>> def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()
->>> f2 = sf.CallGuard.check(f1)
+>>> def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()
+>>> func2 = sf.CallGuard.check(func1)
 >>> ix1 = sf.Index((1024, 2048, 4096), name='y')
->>> f2(ix1)
+>>> func2(ix1)
 4096
 >>> ix2 = sf.Index((0, 1024, -2048, 4096))
->>> f2(ix2)
+>>> func2(ix2)
 ClinicError('\nIn args of (ix: Annotated[Index[int64], Labels(1024, ..., 4096)]) -> Any\n└── Annotated[Index[int64], Labels(1024, ..., 4096)]\n    └── Labels(1024, ..., 4096)\n        └── Expected 1024, provided 0')
 #end_Require-Labels()
 
 #start_Require-Len()
 >>> import typing as tp
->>> def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()
->>> f2 = sf.CallGuard.check(f1)
+>>> def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()
+>>> func2 = sf.CallGuard.check(func1)
 >>> ix1 = sf.Index((1024, 2048, 4096), name='y')
->>> f2(ix1)
+>>> func2(ix1)
 4096
 >>> ix2 = sf.Index((0, 1024, -2048, 4096))
->>> f2(ix2)
+>>> func2(ix2)
 ClinicError('\nIn args of (ix: Annotated[Index[int64], Len(3)]) -> Any\n└── Annotated[Index[int64], Len(3)]\n    └── Len(3)\n        └── Expected length 3, provided length 4')
 #end_Require-Len()
 
 #start_Require-Name()
 >>> import typing as tp
->>> def f1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()
->>> f2 = sf.CallGuard.check(f1)
+>>> def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()
+>>> func2 = sf.CallGuard.check(func1)
 >>> ix1 = sf.Index((1024, 2048, 4096), name='y')
->>> f2(ix1)
+>>> func2(ix1)
 4096
 >>> ix2 = sf.Index((0, 1024, -2048, 4096))
->>> f2(ix2)
+>>> func2(ix2)
 ClinicError("\nIn args of (ix: Annotated[Index[int64], Name(y)]) -> Any\n└── Annotated[Index[int64], Name(y)]\n    └── Name(y)\n        └── Expected name 'y', provided name None")
 #end_Require-Name()
+
+#start_Require-Shape()
+>>> import typing as tp
+>>> def func1(f: tp.Annotated[sf.TFrameAny, sf.Require.Shape(3, 2)]): return f.sum().sum()
+>>> func2 = sf.CallGuard.check(func1)
+>>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
+>>> func2(f1)
+15
+>>> f2 = sf.Frame.from_fields(((2, 9), (3, 8)), columns=('a', 'b'), index=('p', 'q'), name='x')
+>>> func2(f2)
+ClinicError('\nIn args of (f: Annotated[Frame[Any, Any, Unpack[Tuple[Any, ...]]], Shape(3, 2)]) -> Any\n└── Annotated[Frame[Any, Any, Unpack[Tuple[Any, ...]]], Shape(3, 2)]\n    └── Shape(3, 2)\n        └── Expected shape ((3, 2)), provided shape (2, 2)')
+#end_Require-Shape()
 

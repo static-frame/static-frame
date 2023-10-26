@@ -33,9 +33,9 @@ TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: igno
 TValidator = tp.Callable[..., bool]
 
 if tp.TYPE_CHECKING:
-    from types import EllipsisType
+    from types import EllipsisType # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TShapeComponent = tp.Union[int, EllipsisType]
+    TShapeComponent = tp.Union[int, EllipsisType] # pylint: disable=W0611 #pragma: no cover
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
