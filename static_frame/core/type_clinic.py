@@ -30,11 +30,12 @@ from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
-# _UnionGenericAlias comes from tp.Union, UnionType from | expressions
-# tp.Optional returns a _UnionGenericAlias with later Python, but a _GenericAlias with 3.8
+TValidator = tp.Callable[..., bool]
 
 if tp.TYPE_CHECKING:
+    from types import EllipsisType
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TShapeComponent = tp.Union[int, EllipsisType]
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
@@ -197,10 +198,6 @@ class ClinicError(TypeError):
 
 
 #-------------------------------------------------------------------------------
-# could be calld validator
-
-TValidator = tp.Callable[..., bool]
-TShapeComponent = tp.Union[int, ...]
 
 class Validator:
     '''Base class of all run-time constraints, deployed in Annotated generics.
