@@ -39,7 +39,7 @@ class FillValueAuto:
             u: fill value for unsigned integer kind
             f: fill value for float kind
             c: fill value for complex kind
-            m: fill value for timedelta62 kind
+            m: fill value for timedelta64 kind
             M: fill value for datetime64 kind
             O: fill value for object kind
             S: fill value for bytes kind
@@ -80,7 +80,7 @@ class FillValueAuto:
             u: fill value for unsigned integer kind
             f: fill value for float kind
             c: fill value for complex kind
-            m: fill value for timedelta62 kind
+            m: fill value for timedelta64 kind
             M: fill value for datetime64 kind
             O: fill value for object kind
             S: fill value for bytes kind
