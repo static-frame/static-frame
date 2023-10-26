@@ -256,7 +256,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
-    _INDEX_CONSTRUCTOR: tp.Callable[..., 'IndexBase'] = Index
+    _INDEX_CONSTRUCTOR = Index
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------
@@ -2778,7 +2778,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         '''
         Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name) # type: ignore
+        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
     def level_add(self,
             level: TLabel,
@@ -2811,7 +2811,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             yield from self._blocks._blocks
 
         return self.__class__(
-                indices=indices, # type: ignore
+                indices=indices,
                 indexers=indexers,
                 name=self.name,
                 blocks=TypeBlocks.from_blocks(gen_blocks()),

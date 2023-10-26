@@ -6368,7 +6368,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {exclude_first}
             {exclude_last}
         '''
-        # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
+        # might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
         duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
@@ -9000,7 +9000,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # Store based output
 
     def to_xlsx(self,
-            fp: TPathSpecifier, # not sure I can take a file like yet
+            fp: TPathSpecifier,
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9241,9 +9241,7 @@ class FrameGO(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[ty
     STATIC = False
     _COLUMNS_CONSTRUCTOR = IndexGO
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
-
-    _columns: IndexGO[tp.Any] # TODO: replace with TypeVar
-
+    _columns: IndexGO[tp.Any]
 
     def __setitem__(self,
             key: TLabel,

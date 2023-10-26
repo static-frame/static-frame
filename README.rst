@@ -51,18 +51,18 @@ Immutable and grow-only DataFrames with static-typing support and run-time type 
 
 Among the many Python DataFrame libraries, StaticFrame is an alternative that prioritizes correctness, maintainability, and reducing opportunities for error. Key features include:
 
-* An immutable data-model, providing memory efficiency and excllent performance
+* An immutable data-model, providing memory efficiency and excellent performance
 * Use Python type hints to statically type a DataFrame, including the index, columns, and columnar types
 * Use type hints and a family of validators to provide run-time type and data validation
 * A hierarchical and consistent interface (avoiding the inconsistencies of Pandas)
 * Full support of all NumPy dtypes and datetime64 units
-* Interchange with Pandas, Arrow, Parquet, CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, and NumPy
+* Translate between with Pandas, Arrow, Parquet, CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, and NumPy
 * Output to xarray, VisiData, HTML, RST, Markdown, LaTeX, and Jupyter notebooks
 * High performance serialization and memory mapping with NPZ abd NPY encodings
 * Novel multi-table containers (the Bus and the Yarn) supporting lazy data loading
 * A wrapper (the Batch) for deferred processing on groups, windows, or any iterator
 * Comprehensive documentation and thousands of examples
-* Core functionality Depends only on NumPy and team-maintained C-extensions
+* Core functionality depends only on NumPy and team-maintained C-extensions
 
 
 .. A wide variety of table formats are supported, including input from and output to CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, VisiData, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. Full serialization is also available via custom NPZ and NPY encodings, the latter supporting memory mapping.

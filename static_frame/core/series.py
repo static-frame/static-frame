@@ -150,7 +150,7 @@ if tp.TYPE_CHECKING:
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
-def _NA_VALUES_CONSTRCTOR(count: int) -> None: ...
+def _NA_VALUES_CTOR(count: int) -> None: ...
 
 class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
@@ -559,7 +559,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         #-----------------------------------------------------------------------
         # values assignment
 
-        values_constructor = _NA_VALUES_CONSTRCTOR
+        values_constructor = _NA_VALUES_CTOR
 
         if not values.__class__ is np.ndarray:
             if isinstance(values, dict):
@@ -602,7 +602,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             self._index = index # type: ignore
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
-            if values_constructor is not _NA_VALUES_CONSTRCTOR:
+            if values_constructor is not _NA_VALUES_CTOR:
                 value_count = 1
             else:
                 value_count = len(self.values)
@@ -621,7 +621,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not self._index.STATIC: # pyright: ignore
             raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
-        if values_constructor is not _NA_VALUES_CONSTRCTOR:
+        if values_constructor is not _NA_VALUES_CTOR:
             values_constructor(index_count) # updates self.values
             # must update after calling values constructor
         value_count = len(self.values)

@@ -520,7 +520,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     raise self._error_update_axis_labels(self._axis) from None
             else: # get hierarchical
                 self._index = self._axis_hierarchy
-            self._columns = self._axis_opposite
+            self._columns = self._axis_opposite # type: ignore
         else:
             if not self._retain_labels:
                 try:
@@ -529,7 +529,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     raise self._error_update_axis_labels(self._axis) from None
             else:
                 self._columns = self._axis_hierarchy
-            self._index = self._axis_opposite
+            self._index = self._axis_opposite # type: ignore
         self._assign_axis = False
 
     def unpersist(self) -> None:

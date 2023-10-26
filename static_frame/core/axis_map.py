@@ -86,7 +86,7 @@ def bus_to_hierarchy(
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
+        ) -> tp.Tuple[IndexHierarchy, IndexBase | None]:
     '''
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''
@@ -121,7 +121,6 @@ def bus_to_hierarchy(
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-    assert opposite is not None
     # NOTE: we could try to collect index constructors by using the index of the Bus and observing the indices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
 
     return IndexHierarchy.from_tree(tree,
