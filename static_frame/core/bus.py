@@ -65,6 +65,7 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TSeriesObject = Series[tp.Any, np.object_]
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
@@ -213,7 +214,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         # will extract .values, .index from Bus, which will correct load from Store as needed
         # NOTE: useful to use Series here as it handles aligned names, IndexAutoFactory, etc.
-        series: TSeriesAny = Series.from_concat(containers, index=index, name=name)
+        series: TSeriesObject = Series.from_concat(containers, index=index, name=name)
         return cls.from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
@@ -525,7 +526,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     #---------------------------------------------------------------------------
     def _derive_from_series(self,
-            series: TSeriesAny,
+            series: TSeriesObject,
             *,
             own_data: bool = False,
             ) -> tp.Self:
@@ -1047,7 +1048,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> TSeriesAny:
+    def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
@@ -1076,7 +1077,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         return f
 
     @property
-    def shapes(self) -> TSeriesAny:
+    def shapes(self) -> TSeriesObject:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
@@ -1395,7 +1396,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # exporter
 
-    def _to_series_state(self) -> TSeriesAny:
+    def _to_series_state(self) -> TSeriesObject:
         # the mutable array will be copied in the Series construction
         return Series(self._values_mutable,
                 index=self._index,
@@ -1403,7 +1404,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 name=self._name,
                 )
 
-    def to_series(self) -> TSeriesAny:
+    def to_series(self) -> TSeriesObject:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
         # values returns an immutable array and will fully realize from Store

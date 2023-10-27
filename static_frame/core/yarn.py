@@ -51,7 +51,7 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-TSeriesAny = Series[tp.Any, tp.Any]
+TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TBusAny = Bus[tp.Any]
 
@@ -70,7 +70,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             '_deepcopy_from_bus',
             )
 
-    _series: TSeriesAny
+    _series: TSeriesObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
 
@@ -86,7 +86,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
-        series: TSeriesAny = Series.from_items(
+        series: TSeriesObject = Series.from_items(
                     ((b.name, b) for b in buses),
                     dtype=DTYPE_OBJECT,
                     name=name,
@@ -145,7 +145,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if index_components is not None:
             index = index_many_concat(index_components, Index)
 
-        series: TSeriesAny = Series(array, name=name)
+        series: TSeriesObject = Series(array, name=name)
         return cls(series,
                 deepcopy_from_bus=deepcopy_from_bus,
                 index=index,
@@ -153,7 +153,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            series: tp.Union[TSeriesAny, tp.Iterable[TBusAny]],
+            series: tp.Union[TSeriesObject, tp.Iterable[TBusAny]],
             *,
             index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -544,7 +544,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
 
         buses.flags.writeable = False
-        target_series: TSeriesAny = Series(buses,
+        target_series: TSeriesObject = Series(buses,
                 index=target_bus_index,
                 own_index=True,
                 name=self._series._name,
@@ -628,7 +628,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             out=array)
         array.flags.writeable = False
 
-        series: TSeriesAny = Series(array, index=self._index, own_index=True)
+        series: TSeriesObject = Series(array, index=self._index, own_index=True)
 
         return series._display(config,
 
@@ -640,7 +640,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> TSeriesAny:
+    def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         return Series.from_concat((b.mloc for b in self._series.values),
@@ -656,7 +656,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 ).relabel(index=self._index)
 
     @property
-    def shapes(self) -> TSeriesAny:
+    def shapes(self) -> TSeriesObject:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
@@ -688,7 +688,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     # exporter
 
-    def to_series(self) -> TSeriesAny: # can get generic Bus index
+    def to_series(self) -> TSeriesObject: # can get generic Bus index
         '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         # NOTE: this should load all deferred Frame

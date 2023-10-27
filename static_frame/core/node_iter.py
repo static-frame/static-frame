@@ -45,9 +45,6 @@ TContainerAny = tp.TypeVar('TContainerAny',
         'Quilt',
         'Yarn[tp.Any]',
         )
-PoolArgGen = tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
-# FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
-
 
 class IterNodeType(Enum):
     VALUES = 1
@@ -127,7 +124,6 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
-        # arg_gen: PoolArgGen
 
         if self._yield_type is IterNodeType.VALUES:
             def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
