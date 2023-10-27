@@ -1174,11 +1174,6 @@ class InterfaceSummary(Features):
             ) -> tp.Iterator[tp.Tuple[str, tp.Any, tp.Any]]:
         instance = cls.get_instance(target=target)
 
-        # for name_attr in dir(target.__class__): # get metaclass
-        #     if name_attr == 'interface':
-        #         # getting interface off of the class will recurse
-        #         yield name_attr, None, ContainerBase.__class__.interface #type: ignore
-
         if hasattr(target.__class__, 'interface'):
             yield 'interface', None, ContainerBase.__class__.interface #type: ignore
 
