@@ -35,7 +35,8 @@ TValidator = tp.Callable[..., bool]
 if tp.TYPE_CHECKING:
     from types import EllipsisType  # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TShapeSpecifier = tp.Tuple[tp.Union[int, EllipsisType], ...] # pylint: disable=W0611 #pragma: no cover
+    TShapeComponent = tp.Union[int, EllipsisType]
+    TShapeSpecifier = tp.Tuple[TShapeComponent, ...] # pylint: disable=W0611 #pragma: no cover
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
@@ -282,7 +283,7 @@ class Require:
             /
         '''
 
-        __slots__ = ('_shape')
+        __slots__ = ('_shape',)
 
         @staticmethod
         def _validate_shape_component(ss: TShapeSpecifier) -> TShapeSpecifier:
@@ -291,7 +292,7 @@ class Require:
                     raise TypeError(f'Components must be either `...` or an integer, not {c!r}.')
             return ss
 
-        def __init__(self, /, *shape: TShapeSpecifier):
+        def __init__(self, /, *shape: TShapeComponent):
             self._shape = self._validate_shape_component(shape)
 
         def _iter_errors(self,
