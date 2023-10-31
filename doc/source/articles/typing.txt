@@ -157,3 +157,124 @@ https://github.com/numpy/numpy/issues/16547
 
 # https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+f: sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.bool_, np.str_]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>> records = (
+...             (-3, True, 'y'),
+...             (-100, False, 'x'),
+...             (8, True, 'z'),
+...             )
+>>> index = sf.IndexDate(('2022-01-03', '2022-02-05', '2023-04-02'))
+>>> f = sf.Frame.from_records(records,
+...             columns=('a', 'b', 'c'),
+...             index=index,
+...             dtypes=(np.int64, np.bool_, np.str_)
+...             )
+>>> f
+<Frame>
+<Index>         a       b      c     <<U1>
+<IndexDate>
+2022-01-03      -3      True   y
+2022-02-05      -100    False  x
+2023-04-02      8       True   z
+<datetime64[D]> <int64> <bool> <<U1>
+
+
+
+>>> f.via_type_clinic.check(sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.bool_, np.str_])
+
+
+>>> f.via_type_clinic.check(sf.Frame[
+    tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')],
+    sf.Index[np.str_],
+    np.int64, np.bool_, np.str_])
+
+
+>>> f.via_type_clinic.check(sf.Frame[
+    tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')],
+    tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', 'c')],
+    np.int64, np.bool_, np.str_])
+
+
+>>> f.via_type_clinic.check(sf.Frame[
+    tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')],
+    tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])],
+    np.int64, np.bool_, np.str_])
+
+>>> f.via_type_clinic.check(sf.Frame[
+    tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')],
+    tp.Annotated[sf.Index[np.str_], sf.Require.Labels(
+        ...,
+        ['b', lambda s: s.all()],
+        ['c', lambda s: s.isin(('x', 'y', 'z')).all()]
+    )], np.int64, np.bool_, np.str_])
+
+>>> @sf.CallGuard.check
+... def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+...     return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
+...
+>>> proc(f)
+1
+
+
+>>> @sf.CallGuard.check
+... def proc(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int64:
+...     return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
+...
+>>> proc(f)
+ClinicError:
+In args of (f: Frame[Annotated[IndexDate, Labels('2022-01-03', ..., '2023-04-02')], Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])], int64, bool_, str_]) -> int64
+└── Frame[Annotated[IndexDate, Labels('2022-01-03', ..., '2023-04-02')], Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])], int64, bool_, str_]
+    └── Annotated[Index[str_], Labels(..., ['b', <lambda>], ['c', <lambda>])]
+        └── Labels(..., ['b', <lambda>], ['c', <lambda>])
+            └── Validation failed of label 'b' with <lambda>
+
+
+
