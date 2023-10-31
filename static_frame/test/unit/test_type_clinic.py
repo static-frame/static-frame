@@ -1487,8 +1487,8 @@ def test_validate_shape_a():
     v5 = Require.Shape(3, ...)
     assert not tuple(v5._iter_errors(f, None, (), ()))
 
-    v6 = Require.Shape(3)
-    assert not tuple(v6._iter_errors(f, None, (), ()))
+    v6 = Require.Shape(3) # this specifies a 1D shape
+    assert tuple(v6._iter_errors(f, None, (), ()))
 
     v7 = Require.Shape(5, ...)
     assert tuple(v7._iter_errors(f, None, (), ()))

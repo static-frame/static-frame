@@ -35,7 +35,7 @@ TValidator = tp.Callable[..., bool]
 if tp.TYPE_CHECKING:
     from types import EllipsisType  # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TShapeComponent = tp.Union[int, EllipsisType] # pylint: disable=W0611 #pragma: no cover
+    TShapeSpecifier = tp.Tuple[tp.Union[int, EllipsisType], ...] # pylint: disable=W0611 #pragma: no cover
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
@@ -200,7 +200,7 @@ class ClinicError(TypeError):
 #-------------------------------------------------------------------------------
 
 class Validator:
-    '''Base class of all run-time constraints, deployed in Annotated generics.
+    '''Base class of all run-time constraints, deployed in ``Annotated`` generics.
     '''
     __slots__: tp.Tuple[str, ...] = ()
 
@@ -278,21 +278,21 @@ class Require:
         '''Validate the length of a container.
 
         Args:
-            len: The length to validate against.
+            shape: A tuple of one or two values, where values are either an integer or an `...`, specifying any value for that position. The size of the shape always species the dimensionality.
             /
         '''
 
-        __slots__ = ('_y', '_x')
+        __slots__ = ('_shape')
 
         @staticmethod
-        def _validate_shape_component(c: TShapeComponent) -> TShapeComponent:
-            if c is not ... and not isinstance(c, INT_TYPES):
-                raise TypeError(f'Components must be either `...` or an integer, not {c!r}.')
-            return c
+        def _validate_shape_component(ss: TShapeSpecifier) -> TShapeSpecifier:
+            for c in ss:
+                if c is not ... and not isinstance(c, INT_TYPES):
+                    raise TypeError(f'Components must be either `...` or an integer, not {c!r}.')
+            return ss
 
-        def __init__(self, y: TShapeComponent = ..., x: TShapeComponent = ..., /):
-            self._y = self._validate_shape_component(y)
-            self._x = self._validate_shape_component(x)
+        def __init__(self, /, *shape: TShapeSpecifier):
+            self._shape = self._validate_shape_component(shape)
 
         def _iter_errors(self,
                 value: tp.Any,
@@ -302,18 +302,25 @@ class Require:
                 ) -> tp.Iterator[TValidation]:
 
             # same for both 1d and 2d
-            if self._y is not ... and self._y != value.shape[0]:
+            if len(self._shape) != len(value.shape):
                 yield (ERROR_MESSAGE_TYPE,
-                        f'Expected shape ({self._y, self._x}), provided shape {value.shape}',
+                        f'Expected shape ({self._shape}), provided shape {value.shape}',
                         parent_hints,
                         parent_values,
                         )
-            elif value.ndim == 2 and self._x is not ... and self._x != value.shape[1]:
+            elif self._shape[0] is not ... and self._shape[0] != value.shape[0]:
                 yield (ERROR_MESSAGE_TYPE,
-                        f'Expected shape ({self._y, self._x}), provided shape {value.shape}',
+                        f'Expected shape ({self._shape}), provided shape {value.shape}',
                         parent_hints,
                         parent_values,
                         )
+            elif len(self._shape) == 2 and self._shape[1] is not ... and self._shape[1] != value.shape[1]:
+                yield (ERROR_MESSAGE_TYPE,
+                        f'Expected shape ({self._shape}), provided shape {value.shape}',
+                        parent_hints,
+                        parent_values,
+                        )
+
 
     # might accept regular expression objects as label entries?
     class Labels(Validator):
