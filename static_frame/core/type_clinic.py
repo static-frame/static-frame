@@ -494,7 +494,6 @@ class Require:
                                 self._labels[pos_e + 1],
                                 pf,
                                 )
-                        # import ipdb; ipdb.set_trace()
                         if label_next_e is ...:
                             yield (ERROR_MESSAGE_TYPE,
                                     'Expected cannot be defined with adjacent ellipses',

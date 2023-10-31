@@ -194,6 +194,123 @@ static_frame.core.frame.Frame
 
 
 
+# Implementation of _iter_errors
+
+
+# index: q, r, a, b
+# hint: ..., a, b
+# comparisons
+# q, ..., look ahead to a
+# r, ..., look ahead to a
+# a, ..., look ahead to a, validate a, advance two
+# b,
+
+
+# a, b, c, d
+# a, ...
+
+
+
+
+# index: a, b, c, d
+# a, ..., d
+
+a -> a
+b -> ...
+c -> ...
+d -> ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
