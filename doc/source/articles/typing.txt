@@ -1,0 +1,159 @@
+
+
+
+# article
+
+Generic DataFrame Type Hints for Static Analysis and Runtime Validation
+
+Complete DataFrame Type Hints for Static Analysis and Runtime Validation
+
+Type-Hinting DataFrames: Static Typing Index, Columns, and Columnar Types
+
+
+
+Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to specifying just the type:
+
+    def process(f: DataFrame) -> Series: ...
+
+This is insufficient, as it ignores the types contained within the container. A DataFrame might have date labels on the index, string labels on the columns, and two data columns of floating-point numbers. A DataFrame with integer labels and Boolean data, in many contexts, is hardly the same type.
+
+Python built-in generic types, such as the `list`, `tuple`, and `dict`, benefit greatly from specification of component types. The same is true for DataFrames. And yet Pandas, even with the `pandas-stubs` package, does not permit specifying the types DataFrame components.
+
+
+
+
+While using generics can support some of these component definitions, the variable number of types needed to define hierarchical indices or columnar data types has not been easy to represent. The `TypeVarTuple`, introduced in Python 3.11, provides the missing tool to flexibly define variable numbers of types as found in hierarchical indices and columnar data.
+
+Using nested generics and `TypeVarTuple`, and building on the generic types introduced in NumPy, StaticFrame 2.0 permits statically typing the index, columns, and columnar types of a DataFrame.
+
+For example, the same interface from above can be annotated to show a Frame with a hierarchical index (where the outer depth is a date, the inner depth a string), string column labels, and two columns of floats. The returned Series is indexed by date with floating-point values.
+
+def process(f: Frame[
+        IndexDate,
+        Index[np.str_],
+        np.float64,
+        np.float64,
+        ]) -> Series[IndexDate, np.float64]: ...
+
+This signature conveys far more information, even hinting at what the function might be doing. Even better, static type checkers (Pyright now, mypy in the future), can validate arguments to this interface.
+
+Static type checking might not be enough: runtime evaluation provides even stronger constraints. StaticFrame 2.0 introduces a built-in decorator, `check_interface`, that uses the same type hints for runtime validation. Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
+
+@check_interface
+def process(f: Frame[
+        IndexHierarchy[IndexDate, Index[np.int64]],
+        Annotated[Index[np.str_], Labels(('height', 'frequency))],
+        Annotated[np.float64, Validator(lambda s: (s > 0).all())],
+        np.float64,
+        ]) -> Series[IndexDate, np.float64]: ...
+
+
+
+
+
+
+
+==
+The number of combinations of the types of these components, even with just a few columns, is astronomical.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# presentation
+
+Typing DataFrames with Generics and TypeVarTuple
+
+Better DataFrame Typing with Generics and TypeVarTuple
+
+Better DataFrame Typing (and Runtime Validation) with Composite Generics and TypeVarTuple
+
+Better DataFrame Typing with Composite Generics and TypeVarTuple
+
+Typing Arrays and DataFrames
+
+Using Generics and TypeVarTuple for Better Typing of Arrays and DataFrames
+
+.. Using `TypeVarTuple`
+.. for Variadic Columnar dtype Specfication
+
+Using Nested Generics and TypeVarTuple for Better Typing of Arrays and DataFrames
+
+
+Use `generic` insteead of `dtype[generic]` provides a more concise representation.
+
+
+
+
+### first internal presentation
+
+A goal of StaticFrame is to provide an explicit interface that supports creating maintainable libraries using DataFrames. As Python standard library tools for typing have evolved, using type hints to make DataFrame interfaces explicit and statically checkable is now (nearly!) possible.
+
+NumPy has made substantial effort to implement typing for n-dimensional arrays. The challenge of typing n-dimensional arrays is different than for DataFrames: while an array instance might be of any dimensionality and shape while having a single dtype, a DataFrame has indices on the rows and columns, is always two-dimensional, and has zero or more columnar dtypes.
+
+Specifying shape for n-dimensional arrays is complex; there are numerous proposals for such a specification. DataFrames do not need the complexity of an n-dimensional shape type. As DataFrames are always two-dimensional, and columnar types bear the greatest relevance for interfaces, we can forgo full shape types and instead focus on columnar types.
+
+PEP 646 introduces `TypeVarTuple`, a new construct (included in Python 3.11) that supports variadic generics. With the `TypeVarTuple`, the columnar types of a DataFrame can be specified as all float, four columns of Booleans, or any other defined mixture. Combined with generic specifications for index type, column type, and variadic columnar types, DataFrames can be statically typed to meet the needs of most interfaces.
+
+In CR today we will review NumPy's approach to typing, including the as-of-yet undefined generic shape type and the heavy use of overrides to permit type-specific return values where possible. Next, I will introduce `TypeVarTuple` and the benefits of variadic generics. Then, we will see how multiple inheritance with `Generic` can be used to make `Index`, `IndexHierarchy`, `Series`, and `Frame` generic, and how, with `TypeVarTuple`, we can make columnar type specification variadic for `IndexHierarchy` and `Frame`. Finally, we will consider other `Frame` characteristics that might be combined with type hints to perform comprehensive run-time validations.
+
+
+
+
+
+
+
+NumPy Typing Utilities
+https://numpy.org/doc/stable/reference/typing.html
+
+NumPy's pyi file
+https://github.com/numpy/numpy/blob/main/numpy/__init__.pyi
+
+Overloads
+https://github.com/numpy/numpy/blob/18d89cc7c5b4ee202fcc6093a388e816115c1d8d/numpy/__init__.pyi#L1814
+
+Shape types:
+https://github.com/numpy/numpy/issues/16544#issuecomment-1037835285
+
+
+A long discussion
+https://taoa.io/posts/Shape-typing-numpy-with-pyright-and-variadic-generics
+
+Variadic generics
+https://peps.python.org/pep-0646/
+
+Spark's use of slices to define label / dtype pairs:
+https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/typehints.html
+
+
+
+NumPy discussion on ordering of generic args:
+https://github.com/numpy/numpy/issues/16547
+
+
+# some examples
+# https://www.kaggle.com/datasets/paultimothymooney/stock-market-data/
+
+
+# pretty good but many column, including one with tuple
+# https://www.kaggle.com/datasets/sujaykapadnis/meteorites-dataset
+
+# buoy data
+# also many columns
+# https://www.ndbc.noaa.gov/download_data.php?filename=4625382023.txt.gz&dir=data/stdmet/Aug/
+
+
+
+# https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
+
