@@ -31,13 +31,13 @@ from static_frame.core.yarn import Yarn
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 TValidator = tp.Callable[..., bool]
+TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern]
 
 if tp.TYPE_CHECKING:
     from types import EllipsisType  # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TShapeComponent = tp.Union[int, EllipsisType]
     TShapeSpecifier = tp.Tuple[TShapeComponent, ...] # pylint: disable=W0611 #pragma: no cover
-
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'GenericAlias', None):
@@ -322,8 +322,7 @@ class Require:
                         parent_values,
                         )
 
-
-    # might accept regular expression objects as label entries?
+    # reanme LabelsORdered?
     class Labels(Validator):
         r'''Validate the membership and ordering of labels.
 
@@ -543,6 +542,31 @@ class Require:
                                 parent_hints,
                                 parent_values,
                                 )
+
+
+
+
+    class LabelsMatch(Validator):
+        r'''Validate the presence of one or more of each labels specified.
+
+        Args:
+            \*labels: Provide labels as args. Use ... for regions of zero or more undefined labels.
+        '''
+        __slots__ = ('_labels',)
+
+        def __init__(self, *labels: tp.Sequence[TLabelMatchSpecifier]):
+            self._labels: tp.Sequence[TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator]] = labels
+
+            # split into a set of labels and dict of validations for later lookup
+
+        def __repr__(self) -> str:
+            msg = []
+            for v in self._labels:
+                msg.append(to_name(v, func_to_str=repr))
+            return f'{self.__class__.__name__}({", ".join(msg)})'
+
+    # LabelsMatchAny
+
 
     class Apply(Validator):
         '''Apply a function to a container with an arbitrary function. The validation passes if the function returns True (or a truthy value).
