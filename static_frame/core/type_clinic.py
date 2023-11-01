@@ -322,9 +322,8 @@ class Require:
                         parent_values,
                         )
 
-    # reanme LabelsORdered?
-    class Labels(Validator):
-        r'''Validate the membership and ordering of labels.
+    class LabelsOrder(Validator):
+        r'''Validate the ordering of labels.
 
         Args:
             \*labels: Provide labels as args. Use ... for regions of zero or more undefined labels.

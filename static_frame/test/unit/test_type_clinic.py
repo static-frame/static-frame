@@ -1100,120 +1100,120 @@ def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]
 
 def test_validate_labels_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
-    v = Require.Labels('a', 'b', 'c')
+    v = Require.LabelsOrder('a', 'b', 'c')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
-    v = Require.Labels('a', 'b', 'c')
+    v = Require.LabelsOrder('a', 'b', 'c')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided 'x'",)
 
 def test_validate_labels_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
-    v = Require.Labels('a', 'b', 'c')
+    v = Require.LabelsOrder('a', 'b', 'c')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == (
             "Expected 'b', provided 'x'",)
 
 def test_validate_labels_b1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Require.Labels('a', ..., 'd')
+    v = Require.LabelsOrder('a', ..., 'd')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_b2():
     idx1 = sf.Index(('a', 'b'))
-    v = Require.Labels('a', ..., 'b')
+    v = Require.LabelsOrder('a', ..., 'b')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 
 def test_validate_labels_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Require.Labels(..., 'd')
+    v = Require.LabelsOrder(..., 'd')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Require.Labels('a', 'b', ...)
+    v = Require.LabelsOrder('a', 'b', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Require.Labels('a', 'b', ..., 'e')
+    v = Require.LabelsOrder('a', 'b', ..., 'e')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'e'",)
 
 def test_validate_labels_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', ..., 'c', ..., 'd')
+    v = Require.LabelsOrder('a', ..., 'c', ..., 'd')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected labels exhausted at provided 'e'",)
 
 def test_validate_labels_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', ..., 'c', ..., 'e')
+    v = Require.LabelsOrder('a', ..., 'c', ..., 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e3():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', ..., 'c', ...)
+    v = Require.LabelsOrder('a', ..., 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e4():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels(..., 'c', ...)
+    v = Require.LabelsOrder(..., 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e5():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels(..., 'b', 'c', ...)
+    v = Require.LabelsOrder(..., 'b', 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e6():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels(..., 'b', ..., 'd', 'e')
+    v = Require.LabelsOrder(..., 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e7():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', 'b', ..., 'd', 'e')
+    v = Require.LabelsOrder('a', 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', 'b', ..., 'f', ...)
+    v = Require.LabelsOrder('a', 'b', ..., 'f', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'f'",)
 
 def test_validate_labels_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels(..., 'x', ..., 'y', ...)
+    v = Require.LabelsOrder(..., 'x', ..., 'y', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'x', ..., 'y'",)
 
 def test_validate_labels_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels(..., 'a', ..., ...)
+    v = Require.LabelsOrder(..., 'a', ..., ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected cannot be defined with adjacent ellipses",)
 
 def test_validate_labels_e11():
     idx1 = sf.Series(('a',))
-    v = Require.Labels('a', ...)
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected Labels('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
+    v = Require.LabelsOrder('a', ...)
+    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected LabelsOrder('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
 def test_validate_labels_e12():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', 'b', ..., 'd', 'e')
+    v = Require.LabelsOrder('a', 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 
 def test_validate_labels_f1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
-    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_f2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
-    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 def test_validate_labels_f3():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
-    v = Require.Labels('a', 'b', 'c', 'd', 'e', ...)
+    v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'e'", )
 
 
@@ -1227,7 +1227,7 @@ def test_validate_labels_g():
             )
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             tp.Annotated[sf.Index[np.str_],
-                    sf.Require.Labels(
+                    sf.Require.LabelsOrder(
                             ['a', lambda s: (s < 0).all()],
                             ...,
                             'c',
@@ -1246,12 +1246,12 @@ def test_validate_labels_g():
 
     cr = TypeClinic(f)(h1)
     assert (scrub_str(cr.to_str()) ==
-            "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., 'c')], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., 'c')] Labels(['a', <lambda>], ..., 'c') Validation failed of label 'a' with <lambda>"
+            "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')] LabelsOrder(['a', <lambda>], ..., 'c') Validation failed of label 'a' with <lambda>"
             )
 
     h2 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             tp.Annotated[sf.Index[np.str_],
-                    sf.Require.Labels(
+                    sf.Require.LabelsOrder(
                             ['a', lambda s: (s > 0).all()],
                             ...,
                             ['c', lambda s: s.sum() == 3],
@@ -1262,7 +1262,7 @@ def test_validate_labels_g():
             np.bool_]
 
     cr = TypeClinic(f)(h2)
-    assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], Labels(['a', <lambda>], ..., ['c', <lambda>])] Labels(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
+    assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])] LabelsOrder(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
 
 
 #-------------------------------------------------------------------------------
@@ -1282,7 +1282,7 @@ def test_validate_labels_h1():
             dtypes=(np.int64, np.int64, np.bool_)
             )
 
-    v = Require.Labels('a', 'b', ['c', lambda s: s.dtype == bool])
+    v = Require.LabelsOrder('a', 'b', ['c', lambda s: s.dtype == bool])
 
     with pytest.raises(RuntimeError):
         # Provided label validators in a context without a discoverable Frame.
@@ -1307,19 +1307,19 @@ def test_validate_labels_h2():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v = Require.Labels('2022-01-03', ...)
+    v = Require.LabelsOrder('2022-01-03', ...)
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
-    v = Require.Labels(..., '2018-04-02')
+    v = Require.LabelsOrder(..., '2018-04-02')
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
-    v = Require.Labels(..., '2022-02-05', '2018-04-02')
+    v = Require.LabelsOrder(..., '2022-02-05', '2018-04-02')
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
-    v = Require.Labels('2021-01-03', ...)
+    v = Require.LabelsOrder('2021-01-03', ...)
     assert tuple(v._iter_errors(f.index, None, (), (f,)))
 
-    v = Require.Labels(..., '2021-01-03')
+    v = Require.LabelsOrder(..., '2021-01-03')
     assert tuple(v._iter_errors(f.index, None, (), (f,)))
 
 
@@ -1337,10 +1337,10 @@ def test_validate_labels_h3():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v = Require.Labels(['2022-01-03', lambda s: 'y' in s.values], ...)
+    v = Require.LabelsOrder(['2022-01-03', lambda s: 'y' in s.values], ...)
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
-    v = Require.Labels(..., ['2018-04-02', lambda s: 'q' in s.values])
+    v = Require.LabelsOrder(..., ['2018-04-02', lambda s: 'q' in s.values])
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
 
@@ -1360,23 +1360,23 @@ def test_validate_labels_h4():
 
     f.via_type_clinic.check(sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.bool_, np.str_])
 
-    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], sf.Index[np.str_], np.int64, np.bool_, np.str_])
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], sf.Index[np.str_], np.int64, np.bool_, np.str_])
 
-    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', 'c')], np.int64, np.bool_, np.str_])
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.LabelsOrder(..., 'b', 'c')], np.int64, np.bool_, np.str_])
 
-    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
+    f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.LabelsOrder(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
 
     with pytest.raises(TypeError):
-        f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
+        f.via_type_clinic.check(sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.LabelsOrder(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_])
 
     @sf.CallGuard.check
-    def proc1(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int_:
+    def proc1(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.LabelsOrder(..., 'b', ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int_:
         return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
 
     assert proc1(f) == 1
 
     @sf.CallGuard.check
-    def proc2(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.Labels('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.Labels(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int_:
+    def proc2(f: sf.Frame[tp.Annotated[sf.IndexDate, sf.Require.LabelsOrder('2022-01-03', ..., '2023-04-02')], tp.Annotated[sf.Index[np.str_], sf.Require.LabelsOrder(..., ['b', lambda s: s.all()], ['c', lambda s: s.isin(('x', 'y', 'z')).all()])], np.int64, np.bool_, np.str_]) -> np.int_:
         return f.loc[f['b'], 'c'].isin(('y', 'x')).sum()
 
     with pytest.raises(TypeError):
@@ -1395,10 +1395,10 @@ def test_validate_labels_i1():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v = Require.Labels([..., lambda s: (s > 0).all()], 'c', 'd')
+    v = Require.LabelsOrder([..., lambda s: (s > 0).all()], 'c', 'd')
     assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
 
-    v = Require.Labels([..., lambda s: (s < 0).all()], 'c', 'd')
+    v = Require.LabelsOrder([..., lambda s: (s < 0).all()], 'c', 'd')
     assert tuple(v._iter_errors(f.columns, None, (), (f,)))
 
 
@@ -1414,10 +1414,10 @@ def test_validate_labels_i2():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v = Require.Labels([..., lambda s: s.dtype.kind == 'i'], ['c', lambda s: s.dtype == bool], 'd')
+    v = Require.LabelsOrder([..., lambda s: s.dtype.kind == 'i'], ['c', lambda s: s.dtype == bool], 'd')
     assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
 
-    v = Require.Labels([..., lambda s: s.dtype.kind == 'i'], ['c', lambda s: s.dtype == float], 'd')
+    v = Require.LabelsOrder([..., lambda s: s.dtype.kind == 'i'], ['c', lambda s: s.dtype == float], 'd')
     assert tuple(v._iter_errors(f.columns, None, (), (f,)))
 
 
@@ -1433,7 +1433,7 @@ def test_validate_labels_i3():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v = Require.Labels([..., lambda s: s.dtype.kind == 'i'], 'c', ['d', lambda s: s.dtype.kind == 'U'])
+    v = Require.LabelsOrder([..., lambda s: s.dtype.kind == 'i'], 'c', ['d', lambda s: s.dtype.kind == 'U'])
     assert not tuple(v._iter_errors(f.columns, None, (), (f,)))
 
 
@@ -1450,13 +1450,13 @@ def test_validate_labels_i4():
             dtypes=(np.int64, np.int64, np.bool_, np.str_)
             )
 
-    v1 = Require.Labels('a', 'b', 'c', ...)
+    v1 = Require.LabelsOrder('a', 'b', 'c', ...)
     assert not tuple(v1._iter_errors(f.columns, None, (), (f,)))
 
-    v2 = Require.Labels('a', 'b', 'c', [..., lambda s: s.dtype.kind == 'U'])
+    v2 = Require.LabelsOrder('a', 'b', 'c', [..., lambda s: s.dtype.kind == 'U'])
     assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
 
-    v3 = Require.Labels('a', 'b', 'c', [..., lambda s: s.dtype.kind == 'i'])
+    v3 = Require.LabelsOrder('a', 'b', 'c', [..., lambda s: s.dtype.kind == 'i'])
     assert tuple(v3._iter_errors(f.columns, None, (), (f,)))
 
 #-------------------------------------------------------------------------------

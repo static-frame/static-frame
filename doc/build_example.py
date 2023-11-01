@@ -6393,9 +6393,9 @@ class ExGenRequire(ExGen):
             yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
             yield 'func2(ix2)'
-        elif attr == 'Labels()':
+        elif attr == 'LabelsOrder()':
             yield 'import typing as tp'
-            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Labels(1024, ..., 4096)]): return ix.max()'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.LabelsOrder(1024, ..., 4096)]): return ix.max()'
             yield 'func2 = sf.CallGuard.check(func1)'
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
             yield 'func2(ix1)'
