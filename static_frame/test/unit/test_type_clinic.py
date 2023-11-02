@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import warnings
 from functools import partial
 
@@ -1098,120 +1099,120 @@ def test_check_yarn_a():
 def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
-def test_validate_labels_a1():
+def test_validate_labels_order_a1():
     idx1 = sf.Index(('a', 'b', 'c'))
     v = Require.LabelsOrder('a', 'b', 'c')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_a2():
+def test_validate_labels_order_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
     v = Require.LabelsOrder('a', 'b', 'c')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided 'x'",)
 
-def test_validate_labels_a3():
+def test_validate_labels_order_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
     v = Require.LabelsOrder('a', 'b', 'c')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == (
             "Expected 'b', provided 'x'",)
 
-def test_validate_labels_b1():
+def test_validate_labels_order_b1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.LabelsOrder('a', ..., 'd')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_b2():
+def test_validate_labels_order_b2():
     idx1 = sf.Index(('a', 'b'))
     v = Require.LabelsOrder('a', ..., 'b')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 
-def test_validate_labels_c():
+def test_validate_labels_order_c():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.LabelsOrder(..., 'd')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_d1():
+def test_validate_labels_order_d1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.LabelsOrder('a', 'b', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_d2():
+def test_validate_labels_order_d2():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.LabelsOrder('a', 'b', ..., 'e')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'e'",)
 
-def test_validate_labels_e1():
+def test_validate_labels_order_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', ..., 'c', ..., 'd')
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected labels exhausted at provided 'e'",)
 
-def test_validate_labels_e2():
+def test_validate_labels_order_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', ..., 'c', ..., 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e3():
+def test_validate_labels_order_e3():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', ..., 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e4():
+def test_validate_labels_order_e4():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder(..., 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e5():
+def test_validate_labels_order_e5():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder(..., 'b', 'c', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e6():
+def test_validate_labels_order_e6():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder(..., 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e7():
+def test_validate_labels_order_e7():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_e8():
+def test_validate_labels_order_e8():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', 'b', ..., 'f', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'f'",)
 
-def test_validate_labels_e9():
+def test_validate_labels_order_e9():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder(..., 'x', ..., 'y', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'x', ..., 'y'",)
 
-def test_validate_labels_e10():
+def test_validate_labels_order_e10():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder(..., 'a', ..., ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected cannot be defined with adjacent ellipses",)
 
-def test_validate_labels_e11():
+def test_validate_labels_order_e11():
     idx1 = sf.Series(('a',))
     v = Require.LabelsOrder('a', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected LabelsOrder('a', ...) to be used on Index or IndexHierarchy, not provided Series",)
 
-def test_validate_labels_e12():
+def test_validate_labels_order_e12():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', 'b', ..., 'd', 'e')
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
 
-def test_validate_labels_f1():
+def test_validate_labels_order_f1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_f2():
+def test_validate_labels_order_f2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e', 'f', 'g'))
     v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert not get_hints(v._iter_errors(idx1, None, (), ()))
 
-def test_validate_labels_f3():
+def test_validate_labels_order_f3():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
     v = Require.LabelsOrder('a', 'b', 'c', 'd', 'e', ...)
     assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected has unmatched labels 'e'", )
@@ -1219,7 +1220,7 @@ def test_validate_labels_f3():
 
 #-------------------------------------------------------------------------------
 
-def test_validate_labels_g():
+def test_validate_labels_order_g():
     records = (
             (1, 3, True),
             (4, 100, False),
@@ -1267,7 +1268,7 @@ def test_validate_labels_g():
 
 #-------------------------------------------------------------------------------
 
-def test_validate_labels_h1():
+def test_validate_labels_order_h1():
     idx1 = sf.Index(('a', 'b', 'c'))
     records = (
             (1, 3, True),
@@ -1293,7 +1294,7 @@ def test_validate_labels_h1():
         tuple(v._iter_errors(idx1, None, (), (f,)))
 
 
-def test_validate_labels_h2():
+def test_validate_labels_order_h2():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1323,7 +1324,7 @@ def test_validate_labels_h2():
     assert tuple(v._iter_errors(f.index, None, (), (f,)))
 
 
-def test_validate_labels_h3():
+def test_validate_labels_order_h3():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1344,7 +1345,7 @@ def test_validate_labels_h3():
     assert not tuple(v._iter_errors(f.index, None, (), (f,)))
 
 
-def test_validate_labels_h4():
+def test_validate_labels_order_h4():
     records = (
             (-3, True, 'y'),
             (-100, False, 'x'),
@@ -1383,7 +1384,7 @@ def test_validate_labels_h4():
         assert proc2(f) == 1
 
 
-def test_validate_labels_i1():
+def test_validate_labels_order_i1():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1402,7 +1403,7 @@ def test_validate_labels_i1():
     assert tuple(v._iter_errors(f.columns, None, (), (f,)))
 
 
-def test_validate_labels_i2():
+def test_validate_labels_order_i2():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1421,7 +1422,7 @@ def test_validate_labels_i2():
     assert tuple(v._iter_errors(f.columns, None, (), (f,)))
 
 
-def test_validate_labels_i3():
+def test_validate_labels_order_i3():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1438,7 +1439,7 @@ def test_validate_labels_i3():
 
 
 
-def test_validate_labels_i4():
+def test_validate_labels_order_i4():
     records = (
             (1, 3, True, 'y'),
             (4, 100, False, 'x'),
@@ -1458,6 +1459,81 @@ def test_validate_labels_i4():
 
     v3 = Require.LabelsOrder('a', 'b', 'c', [..., lambda s: s.dtype.kind == 'i'])
     assert tuple(v3._iter_errors(f.columns, None, (), (f,)))
+
+
+
+#-------------------------------------------------------------------------------
+
+
+def test_validate_labels_match_a1():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v = Require.LabelsMatch('c', 'b', 'a')
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+def test_validate_labels_match_a2():
+    idx1 = sf.Index(('a', 'b', 'd'))
+    v = Require.LabelsMatch('a', 'b', 'c')
+    assert get_hints(v._iter_errors(idx1, None, (), ()))
+
+def test_validate_labels_match_a3():
+    idx1 = sf.Index((10, 20, 30))
+    v = Require.LabelsMatch(10, 30)
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+def test_validate_labels_match_a4():
+    idx1 = sf.Index((10, 'a', 'c', 40))
+    v = Require.LabelsMatch(10, 'c')
+    assert not get_hints(v._iter_errors(idx1, None, (), ()))
+
+    idx2 = sf.Index(('a', 40))
+    assert get_hints(v._iter_errors(idx2, None, (), ()))
+
+
+def test_validate_labels_match_b1():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v1 = Require.LabelsMatch('c', {'b', 'a'})
+    assert not get_hints(v1._iter_errors(idx1, None, (), ()))
+
+    v2 = Require.LabelsMatch('c', {'b', 'x'})
+    assert not get_hints(v2._iter_errors(idx1, None, (), ()))
+
+    v3 = Require.LabelsMatch('c', {'y', 'x'})
+    assert get_hints(v3._iter_errors(idx1, None, (), ()))
+
+
+def test_validate_labels_match_b2():
+    idx1 = sf.Index(('a', 'b', 'c', 'd'))
+    v1 = Require.LabelsMatch({'c', 'd'}, {'b', 'a'})
+    assert not get_hints(v1._iter_errors(idx1, None, (), ()))
+
+    idx2 = sf.Index(('a', 'c', 'd'))
+    assert not get_hints(v1._iter_errors(idx2, None, (), ()))
+
+    idx3 = sf.Index(('y', 'x'))
+    assert len(get_hints(v1._iter_errors(idx3, None, (), ()))) == 2
+
+
+
+def test_validate_labels_match_c1():
+    idx1 = sf.Index(('aaa', 'bbb', 'ccc', 'dcc'))
+    v1 = Require.LabelsMatch('bbb', re.compile('cc') )
+    assert not get_hints(v1._iter_errors(idx1, None, (), ()))
+
+    idx2 = sf.Index(('aaa', 'bbb', 'dcc'))
+    assert not get_hints(v1._iter_errors(idx2, None, (), ()))
+
+    idx3 = sf.Index(('aaa', 'bbb', 'c_c'))
+    assert get_hints(v1._iter_errors(idx3, None, (), ()))
+
+def test_validate_labels_match_c2():
+    idx1 = sf.Index(('aaa', 'bbb', 'ccc'))
+    v1 = Require.LabelsMatch('bbb', re.compile('^cc') )
+    assert not get_hints(v1._iter_errors(idx1, None, (), ()))
+
+    idx2 = sf.Index(('aaa', 'bbb', 'dcc'))
+    assert get_hints(v1._iter_errors(idx2, None, (), ()))
+
+
 
 #-------------------------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import re
 import types
 import typing
 import warnings
-import re
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
@@ -344,6 +344,26 @@ class Require:
             return None
 
         @staticmethod
+        def _split_validators(
+                label: tp.Any,
+                ) -> tp.Tuple[TLabel | tp.Set[TLabel], tp.List[TValidator] | None]:
+            '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
+            '''
+            label_e: TLabel
+            label_validators: tp.List[TValidator] | None
+
+            # evaluate that all post-label values are callables?
+            if isinstance(label, list):
+                label_e = label[0] # must be first
+                label_validators = label[1:]
+            else:
+                label_e = label
+                label_validators = None
+
+            return label_e, label_validators
+
+
+        @staticmethod
         def _iter_validator_results(*,
                 frame: TFrameAny | None,
                 labels: IndexBase,
@@ -354,9 +374,10 @@ class Require:
                 ) -> tp.Iterator[TValidation]:
             # be a no-op when no validators are present
             if validators:
-                # when validators are extracted, we check that Frame is not None
-                assert frame is not None
+                if frame is None:
+                    raise RuntimeError('Provided label validators in a context without a discoverable Frame.')
 
+                # NOTE: the same index instance might be on both axis, though this is unlikely
                 if labels is frame.index:
                     s = frame.loc[label]
                 elif labels is frame.columns:
@@ -393,31 +414,8 @@ class Require:
                 labels = labels[:-1]
             return ', '.join((repr(l) if l is not ... else '...') for l in labels)
 
-        @staticmethod
-        def _split_validators(
-                label: TLabel | tp.List[TLabel | TValidator],
-                frame: TFrameAny | None,
-                ) -> tp.Tuple[TLabel, tp.List[TValidator]]:
-            '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
-            '''
-            label_e: TLabel
-            label_validators: tp.List[TValidator] | None
-
-            # evaluate that all post-label values are callables?
-            if isinstance(label, list):
-                label_e = label[0] # must be first
-                label_validators = label[1:] # type: ignore
-            else:
-                label_e = label
-                label_validators = None
-
-            if label_validators and frame is None:
-                raise RuntimeError('Provided label validators in a context without a discoverable Frame.')
-
-            return label_e, label_validators # type: ignore
-
         def _provided_is_expected(self,
-                label_e: TLabel,
+                label_e: tp.Any,
                 label_p: TLabel,
                 iloc_p: int,
                 index: IndexBase,
@@ -459,7 +457,7 @@ class Require:
                                 )
                         break
 
-                    label_e, label_validators = self._split_validators(self._labels[pos_e], pf)
+                    label_e, label_validators = self._split_validators(self._labels[pos_e])
                     # partial processor, but defer calling until after label eval
                     iter_validator_results = partial(
                                 self._iter_validator_results,
@@ -501,7 +499,6 @@ class Require:
                         # look ahead to see if the next expected hint matches the current label, if so, we use those validators on this column
                         label_next_e, label_next_validators = self._split_validators(
                                 self._labels[pos_e + 1],
-                                pf,
                                 )
                         if label_next_e is ...:
                             yield (ERROR_MESSAGE_TYPE,
@@ -535,7 +532,7 @@ class Require:
 
                 else: # no break, exhausted all labels; evaluate final conditions
                     # NOTE: must re-split validators to handle all scenarios
-                    if pos_e + 1 == len_e and self._split_validators(self._labels[pos_e], pf)[0] is ...:
+                    if pos_e + 1 == len_e and self._split_validators(self._labels[pos_e])[0] is ...:
                         pass # expected ending on an ellipses
                     elif pos_e < len_e: # if we have unevaluated expected
                         remainder = self._repr_remainder(self._labels[pos_e:])
@@ -547,58 +544,61 @@ class Require:
 
 
     class LabelsMatch(_LabelsValidator):
-        r'''Validate the presence of one or more of each labels specified.
+        r'''Validate the presence of one or more labels, specified with the value, a pattern, or set of values. Order of labels is not relevant.
 
         Args:
-            \*labels: Provide labels as args. Use ... for regions of zero or more undefined labels.
+            \*labels: Provide labels matchers as args. A label matcher can be a label, a set of labels (of which at least one contained label must match), or a compiled regular expression (with which the `search` method is used to determine a match of string labels). Each label matcher provided must find at least one match, otherwise an error is returned.
         '''
         __slots__ = (
                 '_match_labels',
-                '_match_re',
+                '_match_res',
                 '_match_sets',
                 '_match_to_validators',
                 )
 
-        @staticmethod
-        def _split_validators(
-                label: TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator],
-                ) -> tp.Tuple[TLabelMatchSpecifier, tp.List[TValidator]]:
-            '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
-            '''
-            label_e: TLabelMatchSpecifier
-            label_validators: tp.List[TValidator] | None
+        # @staticmethod
+        # def _split_validators(
+        #         label: TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator],
+        #         ) -> tp.Tuple[TLabelMatchSpecifier, tp.List[TValidator]]:
+        #     '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
+        #     '''
+        #     label_e: TLabelMatchSpecifier
+        #     label_validators: tp.List[TValidator] | None
 
-            # evaluate that all post-label values are callables?
-            if isinstance(label, list):
-                label_e = label[0] # must be first
-                label_validators = label[1:] # type: ignore
-            else:
-                label_e = label
-                label_validators = None
+        #     # evaluate that all post-label values are callables?
+        #     if isinstance(label, list):
+        #         label_e = label[0] # must be first
+        #         label_validators = label[1:] # type: ignore
+        #     else:
+        #         label_e = label
+        #         label_validators = None
 
-            return label_e, label_validators # type: ignore
+        #     return label_e, label_validators # type: ignore
 
 
         def __init__(self, *labels: tp.Sequence[TLabelMatchSpecifier]):
             self._labels: tp.Sequence[TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator]] = labels
 
             self._match_labels: tp.Set[TLabel] = set()
-            self._match_re: tp.List[tp.Pattern[str]] = []
+            self._match_res: tp.List[tp.Pattern[str]] = []
             self._match_sets: tp.List[tp.FrozenSet[TLabel]] = []
-            self._match_to_validators: tp.Dict[tp.Any, tp.Sequence[TValidator]] = {}
+            self._match_to_validators: tp.Dict[
+                    tp.Union[TLabel, tp.Pattern[str], tp.FrozenSet[TLabel]],
+                    tp.Sequence[TValidator]
+                    ] = {}
 
             for l in labels:
-                m, v = self._split_validators(l)
+                m, validators = self._split_validators(l)
                 if isinstance(m, re.Pattern):
-                    self._match_re.append(m)
+                    self._match_res.append(m)
                 elif isinstance(m, set):
                     m = frozenset(m)
                     self._match_sets.append(m)
                 else:
                     self._match_labels.add(m)
 
-                if v:
-                    self._match_to_validators[m] = v
+                if validators:
+                    self._match_to_validators[m] = validators
 
         def _iter_errors(self,
                 value: tp.Any, # an index object
@@ -614,14 +614,42 @@ class Require:
                         parent_values,
                         )
             else:
+                # count number of times each condition is met
+                score = {k: 0 for k in chain(self._match_labels, self._match_res, self._match_sets)}
+
                 pf = self._find_parent_frame(parent_values)
-                pos_e = 0 # position in expected
-                len_e = len(self._labels)
+                iter_validator_results = partial(
+                            self._iter_validator_results,
+                            frame=pf,
+                            labels=value,
+                            parent_hints=parent_hints,
+                            parent_values=parent_values,)
+
 
                 for iloc_p, label_p in enumerate(value): # iterate provided index
-                    pass
+                    if label_p in self._match_labels:
+                        score[label_p] += 1
+                        # self._iter_validator_results(label=label_p,
+                        #     validators=self._match_to_validators.get(label_p),
+                        #     )
+                        continue
+                    if isinstance(label_p, str): # NOTE: could coerce all values to strings
+                        for match_re in self._match_res:
+                            if match_re.search(label_p):
+                                score[match_re] += 1
+                                continue
+                    for match_set in self._match_sets:
+                        if label_p in match_set:
+                            score[match_set] += 1
+                            continue
 
-
+                for k, count in score.items():
+                    if count == 0:
+                        yield (ERROR_MESSAGE_TYPE,
+                                f'Expected label to match {k!r}, no provided match',
+                                parent_hints,
+                                parent_values,
+                                )
 
     class Apply(Validator):
         '''Apply a function to a container with an arbitrary function. The validation passes if the function returns True (or a truthy value).

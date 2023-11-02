@@ -158,6 +158,7 @@ https://github.com/numpy/numpy/issues/16547
 # https://www.kaggle.com/datasets/borismarjanovic/price-volume-data-for-all-us-stocks-etfs
 
 
-
+# three column data sets here
+https://www.openassetpricing.com/
 
 
