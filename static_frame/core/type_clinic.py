@@ -609,11 +609,11 @@ class Require:
                 for iloc_p, label_p in enumerate(value): # iterate provided index
                     if label_p in self._match_labels:
                         score[label_p] += 1
-                        for log in iter_validator_results(label=label_p,
-                                validators=self._match_to_validators.get(label_p),
-                                ):
-                            yield log
-                            break
+                        # for log in iter_validator_results(label=label_p,
+                        #         validators=self._match_to_validators.get(label_p),
+                        #         ):
+                        #     yield log
+                        #     break
                         continue
                     if isinstance(label_p, str): # NOTE: could coerce all values to strings
                         for match_re in self._match_res:
