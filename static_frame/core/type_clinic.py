@@ -556,26 +556,6 @@ class Require:
                 '_match_to_validators',
                 )
 
-        # @staticmethod
-        # def _split_validators(
-        #         label: TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator],
-        #         ) -> tp.Tuple[TLabelMatchSpecifier, tp.List[TValidator]]:
-        #     '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
-        #     '''
-        #     label_e: TLabelMatchSpecifier
-        #     label_validators: tp.List[TValidator] | None
-
-        #     # evaluate that all post-label values are callables?
-        #     if isinstance(label, list):
-        #         label_e = label[0] # must be first
-        #         label_validators = label[1:] # type: ignore
-        #     else:
-        #         label_e = label
-        #         label_validators = None
-
-        #     return label_e, label_validators # type: ignore
-
-
         def __init__(self, *labels: tp.Sequence[TLabelMatchSpecifier]):
             self._labels: tp.Sequence[TLabelMatchSpecifier | tp.List[TLabelMatchSpecifier | TValidator]] = labels
 
@@ -629,9 +609,11 @@ class Require:
                 for iloc_p, label_p in enumerate(value): # iterate provided index
                     if label_p in self._match_labels:
                         score[label_p] += 1
-                        # self._iter_validator_results(label=label_p,
-                        #     validators=self._match_to_validators.get(label_p),
-                        #     )
+                        for log in iter_validator_results(label=label_p,
+                                validators=self._match_to_validators.get(label_p),
+                                ):
+                            yield log
+                            break
                         continue
                     if isinstance(label_p, str): # NOTE: could coerce all values to strings
                         for match_re in self._match_res:
