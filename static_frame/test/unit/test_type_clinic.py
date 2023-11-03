@@ -1567,6 +1567,26 @@ def test_validate_labels_match_h1():
     v4 = Require.LabelsMatch(['b', lambda s: s.dtype.kind == 'f'], 'd')
     assert tuple(v4._iter_errors(f.columns, None, (), (f,)))
 
+
+def test_validate_labels_match_h2():
+    records = (
+            (1, 3, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    v1 = Require.LabelsMatch({'a', 'b'}, {'c', 'd'})
+    assert not tuple(v1._iter_errors(f.columns, None, (), (f,)))
+
+    # v2 = Require.LabelsMatch({'a', 'b'},)
+    # assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
+
+
 #-------------------------------------------------------------------------------
 
 def test_validate_shape_a():
