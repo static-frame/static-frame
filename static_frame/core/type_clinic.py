@@ -350,7 +350,7 @@ class Require:
             '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
             '''
             label_e: TLabel
-            label_validators: tp.List[TValidator] | None
+            label_validators: tp.Sequence[TValidator] | None
 
             # evaluate that all post-label values are callables?
             if isinstance(label, list):
@@ -515,7 +515,7 @@ class Require:
                                 ):
                             # NOTE: if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must compare to the next expected value; we then skip that value for subsequent evaluation
                             for log in iter_validator_results(
-                                    label=label_next_e,
+                                    label=label_next_e, # pyright: ignore
                                     validators=label_next_validators,
                                     ):
                                 yield log
@@ -577,8 +577,8 @@ class Require:
                 else:
                     self._match_labels.add(m)
 
-                if validators:
-                    self._match_to_validators[m] = validators
+                # validator might be empty tuple
+                self._match_to_validators[m] = validators
 
         def _iter_errors(self,
                 value: tp.Any, # an index object
@@ -606,24 +606,44 @@ class Require:
                             parent_values=parent_values,)
 
 
-                for iloc_p, label_p in enumerate(value): # iterate provided index
+                for label_p in value: # iterate provided index
+                    matched = False
+
                     if label_p in self._match_labels:
                         score[label_p] += 1
-                        # for log in iter_validator_results(label=label_p,
-                        #         validators=self._match_to_validators.get(label_p),
-                        #         ):
-                        #     yield log
-                        #     break
+                        for log in iter_validator_results(label=label_p,
+                                validators=self._match_to_validators[label_p],
+                                ):
+                            yield log
+                            break
                         continue
+
                     if isinstance(label_p, str): # NOTE: could coerce all values to strings
                         for match_re in self._match_res:
                             if match_re.search(label_p):
                                 score[match_re] += 1
-                                continue
+                                matched = True
+                                for log in iter_validator_results(label=match_re,
+                                        validators=self._match_to_validators[match_re],
+                                        ):
+                                    yield log
+                                    break
+                            if matched:
+                                break
+                        if matched:
+                            continue
+
                     for match_set in self._match_sets:
                         if label_p in match_set:
                             score[match_set] += 1
-                            continue
+                            matched = True
+                            for log in iter_validator_results(label=match_set,
+                                    validators=self._match_to_validators[match_set],
+                                    ):
+                                yield log
+                                break
+                        if matched:
+                            break
 
                 for k, count in score.items():
                     if count == 0:
