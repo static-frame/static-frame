@@ -346,7 +346,7 @@ class Require:
         @staticmethod
         def _split_validators(
                 label: tp.Any,
-                ) -> tp.Tuple[TLabel | tp.Set[TLabel], tp.List[TValidator] | None]:
+                ) -> tp.Tuple[TLabel | tp.Set[TLabel], tp.Sequence[TValidator]]:
             '''Given an object that might be a label, or a list of label and validators, split into two and return label, validators
             '''
             label_e: TLabel
@@ -358,7 +358,7 @@ class Require:
                 label_validators = label[1:]
             else:
                 label_e = label
-                label_validators = None
+                label_validators = ()
 
             return label_e, label_validators
 
@@ -368,7 +368,7 @@ class Require:
                 frame: TFrameAny | None,
                 labels: IndexBase,
                 label: TLabel,
-                validators: tp.List[TValidator],
+                validators: tp.Sequence[TValidator],
                 parent_hints: TParent,
                 parent_values: TParent,
                 ) -> tp.Iterator[TValidation]:
