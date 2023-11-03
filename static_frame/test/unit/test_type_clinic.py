@@ -1534,6 +1534,12 @@ def test_validate_labels_match_c2():
     assert get_hints(v1._iter_errors(idx2, None, (), ()))
 
 
+def test_validate_labels_match_d1():
+    s1 = sf.Series(('a', 'b', 'c', 'd'))
+    v = Require.LabelsMatch('c', 'b', 'a')
+    # returns error for Series
+    assert get_hints(v._iter_errors(s1, None, (), ()))
+
 
 #-------------------------------------------------------------------------------
 
