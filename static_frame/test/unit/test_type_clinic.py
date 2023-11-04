@@ -1583,8 +1583,25 @@ def test_validate_labels_match_h2():
     v1 = Require.LabelsMatch({'a', 'b'}, {'c', 'd'})
     assert not tuple(v1._iter_errors(f.columns, None, (), (f,)))
 
-    # v2 = Require.LabelsMatch({'a', 'b'},)
-    # assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
+    v2 = Require.LabelsMatch([{'a', 'b'}, lambda s: s.dtype.kind == 'i'],)
+    assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
+
+
+def test_validate_labels_match_h3():
+    records = (
+            (1.5, 3.2, True, 'y'),
+            (4.4, 100, False, 'x'),
+            (3.2, 8.1, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            )
+
+    # NOTE: this should fail
+    v2 = Require.LabelsMatch([{'a', 'b'}, lambda s: s.dtype.kind == 'i'],)
+    assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
 
 
 #-------------------------------------------------------------------------------

@@ -623,7 +623,7 @@ class Require:
                             if match_re.search(label_p):
                                 score[match_re] += 1
                                 matched = True
-                                for log in iter_validator_results(label=match_re,
+                                for log in iter_validator_results(label=label_p,
                                         validators=self._match_to_validators[match_re],
                                         ):
                                     yield log
@@ -637,7 +637,7 @@ class Require:
                         if label_p in match_set:
                             score[match_set] += 1
                             matched = True
-                            for log in iter_validator_results(label=match_set,
+                            for log in iter_validator_results(label=label_p,
                                     validators=self._match_to_validators[match_set],
                                     ):
                                 yield log
