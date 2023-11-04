@@ -805,7 +805,6 @@ def iter_index_checks(
 
     [h_generic] = tp.get_args(hint)
     pv_next = parent_values + (value,)
-
     yield value.dtype.type(), h_generic, parent_hints, pv_next
 
 def iter_index_hierarchy_checks(
@@ -1188,6 +1187,9 @@ def _check(
             if v.__class__ is bool:
                 if h is bool:
                     continue
+            if h is np.object_ and v is None:
+                # when comparing object dtypes our test value is None, which is not an instance of np.object_
+                continue
             # general case
             elif isinstance(v, h):
                 continue

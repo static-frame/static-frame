@@ -179,7 +179,9 @@ INDEX_INIT_A6 = dict(labels=('d', 'e', 'f'))
 INDEX_INIT_B1 = dict(labels=(1024, 2048, 4096), name='y')
 INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
 
-INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
+INDEX_INIT_C1 = dict(labels=(None, 'A', 1024, True), name='x')
+INDEX_INIT_C2 = dict(labels=(None, 'b', False, True, 2048), name='x')
+
 INDEX_INIT_D = dict(labels=(False, True), name='x')
 
 INDEX_INIT_E = dict(labels=('qrs ', 'XYZ', '123', ' wX '))
@@ -3147,7 +3149,7 @@ class ExGenIndex(ExGen):
                 'dropna()',
                 'unique()',
                 ):
-            yield f'ix = {icls}({kwa(INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
 
@@ -3160,7 +3162,7 @@ class ExGenIndex(ExGen):
             yield 'ix'
             yield f"ix.{attr_func}('A')"
         elif attr == 'fillna()':
-            yield f'ix = {icls}({kwa(INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}(0)"
         elif attr in (
@@ -3230,7 +3232,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._display(row, 'ix', '', INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', INDEX_INIT_C1)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -3402,7 +3404,7 @@ class ExGenIndex(ExGen):
 class _ExGenIndexDT64(ExGen):
     INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
     INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
-    INDEX_INIT_C: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
+    INDEX_INIT_C1: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
 
     @classmethod
@@ -3524,14 +3526,14 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield f"ix1.{attr_func}(ix2)"
         elif attr == 'dropfalsy()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
         elif attr in (
                 'dropna()',
                 'unique()',
                 ):
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
 
@@ -3540,11 +3542,11 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield f"ix1.{attr_func}(ix2)"
         elif attr == 'fillfalsy()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}('A')"
         elif attr == 'fillna()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}(0)"
         elif attr in (
@@ -3637,7 +3639,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def display(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._display(row, 'ix', '', cls.INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', cls.INDEX_INIT_C1)
 
     @classmethod
     def selector(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -3761,7 +3763,7 @@ class _ExGenIndexDT64(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr == 'via_dt.__call__()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield f'ix.via_dt(fill_value=-1).year'
         elif attr == 'via_dt.fromisoformat()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
@@ -3808,63 +3810,63 @@ class _ExGenIndexDT64(ExGen):
 class ExGenIndexYear(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517', '1520', '1518'))
     INDEX_INIT_B = dict(labels=('2022', '2021', '2018'))
-    INDEX_INIT_C = dict(labels=('1620', 'NaT', '1619')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620', 'NaT', '1619')) # has NaT
     INDEX_COMPONENT = '1518'
 
 
 class ExGenIndexYearMonth(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04', '1517-12', '1517-06'))
     INDEX_INIT_B = dict(labels=('2022-04', '2021-12', '2022-06'))
-    INDEX_INIT_C = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
     INDEX_COMPONENT = '1517-06'
 
 
 class ExGenIndexDate(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMinute(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexHour(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexSecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMillisecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMicrosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexNanosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1789-05-05', '1789-12-31', '1799-11-09'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1789-05-05', 'NaT', '1799-11-09')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1789-05-05', 'NaT', '1799-11-09')) # has NaT
     INDEX_COMPONENT = '1789-05-05'
 
 
@@ -6400,6 +6402,15 @@ class ExGenRequire(ExGen):
             yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
             yield 'func2(ix1)'
             yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'func2(ix2)'
+        elif attr == 'LabelsMatch()':
+            yield 'import re'
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.object_], sf.Require.LabelsMatch(True, None, {1024, 2048}, re.compile("^A"))]): return len(ix)'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_C1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_C2)})"
             yield 'func2(ix2)'
         elif attr == 'Len()':
             yield 'import typing as tp'

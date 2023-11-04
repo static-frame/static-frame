@@ -606,6 +606,11 @@ def test_check_annotated_c():
 
     TypeClinic(v1).check(h2)
 
+
+def test_check_index_a():
+    idx = sf.Index((None, 'A', 1024, True))
+    idx.via_type_clinic.check(sf.Index[np.object_])
+
 #-------------------------------------------------------------------------------
 
 def test_check_index_hierarchy_a():
