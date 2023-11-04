@@ -1187,7 +1187,7 @@ def _check(
             if v.__class__ is bool:
                 if h is bool:
                     continue
-            if h is np.object_ and v is None:
+            elif h is np.object_ and v is None:
                 # when comparing object dtypes our test value is None, which is not an instance of np.object_
                 continue
             # general case
