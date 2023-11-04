@@ -1596,13 +1596,81 @@ def test_validate_labels_match_h3():
 
     f = sf.Frame.from_records(records,
             columns=('a', 'b', 'c', 'd'),
-            dtypes=(np.int64, np.int64, np.bool_, np.str_)
+            dtypes=(np.float64, np.float64, np.bool_, np.str_)
             )
 
-    # NOTE: this should fail
     v2 = Require.LabelsMatch([{'a', 'b'}, lambda s: s.dtype.kind == 'i'],)
-    assert not tuple(v2._iter_errors(f.columns, None, (), (f,)))
+    assert len(tuple(v2._iter_errors(f.columns, None, (), (f,)))) == 2
 
+
+def test_validate_labels_match_h4():
+    records = (
+            (1, 3.2, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8.1, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c', 'd'),
+            dtypes=(np.int64, np.float64, np.bool_, np.str_)
+            )
+
+    v2 = Require.LabelsMatch([{'a', 'b'}, lambda s: s.dtype.kind == 'i'],)
+    assert len(tuple(v2._iter_errors(f.columns, None, (), (f,)))) == 1
+
+
+def test_validate_labels_match_i1():
+    records = (
+            (1, 3.2, True, 'y'),
+            (4, 100, False, 'x'),
+            (3, 8.1, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('aa', 'ab', 'ac', 'ad'),
+            dtypes=(np.int64, np.float64, np.bool_, np.str_)
+            )
+
+    v1 = Require.LabelsMatch([re.compile('a'), lambda s: s.dtype.kind == 'M'],)
+    assert len(tuple(v1._iter_errors(f.columns, None, (), (f,)))) == 4
+
+    v2 = Require.LabelsMatch([re.compile('a'), lambda s: s.dtype.kind == 'b'],)
+    assert len(tuple(v2._iter_errors(f.columns, None, (), (f,)))) == 3
+
+    v3 = Require.LabelsMatch([re.compile('a'), lambda s: len(s) == 3],)
+    assert not tuple(v3._iter_errors(f.columns, None, (), (f,)))
+
+
+
+def test_validate_labels_match_j1():
+    records = (
+            (1.1, 3.2, True, 'y'),
+            (4.1, 100, False, 'x'),
+            (3.1, 8.1, True, 'q'),
+            )
+
+    f = sf.Frame.from_records(records,
+            columns=('aa', 'ab', 'ac', 'qq'),
+            dtypes=(np.float64, np.float64, np.bool_, np.str_)
+            )
+
+    v1 = Require.LabelsMatch(
+            [{'aa', 'ab'}, lambda s: (s > 0).all()],
+            )
+    assert len(tuple(v1._iter_errors(f.columns, None, (), (f,)))) == 0
+
+    v1 = Require.LabelsMatch(
+            [{'aa', 'ab'}, lambda s: (s > 0).all()],
+            [re.compile('a'), lambda s: s.dtype.kind == 'f'],
+            )
+    assert len(tuple(v1._iter_errors(f.columns, None, (), (f,)))) == 1
+
+    v1 = Require.LabelsMatch(
+            [{'aa', 'ab'}, lambda s: (s > 0).all()],
+            [re.compile('a'), lambda s: s.dtype.kind == 'f'],
+            ['aa', lambda s: s.sum() < 8],
+            )
+    assert len(tuple(v1._iter_errors(f.columns, None, (), (f,)))) == 2
 
 #-------------------------------------------------------------------------------
 

@@ -376,7 +376,6 @@ class Require:
             if validators:
                 if frame is None:
                     raise RuntimeError('Provided label validators in a context without a discoverable Frame.')
-
                 # NOTE: the same index instance might be on both axis, though this is unlikely
                 if labels is frame.index:
                     s = frame.loc[label]
@@ -605,6 +604,7 @@ class Require:
                             parent_hints=parent_hints,
                             parent_values=parent_values,)
 
+                # NOTE: a label_p will be tested to match each of the possible three scenarios, as different validators might be assigned to different groups, and all should be tested if validators exist
 
                 for label_p in value: # iterate provided index
                     matched = False
@@ -616,7 +616,7 @@ class Require:
                                 ):
                             yield log
                             break
-                        continue
+                        # continue
 
                     if isinstance(label_p, str): # NOTE: could coerce all values to strings
                         for match_re in self._match_res:
@@ -630,8 +630,8 @@ class Require:
                                     break
                             if matched:
                                 break
-                        if matched:
-                            continue
+                        # if matched:
+                        #     continue
 
                     for match_set in self._match_sets:
                         if label_p in match_set:
