@@ -109,9 +109,9 @@ if tp.TYPE_CHECKING:
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
+
 
 
 TVIHGO = tp.TypeVar('TVIHGO', bound='IndexHierarchyGO')

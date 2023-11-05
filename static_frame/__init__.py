@@ -35,6 +35,11 @@ from static_frame.core.frame import FrameAssignBLoc as FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc as FrameAssignILoc
 from static_frame.core.frame import FrameGO as FrameGO
 from static_frame.core.frame import FrameHE as FrameHE
+from static_frame.core.generic_aliases import TFrameAny as TFrameAny
+from static_frame.core.generic_aliases import TFrameGOAny as TFrameGOAny
+from static_frame.core.generic_aliases import TFrameHEAny as TFrameHEAny
+from static_frame.core.generic_aliases import TIndexAny as TIndexAny
+from static_frame.core.generic_aliases import TIndexHierarchyAny as TIndexHierarchyAny
 from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index
@@ -124,9 +129,5 @@ from static_frame.core.util import TPathSpecifierOrFileLike as TPathSpecifierOrF
 from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
-
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TSeriesAny = Series[tp.Any, tp.Any]
-
 
 __version__ = '1.6.5'
