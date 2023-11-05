@@ -50,6 +50,7 @@ from static_frame.core.util import is_callable_or_mapping
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
 
 TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -306,7 +307,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> TDtypeAny:
+    def dtype(self) -> TDtypeObject:
         '''
         Return the dtype of the realized NumPy array.
 
