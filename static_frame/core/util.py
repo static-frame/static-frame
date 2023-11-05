@@ -48,7 +48,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] # pylint: disable=W0611 #pragma: no cover
+
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
@@ -3295,13 +3298,13 @@ class PositionsAllocator:
     '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
     '''
     _size: int = 1024 # 1048576
-    _array: TNDArrayAny = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
+    _array: TNDArrayIntDefault = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
     # NOTE: preliminary tests of using lru-style caching on these instances has not shown a general benfit
 
     @classmethod
-    def get(cls, size: int) -> TNDArrayAny:
+    def get(cls, size: int) -> TNDArrayIntDefault:
         if size == 1:
             return UNIT_ARRAY_INT
 
