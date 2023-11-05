@@ -42,6 +42,7 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
     # from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
@@ -428,7 +429,7 @@ TIndexInitializer = tp.Union[
         # tp.Type['IndexAutoFactory'],
         ]
 
-TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Callable[..., 'Index'], tp.Type['Index']]
+TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 
