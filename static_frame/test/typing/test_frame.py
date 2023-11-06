@@ -2,11 +2,11 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
+from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.generic_aliases import TFrameGOAny
+from static_frame.core.generic_aliases import TFrameHEAny
 from static_frame.core.type_clinic import CallGuard
 
-TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TFrameGOAny = sf.FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TFrameHEAny = sf.FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 def test_frame_from_dict() -> None:
 

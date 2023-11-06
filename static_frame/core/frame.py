@@ -9232,7 +9232,7 @@ doc_update(Frame.__init__, selector='container_init', class_name='Frame')
 
 #-------------------------------------------------------------------------------
 
-class FrameGO(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
+class FrameGO(Frame[TVIndex, TVColumns]):
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 
@@ -9710,5 +9710,4 @@ class FrameAsType:
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-
+TFrameGOAny = FrameGO[tp.Any, tp.Any]

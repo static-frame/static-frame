@@ -2696,7 +2696,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import FrameGO
-        TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+        from static_frame.core.generic_aliases import TFrameGOAny
         return tp.cast(TFrameGOAny, self._to_frame(FrameGO))
 
     def _to_signature_bytes(self,

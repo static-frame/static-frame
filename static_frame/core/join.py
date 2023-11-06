@@ -29,8 +29,9 @@ from static_frame.core.util import dtype_from_element
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
+
 
 def join(frame: TFrameAny,
         other: TFrameAny, # support a named Series as a 1D frame?

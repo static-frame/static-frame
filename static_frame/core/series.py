@@ -138,10 +138,11 @@ if tp.TYPE_CHECKING:
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TFrameGOAny = FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+    from static_frame.core.generic_aliases import TBusAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameHEAny  # pylint: disable=W0611 #pragma: no cover
 
     FrameType = tp.TypeVar('FrameType', bound=TFrameAny) # pylint: disable=W0611 #pragma: no cover
 
