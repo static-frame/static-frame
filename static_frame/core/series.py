@@ -131,7 +131,6 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
 
-    from static_frame import Bus  # pylint: disable=C0412 #pragma: no cover
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
