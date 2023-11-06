@@ -131,10 +131,6 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable=W0611 #pragma: no cover
 
-    from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
-
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
