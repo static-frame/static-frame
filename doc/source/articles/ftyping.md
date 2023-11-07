@@ -127,7 +127,7 @@ The Pandera library permits specifying columnar schema that can be used as a typ
 
 ## Conclusion
 
-Given the extensive use of DataFrames in the Python ecosystem, as well as the growing interest in static typing, better typing for DataFrames is overdue. With modern Python typing tools and DataFrame built on an immutable data model, StaticFrame meets this need, providing tooling for engineers prioritizing quality, correctness, and verifiability.
+Given the extensive use of DataFrames in the Python ecosystem, as well as the growing interest in static typing, better typing for DataFrames is overdue. With modern Python typing tools and a DataFrame built on an immutable data model, StaticFrame 2 meets this need, providing tooling for engineers prioritizing quality, correctness, and verifiability.
 
 
 
