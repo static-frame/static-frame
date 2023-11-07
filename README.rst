@@ -51,10 +51,10 @@ Immutable, grow-only, and statically-typeable DataFrames with run-time type and 
 
 Among the many Python DataFrame libraries, StaticFrame is an alternative that prioritizes correctness, maintainability, and reducing opportunities for error. Key features include:
 
-* 🛡️ Immutable Data: Provides memory efficiency and excellent performance.
-* 🔒 Static Typing: Use Python type-hints to statically type index, columns, and columnar types.
-* ✅ Runtime Validation: Use type hints and specialized validators for run-time type and data checks.
-* 💡 Consistent Interface: An easy-to-learn, intuitive API that avoids the many inconsistencies of Pandas.
+* 🛡️ Immutable Data: Provides memory efficiency, excellent performance, and prohibits side effects.
+* 🗜️ Static Typing: Use Python type-hints to statically type index, columns, and columnar types.
+* 🚦 Runtime Validation: Use type hints and specialized validators for run-time type and data checks.
+* 🧭 Consistent Interface: An easy-to-learn, intuitive API that avoids the many inconsistencies of Pandas.
 * 🧬 Comprehensive ``dtype`` Support: Full compatibility with all NumPy dtypes and datetime64 units.
 * 🔗 Broad Interoperability: Translate between Pandas, Arrow, Parquet, CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, and NumPy; output to xarray, VisiData, HTML, RST, Markdown, LaTeX, and Jupyter notebooks.
 * 🚀 Optimized Serialization & Memory Mapping: Fast disk I/O with custom NPZ and NPY encodings.
