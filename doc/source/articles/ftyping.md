@@ -100,7 +100,7 @@ In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHie
         └── Expected str_, provided int64 invalid
 ```
 
-To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorator can be used.
+To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorator may be used.
 
 
 
