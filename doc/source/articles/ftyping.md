@@ -5,7 +5,9 @@
 
 Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to specifying just the type:
 
-    def process(f: DataFrame) -> Series: ...
+```python
+def process(f: DataFrame) -> Series: ...
+```
 
 This is insufficient, as it ignores the types contained within the container. A DataFrame might have an integer index, string column labels, and two floating-point columns: these characteristics are necessary to define the type.
 
@@ -29,6 +31,7 @@ For defining columnar types of a ``Frame``, or the values of a ``Series`` or ``I
 
 Using generic specifications, the same interface from above can be annotated to show a ``Frame`` with three columns being transformed into a dictionary of ``Series``.
 
+```python
 def process(f: Frame[
         Any,
         Index[np.str_],
@@ -36,7 +39,7 @@ def process(f: Frame[
         np.str_,
         np.float64,
         ]) -> dict[int, Series[IndexYearMonth, np.float64]]: ...
-
+```
 
 The type hints in this interface offer so much more information we might intuit what the function does. This function processes a signal table from an Open Source Asset Pricing (https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier ("permno"), year and month ("yyyymm"), and signal name.
 
@@ -44,6 +47,7 @@ The function ignores the index (typed as ``Any``) and creates groups defined by 
 
 Rather than returning a ``dict``, the function above might be revised to return a ``Series`` with a hierarchical index. The ``IndexHierarchy`` generic specifies a component ``Index`` for each depth level; as is clear, the outer depth is an ``Index[np.int_]``, the inner depth an ``IndexYearMonth``.
 
+```python
 def process(f: Frame[
         Any,
         Index[np.str_],
@@ -51,7 +55,7 @@ def process(f: Frame[
         np.str_,
         np.float64,
         ]) -> Series[IndexHierarchy[Index[np.int_], IndexYearMonth], np.float64]: ...
-
+```
 
 Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide an interface that makes the functionality explicit.
 
