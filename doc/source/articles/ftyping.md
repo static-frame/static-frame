@@ -27,11 +27,13 @@ A ``TypeVarTuple`` permits creating generics that accept a variable number of ty
 For defining columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``, NumPy generic types are used. For example, ``np.int_`` can be used to type a platform-default integer size, while ``np.int64`` can be used to type an explicit, 64-bit integer.
 
 
-## Interfaces Defined with DataFrame Generics
+## Interfaces Defined with Generic DataFrames
 
 Using generic specifications, the same interface from above can be annotated to show a ``Frame`` with three columns being transformed into a dictionary of ``Series``.
 
 ```python
+from static_frame import Frame, Series, Index, IndexYearMonth
+
 def process(f: Frame[
         Any,
         Index[np.str_],
@@ -48,6 +50,8 @@ The function ignores the index (typed as ``Any``) and creates groups defined by 
 Rather than returning a ``dict``, the function above might be revised to return a ``Series`` with a hierarchical index. The ``IndexHierarchy`` generic specifies a component ``Index`` for each depth level; as is clear, the outer depth is an ``Index[np.int_]``, the inner depth an ``IndexYearMonth``.
 
 ```python
+from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy
+
 def process(f: Frame[
         Any,
         Index[np.str_],
@@ -57,13 +61,73 @@ def process(f: Frame[
         ]) -> Series[IndexHierarchy[Index[np.int_], IndexYearMonth], np.float64]: ...
 ```
 
-Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide an interface that makes the functionality explicit.
+Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide self-documenting interface that makes the functionality explicit.
 
 Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). Calling such a function with a ``Frame`` of two columns of ``np.float64``, for example, will fail a static analysis type check or deliver a warning in your editor.
 
 
-## Runtime Validation
+## Runtime Type Validation
 
-Static type checking might not be enough: runtime evaluation provides even stronger constraints, even for incomplately typed values.
+Static type checking might not be enough: runtime evaluation provides even stronger constraints, particularly for dynamic values or incompletely (or incorrectly) type-hinted values.
 
-StaticFrame 2 introduces a built-in decorator, ``@CallGuard.check``, that uses the same type hints for runtime validation. Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
+Building on a new run-time type checker, ``TypeClinic``, StaticFrame 2 introduces ``@CallGuard.check``, a decorator for run-time validation of type-hinted interfaces. All StaticFrame and NumPy generics are supported, as well as support for most built-in types, even when deeply nested.
+
+```python
+from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy, CallGuard
+
+@CallGuard.check
+def process(f: Frame[
+        Any,
+        Index[np.str_],
+        np.int_,
+        np.str_,
+        np.float64,
+        ]) -> Series[IndexHierarchy[Index[np.int_], IndexYearMonth], np.float64]: ...
+```
+
+Now decorated with ``@CallGuard.check``, if the function above is called with un labelled ``Frame`` of two columns of ``np.float64`` (for example), a ``ClinicError`` exception will be raised, reporting that, where three columns were expected, only two were provided, and where string column labels were expected, integer labels were provided.
+
+<!-- f = Frame(np.random.rand(20).reshape(10,2)) -->
+
+```
+ClinicError:
+In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHierarchy[Index[int64], IndexYearMonth], float64]
+└── Frame[Any, Index[str_], int64, str_, float64]
+    └── Expected Frame has 3 dtype, provided Frame has 2 dtype
+In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHierarchy[Index[int64], IndexYearMonth], float64]
+└── Frame[Any, Index[str_], int64, str_, float64]
+    └── Index[str_]
+        └── Expected str_, provided int64 invalid
+```
+
+To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorator can be used.
+
+
+
+## Runtime Data Validation
+
+
+Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
+
+
+## The Expressive Powers of ``TypeVarTuple``
+
+
+
+## Typing Utilities
+
+Comprehensively typing a ``Frame`` can be time consuming. StaticFrame includes a number of generic aliases to define just the outermost container types. For example, ``TFrameAny`` can be used for any ``Frame``, and ``TSeries`` for any ``Series``.
+
+
+
+## Alternative Approaches
+
+The Pandera library permits specifying columnar schema that can be used as a type-hint stand-in for the Pandas DataFrame type.
+
+
+## Conclusion
+
+Given the extensive use of DataFrames in the Python ecosystem, as well as the growing interest in static typing, better typing for DataFrames is overdue. With modern Python typing tools and DataFrame built on an immutable data model, StaticFrame meets this need, providing tooling for engineers prioritizing quality, correctness, and verifiability.
+
+
+
