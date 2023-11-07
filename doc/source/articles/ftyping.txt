@@ -3,26 +3,48 @@
 
 # article
 
+Type-Hinting DataFrames for Static Analysis and Runtime Validation
+
 Generic DataFrame Type Hints for Static Analysis and Runtime Validation
 
 Complete DataFrame Type Hints for Static Analysis and Runtime Validation
 
-Type-Hinting DataFrames: Static Typing Index, Columns, and Columnar Types
 
 
 
 Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to specifying just the type:
 
-    def process(f: DataFrame) -> Series: ...
+    def process(f: DataFrame) -> DataFrame: ...
 
-This is insufficient, as it ignores the types contained within the container. A DataFrame might have date labels on the index, string labels on the columns, and two data columns of floating-point numbers. A DataFrame with integer labels and Boolean data, in many contexts, is hardly the same type.
+This is insufficient, as it ignores the types contained within the container. A DataFrame might have an integer index, string column labels, and two floating-point data columns: these characteristics define the type. A type hint is more explicit and narrowly verifiable if it specifies such type detail.
 
-Python built-in generic types, such as the `list`, `tuple`, and `dict`, benefit greatly from specification of component types. The same is true for DataFrames. And yet Pandas, even with the `pandas-stubs` package, does not permit specifying the types DataFrame components.
+Python's built-in generic types, like ``tuple`` and ``dict``, require specification of component types to make static analysis of such components useful. While the same is true for DataFrames, there have been few attempts at comprehensively typing DataFrames.
+
+Pandas, even with the `pandas-stubs` package, does not permit specifying the types of a DataFrame's components. The Pandas DataFrame, permitting extensive in-place mutation, may not be sensible to statically type. Fortunately, immutable DataFrames are available in StaticFrame.
+
+Beyond mutability, Python's generic syntax has limited fully typing DataFrames. A key aspect of a DataFrame is that it has a variable number of columns of heterogenous types. Typing such a structure became possible with the standard library ``TypeVarTuple``, introduced in Python 3.11
+
+A ``TypeVarTuple`` provides the missing tool to flexibly define variable numbers of types. (See PEP 646 https://peps.python.org/pep-0646). StaticFrame defines a generic DataFrame (a ``Frame``) with two ``TypeVar``s, defining the index and columns, followed by a ``TypeVarTuple``, defining zero or more columnar types.
+
+The benefit is made clear with an example. The same interface from above can be annotated to show a ``Frame`` with three columns being transformed into a ``Series``.
+
+The returned Series is indexed by date with floating-point values.
+
+def process(f: Frame[
+        IndexDate,
+        Index[np.str_],
+        np.float64,
+        np.float64,
+        ]) -> Series[IndexDate, np.float64]: ...
 
 
 
 
-While using generics can support some of these component definitions, the variable number of types needed to define hierarchical indices or columnar data types has not been easy to represent. The `TypeVarTuple`, introduced in Python 3.11, provides the missing tool to flexibly define variable numbers of types as found in hierarchical indices and columnar data.
+
+
+
+
+
 
 Using nested generics and `TypeVarTuple`, and building on the generic types introduced in NumPy, StaticFrame 2.0 permits statically typing the index, columns, and columnar types of a DataFrame.
 
@@ -57,6 +79,7 @@ def process(f: Frame[
 The number of combinations of the types of these components, even with just a few columns, is astronomical.
 
 
+The Pandera library permits specifying columnar schema that can be used as a type-hint stand-in for the Pandas DataFrame type.
 
 
 
