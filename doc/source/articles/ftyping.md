@@ -32,6 +32,7 @@ For defining columnar types of a ``Frame``, or the values of a ``Series`` or ``I
 Using generic specifications, the same interface from above can be annotated to show a ``Frame`` with three columns being transformed into a dictionary of ``Series``.
 
 ```python
+from typing import Any
 from static_frame import Frame, Series, Index, IndexYearMonth
 
 def process(f: Frame[
@@ -43,13 +44,14 @@ def process(f: Frame[
         ]) -> dict[int, Series[IndexYearMonth, np.float64]]: ...
 ```
 
-The type hints in this interface offer so much more information we might intuit what the function does. This function processes a signal table from an Open Source Asset Pricing (https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier ("permno"), year and month ("yyyymm"), and signal name.
+The type hints in this interface offer so much more information we might intuit what the function does. This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier ("permno"), year and month ("yyyymm"), and signal name.
 
 The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. For each group, a ``Series`` is returned of the ``np.float64`` values, the index an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column.
 
 Rather than returning a ``dict``, the function above might be revised to return a ``Series`` with a hierarchical index. The ``IndexHierarchy`` generic specifies a component ``Index`` for each depth level; as is clear, the outer depth is an ``Index[np.int_]``, the inner depth an ``IndexYearMonth``.
 
 ```python
+from typing import Any
 from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy
 
 def process(f: Frame[
@@ -73,6 +75,7 @@ Static type checking might not be enough: runtime evaluation provides even stron
 Building on a new run-time type checker, ``TypeClinic``, StaticFrame 2 introduces ``@CallGuard.check``, a decorator for run-time validation of type-hinted interfaces. All StaticFrame and NumPy generics are supported, as well as support for most built-in types, even when deeply nested.
 
 ```python
+from typing import Any
 from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy, CallGuard
 
 @CallGuard.check
@@ -82,7 +85,11 @@ def process(f: Frame[
         np.int_,
         np.str_,
         np.float64,
-        ]) -> Series[IndexHierarchy[Index[np.int_], IndexYearMonth], np.float64]: ...
+        ]) -> Series[
+                IndexHierarchy[Index[np.int_], IndexYearMonth],
+                np.float64,
+                ]: ...
+
 ```
 
 Now decorated with ``@CallGuard.check``, if the function above is called with un labelled ``Frame`` of two columns of ``np.float64`` (for example), a ``ClinicError`` exception will be raised, reporting that, where three columns were expected, only two were provided, and where string column labels were expected, integer labels were provided.
@@ -106,8 +113,41 @@ To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorat
 
 ## Runtime Data Validation
 
+There are other characteristics that might be validated at run-time. For example, the ``shape`` or ``name`` attributes, or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators. These objects are provided as one or more additional arguments to the ``Annotated`` generic.
 
-Extended with one or more validators enclosed in an `Annotated` generic, additional run-time validation of shape, labels, or arbitrary functional checks can be included.
+Require.Name
+Require.Len
+Require.Shape
+Require.LabelsOrder
+Require.LabelsMatch
+Require.Apply
+
+The ``Require.LabelsOrder`` validator can prescribe a sequence of labels, optionally using ``...`` for contiguous regions of zero or more labels. For example, to specify that the first two columns of the table are labelled "permno" and "yyyymm" (as is expected with the OSAP signal tables), ``Require.LabelsOrder`` can be used as such:
+
+
+```python
+from typing import Any, Annotated
+from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy, CallGuard, Require
+
+@CallGuard.check
+def process(f: Frame[
+        Any,
+        Annotated[
+                Index[np.str_],
+                Require.LabelsOrder('permo', 'yyyymm', ...),
+                ],
+        np.int_,
+        np.str_,
+        np.float64,
+        ]) -> Series[
+                IndexHierarchy[Index[np.int_], IndexYearMonth],
+                np.float64,
+                ]: ...
+
+```
+
+
+
 
 
 ## The Expressive Powers of ``TypeVarTuple``
