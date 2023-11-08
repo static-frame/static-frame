@@ -10,28 +10,11 @@ LRreversal.csv: permno	yyyymm	LRreversal
 
 
 
-In this case, we are taking a ``Frame`` of three columns, from a table inc
-
-
-@check_interface
-def process(f: Frame[
-        IndexHierarchy[IndexDate, Index[np.int64]],
-        Annotated[Index[np.str_], Labels(('height', 'frequency))],
-        Annotated[np.float64, Validator(lambda s: (s > 0).all())],
-        np.float64,
-        ]) -> Series[IndexDate, np.float64]: ...
-
-
-
-
-
-
-
 ==
 The number of combinations of the types of these components, even with just a few columns, is astronomical.
 
 
-The Pandera library permits specifying columnar schema that can be used as a type-hint stand-in for the Pandas DataFrame type.
+
 
 Generic DataFrame Type Hints for Static Analysis and Runtime Validation
 Complete DataFrame Type Hints for Static Analysis and Runtime Validation
