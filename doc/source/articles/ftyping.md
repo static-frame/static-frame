@@ -9,7 +9,17 @@ Since the advent of type hints in Python 3.5, statically typing a DataFrame has 
 def process(f: DataFrame) -> Series: ...
 ```
 
-This is insufficient, as it ignores the types contained within the container. A DataFrame might have an integer index, string column labels, and two floating-point columns: these characteristics are necessary to define the type.
+This is insufficient, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics are necessary to define the type. A function argument with such a type hint would provide developers, static analyzers, and run-time checkers the information to fully understand the expectations of the interface. The full generic specification would define the type of the index, the type of the column labels, and the types of the columnar values:
+
+```python
+def process(f: Frame[
+        Any,            # the type of the index
+        Index[np.str_], # the type of the coumn labels
+        np.int_,        # the type of the first column
+        np.str_,        # the type of the second column
+        np.float64,     # the type of the third column
+        ]) -> None: ...
+```
 
 StaticFrame 2 offers complete generic specification of a DataFrame, including the index, columns, and a variable number of columnar types. All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits run-time validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful run-time validators, permitting per column or per row analysis in addition to a host of other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive type hints at run time or validate a type hint. Together, these tools offer one of the first cohesive and integrated approaches to typing DataFrames.
 
