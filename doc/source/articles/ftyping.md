@@ -13,8 +13,8 @@ This is insufficient, as it ignores the types contained within the container. A 
 
 ```python
 def process(f: Frame[
-        Any,            # the type of the index
-        Index[np.str_], # the type of the coumn labels
+        Any,            # the type of the index labels
+        Index[np.str_], # the type of the column labels
         np.int_,        # the type of the first column
         np.str_,        # the type of the second column
         np.float64,     # the type of the third column
