@@ -72,18 +72,27 @@ def interface(context, container=None, doc=False):
 @task
 def test(context,
         unit=False,
+        backward=False,
         cov=False,
         pty=False,
+        warnings=False,
         ):
     '''Run tests.
-    '''
-    if unit:
-        fp = 'static_frame/test/unit static_frame/test/typing'
-    else:
-        fp = 'static_frame/test'
 
-    # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
-    cmd = f'pytest -s --tb=native {fp}'
+    Args:
+        backward: If True, we exclude unit_forward tests.
+    '''
+    fps = []
+    fps.append('static_frame/test/unit')
+    fps.append('static_frame/test/typing')
+    if not backward:
+        fps.append('static_frame/test/unit_forward')
+    if not unit:
+        fps.append('static_frame/test/integration')
+        fps.append('static_frame/test/property')
+
+    w_flag = '--disable-pytest-warnings'
+    cmd = f'pytest -s --tb=native {"" if warnings else w_flag} {" ".join(fps)}'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
@@ -104,6 +113,17 @@ def testex(context,
 
     print(cmd)
     context.run(cmd, pty=pty)
+
+
+@task
+def testtyping(context,
+        pty=False,
+         ):
+    '''Run mypy on targetted typing tests
+    '''
+    context.run('pytest -s --tb=native static_frame/test/typing')
+    context.run('pyright static_frame/test/typing', pty=pty)
+    context.run('mypy --strict static_frame/test/typing', pty=pty)
 
 
 @task
@@ -134,15 +154,6 @@ def pyright(context,
     '''
     context.run('pyright', pty=pty)
 
-@task
-def testtyping(context,
-        pty=False,
-         ):
-    '''Run mypy on targetted typing tests
-    '''
-    context.run('pytest -s --tb=native static_frame/test/typing')
-    context.run('pyright static_frame/test/typing', pty=pty)
-    context.run('mypy --strict static_frame/test/typing', pty=pty)
 
 
 @task
