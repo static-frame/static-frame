@@ -82,14 +82,14 @@ def process(f: Frame[
                 ]: ...
 ```
 
-Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide self-documenting interface that makes the functionality explicit.
+Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide a self-documenting interface that makes the functionality explicit.
 
 Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). Calling such a function with a ``Frame`` of two columns of ``np.float64``, for example, will fail a static analysis type check or deliver a warning in your editor.
 
 
 ## Runtime Type Validation
 
-Static type checking might not be enough: runtime evaluation provides even stronger constraints, particularly for dynamic values or incompletely (or incorrectly) type-hinted values.
+Static type checking might not be enough: runtime evaluation provides even stronger constraints, particularly for dynamic or incompletely (or incorrectly) type-hinted values.
 
 Building on a new run-time type checker, ``TypeClinic``, StaticFrame 2 introduces ``@CallGuard.check``, a decorator for run-time validation of type-hinted interfaces. All StaticFrame and NumPy generics are supported, as well as support for most built-in types, even when deeply nested.
 
