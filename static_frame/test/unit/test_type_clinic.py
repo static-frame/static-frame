@@ -152,8 +152,8 @@ def test_check_type_d5():
 #-------------------------------------------------------------------------------
 
 def test_is_unpack_a():
-    assert is_unpack(tp.Unpack)
-    assert not is_unpack(None)
+    assert is_unpack(tp.Unpack, None)
+    assert not is_unpack(None, None)
 
 def test_is_union_a():
     assert is_union(tp.Union[int, str])
@@ -1059,6 +1059,13 @@ def test_check_frame_g():
             )
     assert not f1.via_type_clinic(h1).validated
     assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[IndexDate, Index[str_], str_, str_, str_, Unpack[Tuple[float64, ...]]] Expected Frame has 3 dtype (excluding Unpack), provided Frame has 2 dtype'
+
+@skip_pyle310
+def test_check_frame_h():
+    f = sf.Frame.from_records(([3, '192004', 0.3], [3, '192005', -0.4]), columns=('permno', 'yyyymm', 'Mom3m'))
+
+    cr = f.via_type_clinic(sf.Frame[sf.Index[np.int64], sf.TIndexAny, *tuple[tp.Any, ...]])
+    assert len(cr) == 0
 
 #-------------------------------------------------------------------------------
 

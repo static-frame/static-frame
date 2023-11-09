@@ -12,6 +12,9 @@ def process(f: DataFrame) -> Series: ...
 This is insufficient, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics are necessary to define the type. A function argument with such a type hint would provide developers, static analyzers, and run-time checkers the information to fully understand the expectations of the interface. A full generic specification, now available in StaticFrame 2, defines the type of the index, the type of the column labels, and the types of the columnar values:
 
 ```python
+from typing import Any
+from static_frame import Frame, Index
+
 def process(f: Frame[
         Any,            # the type of the index labels
         Index[np.str_], # the type of the column labels
@@ -263,11 +266,6 @@ Comprehensively typing a ``Frame`` can be time consuming. StaticFrame includes a
 ```python
 >>> f.via_type_clinic.check(sf.TFrameAny)
 ```
-
-
-## Alternative Approaches
-
-The Pandera library permits specifying columnar schema that can be used as a type-hint stand-in for the Pandas DataFrame type.
 
 
 ## Conclusion

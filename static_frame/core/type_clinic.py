@@ -75,9 +75,28 @@ def is_union(hint: tp.Any) -> bool:
         return tp.get_origin(hint) is tp.Union
     return False #pragma: no cover
 
-def is_unpack(hint: tp.Any) -> bool:
+def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
+    # NOTE: the * syntax on *tuple does not create an Unpack instances
+    # tp.get_origin(*tuple[tp.Any, ...]) is tuple
     # NOTE: cannot use isinstance or issubclass with Unpack
-    return hint in UNPACK_TYPES
+    if origin in UNPACK_TYPES:
+        return True
+    if getattr(generic_alias, '__unpacked__', False):
+        # if hint.__unpacked__ is True, this is a *tuple that does not need to be unpacked
+        return True
+    return False
+
+def get_args_unpack(hint: tp.Any) -> tp.Any:
+    '''Normalize the heterogeneity of dealing with *tuple[tp.Any, ...] and tp.Unpack[tp.Tuple[tp.Any, *]]; always return the contained tuple generic alias
+    '''
+    if getattr(hint, '__unpacked__', False):
+        # if hint.__unpacked__ is True, this is a *tuple that does not need to be unpacked
+        tga = hint
+    else:
+        # unpack from tp.Unpack to return the tuple generic alias
+        [tga] = tp.get_args(hint)
+    assert issubclass(tuple, tp.get_origin(tga))
+    return (tga,) # clients expect a tuple of size 1
 
 #-------------------------------------------------------------------------------
 
@@ -101,7 +120,7 @@ def to_name(v: tp.Any,
             origin = tp.get_origin(v)
             if hasattr(origin, '__name__'):
                 name = origin.__name__
-            elif is_unpack(origin): # needed for backwards compat
+            elif is_unpack(origin, v): # needed for backwards compat
                 name = 'Unpack'
             else:
                 name = str(origin)
@@ -821,13 +840,12 @@ def iter_index_hierarchy_checks(
     unpack_pos = -1
     for i, h in enumerate(h_generics):
         # must get_origin to id unpack; origin of simplet types is None
-        if is_unpack(tp.get_origin((h))):
+        if is_unpack(tp.get_origin(h), h):
             unpack_pos = i
             break
 
     if h_len == 1 and unpack_pos == 0:
-        [h_tuple] = tp.get_args(h_generics[0])
-        assert issubclass(tuple, tp.get_origin(h_tuple))
+        [h_tuple] = get_args_unpack(h_generics[0])
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield (tuple(value.index_at_depth(i) for i in range(value.depth)),
                 h_tuple,
@@ -887,8 +905,7 @@ def iter_index_hierarchy_checks(
                     col_pos += 1
 
                 if index_unpack: # we may not have dtypes to compare if fewer
-                    [h_tuple] = tp.get_args(h_unpack)
-                    assert issubclass(tuple, tp.get_origin(h_tuple))
+                    [h_tuple] = get_args_unpack(h_unpack)
                     yield (tuple(index_unpack),
                             h_tuple,
                             parent_hints + (f'Depths {col_pos} to {depth_post_unpack - 1}',),
@@ -923,13 +940,11 @@ def iter_frame_checks(
     unpack_pos = -1
     for i, h in enumerate(h_types):
         # must get_origin to id unpack; origin of simplet types is None
-        if is_unpack(tp.get_origin((h))):
+        if is_unpack(tp.get_origin(h), h):
             unpack_pos = i
             break
-
     if h_types_len == 1 and unpack_pos == 0:
-        [h_tuple] = tp.get_args(h_types[0])
-        assert issubclass(tuple, tp.get_origin(h_tuple))
+        [h_tuple] = get_args_unpack(h_types[0])
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
         yield (tuple(d.type() for d in value._blocks._iter_dtypes()),
                 h_tuple,
@@ -993,8 +1008,7 @@ def iter_frame_checks(
                     col_pos += 1
 
                 if dt_unpack: # we may not have dtypes to compare if fewer
-                    [h_tuple] = tp.get_args(h_unpack)
-                    assert issubclass(tuple, tp.get_origin(h_tuple))
+                    [h_tuple] = get_args_unpack(h_unpack)
                     yield (tuple(d.type() for d in dt_unpack),
                             h_tuple,
                             parent_hints + (f'Fields {col_pos} to {col_post_unpack - 1}',),
