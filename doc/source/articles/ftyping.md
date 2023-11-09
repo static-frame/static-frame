@@ -9,7 +9,7 @@ Since the advent of type hints in Python 3.5, statically typing a DataFrame has 
 def process(f: DataFrame) -> Series: ...
 ```
 
-This is insufficient, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics are necessary to define the type. A function argument with such a type hint would provide developers, static analyzers, and run-time checkers the information to fully understand the expectations of the interface. A full generic specification, now available in StaticFrame 2, defines the type of the index, the type of the column labels, and the types of the columnar values:
+This is insufficient, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics define the type. A function argument with such a type hint would provide developers, static analyzers, and run-time checkers the information to fully understand the expectations of the interface. StaticFrame 2 now permits this:
 
 ```python
 from typing import Any
@@ -24,25 +24,25 @@ def process(f: Frame[
         ]) -> None: ...
 ```
 
-All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits run-time validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful run-time validators, permitting per column or per row analysis in addition to a host of other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive type hints at run time or validate a type hint. Together, these tools offer one of the first cohesive and integrated approaches to typing DataFrames.
+All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits run-time validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful run-time validators, permitting per-column or per-row analysis in addition many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive or validate type hints at run time. Together, these tools offer a cohesive and integrated approach to type-hinting and validating DataFrames.
 
 
 ## The Path to a Generic DataFrame
 
-Python's built-in generic types (e.g.,``tuple`` or ``dict``) require specification of component types. Defining component types for such containers permits more accurate static analysis. While the same is true for DataFrames, there have been few attempts to comprehensively type hint DataFrames.
+Python's built-in generic types (e.g.,``tuple`` or ``dict``) require specification of component types (e.g., ``tuple[int, str, bool]`` or ``dict[str, int]``). Defining component types permits more accurate static analysis. While the same is true for DataFrames, there have been few attempts to comprehensively type hint DataFrames.
 
 Pandas, even with the ``pandas-stubs`` package, does not permit specifying the types of a DataFrame's components. The Pandas DataFrame, permitting extensive in-place mutation, may not even be sensible to statically type. Fortunately, immutable DataFrames are available in StaticFrame.
 
-Beyond mutability, Python's tools for defining generics have limited fully type hinting DataFrames. A key aspect of a DataFrame is that it has a variable number of columns of heterogenous types. Typing such a structure became much easier with the new ``TypeVarTuple``, introduced in Python 3.11
+Until recently, Python's tools for defining generics have also limited type-hinting DataFrames. A key aspect of a DataFrame is that it has a variable number of columns of heterogenous types. Typing such a structure became much easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and available in the ``typing_extensions`` package).
 
-A ``TypeVarTuple`` permits creating generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646). StaticFrame can then define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types. A generic ``Series`` can be defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter taking advantage of ``TypeVarTuple`` to define a component ``Index`` per depth level.
+A ``TypeVarTuple`` permits creating generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646). With this new type of type variable, StaticFrame can defines a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types. A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
 
-For defining columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``, NumPy generic types are used. For example, ``np.int_`` can be used to type a platform-default integer size, while ``np.int64`` can be used to type an explicit, 64-bit integer.
+For defining the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``, NumPy generic types are used. For example, ``np.int_`` is used to type a platform-default integer size, while ``np.int64`` is used to type an explicit, 64-bit integer. As StaticFrame supports all NumPy types, the correspondence is direct.
 
 
 ## Interfaces Defined with Generic DataFrames
 
-Using generic specifications, the same interface from above can be annotated to show a ``Frame`` with three columns being transformed into a dictionary of ``Series``.
+Extending the example above, this interface shows a ``Frame`` with three columns being transformed into a dictionary of ``Series``. With so much more information provided by component type hints, the function's purpose is almost obvious.
 
 ```python
 from typing import Any
@@ -60,11 +60,11 @@ def process(f: Frame[
                 ]: ...
 ```
 
-The type hints in this interface offer so much more information we might intuit what the function does. This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier ("permno"), year and month ("yyyymm"), and signal name.
+This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier ("permno"), year and month ("yyyymm"), and a signal name.
 
-The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. For each group, a ``Series`` is returned of the ``np.float64`` values, the index an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column.
+The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. A dictionary keyed by "permno" is returned, where each value is a ``Series`` of the ``np.float64`` values for that "permno", the index an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column. (StaticFrame uses NumPy ``datetime64`` values to define unit-typed indices.)
 
-Rather than returning a ``dict``, the function above might be revised to return a ``Series`` with a hierarchical index. The ``IndexHierarchy`` generic specifies a component ``Index`` for each depth level; as is clear, the outer depth is an ``Index[np.int_]``, the inner depth an ``IndexYearMonth``.
+Rather than returning a ``dict``, the function below returns a ``Series`` with a hierarchical index. The ``IndexHierarchy`` generic specifies a component ``Index`` for each depth level; as shown, the outer depth is an ``Index[np.int_]`` (for the "permno" column), the inner depth an ``IndexYearMonth`` (from the "yyyymm" column).
 
 ```python
 from typing import Any
@@ -247,14 +247,15 @@ All StaticFrame containers feature a ``via_type_clinic`` interface to permit acc
 >>> f = sf.Frame.from_records(([3, '192004', 0.3], [3, '192005', -0.4]), columns=('permno', 'yyyymm', 'Mom3m'))
 >>> f.via_type_clinic
 Frame[Index[int64], Index[str_], int64, str_, float64]
+
 >>> f.via_type_clinic.to_hint()
 static_frame.core.frame.Frame[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_], numpy.int64, numpy.str_, numpy.float64]
 ```
 
-The ``via_type_clinic.check()`` funtion permits validating the container against type-hint at run-time.
+The ``via_type_clinic.check()`` fun permits validating the container against type-hint at run-time.
 
 ```python
->>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, tp.Unpack[tp.Tuple[tp.Any, ...]]])
+>>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, *tuple[tp.Any, ...]])
 ClinicError:
 In Frame[Index[str_], Index[Any], Unpack[Tuple[Any, ...]]]
 └── Index[str_]
@@ -270,7 +271,7 @@ Comprehensively typing a ``Frame`` can be time consuming. StaticFrame includes a
 
 ## Conclusion
 
-Given the extensive use of DataFrames in the Python ecosystem, as well as the growing interest in static typing, better typing for DataFrames is overdue. With modern Python typing tools and a DataFrame built on an immutable data model, StaticFrame 2 meets this need, providing tooling for engineers prioritizing quality, correctness, and verifiability.
+Given the extensive use of DataFrames in the Python ecosystem, as well as the growing interest in static typing, better typing for DataFrames is overdue. With modern Python typing tools and a DataFrame built on an immutable data model, StaticFrame 2 meets this need, providing resources for engineers prioritizing quality, maintainability, and verifiability.
 
 
 
