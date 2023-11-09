@@ -151,7 +151,7 @@ def process(f: Frame[
         Any,
         Annotated[
                 Index[np.str_],
-                Require.LabelsOrder('permo', 'yyyymm', ...),
+                Require.LabelsOrder('permno', 'yyyymm', ...),
                 ],
         np.int_,
         np.str_,
@@ -163,19 +163,15 @@ def process(f: Frame[
 
 ```
 
-If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If we are only using the files Mom12m.csv, Mom6m.csv, and LRreversal.csv, we can validate the expected names of the third column:
-
+If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If we are only processing tables from the files Mom12m.csv, Mom6m.csv, and LRreversal.csv, we can validate the expected names of the third column:
 
 ```python
-from typing import Any, Annotated
-from static_frame import Frame, Series, Index, IndexYearMonth, IndexHierarchy, CallGuard, Require
-
 @CallGuard.check
 def process(f: Frame[
         Any,
         Annotated[
                 Index[np.str_],
-                Require.LabelsOrder('permo', 'yyyymm', ...),
+                Require.LabelsOrder('permno', 'yyyymm', ...),
                 Require.LabelsMatch({'Mom12m', 'Mom6m', 'LRreversal'}),
                 ],
         np.int_,
@@ -188,9 +184,9 @@ def process(f: Frame[
 
 ```
 
-To perform data validation, both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can be further extended by associating functions with labels. If the validator is associated with the column labels, a ``Series`` of column values will be provided to the function; if the validator is associated with index labels, a ``Series`` of row values will be provided to the function. Similar to usage of ``Annotated``, the label is replaced with a list (which itself cannot be a label), where the first item is the label specifier and remain arguments are fucntions.
+To perform data validation, both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can be extended by associating functions with label specifiers. If the validator is associated with the column labels, a ``Series`` of column values will be provided to the function; if the validator is associated with index labels, a ``Series`` of row values will be provided to the function. Similar to usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier and the remain items are row- or column-processing functions that return a Boolean.
 
-To extend the example above, we might validate all "permo" values are great than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than -1. As shown, any label specifier, even ``...`` can be associated with functions.
+To extend the example above, we might validate all "permno" values are great than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than -1. As shown, any label specifier, even ``...`` can be associated with functions.
 
 
 ```python
@@ -203,7 +199,7 @@ def process(f: Frame[
         Annotated[
                 Index[np.str_],
                 Require.LabelsOrder(
-                        ['permo', lambda s: (s > 0).all()],
+                        ['permno', lambda s: (s > 0).all()],
                         'yyyymm',
                         ...,
                         ),
@@ -221,6 +217,19 @@ def process(f: Frame[
 
 ```
 
+If a type or data validation fails, ``@CallGuard.check`` will raise an exception. For example, if the above function is called with a ``Frame`` that has an unexpected third-column label, the following exception will be raised:
+
+<!-- >>> f = sf.Frame.from_records(([3, '192004', 1.0], [3, '192005', -2.0]), columns=('permno', 'yyyymm', 'Mom3m')) -->
+
+```
+ClinicError:
+In args of (f: Frame[Any, Annotated[Index[str_], LabelsOrder(['permno', <lambda>], 'yyyymm', ...), LabelsMatch([{'Mom12m', 'LRreversal', 'Mom6m'}, <lambda>])], int64, str_, float64]) -> Series[IndexHierarchy[Index[int64], IndexYearMonth], float64]
+└── Frame[Any, Annotated[Index[str_], LabelsOrder(['permno', <lambda>], 'yyyymm', ...), LabelsMatch([{'Mom12m', 'LRreversal', 'Mom6m'}, <lambda>])], int64, str_, float64]
+    └── Annotated[Index[str_], LabelsOrder(['permno', <lambda>], 'yyyymm', ...), LabelsMatch([{'Mom12m', 'LRreversal', 'Mom6m'}, <lambda>])]
+        └── LabelsMatch([{'Mom12m', 'LRreversal', 'Mom6m'}, <lambda>])
+            └── Expected label to match frozenset({'Mom12m', 'LRreversal', 'Mom6m'}), no provided match
+```
+
 
 ## The Expressive Powers of ``TypeVarTuple``
 
@@ -228,8 +237,32 @@ def process(f: Frame[
 
 ## Typing Utilities
 
+All StaticFrame containers feature a ``via_type_clinic`` interface to permit access to a ``TypeClinic`` instantiated with the container. A utility provided by this interface is, given a container, the complete tyep hint for that container. The default string representation of ``via_type_clinic`` provides a string representation of the hint; the ``to_hint`` method returns the a complete generic alias object:
+
+```python
+>>> import static_frame as sf
+>>> f = sf.Frame.from_records(([3, '192004', 0.3], [3, '192005', -0.4]), columns=('permno', 'yyyymm', 'Mom3m'))
+>>> f.via_type_clinic
+Frame[Index[int64], Index[str_], int64, str_, float64]
+>>> f.via_type_clinic.to_hint()
+static_frame.core.frame.Frame[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_], numpy.int64, numpy.str_, numpy.float64]
+```
+
+The ``via_type_clinic.check()`` funtion permits validating the container against type-hint at run-time.
+
+```python
+>>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, tp.Unpack[tp.Tuple[tp.Any, ...]]])
+ClinicError:
+In Frame[Index[str_], Index[Any], Unpack[Tuple[Any, ...]]]
+└── Index[str_]
+    └── Expected str_, provided int64 invalid
+```
+
 Comprehensively typing a ``Frame`` can be time consuming. StaticFrame includes a number of generic aliases to define just the outermost container types. For example, ``TFrameAny`` can be used for any ``Frame``, and ``TSeries`` for any ``Series``.
 
+```python
+>>> f.via_type_clinic.check(sf.TFrameAny)
+```
 
 
 ## Alternative Approaches
