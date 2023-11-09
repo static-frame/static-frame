@@ -72,7 +72,6 @@ def interface(context, container=None, doc=False):
 @task
 def test(context,
         unit=False,
-        backward=False,
         cov=False,
         pty=False,
         warnings=False,
@@ -85,8 +84,9 @@ def test(context,
     fps = []
     fps.append('static_frame/test/unit')
     fps.append('static_frame/test/typing')
-    if not backward:
+    if sys.version_info[:2] >= (3, 11):
         fps.append('static_frame/test/unit_forward')
+
     if not unit:
         fps.append('static_frame/test/integration')
         fps.append('static_frame/test/property')

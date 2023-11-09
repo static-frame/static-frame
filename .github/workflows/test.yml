@@ -58,7 +58,7 @@ jobs:
         pip install -r requirements-test.txt
 
     - name: Invoke Test
-      run: inv test --cov --backward
+      run: inv test --cov
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
