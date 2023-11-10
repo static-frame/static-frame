@@ -13,7 +13,7 @@ This is inadequate, as it ignores the types contained within the container. A Da
 
 ```python
 from typing import Any
-from static_frame import Frame, Index
+from static_frame import Frame, Index, TSeriesAny
 
 def process(f: Frame[   # the type of the container
         Any,            # the type of the index labels
@@ -21,7 +21,7 @@ def process(f: Frame[   # the type of the container
         np.int_,        # the type of the first column
         np.str_,        # the type of the second column
         np.float64,     # the type of the third column
-        ]) -> None: ...
+        ]) -> TSeriesAny: ...
 ```
 
 All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits run-time validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful run-time validators, permitting per-column or per-row analysis as well as many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive and validate type hints. Together, these tools offer a cohesive and integrated approach to type-hinting and validating DataFrames.
