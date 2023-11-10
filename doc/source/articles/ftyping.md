@@ -188,7 +188,7 @@ def process(f: Frame[
 
 ```
 
-Both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can associate functions with label specifiers to perform data value validation. If the validator is applied to column labels, a ``Series`` of column values will be provided to the function; if the validator is applied to index labels, a ``Series`` of row values will be provided to the function.
+Both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can associate functions with label specifiers to validate data values. If the validator is applied to column labels, a ``Series`` of column values will be provided to the function; if the validator is applied to index labels, a ``Series`` of row values will be provided to the function.
 
 Similar to the usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier, and the remaining items are row- or column-processing functions that return a Boolean.
 
