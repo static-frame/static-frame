@@ -234,8 +234,38 @@ In args of (f: Frame[Any, Annotated[Index[str_], LabelsOrder(['permno', <lambda>
 ```
 
 
-## The Expressive Powers of ``TypeVarTuple``
+## The Expressive Power of ``TypeVarTuple``
 
+As shown above, ``TypeVarTuple`` permits specifying ``Frame`` of zero or more types. For example, we can provide type hints for a ``Frame`` of two float or six mixed column values, all while accepting any index or columns type:
+
+```python
+from typing import Any
+from static_frame import Frame, Index
+
+>>> f1: sf.Frame[Any, Any, np.float64, np.float64]
+
+>>> f2: sf.Frame[Any, Any, np.bool_, np.float64, np.int8, np.int8, np.str_, np.datetime64]
+```
+
+Python 3.11 introduces a new syntax for ``TypeVarTuple`` values: star-expandable ``tuple`` generic aliases. For example, to type-hint a ``Frame`` with a date index, string column labels, and any configuration of columns, we can start-expand a ``tuple`` of zero or more ``All``:
+
+```python
+from typing import Any
+from static_frame import Frame, Index
+
+>>> f: sf.Frame[Index[np.datetime64], Index[np.str_], *tuple[All, ...]]
+```
+
+The star-expandable ``tuple`` can go anywhere in a list of types. For example, the type hint below defines a ``Frame`` that starts with Boolean and floating-point columns, but has no requirement for any number of following columns.
+
+```python
+from typing import Any
+from static_frame import Frame
+
+>>> f: sf.Frame[Any, Any, np.bool_, np.float64, *tuple[All, ...]]
+```
+
+While monly one ``TypeVarTuple`` can be used in sequence of columnar types, this tool permits a range of options, letting the definition make requirements about leading or trailing columns as needed.
 
 
 ## Typing Utilities
