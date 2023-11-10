@@ -191,7 +191,7 @@ To perform data value validation, both ``Require.LabelsOrder`` and ``Require.Lab
 
 Similar to usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier and the remaining items are row- or column-processing functions that return a Boolean.
 
-To extend the example above, we might validate all "permno" values are greater than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than -1.
+To extend the example above, we might validate all "permno" values are greater than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than or equal to -1.
 
 
 ```python
@@ -209,7 +209,7 @@ def process(f: Frame[
                         ...,
                         ),
                 Require.LabelsMatch(
-                        [{'Mom12m', 'Mom6m', 'LRreversal'}, lambda s: (s > -1).all()],
+                        [{'Mom12m', 'Mom6m', 'LRreversal'}, lambda s: (s >= -1).all()],
                         ),
                 ],
         np.int_,
