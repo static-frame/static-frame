@@ -9,7 +9,7 @@ Since the advent of type hints in Python 3.5, statically typing a DataFrame has 
 def process(f: DataFrame) -> Series: ...
 ```
 
-This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics define the type. A function argument with such type hints would provide developers, static analyzers, and run-time checkers the information to fully understand the expectations of the interface. StaticFrame 2 now permits this:
+This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics define the type. A function argument with such type hints would provide developers, static analyzers, and runtime checkers the information to fully understand the expectations of the interface. StaticFrame 2 now permits this:
 
 ```python
 from typing import Any
@@ -24,7 +24,7 @@ def process(f: Frame[   # the type of the container
         ]) -> TSeriesAny: ...
 ```
 
-All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits run-time validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful run-time validators, permitting per-column or per-row analysis as well as many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive and validate type hints. Together, these tools offer a cohesive approach to type-hinting and validating DataFrames.
+All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits runtime validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful runtime validators, permitting per-column or per-row analysis as well as many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive and validate type hints. Together, these tools offer a cohesive approach to type-hinting and validating DataFrames.
 
 
 ## The Path to a Generic DataFrame
@@ -87,11 +87,11 @@ Combined with a better function name (e.g., ``partition_by_permno``), such rich 
 Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). Calling this function with a ``Frame`` of two columns of ``np.float64``, for example, will fail a static analysis type check or deliver a warning in an editor.
 
 
-## Run-time Type Validation
+## Runtime Type Validation
 
-Static type checking may not be enough: run-time evaluation provides even stronger constraints, particularly for dynamic or incompletely (or incorrectly) type-hinted values.
+Static type checking may not be enough: runtime evaluation provides even stronger constraints, particularly for dynamic or incompletely (or incorrectly) type-hinted values.
 
-Building on a new run-time type checker named ``TypeClinic``, StaticFrame 2 introduces ``@CallGuard.check``, a decorator for run-time validation of type-hinted interfaces. All StaticFrame and NumPy generics are supported, as well as support for most built-in Python types, even when deeply nested. The function below adds the ``@CallGuard.check`` decorator.
+Building on a new runtime type checker named ``TypeClinic``, StaticFrame 2 introduces ``@CallGuard.check``, a decorator for runtime validation of type-hinted interfaces. All StaticFrame and NumPy generics are supported, as well as support for most built-in Python types, even when deeply nested. The function below adds the ``@CallGuard.check`` decorator.
 
 ```python
 from typing import Any
@@ -131,7 +131,7 @@ To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorat
 
 ## Runtime Data Validation
 
-There are other characteristics that might be validated at run-time. For example, the ``shape`` or ``name`` attributes, or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
+There are other characteristics that might be validated at runtime. For example, the ``shape`` or ``name`` attributes, or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
 
 * ``Require.Name``: Validate the ``name`` attribute of the container.
 * ``Require.Len``: Validate the length of the container.
@@ -268,7 +268,7 @@ from static_frame import Frame
 
 ## Utilities for Type Hinting
 
-Working with such detailed type hints can be challenging. StaticFrame provides convenient utilities for run-time type hinting and checking. All StaticFrame 2 containers feature a ``via_type_clinic`` interface, permitting access to ``TypeClinic`` functionality.
+Working with such detailed type hints can be challenging. StaticFrame provides convenient utilities for runtime type hinting and checking. All StaticFrame 2 containers feature a ``via_type_clinic`` interface, permitting access to ``TypeClinic`` functionality.
 
 First, utilities are provided to translate a container, such as a complete ``Frame``, into a type hint. The default string representation of ``via_type_clinic`` provides a string representation of the type hint. The ``to_hint()`` method returns a complete generic alias object.
 
@@ -283,7 +283,7 @@ Frame[Index[int64], Index[str_], int64, str_, float64]
 static_frame.core.frame.Frame[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_], numpy.int64, numpy.str_, numpy.float64]
 ```
 
-Second, utilities are provided for run-time type hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
+Second, utilities are provided for runtime type hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
 
 ```python
 >>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, *tuple[tp.Any, ...]])
