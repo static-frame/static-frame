@@ -60,7 +60,7 @@ def process(f: Frame[
                 ]: ...
 ```
 
-This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier (labelled "permno"), year and month (labelled "yyyymm"), and the signal (with a name specific to the signal).
+This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / signed_predictors_dl_wide.zip / signed_predictors_dl_wide.csv). The table has three columns: security identifier (labelled "permno"), year and month (labelled "yyyymm"), and the signal (with a name specific to the signal).
 
 The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. A dictionary keyed by "permno" is returned, where each value is a ``Series`` of ``np.float64`` values for that "permno"; the index is an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column. (StaticFrame uses NumPy ``datetime64`` values to define unit-typed indices: ``IndexYearMonth`` stores ``datetime64[M]`` labels.)
 
