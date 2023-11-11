@@ -1,5 +1,6 @@
 
 
+
 # Type-Hinting DataFrames for Static Analysis and Runtime Validation
 
 
@@ -9,7 +10,7 @@ Since the advent of type hints in Python 3.5, statically typing a DataFrame has 
 def process(f: DataFrame) -> Series: ...
 ```
 
-This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values: these characteristics define the type. A function argument with such type hints would provide developers, static analyzers, and runtime checkers the information to fully understand the expectations of the interface. StaticFrame 2 now permits this:
+This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values; these characteristics define the type. A function argument with such type hints provides developers, static analyzers, and runtime checkers with all the information needed to understand the expectations of the interface. StaticFrame 2 now permits this:
 
 ```python
 from typing import Any
@@ -24,25 +25,25 @@ def process(f: Frame[   # the type of the container
         ]) -> TSeriesAny: ...
 ```
 
-All core StaticFrame containers now support generic specification. While statically checkable, a new decorator, ``@CallGuard.check``, permits runtime validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful runtime validators, permitting per-column or per-row analysis as well as many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive and validate type hints. Together, these tools offer a cohesive approach to type-hinting and validating DataFrames.
+All core StaticFrame containers now support generic specifications. While statically checkable, a new decorator, ``@CallGuard.check``, permits runtime validation of these type hints on function interfaces. Using ``Annotated`` generics, the new ``Require`` class defines a family of powerful runtime validators, permitting per-column or per-row analysis and many other validations. Finally, each container exposes a new ``via_type_clinic`` interface to derive and validate type hints. Together, these tools offer a cohesive approach to type-hinting and validating DataFrames.
 
 
 ## The Path to a Generic DataFrame
 
-Python's built-in generic types (e.g.,``tuple`` or ``dict``) require specification of component types (e.g., ``tuple[int, str, bool]`` or ``dict[str, int]``). Defining component types permits more accurate static analysis. While the same is true for DataFrames, there have been few attempts to comprehensively define type hints for DataFrames.
+Python's built-in generic types (e.g.,``tuple`` or ``dict``) require specification of component types (e.g., ``tuple[int, str, bool]`` or ``dict[str, int]``). Defining component types permits more accurate static analysis. While the same is true for DataFrames, there have been few attempts to define comprehensive type hints for DataFrames.
 
-Pandas, even with the ``pandas-stubs`` package, does not permit specifying the types of a DataFrame's components. The Pandas DataFrame, permitting extensive in-place mutation, may not even be sensible to statically type. Fortunately, immutable DataFrames are available in StaticFrame.
+Pandas, even with the ``pandas-stubs`` package, does not permit specifying the types of a DataFrame's components. The Pandas DataFrame, permitting extensive in-place mutation, may not be sensible to type statically. Fortunately, immutable DataFrames are available in StaticFrame.
 
-Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number heterogenous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
+Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number of heterogenous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
 
-A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646 for details.) With this new type variable, StaticFrame can defines a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types. A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
+A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646 for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types. A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
 
-For defining the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``, NumPy generic types are used. This permits narrowly specifying sized numerical types, such as ``np.uint8`` or ``np.complex128``; or broadly specifying categories of types, such as ``np.integer`` or ``np.inexact``. As StaticFrame supports all NumPy types, the correspondence is direct.
+NumPy generic types are used to define the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``. This permits narrowly specifying sized numerical types, such as ``np.uint8`` or ``np.complex128``; or broadly specifying categories of types, such as ``np.integer`` or ``np.inexact``. As StaticFrame supports all NumPy types, the correspondence is direct.
 
 
 ## Interfaces Defined with Generic DataFrames
 
-Extending the example above, the function interface below shows a ``Frame`` with three columns being transformed into a dictionary of ``Series``. With so much more information provided by component type hints, the function's purpose is almost obvious.
+Extending the example above, the function interface below shows a ``Frame`` with three columns transformed into a dictionary of ``Series``. With so much more information provided by component type hints, the function's purpose is almost obvious.
 
 ```python
 from typing import Any
@@ -60,7 +61,7 @@ def process(f: Frame[
                 ]: ...
 ```
 
-This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Full Sets / Predictors / PredictorsIndiv). The table has three columns: security identifier (labelled "permno"), year and month (labelled "yyyymm"), and the signal (with a name specific to the signal).
+This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Individual / Predictors). Each table has three columns: security identifier (labeled "permno"), year and month (labeled "yyyymm"), and the signal (with a name specific to the signal).
 
 The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. A dictionary keyed by "permno" is returned, where each value is a ``Series`` of ``np.float64`` values for that "permno"; the index is an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column. (StaticFrame uses NumPy ``datetime64`` values to define unit-typed indices: ``IndexYearMonth`` stores ``datetime64[M]`` labels.)
 
@@ -82,9 +83,9 @@ def process(f: Frame[
                 ]: ...
 ```
 
-Combined with a better function name (e.g., ``partition_by_permno``), such rich type-hints provide a self-documenting interface that makes functionality explicit.
+In addition to a better function name (e.g., ``partition_by_permno``), rich type-hints provide a self-documenting interface that makes functionality explicit.
 
-Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). Calling this function with a ``Frame`` of two columns of ``np.float64``, for example, will fail a static analysis type check or deliver a warning in an editor.
+Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). For example, calling this function with a ``Frame`` of two columns of ``np.float64`` will fail a static analysis type check or deliver a warning in an editor.
 
 
 ## Runtime Type Validation
@@ -126,12 +127,12 @@ In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHie
         └── Expected str_, provided int64 invalid
 ```
 
-To issue warnings instead of raising exceptions, the ``@CallGuard.warn`` decorator may be used.
+To issue warnings instead of raising exceptions, use the ``@CallGuard.warn`` decorator.
 
 
 ## Runtime Data Validation
 
-There are other characteristics that might be validated at runtime. For example, the ``shape`` or ``name`` attributes, or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
+Other characteristics can be validated at runtime. For example, the ``shape`` or ``name`` attributes or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
 
 * ``Require.Name``: Validate the ``name`` attribute of the container.
 * ``Require.Len``: Validate the length of the container.
@@ -142,7 +143,7 @@ There are other characteristics that might be validated at runtime. For example,
 
 Aligning with a growing trend, these objects are provided in type hints as one or more additional arguments to an ``Annotated`` generic. (See PEP 593 https://peps.python.org/pep-0593 for details).
 
-Extending the example of processing an OSAP signal table, we might validate our expectation of column labels. The ``Require.LabelsOrder`` validator can define a sequence of labels, optionally using ``...`` for contiguous regions of zero or more unspecified labels. To specify that the first two columns of the table are labelled "permno" and "yyyymm", while the third label is variable (depending on the signal), the following ``Require.LabelsOrder`` can be defined with an ``Annotated`` generic:
+Extending the example of processing an OSAP signal table, we might validate our expectation of column labels. The ``Require.LabelsOrder`` validator can define a sequence of labels, optionally using ``...`` for contiguous regions of zero or more unspecified labels. To specify that the first two columns of the table are labeled "permno" and "yyyymm", while the third label is variable (depending on the signal), the following ``Require.LabelsOrder`` can be defined with an ``Annotated`` generic:
 
 
 ```python
@@ -166,7 +167,7 @@ def process(f: Frame[
 
 ```
 
-If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If tables from only three files are expected (i.e. Mom12m.csv, Mom6m.csv, and LRreversal.csv), we can validate the names of the third column by defining a set:
+If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If tables from only three files are expected (i.e., Mom12m.csv, Mom6m.csv, and LRreversal.csv), we can validate the names of the third column by defining a set:
 
 ```python
 @CallGuard.check
@@ -187,11 +188,11 @@ def process(f: Frame[
 
 ```
 
-To perform data value validation, both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can associate functions with label specifiers. If the validator is applied to column labels, a ``Series`` of column values will be provided to the function; if the validator is applied to index labels, a ``Series`` of row values will be provided to the function.
+Both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can associate functions with label specifiers to validate data values. If the validator is applied to column labels, a ``Series`` of column values will be provided to the function; if the validator is applied to index labels, a ``Series`` of row values will be provided to the function.
 
-Similar to usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier and the remaining items are row- or column-processing functions that return a Boolean.
+Similar to the usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier, and the remaining items are row- or column-processing functions that return a Boolean.
 
-To extend the example above, we might validate all "permno" values are greater than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than -1.
+To extend the example above, we might validate that all "permno" values are greater than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than or equal to -1.
 
 
 ```python
@@ -209,7 +210,7 @@ def process(f: Frame[
                         ...,
                         ),
                 Require.LabelsMatch(
-                        [{'Mom12m', 'Mom6m', 'LRreversal'}, lambda s: (s > -1).all()],
+                        [{'Mom12m', 'Mom6m', 'LRreversal'}, lambda s: (s >= -1).all()],
                         ),
                 ],
         np.int_,
@@ -257,7 +258,7 @@ from static_frame import Frame, Index
 >>> f: sf.Frame[Index[np.datetime64], Index[np.str_], *tuple[All, ...]]
 ```
 
-The ``tuple`` star expression can go anywhere in a list of types, but there can be only one. For example, the type hint below defines a ``Frame`` that must start with Boolean and string columns, but has a flexible requirement for any number of subsequent ``np.float64`` columns.
+The ``tuple`` star expression can go anywhere in a list of types, but there can be only one. For example, the type hint below defines a ``Frame`` that must start with Boolean and string columns but has a flexible requirement for any number of subsequent ``np.float64`` columns.
 
 ```python
 from typing import Any
@@ -283,7 +284,7 @@ Frame[Index[int64], Index[str_], int64, str_, float64]
 static_frame.core.frame.Frame[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_], numpy.int64, numpy.str_, numpy.float64]
 ```
 
-Second, utilities are provided for runtime type hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
+Second, utilities are provided for runtime-type hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
 
 ```python
 >>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, *tuple[tp.Any, ...]])
@@ -303,6 +304,5 @@ To support gradual typing, StaticFrame defines several generic aliases configure
 ## Conclusion
 
 Better type hinting for DataFrames is overdue. With modern Python typing tools and a DataFrame built on an immutable data model, StaticFrame 2 meets this need, providing powerful resources for engineers prioritizing maintainability and verifiability.
-
 
 
