@@ -1,7 +1,7 @@
-import typing as tp
 import unittest
 
 import numpy as np
+import typing_extensions as tp
 from hypothesis import given
 from hypothesis import strategies as st
 

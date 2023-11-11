@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing as tp
 from collections import defaultdict
 from functools import partial
 from itertools import chain
@@ -8,6 +7,7 @@ from itertools import product
 from itertools import repeat
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 
@@ -17,13 +17,14 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import NameType
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TIndexCtor
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -33,8 +34,9 @@ from static_frame.core.util import ufunc_unique1d
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 
 #-------------------------------------------------------------------------------
@@ -82,16 +84,16 @@ def extrapolate_column_fields(
     return sub_columns
 
 def pivot_records_dtypes(
-        dtype_map: Series,
+        dtype_map: Series[tp.Any, tp.Any],
         data_fields: tp.Iterable[TLabel],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]]
-        ) -> tp.Iterator[tp.Optional[DtypeAny]]:
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]]
+        ) -> tp.Iterator[tp.Optional[TDtypeAny]]:
     '''
     Iterator of ordered dtypes, providing multiple dtypes per field when func_map is provided.
     '''
     for field in data_fields:
-        dtype: DtypeAny = dtype_map[field]
+        dtype: TDtypeAny = dtype_map[field]
         if func_single:
             yield ufunc_dtype_to_dtype(func_single, dtype)
         else: # we assume
@@ -101,28 +103,29 @@ def pivot_records_dtypes(
 def pivot_records_items_to_frame(
         *,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         func_no: bool,
         kind: TSortKinds,
-        columns_constructor: IndexConstructor,
+        columns_constructor: TIndexCtor,
         columns: tp.Sequence[TLabel],
-        index_constructor: IndexConstructor,
-        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
-        frame_cls: tp.Type['Frame'],
-        ) -> 'Frame':
+        index_constructor: TIndexCtor,
+        dtypes: tp.Tuple[tp.Optional[TDtypeAny], ...],
+        frame_cls: tp.Type[TFrameAny],
+        ) -> TFrameAny:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     record_size = len(data_fields_iloc) * (1 if (func_single or func_no) else len(func_map)) # type: ignore
 
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
+    part: TypeBlocks
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
         index_labels.append(label) # type: ignore
         if func_no:
@@ -141,7 +144,7 @@ def pivot_records_items_to_frame(
                     arrays[i].append(func(values))
                     i += 1
 
-    def gen() -> tp.Iterator[NDArrayAny]:
+    def gen() -> tp.Iterator[TNDArrayAny]:
         for b, dtype in zip(arrays, dtypes):
             if dtype is None:
                 array, _ = iterable_to_array_1d(b)
@@ -162,25 +165,25 @@ def pivot_records_items_to_frame(
 
 def pivot_records_items_to_blocks(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_fields_iloc: tp.Iterable[int],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         func_no: bool,
         fill_value: tp.Any,
-        fill_value_dtype: DtypeAny,
+        fill_value_dtype: TDtypeAny,
         index_outer: 'IndexBase',
-        dtypes: tp.Tuple[tp.Optional[DtypeAny], ...],
+        dtypes: tp.Tuple[tp.Optional[TDtypeAny], ...],
         kind: TSortKinds,
-        ) -> tp.List[NDArrayAny]:
+        ) -> tp.List[TNDArrayAny]:
     '''
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
 
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
-    arrays: tp.List[tp.Union[tp.List[tp.Any], NDArrayAny]] = []
+    group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
+    arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
     for dtype in dtypes:
         if dtype is None:
             # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
@@ -242,21 +245,22 @@ def pivot_records_items_to_blocks(*,
 
 def pivot_items_to_block(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
-        func_single: tp.Optional[UFunc],
-        dtype: tp.Optional[DtypeAny],
+        func_single: tp.Optional[TUFunc],
+        dtype: tp.Optional[TDtypeAny],
         fill_value: tp.Any,
-        fill_value_dtype: DtypeAny,
+        fill_value_dtype: TDtypeAny,
         index_outer: 'IndexBase',
         kind: TSortKinds,
-        ) -> NDArrayAny:
+        ) -> TNDArrayAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     '''
     from static_frame.core.series import Series
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
+            else group_fields_iloc[0])
 
     if func_single and dtype is not None:
         array = np.full(len(index_outer),
@@ -274,15 +278,16 @@ def pivot_items_to_block(*,
         return array
 
     if func_single and dtype is None:
-        def gen() -> tp.Iterator[tp.Tuple[int, tp.Any]]:
+        def gen() -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
             for label, _, values in blocks.group_extract(
                     axis=0,
                     key=group_key,
                     extract=data_field_iloc,
                     kind=kind,
                     ):
-                yield index_outer._loc_to_iloc(label), func_single(values)
-        post = Series.from_items(gen())
+                yield index_outer._loc_to_iloc(label), func_single(values) # pyright: ignore
+
+        post = Series[tp.Any, tp.Any].from_items(gen())
         if len(post) == len(index_outer):
             array = np.empty(len(index_outer), dtype=post.dtype)
         else:
@@ -296,7 +301,7 @@ def pivot_items_to_block(*,
 
     # func_no scenario as no mapping here
     if group_depth == 1:
-        labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)]
+        labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)] # type: ignore
     else:
         # NOTE: might replace _extract_array_column with an iterator of tuples
         labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]
@@ -315,24 +320,25 @@ def pivot_items_to_block(*,
 
 def pivot_items_to_frame(*,
         blocks: TypeBlocks,
-        group_fields_iloc: tp.Iterable[TLabel],
+        group_fields_iloc: tp.List[int],
         group_depth: int,
         data_field_iloc: int,
-        func_single: tp.Optional[AnyCallable],
-        frame_cls: tp.Type['Frame'],
-        name: NameType,
-        dtype: DtypeAny | None,
-        index_constructor: IndexConstructor,
-        columns_constructor: IndexConstructor,
+        func_single: tp.Optional[TCallableAny],
+        frame_cls: tp.Type[TFrameAny],
+        name: TName,
+        dtype: TDtypeAny | None,
+        index_constructor: TIndexCtor,
+        columns_constructor: TIndexCtor,
         kind: TSortKinds,
-        ) -> 'Frame':
+        ) -> TFrameAny:
     '''
     Specialized generator of pairs for when we have only one data_field and one function.
     This version returns a Frame.
     '''
 
     from static_frame.core.series import Series
-    group_key = group_fields_iloc if group_depth > 1 else group_fields_iloc[0] #type: ignore
+    group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
+            else group_fields_iloc[0])
 
     if func_single:
         labels: tp.List[TLabel] = []
@@ -343,7 +349,7 @@ def pivot_items_to_frame(*,
                 extract=data_field_iloc,
                 kind=kind,
                 ):
-            labels.append(label) # type: ignore
+            labels.append(label)
             values.append(func_single(v))
 
         if dtype is None:
@@ -360,7 +366,7 @@ def pivot_items_to_frame(*,
                 )
     # func_no scenario
     if group_depth == 1:
-        index = index_constructor(blocks._extract_array_column(group_key))
+        index = index_constructor(blocks._extract_array_column(group_key)) # type: ignore[arg-type]
     else:
         index = index_constructor(tuple(label) for label in blocks._extract_array(column_key=group_key))
 
@@ -375,17 +381,17 @@ def pivot_items_to_frame(*,
 
 def pivot_core(
         *,
-        frame: 'Frame',
+        frame: TFrameAny,
         index_fields: tp.List[TLabel],
         columns_fields: tp.List[TLabel],
         data_fields: tp.List[TLabel],
         func_fields: tp.Tuple[TLabel, ...],
-        func_single: tp.Optional[UFunc],
-        func_map: tp.Sequence[tp.Tuple[TLabel, UFunc]],
+        func_single: tp.Optional[TUFunc],
+        func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         fill_value: object = np.nan,
-        index_constructor: IndexConstructor = None,
+        index_constructor: TIndexCtorSpecifier = None,
         kind: TSortKinds = DEFAULT_FAST_SORT_KIND,
-        ) -> 'Frame':
+        ) -> TFrameAny:
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
     '''
     from static_frame.core.frame import Frame
@@ -411,19 +417,20 @@ def pivot_core(
         columns_name = columns_name + ('func',)
 
     columns_depth = len(columns_name)
+    columns_constructor: TIndexCtor
 
     if columns_depth == 1:
         columns_name = columns_name[0] # type: ignore
         columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
     else:
-        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
+        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                 depth_reference=columns_depth,
                 name=columns_name)
 
-    dtype_single: DtypeAny | None
+    dtype_single: TDtypeAny | None
     dtype_map = frame.dtypes # returns a Series
 
-    dtypes_per_data_fields: tp.Tuple[DtypeAny | None, ...]
+    dtypes_per_data_fields: tp.Tuple[TDtypeAny | None, ...]
     if func_no:
         dtypes_per_data_fields = tuple(dtype_map[field] for field in data_fields)
         if data_fields_len == 1:
@@ -485,7 +492,7 @@ def pivot_core(
                     frame_cls=frame.__class__,
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
-                else columns_constructor(f.columns))
+                else columns_constructor(f.columns)) # pyright: ignore
         return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
@@ -522,7 +529,7 @@ def pivot_core(
                 )
         sub_columns_collected.extend(sub_columns)
 
-        sub_frame: Frame
+        sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
             sub_blocks.append(pivot_items_to_block(blocks=sub,
@@ -555,7 +562,7 @@ def pivot_core(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=columns_constructor(sub_columns_collected),
+            columns=columns_constructor(sub_columns_collected), # pyright: ignore
             own_data=True,
             own_index=True,
             own_columns=True,
@@ -565,10 +572,10 @@ def pivot_core(
 #-------------------------------------------------------------------------------
 
 def pivot_outer_index(
-        frame: 'Frame',
+        frame: TFrameAny,
         index_fields: tp.Sequence[TLabel],
         index_depth: int,
-        index_constructor: IndexConstructor = None,
+        index_constructor: TIndexCtorSpecifier = None,
         ) -> IndexBase:
 
     index_loc = index_fields if index_depth > 1 else index_fields[0]
@@ -601,7 +608,7 @@ def pivot_outer_index(
                         name=name,
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                ).flat()
+                ).flat() # pyright: ignore
     return index_inner
 
 
@@ -610,16 +617,16 @@ def pivot_outer_index(
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[TLabel]
     target_depth: int
-    target_select: NDArrayAny
+    target_select: TNDArrayAny
     group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]]
     group_depth: int
-    group_select: NDArrayAny
-    group_to_dtype: tp.Dict[TLabel | None, DtypeAny]
+    group_select: TNDArrayAny
+    group_to_dtype: tp.Dict[TLabel | None, TDtypeAny]
 
 def pivot_index_map(*,
         index_src: IndexBase,
         depth_level: TDepthLevel,
-        dtypes_src: NDArrayAny | None, # array of dtypes
+        dtypes_src: TNDArrayAny | None, # array of dtypes
         ) -> PivotIndexMap:
     '''
     Args:
@@ -643,7 +650,7 @@ def pivot_index_map(*,
 
     group_depth = len(group_arrays)
     target_depth = len(target_arrays)
-    group_to_dtype: tp.Dict[tp.Optional[TLabel], DtypeAny] = {}
+    group_to_dtype: tp.Dict[tp.Optional[TLabel], TDtypeAny] = {}
     targets_unique: tp.Iterable[TLabel]
 
     group_to_target_map: tp.Dict[tp.Any, tp.Dict[tp.Any, int]]
@@ -690,18 +697,18 @@ def pivot_index_map(*,
 #-------------------------------------------------------------------------------
 class PivotDeriveConstructors(tp.NamedTuple):
     contract_dst: tp.Optional[tp.Iterable[TLabel]]
-    contract_constructor: IndexConstructor
-    expand_constructor: IndexConstructor
+    contract_constructor: TIndexCtorSpecifier
+    expand_constructor: TIndexCtorSpecifier
 
 def pivot_derive_constructors(*,
         contract_src: IndexBase,
         expand_src: IndexBase,
-        group_select: NDArrayAny, # Boolean
+        group_select: TNDArrayAny, # Boolean
         group_depth: int,
-        target_select: NDArrayAny,
+        target_select: TNDArrayAny,
         group_to_target_map: tp.Dict[tp.Optional[TLabel], tp.Dict[tp.Any, int]],
         expand_is_columns: bool,
-        frame_cls: tp.Type['Frame'],
+        frame_cls: tp.Type[TFrameAny],
         ) -> PivotDeriveConstructors:
     '''
     pivot_stack: columns is contract, index is expand

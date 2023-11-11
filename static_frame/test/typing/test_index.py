@@ -1,33 +1,34 @@
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
+
+TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 
 def test_index_len_a() -> None:
 
-    idx = sf.Index(('a', 'b', 'c'))
+    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
     l: int = len(idx)
     assert l == 3
 
 def test_index_len_b() -> None:
 
-    idx = sf.Frame.from_records([('a', 'b'), ('c', 'd')])
+    idx: TFrameAny = sf.Frame.from_records([('a', 'b'), ('c', 'd')])
     l: int = len(idx.columns)
     assert l == 2
 
 
 def test_index_c() -> None:
 
-    idx = sf.Index(('a', 'b', 'c'))
+    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
     assert len(idx) == 3
 
     x1: str = idx[1]
 
-    x2: sf.Index = idx[1:]
-    x3: sf.Index = idx[[0, 1]]
-    x4: sf.Index = idx[idx.values == 'b']
+    x2: sf.Index[np.unicode_] = idx[1:]
+    x3: sf.Index[np.unicode_] = idx[[0, 1]]
+    x4: sf.Index[np.unicode_] = idx[idx.values == 'b']
 
 
 def test_index_d() -> None:
@@ -39,6 +40,7 @@ def test_index_d() -> None:
     x2: sf.IndexDate = idx[1:]
     x3: sf.IndexDate = idx[[0, 1]]
     x4: sf.IndexDate = idx[idx.values == 'b']
+    dt: np.dtype[np.datetime64] = idx.dtype
 
 
 def test_index_e() -> None:
@@ -51,3 +53,20 @@ def test_index_e() -> None:
     x2: sf.IndexHierarchy = idx[1:]
     x3: sf.IndexHierarchy = idx[[0, 1]]
     x4: sf.IndexHierarchy = idx[idx.values_at_depth(1) == 20]
+
+
+def test_index_go_c() -> None:
+
+    idx = sf.IndexGO[np.unicode_](('a', 'b', 'c'))
+    assert len(idx) == 3
+
+    x1: str = idx[1]
+
+    x2: sf.IndexGO[np.unicode_] = idx[1:]
+    x3: sf.IndexGO[np.unicode_] = idx[[0, 1]]
+    x4: sf.IndexGO[np.unicode_] = idx[idx.values == 'b']
+
+
+
+
+

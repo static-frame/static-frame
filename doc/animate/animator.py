@@ -4,7 +4,8 @@ import subprocess
 import sys
 import time
 import traceback
-import typing as tp
+
+import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 

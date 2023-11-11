@@ -3,13 +3,14 @@ from __future__ import annotations
 import gzip
 import os
 import tempfile
-import typing as tp
 from io import BytesIO
 from io import StringIO
 from pathlib import Path
 from types import TracebackType
 from urllib import request
 from zipfile import ZipFile
+
+import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
 
@@ -100,6 +101,7 @@ WWWReturnType = tp.Union[Path, StringIO, BytesIO]
 class WWW:
     '''Utilities for downloading resources from the world-wide-web.
     '''
+    __slots__ = ()
 
     @staticmethod
     def _download_archive(

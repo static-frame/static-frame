@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 import json
 import string
-import typing as tp
 import unittest
 from itertools import combinations
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 # assuming located in the same directory

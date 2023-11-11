@@ -30,11 +30,11 @@ Native immutable data structures
         PEP 603 -- Adding a frozenmap type to collections | Python.org
 
 '''
-import typing as tp
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+import typing_extensions as tp
 
 import static_frame as sf
 

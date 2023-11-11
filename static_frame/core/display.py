@@ -6,11 +6,11 @@ import os
 import platform
 import re
 import sys
-import typing as tp
 from collections import namedtuple
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
@@ -22,14 +22,14 @@ from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import CallableToIterType
+from static_frame.core.util import TCallableToIter
 from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    THeaderSpecifier = tp.Union[DtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
 
 
 _module = sys.modules[__name__]
@@ -46,7 +46,7 @@ class DisplayTypeCategory:
     CONFIG_ATTR = 'type_color_default'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool: #pylint: disable=W0613
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool: #pylint: disable=W0613
         return True
 
 
@@ -54,56 +54,56 @@ class DisplayTypeInt(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_int'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind in DTYPE_INT_KINDS
 
 class DisplayTypeFloat(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_float'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'f'
 
 class DisplayTypeComplex(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_complex'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'c'
 
 class DisplayTypeBool(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_bool'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'b'
 
 class DisplayTypeObject(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_object'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'O'
 
 class DisplayTypeStr(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_str'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind in DTYPE_STR_KINDS
 
 class DisplayTypeDateTime(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_datetime'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'M'
 
 class DisplayTypeTimeDelta(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_timedelta'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return isinstance(t, np.dtype) and t.kind == 'm'
 
 
@@ -111,7 +111,7 @@ class DisplayTypeIndex(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_index'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         from static_frame.core.index_base import IndexBase
         if not inspect.isclass(t):
             return False
@@ -121,7 +121,7 @@ class DisplayTypeSeries(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_series'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         from static_frame import Series
         if not inspect.isclass(t):
             return False
@@ -131,7 +131,7 @@ class DisplayTypeFrame(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_frame'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         from static_frame import Frame
         if not inspect.isclass(t):
             return False
@@ -141,7 +141,7 @@ class DisplayTypeBus(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_bus'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         from static_frame import Bus
         if not inspect.isclass(t):
             return False
@@ -151,7 +151,7 @@ class DisplayTypeQuilt(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_quilt'
 
     @staticmethod
-    def in_category(t: tp.Union[type, DtypeAny]) -> bool:
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         from static_frame import Quilt
         if not inspect.isclass(t):
             return False
@@ -176,11 +176,11 @@ class DisplayTypeCategoryFactory:
             DisplayTypeQuilt,
             )
 
-    _TYPE_TO_CATEGORY_CACHE: tp.Dict[tp.Union[type, DtypeAny], tp.Type[DisplayTypeCategory]] = {}
+    _TYPE_TO_CATEGORY_CACHE: tp.Dict[tp.Union[type, TDtypeAny], tp.Type[DisplayTypeCategory]] = {}
 
     @classmethod
     def to_category(cls,
-            dtype: tp.Union[type, DtypeAny],
+            dtype: tp.Union[type, TDtypeAny],
             ) -> tp.Type[DisplayTypeCategory]:
         if dtype not in cls._TYPE_TO_CATEGORY_CACHE:
             category = None
@@ -427,7 +427,7 @@ class Display:
 
     @classmethod
     def from_values(cls,
-            values: NDArrayAny | tp.Sequence[tp.Any],
+            values: TNDArrayAny | tp.Sequence[tp.Any],
             *,
             header: THeaderSpecifier,
             config: tp.Optional[DisplayConfig] = None,
@@ -501,9 +501,9 @@ class Display:
             index: 'IndexBase',
             columns: 'IndexBase',
             header: DisplayHeader,
-            column_forward_iter: CallableToIterType,
-            column_reverse_iter: CallableToIterType,
-            column_default_iter: CallableToIterType,
+            column_forward_iter: TCallableToIter,
+            column_reverse_iter: TCallableToIter,
+            column_default_iter: TCallableToIter,
             config: tp.Optional[DisplayConfig] = None,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> 'Display':
@@ -839,7 +839,7 @@ class Display:
             self._rows[row_idx].extend(row)
 
     def extend_iterable(self,
-            iterable: tp.Sequence[tp.Any] | NDArrayAny,
+            iterable: tp.Sequence[tp.Any] | TNDArrayAny,
             header: HeaderInitializer
             ) -> None:
         '''

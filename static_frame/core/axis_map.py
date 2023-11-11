@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from copy import deepcopy
 from functools import partial
 
+import typing_extensions as tp
 from arraykit import array_deepcopy
 
 from static_frame.core.bus import Bus
@@ -13,19 +13,22 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
-from static_frame.core.index_hierarchy import TreeNodeT
-from static_frame.core.util import AnyCallable
+from static_frame.core.index_hierarchy import TTreeNode
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
+    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TBusAny = Bus[tp.Any]
 
 def get_extractor(
         deepcopy_from_bus: bool,
         is_array: bool,
         memo_active: bool,
-        ) -> AnyCallable:
+        ) -> TCallableAny:
     '''
     Args:
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
@@ -33,13 +36,13 @@ def get_extractor(
     if deepcopy_from_bus:
         memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
         if is_array:
-            return partial(array_deepcopy, memo=memo)
+            return partial(array_deepcopy, memo=memo) # pyright: ignore
         return partial(deepcopy, memo=memo)
     return lambda x: x
 
 
 def _bus_to_hierarchy_inner_hierarchies(
-        bus: tp.Union[Bus, 'Yarn'],
+        bus: tp.Union[TBusAny, TYarnAny],
         axis: int,
         extractor: tp.Callable[[IndexBase], IndexBase],
         init_exception_cls: tp.Type[Exception],
@@ -49,7 +52,7 @@ def _bus_to_hierarchy_inner_hierarchies(
     '''
     opposite: tp.Optional[IndexBase] = None
 
-    def level_add(pair: tp.Tuple[TLabel, Frame]) -> IndexHierarchy:
+    def level_add(pair: tp.Tuple[TLabel, TFrameAny]) -> IndexHierarchy:
         nonlocal opposite
         label, frame = pair
 
@@ -79,25 +82,25 @@ def _bus_to_hierarchy_inner_hierarchies(
 
 
 def bus_to_hierarchy(
-        bus: tp.Union[Bus, 'Yarn'],
+        bus: tp.Union[TBusAny, TYarnAny],
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
+        ) -> tp.Tuple[IndexHierarchy, IndexBase | None]:
     '''
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''
     # NOTE: need to extract just axis labels, not the full Frame; need new Store/Bus loaders just for label data
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    first = tp.cast(Frame, bus.iloc[0])
+    first = tp.cast(TFrameAny, bus.iloc[0])
     if (
         (axis == 0 and isinstance(first.index, IndexHierarchy)) or
         (axis == 1 and isinstance(first.columns, IndexHierarchy))
     ):
         return _bus_to_hierarchy_inner_hierarchies(bus, axis, extractor, init_exception_cls)
 
-    tree: TreeNodeT = {}
+    tree: TTreeNode = {}
     opposite: tp.Optional[IndexBase] = None
 
     for label, f in bus.items():
@@ -118,14 +121,14 @@ def bus_to_hierarchy(
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-    # NOTE: we could try to collect index constructors by using the index of the Bus and observing the inidices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
+    # NOTE: we could try to collect index constructors by using the index of the Bus and observing the indices of the contained Frames, but it is not clear that will be better then using IndexAutoConstructorFactory
 
-    return IndexHierarchy.from_tree(tree,  # type: ignore
+    return IndexHierarchy.from_tree(tree,
             index_constructors=IndexAutoConstructorFactory), opposite
 
 
 def buses_to_hierarchy(
-        buses: tp.Iterable[Bus],
+        buses: tp.Iterable[TBusAny],
         labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],

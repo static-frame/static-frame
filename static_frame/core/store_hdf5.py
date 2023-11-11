@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
@@ -17,8 +16,8 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class StoreHDF5(Store):
 
@@ -26,7 +25,7 @@ class StoreHDF5(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -78,8 +77,8 @@ class StoreHDF5(Store):
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
         import tables
         config_map = StoreConfigMap.from_initializer(config)
 
@@ -100,12 +99,12 @@ class StoreHDF5(Store):
                 columns_labels = []
 
                 table = file.get_node(f'/{label_encoded}')
-                colnames = table.cols._v_colnames
+                colnames = table.cols._v_colnames # pyright: ignore
 
-                def blocks() -> tp.Iterator[NDArrayAny]:
+                def blocks() -> tp.Iterator[TNDArrayAny]:
                     for col_idx, colname in enumerate(colnames):
                         # can also do: table.read(field=colname)
-                        array = table.col(colname)
+                        array = table.col(colname) # pyright: ignore
                         if array.dtype.kind in DTYPE_STR_KINDS:
                             array = array.astype(str)
                         array.flags.writeable = False

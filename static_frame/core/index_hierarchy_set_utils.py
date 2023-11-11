@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
@@ -13,8 +13,8 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import IndexConstructor
 from static_frame.core.util import ManyToOneType
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TLabel
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -22,8 +22,8 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class ValidationResult(tp.NamedTuple):
     indices: tp.List[IndexHierarchy]
@@ -31,7 +31,7 @@ class ValidationResult(tp.NamedTuple):
     any_dropped: bool
     any_shallow_copies: bool
     name: TLabel
-    index_constructors: tp.List[IndexConstructor]
+    index_constructors: tp.List[TIndexCtorSpecifier]
 
 
 def _validate_and_process_indices(
@@ -96,8 +96,8 @@ def _validate_and_process_indices(
             )
 
 
-def get_encoding_invariants(indices: tp.List[Index]
-        ) -> tp.Tuple[NDArrayAny, DtypeAny]:
+def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
+        ) -> tp.Tuple[TNDArrayAny, TDtypeAny]:
     # Our encoding scheme requires that we know the number of unique elements
     # for each union depth
     # `num_unique_elements_per_depth` is used as a bit union for the encodings
@@ -109,7 +109,7 @@ def get_encoding_invariants(indices: tp.List[Index]
 
 
 def get_empty(
-        index_constructors: tp.List[IndexConstructor],
+        index_constructors: tp.List[TIndexCtorSpecifier],
         name: TLabel,
         ) -> IndexHierarchy:
     return IndexHierarchy._from_empty(
@@ -122,10 +122,10 @@ def get_empty(
 
 def build_union_indices(
         indices: tp.Sequence[IndexHierarchy],
-        index_constructors: tp.List[IndexConstructor],
+        index_constructors: tp.List[TIndexCtorSpecifier],
         depth: int,
-        ) -> tp.List[Index]:
-    union_indices: tp.List[Index] = []
+        ) -> tp.List[Index[tp.Any]]:
+    union_indices: tp.List[Index[tp.Any]] = []
 
     for i in range(depth):
         union = index_many_to_one(
@@ -141,17 +141,17 @@ def build_union_indices(
 def _get_encodings(
         ih: IndexHierarchy,
         *,
-        union_indices: tp.List[Index],
+        union_indices: tp.List[Index[tp.Any]],
         depth: int,
-        bit_offset_encoders: NDArrayAny,
-        encoding_dtype: DtypeAny,
-        ) -> NDArrayAny:
+        bit_offset_encoders: TNDArrayAny,
+        encoding_dtype: TDtypeAny,
+        ) -> TNDArrayAny:
     '''Encode `ih` based on the union indices'''
-    remapped_indexers: tp.List[NDArrayAny] = []
+    remapped_indexers: tp.List[TNDArrayAny] = []
 
-    union_idx: Index
-    idx: Index
-    indexer: NDArrayAny
+    union_idx: Index[tp.Any]
+    idx: Index[tp.Any]
+    indexer: TNDArrayAny
     depth_level = list(range(depth))
     for ( # type: ignore
         union_idx,
@@ -173,15 +173,15 @@ def _get_encodings(
 
 
 def _remove_union_bloat(
-        indices: tp.List[Index],
-        indexers: tp.List[NDArrayAny] | NDArrayAny,
-        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
+        indices: tp.List[Index[tp.Any]],
+        indexers: tp.List[TNDArrayAny] | TNDArrayAny,
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], TNDArrayAny]:
     # There is potentially a LOT of leftover bloat from all the unions. Clean up.
-    final_indices: tp.List[Index] = []
-    final_indexers: tp.List[NDArrayAny] = []
+    final_indices: tp.List[Index[tp.Any]] = []
+    final_indexers: tp.List[TNDArrayAny] = []
 
-    index: Index
-    indexer: NDArrayAny
+    index: Index[tp.Any]
+    indexer: TNDArrayAny
 
     for index, indexer in zip(indices, indexers):
         unique, new_indexer = ufunc_unique1d_indexer(indexer)

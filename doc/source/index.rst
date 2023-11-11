@@ -7,7 +7,8 @@
 StaticFrame
 =========================================
 
-Immutable and grow-only Pandas-like DataFrames with a more explicit and consistent interface.
+Immutable and grow-only DataFrames with static typing and run-time validation
+
 
 - Code: https://github.com/static-frame/static-frame
 - Packages: https://pypi.org/project/static-frame
@@ -79,6 +80,10 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_nanosecond_go.rst
    api_overview/hloc.rst
    api_overview/iloc.rst
+   api_overview/type_clinic.rst
+   api_overview/call_guard.rst
+   api_overview/clinic_result.rst
+   api_overview/require.rst
    api_overview/www.rst
    api_overview/fill_value_auto.rst
    api_overview/display_active.rst
@@ -131,6 +136,10 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_nanosecond_go.rst
    api_detail/hloc.rst
    api_detail/iloc.rst
+   api_detail/type_clinic.rst
+   api_detail/call_guard.rst
+   api_detail/clinic_result.rst
+   api_detail/require.rst
    api_detail/www.rst
    api_detail/fill_value_auto.rst
    api_detail/display_active.rst
@@ -165,6 +174,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/series-accessor_fill_value.rst
    api_overview/series-accessor_regular_expression.rst
    api_overview/series-accessor_hashlib.rst
+   api_overview/series-accessor_type_clinic.rst
    api_overview/series_he-constructor.rst
    api_overview/series_he-exporter.rst
    api_overview/series_he-attribute.rst
@@ -182,6 +192,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/series_he-accessor_fill_value.rst
    api_overview/series_he-accessor_regular_expression.rst
    api_overview/series_he-accessor_hashlib.rst
+   api_overview/series_he-accessor_type_clinic.rst
    api_overview/frame-constructor.rst
    api_overview/frame-exporter.rst
    api_overview/frame-attribute.rst
@@ -200,6 +211,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/frame-accessor_fill_value.rst
    api_overview/frame-accessor_regular_expression.rst
    api_overview/frame-accessor_hashlib.rst
+   api_overview/frame-accessor_type_clinic.rst
    api_overview/frame_go-constructor.rst
    api_overview/frame_go-exporter.rst
    api_overview/frame_go-attribute.rst
@@ -218,6 +230,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/frame_go-accessor_fill_value.rst
    api_overview/frame_go-accessor_regular_expression.rst
    api_overview/frame_go-accessor_hashlib.rst
+   api_overview/frame_go-accessor_type_clinic.rst
    api_overview/frame_he-constructor.rst
    api_overview/frame_he-exporter.rst
    api_overview/frame_he-attribute.rst
@@ -236,6 +249,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/frame_he-accessor_fill_value.rst
    api_overview/frame_he-accessor_regular_expression.rst
    api_overview/frame_he-accessor_hashlib.rst
+   api_overview/frame_he-accessor_type_clinic.rst
    api_overview/bus-constructor.rst
    api_overview/bus-exporter.rst
    api_overview/bus-attribute.rst
@@ -245,6 +259,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/bus-selector.rst
    api_overview/bus-iterator.rst
    api_overview/bus-accessor_hashlib.rst
+   api_overview/bus-accessor_type_clinic.rst
    api_overview/batch-constructor.rst
    api_overview/batch-exporter.rst
    api_overview/batch-attribute.rst
@@ -261,6 +276,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/batch-accessor_fill_value.rst
    api_overview/batch-accessor_regular_expression.rst
    api_overview/batch-accessor_hashlib.rst
+   api_overview/batch-accessor_type_clinic.rst
    api_overview/yarn-constructor.rst
    api_overview/yarn-exporter.rst
    api_overview/yarn-attribute.rst
@@ -270,6 +286,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/yarn-selector.rst
    api_overview/yarn-iterator.rst
    api_overview/yarn-accessor_hashlib.rst
+   api_overview/yarn-accessor_type_clinic.rst
    api_overview/quilt-constructor.rst
    api_overview/quilt-exporter.rst
    api_overview/quilt-attribute.rst
@@ -279,6 +296,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/quilt-selector.rst
    api_overview/quilt-iterator.rst
    api_overview/quilt-accessor_hashlib.rst
+   api_overview/quilt-accessor_type_clinic.rst
    api_overview/index-constructor.rst
    api_overview/index-exporter.rst
    api_overview/index-attribute.rst
@@ -294,6 +312,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index-accessor_string.rst
    api_overview/index-accessor_regular_expression.rst
    api_overview/index-accessor_hashlib.rst
+   api_overview/index-accessor_type_clinic.rst
    api_overview/index_go-constructor.rst
    api_overview/index_go-exporter.rst
    api_overview/index_go-attribute.rst
@@ -309,6 +328,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_go-accessor_string.rst
    api_overview/index_go-accessor_regular_expression.rst
    api_overview/index_go-accessor_hashlib.rst
+   api_overview/index_go-accessor_type_clinic.rst
    api_overview/index_hierarchy-constructor.rst
    api_overview/index_hierarchy-exporter.rst
    api_overview/index_hierarchy-attribute.rst
@@ -325,6 +345,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_hierarchy-accessor_transpose.rst
    api_overview/index_hierarchy-accessor_regular_expression.rst
    api_overview/index_hierarchy-accessor_hashlib.rst
+   api_overview/index_hierarchy-accessor_type_clinic.rst
    api_overview/index_hierarchy_go-constructor.rst
    api_overview/index_hierarchy_go-exporter.rst
    api_overview/index_hierarchy_go-attribute.rst
@@ -341,6 +362,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_hierarchy_go-accessor_transpose.rst
    api_overview/index_hierarchy_go-accessor_regular_expression.rst
    api_overview/index_hierarchy_go-accessor_hashlib.rst
+   api_overview/index_hierarchy_go-accessor_type_clinic.rst
    api_overview/index_year-constructor.rst
    api_overview/index_year-exporter.rst
    api_overview/index_year-attribute.rst
@@ -356,6 +378,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_year-accessor_string.rst
    api_overview/index_year-accessor_regular_expression.rst
    api_overview/index_year-accessor_hashlib.rst
+   api_overview/index_year-accessor_type_clinic.rst
    api_overview/index_year_go-constructor.rst
    api_overview/index_year_go-exporter.rst
    api_overview/index_year_go-attribute.rst
@@ -371,6 +394,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_year_go-accessor_string.rst
    api_overview/index_year_go-accessor_regular_expression.rst
    api_overview/index_year_go-accessor_hashlib.rst
+   api_overview/index_year_go-accessor_type_clinic.rst
    api_overview/index_year_month-constructor.rst
    api_overview/index_year_month-exporter.rst
    api_overview/index_year_month-attribute.rst
@@ -386,6 +410,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_year_month-accessor_string.rst
    api_overview/index_year_month-accessor_regular_expression.rst
    api_overview/index_year_month-accessor_hashlib.rst
+   api_overview/index_year_month-accessor_type_clinic.rst
    api_overview/index_year_month_go-constructor.rst
    api_overview/index_year_month_go-exporter.rst
    api_overview/index_year_month_go-attribute.rst
@@ -401,6 +426,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_year_month_go-accessor_string.rst
    api_overview/index_year_month_go-accessor_regular_expression.rst
    api_overview/index_year_month_go-accessor_hashlib.rst
+   api_overview/index_year_month_go-accessor_type_clinic.rst
    api_overview/index_date-constructor.rst
    api_overview/index_date-exporter.rst
    api_overview/index_date-attribute.rst
@@ -416,6 +442,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_date-accessor_string.rst
    api_overview/index_date-accessor_regular_expression.rst
    api_overview/index_date-accessor_hashlib.rst
+   api_overview/index_date-accessor_type_clinic.rst
    api_overview/index_date_go-constructor.rst
    api_overview/index_date_go-exporter.rst
    api_overview/index_date_go-attribute.rst
@@ -431,6 +458,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_date_go-accessor_string.rst
    api_overview/index_date_go-accessor_regular_expression.rst
    api_overview/index_date_go-accessor_hashlib.rst
+   api_overview/index_date_go-accessor_type_clinic.rst
    api_overview/index_minute-constructor.rst
    api_overview/index_minute-exporter.rst
    api_overview/index_minute-attribute.rst
@@ -446,6 +474,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_minute-accessor_string.rst
    api_overview/index_minute-accessor_regular_expression.rst
    api_overview/index_minute-accessor_hashlib.rst
+   api_overview/index_minute-accessor_type_clinic.rst
    api_overview/index_minute_go-constructor.rst
    api_overview/index_minute_go-exporter.rst
    api_overview/index_minute_go-attribute.rst
@@ -461,6 +490,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_minute_go-accessor_string.rst
    api_overview/index_minute_go-accessor_regular_expression.rst
    api_overview/index_minute_go-accessor_hashlib.rst
+   api_overview/index_minute_go-accessor_type_clinic.rst
    api_overview/index_hour-constructor.rst
    api_overview/index_hour-exporter.rst
    api_overview/index_hour-attribute.rst
@@ -476,6 +506,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_hour-accessor_string.rst
    api_overview/index_hour-accessor_regular_expression.rst
    api_overview/index_hour-accessor_hashlib.rst
+   api_overview/index_hour-accessor_type_clinic.rst
    api_overview/index_hour_go-constructor.rst
    api_overview/index_hour_go-exporter.rst
    api_overview/index_hour_go-attribute.rst
@@ -491,6 +522,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_hour_go-accessor_string.rst
    api_overview/index_hour_go-accessor_regular_expression.rst
    api_overview/index_hour_go-accessor_hashlib.rst
+   api_overview/index_hour_go-accessor_type_clinic.rst
    api_overview/index_second-constructor.rst
    api_overview/index_second-exporter.rst
    api_overview/index_second-attribute.rst
@@ -506,6 +538,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_second-accessor_string.rst
    api_overview/index_second-accessor_regular_expression.rst
    api_overview/index_second-accessor_hashlib.rst
+   api_overview/index_second-accessor_type_clinic.rst
    api_overview/index_second_go-constructor.rst
    api_overview/index_second_go-exporter.rst
    api_overview/index_second_go-attribute.rst
@@ -521,6 +554,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_second_go-accessor_string.rst
    api_overview/index_second_go-accessor_regular_expression.rst
    api_overview/index_second_go-accessor_hashlib.rst
+   api_overview/index_second_go-accessor_type_clinic.rst
    api_overview/index_millisecond-constructor.rst
    api_overview/index_millisecond-exporter.rst
    api_overview/index_millisecond-attribute.rst
@@ -536,6 +570,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_millisecond-accessor_string.rst
    api_overview/index_millisecond-accessor_regular_expression.rst
    api_overview/index_millisecond-accessor_hashlib.rst
+   api_overview/index_millisecond-accessor_type_clinic.rst
    api_overview/index_millisecond_go-constructor.rst
    api_overview/index_millisecond_go-exporter.rst
    api_overview/index_millisecond_go-attribute.rst
@@ -551,6 +586,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_millisecond_go-accessor_string.rst
    api_overview/index_millisecond_go-accessor_regular_expression.rst
    api_overview/index_millisecond_go-accessor_hashlib.rst
+   api_overview/index_millisecond_go-accessor_type_clinic.rst
    api_overview/index_microsecond-constructor.rst
    api_overview/index_microsecond-exporter.rst
    api_overview/index_microsecond-attribute.rst
@@ -566,6 +602,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_microsecond-accessor_string.rst
    api_overview/index_microsecond-accessor_regular_expression.rst
    api_overview/index_microsecond-accessor_hashlib.rst
+   api_overview/index_microsecond-accessor_type_clinic.rst
    api_overview/index_microsecond_go-constructor.rst
    api_overview/index_microsecond_go-exporter.rst
    api_overview/index_microsecond_go-attribute.rst
@@ -581,6 +618,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_microsecond_go-accessor_string.rst
    api_overview/index_microsecond_go-accessor_regular_expression.rst
    api_overview/index_microsecond_go-accessor_hashlib.rst
+   api_overview/index_microsecond_go-accessor_type_clinic.rst
    api_overview/index_nanosecond-constructor.rst
    api_overview/index_nanosecond-exporter.rst
    api_overview/index_nanosecond-attribute.rst
@@ -596,6 +634,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_nanosecond-accessor_string.rst
    api_overview/index_nanosecond-accessor_regular_expression.rst
    api_overview/index_nanosecond-accessor_hashlib.rst
+   api_overview/index_nanosecond-accessor_type_clinic.rst
    api_overview/index_nanosecond_go-constructor.rst
    api_overview/index_nanosecond_go-exporter.rst
    api_overview/index_nanosecond_go-attribute.rst
@@ -611,6 +650,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/index_nanosecond_go-accessor_string.rst
    api_overview/index_nanosecond_go-accessor_regular_expression.rst
    api_overview/index_nanosecond_go-accessor_hashlib.rst
+   api_overview/index_nanosecond_go-accessor_type_clinic.rst
    api_overview/hloc-constructor.rst
    api_overview/hloc-attribute.rst
    api_overview/hloc-method.rst
@@ -619,8 +659,19 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/iloc-constructor.rst
    api_overview/iloc-attribute.rst
    api_overview/iloc-display.rst
+   api_overview/type_clinic-constructor.rst
+   api_overview/type_clinic-exporter.rst
+   api_overview/type_clinic-method.rst
+   api_overview/type_clinic-display.rst
+   api_overview/call_guard-method.rst
+   api_overview/clinic_result-constructor.rst
+   api_overview/clinic_result-exporter.rst
+   api_overview/clinic_result-attribute.rst
+   api_overview/clinic_result-method.rst
+   api_overview/clinic_result-dictionary_like.rst
+   api_overview/clinic_result-display.rst
+   api_overview/require-constructor.rst
    api_overview/www-constructor.rst
-   api_overview/www-display.rst
    api_overview/fill_value_auto-constructor.rst
    api_overview/fill_value_auto-attribute.rst
    api_overview/fill_value_auto-display.rst
@@ -670,6 +721,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_overview/platform-display.rst
 
 
+
    api_detail/series-constructor.rst
    api_detail/series-exporter.rst
    api_detail/series-attribute.rst
@@ -687,6 +739,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/series-accessor_fill_value.rst
    api_detail/series-accessor_regular_expression.rst
    api_detail/series-accessor_hashlib.rst
+   api_detail/series-accessor_type_clinic.rst
    api_detail/series_he-constructor.rst
    api_detail/series_he-exporter.rst
    api_detail/series_he-attribute.rst
@@ -704,6 +757,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/series_he-accessor_fill_value.rst
    api_detail/series_he-accessor_regular_expression.rst
    api_detail/series_he-accessor_hashlib.rst
+   api_detail/series_he-accessor_type_clinic.rst
    api_detail/frame-constructor.rst
    api_detail/frame-exporter.rst
    api_detail/frame-attribute.rst
@@ -722,6 +776,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/frame-accessor_fill_value.rst
    api_detail/frame-accessor_regular_expression.rst
    api_detail/frame-accessor_hashlib.rst
+   api_detail/frame-accessor_type_clinic.rst
    api_detail/frame_go-constructor.rst
    api_detail/frame_go-exporter.rst
    api_detail/frame_go-attribute.rst
@@ -740,6 +795,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/frame_go-accessor_fill_value.rst
    api_detail/frame_go-accessor_regular_expression.rst
    api_detail/frame_go-accessor_hashlib.rst
+   api_detail/frame_go-accessor_type_clinic.rst
    api_detail/frame_he-constructor.rst
    api_detail/frame_he-exporter.rst
    api_detail/frame_he-attribute.rst
@@ -758,6 +814,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/frame_he-accessor_fill_value.rst
    api_detail/frame_he-accessor_regular_expression.rst
    api_detail/frame_he-accessor_hashlib.rst
+   api_detail/frame_he-accessor_type_clinic.rst
    api_detail/bus-constructor.rst
    api_detail/bus-exporter.rst
    api_detail/bus-attribute.rst
@@ -767,6 +824,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/bus-selector.rst
    api_detail/bus-iterator.rst
    api_detail/bus-accessor_hashlib.rst
+   api_detail/bus-accessor_type_clinic.rst
    api_detail/batch-constructor.rst
    api_detail/batch-exporter.rst
    api_detail/batch-attribute.rst
@@ -783,6 +841,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/batch-accessor_fill_value.rst
    api_detail/batch-accessor_regular_expression.rst
    api_detail/batch-accessor_hashlib.rst
+   api_detail/batch-accessor_type_clinic.rst
    api_detail/yarn-constructor.rst
    api_detail/yarn-exporter.rst
    api_detail/yarn-attribute.rst
@@ -792,6 +851,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/yarn-selector.rst
    api_detail/yarn-iterator.rst
    api_detail/yarn-accessor_hashlib.rst
+   api_detail/yarn-accessor_type_clinic.rst
    api_detail/quilt-constructor.rst
    api_detail/quilt-exporter.rst
    api_detail/quilt-attribute.rst
@@ -801,6 +861,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/quilt-selector.rst
    api_detail/quilt-iterator.rst
    api_detail/quilt-accessor_hashlib.rst
+   api_detail/quilt-accessor_type_clinic.rst
    api_detail/index-constructor.rst
    api_detail/index-exporter.rst
    api_detail/index-attribute.rst
@@ -816,6 +877,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index-accessor_string.rst
    api_detail/index-accessor_regular_expression.rst
    api_detail/index-accessor_hashlib.rst
+   api_detail/index-accessor_type_clinic.rst
    api_detail/index_go-constructor.rst
    api_detail/index_go-exporter.rst
    api_detail/index_go-attribute.rst
@@ -831,6 +893,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_go-accessor_string.rst
    api_detail/index_go-accessor_regular_expression.rst
    api_detail/index_go-accessor_hashlib.rst
+   api_detail/index_go-accessor_type_clinic.rst
    api_detail/index_hierarchy-constructor.rst
    api_detail/index_hierarchy-exporter.rst
    api_detail/index_hierarchy-attribute.rst
@@ -847,6 +910,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_hierarchy-accessor_transpose.rst
    api_detail/index_hierarchy-accessor_regular_expression.rst
    api_detail/index_hierarchy-accessor_hashlib.rst
+   api_detail/index_hierarchy-accessor_type_clinic.rst
    api_detail/index_hierarchy_go-constructor.rst
    api_detail/index_hierarchy_go-exporter.rst
    api_detail/index_hierarchy_go-attribute.rst
@@ -863,6 +927,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_hierarchy_go-accessor_transpose.rst
    api_detail/index_hierarchy_go-accessor_regular_expression.rst
    api_detail/index_hierarchy_go-accessor_hashlib.rst
+   api_detail/index_hierarchy_go-accessor_type_clinic.rst
    api_detail/index_year-constructor.rst
    api_detail/index_year-exporter.rst
    api_detail/index_year-attribute.rst
@@ -878,6 +943,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_year-accessor_string.rst
    api_detail/index_year-accessor_regular_expression.rst
    api_detail/index_year-accessor_hashlib.rst
+   api_detail/index_year-accessor_type_clinic.rst
    api_detail/index_year_go-constructor.rst
    api_detail/index_year_go-exporter.rst
    api_detail/index_year_go-attribute.rst
@@ -893,6 +959,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_year_go-accessor_string.rst
    api_detail/index_year_go-accessor_regular_expression.rst
    api_detail/index_year_go-accessor_hashlib.rst
+   api_detail/index_year_go-accessor_type_clinic.rst
    api_detail/index_year_month-constructor.rst
    api_detail/index_year_month-exporter.rst
    api_detail/index_year_month-attribute.rst
@@ -908,6 +975,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_year_month-accessor_string.rst
    api_detail/index_year_month-accessor_regular_expression.rst
    api_detail/index_year_month-accessor_hashlib.rst
+   api_detail/index_year_month-accessor_type_clinic.rst
    api_detail/index_year_month_go-constructor.rst
    api_detail/index_year_month_go-exporter.rst
    api_detail/index_year_month_go-attribute.rst
@@ -923,6 +991,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_year_month_go-accessor_string.rst
    api_detail/index_year_month_go-accessor_regular_expression.rst
    api_detail/index_year_month_go-accessor_hashlib.rst
+   api_detail/index_year_month_go-accessor_type_clinic.rst
    api_detail/index_date-constructor.rst
    api_detail/index_date-exporter.rst
    api_detail/index_date-attribute.rst
@@ -938,6 +1007,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_date-accessor_string.rst
    api_detail/index_date-accessor_regular_expression.rst
    api_detail/index_date-accessor_hashlib.rst
+   api_detail/index_date-accessor_type_clinic.rst
    api_detail/index_date_go-constructor.rst
    api_detail/index_date_go-exporter.rst
    api_detail/index_date_go-attribute.rst
@@ -953,6 +1023,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_date_go-accessor_string.rst
    api_detail/index_date_go-accessor_regular_expression.rst
    api_detail/index_date_go-accessor_hashlib.rst
+   api_detail/index_date_go-accessor_type_clinic.rst
    api_detail/index_minute-constructor.rst
    api_detail/index_minute-exporter.rst
    api_detail/index_minute-attribute.rst
@@ -968,6 +1039,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_minute-accessor_string.rst
    api_detail/index_minute-accessor_regular_expression.rst
    api_detail/index_minute-accessor_hashlib.rst
+   api_detail/index_minute-accessor_type_clinic.rst
    api_detail/index_minute_go-constructor.rst
    api_detail/index_minute_go-exporter.rst
    api_detail/index_minute_go-attribute.rst
@@ -983,6 +1055,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_minute_go-accessor_string.rst
    api_detail/index_minute_go-accessor_regular_expression.rst
    api_detail/index_minute_go-accessor_hashlib.rst
+   api_detail/index_minute_go-accessor_type_clinic.rst
    api_detail/index_hour-constructor.rst
    api_detail/index_hour-exporter.rst
    api_detail/index_hour-attribute.rst
@@ -998,6 +1071,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_hour-accessor_string.rst
    api_detail/index_hour-accessor_regular_expression.rst
    api_detail/index_hour-accessor_hashlib.rst
+   api_detail/index_hour-accessor_type_clinic.rst
    api_detail/index_hour_go-constructor.rst
    api_detail/index_hour_go-exporter.rst
    api_detail/index_hour_go-attribute.rst
@@ -1013,6 +1087,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_hour_go-accessor_string.rst
    api_detail/index_hour_go-accessor_regular_expression.rst
    api_detail/index_hour_go-accessor_hashlib.rst
+   api_detail/index_hour_go-accessor_type_clinic.rst
    api_detail/index_second-constructor.rst
    api_detail/index_second-exporter.rst
    api_detail/index_second-attribute.rst
@@ -1028,6 +1103,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_second-accessor_string.rst
    api_detail/index_second-accessor_regular_expression.rst
    api_detail/index_second-accessor_hashlib.rst
+   api_detail/index_second-accessor_type_clinic.rst
    api_detail/index_second_go-constructor.rst
    api_detail/index_second_go-exporter.rst
    api_detail/index_second_go-attribute.rst
@@ -1043,6 +1119,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_second_go-accessor_string.rst
    api_detail/index_second_go-accessor_regular_expression.rst
    api_detail/index_second_go-accessor_hashlib.rst
+   api_detail/index_second_go-accessor_type_clinic.rst
    api_detail/index_millisecond-constructor.rst
    api_detail/index_millisecond-exporter.rst
    api_detail/index_millisecond-attribute.rst
@@ -1058,6 +1135,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_millisecond-accessor_string.rst
    api_detail/index_millisecond-accessor_regular_expression.rst
    api_detail/index_millisecond-accessor_hashlib.rst
+   api_detail/index_millisecond-accessor_type_clinic.rst
    api_detail/index_millisecond_go-constructor.rst
    api_detail/index_millisecond_go-exporter.rst
    api_detail/index_millisecond_go-attribute.rst
@@ -1073,6 +1151,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_millisecond_go-accessor_string.rst
    api_detail/index_millisecond_go-accessor_regular_expression.rst
    api_detail/index_millisecond_go-accessor_hashlib.rst
+   api_detail/index_millisecond_go-accessor_type_clinic.rst
    api_detail/index_microsecond-constructor.rst
    api_detail/index_microsecond-exporter.rst
    api_detail/index_microsecond-attribute.rst
@@ -1088,6 +1167,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_microsecond-accessor_string.rst
    api_detail/index_microsecond-accessor_regular_expression.rst
    api_detail/index_microsecond-accessor_hashlib.rst
+   api_detail/index_microsecond-accessor_type_clinic.rst
    api_detail/index_microsecond_go-constructor.rst
    api_detail/index_microsecond_go-exporter.rst
    api_detail/index_microsecond_go-attribute.rst
@@ -1103,6 +1183,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_microsecond_go-accessor_string.rst
    api_detail/index_microsecond_go-accessor_regular_expression.rst
    api_detail/index_microsecond_go-accessor_hashlib.rst
+   api_detail/index_microsecond_go-accessor_type_clinic.rst
    api_detail/index_nanosecond-constructor.rst
    api_detail/index_nanosecond-exporter.rst
    api_detail/index_nanosecond-attribute.rst
@@ -1118,6 +1199,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_nanosecond-accessor_string.rst
    api_detail/index_nanosecond-accessor_regular_expression.rst
    api_detail/index_nanosecond-accessor_hashlib.rst
+   api_detail/index_nanosecond-accessor_type_clinic.rst
    api_detail/index_nanosecond_go-constructor.rst
    api_detail/index_nanosecond_go-exporter.rst
    api_detail/index_nanosecond_go-attribute.rst
@@ -1133,6 +1215,7 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/index_nanosecond_go-accessor_string.rst
    api_detail/index_nanosecond_go-accessor_regular_expression.rst
    api_detail/index_nanosecond_go-accessor_hashlib.rst
+   api_detail/index_nanosecond_go-accessor_type_clinic.rst
    api_detail/hloc-constructor.rst
    api_detail/hloc-attribute.rst
    api_detail/hloc-method.rst
@@ -1141,8 +1224,19 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
    api_detail/iloc-constructor.rst
    api_detail/iloc-attribute.rst
    api_detail/iloc-display.rst
+   api_detail/type_clinic-constructor.rst
+   api_detail/type_clinic-exporter.rst
+   api_detail/type_clinic-method.rst
+   api_detail/type_clinic-display.rst
+   api_detail/call_guard-method.rst
+   api_detail/clinic_result-constructor.rst
+   api_detail/clinic_result-exporter.rst
+   api_detail/clinic_result-attribute.rst
+   api_detail/clinic_result-method.rst
+   api_detail/clinic_result-dictionary_like.rst
+   api_detail/clinic_result-display.rst
+   api_detail/require-constructor.rst
    api_detail/www-constructor.rst
-   api_detail/www-display.rst
    api_detail/fill_value_auto-constructor.rst
    api_detail/fill_value_auto-attribute.rst
    api_detail/fill_value_auto-display.rst
@@ -1193,3 +1287,6 @@ Immutable and grow-only Pandas-like DataFrames with a more explicit and consiste
 
 
 :ref:`genindex`
+
+
+

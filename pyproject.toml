@@ -1,0 +1,66 @@
+[tool.isort]
+line_length = 200
+force_single_line = true
+
+
+[tool.pyright]
+exclude = [
+    "**/__pycache__",
+    "doc/**",
+    "static_frame/profile",
+    "static_frame/core/display_visidata.py",
+    "static_frame/test/property",
+    "static_frame/test/unit",
+    "static_frame/test/integration",
+]
+
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnboundVariable = "none"
+reportInvalidTypeVarUse = false
+pythonVersion = "3.11"
+pythonPlatform = "Linux"
+
+
+[tool.mypy]
+files = "static_frame/**/*.py"
+show_error_codes = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+warn_return_any = true
+warn_unused_configs = true
+disable_error_code = "misc"
+
+[[tool.mypy.overrides]]
+module = [
+    "IPython",
+    "openpyxl",
+    "pandas",
+    "pyarrow",
+    "pyarrow.*",
+    "pytest",
+    "setuptools",
+    "sphinx.*",
+    "sphinx_rtd_theme",
+    "scipy.*",
+    "tables",
+    "xarray",
+    "xlsxwriter.*",
+    "arraymap",
+    "frame_fixtures",
+    ]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "doc.*",
+    "static_frame.profile.*",
+    "static_frame.core.display_visidata",
+    "static_frame.test.property.*",
+    "static_frame.test.unit.*",
+    "static_frame.test.integration.*",
+    ]
+ignore_errors = true
+

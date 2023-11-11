@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import os
 import sqlite3
-import typing as tp
 from contextlib import suppress
 from fractions import Fraction
 
 import numpy as np
+import typing_extensions as tp
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
@@ -22,7 +22,8 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class StoreSQLite(Store):
 
@@ -31,7 +32,7 @@ class StoreSQLite(Store):
 
     @staticmethod
     def _dtype_to_affinity_type(
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> str:
         '''
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
@@ -50,7 +51,7 @@ class StoreSQLite(Store):
     @classmethod
     def _frame_to_table(cls,
             *,
-            frame: Frame,
+            frame: TFrameAny,
             label: str, # can be None
             cursor: sqlite3.Cursor,
             include_columns: bool,
@@ -97,7 +98,7 @@ class StoreSQLite(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -143,8 +144,8 @@ class StoreSQLite(Store):
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
 
         config_map = StoreConfigMap.from_initializer(config)
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)

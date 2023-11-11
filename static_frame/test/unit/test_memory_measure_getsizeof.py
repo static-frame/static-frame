@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import typing as tp
 import unittest
 from sys import getsizeof
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 
 from static_frame import Bus

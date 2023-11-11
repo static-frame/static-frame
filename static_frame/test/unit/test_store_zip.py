@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import frame_fixtures as ff
+import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.frame import Frame

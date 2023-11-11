@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as tp
+import typing_extensions as tp
 
 #-------------------------------------------------------------------------------
 # https://www.w3.org/TR/css-color-3/#svg-color

@@ -3,12 +3,12 @@ from __future__ import annotations
 import copy
 import datetime
 import pickle
-import typing as tp
 import unittest
 from hashlib import sha256
 from io import StringIO
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import mloc
 
 from static_frame import DisplayConfig
@@ -32,8 +32,8 @@ from static_frame.core.util import arrays_equal
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class TestUnit(TestCase):
 

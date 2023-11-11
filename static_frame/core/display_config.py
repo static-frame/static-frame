@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import re
-import typing as tp
 from enum import Enum
+
+import typing_extensions as tp
 
 from static_frame.core import display_html_datatables
 from static_frame.core.interface_meta import InterfaceMeta

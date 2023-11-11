@@ -10,6 +10,8 @@ from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
+from static_frame.core.type_clinic import Require
+from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
 
 
@@ -28,7 +30,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Accessor Datetime', 22), ('Accessor Fill Value', 26), ('Accessor Hashlib', 10), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 38), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 156), ('Method', 102), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+            (('Accessor Datetime', 22), ('Accessor Fill Value', 26), ('Accessor Hashlib', 10), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Type Clinic', 5), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 38), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 156), ('Method', 102), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
             )
 
     def test_interface_summary_c(self) -> None:
@@ -97,6 +99,25 @@ class TestUnit(TestCase):
         f = InterfaceSummary.to_frame(FillValueAuto, minimized=False, max_args=99)
         self.assertTrue(f.size > 0)
         self.assertEqual(len(f), len(f['sna_label'].unique()))
+
+
+    def test_interface_summary_name_obj_iter_a(self) -> None:
+        inter = InterfaceSummary.to_frame(WWW,
+                minimized=False,
+                max_args=99,
+                )
+        self.assertEqual(inter['signature_no_args'].values.tolist(),
+            ['from_file()', 'from_gzip()', 'from_zip()']
+            )
+
+    def test_interface_summary_name_obj_iter_b(self) -> None:
+        inter = InterfaceSummary.to_frame(Require,
+                minimized=False,
+                max_args=99,
+                )
+        sigs = inter['signature_no_args'].values.tolist()
+        assert 'Len()' in sigs
+        assert 'Name()' in sigs
 
 if __name__ == '__main__':
     import unittest

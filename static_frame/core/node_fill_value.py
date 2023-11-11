@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
@@ -10,7 +9,7 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -18,20 +17,19 @@ from static_frame.core.util import TLocSelectorCompound
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.frame import FrameGO  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.node_selector import FrameOrSeries  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.node_selector import TFrameOrSeries  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceBatchTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.node_transpose import InterfaceTranspose  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
 
+    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable = W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame',
-        'Series',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Series[tp.Any, tp.Any]',
         covariant=True,
         )
 INTERFACE_FILL_VALUE = (
@@ -74,7 +72,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
             '_axis',
             )
 
-    INTERFACE = INTERFACE_FILL_VALUE
+    _INTERFACE = INTERFACE_FILL_VALUE
 
     def __init__(self,
             container: TVContainer_co,
@@ -88,7 +86,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     #---------------------------------------------------------------------------
     @property
-    def via_T(self) -> 'InterfaceTranspose[Frame]':
+    def via_T(self) -> InterfaceTranspose[TFrameAny]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -122,7 +120,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     def _extract_loc1d(self,
             key: TLocSelector = NULL_SLICE,
-            ) -> 'Series':
+            ) -> TSeriesAny:
         '''This is only called if container is 1D
         '''
         from static_frame.core.container_util import get_col_fill_value_factory
@@ -145,7 +143,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
     def _extract_loc2d(self,
             row_key: TLocSelector = NULL_SLICE,
             column_key: TLocSelector = NULL_SLICE,
-            ) -> tp.Union['Frame', 'Series']:
+            ) -> tp.Union[TFrameAny, TSeriesAny]:
         '''
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''
@@ -199,9 +197,9 @@ class InterfaceFillValue(Interface[TVContainer_co]):
                 name=column_key, # type: ignore
                 )
 
-    def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> FrameOrSeries:
+    def _extract_loc2d_compound(self, key: TLocSelectorCompound) -> TFrameOrSeries:
         if isinstance(key, tuple):
-            row_key, column_key = key
+            row_key, column_key = key # pyright: ignore
         else:
             row_key = key
             column_key = NULL_SLICE
@@ -209,14 +207,14 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterGetItemLocReduces[FrameOrSeries]:
+    def loc(self) -> InterGetItemLocReduces[TFrameOrSeries]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
             return InterGetItemLocReduces(self._extract_loc1d)
         return InterGetItemLocReduces(self._extract_loc2d_compound)
 
-    def __getitem__(self,  key: TLocSelector) -> FrameOrSeries:
+    def __getitem__(self,  key: TLocSelector) -> TFrameOrSeries:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
@@ -429,7 +427,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is FrameGO
 
     __slots__ = ()
-    INTERFACE = InterfaceFillValue.INTERFACE + ( #type: ignore
+    _INTERFACE = InterfaceFillValue._INTERFACE + ( #type: ignore
             '__setitem__',
             )
 
@@ -445,7 +443,7 @@ class InterfaceFillValueGO(InterfaceFillValue[TVContainer_co]): # only type is F
 class InterfaceBatchFillValue(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
-    INTERFACE = INTERFACE_FILL_VALUE
+    _INTERFACE = INTERFACE_FILL_VALUE
 
     __slots__ = (
             '_batch_apply',
@@ -454,7 +452,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
             )
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             fill_value: object = np.nan,
             axis: int = 0,
             ) -> None:

@@ -1,9 +1,9 @@
 import timeit
-import typing as tp
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 

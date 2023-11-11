@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import datetime
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import index_from_optional_constructors
@@ -29,18 +29,21 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
+from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
+    from openpyxl import Workbook as WorkbookOpenpyxl  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384 #1024 on libre office
@@ -48,26 +51,26 @@ MAX_XLSX_COLUMNS = 16384 #1024 on libre office
 class FormatDefaults:
 
     @staticmethod
-    def label(f: 'Format') -> 'Format':
+    def label(f: Format) -> Format:
         f.set_bold()
         return f
 
     @staticmethod
-    def date(f: 'Format') -> 'Format':
+    def date(f: Format) -> Format:
         f.set_num_format('yyyy-mm-dd')
         return f
 
     @staticmethod
-    def datetime(f: 'Format') -> 'Format':
+    def datetime(f: Format) -> Format:
         f.set_num_format('yyyy-mm-ddThh:mm:ss.000') # ISO 8601 requires the T
         return f
 
     @staticmethod
     def get_format_or_default(
-            workbook: 'Workbook', # do not want module level import o
+            workbook: Workbook,
             # format_specifier: tp.Optional[tp.Dict[str, tp.Any]],
-            format_funcs: tp.Iterable[tp.Callable[['Format'], None]]
-            ) -> 'Format':
+            format_funcs: tp.Iterable[tp.Callable[[Format], Format]]
+            ) -> Format:
         # if format_specifier:
         #     return workbook.add_format(format_specifier)
         f = workbook.add_format()
@@ -84,7 +87,7 @@ class StoreXLSX(Store):
 
     @staticmethod
     def _dtype_to_writer_attr(
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             ) -> tp.Tuple[str, bool]:
         '''
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
@@ -107,9 +110,9 @@ class StoreXLSX(Store):
 
     @classmethod
     def _get_writer(cls,
-            dtype: DtypeAny,
-            ws: 'Worksheet'
-            ) -> AnyCallable: # find better type
+            dtype: TDtypeAny,
+            ws: Worksheet
+            ) -> TCallableAny: # find better type
         '''
         Return a writer function of the passed in Worksheet.
         '''
@@ -124,9 +127,9 @@ class StoreXLSX(Store):
                 row: int,
                 col: int,
                 value: tp.Any,
-                format_date: xlsxwriter.format.Format,
-                format_datetime: xlsxwriter.format.Format,
-                format_cell: tp.Optional[xlsxwriter.format.Format] = None,
+                format_date: Format,
+                format_datetime: Format,
+                format_cell: tp.Optional[Format] = None,
                 ) -> tp.Any:
 
             # cannot yet write complex types directly, so covert to string
@@ -151,7 +154,7 @@ class StoreXLSX(Store):
 
     @classmethod
     def _frame_to_worksheet(cls,
-            frame: Frame,
+            frame: TFrameAny,
             ws: 'Worksheet',
             *,
             include_columns: bool,
@@ -287,7 +290,7 @@ class StoreXLSX(Store):
 
     @store_coherent_write
     def write(self,
-            items: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -366,7 +369,7 @@ class StoreXLSX(Store):
         wb.close()
 
     @staticmethod
-    def _load_workbook(fp: str) -> 'Workbook':
+    def _load_workbook(fp: str) -> WorkbookOpenpyxl:
         import openpyxl
          # NOTE: read_only=True provides best performance, but may lead to empty cells with formatting being loaded
         return openpyxl.load_workbook(
@@ -375,15 +378,14 @@ class StoreXLSX(Store):
                 data_only=True
                 )
 
-    # @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read_many(self,
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
 
         config_map = StoreConfigMap.from_initializer(config)
         wb = self._load_workbook(self._fp)
@@ -404,11 +406,11 @@ class StoreXLSX(Store):
             consolidate_blocks = c.consolidate_blocks
 
             if label is STORE_LABEL_DEFAULT:
-                ws = wb[wb.sheetnames[0]]
+                ws = wb[wb.sheetnames[0]] # pyright: ignore
                 name = None # do not set to default sheet name
             else:
                 label_encoded = config_map.default.label_encode(label)
-                ws = wb[label_encoded]
+                ws = wb[label_encoded] # pyright: ignore
                 name = label # set name to the un-encoded hashable
 
             if ws.max_column <= 1 or ws.max_row <= 1:
@@ -502,11 +504,12 @@ class StoreXLSX(Store):
                     axis_depth=index_depth)
 
             # index: tp.Optional[IndexBase] = None
+            index_default_constructor: TIndexCtor
 
             if index_depth <= 1:
                 index_default_constructor = partial(Index, name=index_name)
             else: # > 1
-                index_default_constructor = partial(IndexHierarchy.from_labels, # type: ignore
+                index_default_constructor = partial(IndexHierarchy.from_labels,
                         name=index_name,
                         continuation_token=None, # NOTE: needed
                         )
@@ -526,7 +529,7 @@ class StoreXLSX(Store):
 
             # columns: tp.Optional[IndexBase] = None
             # own_columns = False
-
+            columns_default_constructor: TIndexCtor
             if columns_depth <= 1:
                 columns_default_constructor = partial(
                         container_type._COLUMNS_CONSTRUCTOR,
@@ -534,7 +537,7 @@ class StoreXLSX(Store):
                         )
             elif columns_depth > 1:
                 columns_default_constructor = partial(
-                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels, # type: ignore
+                        container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_name,
                         continuation_token=None, # NOTE: needed, not the default
                         )
@@ -564,11 +567,11 @@ class StoreXLSX(Store):
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> TFrameAny:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
         '''
-        return next(self.read_many((label,), #type: ignore
+        return next(self.read_many((label,),
                 config=config,
                 store_filter=store_filter,
                 container_type=container_type,

@@ -1,10 +1,10 @@
 import sys
-import typing as tp
+import typing_extensions as tp
 
-import invoke
+from invoke import task # pyright: ignore
 
 #-------------------------------------------------------------------------------
-@invoke.task
+@task
 def clean(context):
     '''Clean doc and build artifacts
     '''
@@ -19,16 +19,17 @@ def clean(context):
     context.run('rm -rf .pytest_cache')
     context.run('rm -rf .hypothesis')
     context.run('rm -rf .ipynb_checkpoints')
+    context.run('rm -rf .ruff_cache')
 
 
-@invoke.task()
+@task()
 def doc(context):
     '''Build docs
     '''
     context.run(f'{sys.executable} doc/doc_build.py')
 
 
-@invoke.task
+@task
 def performance(context):
     '''Run performance tests.
     '''
@@ -37,7 +38,7 @@ def performance(context):
     context.run(cmd)
 
 
-@invoke.task
+@task
 def interface(context, container=None, doc=False):
     '''
     Optionally select a container type to discover what API endpoints have examples.
@@ -68,21 +69,30 @@ def interface(context, container=None, doc=False):
 
 #-------------------------------------------------------------------------------
 
-@invoke.task
+@task
 def test(context,
         unit=False,
         cov=False,
         pty=False,
+        warnings=False,
         ):
     '''Run tests.
-    '''
-    if unit:
-        fp = 'static_frame/test/unit'
-    else:
-        fp = 'static_frame/test'
 
-    # cmd = f'pytest -s --disable-pytest-warnings --tb=native {fp}'
-    cmd = f'pytest -s --tb=native {fp}'
+    Args:
+        backward: If True, we exclude unit_forward tests.
+    '''
+    fps = []
+    fps.append('static_frame/test/unit')
+    fps.append('static_frame/test/typing')
+    if sys.version_info[:2] >= (3, 11):
+        fps.append('static_frame/test/unit_forward')
+
+    if not unit:
+        fps.append('static_frame/test/integration')
+        fps.append('static_frame/test/property')
+
+    w_flag = '--disable-pytest-warnings'
+    cmd = f'pytest -s --tb=native {"" if warnings else w_flag} {" ".join(fps)}'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
@@ -90,7 +100,7 @@ def test(context,
     context.run(cmd, pty=pty)
 
 
-@invoke.task
+@task
 def testex(context,
         cov=False,
         pty=False,
@@ -105,7 +115,18 @@ def testex(context,
     context.run(cmd, pty=pty)
 
 
-@invoke.task
+@task
+def testtyping(context,
+        pty=False,
+         ):
+    '''Run mypy on targetted typing tests
+    '''
+    context.run('pytest -s --tb=native static_frame/test/typing')
+    context.run('pyright static_frame/test/typing', pty=pty)
+    context.run('mypy --strict static_frame/test/typing', pty=pty)
+
+
+@task
 def coverage(context):
     '''
     Perform code coverage, and open report HTML.
@@ -117,43 +138,42 @@ def coverage(context):
     webbrowser.open('htmlcov/index.html')
 
 
-@invoke.task
+@task
 def mypy(context,
         pty=False,
          ):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict', pty=pty)
+    context.run('mypy --strict --new-type-inference', pty=pty)
 
-
-@invoke.task
-def testtyping(context,
+@task
+def pyright(context,
         pty=False,
          ):
-    '''Run mypy on targetted typing tests
+    '''Run pyright static analysis.
     '''
-    context.run('pytest -s --tb=native static_frame/test/typing')
-    context.run('mypy --strict static_frame/test/typing', pty=pty)
+    context.run('pyright', pty=pty)
 
 
-@invoke.task
+
+@task
 def isort(context):
     '''Run isort as a check.
     '''
     context.run('isort static_frame doc --check')
 
-@invoke.task
+@task
 def lint(context):
     '''Run pylint static analysis.
     '''
     context.run('pylint -f colorized static_frame')
 
-@invoke.task(pre=(mypy, lint, isort))
+@task(pre=(mypy, pyright, lint, isort)) # pyright: ignore
 def quality(context):
     '''Perform all quality checks.
     '''
 
-@invoke.task
+@task
 def format(context):
     '''Run mypy static analysis.
     '''
@@ -162,13 +182,13 @@ def format(context):
 
 #-------------------------------------------------------------------------------
 
-@invoke.task(pre=(clean,))
+@task(pre=(clean,)) # pyright: ignore
 def build(context):
     '''Build packages
     '''
     context.run(f'{sys.executable} setup.py sdist bdist_wheel')
 
-@invoke.task(pre=(build,), post=(clean,))
+@task(pre=(build,), post=(clean,)) # pyright: ignore
 def release(context):
     context.run('twine upload dist/*')
 

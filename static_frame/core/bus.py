@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from itertools import chain
 from itertools import zip_longest
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor
@@ -18,8 +18,8 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
@@ -50,20 +50,25 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
-from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TName
+from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
+
+TSeriesObject = Series[tp.Any, np.object_]
+TSeriesAny = Series[tp.Any, tp.Any]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -76,12 +81,14 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
 
 BusItemsType = tp.Iterable[tp.Tuple[
-        TLabel, tp.Union[Frame, tp.Type[FrameDeferred]]]]
+        TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
 
-FrameIterType = tp.Iterator[Frame]
+FrameIterType = tp.Iterator[TFrameAny]
 
 #-------------------------------------------------------------------------------
-class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+
+class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a ContainerOperand
     '''
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     '''
@@ -98,23 +105,23 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '_max_persist',
         )
 
-    _values_mutable: NDArrayAny
+    _values_mutable: TNDArrayAny
     _index: IndexBase
     _store: tp.Optional[Store]
     _config: StoreConfigMap
-    _name: NameType
+    _name: TName
 
     STATIC = False
     _NDIM: int = 1
 
     @classmethod
     def from_items(cls,
-            pairs: tp.Iterable[tp.Tuple[TLabel, Frame]],
+            pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
 
         Returns:
@@ -135,12 +142,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_frames(cls,
-            frames: tp.Iterable[Frame],
+            frames: tp.Iterable[TFrameAny],
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: TIndexCtorSpecifier = None,
             config: StoreConfigMapInitializer = None,
-            name: NameType = None,
-            ) -> 'Bus':
+            name: TName = None,
+            ) -> tp.Self:
         '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
         try:
@@ -154,11 +161,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[TLabel, Frame],
+            mapping: tp.Dict[TLabel, TFrameAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''Bus construction from a mapping of labels and :obj:`Frame`.
 
         Args:
@@ -175,13 +182,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_series(cls,
-            series: Series,
+            series: TSeriesAny,
             *,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
             own_data: bool = False,
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''
         Create a :obj:`Bus` from a :obj:`Series` of :obj:`Frame`.
         '''
@@ -198,17 +205,17 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Bus'],
+            containers: tp.Iterable[TBusAny],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = NAME_DEFAULT,
-            ) -> 'Bus':
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            name: TName = NAME_DEFAULT,
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Bus` into a new :obj:`Bus`. All :obj:`Bus` will load all :obj:`Frame` into memory if any are deferred.
         '''
         # will extract .values, .index from Bus, which will correct load from Store as needed
         # NOTE: useful to use Series here as it handles aligned names, IndexAutoFactory, etc.
-        series = Series.from_concat(containers, index=index, name=name)
+        series: TSeriesObject = Series.from_concat(containers, index=index, name=name)
         return cls.from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
@@ -219,8 +226,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         return cls(None, # will generate FrameDeferred array
                 index=store.labels(config=config),
                 index_constructor=index_constructor,
@@ -233,12 +240,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_tsv(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -254,12 +261,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_csv(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -275,12 +282,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_pickle(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -296,12 +303,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_npz(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped NPZ :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -317,12 +324,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_npy(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped NPY :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -338,12 +345,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_parquet(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -359,12 +366,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_xlsx(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -381,12 +388,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_sqlite(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -402,12 +409,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_hdf5(cls,
-            fp: PathSpecifier,
+            fp: TPathSpecifier,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -422,11 +429,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            frames: NDArrayAny | tp.Iterable[Frame | tp.Type[FrameDeferred]] | None,
+            frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
             *,
-            index: IndexInitializer,
-            index_constructor: IndexConstructor = None,
-            name: NameType = NAME_DEFAULT,
+            index: TIndexInitializer,
+            index_constructor: TIndexCtorSpecifier = None,
+            name: TName = NAME_DEFAULT,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -450,9 +457,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        count = len(self._index)
-        frames_array: NDArrayAny
-        self._loaded: NDArrayAny
+        count = len(self._index) # pyright: ignore
+        frames_array: TNDArrayAny
+        self._loaded: TNDArrayAny
         load_array: bool | np.bool_
         self._loaded_all: bool | np.bool_
 
@@ -520,10 +527,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     def _derive_from_series(self,
-            series: Series,
+            series: TSeriesObject,
             *,
             own_data: bool = False,
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''Utility for creating a derived Bus, propagating the associated ``Store`` and configuration. This can be used if the passed `series` is a subset or re-ordering of self._series; however, if the index has been transformed, this method should not be used, as, if there is a Store, the labels are no longer found in that Store.
         '''
         # NOTE: there may be a more efficient path than using a Series
@@ -544,7 +551,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         return reversed(self._index)
 
-    # def __copy__(self) -> 'Bus':
+    # def __copy__(self) -> tp.Self:
     #     '''
     #     Return a new Bus, holding new references to Frames as well as a link to the a new Store instance.
     #     '''
@@ -559,11 +566,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._name
 
-    def rename(self, name: NameType) -> 'Bus':
+    def rename(self, name: TName) -> tp.Self:
         '''
         Return a new :obj:`Bus` with an updated name attribute.
         '''
@@ -582,15 +589,15 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces['Bus']:
+    def loc(self) -> InterGetItemLocReduces[TBusAny]:
         return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocReduces['Bus']:
+    def iloc(self) -> InterGetItemILocReduces[TBusAny]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Bus']:
+    def drop(self) -> InterfaceSelectTrio[TBusAny]:
         '''
         Interface for dropping elements from :obj:`static_frame.Bus`.
         '''
@@ -602,7 +609,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Bus']:
+    def iter_element(self) -> IterNodeNoArg[TBusAny]:
         '''
         Iterator of elements.
         '''
@@ -615,7 +622,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Bus']:
+    def iter_element_items(self) -> IterNodeNoArg[TBusAny]:
         '''
         Iterator of label, element pairs.
         '''
@@ -634,12 +641,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @doc_inject(selector='reindex', class_name='Bus')
     def reindex(self,
-            index: IndexInitializer,
+            index: TIndexInitializer,
             *,
             fill_value: tp.Any,
             own_index: bool = False,
             check_equals: bool = True
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -659,10 +666,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(self,
-            index: tp.Optional[RelabelInput],
+            index: tp.Optional[TRelabelInput],
             *,
-            index_constructor: IndexConstructor = None,
-            ) -> 'Bus':
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -675,7 +682,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
-    def relabel_flat(self) -> 'Bus':
+    def relabel_flat(self) -> tp.Self:
         '''
         {doc}
         '''
@@ -685,7 +692,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self,
             level: TLabel
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -699,7 +706,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject(selector='relabel_level_drop', class_name='Bus')
     def relabel_level_drop(self,
             count: int = 1
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -712,8 +719,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
-            ) -> 'Bus':
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Return a new :obj:`Bus` with new a hierarchy based on the supplied ``depth_map``.
         '''
@@ -790,7 +797,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-        target_values: NDArrayAny | Frame = array[key]
+        target_values: TNDArrayAny | TFrameAny = array[key]
         target_labels: IndexBase | TLabel = self._index.iloc[key]
         # targets = self._series.iloc[key] # key is iloc key
 
@@ -800,7 +807,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if not target_values.__class__ is np.ndarray:
             targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
-                    config=self._config[target_labels]) for _ in range(1))
+                    config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
         else: # more than one Frame
             store_reader = self._store_reader(
                     store=self._store,
@@ -812,7 +819,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             targets_items = zip(target_labels, target_values) # type: ignore
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
-        for label, frame in targets_items:
+        for label, frame in targets_items: # pyright: ignore
             idx = index._loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
@@ -828,7 +835,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 if max_persist_active:
                     loaded_count += 1
 
-            if max_persist_active and loaded_count > self._max_persist:
+            if max_persist_active and loaded_count > self._max_persist: # pyright: ignore
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
                 idx_remove = index._loc_to_iloc(label_remove)
@@ -836,7 +843,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 array[idx_remove] = FrameDeferred
                 loaded_count -= 1
 
-        self._loaded_all: bool = self._loaded.all() # type: ignore
+        self._loaded_all = self._loaded.all()
 
     def unpersist(self) -> None:
         '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
@@ -864,7 +871,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> 'Bus':
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self:
         '''
         Returns:
             Bus or, if an element is selected, a Frame
@@ -888,12 +895,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 own_data=False, # force immutable copy
                 )
 
-    def _extract_loc(self, key: TLocSelector) -> 'Bus':
+    def _extract_loc(self, key: TLocSelector) -> tp.Self:
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'Bus':
+    def __getitem__(self, key: TLocSelector) -> tp.Self:
         '''Selector of values by label.
 
         Args:
@@ -904,18 +911,18 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: TILocSelector) -> 'Bus':
+    def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         series = self._to_series_state()._drop_iloc(key)
         return self._derive_from_series(series, own_data=True)
 
-    def _drop_loc(self, key: TLocSelector) -> 'Bus':
+    def _drop_loc(self, key: TLocSelector) -> tp.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # axis functions
 
     def _axis_element_items(self,
-            ) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions.
         '''
         yield from self.items()
@@ -946,7 +953,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._loaded_all:
@@ -974,7 +981,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     _items_store = items
 
     @property
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
         # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy
@@ -1042,7 +1049,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> Series:
+    def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         if not self._loaded.any():
@@ -1058,27 +1065,27 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return Series.from_items(gen())
 
     @property
-    def dtypes(self) -> Frame:
+    def dtypes(self) -> TFrameAny:
         '''Returns a :obj:`Frame` of dtype per column for all loaded Frames.
         '''
         if not self._loaded.any():
             return Frame(index=self._index)
 
-        f = Frame.from_concat(
+        f: TFrameAny = Frame.from_concat(
                 frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._index, fill_value=None)
         return f
 
     @property
-    def shapes(self) -> Series:
+    def shapes(self) -> TSeriesObject:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
             :obj:`Series`
         '''
         values = (f.shape if f is not FrameDeferred else None for f in self._values_mutable)
-        return Series(values, index=self._index, dtype=object, name='shape')
+        return Series(values, index=self._index, dtype=DTYPE_OBJECT, name='shape')
 
     @property
     def nbytes(self) -> int:
@@ -1087,11 +1094,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return sum(f.nbytes if f is not FrameDeferred else 0 for f in self._values_mutable)
 
     @property
-    def status(self) -> Frame:
+    def status(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         '''
-        def gen() -> tp.Iterator[Series]:
+        def gen() -> tp.Iterator[TSeriesAny]:
 
             yield Series(self._loaded,
                     index=self._index,
@@ -1115,7 +1122,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> DtypeAny:
+    def dtype(self) -> TDtypeObject:
         '''
         Return the dtype of the underlying NumPy array.
 
@@ -1165,10 +1172,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             :obj:`Index`
         '''
         return self._index
-
-    # @property
-    # def _index(self) -> IndexBase:
-    #     return self._series._index
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -1277,7 +1280,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Bus')
-    def head(self, count: int = 5) -> 'Bus':
+    def head(self, count: int = 5) -> TBusAny:
         '''{doc}
 
         Args:
@@ -1289,7 +1292,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Bus')
-    def tail(self, count: int = 5) -> 'Bus':
+    def tail(self, count: int = 5) -> TBusAny:
         '''{doc}s
 
         Args:
@@ -1307,10 +1310,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @doc_inject(selector='sort')
     def sort_index(self,
             *,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> 'Bus':
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
+            ) -> tp.Self:
         '''
         Return a new Bus ordered by the sorted Index.
 
@@ -1335,8 +1338,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[['Series'], tp.Union[NDArrayAny, 'Series']],
-            ) -> 'Bus':
+            key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
+            ) -> tp.Self:
         '''
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
 
@@ -1361,7 +1364,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             shift: int,
             *,
             include_index: bool = False,
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''Return a Bus with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
@@ -1378,7 +1381,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             shift: int,
             *,
             fill_value: tp.Any,
-            ) -> 'Bus':
+            ) -> tp.Self:
         '''Return a :obj:`Bus` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
@@ -1394,7 +1397,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # exporter
 
-    def _to_series_state(self) -> Series:
+    def _to_series_state(self) -> TSeriesObject:
         # the mutable array will be copied in the Series construction
         return Series(self._values_mutable,
                 index=self._index,
@@ -1402,7 +1405,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 name=self._name,
                 )
 
-    def to_series(self) -> Series:
+    def to_series(self) -> TSeriesObject:
         '''Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`.
         '''
         # values returns an immutable array and will fully realize from Store
@@ -1436,6 +1439,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 v))
 
 
+
+TBusAny = Bus[tp.Any]
 
 
 

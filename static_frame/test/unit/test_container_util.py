@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import datetime
-import typing as tp
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame import Frame
 from static_frame import Index
@@ -909,7 +909,7 @@ class TestUnit(TestCase):
 
         # these two different utilities have slightly different constituents as they are used for different purposes
         self.assertEqual(keys_gc - keys_cm, {'ContainerOperand', 'ContainerOperandSequence'})
-        self.assertEqual(keys_cm - keys_gc, {'FillValueAuto', 'ILoc', 'HLoc', 'MemoryDisplay'})
+        self.assertEqual(keys_cm - keys_gc, {'ILoc', 'TypeClinic', 'CallGuard', 'MemoryDisplay', 'ClinicResult', 'HLoc', 'FillValueAuto', 'Require'})
 
         self.assertEqual(keys_cm & keys_gc, {'FrameHE', 'IndexSecondGO', 'IndexSecond', 'IndexDateGO', 'Bus', 'IndexMinute', 'Index', 'Frame', 'IndexDate', 'IndexYearMonth', 'IndexYearGO', 'IndexMicrosecondGO', 'Yarn', 'IndexNanosecond', 'IndexYearMonthGO', 'IndexNanosecondGO', 'IndexHourGO', 'Batch', 'Quilt', 'IndexMinuteGO', 'FrameGO', 'IndexHour', 'Series', 'IndexGO', 'IndexHierarchy', 'IndexMillisecondGO', 'TypeBlocks', 'IndexYear', 'SeriesHE', 'IndexMicrosecond', 'IndexMillisecond', 'IndexHierarchyGO'})
 

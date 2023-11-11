@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import AnyCallable
 from static_frame.core.util import TBlocKey
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
@@ -22,7 +21,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
 
-# from static_frame.core.util import AnyCallable
+# from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -42,55 +41,61 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
-FrameOrSeries = tp.Union['Frame', 'Series']
+TFrameOrSeries = tp.Union[
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Series[tp.Any, tp.Any]',
+        ]
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Index',
-        'Series',
-        'SeriesHE',
-        'Frame',
-        'FrameGO',
-        'FrameHE',
+        'Index[tp.Any]',
+        'Series[tp.Any, tp.Any]',
+        'SeriesHE[tp.Any, tp.Any]',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'TypeBlocks',
-        'Bus',
+        'Bus[tp.Any]',
         'Batch',
-        'Yarn',
-        # 'Quilt',
+        'Yarn[tp.Any]',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
-         # cannot be NDArrayAny as not available in old NumPy
+         # cannot be TNDArrayAny as not available in old NumPy
         np.ndarray, # type: ignore
         MaskedArray, # type: ignore
-        FrameOrSeries,
+        TFrameOrSeries,
         covariant=True,
         )
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
-        bound=tp.Callable[[TLocSelector], TVContainer_co]
+        bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
 
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
-        bound=tp.Callable[[TILocSelector], TVContainer_co]
+        bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
 
 
 class Interface(tp.Generic[TVContainer_co]):
     __slots__ = ()
-    INTERFACE: tp.Tuple[str, ...] = ()
+    _INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterfaceBatch:
     __slots__ = ()
-    INTERFACE: tp.Tuple[str, ...] = ()
+    _INTERFACE: tp.Tuple[str, ...] = ()
 
 class InterGetItemILocReduces(Interface[TVContainer_co]):
     '''Interface for iloc selection that reduces dimensionality.
     '''
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
@@ -112,7 +117,7 @@ class InterGetItemILoc(Interface[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
     '''
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Union[
             tp.Callable[[TILocSelectorOne], tp.Any],
@@ -128,7 +133,7 @@ class InterGetItemILoc(Interface[TVContainer_co]):
 class InterGetItemLocReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelector], TVContainer_co]
 
@@ -148,7 +153,7 @@ class InterGetItemLocReduces(Interface[TVContainer_co]):
 class InterGetItemLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelector], TVContainer_co]
 
@@ -164,7 +169,7 @@ class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelectorCompound], tp.Any]
 
@@ -172,19 +177,25 @@ class InterGetItemLocCompoundReduces(Interface[TVContainer_co]):
         self._func = func
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> TSeriesAny: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
 
     @tp.overload
+    def __getitem__(self, key: tp.Tuple[tp.List[int], tp.List[int]]) -> TVContainer_co: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[tp.List[str], tp.List[str]]) -> TVContainer_co: ...
+
+    @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Series: ...
+    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> TVContainer_co: ...
@@ -202,7 +213,7 @@ class InterGetItemLocCompound(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TLocSelectorCompound], TVContainer_co]
 
@@ -217,7 +228,7 @@ class InterGetItemLocCompound(Interface[TVContainer_co]):
 class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TILocSelectorCompound], tp.Any]
 
@@ -226,16 +237,16 @@ class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorOne) -> Series: ...
+    def __getitem__(self, key: TILocSelectorOne) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorMany) -> TVContainer_co: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorOne, TILocSelectorMany]) -> TSeriesAny: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> Series: ...
+    def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorOne]) -> TSeriesAny: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TILocSelectorMany, TILocSelectorMany]) -> TVContainer_co: ...
@@ -255,7 +266,7 @@ class InterGetItemILocCompoundReduces(Interface[TVContainer_co]):
 class InterGetItemILocCompound(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TILocSelectorCompound], TVContainer_co]
 
@@ -269,7 +280,7 @@ class InterGetItemILocCompound(Interface[TVContainer_co]):
 class InterfaceGetItemBLoc(Interface[TVContainer_co]):
 
     __slots__ = ('_func',)
-    INTERFACE = ('__getitem__',)
+    _INTERFACE = ('__getitem__',)
 
     _func: tp.Callable[[TBlocKey], TVContainer_co]
 
@@ -290,7 +301,7 @@ class InterfaceSelectDuo(Interface[TVContainer_co]):
             '_func_iloc',
             '_func_loc',
             )
-    INTERFACE = ('iloc', 'loc')
+    _INTERFACE = ('iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -305,7 +316,7 @@ class InterfaceSelectDuo(Interface[TVContainer_co]):
 
     @property
     def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
-        return InterGetItemLocReduces(self._func_loc)
+        return InterGetItemLocReduces(self._func_loc) # pyright: ignore
 
 class InterfaceSelectTrio(Interface[TVContainer_co]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors. It is assumed that functionality that uses this interface returns containers that do not reduce their dimensionality.
@@ -316,7 +327,7 @@ class InterfaceSelectTrio(Interface[TVContainer_co]):
             '_func_loc',
             '_func_getitem',
             )
-    INTERFACE = ('__getitem__', 'iloc', 'loc')
+    _INTERFACE = ('__getitem__', 'iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -342,7 +353,7 @@ class InterfaceSelectTrio(Interface[TVContainer_co]):
     def loc(self) -> InterGetItemLoc[TVContainer_co]:
         '''Label-based selection.
         '''
-        return InterGetItemLoc(self._func_loc)
+        return InterGetItemLoc(self._func_loc) # pyright: ignore
 
 
 class InterfaceSelectQuartet(Interface[TVContainer_co]):
@@ -355,7 +366,7 @@ class InterfaceSelectQuartet(Interface[TVContainer_co]):
             '_func_getitem',
             '_func_bloc',
             )
-    INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
+    _INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
 
     def __init__(self, *,
             func_iloc: TILocSelectorFunc,
@@ -388,7 +399,7 @@ class InterfaceSelectQuartet(Interface[TVContainer_co]):
     def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
         '''Label-based assignment.
         '''
-        return InterGetItemLocReduces(self._func_loc)
+        return InterGetItemLocReduces(self._func_loc) # pyright: ignore
 
 
 #-------------------------------------------------------------------------------
@@ -438,7 +449,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
 
 class InterfaceFrameAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
@@ -462,7 +473,7 @@ class InterfaceFrameAsType(Interface[TVContainer_co]):
             dtype: TDtypeSpecifier,
             *,
             consolidate_blocks: bool = False,
-            ) -> 'Frame':
+            ) -> TFrameAny:
         '''
         Apply a single ``dtype`` to all columns.
         '''
@@ -475,7 +486,7 @@ class InterfaceFrameAsType(Interface[TVContainer_co]):
 
 class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
     __slots__ = ('_func_getitem',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             func_getitem: tp.Callable[[TDepthLevelSpecifier], 'IndexHierarchyAsType']
@@ -496,7 +507,7 @@ class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
         return self._func_getitem(key)
 
     def __call__(self,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             *,
             consolidate_blocks: bool = False,
             ) -> 'IndexHierarchy':
@@ -515,7 +526,7 @@ class BatchAsType:
     __slots__ = ('_batch_apply', '_column_key')
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             column_key: TLocSelector
             ) -> None:
         self._batch_apply = batch_apply
@@ -538,10 +549,10 @@ class InterfaceBatchAsType(Interface[TVContainer_co]):
     '''
 
     __slots__ = ('_batch_apply',)
-    INTERFACE = ('__getitem__', '__call__')
+    _INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             ) -> None:
         self._batch_apply = batch_apply
 
@@ -554,7 +565,7 @@ class InterfaceBatchAsType(Interface[TVContainer_co]):
         '''
         return BatchAsType(batch_apply=self._batch_apply, column_key=key)
 
-    def __call__(self, dtype: DtypeAny) -> 'Batch':
+    def __call__(self, dtype: TDtypeAny) -> 'Batch':
         '''
         Apply a single ``dtype`` to all columns.
         '''
@@ -575,7 +586,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
             '_func_getitem',
             )
 
-    INTERFACE = (
+    _INTERFACE = (
             '__getitem__',
             '__call__',
             'status',
@@ -583,7 +594,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
 
     def __init__(self,
             container: TVContainer_co,
-            func_getitem: tp.Callable[[TLocSelector], 'Frame']
+            func_getitem: tp.Callable[[TLocSelector], TFrameAny]
             ) -> None:
         '''
         Args:
@@ -593,22 +604,22 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
         self._func_getitem = func_getitem
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> 'Frame':
-        '''Selector of columns by label for consolidation.
+    def __getitem__(self, key: TLocSelector) -> TFrameAny:
+        '''Return the full ``Frame``, selecting with ``key`` a subset of columns for consolidation.
 
         Args:
             key: {key_loc}
         '''
         return self._func_getitem(key)
 
-    def __call__(self) -> 'Frame':
+    def __call__(self) -> TFrameAny:
         '''
         Apply consolidation to all columns.
         '''
         return self._func_getitem(NULL_SLICE)
 
     @property
-    def status(self) -> 'Frame':
+    def status(self) -> TFrameAny:
         '''Display consolidation status of this Frame.
         '''
         from static_frame.core.frame import Frame
@@ -616,7 +627,7 @@ class InterfaceConsolidate(Interface[TVContainer_co]):
         flag_attrs: tp.Tuple[str, ...] = ('owndata', 'f_contiguous', 'c_contiguous')
         columns: IndexBase = self._container.columns # type: ignore
 
-        def gen() -> tp.Tuple[DtypeAny, tp.Tuple[int, ...], int]:
+        def gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
             iloc_start = 0
 
             for b in self._container._blocks._blocks: # type: ignore

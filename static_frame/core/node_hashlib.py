@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import hashlib
-import typing as tp
+
+import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
-    from hashlib import _Hash  # pylint: disable = W0611 #pragma: no cover
-    from hashlib import _VarLenHash  # pylint: disable = W0611 #pragma: no cover
+    from hashlib import _Hash  # pylint: disable = E0611 #pragma: no cover
+    from hashlib import _VarLenHash  # pylint: disable = E0611 #pragma: no cover
 
 
 class InterfaceHashlib:
@@ -17,7 +18,7 @@ class InterfaceHashlib:
             '_encoding',
             )
 
-    INTERFACE = (
+    _INTERFACE = (
             'to_bytes',
             'md5',
             'sha256',
@@ -71,10 +72,10 @@ class InterfaceHashlib:
     def to_bytes(self) -> bytes:
         '''Return the byte signature for this container, suitable for passing to a cryptographic hash function.
         '''
-        return self._to_bytes( # type: ignore  # (need Protocol with __call__)
-                include_name=self._include_name,
-                include_class=self._include_class,
-                encoding=self._encoding,
+        return self._to_bytes(
+                self._include_name,
+                self._include_class,
+                self._encoding,
                 )
 
     def md5(self) -> '_Hash':

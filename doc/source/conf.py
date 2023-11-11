@@ -14,7 +14,8 @@
 
 import datetime
 import os
-import typing as tp
+
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
@@ -102,9 +103,9 @@ jinja_contexts = {'ctx': get_jinja_contexts()}
 extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.viewcode',
+        'sphinx.ext.napoleon',
         'sphinx.ext.graphviz',
         'sphinx.ext.inheritance_diagram',
-        'sphinxcontrib.napoleon',
         'sphinx_jinja',
         ]
 

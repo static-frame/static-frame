@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import typing as tp
 from functools import reduce
 
 import numpy as np
+import typing_extensions as tp
 from numpy import char as npc
 
 from static_frame.core.container_util import get_col_format_factory
@@ -16,21 +16,21 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-    BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
 INTERFACE_STR = (
         '__getitem__',
@@ -85,7 +85,7 @@ class InterfaceString(Interface[TVContainer_co]):
             '_ndim',
             '_labels',
             )
-    INTERFACE = INTERFACE_STR
+    _INTERFACE = INTERFACE_STR
 
     def __init__(self,
             blocks: BlocksType,
@@ -103,10 +103,10 @@ class InterfaceString(Interface[TVContainer_co]):
     @staticmethod
     def _process_blocks(
             blocks: BlocksType,
-            func: UFunc,
+            func: TUFunc,
             args: tp.Tuple[tp.Any, ...] = (),
             astype_str: bool = True,
-            ) -> tp.Iterator[NDArrayAny]:
+            ) -> tp.Iterator[TNDArrayAny]:
         '''
         Block-wise processing of blocks after optional string conversion. Non-string conversion is necessary for ``decode``.
         '''
@@ -121,9 +121,9 @@ class InterfaceString(Interface[TVContainer_co]):
     def _process_tuple_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
-            ) -> tp.Iterator[NDArrayAny]:
+            ) -> tp.Iterator[TNDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
@@ -145,9 +145,9 @@ class InterfaceString(Interface[TVContainer_co]):
     def _process_element_blocks(*,
             blocks: BlocksType,
             method_name: str,
-            dtype: DtypeAny,
+            dtype: TDtypeAny,
             args: tp.Tuple[tp.Any, ...] = (),
-            ) -> tp.Iterator[NDArrayAny]:
+            ) -> tp.Iterator[TNDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
@@ -257,7 +257,7 @@ class InterfaceString(Interface[TVContainer_co]):
             block_iter = self._process_blocks(self._blocks, npc.endswith, (suffix, start, end))
             return self._blocks_to_container(block_iter)
 
-        def block_gen() -> tp.Iterator[NDArrayAny]:
+        def block_gen() -> tp.Iterator[TNDArrayAny]:
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.endswith, (sub, start, end))
                     for sub in suffix)
@@ -292,7 +292,7 @@ class InterfaceString(Interface[TVContainer_co]):
 
         if self._ndim == 1:
             # apply the format per label in series
-            def block_gen() -> tp.Iterator[NDArrayAny]:
+            def block_gen() -> tp.Iterator[TNDArrayAny]:
                 post = []
                 for i, v in enumerate(next(iter(self._blocks))):
                     func = format_factory(i).format
@@ -301,7 +301,7 @@ class InterfaceString(Interface[TVContainer_co]):
                 array.flags.writeable = False
                 yield array
         else:
-            def block_gen() -> tp.Iterator[NDArrayAny]:
+            def block_gen() -> tp.Iterator[TNDArrayAny]:
                 pos = 0
                 for block in self._blocks:
                     if block.ndim == 1:
@@ -554,7 +554,7 @@ class InterfaceString(Interface[TVContainer_co]):
             block_iter = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
             return self._blocks_to_container(block_iter)
 
-        def block_gen() -> tp.Iterator[NDArrayAny]:
+        def block_gen() -> tp.Iterator[TNDArrayAny]:
             blocks_per_sub = (
                     self._process_blocks(self._blocks, npc.startswith, (sub, start, end))
                     for sub in prefix)
@@ -615,10 +615,10 @@ class InterfaceBatchString(InterfaceBatch):
     __slots__ = (
             '_batch_apply',
             )
-    INTERFACE = INTERFACE_STR
+    _INTERFACE = INTERFACE_STR
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             ) -> None:
         self._batch_apply = batch_apply
 

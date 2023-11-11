@@ -5,11 +5,11 @@ DOC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(DOC_DIR)))
 
 import argparse
-import typing as tp
 from io import StringIO
 
 import numpy as np
 import pandas as pd
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame.core.container import ContainerBase
@@ -179,7 +179,9 @@ INDEX_INIT_A6 = dict(labels=('d', 'e', 'f'))
 INDEX_INIT_B1 = dict(labels=(1024, 2048, 4096), name='y')
 INDEX_INIT_B2 = dict(labels=(0, 1024, -2048, 4096))
 
-INDEX_INIT_C = dict(labels=(None, 'A', 1024, True), name='x')
+INDEX_INIT_C1 = dict(labels=(None, 'A', 1024, True), name='x')
+INDEX_INIT_C2 = dict(labels=(None, 'b', False, True, 2048), name='x')
+
 INDEX_INIT_D = dict(labels=(False, True), name='x')
 
 INDEX_INIT_E = dict(labels=('qrs ', 'XYZ', '123', ' wX '))
@@ -630,6 +632,42 @@ class ExGen:
             yield f'np.sin({name}.via_values(unify_blocks=True)){exporter}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
+
+
+    @classmethod
+    def accessor_type_clinic(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_type_clinic(row: sf.Series,
+            name: str,
+            ctr_method: str,
+            ctr_kwargs: str,
+            hint: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        if attr == 'via_type_clinic.warn()':
+            pass # cannot capture warnings
+        else:
+            yield f'{name} = {ctr}'
+            yield f'{name}'
+            if attr == 'via_type_clinic.to_hint()':
+                yield f'{name}.via_type_clinic.to_hint()'
+            elif attr == 'via_type_clinic.check()':
+                yield f'{name}.via_type_clinic.check({hint})'
+            elif attr == 'via_type_clinic.__call__()':
+                yield f'cr = {name}.via_type_clinic({hint})'
+                yield f'cr'
+                yield f'cr.validated'
+                yield f'cr.to_str()'
+            elif attr == 'via_type_clinic.__repr__()':
+                yield f'{name}.via_type_clinic'
+            else:
+                raise NotImplementedError(f'no handling for {attr}')
 
 
 class ExGenSeries(ExGen):
@@ -1504,6 +1542,15 @@ class ExGenSeries(ExGen):
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 's', '', SERIES_INIT_A)
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                's',
+                '',
+                SERIES_INIT_Y2,
+                'sf.Series[sf.Index[np.str_], np.int64]')
+
 
 
 class ExGenFrame(ExGen):
@@ -2971,6 +3018,14 @@ class ExGenFrame(ExGen):
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_N)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'f',
+                'from_fields',
+                FRAME_INIT_FROM_FIELDS_M1,
+                'sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_]')
+
 
 class ExGenIndex(ExGen):
 
@@ -3094,7 +3149,7 @@ class ExGenIndex(ExGen):
                 'dropna()',
                 'unique()',
                 ):
-            yield f'ix = {icls}({kwa(INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
 
@@ -3107,7 +3162,7 @@ class ExGenIndex(ExGen):
             yield 'ix'
             yield f"ix.{attr_func}('A')"
         elif attr == 'fillna()':
-            yield f'ix = {icls}({kwa(INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}(0)"
         elif attr in (
@@ -3177,7 +3232,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._display(row, 'ix', '', INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', INDEX_INIT_C1)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -3336,11 +3391,20 @@ class ExGenIndex(ExGen):
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ix', '', INDEX_INIT_B2)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'ix',
+                '',
+                INDEX_INIT_A1,
+                'sf.Index[np.int64]',
+                )
+
 
 class _ExGenIndexDT64(ExGen):
     INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
     INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
-    INDEX_INIT_C: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
+    INDEX_INIT_C1: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
 
     @classmethod
@@ -3462,14 +3526,14 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield f"ix1.{attr_func}(ix2)"
         elif attr == 'dropfalsy()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
         elif attr in (
                 'dropna()',
                 'unique()',
                 ):
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
 
@@ -3478,11 +3542,11 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix2 = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield f"ix1.{attr_func}(ix2)"
         elif attr == 'fillfalsy()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}('A')"
         elif attr == 'fillna()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}(0)"
         elif attr in (
@@ -3575,7 +3639,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def display(cls, row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._display(row, 'ix', '', cls.INDEX_INIT_C)
+        yield from ExGen._display(row, 'ix', '', cls.INDEX_INIT_C1)
 
     @classmethod
     def selector(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -3699,7 +3763,7 @@ class _ExGenIndexDT64(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr == 'via_dt.__call__()':
-            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C)})'
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield f'ix.via_dt(fill_value=-1).year'
         elif attr == 'via_dt.fromisoformat()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
@@ -3733,67 +3797,76 @@ class _ExGenIndexDT64(ExGen):
     def accessor_values(cls, row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ix', '', cls.INDEX_INIT_A)
 
+    @classmethod
+    def accessor_type_clinic(cls, row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'ix',
+                '',
+                cls.INDEX_INIT_A,
+                'sf.Index[np.str_]',
+                )
+
 
 class ExGenIndexYear(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517', '1520', '1518'))
     INDEX_INIT_B = dict(labels=('2022', '2021', '2018'))
-    INDEX_INIT_C = dict(labels=('1620', 'NaT', '1619')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620', 'NaT', '1619')) # has NaT
     INDEX_COMPONENT = '1518'
 
 
 class ExGenIndexYearMonth(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04', '1517-12', '1517-06'))
     INDEX_INIT_B = dict(labels=('2022-04', '2021-12', '2022-06'))
-    INDEX_INIT_C = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09', 'NaT', '1620-11')) # has NaT
     INDEX_COMPONENT = '1517-06'
 
 
 class ExGenIndexDate(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMinute(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexHour(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexSecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMillisecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMicrosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21')) # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexNanosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1789-05-05', '1789-12-31', '1799-11-09'))
     INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
-    INDEX_INIT_C = dict(labels=('1789-05-05', 'NaT', '1799-11-09')) # has NaT
+    INDEX_INIT_C1 = dict(labels=('1789-05-05', 'NaT', '1799-11-09')) # has NaT
     INDEX_COMPONENT = '1789-05-05'
 
 
@@ -4229,6 +4302,15 @@ class ExGenIndexHierarchy(ExGen):
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'ih',
+                'from_labels',
+                IH_INIT_FROM_LABELS_E,
+                'sf.IndexHierarchy[sf.Index[np.str_], sf.Index[np.bool_]]',
+                )
+
 
 class ExGenBus(ExGen):
 
@@ -4534,6 +4616,14 @@ class ExGenBus(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'b',
+                'from_frames',
+                BUS_INIT_FROM_FRAMES_A,
+                'sf.Bus[sf.Index[np.int64]]',
+                )
 
 
 class ExGenYarn(ExGen):
@@ -4835,7 +4925,14 @@ class ExGenYarn(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
 
-
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'y',
+                'from_buses',
+                YARN_INIT_FROM_BUSES_A,
+                'sf.Yarn[sf.Index[np.int64]]',
+                )
 
 
 class ExGenBatch(ExGen):
@@ -5359,10 +5456,18 @@ class ExGenBatch(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'bt', '', BATCH_INIT_D, '')
 
-
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_values(row, 'bt', '', BATCH_INIT_A, '.to_frame()')
+
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'bt',
+                '',
+                BATCH_INIT_K,
+                'sf.Frame',
+                )
 
 
 class ExGenQuilt(ExGen):
@@ -5848,7 +5953,14 @@ class ExGenQuilt(ExGen):
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_hashlib(row, 'q', 'from_frame', QUILT_INIT_FROM_FRAME_A)
 
-
+    @staticmethod
+    def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_type_clinic(row,
+                'q',
+                'from_frame',
+                QUILT_INIT_FROM_FRAME_A,
+                'sf.Frame',
+                )
 
 class ExGenHLoc(ExGen):
 
@@ -6046,8 +6158,6 @@ class ExGenFillValueAuto(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-
-
 class ExGenMemoryDisplay(ExGen):
 
     @staticmethod
@@ -6058,10 +6168,10 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == '__init__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'f.memory'
+            yield 'f.memory'
         elif attr == 'from_any()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f"sf.MemoryDisplay.from_any(f.index)"
+            yield "sf.MemoryDisplay.from_any(f.index)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6072,7 +6182,7 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == 'to_frame()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'f.memory.to_frame()'
+            yield 'f.memory.to_frame()'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6082,12 +6192,250 @@ class ExGenMemoryDisplay(ExGen):
 
         if attr == '__repr__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'md = f.memory'
-            yield f"repr(md)"
+            yield 'md = f.memory'
+            yield "repr(md)"
         elif attr == '__str__()':
             yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
-            yield f'md = f.memory'
-            yield f"str(md)"
+            yield 'md = f.memory'
+            yield "str(md)"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+
+class ExGenTypeClinic(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__init__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == 'to_hint()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc.to_hint()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__call__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc(tuple[bool, bool])'
+            yield 'tc(tuple[bool, bool]).to_str()'
+        elif attr == 'check()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'tc.check(tuple[bool, bool])'
+        elif attr == 'warn()':
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+
+        if attr in ('__repr__()', '__str__()'):
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'tc = sf.TypeClinic((f, True))'
+            yield 'tc'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+
+
+class ExGenClinicResult(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__init__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield f'tc = sf.TypeClinic((f, True))'
+            yield f'cr = tc(tuple[str, int])'
+            yield 'cr'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def exporter(row: sf.Series) -> tp.Iterator[str]:
+        # icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == 'to_str()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr.to_str()'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def attribute(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'validated':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr.validated'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == '__bool__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'bool(cr)'
+        elif attr == '__len__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'len(cr)'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+    @staticmethod
+    def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+
+        if attr == '__iter__()':
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield '[l for l in cr]'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+    @staticmethod
+    def display(row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+
+        if attr in ('__repr__()', '__str__()'):
+            yield f"f = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})"
+            yield 'tc = sf.TypeClinic((f, True))'
+            yield 'cr = tc(tuple[str, int])'
+            yield 'cr'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+
+
+class ExGenCallGuard(ExGen):
+
+    @staticmethod
+    def method(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'check()':
+            yield 'def f1(ix: sf.Index[np.int64]): return len(ix)'
+            yield 'f2 = sf.CallGuard.check(f1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_A1)})"
+            yield 'f2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'f2(ix2)'
+
+            yield 'import typing as tp'
+            yield 'def f3(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(4)]): return len(ix)'
+            yield 'f4 = sf.CallGuard.check(f3)'
+            yield 'f4(ix1)'
+            yield 'f4(ix2)'
+            yield f"ix3 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'f4(ix3)'
+
+        elif attr == 'warn()':
+            pass
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
+
+class ExGenRequire(ExGen):
+
+    @staticmethod
+    def constructor(row: sf.Series) -> tp.Iterator[str]:
+
+        attr = row['signature_no_args']
+
+        if attr == 'Apply()':
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Apply(lambda ix: (ix > 0).all())]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'func2(ix2)'
+        elif attr == 'LabelsOrder()':
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.LabelsOrder(1024, ..., 4096)]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'func2(ix2)'
+        elif attr == 'LabelsMatch()':
+            yield 'import re'
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.object_], sf.Require.LabelsMatch(True, None, {1024, 2048}, re.compile("^A"))]): return len(ix)'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_C1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_C2)})"
+            yield 'func2(ix2)'
+        elif attr == 'Len()':
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Len(3)]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'func2(ix2)'
+        elif attr == 'Name()':
+            yield 'import typing as tp'
+            yield 'def func1(ix: tp.Annotated[sf.Index[np.int64], sf.Require.Name("y")]): return ix.max()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"ix1 = sf.Index({kwa(INDEX_INIT_B1)})"
+            yield 'func2(ix1)'
+            yield f"ix2 = sf.Index({kwa(INDEX_INIT_B2)})"
+            yield 'func2(ix2)'
+        elif attr == 'Shape()':
+            yield 'import typing as tp'
+            yield 'def func1(f: tp.Annotated[sf.TFrameAny, sf.Require.Shape(3, 2)]): return f.sum().sum()'
+            yield 'func2 = sf.CallGuard.check(func1)'
+            yield f"f1 = sf.Frame({kwa(FRAME_INIT_A1)})"
+            yield 'func2(f1)'
+            yield f"f2 = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_P)})"
+            yield 'func2(f2)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6171,6 +6519,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorRe,
             InterfaceGroup.AccessorHashlib,
             InterfaceGroup.AccessorValues,
+            InterfaceGroup.AccessorTypeClinic,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
@@ -6230,6 +6579,11 @@ CLS_TO_EX_GEN = {
         sf.ILoc: ExGenILoc,
         sf.FillValueAuto: ExGenFillValueAuto,
         sf.MemoryDisplay: ExGenMemoryDisplay,
+
+        sf.TypeClinic: ExGenTypeClinic,
+        sf.ClinicResult: ExGenClinicResult,
+        sf.CallGuard: ExGenCallGuard,
+        sf.Require: ExGenRequire,
         }
 
 CLS_NAME_TO_CLS = {cls.__name__: cls for cls in CLS_TO_EX_GEN}

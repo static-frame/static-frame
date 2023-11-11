@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import typing as tp
-
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame import Frame

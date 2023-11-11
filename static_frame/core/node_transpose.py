@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.util import OPERATORS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
@@ -18,10 +17,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_fill_value import InterfaceFillValue  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
-
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'IndexHierarchy',
         covariant=True,
         )
@@ -61,7 +60,7 @@ class InterfaceTranspose(Interface[TVContainer_co]):
             '_container',
             '_fill_value',
             )
-    INTERFACE = INTERFACE_TRANSPOSE
+    _INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
             container: TVContainer_co,
@@ -74,7 +73,7 @@ class InterfaceTranspose(Interface[TVContainer_co]):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
-            ) -> 'InterfaceFillValue[Frame]':
+            ) -> InterfaceFillValue[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
         '''
@@ -295,10 +294,10 @@ class InterfaceBatchTranspose(InterfaceBatch):
             '_batch_apply',
             '_fill_value',
             )
-    INTERFACE = INTERFACE_TRANSPOSE
+    _INTERFACE = INTERFACE_TRANSPOSE
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             fill_value: object = np.nan,
             ) -> None:
 

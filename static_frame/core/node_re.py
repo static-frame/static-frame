@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
-import typing as tp
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
@@ -12,7 +12,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import AnyCallable
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import array_from_element_apply
 
 if tp.TYPE_CHECKING:
@@ -21,11 +21,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-    BlocksType = tp.Iterable[NDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[NDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
 
 
 INTERFACE_RE = (
@@ -46,7 +46,7 @@ class InterfaceRe(Interface[TVContainer_co]):
             '_blocks_to_container',
             '_pattern',
             )
-    INTERFACE = INTERFACE_RE
+    _INTERFACE = INTERFACE_RE
 
     def __init__(self,
             blocks: BlocksType,
@@ -61,9 +61,9 @@ class InterfaceRe(Interface[TVContainer_co]):
     @staticmethod
     def _process_blocks(*,
             blocks: BlocksType,
-            func: AnyCallable,
-            dtype: DtypeAny,
-            ) -> tp.Iterator[NDArrayAny]:
+            func: TCallableAny,
+            dtype: TDtypeAny,
+            ) -> tp.Iterator[TNDArrayAny]:
         '''
         Element-wise processing of a methods on objects in a block
         '''
@@ -233,10 +233,10 @@ class InterfaceBatchRe(InterfaceBatch):
             '_pattern',
             '_flags',
             )
-    INTERFACE = INTERFACE_RE
+    _INTERFACE = INTERFACE_RE
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             pattern: str,
             flags: int = 0,
             ) -> None:

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from collections.abc import Set
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.axis_map import buses_to_hierarchy
 from static_frame.core.bus import Bus
@@ -23,8 +23,8 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
@@ -38,21 +38,28 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import NameType
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TName
 from static_frame.core.util import is_callable_or_mapping
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
 
+TSeriesObject = Series[tp.Any, np.object_]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TBusAny = Bus[tp.Any]
 
-class Yarn(ContainerBase, StoreClientMixin):
+#-------------------------------------------------------------------------------
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+
+class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     '''
@@ -64,7 +71,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             '_deepcopy_from_bus',
             )
 
-    _series: Series
+    _series: TSeriesObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
 
@@ -72,15 +79,15 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_buses(cls,
-            buses: tp.Iterable[Bus],
+            buses: tp.Iterable[TBusAny],
             *,
-            name: NameType = None,
+            name: TName = None,
             retain_labels: bool,
             deepcopy_from_bus: bool = False,
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
-        series = Series.from_items(
+        series: TSeriesObject = Series.from_items(
                     ((b.name, b) for b in buses),
                     dtype=DTYPE_OBJECT,
                     name=name,
@@ -106,12 +113,12 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @classmethod
     def from_concat(cls,
-            containers: tp.Iterable['Yarn'],
+            containers: tp.Iterable[TYarnAny],
             *,
-            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
-            name: NameType = NAME_DEFAULT,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            name: TName = NAME_DEFAULT,
             deepcopy_from_bus: bool = False,
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         Concatenate multiple :obj:`Yarn` into a new :obj:`Yarn`. Loaded status of :obj:`Frame` within each :obj:`Bus` will not be altered.
 
@@ -121,7 +128,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             name:
             deepcopy_from_bus:
         '''
-        bus_components: tp.List[Bus] = []
+        bus_components: tp.List[TBusAny] = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
@@ -139,7 +146,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         if index_components is not None:
             index = index_many_concat(index_components, Index)
 
-        series = Series(array, name=name)
+        series: TSeriesObject = Series(array, name=name)
         return cls(series,
                 deepcopy_from_bus=deepcopy_from_bus,
                 index=index,
@@ -147,10 +154,10 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            series: tp.Union[Series, tp.Iterable[Bus]],
+            series: tp.Union[TSeriesObject, tp.Iterable[TBusAny]],
             *,
-            index: IndexInitializer | IndexAutoFactoryType | None = None,
-            index_constructor: tp.Optional[IndexConstructor] = None,
+            index: TIndexInitializer | TIndexAutoFactory | None = None,
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
             own_index: bool = False,
@@ -200,8 +207,8 @@ class Yarn(ContainerBase, StoreClientMixin):
                     explicit_constructor=index_constructor
                     )
 
-        if len(self._index) != len(self._hierarchy):
-            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).')
+        if len(self._index) != len(self._hierarchy): # pyright: ignore
+            raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).') # pyright: ignore
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -227,11 +234,11 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @property
     @doc_inject()
-    def name(self) -> NameType:
+    def name(self) -> TName:
         '''{}'''
         return self._series._name
 
-    def rename(self, name: NameType) -> 'Yarn':
+    def rename(self, name: TName) -> tp.Self:
         '''
         Return a new :obj:`Yarn` with an updated name attribute.
 
@@ -250,15 +257,15 @@ class Yarn(ContainerBase, StoreClientMixin):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces['Yarn']:
+    def loc(self) -> InterGetItemLocReduces[TYarnAny]:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces['Yarn']:
+    def iloc(self) -> InterGetItemILocReduces[TYarnAny]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Yarn']:
+    def drop(self) -> InterfaceSelectTrio[TYarnAny]:
         '''
         Interface for dropping elements from :obj:`Yarn`.
         '''
@@ -270,7 +277,7 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg['Yarn']:
+    def iter_element(self) -> IterNodeNoArg[TYarnAny]:
         '''
         Iterator of elements.
         '''
@@ -283,7 +290,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg['Yarn']:
+    def iter_element_items(self) -> IterNodeNoArg[TYarnAny]:
         '''
         Iterator of label, element pairs.
         '''
@@ -300,7 +307,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> DtypeAny:
+    def dtype(self) -> TDtypeObject:
         '''
         Return the dtype of the realized NumPy array.
 
@@ -394,7 +401,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             return default
         return self.__getitem__(key)
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
@@ -406,7 +413,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     _items_store = items
 
     @property
-    def values(self) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
@@ -478,7 +485,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Yarn')
-    def head(self, count: int = 5) -> 'Yarn':
+    def head(self, count: int = 5) -> TYarnAny:
         '''{doc}
 
         Args:
@@ -490,7 +497,7 @@ class Yarn(ContainerBase, StoreClientMixin):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Yarn')
-    def tail(self, count: int = 5) -> 'Yarn':
+    def tail(self, count: int = 5) -> TYarnAny:
         '''{doc}s
 
         Args:
@@ -505,7 +512,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> Yarn | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -538,7 +545,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
 
         buses.flags.writeable = False
-        target_series = Series(buses,
+        target_series: TSeriesObject = Series(buses,
                 index=target_bus_index,
                 own_index=True,
                 name=self._series._name,
@@ -551,14 +558,14 @@ class Yarn(ContainerBase, StoreClientMixin):
                 own_index=True,
                 )
 
-    def _extract_loc(self, key: TLocSelector) -> Yarn | Frame:
+    def _extract_loc(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> Yarn | Frame:
+    def __getitem__(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         '''Selector of values by label.
 
         Args:
@@ -569,12 +576,12 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
 
-    def _drop_iloc(self, key: TILocSelector) -> 'Yarn':
+    def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         invalid = np.full(len(self._index), True)
         invalid[key] = False
         return self._extract_iloc(invalid) # type: ignore
 
-    def _drop_loc(self, key: TLocSelector) -> 'Yarn':
+    def _drop_loc(self, key: TLocSelector) -> tp.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
@@ -622,7 +629,7 @@ class Yarn(ContainerBase, StoreClientMixin):
             out=array)
         array.flags.writeable = False
 
-        series = Series(array, index=self._index, own_index=True)
+        series: TSeriesObject = Series(array, index=self._index, own_index=True)
 
         return series._display(config,
 
@@ -634,14 +641,14 @@ class Yarn(ContainerBase, StoreClientMixin):
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> Series:
+    def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
         return Series.from_concat((b.mloc for b in self._series.values),
                 index=self._index)
 
     @property
-    def dtypes(self) -> Frame:
+    def dtypes(self) -> TFrameAny:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
         return Frame.from_concat(
@@ -650,7 +657,7 @@ class Yarn(ContainerBase, StoreClientMixin):
                 ).relabel(index=self._index)
 
     @property
-    def shapes(self) -> Series:
+    def shapes(self) -> TSeriesObject:
         '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
@@ -666,11 +673,11 @@ class Yarn(ContainerBase, StoreClientMixin):
         return sum(b.nbytes for b in self._series.values)
 
     @property
-    def status(self) -> Frame:
+    def status(self) -> TFrameAny:
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
-        f = Frame.from_concat(
+        f: TFrameAny = Frame.from_concat(
                 (b.status for b in self._series.values),
                 index=IndexAutoFactory)
         return f.relabel(index=self._index)
@@ -682,7 +689,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # exporter
 
-    def to_series(self) -> Series:
+    def to_series(self) -> TSeriesObject: # can get generic Bus index
         '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         # NOTE: this should load all deferred Frame
@@ -723,8 +730,8 @@ class Yarn(ContainerBase, StoreClientMixin):
 
     @doc_inject(selector='relabel', class_name='Yarn')
     def relabel(self,
-            index: tp.Optional[RelabelInput]
-            ) -> 'Yarn':
+            index: tp.Optional[TRelabelInput]
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -746,14 +753,14 @@ class Yarn(ContainerBase, StoreClientMixin):
             index_init = index #type: ignore
 
         return self.__class__(self._series, # no change to Buses
-                index=index_init,
+                index=index_init, # pyright: ignore
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
                 own_index=own_index,
                 )
 
     @doc_inject(selector='relabel_flat', class_name='Yarn')
-    def relabel_flat(self) -> 'Yarn':
+    def relabel_flat(self) -> tp.Self:
         '''
         {doc}
         '''
@@ -770,7 +777,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     @doc_inject(selector='relabel_level_add', class_name='Yarn')
     def relabel_level_add(self,
             level: TLabel
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -787,7 +794,7 @@ class Yarn(ContainerBase, StoreClientMixin):
     @doc_inject(selector='relabel_level_drop', class_name='Yarn')
     def relabel_level_drop(self,
             count: int = 1
-            ) -> 'Yarn':
+            ) -> tp.Self:
         '''
         {doc}
 
@@ -807,8 +814,8 @@ class Yarn(ContainerBase, StoreClientMixin):
     def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
-            ) -> 'Yarn':
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
@@ -823,3 +830,8 @@ class Yarn(ContainerBase, StoreClientMixin):
                 )
 
         return self._extract_iloc(iloc_map).relabel(index) # type: ignore
+
+
+TYarnAny = Yarn[tp.Any]
+
+

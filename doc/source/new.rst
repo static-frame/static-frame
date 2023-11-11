@@ -1,6 +1,21 @@
 What is New in StaticFrame
 ===============================
 
+
+2.0.0
+-----------
+
+Added ``TypeClinic``, ``ClinicResult``, and ``ClinicError``, providing type to hint conversion and checks against arbitrary hints.
+
+Added ``via_type_clinic`` interfaces to all containers, exposing a pre-configured ``TypeClinic`` interface.
+
+Added ``CallGuard``, exposing decorators for performing run-time function interface type check and data validation.
+
+Added ``Require``, a collection of classes to be used for run-time validation in ``tp.Annotated`` generics.
+
+Now performing static-analysis with both MyPy (1.6.1) and Pyright (1.1.331).
+
+
 1.6.5
 -----------
 

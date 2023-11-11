@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import COMPLEX_TYPES
@@ -24,8 +23,8 @@ from static_frame.core.util import NAT_STR
 from static_frame.core.util import frozenset_filter
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class StoreFilter(metaclass=InterfaceMeta):
     '''
@@ -77,7 +76,7 @@ class StoreFilter(metaclass=InterfaceMeta):
     value_format_complex_scientific: tp.Optional[str]
     value_format_complex_positional: tp.Optional[str]
 
-    # reference collections defined with values given above; cannot use AnyCallable here
+    # reference collections defined with values given above; cannot use TCallableAny here
     _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _TYPE_TO_TO_SET: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
@@ -204,9 +203,9 @@ class StoreFilter(metaclass=InterfaceMeta):
         return value
 
     def _format_inexact_array(self,
-            array: NDArrayAny,
-            array_object: tp.Optional[NDArrayAny],
-            ) -> NDArrayAny:
+            array: TNDArrayAny,
+            array_object: tp.Optional[TNDArrayAny],
+            ) -> TNDArrayAny:
         '''
         Args:
             array_object: if we have already created an object array, use it as destination, mutating values in-place. ``array`` and ``array_object`` can be the same array.
@@ -226,8 +225,8 @@ class StoreFilter(metaclass=InterfaceMeta):
         return array_object
 
     def from_type_filter_array(self,
-            array: NDArrayAny
-            ) -> NDArrayAny:
+            array: TNDArrayAny
+            ) -> TNDArrayAny:
         '''Given an array, replace types with strings
         '''
         kind = array.dtype.kind
@@ -321,8 +320,8 @@ class StoreFilter(metaclass=InterfaceMeta):
     # converting from strings (in data store) to types
 
     def to_type_filter_array(self,
-            array: NDArrayAny
-            ) -> NDArrayAny:
+            array: TNDArrayAny
+            ) -> TNDArrayAny:
         '''Given an array, replace strings with types.
         '''
         kind = array.dtype.kind

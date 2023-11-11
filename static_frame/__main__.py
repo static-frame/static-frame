@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
         print() # Spacer
         for command in commands:
-            ipython.auto_rewrite_input(command)
+            ipython.auto_rewrite_input(command) # pyright: ignore
         print() # Spacer
 
         embed(user_ns=imports, colors='neutral') # type: ignore

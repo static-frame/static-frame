@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 from arraykit import column_2d_filter
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import UFunc
+from static_frame.core.util import TCallableAny
+from static_frame.core.util import TUFunc
 from static_frame.core.util import blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
@@ -18,14 +17,14 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         'IndexHierarchy',
-        'Series',
-        'Index',
+        'Series[tp.Any, tp.Any]',
+        'Index[tp.Any]',
         covariant=True,
         )
 
@@ -48,25 +47,25 @@ class InterfaceValues(Interface[TVContainer_co]):
             '_unify_blocks',
             '_dtype',
             )
-    INTERFACE = INTERFACE_VALUES
+    _INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
             container: TVContainer_co,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> None:
         self._container: TVContainer_co = container
         self._consolidate_blocks = consolidate_blocks
         self._unify_blocks = unify_blocks
-        self._dtype: DtypeAny | None = dtype
+        self._dtype: TDtypeAny | None = dtype
 
     def __call__(self,
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> 'InterfaceValues[TVContainer_co]':
         '''
         Args:
@@ -81,7 +80,7 @@ class InterfaceValues(Interface[TVContainer_co]):
                 )
 
     def __array_ufunc__(self,
-            ufunc: UFunc,
+            ufunc: TUFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,
@@ -95,7 +94,7 @@ class InterfaceValues(Interface[TVContainer_co]):
         if method not in VALID_UFUNC_ARRAY_METHODS:
             return NotImplemented #pragma: no cover
 
-        def func(block: NDArrayAny, normalize_2d: bool = True) -> NDArrayAny:
+        def func(block: TNDArrayAny, normalize_2d: bool = True) -> TNDArrayAny:
             if normalize_2d:
                 block = column_2d_filter(block)
 
@@ -111,7 +110,7 @@ class InterfaceValues(Interface[TVContainer_co]):
             return array
 
         if self._container._NDIM == 2:
-            blocks: tp.Iterable[NDArrayAny] = self._container._blocks._blocks #type: ignore
+            blocks: tp.Iterable[TNDArrayAny] = self._container._blocks._blocks #type: ignore
 
             if self._unify_blocks:
                 dtype = self._container._blocks._index.dtype if self._dtype is None else self._dtype #type: ignore
@@ -173,7 +172,7 @@ class InterfaceValues(Interface[TVContainer_co]):
 
 
     def apply(self,
-            func: UFunc,
+            func: TUFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
             ) -> TVContainer_co:
@@ -192,14 +191,14 @@ class InterfaceBatchValues(InterfaceBatch):
             '_unify_blocks',
             '_dtype',
             )
-    INTERFACE = INTERFACE_VALUES
+    _INTERFACE = INTERFACE_VALUES
 
     def __init__(self,
-            batch_apply: tp.Callable[[AnyCallable], 'Batch'],
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> None:
         self._batch_apply = batch_apply
         self._consolidate_blocks = consolidate_blocks
@@ -208,7 +207,7 @@ class InterfaceBatchValues(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     def apply(self,
-            func: UFunc,
+            func: TUFunc,
             *args: tp.Any,
             **kwargs: tp.Any,
             ) -> 'Batch':
@@ -225,7 +224,7 @@ class InterfaceBatchValues(InterfaceBatch):
             *,
             consolidate_blocks: bool = False,
             unify_blocks: bool = False,
-            dtype: DtypeAny | None = None,
+            dtype: TDtypeAny | None = None,
             ) -> 'InterfaceBatchValues':
         '''
         Args:
@@ -240,7 +239,7 @@ class InterfaceBatchValues(InterfaceBatch):
                 )
 
     def __array_ufunc__(self,
-            ufunc: UFunc,
+            ufunc: TUFunc,
             method: str,
             *args: tp.Any,
             **kwargs: tp.Any,

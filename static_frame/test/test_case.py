@@ -10,25 +10,27 @@ import string
 import sys
 import tempfile
 import time
-import typing as tp
 import unittest
 from itertools import zip_longest
 from pathlib import Path
 
 import numpy as np
 import pytest
+import typing_extensions as tp
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -56,6 +58,22 @@ skip_mac_pyle38 = pytest.mark.skipif(
         reason='MacOS tk.h issue'
         )
 
+# NOTE: np 1.20 and greater expose generic ndarray and dtype
+skip_nple119 = pytest.mark.skipif(
+        tuple(int(x) for x in np.__version__.split('.')[:2]) <= (1, 19),
+        reason='NumPy less than or equal to 1.19'
+        )
+
+skip_pyle310 = pytest.mark.skipif(
+        sys.version_info[:2] <= (3, 10),
+        reason='Python less than or equal to 3.10'
+        )
+
+skip_pyle38 = pytest.mark.skipif(
+        sys.version_info[:2] <= (3, 8),
+        reason='Python less than or equal to 3.8'
+        )
+
 
 #-------------------------------------------------------------------------------
 class Timer():
@@ -77,7 +95,7 @@ class Timer():
 @contextlib.contextmanager
 def temp_file(suffix: tp.Optional[str] = None,
         path: bool = False
-        ) -> tp.Iterator[PathSpecifier]:
+        ) -> tp.Iterator[TPathSpecifier]:
     try:
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
             tmp_name = f.name
@@ -98,7 +116,7 @@ class TestCase(unittest.TestCase):
     '''
 
     @staticmethod
-    def get_arrays_a() -> tp.Iterator[NDArrayAny]:
+    def get_arrays_a() -> tp.Iterator[tp.Tuple[TNDArrayAny, ...]]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Unique values required.
         '''
@@ -120,7 +138,7 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_arrays_b() -> tp.Iterator[NDArrayAny]:
+    def get_arrays_b() -> tp.Iterator[tp.Tuple[TNDArrayAny, ...]]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Many NaNs.
         '''
@@ -274,7 +292,7 @@ class TestCase(unittest.TestCase):
         return self.assertEqual(v1, v2)
 
 
-    def assertAlmostEqualArray(self, a1: NDArrayAny, a2: NDArrayAny) -> None:
+    def assertAlmostEqualArray(self, a1: TNDArrayAny, a2: TNDArrayAny) -> None:
         # NaNs are treated as equal
         np.testing.assert_allclose(a1, a2)
         # np.testing.assert_array_almost_equal(a1, a2, decimal=5)
@@ -282,7 +300,7 @@ class TestCase(unittest.TestCase):
     def assertTypeBlocksArrayEqual(self,
             tb: TypeBlocks,
             match: tp.Iterable[tp.Any],
-            match_dtype: tp.Optional[tp.Union[type, DtypeAny, str]] = None) -> None:
+            match_dtype: tp.Optional[tp.Union[type, TDtypeAny, str]] = None) -> None:
         '''
         Args:
             tb: a TypeBlocks instance
@@ -327,8 +345,8 @@ class TestCase(unittest.TestCase):
 
 
     def assertEqualFrames(self,
-            f1: Frame,
-            f2: Frame,
+            f1: TFrameAny,
+            f2: TFrameAny,
             compare_dtype: bool = True
             ) -> None:
 

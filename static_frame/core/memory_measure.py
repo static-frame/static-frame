@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import typing as tp
 from collections import abc
 from itertools import chain
 from sys import getsizeof
 from typing import NamedTuple
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.util import DTYPE_OBJECT_KIND
@@ -15,8 +15,8 @@ from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    # DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 class MFConfig(NamedTuple):
     local_only: bool # only data locally owned by arrays, or all referenced data
@@ -83,7 +83,7 @@ class MaterializedArray:
     BASE_ARRAY_BYTES = getsizeof(EMPTY_ARRAY)
 
     def __init__(self,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             format: MFConfig = MeasureFormat.LOCAL,
             ):
         self._array = array
@@ -226,21 +226,21 @@ class MemoryDisplay:
                 for format in MeasureFormat:
                     # NOTE: not sharing seen accross evaluations
                     sizes.append(memory_total(part, format=format))
-                yield label, sizes
+                yield label, sizes # pyright: ignore
 
         if hasattr(obj, 'name') and obj.name is not None:
             name = f'<{obj.__class__.__name__}: {obj.name}>'
         else:
             name = f'<{obj.__class__.__name__}>'
 
-        f = Frame.from_records_items(
+        f: TFrameAny = Frame.from_records_items(
                 gen(),
                 columns=(FORMAT_TO_DISPLAY[mf] for mf in MeasureFormat),
                 name=name,
                 )
         return cls(f)
 
-    def __init__(self, frame: 'Frame'):
+    def __init__(self, frame: TFrameAny):
         '''Initialize an instance with a ``Frame`` of byte counts.
         '''
         from static_frame.core.frame import Frame
@@ -255,7 +255,7 @@ class MemoryDisplay:
                     row_new.extend(e.split(' '))
                 yield row_new
 
-        f = Frame.from_records(gen(), index=f_size.index)
+        f: TFrameAny = Frame.from_records(gen(), index=f_size.index)
         columns = [
                 f_size.columns[i // 2] if i % 2 == 0
                 else f'{f_size.columns[i // 2]}u'.ljust(5)
@@ -268,7 +268,7 @@ class MemoryDisplay:
     def __repr__(self) -> str:
         return self._repr
 
-    def to_frame(self) -> 'Frame':
+    def to_frame(self) -> TFrameAny:
         '''Return a Frame of byte counts.
         '''
         return self._frame

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-import typing as tp
 from functools import partial
 from functools import wraps
 from itertools import chain
 from weakref import WeakValueDictionary
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import StoreFileMutation
@@ -15,22 +15,24 @@ from static_frame.core.exception import StoreParameterConflict
 from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import PathSpecifier
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
+from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 #-------------------------------------------------------------------------------
 # decorators
 
-def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
+def store_coherent_non_write(f: TCallableAny) -> TCallableAny:
 
     @wraps(f)
-    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> Frame:
+    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> TFrameAny:
         '''Decprator for derived Store class implementation of read(), labels().
         '''
         self._mtime_coherent()
@@ -39,7 +41,7 @@ def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
     return wrapper
 
 
-def store_coherent_write(f: AnyCallable) -> AnyCallable:
+def store_coherent_write(f: TCallableAny) -> TCallableAny:
     '''Decorator for derived Store classes implementation of write()
     '''
     @wraps(f)
@@ -61,7 +63,7 @@ class Store:
             '_weak_cache',
             )
 
-    def __init__(self, fp: PathSpecifier):
+    def __init__(self, fp: TPathSpecifier):
         # Redefine fp variable as only string after the filter.
         fp = tp.cast(str, path_filter(fp))
 
@@ -72,7 +74,7 @@ class Store:
         self._fp: str = fp
         self._last_modified = np.nan
         self._mtime_update()
-        self._weak_cache: tp.MutableMapping[TLabel, Frame] = WeakValueDictionary()
+        self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -116,14 +118,14 @@ class Store:
     #---------------------------------------------------------------------------
     @staticmethod
     def get_field_names_and_dtypes(*,
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool,
             include_index_name: bool,
             include_columns: bool,
             include_columns_name: bool,
             force_str_names: bool = False,
             force_brackets: bool = False
-            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[DtypeAny]]:
+            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
 
         index = frame.index
         columns = frame.columns
@@ -137,7 +139,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         field_names: tp.Sequence[TLabel]
-        dtypes: tp.List[DtypeAny]
+        dtypes: tp.List[TDtypeAny]
 
         if not include_index:
             if include_columns_name:
@@ -167,9 +169,9 @@ class Store:
 
             # add index names in front of column names
             if include_columns:
-                field_names.extend(columns_values)
+                field_names.extend(columns_values) # pyright: ignore
             else: # name fields with integers?
-                field_names.extend(range(frame._blocks.shape[1]))
+                field_names.extend(range(frame._blocks.shape[1])) # pyright: ignore
 
         field_names_post: tp.Sequence[str]
         if force_str_names:
@@ -193,7 +195,7 @@ class Store:
 
     @staticmethod
     def _get_row_iterator(
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool
             ) -> tp.Callable[[], tp.Iterator[tp.Sequence[tp.Any]]]:
 
@@ -214,9 +216,9 @@ class Store:
 
     @staticmethod
     def get_column_iterator(
-            frame: Frame,
+            frame: TFrameAny,
             include_index: bool
-            ) -> tp.Iterator[NDArrayAny]:
+            ) -> tp.Iterator[TNDArrayAny]:
         if include_index:
             index_depth = frame._index.depth
 
@@ -238,8 +240,8 @@ class Store:
             labels: tp.Iterable[TLabel],
             *,
             config: StoreConfigMapInitializer = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> tp.Iterator[Frame]:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
         '''Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`.
         '''
         raise NotImplementedError() #pragma: no cover
@@ -249,14 +251,14 @@ class Store:
             label: TLabel,
             *,
             config: tp.Optional[StoreConfig] = None,
-            container_type: tp.Type[Frame] = Frame,
-            ) -> Frame:
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> TFrameAny:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``.
         '''
         return next(self.read_many((label,), config=config, container_type=container_type))
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[str, TFrameAny]],
             *,
             config: StoreConfigMapInitializer = None
             ) -> None:

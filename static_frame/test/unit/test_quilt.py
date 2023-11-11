@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing as tp
 from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.axis_map import bus_to_hierarchy
 from static_frame.core.batch import Batch

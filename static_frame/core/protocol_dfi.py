@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.protocol_dfi_abc import Buffer
 from static_frame.core.protocol_dfi_abc import CategoricalDescription
@@ -19,8 +18,9 @@ from static_frame.core.util import NULL_SLICE
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 NP_KIND_TO_DFI_KIND = {
     'i': DtypeKind.INT,
@@ -65,7 +65,7 @@ class ArrowCType:
     }
 
     @classmethod
-    def from_dtype(cls, dtype: DtypeAny) -> str:
+    def from_dtype(cls, dtype: TDtypeAny) -> str:
         kind = dtype.kind
         if kind == 'O':
             raise NotImplementedError('no support for object arrays')
@@ -84,12 +84,12 @@ class ArrowCType:
             return f'{prefix}{res}'
 
         try:
-            return cls.KIND_ITEMSIZE_TO_FORMAT[(kind, dtype.itemsize)]
+            return cls.KIND_ITEMSIZE_TO_FORMAT[(kind, dtype.itemsize)] # pyright: ignore
         except KeyError as e:
             raise NotImplementedError(f'no support for dtype: {dtype}') from e
 
 
-def np_dtype_to_dfi_dtype(dtype: DtypeAny) -> Dtype:
+def np_dtype_to_dfi_dtype(dtype: TDtypeAny) -> Dtype:
     return (NP_KIND_TO_DFI_KIND[dtype.kind],
             dtype.itemsize * 8, # bits!
             ArrowCType.from_dtype(dtype),
@@ -102,7 +102,7 @@ class DFIBuffer(Buffer):
         '_array',
         )
 
-    def __init__(self, array: NDArrayAny) -> None:
+    def __init__(self, array: TNDArrayAny) -> None:
         self._array = array
 
         # NOTE: would expect transformation upstream to avoid reproducing the same contiguous buffer on repeated calls;expect 1D arrays to have the same value for C_CONTIGUOUS and F_CONTIGUOUS
@@ -112,7 +112,7 @@ class DFIBuffer(Buffer):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -143,7 +143,7 @@ class DFIColumn(Column):
             )
 
     def __init__(self,
-            array: NDArrayAny,
+            array: TNDArrayAny,
             index: 'IndexBase',
             ):
         assert len(array) == len(index)
@@ -154,7 +154,7 @@ class DFIColumn(Column):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: shape={self._array.shape} dtype={self._array.dtype.str}>'
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''
@@ -241,7 +241,7 @@ class DFIDataFrame(DataFrame):
             )
 
     def __init__(self,
-            frame: 'Frame',
+            frame: TFrameAny,
             *,
             nan_as_null: bool = False,
             allow_copy: bool = True,
@@ -258,7 +258,7 @@ class DFIDataFrame(DataFrame):
 
         if recast_blocks:
             from static_frame.core.frame import Frame
-            self._frame = Frame(
+            self._frame: TFrameAny = Frame(
                     frame._blocks.contiguous_columnar(),
                     index=frame._index,
                     columns=frame._columns,
@@ -281,7 +281,7 @@ class DFIDataFrame(DataFrame):
                 recast_blocks=False,
                 )
 
-    def __array__(self, dtype: DtypeAny | None = None) -> NDArrayAny:
+    def __array__(self, dtype: TDtypeAny | None = None) -> TNDArrayAny:
         '''
         Support the __array__ interface, returning an array of values.
         '''

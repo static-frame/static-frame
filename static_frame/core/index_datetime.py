@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import datetime
-import typing as tp
 from functools import partial
 
 import numpy as np
+import typing_extensions as tp
 from arraymap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index import INDEX_GO_LEAF_SLOTS
@@ -28,24 +29,24 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
-from static_frame.core.util import DateInitializer
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NameType
+from static_frame.core.util import TDateInitializer
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TName
+from static_frame.core.util import TYearInitializer
+from static_frame.core.util import TYearMonthInitializer
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import YearInitializer
-from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeDT64 = np.dtype[np.datetime64] # pylint: disable=W0611 #pragma: no cover
 
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
@@ -55,21 +56,20 @@ I = tp.TypeVar('I', bound='IndexDatetime')
 #-------------------------------------------------------------------------------
 # Specialized index for dates
 
-class IndexDatetime(Index):
+class IndexDatetime(Index[np.datetime64]):
     '''
     Derivation of Index to support Datetime operations. Derived classes must define _DTYPE.
     '''
 
     STATIC = True
-    _DTYPE: DtypeAny # define in derived class
+    _DTYPE: TDtypeDT64 # define in derived class
     __slots__ = ()
 
-    # @doc_inject(selector='index_date_time_init')
     def __init__(self,
-            labels: IndexInitializer,
+            labels: TIndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: NameType = NAME_DEFAULT,
+            name: TName = NAME_DEFAULT,
             ) -> None:
         '''Initializer.
 
@@ -98,7 +98,7 @@ class IndexDatetime(Index):
             operator: tp.Callable[..., tp.Any],
             other: tp.Any,
             fill_value: tp.Any = np.nan,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
 
         if self._recache:
             self._update_array_cache()
@@ -118,7 +118,7 @@ class IndexDatetime(Index):
         else:
             other_is_array = False
 
-        result: NDArrayAny
+        result: TNDArrayAny
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
             result = operator(self._labels.astype(other.dtype), other)
@@ -134,7 +134,7 @@ class IndexDatetime(Index):
             if not other_is_array and hasattr(other, '__len__') and len(other) == len(self): # type: ignore
                 # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
-            elif other_is_array and other.size == 1:
+            elif other_is_array and other.size == 1: # pyright: ignore
                 # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
             else:
@@ -146,7 +146,7 @@ class IndexDatetime(Index):
 
     def _loc_to_iloc(self,  # type: ignore
             key: TLocSelector,
-            key_transform: KeyTransformType = key_to_datetime_key,
+            key_transform: TKeyTransform = key_to_datetime_key,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -164,8 +164,7 @@ class IndexDatetime(Index):
         '''Return a Pandas Index.
         '''
         import pandas
-        return pandas.DatetimeIndex(self.values.copy(),
-                name=self._name)
+        return pandas.DatetimeIndex(self.values.copy(), name=self._name) # pyright: ignore
 
 
     #---------------------------------------------------------------------------
@@ -175,7 +174,7 @@ class IndexDatetime(Index):
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         {doc}
 
@@ -190,10 +189,14 @@ class IndexDatetime(Index):
                 )
 
 
+
+doc_update(IndexDatetime.__init__, selector='index_date_time_init')
+
+
 #-------------------------------------------------------------------------------
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
-    _DTYPE: DtypeAny
+    _DTYPE: TDtypeDT64
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
@@ -220,8 +223,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None) -> I:
@@ -238,8 +241,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -259,8 +262,8 @@ class IndexYear(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -268,7 +271,7 @@ class IndexYear(IndexDatetime):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
-        labels: NDArrayAny = np.arange(
+        labels: TNDArrayAny = np.arange(
                 to_datetime64(start, DT64_YEAR),
                 to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'Y'),
@@ -291,7 +294,7 @@ class IndexYear(IndexDatetime):
 
     def _loc_to_iloc(self,  # type: ignore
             key: TLocSelector,
-            key_transform: KeyTransformType = key_to_datetime_key_year,
+            key_transform: TKeyTransform = key_to_datetime_key_year,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -331,8 +334,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -351,8 +354,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -372,8 +375,8 @@ class IndexYearMonth(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -414,8 +417,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
-            start: DateInitializer,
-            stop: DateInitializer,
+            start: TDateInitializer,
+            stop: TDateInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -423,7 +426,7 @@ class IndexDate(IndexDatetime):
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
-        labels: NDArrayAny = np.arange(
+        labels: TNDArrayAny = np.arange(
                 to_datetime64(start, DT64_DAY),
                 to_datetime64(stop, DT64_DAY) + TD64_DAY,
                 np.timedelta64(step, 'D'))
@@ -432,8 +435,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_year_month_range(cls: tp.Type[I],
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
+            start: TYearMonthInitializer,
+            stop: TYearMonthInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None) -> I:
@@ -450,8 +453,8 @@ class IndexDate(IndexDatetime):
 
     @classmethod
     def from_year_range(cls: tp.Type[I],
-            start: YearInitializer,
-            stop: YearInitializer,
+            start: TYearInitializer,
+            stop: TYearInitializer,
             step: int = 1,
             *,
             name: tp.Optional[TLabel] = None
@@ -568,7 +571,7 @@ IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
 
 
 #-------------------------------------------------------------------------------
-_DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index]] = {cls._DTYPE: cls for cls in (
+_DTYPE_TO_CLASS: tp.Dict[TDtypeDT64, tp.Type[Index[np.datetime64]]] = {cls._DTYPE: cls for cls in (
         IndexYear,
         IndexYearMonth,
         IndexDate,
@@ -580,12 +583,12 @@ _DTYPE_TO_CLASS: tp.Dict[DtypeAny, tp.Type[Index]] = {cls._DTYPE: cls for cls in
         IndexNanosecond
         )}
 
-def dtype_to_index_cls(static: bool, dtype: DtypeAny) -> tp.Type[Index]:
+def dtype_to_index_cls(static: bool, dtype: TDtypeDT64) -> tp.Type[Index[tp.Any]]:
     '''
     Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''
 
-    resolved_static: tp.Type[Index] | None = _DTYPE_TO_CLASS.get(dtype)
+    resolved_static: tp.Type[Index[tp.Any]] | None = _DTYPE_TO_CLASS.get(dtype)
     if resolved_static is not None:
         if static:
             return resolved_static

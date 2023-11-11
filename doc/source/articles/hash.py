@@ -6,13 +6,13 @@ import os
 import sys
 import tempfile
 import timeit
-import typing as tp
 from itertools import repeat
 
 import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import typing_extensions as tp
 
 sys.path.append(os.getcwd())
 

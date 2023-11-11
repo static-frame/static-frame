@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 import pickle
-import typing as tp
 from datetime import date
 from datetime import datetime
 from hashlib import sha256
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred

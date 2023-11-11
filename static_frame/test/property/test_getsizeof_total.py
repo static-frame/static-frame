@@ -1,6 +1,6 @@
-import typing as tp
 from sys import getsizeof
 
+import typing_extensions as tp
 from hypothesis import given
 
 from static_frame import Frame

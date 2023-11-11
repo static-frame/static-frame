@@ -3,7 +3,7 @@ Storage for common doc strings and templates shared in non-related classes and m
 '''
 from __future__ import annotations
 
-import typing as tp
+import typing_extensions as tp
 
 #-------------------------------------------------------------------------------
 # common strings
@@ -475,33 +475,57 @@ class DOC_TEMPLATE:
         '''
     )
 
+
+# def template_to_doc(
+#         template: str | None,
+#         selector: str,
+#         **kwargs: tp.Any,
+#         ) -> str:
+
+#     # get doc string, template with decorator args, then template existing doc string
+#     doc_src = getattr(DOC_TEMPLATE, selector)
+#     if isinstance(doc_src, str):
+#         doc = doc_src.format(**kwargs)
+#         return template.format(doc)
+#     doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
+#     return template.format(**doc_dict)
+
+
+def doc_update(
+        func: tp.Callable[..., tp.Any],
+        selector: str | None = None,
+        **kwargs: tp.Any,
+        ) -> None:
+    '''Perform an in-place update on the docstring of a function.
+    '''
+    assert func.__doc__ is not None, f'{func} must have a docstring!'
+
+    key: str = func.__name__ if selector is None else selector
+
+    # get doc string, template with decorator args, then template existing doc string
+    doc_src = getattr(DOC_TEMPLATE, key)
+
+    if isinstance(doc_src, str):
+        doc = doc_src.format(**kwargs)
+        func.__doc__ = func.__doc__.format(doc)
+    else:
+        doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
+        func.__doc__ = func.__doc__.format(**doc_dict)
+
+
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,
-        **kwargs: object
+        **kwargs: tp.Any,
         ) -> tp.Callable[[F], F]:
     '''
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
     '''
     def decorator(f: F) -> F:
-
-        assert f.__doc__ is not None, f'{f} must have a docstring!'
-
-        nonlocal selector
-        selector = f.__name__ if selector is None else selector
-        # get doc string, template with decorator args, then template existing doc string
-        doc_src = getattr(DOC_TEMPLATE, selector)
-        if isinstance(doc_src, str):
-            doc = doc_src.format(**kwargs)
-            f.__doc__ = f.__doc__.format(doc)
-        else: # assume it is a dictionary
-            # try to format each value
-            doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
-            f.__doc__ = f.__doc__.format(**doc_dict)
-
+        doc_update(f, selector, **kwargs)
         return f
 
     return decorator

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import typing as tp
-
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.axis_map import bus_to_hierarchy
 from static_frame.core.axis_map import buses_to_hierarchy
@@ -15,7 +14,7 @@ from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import TreeNodeT
+from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.test.test_case import TestCase
 
 
@@ -48,7 +47,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(),
                 [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
 
-    def compare_trees(self, tree1: TreeNodeT, tree2: TreeNodeT) -> None:
+    def compare_trees(self, tree1: TTreeNode, tree2: TTreeNode) -> None:
         self.assertSequenceEqual(tree1.keys(), tree2.keys())
 
         for k, v1 in tree1.items():

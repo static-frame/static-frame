@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import itertools
 import operator
-import typing as tp
 from ast import literal_eval
 from copy import deepcopy
 from functools import partial
 from itertools import chain
 
 import numpy as np
+import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
@@ -34,9 +34,8 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import mutable_immutable_index_filter
-from static_frame.core.index_auto import RelabelInput
+from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
-# from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_datetime import IndexNanosecond
 from static_frame.core.loc_map import HierarchicalLocMap
@@ -65,22 +64,23 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import BoolOrBools
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import NameType
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TIndexCtor
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexInitializer
+from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorNonContainer
+from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
-from static_frame.core.util import UFunc
+from static_frame.core.util import TUFunc
 from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
@@ -104,28 +104,31 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.frame import FrameHE  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
 
-    NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
 
 
-IH = tp.TypeVar('IH', bound='IndexHierarchy')
-IHGO = tp.TypeVar('IHGO', bound='IndexHierarchyGO')
-IHAsType = tp.TypeVar('IHAsType', bound='IndexHierarchyAsType')
 
-SingleLabelType = tp.Sequence[TLabel]
-TreeNodeT = tp.Dict[TLabel, tp.Union[Index, 'TreeNodeT']]
+TVIHGO = tp.TypeVar('TVIHGO', bound='IndexHierarchyGO')
+TVIHAsType = tp.TypeVar('TVIHAsType', bound='IndexHierarchyAsType')
+
+TSingleLabel = tp.Sequence[TLabel]
+TTreeNode = tp.Dict[TLabel, tp.Union[Index[tp.Any], 'TTreeNode']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
-ExtractionType = tp.Union['IndexHierarchy', SingleLabelType]
+TExtraction = tp.Union['IndexHierarchy', TSingleLabel]
 
-HashableToIntMapsT = tp.List[tp.Dict[TLabel, int]]
-GrowableIndexersT = tp.List[tp.List[int]]
+THashableToIntMaps = tp.List[tp.Dict[TLabel, int]]
+TGrowableIndexers = tp.List[tp.List[int]]
 
 
-def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> NDArrayAny:
+def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> TNDArrayAny:
     '''
     Creates a 2D indexer array given a sequence of `list_lengths`
 
@@ -177,11 +180,11 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> NDArrayAny:
 # 83% of from_arrays_large (83% ufunc_unique1d_indexer)
 def construct_indices_and_indexers_from_column_arrays(
         *,
-        column_iter: tp.Iterable[NDArrayAny],
-        index_constructors_iter: tp.Iterable[IndexConstructor],
-        ) -> tp.Tuple[tp.List[Index], NDArrayAny]:
-    indices: tp.List[Index] = []
-    indexers_coll: tp.List[NDArrayAny] = []
+        column_iter: tp.Iterable[TNDArrayAny],
+        index_constructors_iter: tp.Iterable[TIndexCtorSpecifier],
+        ) -> tp.Tuple[tp.List[Index[tp.Any]], TNDArrayAny]:
+    indices: tp.List[Index[tp.Any]] = []
+    indexers_coll: tp.List[TNDArrayAny] = []
 
     for column, constructor in zip(column_iter, index_constructors_iter):
         # Alternative approach that retains order
@@ -207,7 +210,7 @@ class PendingRow:
     Encapsulates a new label row that has yet to be inserted into a IndexHierarchy.
     '''
     __slots__ = ('row',)
-    def __init__(self, row: SingleLabelType) -> None:
+    def __init__(self, row: TSingleLabel) -> None:
         self.row = row
 
     def __len__(self) -> int:
@@ -220,7 +223,10 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-class IndexHierarchy(IndexBase):
+TVIndices = tp.TypeVarTuple('TVIndices',
+        default=tp.Unpack[tp.Tuple[tp.Any, ...]])
+
+class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     '''
     A hierarchy of :obj:`Index` objects.
     '''
@@ -237,31 +243,31 @@ class IndexHierarchy(IndexBase):
             '_pending_extensions',
             )
 
-    _indices: tp.List[Index] # Of index objects
-    _indexers: NDArrayAny # 2D - integer arrays
-    _name: NameType
+    _indices: tp.List[Index[tp.Any]] # Of index objects
+    _indexers: TNDArrayAny # 2D - integer arrays
+    _name: TName
     _blocks: TypeBlocks
     _recache: bool
-    _values: tp.Optional[NDArrayAny] # Used to cache the property `values`
+    _values: tp.Optional[TNDArrayAny] # Used to cache the property `values`
     _map: HierarchicalLocMap
-    _index_types: tp.Optional['Series'] # Used to cache the property `index_types`
-    _pending_extensions: tp.Optional[tp.List[tp.Union[SingleLabelType, 'IndexHierarchy', PendingRow]]]
+    _index_types: tp.Optional[Series[tp.Any, np.object_]] # Used to cache the property `index_types`
+    _pending_extensions: tp.Optional[tp.List[tp.Union[TSingleLabel, 'IndexHierarchy', PendingRow]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
-    _INDEX_CONSTRUCTOR: IndexConstructor = Index
+    _INDEX_CONSTRUCTOR = Index
     _NDIM: int = 2
 
     # --------------------------------------------------------------------------
     # constructors
 
     @classmethod
-    def _build_index_constructors(cls: tp.Type[IH],
+    def _build_index_constructors(cls,
             *,
-            index_constructors: IndexConstructors,
+            index_constructors: TIndexCtorSpecifiers,
             depth: int,
-            ) -> tp.Iterator[IndexConstructor]:
+            ) -> tp.Iterator[TIndexCtor]:
         '''
         Returns an iterable of `depth` number of index constructors based on user-provided ``index_constructors``.
 
@@ -272,39 +278,39 @@ class IndexHierarchy(IndexBase):
             yield from (cls._INDEX_CONSTRUCTOR for _ in range(depth))
 
         elif callable(index_constructors): # support a single constructor
-            ctr = constructor_from_optional_constructor(
+            ctor = constructor_from_optional_constructor(
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructors
                     )
-            yield from (ctr for _ in range(depth))
+            yield from (ctor for _ in range(depth))
         else:
             index_constructors = tuple(index_constructors)
             if len(index_constructors) != depth:
                 raise ErrorInitIndex(
                     f'When providing multiple index constructors, their number ({len(index_constructors)}) must equal the depth of the IndexHierarchy ({depth}).'
                     )
-            for ctr in index_constructors:
+            for ctor_specifier in index_constructors:
                 yield constructor_from_optional_constructor(
                         default_constructor=cls._INDEX_CONSTRUCTOR,
-                        explicit_constructor=ctr
+                        explicit_constructor=ctor_specifier
                         )
 
     @staticmethod
     def _build_name_from_indices(
-            indices: tp.List[Index],
-            ) -> tp.Optional[SingleLabelType]:
+            indices: tp.List[Index[tp.Any]],
+            ) -> tp.Optional[TSingleLabel]:
         '''
         Builds the IndexHierarchy name from the names of `indices`. If one is not specified, the name is None
         '''
-        name: SingleLabelType = tuple(index.name for index in indices)
+        name: TSingleLabel = tuple(index.name for index in indices)
         if any(n is None for n in name):
             return None
         return name
 
     @classmethod
-    def from_pandas(cls: tp.Type[IH],
-            value: 'pandas.MultiIndex',
-            ) -> IH:
+    def from_pandas(cls,
+            value: pandas.MultiIndex,
+            ) -> tp.Self:
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
@@ -326,21 +332,21 @@ class IndexHierarchy(IndexBase):
         if all(n is None for n in name): #type: ignore
             name = None
 
-        def build_index(pd_idx: pandas.Index) -> Index:
+        def build_index(pd_idx: pandas.Index) -> Index[tp.Any]:
             # NOTE: Newer versions of pandas will not require Python date objects to live inside
             # a DatetimeIndex. Instead, it will be a regular Index with dtype=object.
             # Only numpy datetime objects are put into a DatetimeIndex.
             if isinstance(pd_idx, pandas.DatetimeIndex):
-                constructor: tp.Type[Index] = IndexNanosecond
+                constructor: tp.Type[Index[tp.Any]] = IndexNanosecond
             else:
                 constructor = Index
 
             if cls.STATIC:
                 return constructor(pd_idx, name=pd_idx.name)
-            return tp.cast(Index, constructor._MUTABLE_CONSTRUCTOR(pd_idx))
+            return tp.cast(Index[tp.Any], constructor._MUTABLE_CONSTRUCTOR(pd_idx))
 
-        indices: tp.List[Index] = []
-        indexers: NDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
+        indices: tp.List[Index[tp.Any]] = []
+        indexers: TNDArrayAny = np.empty((value.nlevels, len(value)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (levels, codes) in enumerate(zip(value.levels, value.codes)):
             indexers[i] = codes
@@ -355,11 +361,11 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_product(cls: tp.Type[IH],
-            *levels: IndexInitializer,
-            name: NameType = None,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+    def from_product(cls,
+            *levels: TIndexInitializer,
+            name: TName = None,
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
@@ -375,7 +381,7 @@ class IndexHierarchy(IndexBase):
         if len(levels) == 1:
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
-        indices: tp.List[Index] = [] # store in a list, where index is depth
+        indices: tp.List[Index[tp.Any]] = [] # store in a list, where index is depth
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
@@ -400,9 +406,9 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_tree(cls: tp.Type[IH],
-            tree: TreeNodeT,
-            ) -> tp.Iterator[SingleLabelType]:
+    def _from_tree(cls,
+            tree: TTreeNode,
+            ) -> tp.Iterator[TSingleLabel]:
         '''
         Yields all the labels provided by a `tree`
         '''
@@ -415,12 +421,12 @@ class IndexHierarchy(IndexBase):
                     yield (label, row)
 
     @classmethod
-    def from_tree(cls: tp.Type[IH],
-            tree: TreeNodeT,
+    def from_tree(cls,
+            tree: TTreeNode,
             *,
-            name: NameType = None,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+            name: TName = None,
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
 
@@ -434,13 +440,13 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_empty(cls: tp.Type[IH],
+    def _from_empty(cls,
             empty_labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: NameType = None,
+            name: TName = None,
             depth_reference: tp.Optional[int] = None,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Construct an IndexHierarchy from an iterable of empty labels.
         '''
@@ -475,7 +481,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors,
                 depth=depth_reference,
                 )
-        indices: tp.List[Index] = [ctr(()) for ctr in index_constructors_iter]
+        indices: tp.List[Index[tp.Any]] = [ctr(()) for ctr in index_constructors_iter] # pyright: ignore
 
         if name is None:
             name = cls._build_name_from_indices(indices)
@@ -487,13 +493,13 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_values_per_depth(cls: tp.Type[IH],
-            values: tp.Union[NDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | NDArrayAny],
+    def from_values_per_depth(cls,
+            values: tp.Union[TNDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | TNDArrayAny],
             *,
-            name: NameType = None,
-            depth_reference: tp.Optional[int] = None,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+            name: TName = None,
+            depth_reference: int | None = None,
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Construct an :obj:`IndexHierarchy` from a 2D NumPy array, or a collection of 1D arrays per depth.
 
@@ -502,7 +508,8 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`IndexHierarchy`
         '''
-        arrays: NDArrayAny | tp.Iterable[NDArrayAny]
+        arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
+        depth: int | None
         if values.__class__ is np.ndarray:
             size, depth = values.shape # type: ignore
             column_iter = values.T # type: ignore
@@ -536,7 +543,7 @@ class IndexHierarchy(IndexBase):
 
         index_constructors_iter = cls._build_index_constructors(
                 index_constructors=index_constructors,
-                depth=depth,
+                depth=depth, # type: ignore
                 )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
@@ -565,21 +572,21 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_labels(cls: tp.Type[IH],
+    def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[TLabel]],
             *,
-            name: NameType = None,
+            name: TName = None,
             reorder_for_hierarchy: bool = False,
-            index_constructors: IndexConstructors = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             depth_reference: tp.Optional[int] = None,
             continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Construct an ``IndexHierarchy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
         Args:
             labels: an iterator or generator of tuples.
-            *,
+            *
             name:
             reorder_for_hierarchy: an optional argument that will ensure the resulting index is arranged in a tree-like structure.
             index_constructors:
@@ -606,8 +613,8 @@ class IndexHierarchy(IndexBase):
             raise ErrorInitIndex('Cannot create IndexHierarchy from only one level.')
 
         # A mapping for each depth level, of label to index
-        hash_maps: HashableToIntMapsT = [{} for _ in range(depth)]
-        indexers_coll: GrowableIndexersT = [[] for _ in range(depth)]
+        hash_maps: THashableToIntMaps = [{} for _ in range(depth)]
+        indexers_coll: TGrowableIndexers = [[] for _ in range(depth)]
 
         prev_row: tp.Sequence[TLabel] = ()
 
@@ -656,7 +663,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors,
                 depth=depth,
                 )
-        indices: tp.List[Index] = [constructor(hash_map)
+        indices: tp.List[Index[tp.Any]] = [constructor(hash_map) # pyright: ignore
                 for constructor, hash_map in zip(index_constructors_iter, hash_maps)
                 ]
 
@@ -670,15 +677,15 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def _from_index_items_1d(cls: tp.Type[IH],
-            items: tp.Iterable[tp.Tuple[TLabel, Index]],
+    def _from_index_items_1d(cls,
+            items: tp.Iterable[tp.Tuple[TLabel, Index[tp.Any]]],
             *,
-            index_constructor: tp.Optional[IndexConstructor] = None,
-            name: NameType = None,
-            ) -> IH:
+            index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
+            name: TName = None,
+            ) -> tp.Self:
         labels: tp.List[TLabel] = []
-        index_inner: tp.Optional[IndexGO] = None  # We will grow this in-place
-        indexers_inner: tp.List[NDArrayAny] = []
+        index_inner: tp.Optional[IndexGO[tp.Any]] = None  # We will grow this in-place
+        indexers_inner: tp.List[TNDArrayAny] = []
 
         # Contains the len of the index for each label. Used to generate the outermost indexer
         repeats: tp.List[int] = []
@@ -691,7 +698,10 @@ class IndexHierarchy(IndexBase):
 
             if index_inner is None:
                 # This is the first index. Convert to IndexGO
-                index_inner = tp.cast(IndexGO, mutable_immutable_index_filter(False, index))
+                index_inner = tp.cast(
+                        IndexGO[tp.Any],
+                        mutable_immutable_index_filter(False, index),
+                        )
                 new_indexer = PositionsAllocator.get(len(index_inner))
             else:
                 new_labels = index.difference(index_inner) # Retains order!
@@ -706,7 +716,7 @@ class IndexHierarchy(IndexBase):
 
         index_inner = mutable_immutable_index_filter(cls.STATIC, index_inner) # type: ignore
 
-        indexers: NDArrayAny = np.array(
+        indexers: TNDArrayAny = np.array(
                 [
                     np.hstack([np.repeat(val, repeats=reps) for val, reps in enumerate(repeats)]),
                     np.hstack(indexers_inner),
@@ -728,12 +738,12 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_index_items(cls: tp.Type[IH],
+    def from_index_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, IndexBase]],
             *,
-            index_constructor: IndexConstructor = None,
-            name: NameType = None,
-            ) -> IH:
+            index_constructor: TIndexCtorSpecifier = None,
+            name: TName = None,
+            ) -> tp.Self:
         '''
         Given an iterable of pairs of label, :obj:`IndexBase`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1. While the provided :obj:`IndexBase` can be `Index` or `IndexHierarchy`, across all pairs all depths must be the same.
 
@@ -759,7 +769,7 @@ class IndexHierarchy(IndexBase):
         depth = index.depth
         labels: tp.List[TLabel] = [label]
         repeats: tp.List[int] = [len(index)]
-        existing_index_constructors: tp.List[IndexConstructor] = list(index._index_constructors)
+        existing_index_constructors: tp.List[TIndexCtorSpecifier] = list(index._index_constructors)
 
         blocks = [index._blocks]
         for label, index in items:
@@ -770,7 +780,7 @@ class IndexHierarchy(IndexBase):
             repeats.append(len(index))
             blocks.append(index._blocks)  # type: ignore
 
-            # If the IndexConstructor differs for any level, downcast to the
+            # If the TIndexCtorSpecifier differs for any level, downcast to the
             # default constructor.
             for i, constructor in enumerate(index._index_constructors):  # type: ignore
                 if constructor != existing_index_constructors[i]:
@@ -788,7 +798,7 @@ class IndexHierarchy(IndexBase):
         outer_level.flags.writeable = False
         assert len(outer_level) == sum(map(len, blocks)) # sanity check
 
-        def gen_blocks() -> tp.Iterable[NDArrayAny]:
+        def gen_blocks() -> tp.Iterable[TNDArrayAny]:
             yield outer_level
             yield from TypeBlocks.vstack_blocks_to_blocks(blocks)
 
@@ -796,7 +806,7 @@ class IndexHierarchy(IndexBase):
 
         _, depth = tb.shape
 
-        def gen_columns() -> tp.Iterator[NDArrayAny]:
+        def gen_columns() -> tp.Iterator[TNDArrayAny]:
             for i in range(depth):
                 yield tb._extract_array_column(i)
 
@@ -816,13 +826,13 @@ class IndexHierarchy(IndexBase):
         return cls(indices=indices, indexers=indexers, name=name, blocks=tb, own_blocks=True)
 
     @classmethod
-    def from_labels_delimited(cls: tp.Type[IH],
+    def from_labels_delimited(cls,
             labels: tp.Iterable[str],
             *,
             delimiter: str = ' ',
-            name: NameType = None,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+            name: TName = None,
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Construct an :obj:`IndexHierarchy` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
 
@@ -832,7 +842,7 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy`
         '''
-        def to_label(label: str) -> SingleLabelType:
+        def to_label(label: str) -> TSingleLabel:
 
             start, stop = None, None
             if label[0] in ('[', '('):
@@ -861,16 +871,16 @@ class IndexHierarchy(IndexBase):
                 )
 
     @classmethod
-    def from_names(cls: tp.Type[IH],
+    def from_names(cls,
             names: tp.Iterable[TLabel],
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Construct a zero-length :obj:`IndexHierarchy` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
 
         Args:
             names: Iterable of hashable names per depth.
         '''
-        # NOTE: this might take dtypes and/or IndexConstructors.
+        # NOTE: this might take dtypes and/or TIndexCtorSpecifiers.
         name = tuple(names)
         if len(name) == 0:
             raise ErrorInitIndex('names must be non-empty.')
@@ -878,14 +888,14 @@ class IndexHierarchy(IndexBase):
         return cls._from_empty((), name=name, depth_reference=len(name))
 
     @classmethod
-    def _from_type_blocks(cls: tp.Type[IH],
+    def _from_type_blocks(cls,
             blocks: TypeBlocks,
             *,
-            name: NameType = None,
-            index_constructors: IndexConstructors = None,
+            name: TName = None,
+            index_constructors: TIndexCtorSpecifiers = None,
             own_blocks: bool = False,
             name_interleave: bool = False,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
@@ -900,7 +910,7 @@ class IndexHierarchy(IndexBase):
         if depth == 1:
             raise ErrorInitIndex('blocks must have at least two dimensions.')
 
-        def gen_columns() -> tp.Iterator[NDArrayAny]:
+        def gen_columns() -> tp.Iterator[TNDArrayAny]:
             for i in range(blocks.shape[1]):
                 yield blocks._extract_array_column(i).reshape(size)
 
@@ -945,11 +955,11 @@ class IndexHierarchy(IndexBase):
                 )
 
     # --------------------------------------------------------------------------
-    def _to_type_blocks(self: IH) -> TypeBlocks:
+    def _to_type_blocks(self) -> TypeBlocks:
         '''
         Create a :obj:`TypeBlocks` instance from values respresented by `self._indices` and `self._indexers`.
         '''
-        def gen_blocks() -> tp.Iterator[NDArrayAny]:
+        def gen_blocks() -> tp.Iterator[TNDArrayAny]:
             for index, indexer in zip(self._indices, self._indexers):
                 array = index.values[indexer]
                 array.flags.writeable = False
@@ -958,11 +968,11 @@ class IndexHierarchy(IndexBase):
         return TypeBlocks.from_blocks(gen_blocks())
 
     # --------------------------------------------------------------------------
-    def __init__(self: IH,
-            indices: tp.Union[IndexHierarchy, tp.List[Index]],
+    def __init__(self,
+            indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
             *,
-            indexers: NDArrayAny = EMPTY_ARRAY_INT,
-            name: NameType = NAME_DEFAULT,
+            indexers: TNDArrayAny = EMPTY_ARRAY_INT,
+            name: TName = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
             ) -> None:
@@ -993,7 +1003,7 @@ class IndexHierarchy(IndexBase):
             if indices._recache:
                 indices._update_array_cache()
 
-            self._indices = [
+            self._indices = [ # pyright: ignore
                 mutable_immutable_index_filter(self.STATIC, index)
                 for index in indices._indices
                 ]
@@ -1015,12 +1025,12 @@ class IndexHierarchy(IndexBase):
         if len(indices) <= 1:
             raise ErrorInitIndex('Index Hierarchies must have at least two levels!')
 
-        self._indices = [
+        self._indices = [ # pyright: ignore
             mutable_immutable_index_filter(self.STATIC, index) # type: ignore
             for index in indices
             ]
         self._indexers = indexers
-        self._name = None if name is NAME_DEFAULT else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
         if blocks is None:
             self._blocks = self._to_type_blocks()
@@ -1030,9 +1040,9 @@ class IndexHierarchy(IndexBase):
             self._blocks = blocks.copy()
 
         self._values = None
-        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
+        self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers) # pyright: ignore
 
-    def _update_array_cache(self: IH) -> None:
+    def _update_array_cache(self) -> None:
         # This MUST be set before entering this context
         assert self._pending_extensions is not None
 
@@ -1091,16 +1101,16 @@ class IndexHierarchy(IndexBase):
         if self._values is not None:
             self._values.flags.writeable = False
 
-    def __deepcopy__(self: IH,
+    def __deepcopy__(self,
             memo: tp.Dict[int, tp.Any],
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Return a deep copy of this IndexHierarchy.
         '''
         if self._recache:
             self._update_array_cache()
 
-        obj: IH = self.__class__.__new__(self.__class__)
+        obj: tp.Self = self.__class__.__new__(self.__class__)
         obj._indices = deepcopy(self._indices, memo)
         obj._indexers = array_deepcopy(self._indexers, memo)
         obj._blocks = self._blocks.__deepcopy__(memo)
@@ -1114,7 +1124,7 @@ class IndexHierarchy(IndexBase):
         memo[id(self)] = obj
         return obj
 
-    def __copy__(self: IH) -> IH:
+    def __copy__(self) -> tp.Self:
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
@@ -1123,7 +1133,7 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__(self)
 
-    def copy(self: IH) -> IH:
+    def copy(self) -> tp.Self:
         '''
         Return a shallow copy of this IndexHierarchy.
         '''
@@ -1141,9 +1151,9 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # name interface
 
-    def rename(self: IH,
-            name: NameType,
-            ) -> IH:
+    def rename(self,
+            name: TName,
+            ) -> tp.Self:
         '''
         Return a new IndexHierarchy with an updated name attribute.
         '''
@@ -1153,14 +1163,14 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self: IH) -> InterGetItemLocReduces['IndexHierarchy']:
+    def loc(self) -> InterGetItemLocReduces['IndexHierarchy']:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self: IH) -> InterGetItemILocReduces['IndexHierarchy']:
+    def iloc(self) -> InterGetItemILocReduces['IndexHierarchy']:
         return InterGetItemILocReduces(self._extract_iloc)
 
-    def _iter_label(self: IH,
+    def _iter_label(self,
             depth_level: TDepthLevelSpecifier = None,
             ) -> tp.Iterator[TLabel]:
         '''
@@ -1175,7 +1185,7 @@ class IndexHierarchy(IndexBase):
         else:
             yield from zip(*map(self.values_at_depth, dl))
 
-    def _iter_label_items(self: IH,
+    def _iter_label_items(self,
             depth_level: TDepthLevelSpecifier = None,
             ) -> tp.Iterator[tp.Tuple[int, TLabel]]:
         '''
@@ -1184,7 +1194,7 @@ class IndexHierarchy(IndexBase):
         yield from enumerate(self._iter_label(depth_level=depth_level))
 
     @property
-    def iter_label(self: IH) -> IterNodeDepthLevel[tp.Any]:
+    def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._iter_label_items,
@@ -1216,7 +1226,7 @@ class IndexHierarchy(IndexBase):
         return InterfaceValues(self)
 
     @property
-    def via_str(self: IH) -> InterfaceString[NDArrayAny]:
+    def via_str(self) -> InterfaceString[TNDArrayAny]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -1231,7 +1241,7 @@ class IndexHierarchy(IndexBase):
                 )
 
     @property
-    def via_dt(self: IH) -> InterfaceDatetime[NDArrayAny]:
+    def via_dt(self) -> InterfaceDatetime[TNDArrayAny]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -1244,16 +1254,16 @@ class IndexHierarchy(IndexBase):
                 )
 
     @property
-    def via_T(self: IH) -> InterfaceTranspose['IndexHierarchy']:
+    def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
         return InterfaceTranspose(container=self)
 
-    def via_re(self: IH,
+    def via_re(self,
             pattern: str,
             flags: int = 0,
-            ) -> InterfaceRe[NDArrayAny]:
+            ) -> InterfaceRe[TNDArrayAny]:
         '''
         Interface for applying regular expressions to elements in this container.
         '''
@@ -1270,7 +1280,7 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     @property
     @doc_inject()
-    def mloc(self: IH) -> NDArrayAny:
+    def mloc(self) -> TNDArrayAny:
         '''
         {doc_int}
         '''
@@ -1280,7 +1290,7 @@ class IndexHierarchy(IndexBase):
         return self._blocks.mloc
 
     @property
-    def dtypes(self: IH) -> 'Series':
+    def dtypes(self) -> Series[tp.Any, np.object_]:
         '''
         Return a Series of dytpes for each index depth.
 
@@ -1294,14 +1304,14 @@ class IndexHierarchy(IndexBase):
             and isinstance(self._name, tuple)
             and len(self._name) == self.depth
         ):
-            labels: NameType = self._name
+            labels: TName = self._name
         else:
             labels = None
 
         return Series((index.dtype for index in self._indices), index=labels) # type: ignore
 
     @property
-    def shape(self: IH) -> tp.Tuple[int, ...]:
+    def shape(self) -> tp.Tuple[int, ...]:
         '''
         Return a tuple describing the shape of the underlying NumPy array.
 
@@ -1314,7 +1324,7 @@ class IndexHierarchy(IndexBase):
         return self._blocks.shape
 
     @property
-    def ndim(self: IH) -> int:
+    def ndim(self) -> int:
         '''
         Return the number of dimensions.
 
@@ -1324,7 +1334,7 @@ class IndexHierarchy(IndexBase):
         return self._NDIM
 
     @property
-    def size(self: IH) -> int:
+    def size(self) -> int:
         '''
         Return the size of the underlying NumPy array.
 
@@ -1337,7 +1347,7 @@ class IndexHierarchy(IndexBase):
         return self._blocks.size
 
     @property
-    def nbytes(self: IH) -> int:
+    def nbytes(self) -> int:
         '''
         Return the total bytes of the underlying NumPy array.
 
@@ -1354,7 +1364,7 @@ class IndexHierarchy(IndexBase):
         return total
 
     # --------------------------------------------------------------------------
-    def __len__(self: IH) -> int:
+    def __len__(self) -> int:
         if self._recache:
             size = self._blocks.__len__()
             size += sum(map(len, self._pending_extensions)) # type: ignore
@@ -1363,7 +1373,7 @@ class IndexHierarchy(IndexBase):
         return self._blocks.__len__()
 
     @doc_inject()
-    def display(self: IH,
+    def display(self,
             config: tp.Optional[DisplayConfig] = None,
             *,
             style_config: tp.Optional[StyleConfig] = None,
@@ -1412,15 +1422,15 @@ class IndexHierarchy(IndexBase):
 
     # --------------------------------------------------------------------------
     @property
-    def _index_constructors(self: IH) -> tp.Iterator[tp.Type[Index]]:
+    def _index_constructors(self) -> tp.Iterator[tp.Type[Index[tp.Any]]]:
         '''
         Yields the index constructors for each depth.
         '''
         yield from (index.__class__ for index in self._indices)
 
-    def _drop_iloc(self: IH,
+    def _drop_iloc(self,
             key: TILocSelector,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Create a new index after removing the values specified by the iloc key.
         '''
@@ -1436,9 +1446,9 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
-    def _drop_loc(self: IH,
+    def _drop_loc(self,
             key: TLocSelector,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Create a new index after removing the values specified by the loc key.
         '''
@@ -1448,7 +1458,7 @@ class IndexHierarchy(IndexBase):
 
     @property
     @doc_inject(selector='values_2d', class_name='IndexHierarchy')
-    def values(self: IH) -> NDArrayAny:
+    def values(self) -> TNDArrayAny:
         '''
         {}
         '''
@@ -1461,22 +1471,22 @@ class IndexHierarchy(IndexBase):
         return self._values
 
     @property
-    def positions(self: IH) -> NDArrayAny:
+    def positions(self) -> TNDArrayAny:
         '''
         Return the immutable positions array.
         '''
         return PositionsAllocator.get(self.__len__())
 
     @property
-    def depth(self: IH) -> int: # type: ignore
+    def depth(self) -> int: # type: ignore
         '''
         Return the depth of the index hierarchy.
         '''
         return len(self._indices)
 
-    def values_at_depth(self: IH,
+    def values_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return an NP array for the ``depth_level`` specified.
 
@@ -1492,9 +1502,9 @@ class IndexHierarchy(IndexBase):
             return self._blocks._extract_array_column(dl)
         return self._blocks._extract_array(column_key=dl)
 
-    def index_at_depth(self: IH,
+    def index_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> tp.Union[Index, tp.Tuple[Index, ...]]:
+            ) -> tp.Union[Index[tp.Any], tp.Tuple[Index[tp.Any], ...]]:
         '''
         Return an index, or a tuple of indices for the ``depth_level`` specified.
 
@@ -1511,9 +1521,9 @@ class IndexHierarchy(IndexBase):
 
         return tuple(map(self._indices.__getitem__, dl))
 
-    def indexer_at_depth(self: IH,
+    def indexer_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return the indexers for the ``depth_level`` specified.
         Array will 2D if multiple depths are selected.
@@ -1561,7 +1571,7 @@ class IndexHierarchy(IndexBase):
         yield from zip(map(index._extract_iloc_by_int, ilocs), widths)
 
     @property
-    def index_types(self: IH) -> 'Series':
+    def index_types(self) -> Series[tp.Any, np.object_]:
         '''
         Return a Series of Index classes for each index depth.
 
@@ -1572,7 +1582,7 @@ class IndexHierarchy(IndexBase):
             # Prefer to use `@functools.cached_property`, but that is not supported
             from static_frame.core.series import Series
 
-            labels: NameType
+            labels: TName
 
             if (self._name
                     and isinstance(self._name, tuple)
@@ -1591,9 +1601,9 @@ class IndexHierarchy(IndexBase):
         return self._index_types
 
     # --------------------------------------------------------------------------
-    def relabel(self: IH,
-            mapper: RelabelInput,
-            ) -> IH:
+    def relabel(self,
+            mapper: TRelabelInput,
+            ) -> tp.Self:
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
@@ -1604,7 +1614,7 @@ class IndexHierarchy(IndexBase):
             # if a mapper, it must support both __getitem__ and __contains__
             getitem = getattr(mapper, 'get')
 
-            def gen() -> tp.Iterator[SingleLabelType]:
+            def gen() -> tp.Iterator[TSingleLabel]:
                 for array in self._blocks.axis_values(axis=1):
                     # as np.ndarray are not hashable, must tuplize
                     label = tuple(array)
@@ -1622,10 +1632,10 @@ class IndexHierarchy(IndexBase):
                 index_constructors=self._index_constructors,
                 )
 
-    def relabel_at_depth(self: IH,
-            mapper: RelabelInput,
+    def relabel_at_depth(self,
+            mapper: TRelabelInput,
             depth_level: TDepthLevelSpecifier = 0,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Return a new :obj:`IndexHierarchy` after applying `mapper` to a level or each individual level specified by `depth_level`.
 
@@ -1677,7 +1687,7 @@ class IndexHierarchy(IndexBase):
             if len(values) != self.__len__():
                 raise ValueError('Iterable must provide a value for each label')
 
-            def gen() -> tp.Iterator[NDArrayAny]:
+            def gen() -> tp.Iterator[TNDArrayAny]:
                 for depth_idx in range(self.depth):
                     if depth_idx in target_depths:
                         yield values
@@ -1730,11 +1740,11 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 )
 
-    def rehierarch(self: IH,
+    def rehierarch(self,
             depth_map: tp.Sequence[int],
             *,
-            index_constructors: IndexConstructors = None,
-            ) -> IH:
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
         '''
         Return a new :obj:`IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
@@ -1756,11 +1766,11 @@ class IndexHierarchy(IndexBase):
             own_blocks=True,
             )
 
-    def _build_mask_for_key_at_depth(self: IH,
+    def _build_mask_for_key_at_depth(self,
             depth: int,
             key: tp.Sequence[TLocSelectorNonContainer],
-            available: tp.Optional[NDArrayAny],
-            ) -> NDArrayAny:
+            available: tp.Optional[TNDArrayAny],
+            ) -> TNDArrayAny:
         '''
         Determines the indexer mask for `key` at `depth`.
 
@@ -1777,7 +1787,7 @@ class IndexHierarchy(IndexBase):
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
-        post: NDArrayAny
+        post: TNDArrayAny
 
         if isinstance(key_at_depth, slice):
             if available is None:
@@ -1811,7 +1821,7 @@ class IndexHierarchy(IndexBase):
             else:
                 stop = len(indexer_at_depth)
 
-            target: NDArrayAny = np.arange(start, stop, key_at_depth.step)
+            target: TNDArrayAny = np.arange(start, stop, key_at_depth.step)
             post = np.full(len(indexer_at_depth), False)
             post[target] = True
             return post
@@ -1825,8 +1835,8 @@ class IndexHierarchy(IndexBase):
         post = indexer_at_depth == key_iloc
         return post
 
-    def _loc_to_iloc_index_hierarchy(self: IH,
-            key: IH,
+    def _loc_to_iloc_index_hierarchy(self,
+            key: IndexHierarchy,
             ) -> tp.List[int]:
         '''
         Returns the boolean mask for a key that is an IndexHierarchy.
@@ -1844,7 +1854,7 @@ class IndexHierarchy(IndexBase):
         if key._recache:
             key._update_array_cache()
 
-        remapped_indexers: tp.List[NDArrayAny] = []
+        remapped_indexers: tp.List[TNDArrayAny] = []
         for key_index, self_index, key_indexer in zip(
                 key._indices,
                 self._indices,
@@ -1861,7 +1871,7 @@ class IndexHierarchy(IndexBase):
             # Display the first missing element
             raise KeyError(key.difference(self)[0]) from None
 
-    def _loc_per_depth_to_iloc(self: IH,
+    def _loc_per_depth_to_iloc(self,
             key: tp.Sequence[TLocSelectorNonContainer],
             ) -> TILocSelector:
         '''
@@ -1903,7 +1913,7 @@ class IndexHierarchy(IndexBase):
 
     def _loc_to_iloc(self,
             key: TLocSelector | ILoc | HLoc,
-            key_transform: KeyTransformType = None,
+            key_transform: TKeyTransform = None,
             partial_selection: bool = False,
             ) -> TILocSelector:
         '''
@@ -1927,7 +1937,7 @@ class IndexHierarchy(IndexBase):
             return slice(*LocMap.map_slice_args(self._loc_to_iloc, key)) # type: ignore
 
         if isinstance(key, list):
-            return [self._loc_to_iloc(k) for k in key]
+            return [self._loc_to_iloc(k) for k in key] # pyright: ignore
 
         if key.__class__ is np.ndarray and key.ndim == 2: # type: ignore
             if key.dtype != DTYPE_OBJECT: # type: ignore
@@ -1973,7 +1983,7 @@ class IndexHierarchy(IndexBase):
                 key = tuple(key) # type: ignore
 
                 for subkey in key:
-                    if len(subkey) != self.depth:
+                    if len(subkey) != self.depth: # pyright: ignore
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
@@ -2021,8 +2031,8 @@ class IndexHierarchy(IndexBase):
                     index_constructors=self._index_constructors,
                     )
 
-        new_indices: tp.List[Index] = []
-        new_indexers: NDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
+        new_indices: tp.List[Index[tp.Any]] = []
+        new_indexers: TNDArrayAny = np.empty((self.depth, len(tb)), dtype=DTYPE_INT_DEFAULT)
 
         for i, (index, indexer) in enumerate(zip(self._indices, self._indexers)):
             selection = indexer[key]
@@ -2053,9 +2063,9 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         return tuple(self._blocks.iter_row_elements(key))
 
-    def _extract_loc(self: IH,
+    def _extract_loc(self,
             key: TLocSelector,
-            ) -> ExtractionType:
+            ) -> TExtraction:
         '''
         Extract a new index given an loc key
         '''
@@ -2071,7 +2081,7 @@ class IndexHierarchy(IndexBase):
 
     # --------------------------------------------------------------------------
 
-    def _extract_getitem_astype(self: IH,
+    def _extract_getitem_astype(self,
             key: TDepthLevelSpecifier,
             ) -> 'IndexHierarchyAsType':
         '''
@@ -2087,9 +2097,9 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self: IH,
-            operator: UFunc,
-            ) -> NDArrayAny:
+    def _ufunc_unary_operator(self,
+            operator: TUFunc,
+            ) -> TNDArrayAny:
         '''
         Always return an NP array.
         '''
@@ -2097,13 +2107,13 @@ class IndexHierarchy(IndexBase):
         array.flags.writeable = False
         return array
 
-    def _ufunc_binary_operator(self: IH,
+    def _ufunc_binary_operator(self,
             *,
-            operator: UFunc,
+            operator: TUFunc,
             other: tp.Any,
             axis: int = 0,
             fill_value: object = np.nan,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
@@ -2135,16 +2145,16 @@ class IndexHierarchy(IndexBase):
                     )
         return tb.values
 
-    def _ufunc_axis_skipna(self: IH,
+    def _ufunc_axis_skipna(self,
             *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Returns:
             immutable NumPy array.
@@ -2186,12 +2196,12 @@ class IndexHierarchy(IndexBase):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
+            ufunc: TUFunc,
+            ufunc_skipna: TUFunc,
             composable: bool,
-            dtypes: tp.Tuple[DtypeAny, ...],
+            dtypes: tp.Tuple[TDtypeAny, ...],
             size_one_unity: bool
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         As Index and IndexHierarchy return np.ndarray from such operations, _ufunc_shape_skipna and _ufunc_axis_skipna can be defined the same.
 
@@ -2216,7 +2226,7 @@ class IndexHierarchy(IndexBase):
 
     # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
 
-    def __iter__(self: IH) -> tp.Iterator[SingleLabelType]:
+    def __iter__(self) -> tp.Iterator[TSingleLabel]:
         '''
         Iterate over labels.
         '''
@@ -2225,7 +2235,7 @@ class IndexHierarchy(IndexBase):
         # Don't use .values, as that can coerce types
         yield from self._blocks.iter_row_tuples(None)
 
-    def __reversed__(self: IH) -> tp.Iterator[SingleLabelType]:
+    def __reversed__(self) -> tp.Iterator[TSingleLabel]:
         '''
         Returns a reverse iterator on the index labels.
         '''
@@ -2235,8 +2245,8 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self: IH, # type: ignore
-            value: SingleLabelType,
+    def __contains__(self, # type: ignore
+            value: TSingleLabel,
             ) -> bool:
         '''
         Determine if a label `value` is contained in this Index.
@@ -2254,10 +2264,10 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # utility functions
 
-    def unique(self: IH,
+    def unique(self,
             depth_level: TDepthLevelSpecifier = 0,
             order_by_occurrence: bool = False,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return a NumPy array of unique values.
 
@@ -2299,7 +2309,7 @@ class IndexHierarchy(IndexBase):
         return ufunc_unique(array2d_to_array1d(self.values_at_depth(dl)))
 
     @doc_inject()
-    def equals(self: IH,
+    def equals(self,
             other: tp.Any,
             *,
             compare_name: bool = False,
@@ -2352,12 +2362,12 @@ class IndexHierarchy(IndexBase):
                 )
 
     @doc_inject(selector='sort')
-    def sort(self: IH,
+    def sort(self,
             *,
-            ascending: BoolOrBools = True,
+            ascending: TBoolOrBools = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[NDArrayAny, IndexBase]]] = None,
-            ) -> IH:
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
+            ) -> tp.Self:
         '''
         Return a new Index with the labels sorted.
 
@@ -2383,9 +2393,9 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True,
                 )
 
-    def isin(self: IH,
+    def isin(self,
             other: tp.Iterable[tp.Iterable[TLabel]],
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
         '''
@@ -2406,9 +2416,9 @@ class IndexHierarchy(IndexBase):
 
         return isin(self.flat().values, matches)
 
-    def roll(self: IH,
+    def roll(self,
             shift: int,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
@@ -2429,36 +2439,36 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # utility functions
 
-    def union(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
+    def union(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_union(self, *others) # type: ignore
 
-        return IndexBase.union(self, *others)
+        return IndexBase.union(self, *others) # pyright: ignore
 
-    def intersection(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
+    def intersection(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
 
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_intersection(self, *others) # type: ignore
 
-        return IndexBase.intersection(self, *others)
+        return IndexBase.intersection(self, *others) # pyright: ignore
 
-    def difference(self: IH, *others: tp.Union[IH, tp.Iterable[TLabel]]) -> IH:
+    def difference(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_difference(self, *others) # type: ignore
 
-        return IndexBase.difference(self, *others)
+        return IndexBase.difference(self, *others) # pyright: ignore
 
     #---------------------------------------------------------------------------
 
-    def _drop_missing(self: IH,
-            func: tp.Callable[[NDArrayAny], NDArrayAny],
-            condition: tp.Callable[[NDArrayAny], NDArrayAny],
-            ) -> IH:
+    def _drop_missing(self,
+            func: tp.Callable[[TNDArrayAny], TNDArrayAny],
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny],
+            ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by  a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -2477,26 +2487,26 @@ class IndexHierarchy(IndexBase):
 
         return self._drop_iloc(~row_key) #type: ignore
 
-    def dropna(self: IH, *,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all,
-            ) -> IH:
+    def dropna(self, *,
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+            ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
-            *,
+            *
             condition:
         '''
         return self._drop_missing(isna_array, condition)
 
-    def dropfalsy(self: IH, *,
-            condition: tp.Callable[[NDArrayAny], NDArrayAny] = np.all,
-            ) -> IH:
+    def dropfalsy(self, *,
+            condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+            ) -> tp.Self:
         '''
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
         Args:
-            *,
+            *
             condition:
         '''
         return self._drop_missing(isfalsy_array, condition)
@@ -2504,9 +2514,9 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     @doc_inject(selector='fillna')
-    def fillna(self: IH,
+    def fillna(self,
             value: tp.Any,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
 
@@ -2526,9 +2536,9 @@ class IndexHierarchy(IndexBase):
                 )
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self: IH,
+    def fillfalsy(self,
             value: tp.Any,
-            ) -> IH:
+            ) -> tp.Self:
         '''
         Return an :obj:`IndexHierarchy` after replacing falsy values with the supplied value.
 
@@ -2549,11 +2559,11 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def _sample_and_key(self: IH,
+    def _sample_and_key(self,
             count: int = 1,
             *,
             seed: tp.Optional[int] = None,
-            ) -> tp.Tuple[IH, NDArrayAny]:
+            ) -> tp.Tuple[tp.Self, TNDArrayAny]:
         '''
         Selects a deterministically random sample from this IndexHierarchy.
 
@@ -2576,11 +2586,11 @@ class IndexHierarchy(IndexBase):
         return container, key
 
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
-    def iloc_searchsorted(self: IH,
+    def iloc_searchsorted(self,
             values: tp.Any,
             *,
             side_left: bool = True,
-            ) -> NDArrayAny:
+            ) -> TNDArrayAny:
         '''
         {doc}
 
@@ -2619,13 +2629,13 @@ class IndexHierarchy(IndexBase):
                 )
             values_for_match[i] = label
 
-        post: NDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
+        post: TNDArrayAny = self.flat().iloc_searchsorted(values_for_match, side_left=side_left)
         if is_element:
             return post[0] # type: ignore
         return post
 
     @doc_inject(selector='searchsorted', label_type='loc (label)')
-    def loc_searchsorted(self: IH,
+    def loc_searchsorted(self,
             values: tp.Any,
             *,
             side_left: bool = True,
@@ -2640,18 +2650,18 @@ class IndexHierarchy(IndexBase):
             {fill_value}
         '''
         # will return an integer or an array of integers
-        sel: NDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
+        sel: TNDArrayAny = self.iloc_searchsorted(values, side_left=side_left)
 
         length = self.__len__()
         if sel.ndim == 0 and sel == length: # an element:
             return fill_value
 
-        flat: NDArrayAny = self.flat().values
+        flat: TNDArrayAny = self.flat().values
         mask = sel == length
         if not mask.any():
             return flat[sel]
 
-        post: NDArrayAny = np.empty(len(sel), dtype=object)
+        post: TNDArrayAny = np.empty(len(sel), dtype=object)
         sel[mask] = 0 # set out of range values to zero
         post[:] = flat[sel]
         post[mask] = fill_value
@@ -2661,9 +2671,9 @@ class IndexHierarchy(IndexBase):
     # --------------------------------------------------------------------------
     # export
 
-    def _to_frame(self: IH,
-            constructor: tp.Type['Frame'],
-            ) -> 'Frame':
+    def _to_frame(self,
+            constructor: tp.Type[TFrameAny],
+            ) -> TFrameAny:
         if self._recache:
             self._update_array_cache()
 
@@ -2674,19 +2684,20 @@ class IndexHierarchy(IndexBase):
                 own_data=True,
                 )
 
-    def to_frame(self: IH) -> 'Frame':
+    def to_frame(self) -> TFrameAny:
         '''
         Return :obj:`Frame` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import Frame
         return self._to_frame(Frame)
 
-    def to_frame_go(self: IH) -> 'FrameGO':
+    def to_frame_go(self) -> TFrameGOAny:
         '''
         Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy`.
         '''
         from static_frame import FrameGO
-        return tp.cast(FrameGO, self._to_frame(FrameGO))
+        from static_frame.core.generic_aliases import TFrameGOAny
+        return tp.cast(TFrameGOAny, self._to_frame(FrameGO))
 
     def _to_signature_bytes(self,
             include_name: bool = True,
@@ -2704,7 +2715,7 @@ class IndexHierarchy(IndexBase):
                 ))
 
     # --------------------------------------------------------------------------
-    def to_pandas(self: IH) -> 'DataFrame':
+    def to_pandas(self) -> pandas.MultiIndex:
         '''
         Return a Pandas MultiIndex.
         '''
@@ -2718,18 +2729,18 @@ class IndexHierarchy(IndexBase):
                 levels=[index.values.copy() for index in self._indices],
                 codes=[arr.copy() for arr in self._indexers],
                 )
-        mi.name = self._name
+        mi.name = self._name # pyright: ignore
         mi.names = self.names
         return mi
 
     # --------------------------------------------------------------------------
 
-    def _build_tree_at_depth_from_mask(self: IH,
+    def _build_tree_at_depth_from_mask(self,
             depth: int,
-            mask: NDArrayAny,
-            ) -> tp.Union[TreeNodeT, Index]:
+            mask: TNDArrayAny,
+            ) -> tp.Union[TTreeNode, Index[tp.Any]]:
         '''
-        Recursively build a tree of :obj:`TreeNodeT` at `depth` given `mask`
+        Recursively build a tree of :obj:`TTreeNode` at `depth` given `mask`
         '''
         # This private internal method assumes recache has already been checked for!
 
@@ -2740,7 +2751,7 @@ class IndexHierarchy(IndexBase):
             values = index_at_depth[indexer_at_depth[mask]]
             return index_at_depth.__class__(values)
 
-        tree: TreeNodeT = {}
+        tree: TTreeNode = {}
 
         for i in ufunc_unique(indexer_at_depth[mask]):
             tree[index_at_depth[i]] = self._build_tree_at_depth_from_mask(
@@ -2750,7 +2761,7 @@ class IndexHierarchy(IndexBase):
 
         return tree
 
-    def to_tree(self: IH) -> TreeNodeT:
+    def to_tree(self) -> TTreeNode:
         '''
         Returns the tree representation of an IndexHierarchy
         '''
@@ -2763,17 +2774,17 @@ class IndexHierarchy(IndexBase):
                 )
         return tree # type: ignore
 
-    def flat(self: IH) -> Index:
+    def flat(self) -> Index[np.object_]:
         '''
         Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name) # type: ignore
+        return self._INDEX_CONSTRUCTOR(self.__iter__(), name=self._name)
 
-    def level_add(self: IH,
+    def level_add(self,
             level: TLabel,
             *,
-            index_constructor: IndexConstructor = None,
-            ) -> IH:
+            index_constructor: TIndexCtorSpecifier = None,
+            ) -> tp.Self:
         '''
         Return an IndexHierarchy with a new root (outer) level added.
         '''
@@ -2794,22 +2805,22 @@ class IndexHierarchy(IndexBase):
         indexers[1:] = self._indexers
         indexers.flags.writeable = False
 
-        def gen_blocks() -> tp.Iterator[NDArrayAny]:
+        def gen_blocks() -> tp.Iterator[TNDArrayAny]:
             # First index only has one value. Extract from array (instead of using `level`) since the constructor might have modified its type
             yield np.full(self.__len__(), indices[0][0])
             yield from self._blocks._blocks
 
         return self.__class__(
-                indices=indices, # type: ignore
+                indices=indices,
                 indexers=indexers,
                 name=self.name,
                 blocks=TypeBlocks.from_blocks(gen_blocks()),
                 own_blocks=True,
                 )
 
-    def level_drop(self: IH,
+    def level_drop(self,
             count: int = 1,
-            ) -> tp.Union[Index, IH]:
+            ) -> tp.Union[Index[tp.Any], tp.Self]:
         '''
         Return an IndexHierarchy with one or more leaf levels removed.
 
@@ -2825,7 +2836,7 @@ class IndexHierarchy(IndexBase):
 
         if self._name_is_names():
             if count < 0:
-                name: NameType = self._name[:count] # type: ignore
+                name: TName = self._name[:count] # type: ignore
             elif count > 0:
                 name = self._name[count:] # type: ignore
             if len(name) == 1: # type: ignore
@@ -2869,8 +2880,7 @@ class IndexHierarchy(IndexBase):
                 )
 
 
-
-class IndexHierarchyGO(IndexHierarchy):
+class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]): # type: ignore[type-arg]
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''
@@ -2882,7 +2892,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
     _indices: tp.List[IndexGO] # type: ignore
 
-    def append(self: IHGO,
+    def append(self: TVIHGO,
             value: tp.Sequence[TLabel],
             ) -> None:
         '''
@@ -2907,7 +2917,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
     # 2/3 index.difference
     # 1/3 index.extend
-    def extend(self: IHGO,
+    def extend(self: TVIHGO,
             other: IndexHierarchy,
             ) -> None:
         '''
@@ -2943,14 +2953,14 @@ class IndexHierarchyAsType:
     container: IndexHierarchy
     depth_key: TDepthLevel
 
-    def __init__(self: IHAsType,
+    def __init__(self: TVIHAsType,
             container: IndexHierarchy,
             depth_key: TDepthLevel
             ) -> None:
         self.container = container
         self.depth_key = depth_key
 
-    def __call__(self: IHAsType,
+    def __call__(self: TVIHAsType,
             dtypes: TDtypesSpecifier,
             *,
             consolidate_blocks: bool = False,
@@ -2981,7 +2991,7 @@ class IndexHierarchyAsType:
         # update index_constructors based on dtype
         index_constructors = container.index_types.values.copy()
         # can select element or array
-        dtype_post: DtypeAny | NDArrayAny = blocks.dtypes[self.depth_key]
+        dtype_post: TDtypeAny | TNDArrayAny = blocks.dtypes[self.depth_key]
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,

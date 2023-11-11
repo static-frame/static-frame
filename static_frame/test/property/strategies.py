@@ -1,4 +1,3 @@
-import typing as tp
 from enum import Enum
 from functools import lru_cache
 from functools import partial
@@ -6,6 +5,7 @@ from itertools import chain
 from itertools import repeat
 
 import numpy as np
+import typing_extensions as tp
 from hypothesis import HealthCheck
 from hypothesis import settings as hypo_settings
 from hypothesis import strategies as st

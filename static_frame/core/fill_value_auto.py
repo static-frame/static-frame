@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import typing as tp
-
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64
 
 if tp.TYPE_CHECKING:
-    # NDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    DtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 FILL_VALUE_UNSET = object()
 
@@ -40,7 +39,7 @@ class FillValueAuto:
             u: fill value for unsigned integer kind
             f: fill value for float kind
             c: fill value for complex kind
-            m: fill value for timedelta62 kind
+            m: fill value for timedelta64 kind
             M: fill value for datetime64 kind
             O: fill value for object kind
             S: fill value for bytes kind
@@ -81,7 +80,7 @@ class FillValueAuto:
             u: fill value for unsigned integer kind
             f: fill value for float kind
             c: fill value for complex kind
-            m: fill value for timedelta62 kind
+            m: fill value for timedelta64 kind
             M: fill value for datetime64 kind
             O: fill value for object kind
             S: fill value for bytes kind
@@ -100,7 +99,7 @@ class FillValueAuto:
         self.U = U
         self.V = V
 
-    def __getitem__(self, dtype: DtypeAny) -> tp.Any:
+    def __getitem__(self, dtype: TDtypeAny) -> tp.Any:
         fv = getattr(self, dtype.kind)
         if fv is FILL_VALUE_UNSET:
             raise RuntimeError(f'FillValueAuto requested value for kind {dtype.kind} not defined.')

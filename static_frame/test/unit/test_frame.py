@@ -9,7 +9,6 @@ import os
 import pickle
 import sqlite3
 import string
-import typing as tp
 import unittest
 from collections import OrderedDict
 from collections import defaultdict
@@ -23,6 +22,7 @@ from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
+import typing_extensions as tp
 
 import static_frame as sf
 from static_frame import DisplayConfig
@@ -5515,7 +5515,7 @@ class TestUnit(TestCase):
         f1 = FrameGO.from_dict(
                 {('A', 1): (10, 20), ('A', 2): (40, 50), ('B', 1): (30, 50)}
                 )
-        # we have to convert the IH to an IHGO
+        # we have to convert the IH to an TVIHGO
         f2 = f1.relabel(columns=IndexHierarchy.from_labels(f1.columns))
         self.assertEqual(f2.columns.__class__, IndexHierarchyGO)
         self.assertEqual(f2.to_pairs(),
