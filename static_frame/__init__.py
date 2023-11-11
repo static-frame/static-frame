@@ -130,4 +130,4 @@ from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '1.6.5'
+__version__ = '2.0.0'
