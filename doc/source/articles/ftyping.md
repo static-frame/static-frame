@@ -36,9 +36,11 @@ Pandas, even with the ``pandas-stubs`` package, does not permit specifying the t
 
 Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number of heterogenous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
 
-A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646 for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types. A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
+A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646 for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types.
 
-NumPy generic types are used to define the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``. This permits narrowly specifying sized numerical types, such as ``np.uint8`` or ``np.complex128``; or broadly specifying categories of types, such as ``np.integer`` or ``np.inexact``. As StaticFrame supports all NumPy types, the correspondence is direct.
+A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
+
+NumPy types are used to define the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``. This permits narrowly specifying sized numerical types, such as ``np.uint8`` or ``np.complex128``; or broadly specifying categories of types, such as ``np.integer`` or ``np.inexact``. As StaticFrame supports all NumPy types, the correspondence is direct.
 
 
 ## Interfaces Defined with Generic DataFrames
@@ -83,9 +85,7 @@ def process(f: Frame[
                 ]: ...
 ```
 
-In addition to a better function name (e.g., ``partition_by_permno``), rich type-hints provide a self-documenting interface that makes functionality explicit.
-
-Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). For example, calling this function with a ``Frame`` of two columns of ``np.float64`` will fail a static analysis type check or deliver a warning in an editor.
+Rich type-hints provide a self-documenting interface that makes functionality explicit. Even better, these type hints can be used for static analysis with Pyright (now) and MyPy (pending full ``TypeVarTuple`` support). For example, calling this function with a ``Frame`` of two columns of ``np.float64`` will fail a static analysis type check or deliver a warning in an editor.
 
 
 ## Runtime Type Validation
@@ -112,7 +112,7 @@ def process(f: Frame[
 
 ```
 
-Now decorated with ``@CallGuard.check``, if the function above is called with an unlabelled ``Frame`` of two columns of ``np.float64``, a ``ClinicError`` exception will be raised, illustrating that, where three columns were expected, two were provided, and where string column labels were expected, integer labels were provided.
+Now decorated with ``@CallGuard.check``, if the function above is called with an unlabelled ``Frame`` of two columns of ``np.float64``, a ``ClinicError`` exception will be raised, illustrating that, where three columns were expected, two were provided, and where string column labels were expected, integer labels were provided. (To issue warnings instead of raising exceptions, use the ``@CallGuard.warn`` decorator.)
 
 <!-- f = Frame(np.random.rand(20).reshape(10,2)) -->
 
@@ -127,8 +127,6 @@ In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHie
         └── Expected str_, provided int64 invalid
 ```
 
-To issue warnings instead of raising exceptions, use the ``@CallGuard.warn`` decorator.
-
 
 ## Runtime Data Validation
 
@@ -141,9 +139,9 @@ Other characteristics can be validated at runtime. For example, the ``shape`` or
 * ``Require.LabelsMatch``: Validate inclusion of labels independent of order.
 * ``Require.Apply``: Apply a Boolean-returning function to the container.
 
-Aligning with a growing trend, these objects are provided in type hints as one or more additional arguments to an ``Annotated`` generic. (See PEP 593 https://peps.python.org/pep-0593 for details).
+Aligning with a growing trend, these objects are provided within type hints as one or more additional arguments to an ``Annotated`` generic. (See PEP 593 https://peps.python.org/pep-0593 for details.) The type referenced by the first ``Annotated`` argument is the target of subsequent-argument validators. For example, if a ``Index[np.str_]`` type hint is replaced with an ``Annotated[Index[np.str_], Require.Len(20)]`` type hint, the runtime length validation is applied to the index associated with the first argument.
 
-Extending the example of processing an OSAP signal table, we might validate our expectation of column labels. The ``Require.LabelsOrder`` validator can define a sequence of labels, optionally using ``...`` for contiguous regions of zero or more unspecified labels. To specify that the first two columns of the table are labeled "permno" and "yyyymm", while the third label is variable (depending on the signal), the following ``Require.LabelsOrder`` can be defined with an ``Annotated`` generic:
+Extending the example of processing an OSAP signal table, we might validate our expectation of column labels. The ``Require.LabelsOrder`` validator can define a sequence of labels, optionally using ``...`` for contiguous regions of zero or more unspecified labels. To specify that the first two columns of the table are labeled "permno" and "yyyymm", while the third label is variable (depending on the signal), the following ``Require.LabelsOrder`` can be defined within an ``Annotated`` generic:
 
 
 ```python
@@ -167,7 +165,7 @@ def process(f: Frame[
 
 ```
 
-If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If tables from only three files are expected (i.e., Mom12m.csv, Mom6m.csv, and LRreversal.csv), we can validate the names of the third column by defining a set:
+If the interface expects a small collection of OSAP signal tables, we can validate the third column with the ``Require.LabelsMatch`` validator. This validator can specify required labels, sets of labels (from which at least one must match), and regular expression patterns. If tables from only three files are expected (i.e., "Mom12m.csv", "Mom6m.csv", and "LRreversal.csv"), we can validate the names of the third column by defining a set:
 
 ```python
 @CallGuard.check
@@ -190,7 +188,7 @@ def process(f: Frame[
 
 Both ``Require.LabelsOrder`` and ``Require.LabelsMatch`` can associate functions with label specifiers to validate data values. If the validator is applied to column labels, a ``Series`` of column values will be provided to the function; if the validator is applied to index labels, a ``Series`` of row values will be provided to the function.
 
-Similar to the usage of ``Annotated``, the label is replaced with a list, where the first item is the label specifier, and the remaining items are row- or column-processing functions that return a Boolean.
+Similar to the usage of ``Annotated``, the label specifier is replaced with a list, where the first item is the label specifier, and the remaining items are row- or column-processing functions that return a Boolean.
 
 To extend the example above, we might validate that all "permno" values are greater than zero and that all signal values ("Mom12m", "Mom6m", "LRreversal") are greater than or equal to -1.
 
@@ -239,7 +237,7 @@ In args of (f: Frame[Any, Annotated[Index[str_], LabelsOrder(['permno', <lambda>
 
 ## The Expressive Power of ``TypeVarTuple``
 
-As shown above, ``TypeVarTuple`` permits specifying ``Frame`` with zero or more heterogenous columnar types. For example, we can provide type hints for a ``Frame`` of two float or six mixed columnar types:
+As shown above, ``TypeVarTuple`` permits specifying ``Frame`` with zero or more heterogenous columnar types. For example, we can provide type hints for a ``Frame`` of two float or six mixed types:
 
 ```python
 from typing import Any
@@ -258,7 +256,7 @@ from static_frame import Frame, Index
 >>> f: sf.Frame[Index[np.datetime64], Index[np.str_], *tuple[All, ...]]
 ```
 
-The ``tuple`` star expression can go anywhere in a list of types, but there can be only one. For example, the type hint below defines a ``Frame`` that must start with Boolean and string columns but has a flexible requirement for any number of subsequent ``np.float64`` columns.
+The ``tuple`` star expression can go anywhere in a list of types, but there can be only one. For example, the type hint below defines a ``Frame`` that must start with Boolean and string columns but has a flexible specification for any number of subsequent ``np.float64`` columns.
 
 ```python
 from typing import Any
@@ -269,9 +267,9 @@ from static_frame import Frame
 
 ## Utilities for Type Hinting
 
-Working with such detailed type hints can be challenging. StaticFrame provides convenient utilities for runtime type hinting and checking. All StaticFrame 2 containers feature a ``via_type_clinic`` interface, permitting access to ``TypeClinic`` functionality.
+Working with such detailed type hints can be challenging. To aid users, StaticFrame provides convenient utilities for runtime type hinting and checking. All StaticFrame 2 containers now feature a ``via_type_clinic`` interface, permitting access to ``TypeClinic`` functionality.
 
-First, utilities are provided to translate a container, such as a complete ``Frame``, into a type hint. The default string representation of ``via_type_clinic`` provides a string representation of the type hint. The ``to_hint()`` method returns a complete generic alias object.
+First, utilities are provided to translate a container, such as a complete ``Frame``, into a type hint. The string representation of the ``via_type_clinic`` interface provides a string representation of the container's type hint; further, the ``to_hint()`` method returns a complete generic alias object.
 
 ```python
 >>> import static_frame as sf
@@ -284,7 +282,7 @@ Frame[Index[int64], Index[str_], int64, str_, float64]
 static_frame.core.frame.Frame[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_], numpy.int64, numpy.str_, numpy.float64]
 ```
 
-Second, utilities are provided for runtime-type hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
+Second, utilities are provided for runtime-type-hint testing. The ``via_type_clinic.check()`` function permits validating the container against a provided type-hint.
 
 ```python
 >>> f.via_type_clinic.check(sf.Frame[sf.Index[np.str_], sf.TIndexAny, *tuple[tp.Any, ...]])
@@ -294,7 +292,7 @@ In Frame[Index[str_], Index[Any], Unpack[Tuple[Any, ...]]]
     └── Expected str_, provided int64 invalid
 ```
 
-To support gradual typing, StaticFrame defines several generic aliases configured with ``Any`` for every component type. For example, ``TFrameAny`` can be used for any ``Frame``, and ``TSeriesAny`` for any ``Series``. As expected, ``TFrameAny`` will validate the ``Frame`` created above without error.
+To support gradual typing, StaticFrame defines several generic aliases configured with ``Any`` for every component type. For example, ``TFrameAny`` can be used for any ``Frame``, and ``TSeriesAny`` for any ``Series``. As expected, ``TFrameAny`` will validate the ``Frame`` created above.
 
 ```python
 >>> f.via_type_clinic.check(sf.TFrameAny)
