@@ -5727,12 +5727,6 @@ class Frame(ContainerOperand):
                     drop=drop,
                     as_array=as_array,
                     )
-            if axis == 0:
-                index = self._index
-                columns = self._columns if not drop else self._columns[drop_mask]
-            else:
-                index = self._index if not drop else self._index[drop_mask]
-                columns = self._columns
 
         else:
             group_iter = group_match(
@@ -5742,12 +5736,13 @@ class Frame(ContainerOperand):
                     drop=drop,
                     as_array=as_array,
                     )
-            if axis == 0:
-                index = self._index
-                columns = self._columns if not drop else self._columns[drop_mask]
-            else:
-                index = self._index if not drop else self._index[drop_mask]
-                columns = self._columns
+
+        if axis == 0:
+            index = self._index
+            columns = self._columns if not drop else self._columns[drop_mask]
+        else:
+            index = self._index if not drop else self._index[drop_mask]
+            columns = self._columns
 
         yield from self._axis_group_final_iter(
                 axis=axis,
