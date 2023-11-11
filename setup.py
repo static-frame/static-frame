@@ -22,7 +22,7 @@ from setuptools import setup
 
 # Immutable DataFrames with full support for static type hints',
 # Statically type and run-time validate immutable DataFrames
-DESCRIPTION = 'Immutable and grow-only DataFrames with static typing and run-time validation'
+DESCRIPTION = 'Immutable and statically-typeable DataFrames with runtime type and data validation.'
 
 ROOT_DIR_FP = path.abspath(path.dirname(__file__))
 
@@ -36,8 +36,6 @@ def get_long_description() -> str:
                 start = i + 2 # skip this line and the next
             if i == start:
                 collect = True
-            # if line.startswith('Installation'):
-            #     collect = False
             if collect:
                 msg.append(line)
 
