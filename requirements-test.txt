@@ -15,7 +15,7 @@ xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
 tables==3.7.0
-pyarrow==6.0.1
+pyarrow==14.0.1
 msgpack==1.0.0
 msgpack-numpy==0.4.7
 visidata==2.4
