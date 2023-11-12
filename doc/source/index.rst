@@ -7,8 +7,7 @@
 StaticFrame
 =========================================
 
-Immutable and grow-only DataFrames with static typing and run-time validation
-
+Immutable and statically-typeable DataFrames with runtime type and data validation.
 
 - Code: https://github.com/static-frame/static-frame
 - Packages: https://pypi.org/project/static-frame
