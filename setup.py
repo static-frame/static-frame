@@ -106,3 +106,4 @@ setup(
             'static_frame.test.unit', # needed for doc generation
             ],
     )
+
