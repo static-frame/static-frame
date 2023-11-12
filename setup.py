@@ -1,5 +1,4 @@
-# Always prefer setuptools over distutils
-import typing_extensions as tp
+import typing as tp
 # To use a consistent encoding
 from codecs import open
 from os import path
