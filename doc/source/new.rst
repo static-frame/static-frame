@@ -2,6 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
+2.0.1
+-----------
+
+Corrected import in ``setup.py``.
+
+
 2.0.0
 -----------
 
@@ -511,7 +517,7 @@ Implemented ``max`` and ``min`` methods on ``IndexHierarchy``; related statistic
 
 Updated AutoMap to 0.5.1
 
-Removed "performance" package from setup.py
+Removed "performance" package from ``setup.py``.
 
 
 0.9.4
