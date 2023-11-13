@@ -10,7 +10,7 @@ Since the advent of type hints in Python 3.5, statically typing a DataFrame has 
 def process(f: DataFrame) -> Series: ...
 ```
 
-This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values; these characteristics define the type. A function argument with such type hints provides developers, static analyzers, and runtime checkers with all the information needed to understand the expectations of the interface. StaticFrame 2 now permits this:
+This is inadequate, as it ignores the types contained within the container. A DataFrame might have string column labels and three columns of integer, string, and floating-point values; these characteristics define the type. A function argument with such type hints provides developers, static analyzers, and runtime checkers with all the information needed to understand the expectations of the interface. [StaticFrame](https://github.com/static-frame/static-frame) 2 now permits this:
 
 ```python
 from typing import Any
@@ -36,7 +36,7 @@ Pandas, even with the ``pandas-stubs`` package, does not permit specifying the t
 
 Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number of heterogenous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
 
-A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See PEP 646 https://peps.python.org/pep-0646 for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types.
+A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See [PEP 646](https://peps.python.org/pep-0646) for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types.
 
 A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
 
@@ -63,7 +63,7 @@ def process(f: Frame[
                 ]: ...
 ```
 
-This function processes a signal table from an Open Source Asset Pricing (OSAP https://www.openassetpricing.com) dataset (Firm Level Characteristics / Individual / Predictors). Each table has three columns: security identifier (labeled "permno"), year and month (labeled "yyyymm"), and the signal (with a name specific to the signal).
+This function processes a signal table from an [Open Source Asset Pricing](https://www.openassetpricing.com) (OSAP) dataset (Firm Level Characteristics / Individual / Predictors). Each table has three columns: security identifier (labeled "permno"), year and month (labeled "yyyymm"), and the signal (with a name specific to the signal).
 
 The function ignores the index (typed as ``Any``) and creates groups defined by the first column "permno" ``np.int_`` values. A dictionary keyed by "permno" is returned, where each value is a ``Series`` of ``np.float64`` values for that "permno"; the index is an ``IndexYearMonth`` created from the ``np.str_`` "yyyymm" column. (StaticFrame uses NumPy ``datetime64`` values to define unit-typed indices: ``IndexYearMonth`` stores ``datetime64[M]`` labels.)
 
@@ -139,7 +139,7 @@ Other characteristics can be validated at runtime. For example, the ``shape`` or
 * ``Require.LabelsMatch``: Validate inclusion of labels independent of order.
 * ``Require.Apply``: Apply a Boolean-returning function to the container.
 
-Aligning with a growing trend, these objects are provided within type hints as one or more additional arguments to an ``Annotated`` generic. (See PEP 593 https://peps.python.org/pep-0593 for details.) The type referenced by the first ``Annotated`` argument is the target of subsequent-argument validators. For example, if a ``Index[np.str_]`` type hint is replaced with an ``Annotated[Index[np.str_], Require.Len(20)]`` type hint, the runtime length validation is applied to the index associated with the first argument.
+Aligning with a growing trend, these objects are provided within type hints as one or more additional arguments to an ``Annotated`` generic. (See [PEP 593](https://peps.python.org/pep-0593) for details.) The type referenced by the first ``Annotated`` argument is the target of subsequent-argument validators. For example, if a ``Index[np.str_]`` type hint is replaced with an ``Annotated[Index[np.str_], Require.Len(20)]`` type hint, the runtime length validation is applied to the index associated with the first argument.
 
 Extending the example of processing an OSAP signal table, we might validate our expectation of column labels. The ``Require.LabelsOrder`` validator can define a sequence of labels, optionally using ``...`` for contiguous regions of zero or more unspecified labels. To specify that the first two columns of the table are labeled "permno" and "yyyymm", while the third label is variable (depending on the signal), the following ``Require.LabelsOrder`` can be defined within an ``Annotated`` generic:
 
