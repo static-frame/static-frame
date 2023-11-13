@@ -5,11 +5,13 @@
 
 
 <!--
-This article demonstrates complete DataFrame type-hinting in Python, now available with generically defined containers in StaticFrame 2. In addition to usage in static analysis (with Pyright and Mypy), these type hints can be validated at runtime with an included decorator. StaticFrame provides a family of additional validators for runtime data validation, as well as utilities to convert a DataFrame to a type hint and perform runtime type-hint validation.
+How StaticFrame Enables Comprehensive DataFrame Type Hints
+
+This article demonstrates complete DataFrame type-hinting in Python, now available with generically defined containers in StaticFrame 2. In addition to usage in static analysis (with Pyright and Mypy), these type hints can be validated at runtime with an included decorator. StaticFrame also provides a family of validators for runtime data validation, as well as utilities to convert a DataFrame to a type hint and perform runtime type-hint validation on a DataFrame.
 -->
 
 
-Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to specifying just the type.
+Since the advent of type hints in Python 3.5, statically typing a DataFrame has generally been limited to specifying just the type:
 
 ```python
 def process(f: DataFrame) -> Series: ...
@@ -39,11 +41,11 @@ Python's built-in generic types (e.g.,``tuple`` or ``dict``) require specificati
 
 Pandas, even with the ``pandas-stubs`` package, does not permit specifying the types of a DataFrame's components. The Pandas DataFrame, permitting extensive in-place mutation, may not be sensible to type statically. Fortunately, immutable DataFrames are available in StaticFrame.
 
-Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number of heterogenous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
+Further, Python's tools for defining generics, until recently, have not been well-suited for DataFrames. That a DataFrame has a variable number of heterogeneous columnar types poses a challenge for generic specification. Typing such a structure became easier with the new ``TypeVarTuple``, introduced in Python 3.11 (and back-ported in the ``typing_extensions`` package).
 
 A ``TypeVarTuple`` permits defining generics that accept a variable number of types. (See [PEP 646](https://peps.python.org/pep-0646) for details.) With this new type variable, StaticFrame can define a generic ``Frame`` with a ``TypeVar`` for the index, a ``TypeVar`` for the columns, and a ``TypeVarTuple`` for zero or more columnar types.
 
-A generic ``Series`` is defined as a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
+A generic ``Series`` is defined with a ``TypeVar`` for the index and a ``TypeVar`` for the values. The StaticFrame ``Index`` and ``IndexHierarchy`` are also generic, the latter again taking advantage of ``TypeVarTuple`` to define a variable number of component ``Index`` for each depth level.
 
 StaticFrame uses NumPy types to define the columnar types of a ``Frame``, or the values of a ``Series`` or ``Index``. This permits narrowly specifying sized numerical types, such as ``np.uint8`` or ``np.complex128``; or broadly specifying categories of types, such as ``np.integer`` or ``np.inexact``. As StaticFrame supports all NumPy types, the correspondence is direct.
 
@@ -95,7 +97,7 @@ def process(f: Frame[
                 ]: ...
 ```
 
-Rich type-hints provide a self-documenting interface that makes functionality explicit. Even better, these type hints can be used for static analysis with Pyright (now) and Mypy (pending full ``TypeVarTuple`` support). For example, calling this function with a ``Frame`` of two columns of ``np.float64`` will fail a static analysis type check or deliver a warning in an editor.
+Rich type hints provide a self-documenting interface that makes functionality explicit. Even better, these type hints can be used for static analysis with Pyright (now) and Mypy (pending full ``TypeVarTuple`` support). For example, calling this function with a ``Frame`` of two columns of ``np.float64`` will fail a static analysis type check or deliver a warning in an editor.
 
 
 ## Runtime Type Validation
@@ -140,7 +142,7 @@ In args of (f: Frame[Any, Index[str_], int64, str_, float64]) -> Series[IndexHie
 
 ## Runtime Data Validation
 
-Other characteristics can be validated at runtime. For example, the ``shape`` or ``name`` attributes or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
+Other characteristics can be validated at runtime. For example, the ``shape`` or ``name`` attributes, or the sequence of labels on the index or columns. The StaticFrame ``Require`` class provides a family of configurable validators.
 
 * ``Require.Name``: Validate the ``name`` attribute of the container.
 * ``Require.Len``: Validate the length of the container.
@@ -247,11 +249,11 @@ In args of (f: Frame[Any, Annotated[Index[str_], LabelsOrder(['permno', <lambda>
 
 ## The Expressive Power of ``TypeVarTuple``
 
-As shown above, ``TypeVarTuple`` permits specifying ``Frame`` with zero or more heterogenous columnar types. For example, we can provide type hints for a ``Frame`` of two float or six mixed types:
+As shown above, ``TypeVarTuple`` permits specifying ``Frame`` with zero or more heterogeneous columnar types. For example, we can provide type hints for a ``Frame`` of two float or six mixed types:
 
 ```python
-from typing import Any
-from static_frame import Frame, Index
+>>> from typing import Any
+>>> from static_frame import Frame, Index
 
 >>> f1: sf.Frame[Any, Any, np.float64, np.float64]
 >>> f2: sf.Frame[Any, Any, np.bool_, np.float64, np.int8, np.int8, np.str_, np.datetime64]
@@ -260,8 +262,8 @@ from static_frame import Frame, Index
 While this accommodates diverse DataFrames, type-hinting wide DataFrames, such as those with hundreds of columns, would be unwieldy. Python 3.11 introduces a new syntax to provide a variable range of types in ``TypeVarTuple`` generics: star expressions of ``tuple`` generic aliases. For example, to type-hint a ``Frame`` with a date index, string column labels, and any configuration of columnar types, we can star-unpack a ``tuple`` of zero or more ``All``:
 
 ```python
-from typing import Any
-from static_frame import Frame, Index
+>>> from typing import Any
+>>> from static_frame import Frame, Index
 
 >>> f: sf.Frame[Index[np.datetime64], Index[np.str_], *tuple[All, ...]]
 ```
