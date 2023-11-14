@@ -271,8 +271,8 @@ While this accommodates diverse DataFrames, type-hinting wide DataFrames, such a
 The ``tuple`` star expression can go anywhere in a list of types, but there can be only one. For example, the type hint below defines a ``Frame`` that must start with Boolean and string columns but has a flexible specification for any number of subsequent ``np.float64`` columns.
 
 ```python
-from typing import Any
-from static_frame import Frame
+>>> from typing import Any
+>>> from static_frame import Frame
 
 >>> f: sf.Frame[Any, Any, np.bool_, np.str_, *tuple[np.float64, ...]]
 ```
