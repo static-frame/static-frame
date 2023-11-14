@@ -594,6 +594,39 @@ class Label:
     FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
 
 
+def metadata_encode(f: TFrameAny) -> tp.Dict[str, tp.Any]:
+    '''Generic routine to extract an NPY-style metadata bundle for usage in other contexts.
+    '''
+    # NOTE: need to store dtypes per index, per values; introduce new metadata label, use dtype.str to get string encoding
+
+    md = {}
+    md[Label.KEY_NAMES] = [
+            JSONTranslator.encode_element(f._name),
+            JSONTranslator.encode_element(f._index._name),
+            JSONTranslator.encode_element(f._columns._name),
+            ]
+    md[Label.KEY_TYPES] = [
+            f._index.__class__.__name__,
+            f._columns.__class__.__name__,
+            ]
+
+    for labels, key in (
+            (f.index, Label.KEY_TYPES_INDEX),
+            (f.columns, Label.KEY_TYPES_COLUMNS),
+            ):
+        if labels.depth > 1:
+            md[key] = [cls.__name__ for cls in labels.index_types.values]
+
+    md[Label.KEY_DEPTHS] = [
+            len(f._blocks._blocks),
+            f._index.depth,
+            f._columns.depth]
+
+    return md
+
+
+#-------------------------------------------------------------------------------
+
 class ArchiveIndexConverter:
     '''Utility methods for converting Index or index components.
     '''
@@ -1224,3 +1257,5 @@ class NPY(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
     _ARCHIVE_CLS = ArchiveDirectory
+
+
