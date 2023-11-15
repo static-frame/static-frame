@@ -6,11 +6,12 @@ from static_frame.core.util import JSONTranslator
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
+    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class NPYLabel:
     KEY_NAMES = '__names__'
-    KEY_TYPES = '__types__'
     KEY_DEPTHS = '__depths__'
+    KEY_TYPES = '__types__'
     KEY_TYPES_INDEX = '__types_index__'
     KEY_TYPES_COLUMNS = '__types_columns__'
     FILE_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
@@ -22,10 +23,19 @@ class JSONMeta:
     '''Metadata for JSON encodings.
     '''
     KEY_NAMES = NPYLabel.KEY_NAMES
-    KEY_TYPES = NPYLabel.KEY_TYPES
     KEY_DEPTHS = NPYLabel.KEY_DEPTHS
+    KEY_TYPES = NPYLabel.KEY_TYPES
     KEY_TYPES_INDEX = NPYLabel.KEY_TYPES_INDEX
     KEY_TYPES_COLUMNS = NPYLabel.KEY_TYPES_COLUMNS
+    KEY_DTYPES = '__dtypes__'
+    KEY_DTYPES_INDEX = '__dtypes_index__'
+    KEY_DTYPES_COLUMNS = '__dtypes_columns__'
+
+    @staticmethod
+    def dtype_to_str(dt: TDtypeAny):
+        '''Normalize all dtype strings as platform native
+        '''
+        return '=' + dt.name[1:]
 
     @classmethod
     def to_dict(cls, f: TFrameAny) -> tp.Dict[str, tp.Any]:
