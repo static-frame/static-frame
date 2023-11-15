@@ -17,15 +17,14 @@ from static_frame.core.archive_npy import NPZ
 from static_frame.core.archive_npy import ArchiveDirectory
 from static_frame.core.archive_npy import ArchiveZip
 from static_frame.core.archive_npy import ArchiveZipWrapper
-from static_frame.core.archive_npy import Label
 from static_frame.core.archive_npy import NPYConverter
-from static_frame.core.archive_npy import metadata_encode
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorNPYDecode
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
+from static_frame.core.metadata import NPYLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
@@ -625,66 +624,15 @@ class TestUnit(TestCase):
                 archive = ArchiveZipWrapper(zf, writeable=False, memory_map=False, delimiter='/')
 
                 archive.prefix = 'b'
-                post1 = archive.read_array_header(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                post1 = archive.read_array_header(NPYLabel.FILE_TEMPLATE_BLOCKS.format(0))
                 self.assertEqual(post1, (np.dtype('bool'), False, (2, 2)))
 
-                post2 = archive.size_array(Label.FILE_TEMPLATE_BLOCKS.format(0))
+                post2 = archive.size_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(0))
                 self.assertEqual(post2, 68)
 
                 post3 = archive.size_metadata()
                 self.assertEqual(post3, 90)
 
-
-    #---------------------------------------------------------------------------
-    def test_to_metadata_a(self) -> None:
-        f = ff.parse('s(2,3)|v(int,float)|i(ID,dtD)').rename('a')
-        md = metadata_encode(f)
-        self.assertEqual(md, {
-                '__names__': ['a', None, None],
-                '__types__': ['IndexDate', 'Index'],
-                '__depths__': [3, 1, 1],
-                })
-
-    def test_to_metadata_b(self) -> None:
-        f = ff.parse('s(2,4)|v(int,float)|i(ID,dtD)|c(IH, (int, str))').rename('a')
-        md = metadata_encode(f)
-        self.assertEqual(md, {
-                '__names__': ['a', None, None],
-                '__types__': ['IndexDate', 'IndexHierarchy'],
-                '__types_columns__': ['Index', 'Index'],
-                '__depths__': [4, 1, 2],
-                })
-
-    def test_to_metadata_c(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|i(IS,dts)|c(IH, (int, str, str))').rename('a')
-        md = metadata_encode(f)
-        self.assertEqual(md, {
-                '__names__': ['a', None, None],
-                '__types__': ['IndexSecond', 'IndexHierarchy'],
-                '__types_columns__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 1, 3],
-                })
-
-    def test_to_metadata_d(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|c(IS,dts)|i(IH, (int, str, str))').rename('a')
-        md = metadata_encode(f)
-        self.assertEqual(md, {
-                '__names__': ['a', None, None],
-                '__types__': ['IndexHierarchy', 'IndexSecond'],
-                '__types_index__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 3, 1],
-                })
-
-    def test_to_metadata_d(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|c(IH, (str, int, str))|i(IH, (int, str))').rename('a')
-        md = metadata_encode(f)
-        self.assertEqual(md, {
-                '__names__': ['a', None, None],
-                '__types__': ['IndexHierarchy', 'IndexHierarchy'],
-                '__types_index__': ['Index', 'Index'],
-                '__types_columns__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 2, 3],
-                })
 
 if __name__ == '__main__':
     import unittest
