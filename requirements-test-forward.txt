@@ -14,7 +14,7 @@ pandas==2.0.3
 xlsxwriter==1.1.2
 openpyxl==3.0.10
 xarray==0.21.1
-tables==3.8.0
+tables==3.9.1
 pyarrow==10.0.1
 msgpack==1.0.4
 msgpack-numpy==0.4.8
