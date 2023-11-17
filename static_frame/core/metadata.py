@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.index_base import IndexBase
 from static_frame.core.util import JSONTranslator
 
 if tp.TYPE_CHECKING:
@@ -33,10 +34,16 @@ class JSONMeta:
     KEY_DTYPES_COLUMNS = '__dtypes_columns__'
 
     @staticmethod
-    def dtype_to_str(dt: TDtypeAny) -> str:
+    def _dtype_to_str(dt: TDtypeAny) -> str:
         '''Normalize all dtype strings as platform native
         '''
-        return '=' + dt.name[1:]
+        return '=' + dt.str[1:]
+
+    @classmethod
+    def _index_to_dtype_str(cls, index: IndexBase) -> tp.List[str]:
+        if index.depth == 1:
+            return [cls._dtype_to_str(index.dtype)] # type: ignore[attr-defined]
+        return [cls._dtype_to_str(dt) for dt in index.dtypes.values] # type: ignore[attr-defined]
 
     @classmethod
     def to_dict(cls, f: TFrameAny) -> tp.Dict[str, tp.Any]:
@@ -50,6 +57,11 @@ class JSONMeta:
                 JSONTranslator.encode_element(f._index._name),
                 JSONTranslator.encode_element(f._columns._name),
                 ]
+
+        md[cls.KEY_DTYPES] = list(f.dtypes.values)
+        md[cls.KEY_DTYPES_INDEX] = cls._index_to_dtype_str(f.index)
+        md[cls.KEY_DTYPES_COLUMNS] = cls._index_to_dtype_str(f.columns)
+
         md[cls.KEY_TYPES] = [
                 f._index.__class__.__name__,
                 f._columns.__class__.__name__,
