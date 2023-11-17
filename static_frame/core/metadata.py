@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.util import JSONTranslator
@@ -32,7 +33,7 @@ class JSONMeta:
     KEY_DTYPES_COLUMNS = '__dtypes_columns__'
 
     @staticmethod
-    def dtype_to_str(dt: TDtypeAny):
+    def dtype_to_str(dt: TDtypeAny) -> str:
         '''Normalize all dtype strings as platform native
         '''
         return '=' + dt.name[1:]
