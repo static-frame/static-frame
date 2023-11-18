@@ -2982,7 +2982,7 @@ def isin_array(*,
             pass
 
     assume_unique = array_is_unique and other_is_unique
-    func = np.in1d if array.ndim == 1 else np.isin # type: ignore[assignment]
+    func = np.in1d if array.ndim == 1 else np.isin
 
     result: TNDArrayAny
     with WarningsSilent():
