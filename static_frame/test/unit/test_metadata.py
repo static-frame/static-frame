@@ -33,36 +33,33 @@ class TestUnit(TestCase):
                 '__names__': ['a', None, None],
                 '__types__': ['IndexDate', 'Index'],
                 '__depths__': [3, 1, 1],
-                '__dtypes__': [np.dtype('int64'), np.dtype('float64'), np.dtype('int64')],
+                '__dtypes__': ['=i8', '=f8', '=i8'],
                 '__dtypes_columns__': ['=i8'],
                 '__dtypes_index__': ['=M8[D]'],
                 })
 
     def test_to_metadata_b(self) -> None:
-        f = ff.parse('s(2,4)|v(int,float)|i(ID,dtD)|c(IH, (int, str))').rename('a')
+        f = ff.parse('s(2,4)|v(int64,float)|i(ID,dtD)|c(IH, (int64, str))').rename('a')
         md = JSONMeta.to_dict(f)
         self.assertEqual(md, {
                 '__names__': ['a', None, None],
                 '__types__': ['IndexDate', 'IndexHierarchy'],
                 '__types_columns__': ['Index', 'Index'],
                 '__depths__': [4, 1, 2],
-                '__dtypes__': [np.dtype('int64'),
-                               np.dtype('float64'),
-                               np.dtype('int64'),
-                               np.dtype('float64')],
+                '__dtypes__': ['=i8', '=f8', '=i8', '=f8'],
                 '__dtypes_columns__': ['=i8', '=U4'],
                 '__dtypes_index__': ['=M8[D]'],
                 })
 
     def test_to_metadata_c(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|i(IS,dts)|c(IH, (int, str, str))').rename('a')
+        f = ff.parse('s(2,4)|v(bool)|i(IS,dts)|c(IH, (int64, str, str))').rename('a')
         md = JSONMeta.to_dict(f)
         self.assertEqual(md, {
                 '__names__': ['a', None, None],
                 '__types__': ['IndexSecond', 'IndexHierarchy'],
                 '__types_columns__': ['Index', 'Index', 'Index'],
                 '__depths__': [1, 1, 3],
-                '__dtypes__': [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')],
+                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
                 '__dtypes_columns__': ['=i8', '=U4', '=U4'],
                 '__dtypes_index__': ['=M8[s]'],
                 })
@@ -75,10 +72,13 @@ class TestUnit(TestCase):
                 '__types__': ['IndexHierarchy', 'IndexSecond'],
                 '__types_index__': ['Index', 'Index', 'Index'],
                 '__depths__': [1, 3, 1],
+                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
+                '__dtypes_columns__': ['=M8[s]'],
+                '__dtypes_index__': ['=i8', '=U4', '=U4'],
                 })
 
-    def test_to_metadata_d(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|c(IH, (str, int, str))|i(IH, (int, str))').rename('a')
+    def test_to_metadata_e(self) -> None:
+        f = ff.parse('s(2,4)|v(bool)|c(IH, (str, int64, str))|i(IH, (int64, str))').rename('a')
         md = JSONMeta.to_dict(f)
         self.assertEqual(md, {
                 '__names__': ['a', None, None],
@@ -86,7 +86,7 @@ class TestUnit(TestCase):
                 '__types_index__': ['Index', 'Index'],
                 '__types_columns__': ['Index', 'Index', 'Index'],
                 '__depths__': [1, 2, 3],
-                '__dtypes__': [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')],
+                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
                 '__dtypes_columns__': ['=U4', '=i8', '=U4'],
                 '__dtypes_index__': ['=i8', '=U4'],
                 })

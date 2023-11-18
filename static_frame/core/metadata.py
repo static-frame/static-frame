@@ -58,7 +58,7 @@ class JSONMeta:
                 JSONTranslator.encode_element(f._columns._name),
                 ]
 
-        md[cls.KEY_DTYPES] = list(f.dtypes.values)
+        md[cls.KEY_DTYPES] = [cls._dtype_to_str(dt) for dt in f.dtypes.values]
         md[cls.KEY_DTYPES_INDEX] = cls._index_to_dtype_str(f.index)
         md[cls.KEY_DTYPES_COLUMNS] = cls._index_to_dtype_str(f.columns)
 
