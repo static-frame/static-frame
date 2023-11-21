@@ -84,6 +84,7 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.join import join
+from static_frame.core.metadata import JSONMeta
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
 from static_frame.core.node_fill_value import InterfaceFillValueGO
@@ -8633,7 +8634,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def to_json_index(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON string constructored as follows: {json_index}
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_index}
 
         Args:
             {indent}
@@ -8645,7 +8646,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON string constructored as follows: {json_columns}
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_columns}
 
         Args:
             {indent}
@@ -8654,23 +8655,30 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
-    def to_json_split(self, indent: tp.Optional[int] = None) -> str:
+    def to_json_split(self,
+            indent: tp.Optional[int] = None,
+            include_meta: bool = False,
+            ) -> str:
         '''
-        Export a :obj:`Frame` as a JSON string constructored as follows: {json_split}
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_split}
 
         Args:
             {indent}
+            include_meta: If True, and additional JSON object is provided that defines all component types and dtypes.
         '''
         d = dict(columns=JSONFilter.encode_iterable(self._columns),
                 index=JSONFilter.encode_iterable(self._index),
-                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1))
+                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1)),
                 )
+        if include_meta:
+            d['__meta__'] = JSONMeta.to_dict(self),
+
         return json.dumps(d, indent=indent)
 
     @doc_inject(selector='json')
     def to_json_records(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON string constructored as follows: {json_records}
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_records}
 
         Args:
             {indent}
@@ -8682,7 +8690,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def to_json_values(self, indent: tp.Optional[int] = None) -> str:
         '''
-        Export a :obj:`Frame` as a JSON string constructored as follows: {json_values}
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_values}
 
         Args:
             {indent}
