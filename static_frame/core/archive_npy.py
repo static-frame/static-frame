@@ -633,7 +633,7 @@ class ArchiveIndexConverter:
             archive: Archive,
             metadata: tp.Dict[str, tp.Any],
             key_template_values: str,
-            key_types: str,
+            key_types: str, # which key to fetch IH component types
             depth: int,
             cls_index: tp.Type['IndexBase'],
             name: TName,
@@ -783,9 +783,9 @@ class ArchiveFrameConverter:
 
 
         block_count, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
+
         cls_index: tp.Type[IndexBase]
         cls_columns: tp.Type[IndexBase]
-
         cls_index, cls_columns = (ContainerMap.str_to_cls(name) # type: ignore
                 for name in metadata[NPYLabel.KEY_TYPES])
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
+from functools import partial
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import JSONTranslator
@@ -80,3 +81,54 @@ class JSONMeta:
                 f._columns.depth]
 
         return md
+
+
+
+    @staticmethod
+    def _build_index_ctor(
+            depth: int,
+            cls_index: tp.Type['IndexBase'],
+            name: TName,
+            cls_components: tp.List[str],
+            dtypes: tp.List[str],
+            ):
+        if depth == 1:
+            return partial(cls_index, name=name, dtype=dtypes[0])
+
+        from static_frame.core.index_hierarchy import IndexHierarchy
+
+        return partial(IndexHierarchy.from_labels,
+                name=name)
+
+
+    @classmethod
+    def from_dict_to_ctors(cls, md: tp.Dict[str, tp.Any]):
+
+        names = metadata[NPYLabel.KEY_NAMES]
+        name_index = JSONTranslator.decode_element(names[1])
+        name_columns = JSONTranslator.decode_element(names[2])
+
+        cls_index: tp.Type[IndexBase]
+        cls_columns: tp.Type[IndexBase]
+        cls_index, cls_columns = (ContainerMap.str_to_cls(n) # type: ignore
+                for n in metadata[NPYLabel.KEY_TYPES])
+
+        _, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
+
+        index_ctor = cls._build_index_ctor(
+                depth_index,
+                cls_index,
+                name_index,
+                md[JSONMeta.KEY_TYPES_INDEX],
+                md[JSONMeta.KEY_DTYPES_INDEX],
+                )
+
+        columns_ctor = cls._build_index_ctor(
+                depth_columns,
+                cls_columns,
+                name_columns,
+                md[JSONMeta.KEY_TYPES_COLUMNS],
+                md[JSONMeta.KEY_DTYPES_COLUMNS],
+                )
+
+        return index_ctor, columns_ctor

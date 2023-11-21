@@ -2026,6 +2026,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
+            include_meta: bool = False,
             ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
@@ -2034,7 +2035,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {dtypes}
             {name}
             {consolidate_blocks}
-
+            include_meta: If True, expect and use metadata defined in the JSON. Other parameters explicitly given will override any metadata.
         Returns:
             :obj:`Frame`
         '''
@@ -2042,6 +2043,17 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
+
+        if include_meta:
+            if not (meta := data.get('__meta__')):
+                raise RuntimeError('`include_meta` parameter set by no metadata found.')
+            if dtypes is None:
+                dtypes = meta[JSONMeta.KEY_DTYPES]
+
+            if name is None:
+                name = meta[JSONMeta.KEY_NAMES][0]
+
+        # TODO: get index, columns ctor
 
         return cls.from_records(data['data'],
                 index=data['index'],
