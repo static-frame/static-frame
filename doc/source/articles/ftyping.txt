@@ -83,6 +83,10 @@ In CR today we will review NumPy's approach to typing, including the as-of-yet u
 NumPy Typing Utilities
 https://numpy.org/doc/stable/reference/typing.html
 
+NumPy's decision on ordering
+https://github.com/numpy/numpy/issues/16547
+
+
 NumPy's pyi file
 https://github.com/numpy/numpy/blob/main/numpy/__init__.pyi
 
