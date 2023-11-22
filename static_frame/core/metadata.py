@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from functools import partial
+
 import numpy as np
 import typing_extensions as tp
-from functools import partial
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import JSONTranslator
+from static_frame.core.util import TIndexCtor
+from static_frame.core.util import TName
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
@@ -91,7 +94,7 @@ class JSONMeta:
             name: TName,
             cls_components: tp.List[str],
             dtypes: tp.List[str],
-            ):
+            ) -> TIndexCtor:
         if depth == 1:
             return partial(cls_index, name=name, dtype=dtypes[0])
 
@@ -102,18 +105,20 @@ class JSONMeta:
 
 
     @classmethod
-    def from_dict_to_ctors(cls, md: tp.Dict[str, tp.Any]):
+    def from_dict_to_ctors(cls,
+            md: tp.Dict[str, tp.Any],
+            ) -> tp.Tuple[TIndexCtor, TIndexCtor]:
 
-        names = metadata[NPYLabel.KEY_NAMES]
+        names = md[NPYLabel.KEY_NAMES]
         name_index = JSONTranslator.decode_element(names[1])
         name_columns = JSONTranslator.decode_element(names[2])
 
         cls_index: tp.Type[IndexBase]
         cls_columns: tp.Type[IndexBase]
         cls_index, cls_columns = (ContainerMap.str_to_cls(n) # type: ignore
-                for n in metadata[NPYLabel.KEY_TYPES])
+                for n in md[NPYLabel.KEY_TYPES])
 
-        _, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
+        _, depth_index, depth_columns = md[NPYLabel.KEY_DEPTHS]
 
         index_ctor = cls._build_index_ctor(
                 depth_index,
