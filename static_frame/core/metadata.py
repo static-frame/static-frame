@@ -5,6 +5,7 @@ from functools import partial
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.container_util import ContainerMap
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import TIndexCtor
@@ -92,16 +93,24 @@ class JSONMeta:
             depth: int,
             cls_index: tp.Type['IndexBase'],
             name: TName,
-            cls_components: tp.List[str],
+            cls_components: tp.List[str] | None,
             dtypes: tp.List[str],
             ) -> TIndexCtor:
-        if depth == 1:
-            return partial(cls_index, name=name, dtype=dtypes[0])
-
+        from static_frame.core.index_datetime import IndexDatetime
         from static_frame.core.index_hierarchy import IndexHierarchy
 
+        if depth == 1:
+            if issubclass(cls_index, IndexDatetime):
+                # do not provide dtype if a datetime64 index subclass
+                return partial(cls_index, name=name)
+            return partial(cls_index, name=name, dtype=dtypes[0])
+
+        assert cls_components is not None # if depth > 1, must be provided
+        index_constructors = [ContainerMap.str_to_cls(n) for n in cls_components]
         return partial(IndexHierarchy.from_labels,
-                name=name)
+                name=name,
+                index_constructors=index_constructors,
+                )
 
 
     @classmethod
@@ -124,16 +133,16 @@ class JSONMeta:
                 depth_index,
                 cls_index,
                 name_index,
-                md[JSONMeta.KEY_TYPES_INDEX],
-                md[JSONMeta.KEY_DTYPES_INDEX],
+                md.get(JSONMeta.KEY_TYPES_INDEX),
+                md.get(JSONMeta.KEY_DTYPES_INDEX), # type: ignore
                 )
 
         columns_ctor = cls._build_index_ctor(
                 depth_columns,
                 cls_columns,
                 name_columns,
-                md[JSONMeta.KEY_TYPES_COLUMNS],
-                md[JSONMeta.KEY_DTYPES_COLUMNS],
+                md.get(JSONMeta.KEY_TYPES_COLUMNS),
+                md.get(JSONMeta.KEY_DTYPES_COLUMNS), # type: ignore
                 )
 
         return index_ctor, columns_ctor

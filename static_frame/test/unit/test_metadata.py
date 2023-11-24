@@ -3,6 +3,8 @@ from __future__ import annotations
 import frame_fixtures as ff
 import numpy as np
 
+from static_frame.core.index import Index
+from static_frame.core.index_datetime import IndexDate
 from static_frame.core.metadata import JSONMeta
 from static_frame.test.test_case import TestCase
 
@@ -90,3 +92,19 @@ class TestUnit(TestCase):
                 '__dtypes_columns__': ['=U4', '=i8', '=U4'],
                 '__dtypes_index__': ['=i8', '=U4'],
                 })
+
+    #---------------------------------------------------------------------------
+    def test_from_dict_to_ctors_a(self) -> None:
+        f = ff.parse('s(2,3)|v(int,float)|i(ID,dtD)').rename('a', index='row', columns='col')
+        md = JSONMeta.to_dict(f)
+        index_ctor, columns_ctor = JSONMeta.from_dict_to_ctors(md)
+        idx1 = index_ctor(('2022-01-01',))
+        self.assertEqual(idx1.name, 'row')
+        self.assertIs(idx1.__class__, IndexDate)
+
+        idx2 = columns_ctor((3, 2))
+        self.assertEqual(idx2.name, 'col')
+        self.assertIs(idx2.__class__, Index)
+        self.assertEqual(idx2.dtype.kind, 'i')
+
+
