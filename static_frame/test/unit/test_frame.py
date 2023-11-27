@@ -5418,6 +5418,13 @@ class TestUnit(TestCase):
                 (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
                 )
 
+    def test_frame_sort_values_q(self) -> None:
+        f1 = ff.parse('s(2,4)')
+        self.assertEqual(
+            f1.sort_values(0, axis=1).index.values.tolist(),
+            [1, 0]
+            )
+
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_a(self) -> None:
