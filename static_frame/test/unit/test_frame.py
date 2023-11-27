@@ -15202,7 +15202,7 @@ class TestUnit(TestCase):
     def test_frame_to_json_split_b(self) -> None:
         f = ff.parse('s(2,4)|v(bool,int32,float,str)|i(I,int32)|c(I,str)')
         post = f.to_json_split(include_meta=True)
-        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]], "__meta__": [{"__names__": [null, null, null], "__dtypes__": ["=b1", "=i4", "=f8", "=U4"], "__dtypes_index__": ["=i4"], "__dtypes_columns__": ["=U4"], "__types__": ["Index", "Index"], "__depths__": [4, 1, 1]}]}')
+        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, 162197, 694.3, "z2Oo"], [false, -41157, -72.96, "z5l6"]], "__meta__": {"__names__": [null, null, null], "__dtypes__": ["=b1", "=i4", "=f8", "=U4"], "__dtypes_index__": ["=i4"], "__dtypes_columns__": ["=U4"], "__types__": ["Index", "Index"], "__depths__": [4, 1, 1]}}')
 
 
     #---------------------------------------------------------------------------
@@ -15242,6 +15242,8 @@ class TestUnit(TestCase):
         f2 = Frame.from_json_columns(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
         self.assertTrue(f1.equals(f2))
 
+    #---------------------------------------------------------------------------
+
     def test_frame_from_json_split_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
         post = f1.to_json_split()
@@ -15253,6 +15255,48 @@ class TestUnit(TestCase):
         post = f1.to_json_split()
         f2 = Frame.from_json_split(StringIO(post), index_constructor=partial(sf.Index, dtype=int))
         self.assertTrue(f1.equals(f2))
+
+
+    def test_frame_from_json_split_c(self) -> None:
+        f1 = ff.parse('s(2,4)|v(bool,int32,float,str)|i(I,int32)|c(I,str)').rename('x', index='y', columns='z')
+        post = f1.to_json_split(include_meta=True)
+        f2 = Frame.from_json_split(post, include_meta=True)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+
+    def test_frame_from_json_split_d(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i(ID,dtD)|c(ID,dtD)').rename('x', index='y', columns='z')
+        post = f1.to_json_split(include_meta=True)
+        f2 = Frame.from_json_split(post, include_meta=True)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+
+    def test_frame_from_json_split_e(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i(IH,(str,str))|c(IH,(int64,int64))').rename('x', index='y', columns='z')
+        post = f1.to_json_split(include_meta=True)
+
+        f2 = Frame.from_json_split(post, include_meta=True)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+
+        f3 = Frame.from_json_split(post, include_meta=True, name='foo')
+        self.assertTrue(f1.equals(f3, compare_dtype=True, compare_class=True))
+        self.assertEqual(f3.name, 'foo')
+
+
+    def test_frame_from_json_split_f(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i(IH,(str,str))|c(IH,(int64,int64))')
+        post = f1.to_json_split(include_meta=True)
+
+        ctor = lambda it: Index(tuple(label) for label in it)
+        f2 = Frame.from_json_split(post, include_meta=True, index_constructor=ctor, columns_constructor=ctor)
+
+        self.assertEqual(f2.index.values.tolist(),
+                [('zZbu', 'zOyq'), ('zZbu', 'zIA5')],
+                )
+        self.assertEqual(f2.columns.values.tolist(),
+                [(34715, 105269), (34715, 119909), (-3648, 194224), (-3648, 172133)],
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_from_json_records_a(self) -> None:
         f1 = ff.parse('s(2,4)|v(bool,int,float,str)|c(I,str)')

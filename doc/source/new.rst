@@ -2,6 +2,13 @@ What is New in StaticFrame
 ===============================
 
 
+2.1.0
+-----------
+
+``Frame.to_json_split()`` and ``Frame.from_json_split()`` now expose an ``include_meta`` parameter to export and import comprehensive ``Frame`` metadata for complete round-trip serialization.
+
+
+
 2.0.1
 -----------
 

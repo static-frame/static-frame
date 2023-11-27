@@ -2045,15 +2045,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             data = json.load(json_data)
 
         if include_meta:
-            if not (meta := data.get('__meta__')):
+            if not (md := data.get('__meta__')):
                 raise RuntimeError('`include_meta` parameter set by no metadata found.')
             if dtypes is None:
-                dtypes = meta[JSONMeta.KEY_DTYPES]
+                dtypes = md[JSONMeta.KEY_DTYPES]
 
             if name is None:
-                name = meta[JSONMeta.KEY_NAMES][0]
+                name = md[JSONMeta.KEY_NAMES][0] # first is for Frame
 
-        # TODO: get index, columns ctor
+            ictor, cctor = JSONMeta.from_dict_to_ctors(md)
+            if index_constructor is None:
+                index_constructor = ictor
+            if columns_constructor is None:
+                columns_constructor = cctor
 
         return cls.from_records(data['data'],
                 index=data['index'],
@@ -8683,8 +8687,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1)),
                 )
         if include_meta:
-            d['__meta__'] = JSONMeta.to_dict(self),
-
+            d['__meta__'] = JSONMeta.to_dict(self)
         return json.dumps(d, indent=indent)
 
     @doc_inject(selector='json')
