@@ -67,7 +67,7 @@ class TestUnit(TestCase):
                 })
 
     def test_to_metadata_d(self) -> None:
-        f = ff.parse('s(2,4)|v(bool)|c(IS,dts)|i(IH, (int, str, str))').rename('a')
+        f = ff.parse('s(2,4)|v(bool)|c(IS,dts)|i(IH, (int64, str, str))').rename('a')
         md = JSONMeta.to_dict(f)
         self.assertEqual(md, {
                 '__names__': ['a', None, None],
