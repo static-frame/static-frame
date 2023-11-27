@@ -96,6 +96,8 @@ class JSONMeta:
             cls_components: tp.List[str] | None,
             dtypes: tp.List[str],
             ) -> TIndexCtor:
+
+        from static_frame.core.index import Index
         from static_frame.core.index_datetime import IndexDatetime
         from static_frame.core.index_hierarchy import IndexHierarchy
 
@@ -103,10 +105,10 @@ class JSONMeta:
             if issubclass(cls_index, IndexDatetime):
                 # do not provide dtype if a datetime64 index subclass
                 return partial(cls_index, name=name)
-            return partial(cls_index, name=name, dtype=dtypes[0])
+            return partial(cls_index, name=name, dtype=dtypes[0]) # pyright: ignore
 
         assert cls_components is not None # if depth > 1, must be provided
-        index_constructors = [ContainerMap.str_to_cls(n) for n in cls_components]
+        index_constructors: tp.List[tp.Type[Index[tp.Any]]] = [ContainerMap.str_to_cls(n) for n in cls_components] # pyright: ignore
         return partial(IndexHierarchy.from_labels,
                 name=name,
                 index_constructors=index_constructors,
