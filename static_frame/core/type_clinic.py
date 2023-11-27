@@ -7,6 +7,7 @@ import warnings
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
+from collections.abc import Callable
 from enum import Enum
 from functools import partial
 from functools import wraps
@@ -758,6 +759,26 @@ def iter_mapping_checks(
             ):
         yield v, h, parent_hints, pv_next
 
+def iter_callable_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent_hints: TParent,
+        parent_values: TParent,
+        ) -> tp.Iterable[TValidation]:
+
+    [h_args, h_return] = tp.get_args(hint)
+    pv_next = parent_values + (value,)
+
+    hints = tp.get_type_hints(value, include_extras=False)
+
+
+    # import ipdb; ipdb.set_trace()
+
+    # for v, h in chain(
+    #         zip(value.keys(), repeat(h_keys)),
+    #         zip(value.values(), repeat(h_values)),
+    #         ):
+    #     yield v, h, parent_hints, pv_next
 
 def iter_typeddict(
         value: tp.Any,
@@ -1156,7 +1177,7 @@ def _check(
                 q.append((v, h_type, ph_next, pv))
 
             else:
-                # NOTE: many generic containers require recursing into component values. It is in these functions below that parent_values is updated and yielded back into the queue. There are many other cases where parent_values does not need to be updated (and for efficiency is not).
+                # NOTE: many generic containers require recursing into component values. It is in these functions below that parent_values is updated and yielded back into the queue. There are many other cases where parent_values do not need to be updated (and for efficiency is not).
 
                 if not isinstance(v, origin):
                     e_log.append((v, origin, ph, pv))
@@ -1168,6 +1189,8 @@ def _check(
                     tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                 elif isinstance(v, MutableMapping):
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
+                elif isinstance(v, Callable):
+                    tee_error_or_check(iter_callable_checks(v, h, ph_next, pv))
 
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))

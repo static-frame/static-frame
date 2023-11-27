@@ -406,6 +406,18 @@ def test_check_type_dict_a():
         TypeClinic({'a': 20, 'b': 18, 20: 3}).check(tp.Dict[str, int])
 
 
+
+#-------------------------------------------------------------------------------
+
+# def test_check_callable_a():
+
+#     def func(a: int, b: bool) -> float:
+#         return 1.0
+
+#     TypeClinic(func).check(tp.Callable[[int, bool], float])
+#     TypeClinic(func).check(tp.Callable[[int, bool], float])
+
+
 #-------------------------------------------------------------------------------
 def test_check_interface_a():
 
