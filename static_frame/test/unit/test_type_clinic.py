@@ -409,13 +409,34 @@ def test_check_type_dict_a():
 
 #-------------------------------------------------------------------------------
 
-# def test_check_callable_a():
+def test_check_callable_a():
 
-#     def func(a: int, b: bool) -> float:
-#         return 1.0
+    def func(a: int, b: bool) -> float:
+        return 1.0
 
-#     TypeClinic(func).check(tp.Callable[[int, bool], float])
-#     TypeClinic(func).check(tp.Callable[[int, bool], float])
+    TypeClinic(func).check(tp.Callable[[int, bool], float])
+    TypeClinic(func).check(tp.Callable[[int, bool], tp.Any])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool], bool])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool, str], float])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, str], tp.Any])
+
+    TypeClinic(func).check(tp.Callable[..., tp.Any])
+
+
+def test_check_callable_b():
+
+    # no return type
+    def func(a: int, b: bool):
+        return 1.0
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool], float])
 
 
 #-------------------------------------------------------------------------------

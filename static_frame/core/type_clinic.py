@@ -126,6 +126,8 @@ def to_name(v: tp.Any,
             else:
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif isinstance(v, list):
+        s = f'[{", ".join(to_name(part) for part in v)}]'
     elif hasattr(v, '__name__'):
         s = v.__name__
     elif v is ...:
@@ -759,6 +761,9 @@ def iter_mapping_checks(
             ):
         yield v, h, parent_hints, pv_next
 
+
+NO_HINT = object()
+
 def iter_callable_checks(
         value: tp.Any,
         hint: tp.Any,
@@ -769,10 +774,36 @@ def iter_callable_checks(
     [h_args, h_return] = tp.get_args(hint)
     pv_next = parent_values + (value,)
 
-    hints = tp.get_type_hints(value, include_extras=False)
-
+    sig = Signature.from_callable(value)
+    v_hints = tp.get_type_hints(value, include_extras=False)
+    v_hints_seq = [v_hints.get(k, NO_HINT) for k in sig.parameters.keys()]
 
     # import ipdb; ipdb.set_trace()
+    if h_return != tp.Any:
+        v_return = v_hints.get('return', NO_HINT)
+        if v_return is NO_HINT:
+            msg = f'Expected callable has return {h_return}, provided callable has no return type'
+            yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+        # NOTE: need to compare two hints in a way that includes subclasses
+        elif h_return != v_return:
+            msg = f'Expected callable has return {h_return}, provided callable has return {v_return}'
+            yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+
+    if h_args is ...:
+        pass
+    elif len(h_args) != len(v_hints_seq):
+        msg = f'Expected {len(h_args)} args, provided callable has {len(v_hints_seq)} args'
+        yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+    else:
+        # these are exclusively positional
+        for h_arg_pos, h_arg in enumerate(h_args):
+            v_arg = v_hints_seq[h_arg_pos]
+            if v_arg is NO_HINT:
+                msg = f'Expected callable has arg {h_arg_pos + 1} {h_arg}, provided callable has no arg type'
+                yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+            elif h_arg != v_arg:
+                msg = f'Expected callable has arg {h_arg_pos + 1} {h_arg}, provided callable has {v_arg}'
+                yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
 
     # for v, h in chain(
     #         zip(value.keys(), repeat(h_keys)),
@@ -1189,7 +1220,7 @@ def _check(
                     tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                 elif isinstance(v, MutableMapping):
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
-                elif isinstance(v, Callable):
+                elif isinstance(v, Callable): # type: ignore
                     tee_error_or_check(iter_callable_checks(v, h, ph_next, pv))
 
                 elif isinstance(v, Index):
@@ -1385,6 +1416,8 @@ class ErrorAction(Enum):
     RAISE = 0
     WARN = 1
     RETURN = 2
+
+# TODO: use NO_HINT on all get calls
 
 def _check_interface(
         func: tp.Callable[..., tp.Any],
