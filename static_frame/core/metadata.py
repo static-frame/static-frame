@@ -12,7 +12,7 @@ from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TName
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.generic_aliases import TFrameAny # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 class NPYLabel:
