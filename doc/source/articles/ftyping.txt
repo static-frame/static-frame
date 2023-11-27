@@ -99,9 +99,15 @@ https://taoa.io/posts/Shape-typing-numpy-with-pyright-and-variadic-generics
 Variadic generics
 https://peps.python.org/pep-0646/
 
+
+Alternative DF typings approaches:
+
 Spark's use of slices to define label / dtype pairs:
 https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/typehints.html
 
+
+Alternative class for definin columnar types:
+https://github.com/CedricFR/dataenforce
 
 
 NumPy discussion on ordering of generic args:
