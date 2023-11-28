@@ -107,8 +107,17 @@ class JSONMeta:
                 return partial(cls_index, name=name)
             return partial(cls_index, name=name, dtype=dtypes[0]) # pyright: ignore
 
-        assert cls_components is not None # if depth > 1, must be provided
-        index_constructors: tp.List[tp.Type[Index[tp.Any]]] = [ContainerMap.str_to_cls(n) for n in cls_components] # pyright: ignore
+        assert cls_components is not None
+        assert len(cls_components) == len(dtypes) # if depth > 1, must be provided
+
+        index_constructors: tp.List[tp.Callable[..., Index[tp.Any]]] = []
+        for cls_name, dt in zip(cls_components, dtypes):
+            cls = ContainerMap.str_to_cls(cls_name)
+            if issubclass(cls, IndexDatetime):
+                index_constructors.append(cls)
+            else:
+                index_constructors.append(partial(cls, dtype=dt)) # type: ignore
+
         return partial(IndexHierarchy.from_labels,
                 name=name,
                 index_constructors=index_constructors,
