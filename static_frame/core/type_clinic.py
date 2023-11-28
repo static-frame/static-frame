@@ -8,6 +8,7 @@ from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
 from collections.abc import Callable
+from itertools import zip_longest
 from enum import Enum
 from functools import partial
 from functools import wraps
@@ -100,6 +101,7 @@ def get_args_unpack(hint: tp.Any) -> tp.Any:
     return (tga,) # clients expect a tuple of size 1
 
 #-------------------------------------------------------------------------------
+NAH = object() # not a hint
 
 TParent = tp.Tuple[tp.Any, ...]
 # A validation record can be used to queue checks or report errors
@@ -761,9 +763,6 @@ def iter_mapping_checks(
             ):
         yield v, h, parent_hints, pv_next
 
-
-NO_HINT = object()
-
 def iter_callable_checks(
         value: tp.Any,
         hint: tp.Any,
@@ -776,12 +775,12 @@ def iter_callable_checks(
 
     sig = Signature.from_callable(value)
     v_hints = tp.get_type_hints(value, include_extras=False)
-    v_hints_seq = [v_hints.get(k, NO_HINT) for k in sig.parameters.keys()]
+    v_hints_seq = [v_hints.get(k, NAH) for k in sig.parameters.keys()]
 
     # import ipdb; ipdb.set_trace()
     if h_return != tp.Any:
-        v_return = v_hints.get('return', NO_HINT)
-        if v_return is NO_HINT:
+        v_return = v_hints.get('return', NAH)
+        if v_return is NAH:
             msg = f'Expected callable has return {h_return}, provided callable has no return type'
             yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
         # NOTE: need to compare two hints in a way that includes subclasses
@@ -798,7 +797,7 @@ def iter_callable_checks(
         # these are exclusively positional
         for h_arg_pos, h_arg in enumerate(h_args):
             v_arg = v_hints_seq[h_arg_pos]
-            if v_arg is NO_HINT:
+            if v_arg is NAH:
                 msg = f'Expected callable has arg {h_arg_pos + 1} {h_arg}, provided callable has no arg type'
                 yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
             elif h_arg != v_arg:
@@ -1265,6 +1264,63 @@ def _check(
 
     return ClinicResult(e_log)
 
+
+
+
+def is_subhint(expected: tp.Any, provided: tp.Any) -> bool:
+    '''Returns True if provided is compatible with expected.
+    '''
+    q = deque(((expected, provided),))
+
+    while q:
+        e, p = q.popleft()
+
+        if is_generic(e):
+            e_type = tp.get_origin(e)
+            e_args = tp.get_args(e)
+        else:
+            e_type = e
+            e_args = ()
+
+        if e_type is tp.Any:
+            continue
+
+        if is_generic(p):
+            p_type = tp.get_origin(p)
+            p_args = tp.get_args(p)
+        else:
+            p_type = p
+            p_args = ()
+
+        if e_type is NAH or p_type is NAH:
+            return False
+
+        e_is_union = is_union(e)
+        p_is_union = is_union(p)
+        # import ipdb; ipdb.set_trace()
+
+        if e_is_union + p_is_union == 1:
+            return False
+        elif e_is_union + p_is_union == 2:
+            # TODO: need to do an unordered collection test...
+            pass
+        else:
+            if not issubclass(p_type, e_type):
+                return False
+
+            if issubclass(e_type, tuple):
+                if len(e_args) == 2 and e_args[1] is ...:
+                    for p_arg in p_args:
+                        q.append((e_args[0], p_arg))
+                else:
+                    for e_arg, p_arg in zip_longest(e_args, p_args, fillvalue=NAH):
+                        q.append((e_arg, p_arg))
+
+            else:
+                for e_arg, p_arg in zip_longest(e_args, p_args, fillvalue=NAH):
+                    q.append((e_arg, p_arg))
+    return True
+
 #-------------------------------------------------------------------------------
 # public interfaces
 
@@ -1417,7 +1473,7 @@ class ErrorAction(Enum):
     WARN = 1
     RETURN = 2
 
-# TODO: use NO_HINT on all get calls
+# TODO: use NAH on all get calls
 
 def _check_interface(
         func: tp.Callable[..., tp.Any],
