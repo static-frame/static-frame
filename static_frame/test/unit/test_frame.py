@@ -15312,6 +15312,13 @@ class TestUnit(TestCase):
         self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
 
 
+    def test_frame_from_json_split_h(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i((ID, I),(dtD,str))|c((IS, I),(dts,int64))').rename('x', index='y', columns='z')
+        post1 = f1.to_json_split(include_meta=False)
+        with self.assertRaises(RuntimeError):
+            f2 = Frame.from_json_split(post1, include_meta=True)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_json_records_a(self) -> None:
