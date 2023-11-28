@@ -26,6 +26,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.metadata import NPYLabel
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import ManyToOneType
@@ -38,11 +39,12 @@ if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611,C0412 #pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]] # pylint: disable=W0611 #pragma: no cover
     HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -580,19 +582,7 @@ class ArchiveZipWrapper(Archive):
         return self._archive.getinfo(name).file_size
 
 
-
-
 #-------------------------------------------------------------------------------
-class Label:
-    KEY_NAMES = '__names__'
-    KEY_TYPES = '__types__'
-    KEY_DEPTHS = '__depths__'
-    KEY_TYPES_INDEX = '__types_index__'
-    KEY_TYPES_COLUMNS = '__types_columns__'
-    FILE_TEMPLATE_VALUES_INDEX = '__values_index_{}__.npy'
-    FILE_TEMPLATE_VALUES_COLUMNS = '__values_columns_{}__.npy'
-    FILE_TEMPLATE_BLOCKS = '__blocks_{}__.npy'
-
 
 class ArchiveIndexConverter:
     '''Utility methods for converting Index or index components.
@@ -643,7 +633,7 @@ class ArchiveIndexConverter:
             archive: Archive,
             metadata: tp.Dict[str, tp.Any],
             key_template_values: str,
-            key_types: str,
+            key_types: str, # which key to fetch IH component types
             depth: int,
             cls_index: tp.Type['IndexBase'],
             name: TName,
@@ -686,13 +676,13 @@ class ArchiveFrameConverter:
         metadata: tp.Dict[str, tp.Any] = {}
 
         # NOTE: isolate custom pre-json encoding only where needed: on `name` attributes; the name might be nested tuples, so we cannot assume that name is just a string
-        metadata[Label.KEY_NAMES] = [
+        metadata[NPYLabel.KEY_NAMES] = [
                 JSONTranslator.encode_element(frame._name),
                 JSONTranslator.encode_element(frame._index._name),
                 JSONTranslator.encode_element(frame._columns._name),
                 ]
         # do not store Frame class as caller will determine
-        metadata[Label.KEY_TYPES] = [
+        metadata[NPYLabel.KEY_TYPES] = [
                 frame._index.__class__.__name__,
                 frame._columns.__class__.__name__,
                 ]
@@ -711,8 +701,8 @@ class ArchiveFrameConverter:
                 metadata=metadata,
                 archive=archive,
                 index=frame._index,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-                key_types=Label.KEY_TYPES_INDEX,
+                key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=NPYLabel.KEY_TYPES_INDEX,
                 depth=depth_index,
                 include=include_index,
                 )
@@ -720,16 +710,16 @@ class ArchiveFrameConverter:
                 metadata=metadata,
                 archive=archive,
                 index=frame._columns,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-                key_types=Label.KEY_TYPES_COLUMNS,
+                key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=NPYLabel.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 include=include_columns,
                 )
         i = 0
         for i, array in enumerate(block_iter, 1):
-            archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i-1), array)
+            archive.write_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(i-1), array)
 
-        metadata[Label.KEY_DEPTHS] = [
+        metadata[NPYLabel.KEY_DEPTHS] = [
                 i, # block count
                 depth_index,
                 depth_columns]
@@ -785,25 +775,25 @@ class ArchiveFrameConverter:
         metadata = archive.read_metadata()
 
         # NOTE: we isolate custom post-JSON decoding to only where it is needed: the name attributes. JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
-        names = metadata[Label.KEY_NAMES]
+        names = metadata[NPYLabel.KEY_NAMES]
 
         name = JSONTranslator.decode_element(names[0])
         name_index = JSONTranslator.decode_element(names[1])
         name_columns = JSONTranslator.decode_element(names[2])
 
 
-        block_count, depth_index, depth_columns = metadata[Label.KEY_DEPTHS]
+        block_count, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
+
         cls_index: tp.Type[IndexBase]
         cls_columns: tp.Type[IndexBase]
-
         cls_index, cls_columns = (ContainerMap.str_to_cls(name) # type: ignore
-                for name in metadata[Label.KEY_TYPES])
+                for name in metadata[NPYLabel.KEY_TYPES])
 
         index = ArchiveIndexConverter.index_decode(
                 archive=archive,
                 metadata=metadata,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-                key_types=Label.KEY_TYPES_INDEX,
+                key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_INDEX,
+                key_types=NPYLabel.KEY_TYPES_INDEX,
                 depth=depth_index,
                 cls_index=cls_index,
                 name=name_index,
@@ -819,8 +809,8 @@ class ArchiveFrameConverter:
         columns = ArchiveIndexConverter.index_decode(
                 archive=archive,
                 metadata=metadata,
-                key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-                key_types=Label.KEY_TYPES_COLUMNS,
+                key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_COLUMNS,
+                key_types=NPYLabel.KEY_TYPES_COLUMNS,
                 depth=depth_columns,
                 cls_index=cls_columns,
                 name=name_columns,
@@ -828,7 +818,7 @@ class ArchiveFrameConverter:
 
         if block_count:
             tb = TypeBlocks.from_blocks(
-                    archive.read_array(Label.FILE_TEMPLATE_BLOCKS.format(i))
+                    archive.read_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(i))
                     for i in range(block_count)
                     )
         else:
@@ -1010,8 +1000,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     metadata=metadata,
                     archive=self._archive,
                     index=index,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
-                    key_types=Label.KEY_TYPES_INDEX,
+                    key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_INDEX,
+                    key_types=NPYLabel.KEY_TYPES_INDEX,
                     depth=depth_index,
                     include=True,
                     )
@@ -1026,7 +1016,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     metadata=metadata,
                     archive=self._archive,
                     array=index,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_INDEX,
+                    key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_INDEX,
                     )
         else:
             depth_index = 1
@@ -1041,8 +1031,8 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     metadata=metadata,
                     archive=self._archive,
                     index=columns,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
-                    key_types=Label.KEY_TYPES_COLUMNS,
+                    key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_COLUMNS,
+                    key_types=NPYLabel.KEY_TYPES_COLUMNS,
                     depth=depth_columns,
                     include=True,
                     )
@@ -1057,19 +1047,19 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                     metadata=metadata,
                     archive=self._archive,
                     array=columns,
-                    key_template_values=Label.FILE_TEMPLATE_VALUES_COLUMNS,
+                    key_template_values=NPYLabel.FILE_TEMPLATE_VALUES_COLUMNS,
                     )
         else:
             depth_columns = 1 # only support 1D
             name_columns = None
             cls_columns = Index
 
-        metadata[Label.KEY_NAMES] = [name,
+        metadata[NPYLabel.KEY_NAMES] = [name,
                 name_index,
                 name_columns,
                 ]
         # do not store Frame class as caller will determine
-        metadata[Label.KEY_TYPES] = [
+        metadata[NPYLabel.KEY_TYPES] = [
                 cls_index.__name__,
                 cls_columns.__name__,
                 ]
@@ -1082,17 +1072,17 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 else:
                     if array.shape[0] != rows:
                         raise RuntimeError('incompatible block shapes')
-                self._archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(i), array)
+                self._archive.write_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(i), array)
         elif axis == 0:
             # for now, just vertically concat and write, though this has a 2X memory requirement
             resolved = concat_resolved(blocks, axis=0)
             # if this results in an obect array, an exception will be raised
-            self._archive.write_array(Label.FILE_TEMPLATE_BLOCKS.format(0), resolved)
+            self._archive.write_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(0), resolved)
             i = 0
         else:
             raise AxisInvalid(f'invalid axis {axis}')
 
-        metadata[Label.KEY_DEPTHS] = [
+        metadata[NPYLabel.KEY_DEPTHS] = [
                 i + 1, # block count
                 depth_index,
                 depth_columns]
@@ -1224,3 +1214,5 @@ class NPY(ArchiveComponentsConverter):
     '''Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`.
     '''
     _ARCHIVE_CLS = ArchiveDirectory
+
+
