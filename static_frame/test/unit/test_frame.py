@@ -15302,6 +15302,15 @@ class TestUnit(TestCase):
                 [(34715, 105269), (34715, 119909), (-3648, 194224), (-3648, 172133)],
                 )
 
+    def test_frame_from_json_split_g(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i((ID, I),(dtD,str))|c((IS, I),(dts,int64))').rename('x', index='y', columns='z')
+        post1 = f1.to_json_split(include_meta=True)
+
+        f2 = Frame.from_json_split(post1, include_meta=True)
+        self.assertEqual(f2.to_json_split(include_meta=True), post1)
+
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+
 
     #---------------------------------------------------------------------------
 
