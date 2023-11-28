@@ -15273,6 +15273,10 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(2,4)|v(int8,str)|i(IH,(str,str))|c(IH,(int64,int64))').rename('x', index='y', columns='z')
         post = f1.to_json_split(include_meta=True)
 
+        self.assertEqual(post,
+                '{"columns": [[34715, 105269], [34715, 119909], [-3648, 194224], [-3648, 172133]], "index": [["zZbu", "zOyq"], ["zZbu", "zIA5"]], "data": [[47, "zaji", -64, "z2Oo"], [-61, "zJnC", -91, "z5l6"]], "__meta__": {"__names__": ["x", "y", "z"], "__dtypes__": ["=i1", "=U4", "=i1", "=U4"], "__dtypes_index__": ["=U4", "=U4"], "__dtypes_columns__": ["=i8", "=i8"], "__types__": ["IndexHierarchy", "IndexHierarchy"], "__types_index__": ["Index", "Index"], "__types_columns__": ["Index", "Index"], "__depths__": [4, 2, 2]}}'
+                )
+
         f2 = Frame.from_json_split(post, include_meta=True)
         self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
 
