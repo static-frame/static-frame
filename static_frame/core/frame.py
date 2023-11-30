@@ -2046,7 +2046,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if include_meta:
             if not (md := data.get('__meta__')):
-                raise RuntimeError('`include_meta` parameter set by no metadata found.')
+                raise RuntimeError('`include_meta` parameter set but no metadata found.')
             if dtypes is None:
                 dtypes = md[JSONMeta.KEY_DTYPES]
 
