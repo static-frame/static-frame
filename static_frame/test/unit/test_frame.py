@@ -15310,6 +15310,12 @@ class TestUnit(TestCase):
         f2 = FrameGO.from_json_typed(post)
         self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=False))
 
+    def test_frame_from_json_typed_f(self) -> None:
+        f1 = ff.parse('s(2,4)|v(int8,str)|i(ID,dtD)|c(ID,dtD)').rename('x', index='y', columns='z')
+        post = f1.to_json_typed()
+        sio = io.StringIO(post)
+        f2 = FrameGO.from_json_typed(sio)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=False))
 
     #---------------------------------------------------------------------------
 
