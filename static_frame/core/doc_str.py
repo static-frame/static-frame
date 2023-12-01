@@ -458,9 +458,10 @@ class DOC_TEMPLATE:
     json = dict(
             json_index = 'A JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.',
             json_columns = 'A JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.',
-            json_split = 'A JSON object with a key for "columns", "index", and "data"; each are arrays of values.',
+            json_split = 'A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of row values.',
             json_records = 'A JSON array of row objects, where column labels are repeated for each row, and no index labels are included.',
-            json_values = 'A JSON array of arrays of row data; no index or columns labels are included.',
+            json_values = 'A JSON array of arrays of row values; no index or columns labels are included.',
+            json_typed = 'A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of column values; additionally, a key for "__meta__" defines an object with complete metadata and typing information.',
             indent = 'indent: If indent is a non-negative integer or string, then JSON array elements and object members will be pretty-printed with that indent level.',
             dtypes=DTYPES,
             name=NAME,

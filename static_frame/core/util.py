@@ -3382,7 +3382,7 @@ class JSONFilter:
 
     @staticmethod
     def encode_element(obj: tp.Any) -> tp.Any:
-        '''Convert non-JSON compatible objects to JSON compatible objects or strings.
+        '''Convert non-JSON compatible objects to JSON compatible objects or strings. This will recursively process components of iterables.
         '''
         if obj is None:
             return obj

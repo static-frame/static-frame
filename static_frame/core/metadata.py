@@ -80,7 +80,7 @@ class JSONMeta:
                 md[key] = [cls.__name__ for cls in labels.index_types.values]
 
         md[cls.KEY_DEPTHS] = [
-                len(f._blocks._blocks),
+                f._blocks._index.shape[1], # count of columns
                 f._index.depth,
                 f._columns.depth]
 
