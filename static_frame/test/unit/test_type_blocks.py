@@ -4082,6 +4082,12 @@ class TestUnit(TestCase):
                 (84967, 5729, False, 'zCE3', 170440, 175579, False, 'zljm', -31776, -97851))
 
     #---------------------------------------------------------------------------
+    def test_type_blocks_iter_row_tuples_a(self) -> None:
+        tb1 = ff.parse('s(4,1)')._blocks
+        post = tuple(tb1.iter_row_tuples(key=None))
+        self.assertEqual(post, ((1930.4,), (-1760.34,), (1857.34,), (1699.34,)))
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_iter_columns_tuples_a(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))

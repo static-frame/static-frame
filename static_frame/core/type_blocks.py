@@ -2832,9 +2832,13 @@ class TypeBlocks(ContainerOperand):
             arrays = list(self._slice_blocks(column_key=key))
 
         if len(arrays) == 1:
-            array = arrays[0]
-            for i in range(array.shape[0]):
-                yield constructor(array[i]) # pyright: ignore # works for 1D, 2D
+            a = arrays[0]
+            if a.ndim > 1:
+                for i in range(a.shape[0]):
+                    yield constructor(a[i]) # pyright: ignore # works for 1D, 2D
+            else:
+                for v in a:
+                    yield constructor((v,))
         else:
             def chainer(i: int) -> tp.Any:
                 for a in arrays:
