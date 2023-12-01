@@ -346,7 +346,7 @@ def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
         return value
 
     dt = np.dtype(value)
-    if dt == DTYPE_OBJECT and value is not object and value != "object":
+    if dt == DTYPE_OBJECT and value is not object and value not in ('object', '|O'):
         # fail on implicit conversion to object dtype
         raise TypeError(f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.')
     return dt

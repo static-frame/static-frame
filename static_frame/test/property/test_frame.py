@@ -398,7 +398,7 @@ class TestUnit(TestCase):
         except ErrorInitIndexNonUnique:
             pass
 
-    @given(sfst.get_frame_or_frame_go())
+    @given(sfst.get_frame_or_frame_go_core_no_object())
     def test_frame_to_json_typed(self, f1: Frame) -> None:
         msg = f1.to_json_typed()
         self.assertIsInstance(msg, str)
