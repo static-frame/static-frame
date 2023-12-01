@@ -7,7 +7,7 @@ What is New in StaticFrame
 
 Added ``TSeriesAny``, ``TSeriesHEAny``, ``TBusAny`` generic aliases.
 
-``Frame.to_json_split()`` and ``Frame.from_json_split()`` now expose an ``include_meta`` parameter to export and import comprehensive ``Frame`` metadata for complete round-trip serialization.
+Added ``Frame.to_json_typed()`` and ``Frame.from_json_typed()``, supporting optimized, complete round-trip ``Frame`` serialization.
 
 
 2.0.1
