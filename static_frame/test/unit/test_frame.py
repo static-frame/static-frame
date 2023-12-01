@@ -15212,7 +15212,7 @@ class TestUnit(TestCase):
         f = ff.parse('s(2,4)|v(bool,int32,float,str)|i(I,int32)|c(I,str)')
         post = f.to_json_typed()
 
-        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, false], [162197, -41157], [694.3, -72.96], ["z2Oo", "z5l6"]], "__meta__": {"__names__": [null, null, null], "__dtypes__": ["=b1", "=i4", "=f8", "=U4"], "__dtypes_index__": ["=i4"], "__dtypes_columns__": ["=U4"], "__types__": ["Index", "Index"], "__depths__": [4, 1, 1]}}')
+        self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, false], [162197, -41157], [694.3, -72.96], ["z2Oo", "z5l6"]], "__meta__": {"__names__": [null, null, null], "__dtypes__": ["|b1", "=i4", "=f8", "=U4"], "__dtypes_index__": ["=i4"], "__dtypes_columns__": ["=U4"], "__types__": ["Index", "Index"], "__depths__": [4, 1, 1]}}')
 
     #---------------------------------------------------------------------------
     def test_frame_to_json_records_a(self) -> None:
@@ -15272,7 +15272,7 @@ class TestUnit(TestCase):
         post1 = f1.to_json_typed()
 
         self.assertEqual(post1,
-                '{"columns": [[34715, 105269], [34715, 119909], [-3648, 194224], [-3648, 172133]], "index": [["zZbu", "zOyq"], ["zZbu", "zIA5"]], "data": [[47, -61], ["zaji", "zJnC"], [-64, -91], ["z2Oo", "z5l6"]], "__meta__": {"__names__": ["x", "y", "z"], "__dtypes__": ["=i1", "=U4", "=i1", "=U4"], "__dtypes_index__": ["=U4", "=U4"], "__dtypes_columns__": ["=i8", "=i8"], "__types__": ["IndexHierarchy", "IndexHierarchy"], "__types_index__": ["Index", "Index"], "__types_columns__": ["Index", "Index"], "__depths__": [4, 2, 2]}}'
+                '{"columns": [[34715, 105269], [34715, 119909], [-3648, 194224], [-3648, 172133]], "index": [["zZbu", "zOyq"], ["zZbu", "zIA5"]], "data": [[47, -61], ["zaji", "zJnC"], [-64, -91], ["z2Oo", "z5l6"]], "__meta__": {"__names__": ["x", "y", "z"], "__dtypes__": ["|i1", "=U4", "|i1", "=U4"], "__dtypes_index__": ["=U4", "=U4"], "__dtypes_columns__": ["=i8", "=i8"], "__types__": ["IndexHierarchy", "IndexHierarchy"], "__types_index__": ["Index", "Index"], "__types_columns__": ["Index", "Index"], "__depths__": [4, 2, 2]}}'
                 )
 
         f2 = Frame.from_json_typed(post1, )

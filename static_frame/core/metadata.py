@@ -42,7 +42,10 @@ class JSONMeta:
     def _dtype_to_str(dt: TDtypeAny) -> str:
         '''Normalize all dtype strings as platform native
         '''
-        return '=' + dt.str[1:]
+        dts = dt.str
+        if dts[0] == '|':
+            return dts
+        return '=' + dts[1:]
 
     @classmethod
     def _index_to_dtype_str(cls, index: IndexBase) -> tp.List[str]:
