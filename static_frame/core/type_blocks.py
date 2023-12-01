@@ -2822,7 +2822,7 @@ class TypeBlocks(ContainerOperand):
     def iter_row_tuples(self,
             key: TILocSelector,
             *,
-            constructor: tp.Optional[TTupleCtor] = tuple,
+            constructor: TTupleCtor = tuple,
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per row of values based on a selection of one or more columns. This interface yields all rows in the TypeBlocks.
         '''
@@ -2838,7 +2838,7 @@ class TypeBlocks(ContainerOperand):
                     yield constructor(a[i]) # pyright: ignore # works for 1D, 2D
             else:
                 for v in a:
-                    yield constructor((v,))
+                    yield constructor((v,)) # pyright: ignore
         else:
             def chainer(i: int) -> tp.Any:
                 for a in arrays:
