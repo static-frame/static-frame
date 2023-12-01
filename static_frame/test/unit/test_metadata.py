@@ -97,7 +97,7 @@ class TestUnit(TestCase):
     def test_from_dict_to_ctors_a(self) -> None:
         f = ff.parse('s(2,3)|v(int,float)|i(ID,dtD)').rename('a', index='row', columns='col')
         md = JSONMeta.to_dict(f)
-        index_ctor, columns_ctor = JSONMeta.from_dict_to_ctors(md)
+        index_ctor, columns_ctor = JSONMeta.from_dict_to_ctors(md, True)
         idx1 = index_ctor(('2022-01-01',))
         self.assertEqual(idx1.name, 'row')
         self.assertIs(idx1.__class__, IndexDate)

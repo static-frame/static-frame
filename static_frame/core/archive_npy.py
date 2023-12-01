@@ -771,7 +771,6 @@ class ArchiveFrameConverter:
         '''
         from static_frame.core.type_blocks import TypeBlocks
 
-
         metadata = archive.read_metadata()
 
         # NOTE: we isolate custom post-JSON decoding to only where it is needed: the name attributes. JSON will bring back tuple `name` attributes as lists; these must be converted to tuples to be hashable. Alternatives (like storing repr and using literal_eval) are slower than JSON.
@@ -780,7 +779,6 @@ class ArchiveFrameConverter:
         name = JSONTranslator.decode_element(names[0])
         name_index = JSONTranslator.decode_element(names[1])
         name_columns = JSONTranslator.decode_element(names[2])
-
 
         block_count, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
 

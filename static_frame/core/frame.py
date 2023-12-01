@@ -2151,7 +2151,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         md = data['__meta__']
         name = md[JSONMeta.KEY_NAMES][0] # first is for Frame
         dtypes = md[JSONMeta.KEY_DTYPES]
-        index_constructor, columns_constructor = JSONMeta.from_dict_to_ctors(md)
+        index_constructor, columns_constructor = JSONMeta.from_dict_to_ctors(
+                md,
+                cls.STATIC,
+                )
 
         return cls.from_fields(data['data'],
                 index=data['index'],
