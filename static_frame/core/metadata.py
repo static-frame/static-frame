@@ -136,7 +136,7 @@ class JSONMeta:
             if ctor_static:
                 return cls._IMMUTABLE_CONSTRUCTOR #type: ignore
             return cls._MUTABLE_CONSTRUCTOR #type: ignore
-        return cls
+        return cls #type: ignore
 
     @classmethod
     def from_dict_to_ctors(cls,
