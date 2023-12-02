@@ -1640,6 +1640,13 @@ class ExGenFrame(ExGen):
             yield 'msg'
             yield f"sf.Frame.{attr}(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))"
 
+        elif attr == 'from_json_typed':
+            encoder = attr.replace('from_', 'to_')
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield f"msg = f.{encoder}(indent=4)"
+            yield 'msg'
+            yield f"sf.Frame.{attr}(msg)"
+
         elif attr == 'from_msgpack':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
             yield f'mb = f1.to_msgpack()'
@@ -1781,6 +1788,7 @@ class ExGenFrame(ExGen):
                 'to_json_split()',
                 'to_json_records()',
                 'to_json_values()',
+                'to_json_typed()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield f"f.{attr_func}(indent=4)"

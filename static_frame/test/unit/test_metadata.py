@@ -19,7 +19,7 @@ class TestUnit(TestCase):
         self._round_trip_dtype(np.dtype(np.float64))
 
     def test_dtype_to_str_b(self) -> None:
-        self.assertEqual(JSONMeta._dtype_to_str(np.dtype(np.uint8)), '=u1')
+        self.assertEqual(JSONMeta._dtype_to_str(np.dtype(np.uint8)), '|u1')
         self._round_trip_dtype(np.dtype(np.uint8))
 
     def test_dtype_to_str_c(self) -> None:
@@ -60,8 +60,8 @@ class TestUnit(TestCase):
                 '__names__': ['a', None, None],
                 '__types__': ['IndexSecond', 'IndexHierarchy'],
                 '__types_columns__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 1, 3],
-                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
+                '__depths__': [4, 1, 3],
+                '__dtypes__': ['|b1', '|b1', '|b1', '|b1'],
                 '__dtypes_columns__': ['=i8', '=U4', '=U4'],
                 '__dtypes_index__': ['=M8[s]'],
                 })
@@ -73,8 +73,8 @@ class TestUnit(TestCase):
                 '__names__': ['a', None, None],
                 '__types__': ['IndexHierarchy', 'IndexSecond'],
                 '__types_index__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 3, 1],
-                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
+                '__depths__': [4, 3, 1],
+                '__dtypes__': ['|b1', '|b1', '|b1', '|b1'],
                 '__dtypes_columns__': ['=M8[s]'],
                 '__dtypes_index__': ['=i8', '=U4', '=U4'],
                 })
@@ -87,8 +87,8 @@ class TestUnit(TestCase):
                 '__types__': ['IndexHierarchy', 'IndexHierarchy'],
                 '__types_index__': ['Index', 'Index'],
                 '__types_columns__': ['Index', 'Index', 'Index'],
-                '__depths__': [1, 2, 3],
-                '__dtypes__': ['=b1', '=b1', '=b1', '=b1'],
+                '__depths__': [4, 2, 3],
+                '__dtypes__': ['|b1', '|b1', '|b1', '|b1'],
                 '__dtypes_columns__': ['=U4', '=i8', '=U4'],
                 '__dtypes_index__': ['=i8', '=U4'],
                 })
@@ -97,7 +97,7 @@ class TestUnit(TestCase):
     def test_from_dict_to_ctors_a(self) -> None:
         f = ff.parse('s(2,3)|v(int,float)|i(ID,dtD)').rename('a', index='row', columns='col')
         md = JSONMeta.to_dict(f)
-        index_ctor, columns_ctor = JSONMeta.from_dict_to_ctors(md)
+        index_ctor, columns_ctor = JSONMeta.from_dict_to_ctors(md, True)
         idx1 = index_ctor(('2022-01-01',))
         self.assertEqual(idx1.name, 'row')
         self.assertIs(idx1.__class__, IndexDate)

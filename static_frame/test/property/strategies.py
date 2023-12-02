@@ -219,9 +219,11 @@ class DTGroup(Enum):
 
     BASIC_NO_REAL = NUMERIC_INT + BOOL + STRING
 
+    BASIC_NO_BOOL = NUMERIC + STRING
+
     # NOTE: duplicate non-datetime to produce more balanced distribution
     CORE = tuple(chain(
-            # OBJECT, # object is included butg is handled with get_array_from_dtype_group
+            # OBJECT, # object is included but is handled with get_array_from_dtype_group
             NUMERIC, NUMERIC, NUMERIC,
             BOOL, BOOL, BOOL,
             STRING, STRING, STRING,
@@ -966,6 +968,23 @@ def get_frame_or_frame_go(
 
 
 
+def get_frame_or_frame_go_core_no_object(
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
+        ) -> st.SearchStrategy:
+    return get_frame_or_frame_go(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            dtype_group=DTGroup.CORE_NO_OBJECT,
+            index_cls=Index,
+            index_dtype_group=DTGroup.BASIC_NO_BOOL,
+            columns_cls=Index,
+            columns_dtype_group=DTGroup.BASIC_NO_BOOL,
+            )
 
 if __name__ == '__main__':
     import fnmatch

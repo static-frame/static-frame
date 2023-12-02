@@ -35,11 +35,14 @@ from static_frame.core.frame import FrameAssignBLoc as FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc as FrameAssignILoc
 from static_frame.core.frame import FrameGO as FrameGO
 from static_frame.core.frame import FrameHE as FrameHE
+from static_frame.core.generic_aliases import TBusAny as TBusAny
 from static_frame.core.generic_aliases import TFrameAny as TFrameAny
 from static_frame.core.generic_aliases import TFrameGOAny as TFrameGOAny
 from static_frame.core.generic_aliases import TFrameHEAny as TFrameHEAny
 from static_frame.core.generic_aliases import TIndexAny as TIndexAny
 from static_frame.core.generic_aliases import TIndexHierarchyAny as TIndexHierarchyAny
+from static_frame.core.generic_aliases import TSeriesAny as TSeriesAny
+from static_frame.core.generic_aliases import TSeriesHEAny as TSeriesHEAny
 from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index

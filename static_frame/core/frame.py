@@ -2026,7 +2026,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             consolidate_blocks: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
             columns_constructor: TIndexCtorSpecifier = None,
-            include_meta: bool = False,
             ) -> tp.Self:
         '''Frame constructor from an in-memory JSON document in the following format: {json_split}
 
@@ -2035,7 +2034,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {dtypes}
             {name}
             {consolidate_blocks}
-            include_meta: If True, expect and use metadata defined in the JSON. Other parameters explicitly given will override any metadata.
         Returns:
             :obj:`Frame`
         '''
@@ -2043,21 +2041,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
-
-        if include_meta:
-            if not (md := data.get('__meta__')):
-                raise RuntimeError('`include_meta` parameter set but no metadata found.')
-            if dtypes is None:
-                dtypes = md[JSONMeta.KEY_DTYPES]
-
-            if name is None:
-                name = md[JSONMeta.KEY_NAMES][0] # first is for Frame
-
-            ictor, cctor = JSONMeta.from_dict_to_ctors(md)
-            if index_constructor is None:
-                index_constructor = ictor
-            if columns_constructor is None:
-                columns_constructor = cctor
 
         return cls.from_records(data['data'],
                 index=data['index'],
@@ -2144,6 +2127,45 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index_constructor=index_constructor,
                 columns_constructor=columns_constructor,
                 )
+
+
+    @classmethod
+    @doc_inject(selector='json')
+    def from_json_typed(cls,
+            json_data: tp.Union[str, StringIO],
+            *,
+            consolidate_blocks: bool = False,
+            ) -> tp.Self:
+        '''Frame constructor from an in-memory JSON document in the following format: {json_typed}
+
+        Args:
+            json_data: a string or StringIO of JSON data
+        Returns:
+            :obj:`Frame`
+        '''
+        if isinstance(json_data, str):
+            data = json.loads(json_data)
+        else: # StringIO or open file
+            data = json.load(json_data)
+
+        md = data['__meta__']
+        name = md[JSONMeta.KEY_NAMES][0] # first is for Frame
+        dtypes = md[JSONMeta.KEY_DTYPES]
+        index_constructor, columns_constructor = JSONMeta.from_dict_to_ctors(
+                md,
+                cls.STATIC,
+                )
+
+        return cls.from_fields(data['data'],
+                index=data['index'],
+                columns=data['columns'],
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
+
 
     #---------------------------------------------------------------------------
     @classmethod
@@ -8673,21 +8695,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def to_json_split(self,
             indent: tp.Optional[int] = None,
-            include_meta: bool = False,
             ) -> str:
         '''
         Export a :obj:`Frame` as a JSON string constructed as follows: {json_split}
 
         Args:
             {indent}
-            include_meta: If True, and additional JSON object is provided that defines all component types and dtypes.
         '''
         d = dict(columns=JSONFilter.encode_iterable(self._columns),
                 index=JSONFilter.encode_iterable(self._index),
-                data=JSONFilter.encode_iterable(self.iter_tuple(constructor=list, axis=1)),
+                data=JSONFilter.encode_iterable(
+                        self._blocks.iter_row_tuples(key=None, constructor=tuple)
+                        ),
                 )
-        if include_meta:
-            d['__meta__'] = JSONMeta.to_dict(self)
         return json.dumps(d, indent=indent)
 
     @doc_inject(selector='json')
@@ -8710,8 +8730,25 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             {indent}
         '''
-        d = self.iter_tuple(constructor=tuple, axis=1)
+        d = self._blocks.iter_row_tuples(key=None, constructor=tuple)
         return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
+
+    @doc_inject(selector='json')
+    def to_json_typed(self,
+            indent: tp.Optional[int] = None,
+            ) -> str:
+        '''
+        Export a :obj:`Frame` as a JSON string constructed as follows: {json_typed}
+
+        Args:
+            {indent}
+        '''
+        d = dict(columns=JSONFilter.encode_iterable(self._columns),
+                index=JSONFilter.encode_iterable(self._index),
+                data=JSONFilter.encode_iterable(self._blocks.axis_values(0)),
+                __meta__=JSONMeta.to_dict(self),
+                )
+        return json.dumps(d, indent=indent)
 
     #---------------------------------------------------------------------------
     # exporters: delimited

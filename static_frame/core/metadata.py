@@ -42,7 +42,10 @@ class JSONMeta:
     def _dtype_to_str(dt: TDtypeAny) -> str:
         '''Normalize all dtype strings as platform native
         '''
-        return '=' + dt.str[1:]
+        dts = dt.str
+        if dts[0] == '|':
+            return dts
+        return '=' + dts[1:]
 
     @classmethod
     def _index_to_dtype_str(cls, index: IndexBase) -> tp.List[str]:
@@ -80,7 +83,7 @@ class JSONMeta:
                 md[key] = [cls.__name__ for cls in labels.index_types.values]
 
         md[cls.KEY_DEPTHS] = [
-                len(f._blocks._blocks),
+                f._blocks._index.shape[1], # count of columns
                 f._index.depth,
                 f._columns.depth]
 
@@ -124,19 +127,30 @@ class JSONMeta:
                 )
 
 
+
+    @staticmethod
+    def _get_cls(name: str, ctor_static: bool) -> tp.Type[IndexBase]:
+        cls = ContainerMap.str_to_cls(name)
+        # if containing Frame static does not match this class, update
+        if ctor_static != cls.STATIC:
+            if ctor_static:
+                return cls._IMMUTABLE_CONSTRUCTOR #type: ignore
+            return cls._MUTABLE_CONSTRUCTOR #type: ignore
+        return cls #type: ignore
+
     @classmethod
     def from_dict_to_ctors(cls,
             md: tp.Dict[str, tp.Any],
+            ctor_static: bool,
             ) -> tp.Tuple[TIndexCtor, TIndexCtor]:
 
         names = md[NPYLabel.KEY_NAMES]
         name_index = JSONTranslator.decode_element(names[1])
         name_columns = JSONTranslator.decode_element(names[2])
 
-        cls_index: tp.Type[IndexBase]
-        cls_columns: tp.Type[IndexBase]
-        cls_index, cls_columns = (ContainerMap.str_to_cls(n) # type: ignore
-                for n in md[NPYLabel.KEY_TYPES])
+        types = md[NPYLabel.KEY_TYPES]
+        cls_index: tp.Type[IndexBase] = cls._get_cls(types[0], True)
+        cls_columns: tp.Type[IndexBase] = cls._get_cls(types[1], ctor_static)
 
         _, depth_index, depth_columns = md[NPYLabel.KEY_DEPTHS]
 

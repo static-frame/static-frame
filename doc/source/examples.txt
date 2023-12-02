@@ -11118,6 +11118,98 @@ s          3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_Frame-from_json_split()
 
+#start_Frame-from_json_typed()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_typed(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        [
+            0,
+            "p"
+        ],
+        [
+            0,
+            "q"
+        ],
+        [
+            1,
+            "p"
+        ],
+        [
+            1,
+            "q"
+        ]
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8",
+            "=U1"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "IndexHierarchy",
+            "Index"
+        ],
+        "__types_index__": [
+            "Index",
+            "Index"
+        ],
+        "__depths__": [
+            3,
+            2,
+            1
+        ]
+    }
+}
+>>> sf.Frame.from_json_typed(msg)
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                p     10      False  1517-01-01
+0                q     2       True   1517-04-01
+1                p     8       True   1517-12-31
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+#end_Frame-from_json_typed()
+
 #start_Frame-from_json_values()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> msg = f.to_json_values(indent=4)
@@ -11607,6 +11699,71 @@ s            3        wX
     ]
 }
 #end_Frame-to_json_split()
+
+#start_Frame-to_json_typed()
+>>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_typed(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "Index",
+            "Index"
+        ],
+        "__depths__": [
+            3,
+            1,
+            1
+        ]
+    }
+}
+#end_Frame-to_json_typed()
 
 #start_Frame-to_json_values()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -19321,6 +19478,98 @@ s            3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_json_split()
 
+#start_FrameHE-from_json_typed()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_typed(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        [
+            0,
+            "p"
+        ],
+        [
+            0,
+            "q"
+        ],
+        [
+            1,
+            "p"
+        ],
+        [
+            1,
+            "q"
+        ]
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8",
+            "=U1"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "IndexHierarchy",
+            "Index"
+        ],
+        "__types_index__": [
+            "Index",
+            "Index"
+        ],
+        "__depths__": [
+            3,
+            2,
+            1
+        ]
+    }
+}
+>>> sf.Frame.from_json_typed(msg)
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                p     10      False  1517-01-01
+0                q     2       True   1517-04-01
+1                p     8       True   1517-12-31
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_json_typed()
+
 #start_FrameHE-from_json_values()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> msg = f.to_json_values(indent=4)
@@ -19810,6 +20059,71 @@ s            3        wX
     ]
 }
 #end_FrameHE-to_json_split()
+
+#start_FrameHE-to_json_typed()
+>>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_typed(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "Index",
+            "Index"
+        ],
+        "__depths__": [
+            3,
+            1,
+            1
+        ]
+    }
+}
+#end_FrameHE-to_json_typed()
 
 #start_FrameHE-to_json_values()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -27496,6 +27810,98 @@ s            3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_json_split()
 
+#start_FrameGO-from_json_typed()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> msg = f.to_json_typed(indent=4)
+>>> msg
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        [
+            0,
+            "p"
+        ],
+        [
+            0,
+            "q"
+        ],
+        [
+            1,
+            "p"
+        ],
+        [
+            1,
+            "q"
+        ]
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8",
+            "=U1"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "IndexHierarchy",
+            "IndexGO"
+        ],
+        "__types_index__": [
+            "Index",
+            "Index"
+        ],
+        "__depths__": [
+            3,
+            2,
+            1
+        ]
+    }
+}
+>>> sf.Frame.from_json_typed(msg)
+<Frame: x>
+<Index>                a       b      c               <<U1>
+<IndexHierarchy>
+0                p     10      False  1517-01-01
+0                q     2       True   1517-04-01
+1                p     8       True   1517-12-31
+1                q     3       False  1517-06-30
+<int64>          <<U1> <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_json_typed()
+
 #start_FrameGO-from_json_values()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> msg = f.to_json_values(indent=4)
@@ -27985,6 +28391,71 @@ s            3        wX
     ]
 }
 #end_FrameGO-to_json_split()
+
+#start_FrameGO-to_json_typed()
+>>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f.to_json_typed(indent=4)
+{
+    "columns": [
+        "a",
+        "b",
+        "c"
+    ],
+    "index": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "data": [
+        [
+            10,
+            2,
+            8,
+            3
+        ],
+        [
+            false,
+            true,
+            true,
+            false
+        ],
+        [
+            "1517-01-01",
+            "1517-04-01",
+            "1517-12-31",
+            "1517-06-30"
+        ]
+    ],
+    "__meta__": {
+        "__names__": [
+            "x",
+            null,
+            null
+        ],
+        "__dtypes__": [
+            "=i8",
+            "|b1",
+            "=M8[D]"
+        ],
+        "__dtypes_index__": [
+            "=i8"
+        ],
+        "__dtypes_columns__": [
+            "=U1"
+        ],
+        "__types__": [
+            "Index",
+            "IndexGO"
+        ],
+        "__depths__": [
+            3,
+            1,
+            1
+        ]
+    }
+}
+#end_FrameGO-to_json_typed()
 
 #start_FrameGO-to_json_values()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -35296,7 +35767,7 @@ s            0.0                 0.0                 -0.5365729180004349
 1                q     3       False  1517-06-30
 <int64>          <<U1> <int64> <bool> <datetime64[D]>
 >>> f.via_type_clinic.to_hint()
-static_frame.core.frame.FrameGO[static_frame.core.index_hierarchy.IndexHierarchy[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_]], static_frame.core.index.IndexGO[numpy.str_], numpy.int64, numpy.bool_, numpy.datetime64]
+TypeError("Too many arguments for <class 'static_frame.core.frame.FrameGO'>; actual 5, expected 2")
 #end_FrameGO-via_type_clinic.to_hint()
 
 #start_FrameGO-via_type_clinic.check()
@@ -35351,7 +35822,7 @@ In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool_, 
 1                q     3       False  1517-06-30
 <int64>          <<U1> <int64> <bool> <datetime64[D]>
 >>> f.via_type_clinic
-FrameGO[IndexHierarchy[Index[int64], Index[str_]], IndexGO[str_], int64, bool_, datetime64]
+TypeError("Too many arguments for <class 'static_frame.core.frame.FrameGO'>; actual 5, expected 2")
 #end_FrameGO-via_type_clinic.__repr__()
 
 #start_Index-__init__()
@@ -72839,13 +73310,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchy-all()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f3b3818a2a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f4c36fa22a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
 >>> ih = sf.IndexHierarchy.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f3b3818a340> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f4c36fa2340> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -72893,13 +73364,13 @@ False                             True  False
 #start_IndexHierarchy-cumprod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f3b7a1ffec0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4c7902fec0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f3b7a1ff740> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f4c7902f740> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -73162,13 +73633,13 @@ slice(2, None, None)
 #start_IndexHierarchy-mean()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f3b7a20c4a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4c7903c4a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f3b79984720> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f4c7878c720> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -73180,7 +73651,7 @@ NotImplementedError('<function median at 0x7f3b79984720> for IndexHierarchy is n
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f3b7a1ffd80> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4c7902fd80> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -73295,13 +73766,13 @@ a                   1024    True
 #start_IndexHierarchy-std()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f3b7a2076f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4c79037e70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f3b7a1ff380> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f4c7902f380> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -73357,7 +73828,7 @@ nan                          nan
 #start_IndexHierarchy-var()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f3b7a207930>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4c790400f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -75391,13 +75862,13 @@ ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indica
 #start_IndexHierarchyGO-all()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f3b3818a2a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f4c36fa22a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
 >>> ih = sf.IndexHierarchyGO.from_labels(((False, True, True), (True, True, True), (False, True, False)), name=('x', 'y', 'z'))
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f3b3818a340> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f4c36fa2340> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -75458,13 +75929,13 @@ False                               True  False
 #start_IndexHierarchyGO-cumprod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f3b7a1ffec0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4c7902fec0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f3b7a1ff740> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f4c7902f740> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -75735,13 +76206,13 @@ slice(2, None, None)
 #start_IndexHierarchyGO-mean()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f3b7a20c4a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4c7903c4a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.median()
-NotImplementedError('<function median at 0x7f3b79984720> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f4c7878c720> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -75753,7 +76224,7 @@ NotImplementedError('<function median at 0x7f3b79984720> for IndexHierarchyGO is
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f3b7a1ffd80> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4c7902fd80> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -75868,13 +76339,13 @@ a                     1024    True
 #start_IndexHierarchyGO-std()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f3b7a2076f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4c79037e70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f3b7a1ff380> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f4c7902f380> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -75930,7 +76401,7 @@ nan                            nan
 #start_IndexHierarchyGO-var()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f3b7a207930>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4c790400f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -86533,7 +87004,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f3b08591fc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4bd5d919c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -86593,13 +87064,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f3b08590640>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4bd5d93a40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f3b08592840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f4bd5d924c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
