@@ -676,6 +676,7 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
         # try to make it into an array
         lhs = np.array(lhs)
 
+    lhs_type: tp.Union[np.ndarray, tp.Type[Series], tp.Type[Frame]]
     if isinstance(lhs, np.ndarray):
         lhs_type = np.ndarray
     elif isinstance(lhs, Series):

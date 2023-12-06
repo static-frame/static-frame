@@ -144,7 +144,7 @@ def mypy(context,
          ):
     '''Run mypy static analysis.
     '''
-    context.run('mypy --strict --new-type-inference', pty=pty)
+    context.run('mypy --strict', pty=pty)
 
 @task
 def pyright(context,
