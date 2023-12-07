@@ -44,8 +44,7 @@ class TestUnit(TestCase):
         idx1 = IndexAutoFactory.from_optional_constructor(5,
                 default_constructor=IndexGO,
                 explicit_constructor=Index)
-        # when using an alternate constructor, loc_is_iloc will not be set
-        self.assertEqual(idx1._map is None, False) #type: ignore
+        self.assertTrue(idx1._map is None) #type: ignore
         self.assertEqual(len(idx1), 5)
         self.assertEqual(idx1.STATIC, True)
 
