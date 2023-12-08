@@ -111,6 +111,7 @@ if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny  # pylint: disable=W0611 #pragma: no cover
 
 
 
@@ -122,7 +123,7 @@ TTreeNode = tp.Dict[TLabel, tp.Union[Index[tp.Any], 'TTreeNode']]
 
 _NBYTES_GETTER = operator.attrgetter('nbytes')
 
-TExtraction = tp.Union['IndexHierarchy', TSingleLabel]
+TExtraction = tp.Union['TIndexHierarchyAny', TSingleLabel]
 
 THashableToIntMaps = tp.List[tp.Dict[TLabel, int]]
 TGrowableIndexers = tp.List[tp.List[int]]
@@ -251,7 +252,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     _values: tp.Optional[TNDArrayAny] # Used to cache the property `values`
     _map: HierarchicalLocMap
     _index_types: tp.Optional[Series[tp.Any, np.object_]] # Used to cache the property `index_types`
-    _pending_extensions: tp.Optional[tp.List[tp.Union[TSingleLabel, 'IndexHierarchy', PendingRow]]]
+    _pending_extensions: tp.Optional[tp.List[tp.Union[TSingleLabel, TIndexHierarchyAny, PendingRow]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -969,7 +970,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     # --------------------------------------------------------------------------
     def __init__(self,
-            indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
+            indices: tp.Union[TIndexHierarchyAny, tp.List[Index[tp.Any]]],
             *,
             indexers: TNDArrayAny = EMPTY_ARRAY_INT,
             name: TName = NAME_DEFAULT,
@@ -1163,11 +1164,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces['IndexHierarchy']:
+    def loc(self) -> InterGetItemLocReduces[TIndexHierarchyAny]:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces['IndexHierarchy']:
+    def iloc(self) -> InterGetItemILocReduces[TIndexHierarchyAny]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     def _iter_label(self,
@@ -1205,7 +1206,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @property
     @doc_inject(select='astype')
-    def astype(self) -> InterfaceIndexHierarchyAsType[IndexHierarchy]:
+    def astype(self) -> InterfaceIndexHierarchyAsType[TIndexHierarchyAny]:
         '''
         Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
 
@@ -1216,7 +1217,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     # --------------------------------------------------------------------------
     @property
-    def via_values(self) -> InterfaceValues[IndexHierarchy]:
+    def via_values(self) -> InterfaceValues[TIndexHierarchyAny]:
         '''
         Interface for applying functions to values (as arrays) in this container.
         '''
@@ -1254,7 +1255,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
+    def via_T(self) -> InterfaceTranspose[TIndexHierarchyAny]:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
@@ -1836,7 +1837,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return post
 
     def _loc_to_iloc_index_hierarchy(self,
-            key: IndexHierarchy,
+            key: TIndexHierarchyAny,
             ) -> tp.List[int]:
         '''
         Returns the boolean mask for a key that is an IndexHierarchy.
@@ -2439,7 +2440,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # --------------------------------------------------------------------------
     # utility functions
 
-    def union(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
+    def union(self, *others: tp.Union[TIndexHierarchyAny, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2447,7 +2448,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         return IndexBase.union(self, *others) # pyright: ignore
 
-    def intersection(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
+    def intersection(self, *others: tp.Union[TIndexHierarchyAny, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2455,7 +2456,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         return IndexBase.intersection(self, *others) # pyright: ignore
 
-    def difference(self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]) -> tp.Self:
+    def difference(self, *others: tp.Union[TIndexHierarchyAny, tp.Iterable[TLabel]]) -> tp.Self:
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
@@ -2880,7 +2881,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
 
-class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]): # type: ignore[type-arg]
+class IndexHierarchyGO(IndexHierarchy): # type: ignore[type-arg]
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''
@@ -2918,7 +2919,7 @@ class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]): # type: ignore[typ
     # 2/3 index.difference
     # 1/3 index.extend
     def extend(self: TVIHGO,
-            other: IndexHierarchy,
+            other: TIndexHierarchyAny,
             ) -> None:
         '''
         Extend this IndexHierarchyGO in-place
@@ -2950,11 +2951,11 @@ class IndexHierarchyAsType:
             'depth_key',
             )
 
-    container: IndexHierarchy
+    container: TIndexHierarchyAny
     depth_key: TDepthLevel
 
     def __init__(self: TVIHAsType,
-            container: IndexHierarchy,
+            container: TIndexHierarchyAny,
             depth_key: TDepthLevel
             ) -> None:
         self.container = container
@@ -2964,7 +2965,7 @@ class IndexHierarchyAsType:
             dtypes: TDtypesSpecifier,
             *,
             consolidate_blocks: bool = False,
-            ) -> IndexHierarchy:
+            ) -> TIndexHierarchyAny:
         '''
         Entrypoint to `astype` the container
         '''

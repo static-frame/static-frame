@@ -62,10 +62,6 @@ from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 
-TFrameOrSeries = tp.Union[Frame, Series]
-TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
-TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
-
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TILocSelectorCompound  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -74,6 +70,9 @@ if tp.TYPE_CHECKING:
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 TBusAny = Bus[tp.Any]
+TFrameOrSeries = tp.Union[TFrameAny, TSeriesAny]
+TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
+TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 
 #-------------------------------------------------------------------------------
 # family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls

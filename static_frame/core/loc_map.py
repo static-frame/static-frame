@@ -39,7 +39,7 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
-HierarchicalLocMapKey = tp.Union[np.ndarray, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
+HierarchicalLocMapKey = tp.Union['np.ndarray[tp.Any, tp.Any]', tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
 _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()

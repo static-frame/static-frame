@@ -59,7 +59,7 @@ if tp.TYPE_CHECKING:
     TKeyIterable = tp.Union[tp.Iterable[tp.Any], TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
 
     TILocSelectorOne = tp.Union[int, np.integer[tp.Any]]
-    TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
+    TILocSelectorMany = tp.Union[TNDArrayAny, tp.List[int], slice, None]
     TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
     TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
 
@@ -263,10 +263,10 @@ TLabel = tp.Union[
         int,
         bool,
         np.bool_,
-        np.integer,
+        'np.integer[tp.Any]',
         float,
         complex,
-        np.inexact,
+        'np.inexact[tp.Any]',
         str,
         bytes,
         None,
@@ -280,16 +280,16 @@ TLabel = tp.Union[
 TLocSelectorMany = tp.Union[
         slice,
         tp.List[TLabel],
-        np.ndarray,
+        'np.ndarray[tp.Any, tp.Any]',
         'IndexBase',
-        'Series',
+        'Series[tp.Any, tp.Any]',
         ]
 
 TLocSelectorNonContainer = tp.Union[
         TLabel,
         slice,
         tp.List[TLabel],
-        np.ndarray,
+        'np.ndarray[tp.Any, tp.Any]',
         ]
 
 # keys once dimension has been isolated
@@ -306,14 +306,14 @@ TName = TLabel # include name default?
 
 TTupleCtor = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
-TBlocKey = tp.Union['Frame', np.ndarray, None]
+TBlocKey = tp.Union['Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', 'np.ndarray[tp.Any, tp.Any]', None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
 
-TUFunc = tp.Callable[..., np.ndarray]
+TUFunc = tp.Callable[..., 'np.ndarray[tp.Any, tp.Any]']
 TCallableAny = tp.Callable[..., tp.Any]
 
-TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
-TCallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']
+TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series[tp.Any, tp.Any]']
+TCallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series[tp.Any, tp.Any]']
 
 TShape = tp.Union[int, tp.Tuple[int, ...]]
 
@@ -337,12 +337,12 @@ TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
-TPathSpecifier = tp.Union[str, PathLike]
-TPathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
-TPathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
+TPathSpecifier = tp.Union[str, PathLike[tp.Any]]
+TPathSpecifierOrFileLike = tp.Union[str, PathLike[tp.Any], tp.TextIO]
+TPathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike[tp.Any], tp.TextIO, tp.Iterator[str]]
 
-TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
-TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
+TDtypeSpecifier = tp.Union[str, 'np.dtype[tp.Any]', type, None]
+TDtypeOrDT64 = tp.Union['np.dtype[tp.Any]', tp.Type[np.datetime64]]
 
 def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
     if value is None or isinstance(value, np.dtype):
@@ -419,7 +419,7 @@ TDtypesSpecifier = tp.Optional[tp.Union[
         tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
-TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
+TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, 'np.ndarray[tp.Any, tp.Any]', None]
 TDepthLevel = tp.Union[int, tp.List[int]]
 
 TCallableToIter = tp.Callable[[], tp.Iterable[tp.Any]]
@@ -432,14 +432,14 @@ TIndexInitializer = tp.Union[
         # tp.Type['IndexAutoFactory'],
         ]
 
-TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
+TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index[tp.Any]']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 
 TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
         tp.Sequence[TIndexCtorSpecifier],
         tp.Iterator[TIndexCtorSpecifier],
-        np.ndarray, # object array of constructors
+        'np.ndarray[tp.Any, np.dtype[np.object_]]', # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],
         ]
@@ -454,7 +454,7 @@ TExplicitIndexCtor = tp.Union[
 
 TSeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
-        np.ndarray,
+        'np.ndarray[tp.Any, tp.Any]',
         ]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
@@ -464,15 +464,15 @@ ZIP_LONGEST_DEFAULT = object()
 
 TFrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
-        np.ndarray,
+        'np.ndarray[tp.Any, tp.Any]',
         'TypeBlocks',
-        'Frame',
-        'Series',
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
+        'Series[tp.Any, tp.Any]',
         ]
 
-TDateInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-TYearMonthInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-TYearInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+TDateInitializer = tp.Union[int, 'np.integer[tp.Any]', str, datetime.date, np.datetime64]
+TYearMonthInitializer = tp.Union[int, 'np.integer[tp.Any]', str, datetime.date, np.datetime64]
+TYearInitializer = tp.Union[int, 'np.integer[tp.Any]', str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
