@@ -206,6 +206,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset  # pylint: disable=W0611 #pragma: no cover
 
+    from static_frame.core.generic_aliases import TIndexHierarchyAny
     from static_frame.core.util import TILocSelector
     from static_frame.core.util import TILocSelectorCompound
     from static_frame.core.util import TILocSelectorMany
@@ -1889,7 +1890,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 def default_constructor(
                         iterables: tp.Iterable[tp.Iterable[TLabel]],
                         index_constructors: TIndexCtorSpecifiers,
-                        ) -> IndexHierarchy: #pylint: disable=function-redefined
+                        ) -> TIndexHierarchyAny: #pylint: disable=function-redefined
                     if get_col_dtype:
                         blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
                                 for i, it in enumerate(iterables)]
@@ -9417,7 +9418,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 #-------------------------------------------------------------------------------
-class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
+class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     '''
     A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     '''
