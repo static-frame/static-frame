@@ -10,6 +10,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.series import SeriesHE
 
+
 TIndexAny = Index[tp.Any]
 TIndexHierarchyAny = IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
