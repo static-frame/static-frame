@@ -70,6 +70,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.util import TILocSelectorCompound  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.util import TILocSelectorMany  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.util import TILocSelectorOne  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny # pylint: disable=W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -98,7 +99,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     _bus: tp.Union[TBusAny, TYarnAny]
     _axis: int
-    _axis_hierarchy: tp.Optional[IndexHierarchy]
+    _axis_hierarchy: tp.Optional[TIndexHierarchyAny]
     _axis_opposite: tp.Optional[IndexBase]
     _columns: IndexBase
     _index: IndexBase
@@ -476,7 +477,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             *,
             axis: int = 0,
             retain_labels: bool,
-            axis_hierarchy: tp.Optional[IndexHierarchy] = None,
+            axis_hierarchy: tp.Optional[TIndexHierarchyAny] = None,
             axis_opposite: tp.Optional[IndexBase] = None,
             deepcopy_from_bus: bool = False,
             ) -> None:

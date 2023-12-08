@@ -22,11 +22,14 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique1d_indexer
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TIndexHierarchyAny
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
+
 class ValidationResult(tp.NamedTuple):
-    indices: tp.List[IndexHierarchy]
+    indices: tp.List[TIndexHierarchyAny]
     depth: int
     any_dropped: bool
     any_shallow_copies: bool
@@ -35,7 +38,7 @@ class ValidationResult(tp.NamedTuple):
 
 
 def _validate_and_process_indices(
-        indices: tp.Tuple[IndexHierarchy, ...],
+        indices: tp.Tuple[TIndexHierarchyAny, ...],
         ) -> ValidationResult:
     '''
     Common sanitization for IndexHierarchy operations.
@@ -53,7 +56,7 @@ def _validate_and_process_indices(
     index_constructors = list(indices[0]._index_constructors)
 
     unique_signatures: tp.Set[TLabel] = set()
-    unique_non_empty_indices: tp.List[IndexHierarchy] = []
+    unique_non_empty_indices: tp.List[TIndexHierarchyAny] = []
 
     depth: tp.Optional[int] = None
     for idx in indices:
@@ -111,7 +114,7 @@ def get_encoding_invariants(indices: tp.List[Index[tp.Any]]
 def get_empty(
         index_constructors: tp.List[TIndexCtorSpecifier],
         name: TLabel,
-        ) -> IndexHierarchy:
+        ) -> TIndexHierarchyAny:
     return IndexHierarchy._from_empty(
             (),
             depth_reference=len(index_constructors),
@@ -121,7 +124,7 @@ def get_empty(
 
 
 def build_union_indices(
-        indices: tp.Sequence[IndexHierarchy],
+        indices: tp.Sequence[TIndexHierarchyAny],
         index_constructors: tp.List[TIndexCtorSpecifier],
         depth: int,
         ) -> tp.List[Index[tp.Any]]:
@@ -139,7 +142,7 @@ def build_union_indices(
 
 
 def _get_encodings(
-        ih: IndexHierarchy,
+        ih: TIndexHierarchyAny,
         *,
         union_indices: tp.List[Index[tp.Any]],
         depth: int,
@@ -199,7 +202,7 @@ def _remove_union_bloat(
     return final_indices, final_indexers_arr
 
 
-def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_intersection(*indices: TIndexHierarchyAny) -> TIndexHierarchyAny:
     '''
     Equivalent to:
 
@@ -302,7 +305,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     )
 
 
-def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_difference(*indices: TIndexHierarchyAny) -> TIndexHierarchyAny:
     '''
     Equivalent to:
 
@@ -405,7 +408,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     )
 
 
-def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_union(*indices: TIndexHierarchyAny) -> TIndexHierarchyAny:
     '''
     Equivalent to:
 

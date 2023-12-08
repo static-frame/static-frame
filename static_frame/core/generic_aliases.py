@@ -1,3 +1,4 @@
+import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.bus import Bus

@@ -48,6 +48,7 @@ from static_frame.core.util import is_callable_or_mapping
 
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TILocSelector
+    from static_frame.core.generic_aliases import TIndexHierarchyAny
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -73,7 +74,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             )
 
     _series: TSeriesObject
-    _hierarchy: IndexHierarchy
+    _hierarchy: TIndexHierarchyAny
     _index: IndexBase
 
     _NDIM: int = 1
@@ -160,7 +161,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
-            hierarchy: tp.Optional[IndexHierarchy] = None,
+            hierarchy: tp.Optional[TIndexHierarchyAny] = None,
             own_index: bool = False,
             ) -> None:
         '''

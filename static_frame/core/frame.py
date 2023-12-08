@@ -9295,7 +9295,7 @@ doc_update(Frame.__init__, selector='container_init', class_name='Frame')
 
 #-------------------------------------------------------------------------------
 
-class FrameGO(Frame[TVIndex, TVColumns]):
+class FrameGO(Frame[TVIndex, TVColumns]): # NOTE: we do not define columnar types
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 

@@ -19,6 +19,7 @@ from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny # pylint: disable=W0611 #pragma: no cover
     TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
@@ -46,13 +47,13 @@ def _bus_to_hierarchy_inner_hierarchies(
         axis: int,
         extractor: tp.Callable[[IndexBase], IndexBase],
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[IndexHierarchy, IndexBase]:
+        ) -> tp.Tuple[TIndexHierarchyAny, IndexBase]:
     '''
     Specialized version of :func:`bus_to_hierarchy` for the case where Bus's frames contains only hierarchical indices on the axis of concatentation
     '''
     opposite: tp.Optional[IndexBase] = None
 
-    def level_add(pair: tp.Tuple[TLabel, TFrameAny]) -> IndexHierarchy:
+    def level_add(pair: tp.Tuple[TLabel, TFrameAny]) -> TIndexHierarchyAny:
         nonlocal opposite
         label, frame = pair
 
@@ -86,7 +87,7 @@ def bus_to_hierarchy(
         axis: int,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> tp.Tuple[IndexHierarchy, IndexBase | None]:
+        ) -> tp.Tuple[TIndexHierarchyAny, IndexBase | None]:
     '''
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     '''
@@ -132,7 +133,7 @@ def buses_to_hierarchy(
         labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> IndexHierarchy:
+        ) -> TIndexHierarchyAny:
     '''
     Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
     '''

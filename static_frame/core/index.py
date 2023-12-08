@@ -89,10 +89,11 @@ if tp.TYPE_CHECKING:
     from static_frame import IndexHierarchy  # pylint: disable=C0412 #pragma: no cover
     from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.util import TILocSelector
-    from static_frame.core.util import TILocSelectorMany
-    from static_frame.core.util import TILocSelectorOne
+    from static_frame.core.util import TILocSelector # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorMany # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorOne # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.util import TKeyIterable  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny # pylint: disable=W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -1386,7 +1387,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             level: TLabel,
             *,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> 'IndexHierarchy':
+            ) -> TIndexHierarchyAny:
         '''Return an IndexHierarchy with an added root level.
 
         Args:

@@ -17,11 +17,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_fill_value import InterfaceFillValue  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny # pylint: disable = W0611 #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
-        'IndexHierarchy',
+        'IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
         covariant=True,
         )
 

@@ -44,6 +44,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.util import TILocSelector
     from static_frame.core.util import TILocSelectorMany
     from static_frame.core.util import TILocSelectorOne
+    from static_frame.core.generic_aliases import TIndexHierarchyAny
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -253,7 +254,7 @@ class IndexBase(ContainerOperandSequence):
             level: TLabel,
             *,
             index_constructor: TIndexCtorSpecifier = None,
-            ) -> 'IndexHierarchy':
+            ) -> TIndexHierarchyAny:
         raise NotImplementedError() #pragma: no cover
 
     def display(self,

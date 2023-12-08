@@ -76,11 +76,12 @@ if tp.TYPE_CHECKING:
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TSeriesAny # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny # pylint: disable=W0611,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
@@ -676,7 +677,7 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
         # try to make it into an array
         lhs = np.array(lhs)
 
-    lhs_type: tp.Union[np.ndarray, tp.Type[Series], tp.Type[Frame]]
+    lhs_type: tp.Union[tp.Type[TNDArrayAny], tp.Type[TSeriesAny], tp.Type[TFrameAny]]
     if isinstance(lhs, np.ndarray):
         lhs_type = np.ndarray
     elif isinstance(lhs, Series):
@@ -1085,7 +1086,7 @@ def rehierarch_from_type_blocks(*,
 
 
 def rehierarch_from_index_hierarchy(*,
-        labels: 'IndexHierarchy',
+        labels: TIndexHierarchyAny,
         depth_map: tp.Sequence[int],
         index_constructors: TIndexCtorSpecifiers = None,
         name: tp.Optional[TLabel] = None,

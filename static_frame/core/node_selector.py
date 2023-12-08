@@ -41,12 +41,12 @@ if tp.TYPE_CHECKING:
     from static_frame.core.util import TILocSelectorOne
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
+    from static_frame.core.generic_aliases import TSeriesAny
+    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.generic_aliases import TIndexHierarchyAny
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
 
     TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
             bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
@@ -54,7 +54,7 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 TFrameOrSeries = tp.Union[
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'Series[tp.Any, tp.Any]',
         ]
 
@@ -62,14 +62,14 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'Index[tp.Any]',
         'Series[tp.Any, tp.Any]',
         'SeriesHE[tp.Any, tp.Any]',
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
-        'FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
-        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
+        'FrameGO[tp.Any, tp.Any]',
+        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'TypeBlocks',
         'Bus[tp.Any]',
         'Batch',
         'Yarn[tp.Any]',
-        'IndexHierarchy',
+        'IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'SeriesAssign',
         'FrameAssignILoc',
          # cannot be TNDArrayAny as not available in old NumPy
@@ -511,7 +511,7 @@ class InterfaceIndexHierarchyAsType(Interface[TVContainer_co]):
             dtype: TDtypeAny,
             *,
             consolidate_blocks: bool = False,
-            ) -> 'IndexHierarchy':
+            ) -> TIndexHierarchyAny:
         '''
         Apply a single ``dtype`` to all columns.
         '''
