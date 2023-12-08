@@ -15214,6 +15214,11 @@ class TestUnit(TestCase):
 
         self.assertEqual(post, '{"columns": ["zZbu", "ztsv", "zUvW", "zkuW"], "index": [34715, -3648], "data": [[false, false], [162197, -41157], [694.3, -72.96], ["z2Oo", "z5l6"]], "__meta__": {"__names__": [null, null, null], "__dtypes__": ["|b1", "=i4", "=f8", "=U4"], "__dtypes_index__": ["=i4"], "__dtypes_columns__": ["=U4"], "__types__": ["Index", "Index"], "__depths__": [4, 1, 1]}}')
 
+    def test_frame_to_json_typed_b(self) -> None:
+        f = ff.parse('s(2,2)|v(bool)')
+        post = f.to_json_typed()
+        self.assertEqual(post, '{"columns": null, "index": null, "data": [[false, false], [false, false]], "__meta__": {"__names__": [null, null, null], "__dtypes__": ["|b1", "|b1"], "__dtypes_index__": ["=i8"], "__dtypes_columns__": ["=i8"], "__types__": ["Index", "Index"], "__depths__": [2, 1, 1]}}')
+
     #---------------------------------------------------------------------------
     def test_frame_to_json_records_a(self) -> None:
         f = ff.parse('s(2,4)|v(bool,int,float,str)|i(I,int)|c(I,str)')
@@ -15316,6 +15321,15 @@ class TestUnit(TestCase):
         sio = io.StringIO(post)
         f2 = FrameGO.from_json_typed(sio)
         self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=False))
+
+    def test_frame_from_json_typed_g(self) -> None:
+        f1 = ff.parse('s(2,3)|v(str,bool)').rename('x', index='y', columns='z')
+        post = f1.to_json_typed()
+        f2 = Frame.from_json_typed(post)
+        self.assertIsNone(f2._index._map)
+        self.assertIsNone(f2._columns._map)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+
 
     #---------------------------------------------------------------------------
 

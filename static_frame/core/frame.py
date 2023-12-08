@@ -1359,7 +1359,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
-                columns_constructor=columns_constructor
+                columns_constructor=columns_constructor,
+                index_constructor=None if own_index else index_constructor,
                 )
 
 
@@ -2155,7 +2156,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 md,
                 cls.STATIC,
                 )
-
         return cls.from_fields(data['data'],
                 index=data['index'],
                 columns=data['columns'],
@@ -8743,8 +8743,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             {indent}
         '''
-        d = dict(columns=JSONFilter.encode_iterable(self._columns),
-                index=JSONFilter.encode_iterable(self._index),
+        index = (None if self._index._map is None # type: ignore
+                else JSONFilter.encode_iterable(self._index))
+        columns = (None if self._columns._map is None # type: ignore
+                else JSONFilter.encode_iterable(self._columns))
+
+        d = dict(columns=columns,
+                index=index,
                 data=JSONFilter.encode_iterable(self._blocks.axis_values(0)),
                 __meta__=JSONMeta.to_dict(self),
                 )

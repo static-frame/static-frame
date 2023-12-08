@@ -124,7 +124,7 @@ class IndexAutoFactory:
                         default_constructor=default_constructor, # type: ignore
                         # NOTE might just pass name
                         )
-            return explicit_constructor(labels) # type: ignore
+            return explicit_constructor(labels, loc_is_iloc=True) # type: ignore
 
         else: # get from default constructor
             assert default_constructor is not None
