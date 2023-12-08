@@ -337,9 +337,9 @@ TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
-TPathSpecifier = tp.Union[str, PathLike[tp.Any]]
-TPathSpecifierOrFileLike = tp.Union[str, PathLike[tp.Any], tp.TextIO]
-TPathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike[tp.Any], tp.TextIO, tp.Iterator[str]]
+TPathSpecifier = tp.Union[str, 'PathLike[tp.Any]']
+TPathSpecifierOrFileLike = tp.Union[str, 'PathLike[tp.Any]', tp.TextIO]
+TPathSpecifierOrFileLikeOrIterator = tp.Union[str, 'PathLike[tp.Any]', tp.TextIO, tp.Iterator[str]]
 
 TDtypeSpecifier = tp.Union[str, 'np.dtype[tp.Any]', type, None]
 TDtypeOrDT64 = tp.Union['np.dtype[tp.Any]', tp.Type[np.datetime64]]
