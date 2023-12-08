@@ -56,6 +56,14 @@ if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
 
+    TKeyIterable = tp.Union[tp.Iterable[tp.Any], TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
+
+    TILocSelectorOne = tp.Union[int, np.integer[tp.Any]]
+    TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
+    TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
+    TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
+
+
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
 #     b 	boolean
@@ -243,15 +251,10 @@ INT64_MAX = np.iinfo(np.int64).max
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
-TKeyIterable = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
 
-TILocSelectorOne = tp.Union[int, np.integer]
-TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
-TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
-TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
 
 # NOTE: slice is not hashable
 # NOTE: this is TLocSelectorOne

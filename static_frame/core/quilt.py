@@ -54,10 +54,6 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TCallableAny
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -70,6 +66,11 @@ from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelector  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorCompound  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorMany  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorOne  # pylint: disable=W0611 #pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 

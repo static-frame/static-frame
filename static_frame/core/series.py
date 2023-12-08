@@ -88,9 +88,6 @@ from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexInitializer
@@ -135,6 +132,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameHEAny  # pylint: disable=C0412 #pragma: no cover
+    from static_frame.core.util import TILocSelector
+    from static_frame.core.util import TILocSelectorMany
+    from static_frame.core.util import TILocSelectorOne
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover

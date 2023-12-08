@@ -46,10 +46,6 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TArraySignature
 from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TShape
 from static_frame.core.util import TSortKinds
@@ -79,6 +75,10 @@ from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.util import TILocSelector  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorCompound  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorMany  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelectorOne  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover

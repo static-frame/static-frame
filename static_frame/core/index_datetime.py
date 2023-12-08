@@ -30,7 +30,6 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import TDateInitializer
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
@@ -45,6 +44,8 @@ from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pylint: disable = W0611 #pragma: no cover
+
+    from static_frame.core.util import TILocSelector  # pylint: disable = W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeDT64 = np.dtype[np.datetime64] # pylint: disable=W0611 #pragma: no cover
 

@@ -69,7 +69,6 @@ from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
@@ -106,6 +105,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.frame import FrameHE  # pylint: disable=W0611,C0412 # pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.util import TILocSelector  # pylint: disable=W0611,C0412 # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover

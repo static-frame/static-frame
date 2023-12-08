@@ -5,13 +5,13 @@ import typing_extensions as tp
 
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelector
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 

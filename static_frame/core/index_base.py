@@ -26,9 +26,6 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import OPERATORS
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
@@ -44,6 +41,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.util import TILocSelector
+    from static_frame.core.util import TILocSelectorMany
+    from static_frame.core.util import TILocSelectorOne
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
 

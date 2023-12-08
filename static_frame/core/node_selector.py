@@ -12,10 +12,6 @@ from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
@@ -39,6 +35,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import SeriesAssign  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import SeriesHE  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelector
+    from static_frame.core.util import TILocSelectorCompound
+    from static_frame.core.util import TILocSelectorMany
+    from static_frame.core.util import TILocSelectorOne
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -47,6 +47,10 @@ if tp.TYPE_CHECKING:
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
     TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
+    TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
+            bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
+            )
 
 #-------------------------------------------------------------------------------
 TFrameOrSeries = tp.Union[
@@ -78,9 +82,6 @@ TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
 
-TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
-        bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
-        )
 
 
 class Interface(tp.Generic[TVContainer_co]):

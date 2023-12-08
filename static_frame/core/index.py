@@ -57,13 +57,9 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyIterable
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
@@ -93,9 +89,14 @@ if tp.TYPE_CHECKING:
     from static_frame import IndexHierarchy  # pylint: disable=C0412 #pragma: no cover
     from static_frame import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.util import TILocSelector
+    from static_frame.core.util import TILocSelectorMany
+    from static_frame.core.util import TILocSelectorOne
+    from static_frame.core.util import TKeyIterable  # pylint: disable=W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+
 
 I = tp.TypeVar('I', bound='Index[tp.Any]')
 

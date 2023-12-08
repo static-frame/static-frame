@@ -51,7 +51,6 @@ from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import ZIP_LONGEST_DEFAULT
 from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexInitializer
@@ -62,6 +61,7 @@ from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.util import TILocSelector  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
