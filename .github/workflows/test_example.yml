@@ -7,7 +7,9 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test_ex_3_11:
+    name: Test Examples / ${{ matrix.os }} / Python ${{ matrix.python-version }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -28,7 +30,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: quality-pip-${{ hashFiles('requirements-test.txt', '.github/workflows/quality.yml') }}
+        key: quality-pip-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/quality.yml') }}
         restore-keys: quality-pip-
 
     - name: Install dependencies
