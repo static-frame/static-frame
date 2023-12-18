@@ -30,13 +30,13 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: quality-pip-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/quality.yml') }}
+        key: quality-pip-${{ hashFiles('requirements-dev-3_11.txt', '.github/workflows/quality.yml') }}
         restore-keys: quality-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-test-3_11.txt
+        pip install -r requirements-dev-3_11.txt
 
     - name: Invoke Quality
       run: inv quality
