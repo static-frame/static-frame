@@ -10,14 +10,13 @@ env:
   CFLAGS: -Wno-error=implicit-function-declaration
 
 jobs:
-  build:
+  test_3_08:
+    name: Test / ${{ matrix.os }} / Python ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
         os: ['ubuntu-20.04', 'windows-2019', 'macos-11']
-        # this is presently the same as test-backward; updated this and quality to new baseline
         python-version: ['3.8']
-
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -33,7 +32,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu-')
       with:
         path: ~/.cache/pip
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (MacOS)
@@ -41,7 +40,7 @@ jobs:
       if: startsWith(matrix.os, 'macos-')
       with:
         path: ~/Library/Caches/pip
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (Windows)
@@ -49,13 +48,13 @@ jobs:
       if: startsWith(matrix.os, 'windows-')
       with:
         path: ~\AppData\Local\pip\Cache
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-test.txt
+        pip install -r requirements-test-3_08.txt
 
     - name: Invoke Test
       run: inv test --cov
@@ -67,3 +66,65 @@ jobs:
         files: coverage.xml
         fail_ci_if_error: false
         verbose: true
+
+
+  test_3_11:
+    name: Test / ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-22.04', 'windows-2022', 'macos-13']
+        python-version: ['3.9', '3.10', '3.11']
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Restore cache (Ubuntu)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'ubuntu-')
+      with:
+        path: ~/.cache/pip
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+
+    - name: Restore cache (MacOS)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'macos-')
+      with:
+        path: ~/Library/Caches/pip
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+
+    - name: Restore cache (Windows)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'windows-')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-test-3_11.txt
+
+    - name: Invoke Test
+      run: inv test --cov
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: 6de39346-7381-441d-80d3-a6c0c051be2d
+        files: coverage.xml
+        fail_ci_if_error: false
+        verbose: true
+
+
+
+
