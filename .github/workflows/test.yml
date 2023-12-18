@@ -68,7 +68,7 @@ jobs:
         verbose: true
 
 
-  test_3_11:
+  test_3_9_to_3_11:
     name: Test / ${{ matrix.os }} / Python ${{ matrix.python-version }}
     strategy:
       fail-fast: false
