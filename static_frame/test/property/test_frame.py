@@ -297,7 +297,11 @@ class TestUnit(TestCase):
             try:
                 f1.to_sqlite(fp, label='foo')
                 self.assertTrue(os.stat(fp).st_size > 0)
-            except (sqlite3.IntegrityError, sqlite3.OperationalError, OverflowError):
+            except (sqlite3.IntegrityError,
+                    sqlite3.OperationalError,
+                    OverflowError,
+                    UnicodeEncodeError,
+                    ):
                 # some indices, after translation, are not unique
                 # SQLite is no case sensitive, and does not support unicide
                 # OverflowError: Python int too large to convert to SQLite INTEGER

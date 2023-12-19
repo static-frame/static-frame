@@ -91,7 +91,12 @@ def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
 
 # 55203 is just before 'high surrogates', and avoids this exception
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
-ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
+ST_CODEPOINT_LIMIT = dict(
+        exclude_characters=['\n', '\r', '\ud800'],
+        min_codepoint=1,
+        max_codepoint=55203,
+        codec='utf-8'
+        )
 
 ST_TYPES_COMMON: tp.Tuple[tp.Callable[..., st.SearchStrategy], ...] = (
         st.integers,
