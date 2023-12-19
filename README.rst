@@ -79,7 +79,7 @@ Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-fra
 Installation via ``pip``
 -------------------------------
 
-Install StaticFrame with ``pip``::
+Install StaticFrame with ``pip``. Note that pre-built wheels are published for all supported Python versions and platforms (including Apple Silicon platforms)::
 
     pip install static-frame
 
