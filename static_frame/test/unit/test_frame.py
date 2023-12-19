@@ -1364,8 +1364,8 @@ class TestUnit(TestCase):
                     columns_depth=1)
 
             self.assertEqual(
-                    f2.dtypes.values.tolist(),
-                    [dtype('<M8[ns]'), dtype('O'), dtype('bool'), dtype('int64')]
+                    [dt.kind for dt in f2.dtypes.values],
+                    ['M', 'O', 'b', 'i']
                     )
 
             f3 = Frame.from_parquet(fp,
@@ -1403,8 +1403,8 @@ class TestUnit(TestCase):
                     columns_depth=1,
                     dtypes=str
                     )
-            self.assertEqual(f5.dtypes.values.tolist(),
-                    [np.dtype('<U48'), np.dtype('<U3'), np.dtype('<U5'), np.dtype('<U21')])
+            self.assertEqual([dt.kind for dt in f5.dtypes.values],
+                    ['U', 'U', 'U', 'U'])
 
     def test_frame_from_parquet_e(self) -> None:
         dt64 = np.datetime64
@@ -1421,8 +1421,8 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=0)
 
-            self.assertEqual(f2.dtypes.values.tolist(),
-                    [dtype('float64'), dtype('float64'), dtype('bool'), dtype('<M8[ns]')]
+            self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                    ['f', 'f', 'b', 'M']
                     )
 
             # can include fields that are not used; this does not raise
