@@ -4580,6 +4580,24 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, False))))
                 )
 
+    def test_frame_isin_c(self) -> None:
+
+        f1 = Frame.from_element(9223372036854775808, index=(1,2), columns=(3,4))
+        f2 = f1.isin((9223372036854775808,))
+        self.assertEqual(f2.to_pairs(),
+            ((3, ((1, True), (2, True))), (4, ((1, True), (2, True))))
+            )
+
+    def test_frame_isin_d(self) -> None:
+        # NOTE: the usage of True/Falseint8 in the second column was made this fail
+        f1 = Frame.from_fields([(9223372036854775808, 0), (True, False)], index=(1,2), columns=(3,4), dtypes=(np.uint64, np.int8))
+
+        f2 = f1.isin((9223372036854775808,))
+        self.assertEqual(f2.to_pairs(),
+            ((3, ((1, True), (2, False))), (4, ((1, False), (2, False)))),
+            )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_transpose_a(self) -> None:

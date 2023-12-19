@@ -147,7 +147,10 @@ class TestUnit(TestCase):
         if (not isna_element(value) and
                 not isinstance(value, np.datetime64) and
                 not isinstance(value, np.timedelta64)):
-            self.assertTrue(f1.isin((value,)).iloc[0, 0])
+            try:
+                self.assertTrue(f1.isin((value,)).iloc[0, 0])
+            except:
+                import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
