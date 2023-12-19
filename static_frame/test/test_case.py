@@ -53,8 +53,8 @@ skip_linux_no_display = pytest.mark.skipif(
         reason='No display available'
         )
 
-skip_mac_pyle38 = pytest.mark.skipif(
-        sys.platform == 'darwin' and sys.version_info[:2] <= (3, 8),
+skip_mac_pyle310 = pytest.mark.skipif(
+        sys.platform == 'darwin' and sys.version_info[:2] <= (3, 10),
         reason='MacOS tk.h issue'
         )
 
