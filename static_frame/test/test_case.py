@@ -289,6 +289,13 @@ class TestCase(unittest.TestCase):
                 and cmath.isnan(v2)
                 ):
             return
+
+        if isinstance(v1, np.datetime64) and np.isnan(v1) and isinstance(v2, np.datetime64) and np.isnan(v2):
+            return
+
+        if isinstance(v1, np.timedelta64) and np.isnan(v1) and isinstance(v2, np.timedelta64) and np.isnan(v2):
+            return
+
         return self.assertEqual(v1, v2)
 
 
