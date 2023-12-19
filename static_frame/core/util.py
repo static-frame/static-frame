@@ -2990,6 +2990,8 @@ def isin_array(*,
     if len(other) == 1:
         # this alternative was implmented due to strange behavior in NumPy when using np.isin with "other" that is one element and an unsigned int
         result = array == other
+        if not result.__class__ is np.ndarray:
+            result = np.full(array.shape, result, dtype=DTYPE_BOOL)
     else:
         with WarningsSilent():
             # FutureWarning: elementwise comparison failed;

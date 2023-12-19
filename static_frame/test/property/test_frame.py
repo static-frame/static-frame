@@ -139,6 +139,8 @@ class TestUnit(TestCase):
                     b = attrs.ufunc_skipna(values, axis=axis)
 
     # NOTE: this fails with dt64 types due to odd unitless values from hypothesis
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.40.0', b'AXicY2DmYGBkwAKQBBkRbCY0KagCLhAJAAS+AB4=')
     @given(sfst.get_frame(
             dtype_group=sfst.DTGroup.CORE_NO_OBJECT,
             ))
