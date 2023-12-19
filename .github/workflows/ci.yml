@@ -35,7 +35,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ matrix.os.pip_cache }}
-        key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
+        key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/ci.yml') }}
         restore-keys: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
@@ -79,7 +79,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ matrix.os.pip_cache }}
-        key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/test.yml') }}
+        key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/ci.yml') }}
         restore-keys: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
@@ -122,7 +122,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: quality-pip-${{ hashFiles('requirements-dev-3_11.txt', '.github/workflows/quality.yml') }}
+        key: quality-pip-${{ hashFiles('requirements-dev-3_11.txt', '.github/workflows/ci.yml') }}
         restore-keys: quality-pip-
 
     - name: Install dependencies
@@ -157,7 +157,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: quality-pip-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/quality.yml') }}
+        key: quality-pip-${{ hashFiles('requirements-test-3_11.txt', '.github/workflows/ci.yml') }}
         restore-keys: quality-pip-
 
     - name: Install dependencies
