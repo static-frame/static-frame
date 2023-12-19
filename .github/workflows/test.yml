@@ -1,4 +1,4 @@
-name: Test
+name: CI
 
 on:
   push:
@@ -11,13 +11,16 @@ env:
 
 jobs:
   test_3_08:
-    name: Test / ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    name: Test / ${{ matrix.os.name }} / Python ${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-20.04', 'windows-2019', 'macos-11']
+        os:
+          - {name: 'ubuntu-20.04', pip_cache: '~/.cache/pip'}
+          - {name: 'windows-2019', pip_cache: '~\AppData\Local\pip\Cache'}
+          - {name: 'macos-11', pip_cache: '~/Library/Caches/pip'}
         python-version: ['3.8']
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.name }}
 
     steps:
     - uses: actions/checkout@v2
@@ -27,29 +30,28 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Restore cache (Ubuntu)
+    - name: Restore cache
       uses: actions/cache@v2
-      if: startsWith(matrix.os, 'ubuntu-')
       with:
-        path: ~/.cache/pip
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+        path: ${{ matrix.os.pip_cache }}
+        key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-
 
-    - name: Restore cache (MacOS)
-      uses: actions/cache@v2
-      if: startsWith(matrix.os, 'macos-')
-      with:
-        path: ~/Library/Caches/pip
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+    # - name: Restore cache (MacOS)
+    #   uses: actions/cache@v2
+    #   if: startsWith(matrix.os.name, 'macos-')
+    #   with:
+    #     path: ~/Library/Caches/pip
+    #     key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
+    #     restore-keys: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-
 
-    - name: Restore cache (Windows)
-      uses: actions/cache@v2
-      if: startsWith(matrix.os, 'windows-')
-      with:
-        path: ~\AppData\Local\pip\Cache
-        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+    # - name: Restore cache (Windows)
+    #   uses: actions/cache@v2
+    #   if: startsWith(matrix.os.name, 'windows-')
+    #   with:
+    #     path: ~\AppData\Local\pip\Cache
+    #     key: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test-3_08.txt', '.github/workflows/test.yml') }}
+    #     restore-keys: test-pip-${{ matrix.os.name }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
