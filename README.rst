@@ -16,17 +16,8 @@
   :target: https://codecov.io/gh/static-frame/static-frame
 
 
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test.yml?branch=master&label=test&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_forward.yml?branch=master&label=test-forward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test_forward.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_backward.yml?branch=master&label=test-backward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test_backward.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/quality.yml?branch=master&label=quality&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/quality.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/ci.yml?branch=master&label=test&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/ci.yml
 
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg
