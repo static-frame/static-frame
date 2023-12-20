@@ -108,7 +108,7 @@ jobs:
     name: Publish
     if: github.event_name == 'release'
 
-    needs: [test, quality, test_ex, package]
+    needs: [test, checks]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/download-artifact@v3
