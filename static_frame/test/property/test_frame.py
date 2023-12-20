@@ -320,6 +320,7 @@ class TestUnit(TestCase):
                     sqlite3.ProgrammingError,
                     OverflowError,
                     UnicodeEncodeError,
+                    ValueError, # the query contains a null character
                     ):
                 # some indices, after translation, are not unique
                 # SQLite is no case sensitive, and does not support unicide
