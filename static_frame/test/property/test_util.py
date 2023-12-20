@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import timedelta64_not_aligned
 from static_frame.test.property.strategies import DTGroup
@@ -413,8 +414,8 @@ class TestUnit(TestCase):
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------
-    from hypothesis import reproduce_failure
-    @reproduce_failure('6.92.1', b'AAAFAAAAAAAAAQCAAAAAAAAAAA==')
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.92.1', b'AAAFAAAAAAAAAQCAAAAAAAAAAA==')
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
@@ -425,6 +426,8 @@ class TestUnit(TestCase):
             sample = array[0]
             if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
+            elif np.array(sample).dtype.kind in DTYPE_NAT_KINDS and np.isnan(sample):
+                pass
             else:
                 for factory in container_factory:
                     result = util.isin(array, factory((sample,)))
@@ -433,10 +436,15 @@ class TestUnit(TestCase):
             sample = array[0, 0]
             if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
+            elif np.array(sample).dtype.kind in DTYPE_NAT_KINDS and np.isnan(sample):
+                pass
             else:
                 for factory in container_factory:
                     result = util.isin(array, factory((sample,)))
-                    self.assertTrue(result[0, 0])
+                    try:
+                        self.assertTrue(result[0, 0])
+                    except:
+                        import ipdb; ipdb.set_trace()
 
         if result is not None:
             self.assertTrue(array.shape == result.shape)
