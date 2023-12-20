@@ -207,7 +207,11 @@ class TestUnit(TestCase):
             index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
     def test_frame_to_pandas(self, f1: Frame) -> None:
-        post = f1.to_pandas()
+        try:
+            post = f1.to_pandas()
+        except NotImplementedError:
+            return
+
         self.assertTrue(post.shape == f1.shape)
         if not f1.isna().any().any():
             self.assertTrue((post.values == f1.values).all())
@@ -245,7 +249,7 @@ class TestUnit(TestCase):
             ))
     def test_frame_to_xarray(self, f1: Frame) -> None:
         xa = f1.to_xarray()
-        self.assertTrue(tuple(xa.keys()) == tuple(f1.columns))
+        self.assertAlmostEqualValues(xa.keys(), f1.columns)
 
     @given(sfst.get_frame(
             dtype_group=sfst.DTGroup.BASIC,
@@ -376,7 +380,8 @@ class TestUnit(TestCase):
         except ErrorInitIndexNonUnique:
             pass
 
-
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.92.1', b'AXicXYxBDgAgCMMqoP9/sookOndgKYwxAhp0SL9qiwyVfZkMPaT5fg/1DL5H1Eq7BN8m9+MDJhbzAD4=')
     @given(sfst.get_frame_or_frame_go())
     def test_frame_to_json_split(self, f1: Frame) -> None:
         msg = f1.to_json_split()

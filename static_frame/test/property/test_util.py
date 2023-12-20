@@ -413,7 +413,8 @@ class TestUnit(TestCase):
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------
-
+    from hypothesis import reproduce_failure
+    @reproduce_failure('6.92.1', b'AAAFAAAAAAAAAQCAAAAAAAAAAA==')
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
