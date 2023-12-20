@@ -319,8 +319,6 @@ class TestUnit(TestCase):
                 # SQLite is no case sensitive, and does not support unicide
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
-            except:
-                import ipdb; ipdb.set_trace()
 
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,

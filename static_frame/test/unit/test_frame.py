@@ -9203,7 +9203,6 @@ class TestUnit(TestCase):
         # when explicitly named 0, we get the expected error when creting the index
         s1 = Series([1, 2, 3], name=0)
         s2 = s1.rename(np.datetime64('2022-01-01'))
-        # import ipdb; ipdb.set_trace()
         with self.assertRaises(InvalidDatetime64Initializer):
             _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
 
