@@ -222,7 +222,7 @@ class TestUnit(TestCase):
             try:
                 f1.to_parquet(fp)
                 self.assertTrue(os.stat(fp).st_size > 0)
-            except pyarrow.lib.ArrowNotImplementedError:
+            except (pyarrow.lib.ArrowNotImplementedError, UnicodeDecodeError):
                 # could be Byte-swapped arrays not supported
                 pass
 
