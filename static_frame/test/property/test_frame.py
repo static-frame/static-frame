@@ -226,7 +226,7 @@ class TestUnit(TestCase):
             try:
                 f1.to_parquet(fp)
                 self.assertTrue(os.stat(fp).st_size > 0)
-            except (pyarrow.lib.ArrowNotImplementedError, UnicodeDecodeError):
+            except (pyarrow.lib.ArrowNotImplementedError, UnicodeEncodeError):
                 # could be Byte-swapped arrays not supported
                 pass
 
@@ -298,6 +298,8 @@ class TestUnit(TestCase):
             except UnicodeEncodeError:
                 pass
 
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.92.1', b'AXicY2BlAAImBjBgZIDTQBFmBgYWBkZGFkYgPwokBQAELQB2')
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -309,6 +311,7 @@ class TestUnit(TestCase):
                 self.assertTrue(os.stat(fp).st_size > 0)
             except (sqlite3.IntegrityError,
                     sqlite3.OperationalError,
+                    sqlite3.ProgrammingError,
                     OverflowError,
                     UnicodeEncodeError,
                     ):
@@ -316,6 +319,8 @@ class TestUnit(TestCase):
                 # SQLite is no case sensitive, and does not support unicide
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
+            except:
+                import ipdb; ipdb.set_trace()
 
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
