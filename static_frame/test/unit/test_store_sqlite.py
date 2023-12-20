@@ -12,6 +12,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
 
@@ -140,6 +141,7 @@ class TestUnit(TestCase):
                     (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
                     )
 
+    @skip_win
     def test_store_sqlite_write_f(self) -> None:
 
         f1 = Frame.from_dict(
