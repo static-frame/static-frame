@@ -541,8 +541,6 @@ class TestUnit(TestCase):
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
 
-        # need to avoid this
-        # ipdb> np.union1d(a1, a2)                                                             # array(['1', '2', '3'], dtype='<U21')
         self.assertEqual(set(union1d(a1, a2)),
                 {1, 2, 3, '2', '1', '3'}
                 )

@@ -441,10 +441,7 @@ class TestUnit(TestCase):
             else:
                 for factory in container_factory:
                     result = util.isin(array, factory((sample,)))
-                    try:
-                        self.assertTrue(result[0, 0])
-                    except:
-                        import ipdb; ipdb.set_trace()
+                    self.assertTrue(result[0, 0])
 
         if result is not None:
             self.assertTrue(array.shape == result.shape)
