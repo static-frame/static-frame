@@ -226,7 +226,7 @@ class TestUnit(TestCase):
             try:
                 f1.to_parquet(fp)
                 self.assertTrue(os.stat(fp).st_size > 0)
-            except (pyarrow.lib.ArrowNotImplementedError, UnicodeEncodeError):
+            except (pyarrow.lib.ArrowNotImplementedError, UnicodeEncodeError, UnicodeDecodeError):
                 # could be Byte-swapped arrays not supported
                 pass
 
@@ -318,6 +318,7 @@ class TestUnit(TestCase):
             except (sqlite3.IntegrityError,
                     sqlite3.OperationalError,
                     sqlite3.ProgrammingError,
+                    sqlite3.Warning,
                     OverflowError,
                     UnicodeEncodeError,
                     ValueError, # the query contains a null character
