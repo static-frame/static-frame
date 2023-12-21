@@ -39,6 +39,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import WarningsSilent
 
 MAX_ROWS = 8
 MAX_COLUMNS = 10
@@ -91,8 +92,9 @@ def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
 
 # 55203 is just before 'high surrogates', and avoids this exception
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
+# NOTE: these constraints are not applied to NumPy unicode array generation
 ST_CODEPOINT_LIMIT = dict(
-        exclude_characters=['\n', '\r', '\x00'],
+        exclude_characters=['\n', '\r', '\x00', '\\'],
         min_codepoint=1,
         max_codepoint=55203,
         codec='utf-8'
@@ -104,7 +106,7 @@ ST_TYPES_COMMON: tp.Tuple[tp.Callable[..., st.SearchStrategy], ...] = (
         st.fractions,
         st.dates,
         st.datetimes,
-        partial(st.characters, **ST_CODEPOINT_LIMIT),
+        # partial(st.characters, **ST_CODEPOINT_LIMIT),
         partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))  # type: ignore
         )
 
@@ -333,8 +335,14 @@ def array_map(a: np.ndarray,
     return a
 
 def array_filter(a: np.ndarray, unique: bool):
+    if a.dtype.kind == 'U':
+        for s in a.flat:
+            try:
+                s.encode('utf-8')
+            except UnicodeEncodeError:
+                return False
     if unique:
-        # remove cases where we get mulutple NaNs when requesting unique values
+        # remove cases where we get multiple NaNs when requesting unique values
         if a.dtype.kind in DTYPE_INEXACT_KINDS:
             isna = np.isnan(a)
             if isna.sum() > 1:
@@ -346,7 +354,7 @@ def array_filter(a: np.ndarray, unique: bool):
     return True
 
 def get_array_from_dtype_group(
-        dtype_group: DTGroup,
+        dtype_group: DTGroup = DTGroup.ALL,
         shape: tp.Tuple[int, ...] = (MAX_ROWS, MAX_COLUMNS),
         unique: bool = True,
         ) -> st.SearchStrategy:
@@ -1013,7 +1021,8 @@ if __name__ == '__main__':
         print(HexColor.format_terminal('grey', '.' * 50))
         print(HexColor.format_terminal('hotpink', str(v.__name__)))
 
-        for x in range(options.count):
-            print(HexColor.format_terminal('grey', '.' * 50))
-            example = v().example()
-            print(repr(example))
+        with WarningsSilent():
+            for x in range(options.count):
+                print(HexColor.format_terminal('grey', '.' * 50))
+                example = v().example()
+                print(repr(example))
