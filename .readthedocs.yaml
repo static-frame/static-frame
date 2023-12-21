@@ -10,6 +10,6 @@ sphinx:
 
 python:
    install:
-   - requirements: requirements-dev_311.txt
+   - requirements: requirements-dev-3_11.txt
    - method: pip
      path: .
