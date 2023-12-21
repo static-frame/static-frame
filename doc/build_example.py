@@ -376,6 +376,7 @@ class ExGen:
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
 
         yield f'{name} = {ctr}'
+        yield f'{name}'
 
         if attr == '__contains__()':
             yield f"{name}.{attr_func}('a')"
@@ -412,6 +413,7 @@ class ExGen:
 
         if attr == 'interface':
             yield f'{name} = {ctr}'
+            yield f'{name}'
             yield f"{name}.{attr}"
         elif attr == 'display()':
             yield f'{name} = {ctr}'
@@ -580,10 +582,10 @@ class ExGen:
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
 
         yield f'{name} = {ctr}'
+        yield f'{name}'
 
         if attr == 'via_hashlib().to_bytes()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}()"
-
         elif attr == 'via_hashlib().md5()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
         elif attr == 'via_hashlib().sha256()':
@@ -598,12 +600,10 @@ class ExGen:
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest(8)"
         elif attr == 'via_hashlib().shake_256()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest(8)"
-
         elif attr == 'via_hashlib().blake2b()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
         elif attr == 'via_hashlib().blake2s()':
             yield f"{name}.via_hashlib(include_name=False).{attr_funcs[1]}().hexdigest()"
-
         else:
             raise NotImplementedError(attr)
 
@@ -624,6 +624,8 @@ class ExGen:
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
 
         yield f'{name} = {ctr}'
+        yield f'{name}'
+
         if attr == 'via_values.apply()':
             yield f'{name}.via_values.apply(np.sin){exporter}'
         elif attr == 'via_values.__array_ufunc__()':
@@ -655,6 +657,7 @@ class ExGen:
         else:
             yield f'{name} = {ctr}'
             yield f'{name}'
+
             if attr == 'via_type_clinic.to_hint()':
                 yield f'{name}.via_type_clinic.to_hint()'
             elif attr == 'via_type_clinic.check()':
@@ -683,11 +686,15 @@ class ExGenSeries(ExGen):
             yield f'{icls}({kwa(SERIES_INIT_A)})'
         elif attr == 'from_concat':
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
+            yield 's2'
             yield f'{iattr}((s1, s2))'
         elif attr == 'from_concat_items':
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_B)})'
+            yield 's2'
             yield f"{iattr}((('x', s1), ('y', s2)))"
         elif attr == 'from_delimited':
             yield f"{iattr}('1.2|5.5|8.2|-3.0', delimiter='|')"
@@ -702,6 +709,7 @@ class ExGenSeries(ExGen):
             yield f's1 = {icls}({kwa(SERIES_INIT_C)})'
             yield f's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            yield 's2'
             yield f"{iattr}((s1, s2))"
         elif attr == 'from_pandas':
             yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
@@ -725,6 +733,7 @@ class ExGenSeries(ExGen):
                 'to_series()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s.{attr_func}()"
         elif attr in ('to_html()',
                 'to_html_datatables()',
@@ -760,20 +769,25 @@ class ExGenSeries(ExGen):
                 'transpose()',
                  ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s.{attr_func}()"
 
         elif attr == '__array_ufunc__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"np.array((0, 1, 0)) * s"
         elif attr == '__bool__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"bool(s)"
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"copy.deepcopy(s)"
         elif attr == '__len__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"len(s)"
         elif attr == '__round__()':
             yield f's = {icls}({kwa(SERIES_INIT_E)})'
@@ -784,6 +798,7 @@ class ExGenSeries(ExGen):
                 'any()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
+            yield 's'
             yield f"s.{attr_func}()"
         elif attr == 'astype()':
             yield f's = {icls}({kwa(SERIES_INIT_C)})'
@@ -795,15 +810,20 @@ class ExGenSeries(ExGen):
             yield f"s.{attr_func}(lower=2.5, upper=10.1)"
         elif attr == 'count()':
             yield f's = {icls}({kwa(SERIES_INIT_G)})'
+            yield 's'
             yield f"s.{attr_func}(skipna=True)"
             yield f"s.{attr_func}(unique=True)"
         elif attr in ('cov()',):
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's2'
             yield f"s1.{attr_func}(s2)"
         elif attr in ('corr()',):
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's2'
             yield f"s1.{attr_func}(s2)"
         elif attr in (
                 'drop_duplicated()',
@@ -823,7 +843,9 @@ class ExGenSeries(ExGen):
 
         elif attr == 'equals()':
             yield f's1 = {icls}({kwa(SERIES_INIT_E)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's2'
             yield f"s1.{attr_func}(s2)"
         elif attr == 'fillfalsy()':
             yield f's = {icls}({kwa(SERIES_INIT_H)})'
@@ -1001,6 +1023,7 @@ class ExGenSeries(ExGen):
 
         if attr == 'assign[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.assign['c']('x')"
             yield f"s.assign['c':]('x')"
             yield f"s.assign[['a', 'd']](('x', 'y'))"
@@ -1018,6 +1041,7 @@ class ExGenSeries(ExGen):
             yield f"s.assign['b':].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.iloc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.assign.iloc[2]('x')"
             yield f"s.assign.iloc[2:]('x')"
             yield f"s.assign.iloc[[0, 4]](('x', 'y'))"
@@ -1035,6 +1059,7 @@ class ExGenSeries(ExGen):
             yield f"s.assign.iloc[2:].apply_element_items(lambda l, e: e if l == 'c' else f'--{{e}}--')"
         elif attr == 'assign.loc[]()':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.assign.loc['c']('x')"
             yield f"s.assign.loc['c':]('x')"
             yield f"s.assign.loc[['a', 'd']](('x', 'y'))"
@@ -1066,6 +1091,7 @@ class ExGenSeries(ExGen):
                 'masked_array[]',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_sel}['c']"
             yield f"s.{attr_sel}['c':]"
             yield f"s.{attr_sel}[['a', 'd']]"
@@ -1075,6 +1101,7 @@ class ExGenSeries(ExGen):
                 'masked_array.iloc[]',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_sel}[2]"
             yield f"s.{attr_sel}[2:]"
             yield f"s.{attr_sel}[[0, 4]]"
@@ -1084,26 +1111,31 @@ class ExGenSeries(ExGen):
                 'masked_array.loc[]',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_sel}['c']"
             yield f"s.{attr_sel}['c':]"
             yield f"s.{attr_sel}[['a', 'd']]"
         elif attr == '[]':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s['c']"
             yield f"s['c':]"
             yield f"s[['a', 'd']]"
         elif attr == '[]':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s['c']"
             yield f"s['c':]"
             yield f"s[['a', 'd']]"
         elif attr == 'iloc[]':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.iloc[2]"
             yield f"s.iloc[2:]"
             yield f"s.iloc[[0, 4]]"
         elif attr == 'loc[]':
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.loc['c']"
             yield f"s.loc['c':]"
             yield f"s.loc[['a', 'd']]"
@@ -1127,28 +1159,33 @@ class ExGenSeries(ExGen):
                 'iter_element_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"tuple(s.{attr_func}())"
         elif attr in (
                 'iter_element().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_func}(lambda e: e > 10)"
         elif attr in (
                 'iter_element_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_func}(lambda l, e: e > 10 if l != 'c' else 0)"
         elif attr in (
                 'iter_element().apply_iter()',
                 'iter_element().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"tuple(s.{attr_func}(lambda e: e > 10))"
         elif attr in (
                 'iter_element().apply_pool()',
                 ):
             yield 'def func(e): return e > 10'
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
 
         elif attr in (
@@ -1198,12 +1235,14 @@ class ExGenSeries(ExGen):
                 'iter_element_items().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"tuple(s.{attr_func}(lambda l, e: e > 10 and l != 'e'))"
         elif attr in (
                 'iter_element_items().apply_pool()',
                 ):
             yield "def func(pair): return pair[1] > 10 and pair[0] != 'e'"
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
 
 
@@ -1255,6 +1294,7 @@ class ExGenSeries(ExGen):
                 'iter_group_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"tuple(s.{attr_func}())"
         elif attr in (
                 'iter_group_other()',
@@ -1263,6 +1303,7 @@ class ExGenSeries(ExGen):
                 'iter_group_other_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"tuple(s.{attr_func}(np.arange(len(s)) % 2))"
         elif attr in (
                 'iter_group().apply()',
@@ -1271,6 +1312,7 @@ class ExGenSeries(ExGen):
                 'iter_group_labels_array().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_func}(lambda s: s.sum())"
         elif attr in (
                 'iter_group_other().apply()',
@@ -1279,6 +1321,7 @@ class ExGenSeries(ExGen):
                 'iter_group_other_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
         elif attr in (
                 'iter_group().apply_iter()',
@@ -1291,6 +1334,7 @@ class ExGenSeries(ExGen):
                 'iter_group_labels_array().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"tuple(s.{attr_func}(lambda s: s.sum()))"
         elif attr in (
                 'iter_group_other().apply_iter()',
@@ -1303,6 +1347,7 @@ class ExGenSeries(ExGen):
                 'iter_group_other_items().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
         elif attr in (
                 'iter_group().apply_pool()',
@@ -1312,6 +1357,7 @@ class ExGenSeries(ExGen):
                 ):
             yield "def func(s): return s.sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
         elif attr in (
                 'iter_group_other().apply_pool()',
@@ -1319,6 +1365,7 @@ class ExGenSeries(ExGen):
                 ):
             yield "def func(s): return s.sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(func, use_threads=True)"
         elif attr in (
                 'iter_group_other_array_items().apply_pool()',
@@ -1326,6 +1373,7 @@ class ExGenSeries(ExGen):
                 ):
             yield "def func(pair): return pair[1].sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(func, use_threads=True)"
         elif attr in (
                 'iter_group_items().apply_pool()',
@@ -1336,6 +1384,7 @@ class ExGenSeries(ExGen):
             # NOTE: check that this is delivering expected results
             yield "def func(pair): return pair[1].sum()"
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
         elif attr in (
                 'iter_group_items().apply()',
@@ -1344,6 +1393,7 @@ class ExGenSeries(ExGen):
                 'iter_group_labels_array_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"s.{attr_func}(lambda l, s: s.sum() if l != 8 else s.shape)"
         elif attr in (
                 'iter_group_items().apply_iter()',
@@ -1356,6 +1406,7 @@ class ExGenSeries(ExGen):
                 'iter_group_labels_array_items().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f"tuple(s.{attr_func}(lambda l, s: s.sum() if l != 8 else -1))"
         elif attr in (
                 'iter_group_labels()',
@@ -1364,6 +1415,7 @@ class ExGenSeries(ExGen):
                 'iter_group_labels_array_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"tuple(s.{attr_func}())"
         elif attr in (
                 'iter_window()',
@@ -1378,6 +1430,7 @@ class ExGenSeries(ExGen):
                 'iter_window_array().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum())"
         elif attr in (
                 'iter_window().apply_iter()',
@@ -1386,12 +1439,14 @@ class ExGenSeries(ExGen):
                 'iter_window_array().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum()))"
         elif attr in (
                 'iter_window_items().apply()',
                 'iter_window_array_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1)"
         elif attr in (
                 'iter_window_items().apply_iter()',
@@ -1400,18 +1455,21 @@ class ExGenSeries(ExGen):
                 'iter_window_array_items().apply_iter_items()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"tuple(s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda l, s: s.sum() if l != 'd' else -1))"
         elif attr in (
                 'iter_window().apply_pool()',
                 'iter_window_array().apply_pool()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda s: s.sum(), use_threads=True)"
         elif attr in (
                 'iter_window_items().apply_pool()',
                 'iter_window_array_items().apply_pool()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
+            yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -1423,6 +1481,7 @@ class ExGenSeries(ExGen):
 
         if attr in cls.SIG_TO_OP_NUMERIC:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             if attr.startswith('__r'):
                 yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} s'
                 # no need to show reverse on series
@@ -1431,13 +1490,16 @@ class ExGenSeries(ExGen):
                 yield f"s {cls.SIG_TO_OP_NUMERIC[attr]} s.reindex(('c', 'b'))"
         elif attr in cls.SIG_TO_OP_LOGIC:
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
+            yield 's'
             yield f"s {cls.SIG_TO_OP_LOGIC[attr]} True"
             yield f"s {cls.SIG_TO_OP_LOGIC[attr]} (True, False, True)"
         elif attr in cls.SIG_TO_OP_MATMUL:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s {cls.SIG_TO_OP_MATMUL[attr]} (3, 0, 4)"
         elif attr in cls.SIG_TO_OP_BIT:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s {cls.SIG_TO_OP_BIT[attr]} 1"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -1453,12 +1515,15 @@ class ExGenSeries(ExGen):
         }
         if attr == '__abs__()':
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
             yield f'abs(s)'
         elif attr == '__invert__()':
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
+            yield 's'
             yield f'~s'
         elif attr in sig_to_op:
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"{sig_to_op[attr]}s"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -1471,21 +1536,26 @@ class ExGenSeries(ExGen):
 
         if attr == 'via_dt.__call__()':
             yield f's = {icls}({kwa(SERIES_INIT_U2)})'
+            yield 's'
             yield f's.via_dt(fill_value=-1).year'
         elif attr == 'via_dt.fromisoformat()':
             yield f's = {icls}({kwa(SERIES_INIT_W)})'
+            yield 's'
             yield f's.{attr}'
         elif attr == 'via_dt.strftime()':
             yield f's = {icls}({kwa(SERIES_INIT_U1)})'
+            yield 's'
             yield f's.{attr_func}("%A | %B")'
         elif attr in (
                 'via_dt.strptime()',
                 'via_dt.strpdate()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_V)})'
+            yield 's'
             yield f's.{attr_func}("%m/%d/%Y")'
         else:
             yield f's = {icls}({kwa(SERIES_INIT_U1)})'
+            yield 's'
             yield f's.{attr}'
 
     @staticmethod
@@ -1509,24 +1579,33 @@ class ExGenSeries(ExGen):
                 yield f's1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} s2'
         elif attr_op in cls.SIG_TO_OP_LOGIC:
             yield f's1 = {icls}({kwa(SERIES_INIT_F)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_Z)})'
+            yield 's2'
             yield f"s1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} s2"
         elif attr_op in cls.SIG_TO_OP_MATMUL:
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            yield 's2'
             yield f"s1.via_fill_value(1) {cls.SIG_TO_OP_MATMUL[attr_op]} s2"
         elif attr_op in cls.SIG_TO_OP_BIT:
             yield f's1 = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's1'
             yield f's2 = {icls}({kwa(SERIES_INIT_D)})'
+            yield 's2'
             yield f"s1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} s2"
         elif attr == 'via_fill_value().loc':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s.via_fill_value(0).loc[['a', 'c', 'd', 'e']]"
         elif attr == 'via_fill_value().__getitem__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f"s.via_fill_value(0)[['a', 'c', 'd', 'e']]"
         elif attr == 'via_fill_value().via_T':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
             yield f's.{attr}'
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -1566,32 +1645,40 @@ class ExGenFrame(ExGen):
             yield f'{icls}({kwa(FRAME_INIT_A1)})'
         elif attr == 'from_arrow':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"aw = f1.to_arrow()"
             yield 'aw'
             yield f"{iattr}(aw, index_depth=1)"
         elif attr == 'from_clipboard':
             if sys.platform != 'darwin':
                 yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+                yield 'f1'
                 yield f"f1.to_clipboard()"
                 yield f"{iattr}(index_depth=1)"
         elif attr == 'from_concat':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f2'
             yield f'{iattr}((f1, f2), axis=1)'
             yield f"{iattr}((f1, f2.relabel(columns=('a', 'b'))), axis=0, index=sf.IndexAutoFactory)"
         elif attr == 'from_concat_items':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f2'
             yield f"{iattr}(((f1.name, f1), (f2.name, f2)), axis=1)"
             yield f"{iattr}(((f1.name, f1), (f2.name, f2.relabel(columns=('a', 'b')))), axis=0)"
         elif attr == 'from_csv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_csv('/tmp/f.csv')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.csv').read_text()"
             yield f"{iattr}('/tmp/f.csv', index_depth=1)"
         elif attr == 'from_delimited':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.psv').read_text()"
@@ -1615,6 +1702,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_hdf5':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
             yield f"f1.to_hdf5('/tmp/f.hdf5')"
             yield f"f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)"
 
@@ -1629,6 +1717,7 @@ class ExGenFrame(ExGen):
                 ):
             encoder = attr.replace('from_', 'to_')
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f'
             yield f"msg = f.{encoder}(indent=4)"
             yield 'msg'
             yield f"sf.Frame.{attr}(msg, dtypes=dict(c=np.datetime64))"
@@ -1636,6 +1725,7 @@ class ExGenFrame(ExGen):
         elif attr == 'from_json_values':
             encoder = attr.replace('from_', 'to_')
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f'
             yield f"msg = f.{encoder}(indent=4)"
             yield 'msg'
             yield f"sf.Frame.{attr}(msg, columns=tuple('abc'), dtypes=dict(c=np.datetime64))"
@@ -1643,18 +1733,21 @@ class ExGenFrame(ExGen):
         elif attr == 'from_json_typed':
             encoder = attr.replace('from_', 'to_')
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"msg = f.{encoder}(indent=4)"
             yield 'msg'
             yield f"sf.Frame.{attr}(msg)"
 
         elif attr == 'from_msgpack':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
             yield f'mb = f1.to_msgpack()'
             yield 'mb'
             yield f'{iattr}(mb)'
 
         elif attr == 'from_npy':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"{iattr}('/tmp/f.npy')"
             yield f'import shutil'
@@ -1662,6 +1755,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_npy_mmap':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"f2, closer = {iattr}('/tmp/f.npy')"
             yield 'f2'
@@ -1671,6 +1765,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_npz':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_npz('/tmp/f.npz')"
             yield f"{iattr}('/tmp/f.npz')"
 
@@ -1683,17 +1778,20 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_pandas':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
             yield f'df = f1.to_pandas()'
             yield 'df'
             yield f'{iattr}(df, dtypes=dict(b=str))'
 
         elif attr == 'from_parquet':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
             yield f"f1.to_parquet('/tmp/f.parquet')"
             yield f"{iattr}('/tmp/f.parquet', index_depth=1)"
 
         elif attr == 'from_pickle':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_pickle('/tmp/f.pickle')"
             yield f"{iattr}('/tmp/f.pickle')"
 
@@ -1705,10 +1803,12 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_series':
             yield f's = sf.Series({kwa(SERIES_INIT_S)})'
+            yield 's'
             yield f'{iattr}(s)'
 
         elif attr == 'from_sql':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield "f1.to_sqlite('/tmp/f.db')"
             yield 'import sqlite3'
             yield "conn = sqlite3.connect('/tmp/f.db')"
@@ -1716,6 +1816,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_sqlite':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield "f1.to_sqlite('/tmp/f.db')"
             yield f"{iattr}('/tmp/f.db', label=f1.name, index_depth=1)"
 
@@ -1726,6 +1827,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_tsv':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_tsv('/tmp/f.tsv')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.tsv').read_text()"
@@ -1733,6 +1835,7 @@ class ExGenFrame(ExGen):
 
         elif attr == 'from_xlsx':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
             yield f"{iattr}('/tmp/f.xlsx', index_depth=1)"
 
@@ -1762,24 +1865,28 @@ class ExGenFrame(ExGen):
                 'to_rst()',
                 'to_xarray()',
                 ):
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-            yield f"s.{attr_func}()"
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f'
+            yield f"f.{attr_func}()"
         elif attr == 'to_clipboard()':
             if sys.platform != 'darwin':
                 yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
                 yield f"f1.to_clipboard()"
         elif attr == 'to_csv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_csv('/tmp/f.csv')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.csv').read_text()"
         elif attr == 'to_delimited()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_delimited('/tmp/f.psv', delimiter='|')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.psv').read_text()"
         elif attr == 'to_hdf5()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_hdf5('/tmp/f.h5')"
 
         elif attr in (
@@ -1791,38 +1898,46 @@ class ExGenFrame(ExGen):
                 'to_json_typed()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f'
             yield f"f.{attr_func}(indent=4)"
 
         elif attr == 'to_npy()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_npy('/tmp/f.npy')"
             yield f"sf.Frame.from_npy('/tmp/f.npy')"
             yield f'import shutil'
             yield f"shutil.rmtree('/tmp/f.npy')"
         elif attr == 'to_npz()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_npz('/tmp/f.npz')"
             yield f"sf.Frame.from_npz('/tmp/f.npz')"
         elif attr == 'to_parquet()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_parquet('/tmp/f.parquet')"
         elif attr == 'to_pickle()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield f"f1.to_pickle('/tmp/f.pickle')"
             yield f"sf.Frame.from_pickle('/tmp/f.pickle')"
         elif attr == 'to_sqlite()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
             yield "f1.to_sqlite('/tmp/f.db')"
             yield 'import sqlite3'
             yield "conn = sqlite3.connect('/tmp/f.db')"
             yield f'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
         elif attr == 'to_tsv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_tsv('/tmp/f.tsv')"
             yield f'from pathlib import Path'
             yield "Path('/tmp/f.tsv').read_text()"
         elif attr == 'to_xlsx()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
         elif attr in ('to_html()',
                 'to_html_datatables()',
@@ -1858,24 +1973,30 @@ class ExGenFrame(ExGen):
                 'transpose()',
                  ):
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f"f.{attr_func}()"
 
         elif attr == '__array_ufunc__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f"np.array((1, 0)) * f"
         elif attr == '__bool__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f"bool(f)"
         elif attr == '__dataframe__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f'dfi = f.{attr}'
             yield f"tuple(dfi.get_columns())"
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f"copy.deepcopy(f)"
         elif attr == '__len__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
             yield f"len(f)"
         elif attr == '__round__()':
             yield f'f = {icls}({kwa(FRAME_INIT_C)})'
@@ -1886,6 +2007,7 @@ class ExGenFrame(ExGen):
                 'any()',
                 ):
             yield f'f = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f'
             yield f"f.{attr_func}()"
         elif attr == 'astype[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -1919,9 +2041,11 @@ class ExGenFrame(ExGen):
 
         elif attr in ('cov()',):
             yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
+            yield 'f1'
             yield f"f1.{attr_func}()"
         elif attr in ('corr()',):
             yield f'f1 = {icls}({kwa(FRAME_INIT_D)})'
+            yield 'f1'
             yield f"f1.{attr_func}()"
         elif attr in (
                 'drop_duplicated()',
@@ -1943,7 +2067,9 @@ class ExGenFrame(ExGen):
 
         elif attr == 'equals()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f'f2 = {icls}({kwa(FRAME_INIT_C)})'
+            yield 'f2'
             yield f"f1.{attr_func}(f2)"
         elif attr == 'fillfalsy()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_E)})'
@@ -2032,7 +2158,9 @@ class ExGenFrame(ExGen):
             yield f"f.{attr_func}(axis=1)"
         elif attr in ('insert_before()', 'insert_after()'):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f2'
             yield f"f1.{attr_func}('b', f2)"
         elif attr in (
                 'isfalsy()',
@@ -2043,32 +2171,44 @@ class ExGenFrame(ExGen):
             yield f"f.{attr_func}()"
         elif attr == 'isin()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_F1)})'
+            yield 'f'
             yield f"f.{attr_func}((0, 8))"
 
         elif attr == 'join_inner()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
         elif attr == 'join_left()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
         elif attr == 'join_right()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
         elif attr == 'join_outer()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
         elif attr == 'pivot()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f"f1.{attr_func}(index_fields='b', columns_fields='c')"
         elif attr == 'pivot_stack()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f"f1.{attr_func}()"
         elif attr == 'pivot_unstack()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
             yield f"f2 = f1.pivot_stack()"
             yield f'f2'
             yield f"f2.{attr_func}()"
@@ -2176,11 +2316,14 @@ class ExGenFrame(ExGen):
             yield f"f.rename(index=(('d', 'e'))).{attr_func}()"
         elif attr == 'extend()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f'f2 = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f2'
             yield f'f1.extend(f2)'
             yield 'f1'
         elif attr == 'extend_items()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f1'
             yield f"f1.extend_items((('d', (1, 2, 3)), ('e', (4, 5, 6))))"
             yield 'f1'
         else:
@@ -2203,6 +2346,7 @@ class ExGenFrame(ExGen):
 
         if attr == 'assign[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign['a'](-1)"
             yield f"f.assign[['a', 'c']](-1)"
         elif attr == 'assign[].apply()':
@@ -2219,6 +2363,7 @@ class ExGenFrame(ExGen):
             yield f"f.assign['a'].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.iloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.iloc[2]((-1, -2, -3))"
             yield f"f.assign.iloc[2:](-1)"
             yield f"f.assign.iloc[[0, 3]](-1)"
@@ -2236,6 +2381,7 @@ class ExGenFrame(ExGen):
             yield f"f.assign.iloc[1:].apply_element_items(lambda l, e: e / 100 if l == ('q', 'a') else e)"
         elif attr == 'assign.loc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.loc['r'](-1)"
             yield f"f.assign.loc['r':](-1)"
             yield f"f.assign.loc[['p', 's']](-1)"
@@ -2253,15 +2399,19 @@ class ExGenFrame(ExGen):
             yield f"f.assign.loc['r':].apply_element_items(lambda l, e: e / 100 if l[1] == 'c' else e)"
         elif attr == 'assign.bloc[]()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.bloc[f > 5](-1)"
         elif attr == 'assign.bloc[].apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.bloc[f > 5].apply(lambda s: s * .01)"
         elif attr == 'assign.bloc[].apply_element()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.bloc[f > 5].apply_element(lambda e: e * .01 if e == 8 else e)"
         elif attr == 'assign.bloc[].apply_element_items()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -2279,6 +2429,7 @@ class ExGenFrame(ExGen):
                 'masked_array[]',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_sel}['c']"
             yield f"f.{attr_sel}['b':]"
             yield f"f.{attr_sel}[['a', 'c']]"
@@ -2288,11 +2439,13 @@ class ExGenFrame(ExGen):
                 'masked_array.iloc[]',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_sel}[1]"
             yield f"f.{attr_sel}[1:]"
             yield f"f.{attr_sel}[[0, 2]]"
         elif attr == 'bloc[]':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_sel}[f > 5]"
         elif attr in (
                 'drop.loc[]',
@@ -2300,21 +2453,25 @@ class ExGenFrame(ExGen):
                 'masked_array.loc[]',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_sel}['r']"
             yield f"f.{attr_sel}['r':]"
             yield f"f.{attr_sel}[['p', 's']]"
         elif attr == '[]':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f['b']"
             yield f"f['b':]"
             yield f"f[['a', 'c']]"
         elif attr == 'iloc[]':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.iloc[2]"
             yield f"f.iloc[2:]"
             yield f"f.iloc[[0, 3]]"
         elif attr == 'loc[]':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.loc['r']"
             yield f"f.loc['r':]"
             yield f"f.loc[['p', 's']]"
@@ -2333,7 +2490,6 @@ class ExGenFrame(ExGen):
             # ['iter_element', 'apply']
             attr_funcs = [x.strip('.') for x in sig.split('()') if x]
 
-
         if attr in (
                 'iter_array()',
                 'iter_array_items()',
@@ -2343,12 +2499,14 @@ class ExGenFrame(ExGen):
                 'iter_tuple_items()'
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}())"
         elif attr in (
                 'iter_array().apply()',
                 'iter_series().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda v: v.sum())"
         elif attr in (
                 'iter_array().apply_iter()',
@@ -2357,18 +2515,21 @@ class ExGenFrame(ExGen):
                 'iter_series().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(lambda v: v.sum()))"
         elif attr in (
                 'iter_array().apply_pool()'
                 'iter_series().apply_pool()'
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda v: v.sum(), use_threads=True)"
         elif attr in (
                 'iter_array_items().apply()',
                 'iter_series_items().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda k, v: v.sum() if k != 'b' else -1)"
         elif attr in (
                 'iter_array_items().apply_iter()',
@@ -2377,26 +2538,31 @@ class ExGenFrame(ExGen):
                 'iter_series_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(lambda k, v: v.sum() if k != 'b' else -1))"
         elif attr in (
                 'iter_array_items().apply_pool()',
                 'iter_series_items().apply_pool()'
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda pair: pair[1].sum() if pair[0] != 'b' else -1, use_threads=True)"
 
         elif attr == 'iter_tuple().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda v: v.p + v.q)"
         elif attr in (
                 'iter_tuple().apply_iter()',
                 'iter_tuple().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(lambda v: v.p + v.q))"
 
         elif attr == 'iter_tuple_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda k, v: v.p + v.q if k == 'b' else -1)"
         elif attr in (
                 'iter_tuple_items().apply_iter()',
@@ -2489,18 +2655,18 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"tuple(f.{attr_func}({{('a', (2, 9)): -1}}, fill_value=np.nan))"
 
-
-
         elif attr in (
                 'iter_element()',
                 'iter_element_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}())"
         elif attr in (
                 'iter_element().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda e: e > 5)"
 
         elif attr in (
@@ -2508,11 +2674,13 @@ class ExGenFrame(ExGen):
                 'iter_element().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(lambda e: e > 10))"
         elif attr in (
                 'iter_element().apply_pool()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda e: e > 5, use_threads=True)"
 
         elif attr in (
@@ -2556,12 +2724,12 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f"tuple(f.{attr_func}({{1: -1, 2: 45}}, fill_value=np.nan))"
 
-
         # iter_element_items
         elif attr in (
                 'iter_element_items().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'
+            yield 'f'
             yield f"f.{attr_func}(lambda k, v: v > 1 if k != ('q', 'b') else 'x')"
 
         elif attr in (
@@ -2569,12 +2737,14 @@ class ExGenFrame(ExGen):
                 'iter_element_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(lambda k, v: v > 1 if k != ('q', 'b') else 'x'))"
         elif attr in (
                 'iter_element_items().apply_pool()',
                 ):
             yield "def func(pair): return pair[1] > 0 and pair[0] == ('q', 'b')"
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'
+            yield 'f'
             yield f"f.{attr_func}(func, use_threads=True)"
 
 
@@ -2627,6 +2797,7 @@ class ExGenFrame(ExGen):
                 'iter_group_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}('c'))"
         elif attr in (
                 'iter_group_other()',
@@ -2642,27 +2813,32 @@ class ExGenFrame(ExGen):
                 'iter_group().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f['b'].sum())"
         elif attr in (
                 'iter_group_other().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda f: f['b'].sum())"
         elif attr in (
                 'iter_group_array().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda a: np.sum(a))"
         elif attr in (
                 'iter_group_other_array().apply()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda a: np.sum(a))"
         elif attr in (
                 'iter_group().apply_iter()',
                 'iter_group().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f['b'].sum()))"
         elif attr in (
                 'iter_group_other().apply_iter()',
@@ -2676,34 +2852,41 @@ class ExGenFrame(ExGen):
                 'iter_group_array().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda a: np.sum(a)))"
         elif attr in (
                 'iter_group_other_array().apply_iter()',
                 'iter_group_other_array().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda a: np.sum(a)))"
         elif attr == 'iter_group().apply_pool()':
             yield "def func(f): return f['b'].sum()"
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(func, use_threads=True)"
 
         elif attr == 'iter_group_array().apply_pool()':
             yield "def func(a): return np.sum(a)"
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(func, use_threads=True)"
 
         elif attr == 'iter_group_array_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape)"
         elif attr == 'iter_group_other_array_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape)"
         elif attr in (
                 'iter_group_array_items().apply_iter()',
                 'iter_group_array_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape))"
 
         elif attr in (
@@ -2711,14 +2894,17 @@ class ExGenFrame(ExGen):
                 'iter_group_other_array_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape))"
 
         elif attr == 'iter_group_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 0 else v.shape)"
 
         elif attr == 'iter_group_other_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 0 else v.shape)"
 
         elif attr in (
@@ -2726,6 +2912,7 @@ class ExGenFrame(ExGen):
                 'iter_group_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 0 else v.shape))"
 
         elif attr in (
@@ -2733,6 +2920,7 @@ class ExGenFrame(ExGen):
                 'iter_group_other_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 0 else v.shape))"
 
         elif attr in (
@@ -2742,10 +2930,12 @@ class ExGenFrame(ExGen):
                 'iter_group_labels_array_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"tuple(f.{attr_func}(1))"
 
         elif attr == 'iter_group_labels().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum())"
 
         elif attr in (
@@ -2753,10 +2943,12 @@ class ExGenFrame(ExGen):
                 'iter_group_labels().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda f: f['b'].sum()))"
 
         elif attr == 'iter_group_labels_array().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0]))"
 
         elif attr in (
@@ -2764,10 +2956,12 @@ class ExGenFrame(ExGen):
                 'iter_group_labels_array().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda a: np.sum(a[:, 0])))"
 
         elif attr == 'iter_group_labels_array_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1)"
 
         elif attr in (
@@ -2775,10 +2969,12 @@ class ExGenFrame(ExGen):
                 'iter_group_labels_array_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: np.sum(v[:, 0]) if k != 'p' else -1))"
 
         elif attr == 'iter_group_labels_items().apply()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1)"
 
         elif attr in (
@@ -2786,6 +2982,7 @@ class ExGenFrame(ExGen):
                 'iter_group_labels_items().apply_iter_items()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_M1)})'
+            yield 'f'
             yield f"tuple(f.{attr_funcs[0]}(1).{attr_funcs[1]}(lambda k, v: v['b'].sum() if k == 'p' else -1))"
 
         elif attr in (
@@ -2803,7 +3000,6 @@ class ExGenFrame(ExGen):
                 'iter_group_other_items().apply_pool()',
                 ):
             pass
-
 
         elif attr in (
                 'iter_window()',
@@ -2885,7 +3081,9 @@ class ExGenFrame(ExGen):
 
         if attr in cls.SIG_TO_OP_NUMERIC:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_P)})'
+            yield 'f2'
 
             if attr.startswith('__r'):
                 yield f'8 {cls.SIG_TO_OP_NUMERIC[attr]} f1'
@@ -2895,14 +3093,18 @@ class ExGenFrame(ExGen):
                 yield f"f1 {cls.SIG_TO_OP_NUMERIC[attr]} f2"
         elif attr in cls.SIG_TO_OP_LOGIC:
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield 'f'
             yield f"f {cls.SIG_TO_OP_LOGIC[attr]} True"
             yield f"f {cls.SIG_TO_OP_LOGIC[attr]} (True, False)"
         elif attr in cls.SIG_TO_OP_MATMUL:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_O)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f2'
             yield f"f1 {cls.SIG_TO_OP_MATMUL[attr]} f2"
         elif attr in cls.SIG_TO_OP_BIT:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f1'
             yield f"f1 {cls.SIG_TO_OP_BIT[attr]} 1"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -2918,12 +3120,15 @@ class ExGenFrame(ExGen):
         }
         if attr == '__abs__()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f'abs(f)'
         elif attr == '__invert__()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield 'f'
             yield f'~f'
         elif attr in sig_to_op:
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f"{sig_to_op[attr]}f"
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -2935,23 +3140,28 @@ class ExGenFrame(ExGen):
         attr_func = row['signature_no_args'][:-2]
 
         if attr == 'via_dt.__call__()':
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T3)})'
-            yield f's.via_dt(fill_value=-1).year'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T3)})'
+            yield 'f'
+            yield f'f.via_dt(fill_value=-1).year'
         elif attr == 'via_dt.fromisoformat()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_S1)})'
+            yield 'f'
             yield f'f.{attr}'
         elif attr == 'via_dt.strftime()':
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
-            yield f's.{attr_func}("%A | %B")'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
+            yield 'f'
+            yield f'f.{attr_func}("%A | %B")'
         elif attr in (
                 'via_dt.strptime()',
                 'via_dt.strpdate()',
                 ):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_U1)})'
+            yield 'f'
             yield f'f.{attr_func}("%m/%d/%Y")'
         else:
-            yield f's = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
-            yield f's.{attr}'
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_T1)})'
+            yield 'f'
+            yield f'f.{attr}'
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
@@ -2967,15 +3177,21 @@ class ExGenFrame(ExGen):
             yield ''
         elif attr_op in cls.SIG_TO_OP_NUMERIC:
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f's = sf.Series({kwa(SERIES_INIT_Y1)})'
+            yield 's'
             yield f'f.via_T {cls.SIG_TO_OP_NUMERIC[attr_op]} s'
         elif attr_op in cls.SIG_TO_OP_LOGIC:
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
+            yield 'f'
             yield f's = sf.Series({kwa(SERIES_INIT_Y2)})'
+            yield 's'
             yield f'f.via_T {cls.SIG_TO_OP_LOGIC[attr_op]} s'
         elif attr_op in cls.SIG_TO_OP_BIT:
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
             yield f's = sf.Series({kwa(SERIES_INIT_Y3)})'
+            yield 's'
             yield f'f.via_T {cls.SIG_TO_OP_BIT[attr_op]} s'
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -2988,27 +3204,36 @@ class ExGenFrame(ExGen):
 
         if attr_op in cls.SIG_TO_OP_NUMERIC:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'
+            yield 'f2'
             if attr_op.startswith('__r'): # NOTE: these raise
                 yield f'f2 {cls.SIG_TO_OP_NUMERIC[attr_op]} f1.via_fill_value(0)'
             else:
                 yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_NUMERIC[attr_op]} f2'
         elif attr_op in cls.SIG_TO_OP_LOGIC:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R5)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R4)})'
+            yield 'f2'
             yield f'f1.via_fill_value(False) {cls.SIG_TO_OP_LOGIC[attr_op]} f2'
         elif attr_op in cls.SIG_TO_OP_BIT:
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f1'
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'
+            yield 'f2'
             yield f'f1.via_fill_value(0) {cls.SIG_TO_OP_BIT[attr_op]} f2'
         elif attr == 'via_fill_value().loc':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f'
             yield f"f.via_fill_value(-1).loc[['a', 'b', 'd']]"
         elif attr == 'via_fill_value().__getitem__()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f'
             yield f"f.via_fill_value(-1)[['z', 'x']]"
         elif attr == 'via_fill_value().via_T':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R1)})'
+            yield 'f'
             yield f's = sf.Series({kwa(SERIES_INIT_D)})'
             yield f'f.via_fill_value(-1).via_T * s'
         else:
