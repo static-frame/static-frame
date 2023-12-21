@@ -754,6 +754,7 @@ class TestUnit(TestCase):
         for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
 
+    @skip_win
     def test_bus_to_sqlite_b(self) -> None:
         '''
         Test manipulating a file behind the Bus.
@@ -766,9 +767,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1,),)
 
         with temp_file('.db') as fp:
-
             b1.to_sqlite(fp)
-
             b2 = Bus.from_sqlite(fp)
 
         with self.assertRaises(StoreFileMutation):

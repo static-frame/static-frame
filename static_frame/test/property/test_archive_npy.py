@@ -6,6 +6,7 @@ from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
@@ -53,6 +54,10 @@ class TestUnit(TestCase):
             a2 = np.load(fp)
             if a2.dtype.kind in DTYPE_INEXACT_KINDS:
                 self.assertAlmostEqualArray(a1, a2)
+            elif a2.dtype.kind in DTYPE_NAT_KINDS:
+                assert a1.shape == a2.shape
+                for v1, v2 in zip(a1.flat, a2.flat):
+                    self.assertEqualWithNaN(v1, v2)
             else:
                 self.assertTrue((a1 == a2).all())
             self.assertTrue(a1.shape == a2.shape)
@@ -61,12 +66,16 @@ class TestUnit(TestCase):
                 a3, _ = NPYConverter.from_npy(f, header_decode_cache)
                 if a3.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a3)
+                elif a3.dtype.kind in DTYPE_NAT_KINDS:
+                    assert a3.shape == a1.shape
+                    for v1, v2 in zip(a3.flat, a1.flat):
+                        self.assertEqualWithNaN(v1, v2)
                 else:
                     self.assertTrue((a1 == a3).all())
                 self.assertTrue(a1.shape == a3.shape)
 
     @given(sfst.get_array_1d2d(dtype_group=sfst.DTGroup.ALL_NO_OBJECT))
-    def test_frame_to_npy_b(self, a1: Frame) -> None:
+    def test_frame_to_npy_b(self, a1: np.ndarray) -> None:
 
         header_decode_cache: HeaderDecodeCacheType = {}
 
@@ -81,6 +90,10 @@ class TestUnit(TestCase):
                         )
                 if a2.dtype.kind in DTYPE_INEXACT_KINDS:
                     self.assertAlmostEqualArray(a1, a2)
+                elif a2.dtype.kind in DTYPE_NAT_KINDS:
+                    assert a1.shape == a2.shape
+                    for v1, v2 in zip(a1.flat, a2.flat):
+                        self.assertEqualWithNaN(v1, v2)
                 else:
                     self.assertTrue((a1 == a2).all())
                 self.assertTrue(a1.shape == a2.shape)

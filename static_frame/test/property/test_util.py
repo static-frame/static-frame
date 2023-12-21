@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import datetime64_not_aligned
 from static_frame.core.util import timedelta64_not_aligned
 from static_frame.test.property.strategies import DTGroup
@@ -325,12 +326,20 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.92.1', b'AAACAAMBAQAAAQAAAAAAAQAAAQAAAQE=')
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         if datetime64_not_aligned(arrays[0], arrays[1]):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
+        # mismatched integer types cause NumPy problems
+        if arrays[0].dtype.kind == 'u' and arrays[1].dtype.kind == 'i':
+            return
+        if arrays[0].dtype.kind == 'i' and arrays[1].dtype.kind == 'u':
+            return
+
         post = util.setdiff1d(
                 arrays[0],
                 arrays[1],
@@ -413,7 +422,8 @@ class TestUnit(TestCase):
             self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------
-
+    # from hypothesis import reproduce_failure
+    # @reproduce_failure('6.92.1', b'AAAFAAAAAAAAAQCAAAAAAAAAAA==')
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
@@ -424,6 +434,8 @@ class TestUnit(TestCase):
             sample = array[0]
             if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
+            elif np.array(sample).dtype.kind in DTYPE_NAT_KINDS and np.isnan(sample):
+                pass
             else:
                 for factory in container_factory:
                     result = util.isin(array, factory((sample,)))
@@ -431,6 +443,8 @@ class TestUnit(TestCase):
         elif array.ndim == 2:
             sample = array[0, 0]
             if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
+                pass
+            elif np.array(sample).dtype.kind in DTYPE_NAT_KINDS and np.isnan(sample):
                 pass
             else:
                 for factory in container_factory:

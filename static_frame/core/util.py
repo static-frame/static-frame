@@ -51,6 +51,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] # pylint: disable=W0611 #pragma: no cover
+
     TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] # pylint: disable=W0611 #pragma: no cover
 
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
@@ -2987,10 +2989,16 @@ def isin_array(*,
     assume_unique = array_is_unique and other_is_unique
     func = np.in1d if array.ndim == 1 else np.isin
 
-    result: TNDArrayAny
-    with WarningsSilent():
-        # FutureWarning: elementwise comparison failed;
-        result = func(array, other, assume_unique=assume_unique)
+    result: TNDArrayBool
+    if len(other) == 1:
+        # this alternative was implmented due to strange behavior in NumPy when using np.isin with "other" that is one element and an unsigned int
+        result = array == other
+        if not result.__class__ is np.ndarray:
+            result = np.full(array.shape, result, dtype=DTYPE_BOOL)
+    else:
+        with WarningsSilent():
+            # FutureWarning: elementwise comparison failed;
+            result = func(array, other, assume_unique=assume_unique)
 
     result.flags.writeable = False
     return result

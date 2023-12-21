@@ -18,9 +18,6 @@ from setuptools import setup
 # submit PR to conda-forge/static-frame-feedstock from fork
 # merge into conda forge feedstock after all checks pass
 
-
-# Immutable DataFrames with full support for static type hints',
-# Statically type and run-time validate immutable DataFrames
 DESCRIPTION = 'Immutable and statically-typeable DataFrames with runtime type and data validation.'
 
 ROOT_DIR_FP = path.abspath(path.dirname(__file__))
@@ -95,6 +92,7 @@ setup(
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Typing :: Typed',
             ],
 
