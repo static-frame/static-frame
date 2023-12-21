@@ -16,17 +16,8 @@
   :target: https://codecov.io/gh/static-frame/static-frame
 
 
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test.yml?branch=master&label=test&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_forward.yml?branch=master&label=test-forward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test_forward.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/test_backward.yml?branch=master&label=test-backward&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/test_backward.yml
-
-.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/quality.yml?branch=master&label=quality&logo=Github
-  :target: https://github.com/static-frame/static-frame/actions/workflows/quality.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/ci.yml?branch=master&label=test&logo=Github
+  :target: https://github.com/static-frame/static-frame/actions/workflows/ci.yml
 
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg
@@ -79,7 +70,7 @@ Jupyter Notebook Tutorial: `Launch Binder <https://mybinder.org/v2/gh/static-fra
 Installation via ``pip``
 -------------------------------
 
-Install StaticFrame with ``pip``::
+Install StaticFrame with ``pip``. Note that pre-built wheels are published for all supported Python versions and platforms (including Apple Silicon platforms)::
 
     pip install static-frame
 
@@ -110,8 +101,8 @@ Core StaticFrame requires the following:
 
 - Python>=3.8
 - numpy>=1.19.5
-- arraymap==0.1.9
-- arraykit==0.4.10
+- arraymap==0.2.2
+- arraykit==0.5.1
 - typing-extensions>=4.7.1
 
 For extended input and output, the following packages are required:

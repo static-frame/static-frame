@@ -25,7 +25,7 @@ Using Python 3.11, Create a virtual environment with StaticFrame's development r
     cd static-frame
     python3 -m venv .env-sf
     source .env-sf/bin/activate
-    pip install -r requirements-dev.txt
+    pip install -r requirements-dev-3_11.txt
 
 
 

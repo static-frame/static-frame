@@ -116,7 +116,7 @@ class StoreSQLite(Store):
         sqlite3.register_adapter(Fraction, str)
         sqlite3.register_adapter(complex, lambda x: f'{x.real}:{x.imag}')
 
-        # SQLite will naturally try to update, no replace, a DB found at an FP; this is not how all other stores work, so best to remove the file first.
+        # SQLite will naturally try to update, not replace, a DB found at an FP; this is not how all other stores work, so best to remove the file first.
         with suppress(FileNotFoundError):
             os.remove(self._fp)
 

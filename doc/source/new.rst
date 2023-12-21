@@ -9,6 +9,10 @@ Added ``TSeriesAny``, ``TSeriesHEAny``, ``TBusAny`` generic aliases.
 
 Added ``Frame.to_json_typed()`` and ``Frame.from_json_typed()``, supporting optimized, complete round-trip ``Frame`` serialization.
 
+Set ``arraykit`` to 0.5.1, now with functional wheels for Mac OS ``arm64`` / Apple Silicon.
+
+Set ``arraymap`` to 0.2.2, now with functional wheels for Mac OS ``arm64`` / Apple Silicon.
+
 
 2.0.1
 -----------

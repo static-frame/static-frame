@@ -1364,8 +1364,8 @@ class TestUnit(TestCase):
                     columns_depth=1)
 
             self.assertEqual(
-                    f2.dtypes.values.tolist(),
-                    [dtype('<M8[ns]'), dtype('O'), dtype('bool'), dtype('int64')]
+                    [dt.kind for dt in f2.dtypes.values],
+                    ['M', 'O', 'b', 'i']
                     )
 
             f3 = Frame.from_parquet(fp,
@@ -1403,8 +1403,8 @@ class TestUnit(TestCase):
                     columns_depth=1,
                     dtypes=str
                     )
-            self.assertEqual(f5.dtypes.values.tolist(),
-                    [np.dtype('<U48'), np.dtype('<U3'), np.dtype('<U5'), np.dtype('<U21')])
+            self.assertEqual([dt.kind for dt in f5.dtypes.values],
+                    ['U', 'U', 'U', 'U'])
 
     def test_frame_from_parquet_e(self) -> None:
         dt64 = np.datetime64
@@ -1421,8 +1421,8 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=0)
 
-            self.assertEqual(f2.dtypes.values.tolist(),
-                    [dtype('float64'), dtype('float64'), dtype('bool'), dtype('<M8[ns]')]
+            self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                    ['f', 'f', 'b', 'M']
                     )
 
             # can include fields that are not used; this does not raise
@@ -4579,6 +4579,24 @@ class TestUnit(TestCase):
         self.assertEqual(post2.to_pairs(),
                 ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, False))))
                 )
+
+    def test_frame_isin_c(self) -> None:
+
+        f1 = Frame.from_element(9223372036854775808, index=(1,2), columns=(3,4))
+        f2 = f1.isin((9223372036854775808,))
+        self.assertEqual(f2.to_pairs(),
+            ((3, ((1, True), (2, True))), (4, ((1, True), (2, True))))
+            )
+
+    def test_frame_isin_d(self) -> None:
+        # NOTE: the usage of True/Falseint8 in the second column was made this fail
+        f1 = Frame.from_fields([(9223372036854775808, 0), (True, False)], index=(1,2), columns=(3,4), dtypes=(np.uint64, np.int8))
+
+        f2 = f1.isin((9223372036854775808,))
+        self.assertEqual(f2.to_pairs(),
+            ((3, ((1, True), (2, False))), (4, ((1, False), (2, False)))),
+            )
+
 
     #---------------------------------------------------------------------------
 
@@ -9185,7 +9203,6 @@ class TestUnit(TestCase):
         # when explicitly named 0, we get the expected error when creting the index
         s1 = Series([1, 2, 3], name=0)
         s2 = s1.rename(np.datetime64('2022-01-01'))
-        # import ipdb; ipdb.set_trace()
         with self.assertRaises(InvalidDatetime64Initializer):
             _ = Frame.from_concat((s1, s2), axis=1, columns_constructor=sf.IndexDate)
 

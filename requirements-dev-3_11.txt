@@ -1,11 +1,11 @@
 numpy==1.25.2
-arraymap==0.1.9
-arraykit==0.4.10
+arraymap==0.2.2
+arraykit==0.5.1
 typing-extensions>=4.7.1
 
 pytest==7.1.2
 pytest-cov==4.0.0
-hypothesis==6.40.0
+hypothesis==6.92.1
 scipy==1.10.0
 invoke==2.2.0
 ipython==8.14.0
@@ -32,3 +32,4 @@ line-profiler==4.0.3
 sphinx==7.2.6
 sphinx-jinja==2.0.2
 sphinx_rtd_theme==1.3.0
+wheel==0.42.0
