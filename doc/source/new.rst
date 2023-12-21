@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+2.1.1
+-----------
+
+Updated release automation in CI.
+
 
 2.1.0
 -----------
