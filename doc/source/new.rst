@@ -2,7 +2,7 @@ What is New in StaticFrame
 ===============================
 
 
-2.1.0-dev
+2.1.0
 -----------
 
 Added ``TSeriesAny``, ``TSeriesHEAny``, ``TBusAny`` generic aliases.
@@ -12,6 +12,8 @@ Added ``Frame.to_json_typed()`` and ``Frame.from_json_typed()``, supporting opti
 Set ``arraykit`` to 0.5.1, now with functional wheels for Mac OS ``arm64`` / Apple Silicon.
 
 Set ``arraymap`` to 0.2.2, now with functional wheels for Mac OS ``arm64`` / Apple Silicon.
+
+Added support for Python 3.12.
 
 
 2.0.1
