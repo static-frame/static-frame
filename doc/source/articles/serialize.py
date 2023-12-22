@@ -239,7 +239,7 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 5
+NUMBER = 4
 
 def scale(v):
     return int(v * 10)
@@ -277,7 +277,7 @@ FIXTURE_SHAPE_MAP = {
     '1000x100000': 'Wide',
 }
 
-def plot_performance(frame: sf.Frame):
+def plot_performance(frame: sf.Frame, fp: str = '/tmp/serialize.png'):
     fixture_total = len(frame['fixture'].unique())
     cat_total = len(frame['category'].unique())
     name_total = len(frame['name'].unique())
@@ -375,7 +375,6 @@ def plot_performance(frame: sf.Frame):
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
     fig.text(.05, .91, shape_msg, fontsize=6)
 
-    fp = '/tmp/serialize.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
@@ -605,16 +604,15 @@ CLS_READ = (
     PDReadParquetArrowNoComp,
     # PDReadParquetFast, # not faster!
     # PDReadFeather,
-
     # SFReadParquet,
     SFReadNPZ,
     # SFReadNPY,
-    SFReadNPYMM,
+    # SFReadNPYMM,
     SFReadPickle,
     )
 CLS_WRITE = (
-    # PDWriteParquetArrow,
-    # PDWriteParquetArrowNoComp,
+    PDWriteParquetArrow,
+    PDWriteParquetArrowNoComp,
     # PDWriteParquetFast, # not faster!
     # SFWriteParquet,
     # PDWriteFeather,
@@ -627,6 +625,7 @@ CLS_WRITE = (
 def run_test(
         include_read: bool = True,
         include_write: bool = True,
+        fp: str = '/tmp/serialize.png',
         ):
     records = []
     for dtype_hetero, fixture_label, fixture in (
@@ -678,12 +677,12 @@ def run_test(
             )
     print(display.display(config))
 
-    plot_performance(f)
+    plot_performance(f, fp)
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    get_sizes()
-    # run_test(include_read=True, include_write=False)
-    # run_test(include_read=False, include_write=True)
+    # get_sizes()
+    run_test(include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    run_test(include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
