@@ -213,6 +213,7 @@ class NPYConverter:
 
         # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
         # NOTE: np.frombuffer produces a read-only view on the existing data
+        # import ipdb; ipdb.set_trace()
         # array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
         array = np.frombuffer(file.read(), dtype=dtype)
 

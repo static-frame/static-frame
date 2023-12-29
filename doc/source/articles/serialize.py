@@ -239,7 +239,7 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 4
+NUMBER = 2
 
 def scale(v):
     return int(v * 10)
@@ -683,6 +683,6 @@ if __name__ == '__main__':
     # pandas_serialize_test()
     # get_sizes()
     run_test(include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    run_test(include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    # run_test(include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
