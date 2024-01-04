@@ -98,7 +98,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifierOrFileLike
+from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import TSeriesInitializer
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
@@ -3539,7 +3539,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,
-            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrTextIO] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> tp.Optional[str]:

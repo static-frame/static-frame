@@ -337,8 +337,10 @@ TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
 TPathSpecifier = tp.Union[str, PathLike]
-TPathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
-TPathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
+TPathSpecifierOrIO = tp.Union[str, PathLike, tp.IO]
+TPathSpecifierOrBinaryIO = tp.Union[str, PathLike, tp.BinaryIO]
+TPathSpecifierOrTextIO = tp.Union[str, PathLike, tp.TextIO]
+TPathSpecifierOrTextIOOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
 TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
 TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
@@ -3593,7 +3595,7 @@ def slices_from_targets(
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
-def path_filter(fp: TPathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.TextIO]:
+def path_filter(fp: TPathSpecifierOrTextIOOrIterator) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
     if fp is None:
@@ -3604,7 +3606,7 @@ def path_filter(fp: TPathSpecifierOrFileLikeOrIterator) -> tp.Union[str, tp.Text
 
 def write_optional_file(
         content: str,
-        fp: tp.Optional[TPathSpecifierOrFileLike] = None,
+        fp: tp.Optional[TPathSpecifierOrTextIO] = None,
         ) -> tp.Optional[str]:
 
     if fp is not None:
@@ -3633,7 +3635,7 @@ def write_optional_file(
 
 @contextlib.contextmanager
 def file_like_manager(
-        file_like: TPathSpecifierOrFileLikeOrIterator,
+        file_like: TPathSpecifierOrTextIOOrIterator,
         encoding: tp.Optional[str] = None,
         mode: str = 'r',
         ) -> tp.Iterator[tp.Iterator[str]]:

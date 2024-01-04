@@ -34,7 +34,7 @@ from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifierOrFileLike
+from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import TUFunc
 from static_frame.core.util import write_optional_file
 
@@ -503,7 +503,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
-            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrTextIO] = None,
             *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None

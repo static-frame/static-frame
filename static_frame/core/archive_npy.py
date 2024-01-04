@@ -33,6 +33,9 @@ from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TLabel
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
+from static_frame.core.util import TPathSpecifierOrIO
+from static_frame.core.util import TPathSpecifierOrBinaryIO
+from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
@@ -245,7 +248,7 @@ class Archive:
     FUNC_REMOVE_FP: tp.Callable[[TPathSpecifier], None]
 
     def __init__(self,
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             writeable: bool,
             memory_map: bool,
             ):
@@ -731,7 +734,7 @@ class ArchiveFrameConverter:
     def to_archive(cls,
             *,
             frame: TFrameAny,
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
@@ -754,8 +757,8 @@ class ArchiveFrameConverter:
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
-            # fp can be BytesIO in a to_zip_npz scenario
-            if not isinstance(fp, BytesIO) and os.path.exists(fp): #type: ignore
+            # fp can be BytesIO in a to_npy/to_npz/to_zip_npz scenario
+            if not isinstance(fp, BytesIO) and os.path.exists(fp): # type: ignore
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
@@ -836,7 +839,7 @@ class ArchiveFrameConverter:
     def from_archive(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -855,7 +858,7 @@ class ArchiveFrameConverter:
     def from_archive_mmap(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrTextIO,
             ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an npz file.
