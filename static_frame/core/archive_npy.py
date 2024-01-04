@@ -757,8 +757,8 @@ class ArchiveFrameConverter:
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
-            # fp can be BytesIO in a to_npy/to_npz/to_zip_npz scenario
-            if not isinstance(fp, BytesIO) and os.path.exists(fp): # type: ignore
+            # fp can be BytesIO in a to_npz/to_zip_npz scenario
+            if not isinstance(fp, tp.IO) and os.path.exists(fp):
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
@@ -858,7 +858,7 @@ class ArchiveFrameConverter:
     def from_archive_mmap(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: TPathSpecifierOrTextIO,
+            fp: TPathSpecifier,
             ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an npz file.
