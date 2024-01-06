@@ -239,10 +239,10 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 1
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -258,6 +258,14 @@ FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v(int,int,bool,float,floa
 FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
 
 #-------------------------------------------------------------------------------
+
+def seconds_to_display(seconds: float, number: int) -> str:
+    seconds /= number
+    if seconds < 1e-4:
+        return f'{seconds * 1e6: .1f} (µs)'
+    if seconds < 1e-1:
+        return f'{seconds * 1e3: .1f} (ms)'
+    return f'{seconds: .1f} (s)'
 
 def get_versions() -> str:
     import platform
@@ -277,12 +285,18 @@ FIXTURE_SHAPE_MAP = {
     '1000x100000': 'Wide',
 }
 
-def plot_performance(frame: sf.Frame, fp: str = '/tmp/serialize.png'):
+def plot_performance(
+        frame: sf.Frame,
+        *,
+        number: int,
+        fp: str = '/tmp/serialize.png',
+        log_scale: bool = False,
+        ):
     fixture_total = len(frame['fixture'].unique())
     cat_total = len(frame['category'].unique())
     name_total = len(frame['name'].unique())
 
-    fig, axes = plt.subplots(cat_total, fixture_total)
+    fig, axes = plt.subplots(cat_total, fixture_total, squeeze=False)
 
     # for legend
     name_replace = {
@@ -335,40 +349,73 @@ def plot_performance(frame: sf.Frame, fp: str = '/tmp/serialize.png'):
         for fixture_count, (fixture_label, fixture) in enumerate(
                 cat.iter_group_items('fixture')):
             ax = axes[cat_count][fixture_count]
-
-            # set order
             fixture = fixture.sort_values('name', key=lambda s:s.iter_element().map_all(name_order))
             results = fixture['time'].values.tolist()
-            names = fixture['name'].values.tolist()
-            x = np.arange(len(results))
-            names_display = [name_replace[l] for l in names]
-            post = ax.bar(names_display, results, color=color)
 
-            # ax.set_ylabel()
+            x_labels = [f'{i}: {name_replace[name]}' for i, name in
+                    zip(range(1, len(results) + 1),
+                    fixture['name'].values)
+                    ]
+            # import ipdb; ipdb.set_trace()
+            x_tick_labels = [str(l + 1) for l in range(len(x_labels))]
+            x = np.arange(len(results))
+            x_bar = ax.bar(x_labels, results, color=color)
+
             cat_io, cat_dtype = cat_label.split(' ')
-            title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
-            ax.set_title(title, fontsize=8)
+            plot_title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+
+            ax.set_title(plot_title, fontsize=6)
             ax.set_box_aspect(0.75) # makes taller tan wide
-            time_max = fixture['time'].max()
-            ax.set_yticks([0, time_max * 0.5, time_max])
-            ax.set_yticklabels(['',
-                    f'{time_max * 0.5:.3f} (s)',
-                    f'{time_max:.3f} (s)',
-                    ], fontsize=6)
-            # ax.set_xticks(x, names_display, rotation='vertical')
+
+            time_max = fixture["time"].max()
+            time_min = fixture["time"].min()
+
+            if log_scale:
+                ax.set_yscale('log')
+                y_ticks = []
+                for v in range(
+                        math.floor(math.log(time_min, 10)),
+                        math.floor(math.log(time_max, 10)) + 1,
+                        ):
+                    y_ticks.append(1 * pow(10, v))
+                ax.set_yticks(y_ticks)
+            else:
+                y_ticks = [0, time_min, time_max * 0.5, time_max]
+                y_labels = [
+                    "",
+                    seconds_to_display(time_min, number),
+                    seconds_to_display(time_max * 0.5, number),
+                    seconds_to_display(time_max, number),
+                ]
+                if time_min > time_max * 0.25:
+                    # remove the min if it is greater than quarter
+                    y_ticks.pop(1)
+                    y_labels.pop(1)
+                ax.set_yticks(y_ticks)
+                ax.set_yticklabels(y_labels)
+
             ax.tick_params(
-                    axis='x',
-                    which='both',
-                    bottom=False,
-                    top=False,
-                    labelbottom=False,
-                    )
+                axis="y",
+                length=2,
+                width=0.5,
+                pad=1,
+                labelsize=4,
+            )
+            ax.set_xticks(x)
+            ax.set_xticklabels(x_tick_labels)
+            ax.tick_params(
+                axis="x",
+                length=2,
+                width=0.5,
+                pad=1,
+                labelsize=4,
+            )
 
     fig.set_size_inches(6, 3.5) # width, height
-    fig.legend(post, names_display, loc='center right', fontsize=8)
+    fig.legend(x_bar, x_labels, loc='center right', fontsize=8)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {number} Iterations', fontsize=10)
     fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
@@ -545,7 +592,6 @@ def get_sizes():
             'npz_hr',
             'pickle',
             'pickle_hr',
-
             'npz/parquet',
             'npz/parquet_noc'
             )).set_index('fixture', drop=True)
@@ -608,7 +654,7 @@ CLS_READ = (
     SFReadNPZ,
     # SFReadNPY,
     # SFReadNPYMM,
-    SFReadPickle,
+    # SFReadPickle,
     )
 CLS_WRITE = (
     PDWriteParquetArrow,
@@ -623,23 +669,25 @@ CLS_WRITE = (
 
 
 def run_test(
+        *,
+        number: int,
         include_read: bool = True,
         include_write: bool = True,
         fp: str = '/tmp/serialize.png',
         ):
     records = []
     for dtype_hetero, fixture_label, fixture in (
-            fixture_to_pair('uniform', FF_wide_uniform),
-            fixture_to_pair('mixed', FF_wide_mixed),
-            fixture_to_pair('columnar', FF_wide_columnar),
+            # fixture_to_pair('uniform', FF_wide_uniform),
+            # fixture_to_pair('mixed', FF_wide_mixed),
+            # fixture_to_pair('columnar', FF_wide_columnar),
 
             fixture_to_pair('uniform', FF_tall_uniform),
             fixture_to_pair('mixed', FF_tall_mixed),
             fixture_to_pair('columnar', FF_tall_columnar),
 
-            fixture_to_pair('uniform', FF_square_uniform),
-            fixture_to_pair('mixed', FF_square_mixed),
-            fixture_to_pair('columnar', FF_square_columnar),
+            # fixture_to_pair('uniform', FF_square_uniform),
+            # fixture_to_pair('mixed', FF_square_mixed),
+            # fixture_to_pair('columnar', FF_square_columnar),
             ):
 
         for cls, category_prefix in chain(
@@ -649,12 +697,12 @@ def run_test(
             runner = cls(fixture)
             category = f'{category_prefix} {dtype_hetero}'
 
-            record = [cls.__name__, NUMBER, category, fixture_label]
+            record = [cls.__name__, number, category, fixture_label]
             try:
                 result = timeit.timeit(
                         f'runner()',
                         globals=locals(),
-                        number=NUMBER)
+                        number=number)
             except OSError:
                 result = np.nan
             finally:
@@ -677,12 +725,12 @@ def run_test(
             )
     print(display.display(config))
 
-    plot_performance(f, fp)
+    plot_performance(f, number=number, fp=fp)
 
 if __name__ == '__main__':
     # pandas_serialize_test()
     # get_sizes()
-    run_test(include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
     # run_test(include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
