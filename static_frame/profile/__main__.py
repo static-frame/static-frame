@@ -1162,7 +1162,7 @@ class FrameToParquet_R(FrameToParquet, Reference):
 
 #-------------------------------------------------------------------------------
 
-class FrameToNPZ(PerfPrivate):
+class FrameToNPZ(Perf):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1170,6 +1170,7 @@ class FrameToNPZ(PerfPrivate):
         _, self.fp = tempfile.mkstemp(suffix='.zip')
 
         self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        self.sff2 = ff.parse('s(10_000,10)|v(float)|i(I,str)|c(I,str)')
 
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
@@ -1187,6 +1188,8 @@ class FrameToNPZ_N(FrameToNPZ, Native):
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
 
+    def tall_uniform_index_str(self) -> None:
+        self.sff2.to_npz(self.fp)
 
 class FrameToNPZ_R(FrameToNPZ, Reference):
 
@@ -1194,45 +1197,56 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
 
+    def tall_uniform_index_str(self) -> None:
+        self.sff2.to_parquet(self.fp)
 
-class FrameFromNPZ(PerfPrivate):
+
+class FrameFromNPZ(Perf):
     NUMBER = 1
 
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
-        _, self.fp_npz = tempfile.mkstemp(suffix='.zip')
-        self.sff1.to_npz(self.fp_npz)
+        self.sff1 = ff.parse('s(100,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        _, self.fp1_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff1.to_npz(self.fp1_npz)
+        _, self.fp1_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff1.to_parquet(self.fp1_parquet)
 
-        _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
-        self.sff1.to_parquet(self.fp_parquet)
+        self.sff2 = ff.parse('s(100_000,10)|v(float)|i(I,str)|c(I,str)')
+        _, self.fp2_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff2.to_npz(self.fp2_npz)
+        _, self.fp2_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff2.to_parquet(self.fp2_parquet)
 
-        from static_frame.core.archive_npy import NPYConverter
-
-        self.meta = {
-            'wide_mixed_index_str': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=NPYConverter._header_decode,
-                ),
-            }
+        # from static_frame.core.archive_npy import NPYConverter
+        # self.meta = {
+        #     'wide_mixed_index_str': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=NPYConverter._header_decode,
+        #         ),
+        #     }
 
     def __del__(self) -> None:
-        os.unlink(self.fp_npz)
-        os.unlink(self.fp_parquet)
-
+        os.unlink(self.fp1_npz)
+        os.unlink(self.fp1_parquet)
+        os.unlink(self.fp2_npz)
+        os.unlink(self.fp2_parquet)
 
 class FrameFromNPZ_N(FrameFromNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
-        sf.Frame.from_npz(self.fp_npz)
+        sf.Frame.from_npz(self.fp1_npz)
 
+    def tall_uniform_index_str(self) -> None:
+        sf.Frame.from_npz(self.fp2_npz)
 
 class FrameFromNPZ_R(FrameFromNPZ, Reference):
-
-    # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
-        sf.Frame.from_parquet(self.fp_parquet)
+        pd.read_parquet(self.fp1_parquet) # need to set index
+
+    def tall_uniform_index_str(self) -> None:
+        pd.read_parquet(self.fp2_parquet)
 
 
 class FrameFromCSV(Perf):
