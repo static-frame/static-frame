@@ -13,6 +13,7 @@ import sys
 import tempfile
 import timeit
 from enum import Enum
+from pathlib import Path
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
@@ -1201,19 +1202,30 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
         self.sff2.to_parquet(self.fp)
 
 
+import hashlib
+
+def ff_cached(fmt: str) -> sf.Frame:
+    h = hashlib.sha256(bytes(fmt, 'utf-8')).hexdigest()
+    fp = Path('/tmp') / f"{h}.npz"
+    if fp.exists():
+        return sf.Frame.from_npz(fp)
+    f = ff.parse(fmt)
+    f.to_npz(fp)
+    return f
+
 class FrameFromNPZ(Perf):
-    NUMBER = 1
+    NUMBER = 5
 
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff.parse('s(100,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        self.sff1 = ff_cached('s(100,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
         _, self.fp1_npz = tempfile.mkstemp(suffix='.zip')
         self.sff1.to_npz(self.fp1_npz)
         _, self.fp1_parquet = tempfile.mkstemp(suffix='.parquet')
         self.sff1.to_parquet(self.fp1_parquet)
 
-        self.sff2 = ff.parse('s(100_000,10)|v(float)|i(I,str)|c(I,str)')
+        self.sff2 = ff_cached('s(1_000_000,10)|v(float)|i(I,str)|c(I,str)')
         _, self.fp2_npz = tempfile.mkstemp(suffix='.zip')
         self.sff2.to_npz(self.fp2_npz)
         _, self.fp2_parquet = tempfile.mkstemp(suffix='.parquet')
