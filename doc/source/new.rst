@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+2.1.2
+-----------
+
+``ContainerBase`` added to the public namespace.
+
+
 2.1.1
 -----------
 
