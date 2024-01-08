@@ -885,16 +885,14 @@ class ZipExtFile(io.BufferedIOBase):
         #     self._expected_crc = None
 
         self._seekable = False
-        try:
-            if fileobj.seekable():
-                self._orig_compress_start = fileobj.tell()
-                self._orig_compress_size = zipinfo.compress_size
-                self._orig_file_size = zipinfo.file_size
-                # self._orig_start_crc = self._running_crc
-                # self._orig_crc = self._expected_crc
-                self._seekable = True
-        except AttributeError:
-            pass
+        if fileobj.seekable():
+            self._orig_compress_start = fileobj.tell()
+            self._orig_compress_size = zipinfo.compress_size
+            self._orig_file_size = zipinfo.file_size
+            self._seekable = True
+        else:
+            raise NotImplementedError('not expecting an unseekable file')
+
 
         # self._decrypter = None
         # if pwd:
