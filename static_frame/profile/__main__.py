@@ -1204,6 +1204,7 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
 
 import hashlib
 
+
 def ff_cached(fmt: str) -> sf.Frame:
     h = hashlib.sha256(bytes(fmt, 'utf-8')).hexdigest()
     fp = Path('/tmp') / f"{h}.npz"
