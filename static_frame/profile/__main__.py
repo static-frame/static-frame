@@ -1215,7 +1215,7 @@ def ff_cached(fmt: str) -> sf.Frame:
     return f
 
 class FrameFromNPZ(Perf):
-    NUMBER = 5
+    NUMBER = 10
 
     def __init__(self) -> None:
         super().__init__()
