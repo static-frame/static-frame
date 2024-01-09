@@ -1609,16 +1609,15 @@ class ZipFileRO:
     #     self._comment = comment
     #     self._didModify = True
 
-    # def read(self, name, pwd=None):
-    #     """Return file bytes for name."""
-    #     with self.open(name, "r", pwd) as fp:
-    #         return fp.read()
+    def read(self, name: str):
+        """Return file bytes for name."""
+        with self.open(name) as file:
+            return file.read()
 
-    def open(self, name: str | ZipInfoRO) -> ZipFilePartRO:
+    def open(self, name: str) -> ZipFilePartRO:
         """Return file-like object for 'name'.
 
-        name is a string for the file name within the ZIP file, or a ZipInfoRO
-        object.
+        name is a string for the file name within the ZIP file
 
         mode should be 'r' to read a file already in the ZIP file, or 'w' to
         write to a file newly added to the archive.
@@ -1637,11 +1636,7 @@ class ZipFileRO:
         if not self._file:
             raise ValueError("Attempt to use ZIP archive that was already closed")
 
-        # Make sure we have an info object
-        if isinstance(name, ZipInfoRO):
-            zinfo = name
-        else:
-            zinfo = self.getinfo(name)
+        zinfo = self.getinfo(name)
 
         # if mode == 'w':
         #     return self._open_to_write(zinfo, force_zip64=force_zip64)

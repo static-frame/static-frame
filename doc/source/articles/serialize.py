@@ -677,17 +677,17 @@ def run_test(
         ):
     records = []
     for dtype_hetero, fixture_label, fixture in (
-            # fixture_to_pair('uniform', FF_wide_uniform),
-            # fixture_to_pair('mixed', FF_wide_mixed),
-            # fixture_to_pair('columnar', FF_wide_columnar),
+            fixture_to_pair('uniform', FF_wide_uniform),
+            fixture_to_pair('mixed', FF_wide_mixed),
+            fixture_to_pair('columnar', FF_wide_columnar),
 
             fixture_to_pair('uniform', FF_tall_uniform),
             fixture_to_pair('mixed', FF_tall_mixed),
             fixture_to_pair('columnar', FF_tall_columnar),
 
-            # fixture_to_pair('uniform', FF_square_uniform),
-            # fixture_to_pair('mixed', FF_square_mixed),
-            # fixture_to_pair('columnar', FF_square_columnar),
+            fixture_to_pair('uniform', FF_square_uniform),
+            fixture_to_pair('mixed', FF_square_mixed),
+            fixture_to_pair('columnar', FF_square_columnar),
             ):
 
         for cls, category_prefix in chain(

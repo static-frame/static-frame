@@ -15,6 +15,7 @@ from zipfile import ZipFile
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_to_one
@@ -301,14 +302,29 @@ class ArchiveZip(Archive):
             memory_map: bool,
             ):
 
-        mode: tp.Literal['w', 'r'] = 'w' if writeable else 'r'
-        self._archive = ZipFile(fp, # pylint: disable=R1732
-                mode=mode,
+        # mode: tp.Literal['w', 'r'] = 'w' if writeable else 'r'
+        # self._archive = ZipFile(fp, # pylint: disable=R1732
+        #         mode=mode,
+        #         compression=ZIP_STORED,
+        #         allowZip64=True,
+        #         )
+        if writeable:
+            self._archive = ZipFile(fp, # pylint: disable=R1732
+                mode='w',
                 compression=ZIP_STORED,
                 allowZip64=True,
                 )
         if not writeable:
+            self._archive = ZipFileRO(fp)
+
+            # self._archive = ZipFile(fp, # pylint: disable=R1732
+            #     mode='r',
+            #     compression=ZIP_STORED,
+            #     allowZip64=True,
+            #     )
+
             self._header_decode_cache = {}
+
         if memory_map:
             raise RuntimeError(f'Cannot memory_map with {self}')
 

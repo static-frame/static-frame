@@ -1220,13 +1220,13 @@ class FrameFromNPZ(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff_cached('s(100,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        self.sff1 = ff_cached('s(100,10_000)|v(int,bool,float)|c(I,str)')
         _, self.fp1_npz = tempfile.mkstemp(suffix='.zip')
         self.sff1.to_npz(self.fp1_npz)
         _, self.fp1_parquet = tempfile.mkstemp(suffix='.parquet')
         self.sff1.to_parquet(self.fp1_parquet)
 
-        self.sff2 = ff_cached('s(1_000_000,10)|v(float)|i(I,str)|c(I,str)')
+        self.sff2 = ff_cached('s(1_000_000,10)|v(float)|c(I,str)')
         _, self.fp2_npz = tempfile.mkstemp(suffix='.zip')
         self.sff2.to_npz(self.fp2_npz)
         _, self.fp2_parquet = tempfile.mkstemp(suffix='.parquet')
