@@ -887,7 +887,7 @@ class ZipFilePartRO(io.BufferedIOBase):
         # self._compress_type = zipinfo.compress_type
         self._compress_left = zipinfo.compress_size
         self._left = zipinfo.file_size
-
+        # assert self._compress_left == self._left
         # self._decompressor = None # _get_decompressor(self._compress_type)
 
         self._eof = False
@@ -939,19 +939,19 @@ class ZipFilePartRO(io.BufferedIOBase):
     #     self._compress_left -= 12
     #     return self._decrypter(header)[11]
 
-    def __repr__(self):
-        result = ['<%s.%s' % (self.__class__.__module__,
-                              self.__class__.__qualname__)]
-        if not self.closed:
-            result.append(' name=%r mode=%r' % (self.name, self.mode))
-            # if self._compress_type != ZIP_STORED:
-            #     result.append(' compress_type=%s' %
-            #                   compressor_names.get(self._compress_type,
-            #                                        self._compress_type))
-        else:
-            result.append(' [closed]')
-        result.append('>')
-        return ''.join(result)
+    # def __repr__(self):
+    #     result = ['<%s.%s' % (self.__class__.__module__,
+    #                           self.__class__.__qualname__)]
+    #     if not self.closed:
+    #         result.append(' name=%r mode=%r' % (self.name, self.mode))
+    #         # if self._compress_type != ZIP_STORED:
+    #         #     result.append(' compress_type=%s' %
+    #         #                   compressor_names.get(self._compress_type,
+    #         #                                        self._compress_type))
+    #     else:
+    #         result.append(' [closed]')
+    #     result.append('>')
+    #     return ''.join(result)
 
     # def readline(self, limit=-1):
     #     """Read and return a line from the stream.
@@ -1004,7 +1004,7 @@ class ZipFilePartRO(io.BufferedIOBase):
 
         end = n + self._offset
         if end < len(self._readbuffer):
-            buf = self._readbuffer[self._offset:end]
+            buf = self._readbuffer[self._offset: end]
             self._offset = end
             return buf
 
