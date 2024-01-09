@@ -85,7 +85,7 @@ _ECD_LOCATION = 9
 # of entries in the structure (section V.F in the format document)
 structCentralDir = "<4s4B4HL2L5H2L"
 stringCentralDir = b"PK\001\002"
-sizeCentralDir = struct.calcsize(structCentralDir)
+_CENTRAL_DIR_SIZE = struct.calcsize(structCentralDir)
 
 # indexes of entries in the central directory structure
 _CD_SIGNATURE = 0
@@ -367,7 +367,7 @@ class ZipInfo:
         'orig_filename',
         'filename',
         # 'date_time',
-        'compress_type',
+        # 'compress_type',
         # '_compresslevel',
         # 'comment',
         # 'extra',
@@ -404,7 +404,7 @@ class ZipInfo:
         #     raise ValueError('ZIP does not support timestamps before 1980')
 
         # Standard values:
-        self.compress_type = ZIP_STORED # Type of compression for the file
+        # self.compress_type = ZIP_STORED # Type of compression for the file
         # self._compresslevel = None      # Level for the compressor
         # self.comment = b""              # Comment for each file
         # self.extra = b""                # ZIP extra data
@@ -867,7 +867,7 @@ class ZipExtFile(io.BufferedIOBase):
         self._compress_left = zipinfo.compress_size
         self._left = zipinfo.file_size
 
-        self._decompressor = None # _get_decompressor(self._compress_type)
+        # self._decompressor = None # _get_decompressor(self._compress_type)
 
         self._eof = False
         self._readbuffer = b''
@@ -1168,7 +1168,7 @@ class ZipExtFile(io.BufferedIOBase):
             self._left = self._orig_file_size
             self._readbuffer = b''
             self._offset = 0
-            self._decompressor = None # _get_decompressor(self._compress_type)
+            # self._decompressor = None # _get_decompressor(self._compress_type)
             self._eof = False
             read_offset = new_pos
             # if self._decrypter is not None:
@@ -1277,8 +1277,8 @@ class ZipExtFile(io.BufferedIOBase):
 class ZipFile:
 
     fp = None                   # Set here since __del__ checks it
-    _windows_illegal_name_trans_table = None
-    compression = ZIP_STORED
+    # _windows_illegal_name_trans_table = None
+    # compression = ZIP_STORED
     mode = 'r'
 
     __slots__ = (
@@ -1300,7 +1300,6 @@ class ZipFile:
         if not endrec:
             raise BadZipFile("File is not a zip file")
 
-
         size_cd = endrec[_ECD_SIZE]             # bytes in central directory
         offset_cd = endrec[_ECD_OFFSET]         # offset of central directory
         # self._comment = endrec[_ECD_COMMENT]    # archive comment
@@ -1321,17 +1320,23 @@ class ZipFile:
         fp = io.BytesIO(data)
 
         total = 0
+        filename_length = 0
+        extra_length = 0
+        comment_length = 0
+
         while total < size_cd:
-            centdir = fp.read(sizeCentralDir)
-            if len(centdir) != sizeCentralDir:
+            cdir = fp.read(_CENTRAL_DIR_SIZE)
+            if len(cdir) != _CENTRAL_DIR_SIZE:
                 raise BadZipFile("Truncated central directory")
-            centdir = struct.unpack(structCentralDir, centdir)
-            if centdir[_CD_SIGNATURE] != stringCentralDir:
+
+            cdir = struct.unpack(structCentralDir, cdir)
+            if cdir[_CD_SIGNATURE] != stringCentralDir:
                 raise BadZipFile("Bad magic number for central directory")
 
-            filename = fp.read(centdir[_CD_FILENAME_LENGTH])
-            orig_filename_crc = crc32(filename)
-            flags = centdir[_CD_FLAG_BITS]
+            filename_length = cdir[_CD_FILENAME_LENGTH]
+            filename = fp.read(filename_length)
+            # orig_filename_crc = crc32(filename)
+            flags = cdir[_CD_FLAG_BITS]
 
             if flags & _MASK_UTF_FILENAME:
                 # UTF-8 file names extension
@@ -1341,39 +1346,49 @@ class ZipFile:
                 filename = filename.decode('cp437')
 
             # Create ZipInfo instance to store file information
-            x = ZipInfo(filename)
-            _ = fp.read(centdir[_CD_EXTRA_FIELD_LENGTH])
-            _ = fp.read(centdir[_CD_COMMENT_LENGTH])
-            x.header_offset = centdir[_CD_LOCAL_HEADER_OFFSET]
+            zinfo = ZipInfo(filename)
+            extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
+            _ = fp.read(extra_length)
+            comment_length = cdir[_CD_COMMENT_LENGTH]
+            _ = fp.read(comment_length)
+
+            zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET]
 
             # (_, _, _, _,
-            #  x.flag_bits, x.compress_type, _, _,
-            # _, x.compress_size, x.file_size) = centdir[1:12]
-            x.flag_bits = centdir[5]
-            x.compress_type = centdir[6]
-            x.compress_size = centdir[10]
-            x.file_size = centdir[11]
+            #  zinfo.flag_bits, zinfo.compress_type, _, _,
+            # _, zinfo.compress_size, zinfo.file_size) = cdir[1:12]
+            zinfo.flag_bits = cdir[5]
+
+            compress_type = cdir[6]
+            assert compress_type == ZIP_STORED
+
+            zinfo.compress_size = cdir[10]
+            zinfo.file_size = cdir[11]
 
 
-            # if x.extract_version > MAX_EXTRACT_VERSION:
+            # if zinfo.extract_version > MAX_EXTRACT_VERSION:
             #     raise NotImplementedError("zip file version %.1f" %
-            #                               (x.extract_version / 10))
+            #                               (zinfo.extract_version / 10))
 
-            # x.volume, x.internal_attr, x.external_attr = centdir[15:18]
+            # zinfo.volume, zinfo.internal_attr, zinfo.external_attr = cdir[15:18]
             # Convert date/time code to (year, month, day, hour, min, sec)
-            # x._raw_time = t
-            # x.date_time = ( (d>>9)+1980, (d>>5)&0xF, d&0x1F,
+            # zinfo._raw_time = t
+            # zinfo.date_time = ( (d>>9)+1980, (d>>5)&0xF, d&0x1F,
             #                 t>>11, (t>>5)&0x3F, (t&0x1F) * 2 )
-            # x._decodeExtra(orig_filename_crc)
-            x.header_offset = x.header_offset + concat
+            # zinfo._decodeExtra(orig_filename_crc)
+            zinfo.header_offset = zinfo.header_offset + concat
 
             # self.filelist.append(x)
-            self._name_to_info[x.filename] = x
+            self._name_to_info[zinfo.filename] = zinfo
 
             # update total bytes read from central directory
-            total = (total + sizeCentralDir + centdir[_CD_FILENAME_LENGTH]
-                     + centdir[_CD_EXTRA_FIELD_LENGTH]
-                     + centdir[_CD_COMMENT_LENGTH])
+            total = (
+                    total +
+                    _CENTRAL_DIR_SIZE +
+                    filename_length +
+                    extra_length +
+                    comment_length
+                    )
 
 
     def __init__(self,
