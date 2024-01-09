@@ -240,7 +240,7 @@ _DD_SIGNATURE = 0x08074b50
 
 TEndArchive = tp.List[tp.Union[bytes, int]]
 
-def _end_archive_update_zip64(fpin: tp.IO[bytes],
+def _end_archive64_update(fpin: tp.IO[bytes],
         offset: int,
         endrec: TEndArchive,
         ) -> TEndArchive:
@@ -305,7 +305,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
     record followed by a tenth item, the file seek offset of this record."""
 
     # Determine file size
-    fpin.seek(0, 2)
+    fpin.seek(0, 2) # seek to end
     filesize = fpin.tell()
 
     # Check to see if this is ZIP file with no archive comment (the
@@ -328,7 +328,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
         endrec.append(b"")
         endrec.append(filesize - _END_ARCHIVE_SIZE)
         # Try to read the "Zip64 end of central directory" structure
-        return _end_archive_update_zip64(fpin, -_END_ARCHIVE_SIZE, endrec)
+        return _end_archive64_update(fpin, -_END_ARCHIVE_SIZE, endrec)
 
     # Either this is not a ZIP file, or it is a ZIP file with an archive
     # comment.  Search the end of the file for the "end of central directory"
@@ -344,17 +344,18 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
         # found the magic number; attempt to unpack and interpret
         recData = data[start: start + _END_ARCHIVE_SIZE]
         if len(recData) != _END_ARCHIVE_SIZE:
-            # Zip file is corrupted.
-            return None
+            return None # Zip file is corrupted.
 
         endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, recData))
-        commentSize = endrec[_ECD_COMMENT_SIZE] #as claimed by the zip file
-        comment = data[start+_END_ARCHIVE_SIZE:start+_END_ARCHIVE_SIZE+commentSize]
-        endrec.append(comment)
+        # comment = data[
+        #         start + _END_ARCHIVE_SIZE:
+        #         start + _END_ARCHIVE_SIZE + endrec[_ECD_COMMENT_SIZE]
+        #         ]
+        endrec.append(b'') # ignore comment
         endrec.append(comment_max_start + start)
 
         # Try to read the "Zip64 end of central directory" structure
-        return _end_archive_update_zip64(fpin,
+        return _end_archive64_update(fpin,
                 comment_max_start + start - filesize,
                 endrec,
                 )
